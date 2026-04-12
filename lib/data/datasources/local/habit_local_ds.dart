@@ -4,7 +4,6 @@ import '../../database/daos/habit_dao.dart';
 import '../../database/daos/player_dao.dart';
 import '../../database/tables/habits_table.dart';
 import '../../database/tables/habit_logs_table.dart';
-import '../../database/tables/players_table.dart';
 
 class HabitLocalDs {
   final AppDatabase _db;
@@ -47,7 +46,6 @@ class HabitLocalDs {
     _           => 0,
   };
 
-  // Verifica e aplica falhas automáticas do dia anterior
   Future<void> applyDailyReset(int playerId) async {
     final habits = await _habitDao.getHabits(playerId);
     final yesterday = DateTime.now().subtract(const Duration(days: 1));
@@ -55,14 +53,12 @@ class HabitLocalDs {
     final yEnd = yStart.add(const Duration(days: 1));
 
     for (final habit in habits) {
-      // Verifica se tem log de ontem
       final log = await (_db.select(_db.habitLogsTable)
             ..where((t) => t.habitId.equals(habit.id))
             ..where((t) => t.playerId.equals(playerId))
             ..where((t) => t.logDate.isBetweenValues(yStart, yEnd)))
           .getSingleOrNull();
 
-      // Se não tem log de ontem, marca como failed
       if (log == null) {
         await _db.into(_db.habitLogsTable).insert(
           HabitLogsTableCompanion(
@@ -72,9 +68,12 @@ class HabitLocalDs {
             xpGained: const Value(0),
             goldGained: const Value(0),
             shadowImpact: const Value(-8),
-            logDate: Value(yStart.add(const Duration(hours: 23, minutes: 59))),
+            logDate: Value(
+                yStart.add(const Duration(hours: 23, minutes: 59))),
           ),
         );
+        // Aplica impacto na sombra
+        await _playerDao.updateShadow(playerId, -8);
       }
     }
   }
@@ -83,10 +82,9 @@ class HabitLocalDs {
     final habits = await _habitDao.getHabits(playerId);
     final logs = await _habitDao.getTodayLogs(playerId);
     final logMap = {for (var l in logs) l.habitId: l};
-    return habits.map((h) => HabitWithStatus(
-      habit: h,
-      todayLog: logMap[h.id],
-    )).toList();
+    return habits
+        .map((h) => HabitWithStatus(habit: h, todayLog: logMap[h.id]))
+        .toList();
   }
 
   Future<void> createSystemHabit({
@@ -99,7 +97,7 @@ class HabitLocalDs {
       title: Value(title),
       category: Value(category),
       isSystemHabit: const Value(true),
-      isRepeatable: const Value(false), // 1x por dia sempre
+      isRepeatable: const Value(false),
       xpReward: const Value(20),
       goldReward: const Value(10),
     ));
@@ -116,7 +114,7 @@ class HabitLocalDs {
     if (isFreeUser) {
       final count = await _habitDao.countPersonalHabits(playerId);
       if (count >= 5) {
-        return 'Limite de 5 missões individuais atingido. Seja PRO para ilimitado.';
+        return 'Limite de 5 missões individuais. Seja PRO para ilimitado.';
       }
     }
     final xp = _calcXp(rank, 'completed');
@@ -128,7 +126,7 @@ class HabitLocalDs {
       category: Value(category),
       rank: Value(rank),
       isSystemHabit: const Value(false),
-      isRepeatable: const Value(false), // 1x por dia
+      isRepeatable: const Value(false),
       xpReward: Value(xp),
       goldReward: Value(gold),
     ));
@@ -141,13 +139,11 @@ class HabitLocalDs {
     required String rank,
     required String status,
   }) async {
-    // Verifica se já foi feita hoje
     final existingLog = await _habitDao.getTodayLog(habitId, playerId);
     if (existingLog != null) {
       return HabitResult(
-        xpGained: 0, goldGained: 0,
-        shadowImpact: 0, status: 'already_done',
-      );
+          xpGained: 0, goldGained: 0,
+          shadowImpact: 0, status: 'already_done');
     }
 
     final xp = _calcXp(rank, status);
@@ -163,30 +159,10 @@ class HabitLocalDs {
       shadowImpact: shadowImpact,
     );
 
-    if (xp > 0 || gold > 0) {
-      final player = await _playerDao.findById(playerId);
-      if (player != null) {
-        int newXp = player.xp + xp;
-        int newGold = player.gold + gold;
-        int newLevel = player.level;
-        int newXpToNext = player.xpToNext;
-
-        while (newXp >= newXpToNext) {
-          newXp -= newXpToNext;
-          newLevel++;
-          newXpToNext = (newXpToNext * 1.5).round();
-        }
-
-        await (_db.update(_db.playersTable)
-              ..where((t) => t.id.equals(playerId)))
-            .write(PlayersTableCompanion(
-          xp: Value(newXp),
-          gold: Value(newGold),
-          level: Value(newLevel),
-          xpToNext: Value(newXpToNext),
-        ));
-      }
-    }
+    // Aplica recompensas
+    if (xp > 0) await _playerDao.addXp(playerId, xp);
+    if (gold > 0) await _playerDao.addGold(playerId, gold);
+    await _playerDao.updateShadow(playerId, shadowImpact);
 
     return HabitResult(
       xpGained: xp,
@@ -210,7 +186,7 @@ class HabitWithStatus {
       todayLog != null &&
       (todayLog!.status == 'completed' || todayLog!.status == 'partial');
 
-  bool get isLocked => todayLog != null; // já tem log hoje
+  bool get isLocked => todayLog != null;
 
   String get todayStatus => todayLog?.status ?? 'pending';
 }

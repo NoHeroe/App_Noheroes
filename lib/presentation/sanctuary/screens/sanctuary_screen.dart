@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
@@ -29,7 +28,6 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
     ));
-    // Reset diário ao abrir o app
     WidgetsBinding.instance.addPostFrameCallback((_) => _runDailyReset());
   }
 
@@ -62,12 +60,16 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(height: 8),
+                        // 1. Barras HP/MP/XP primeiro
+                        StatBarsRow(),
+                        SizedBox(height: 12),
+                        // 2. Banner Caelum/Nível (sem sombra)
                         CaelumDayBanner(),
                         SizedBox(height: 16),
+                        // 3. Card da Sombra
                         ShadowStatusCard(),
-                        SizedBox(height: 16),
-                        StatBarsRow(),
                         SizedBox(height: 20),
+                        // 4. Missões do dia
                         DailyMissionsCard(),
                         SizedBox(height: 20),
                       ],
@@ -104,12 +106,10 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          // Menu
           GestureDetector(
             onTap: () => _scaffoldKey.currentState?.openDrawer(),
-            child: _topBarButton(Icons.menu),
+            child: _topBarBtn(Icons.menu),
           ),
-
           const Expanded(
             child: Center(
               child: Text('SANTUÁRIO',
@@ -121,8 +121,6 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
                   )),
             ),
           ),
-
-          // Ouro
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
@@ -130,51 +128,40 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
               borderRadius: BorderRadius.circular(10),
               color: AppColors.surface,
             ),
-            child: Row(
-              children: [
-                const Text('🪙', style: TextStyle(fontSize: 13)),
-                const SizedBox(width: 4),
-                Text('$gold',
-                    style: GoogleFonts.roboto(
-                        fontSize: 13,
-                        color: AppColors.gold,
-                        fontWeight: FontWeight.w600)),
-              ],
-            ),
+            child: Row(children: [
+              const Text('🪙', style: TextStyle(fontSize: 13)),
+              const SizedBox(width: 4),
+              Text('$gold',
+                  style: GoogleFonts.roboto(
+                      fontSize: 13,
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.w600)),
+            ]),
           ),
-
           const SizedBox(width: 8),
-
-          // Notificações
-          Stack(
-            children: [
-              _topBarButton(Icons.notifications_none),
-              Positioned(
-                top: 8, right: 8,
-                child: Container(
-                  width: 8, height: 8,
-                  decoration: const BoxDecoration(
-                    color: AppColors.purple,
-                    shape: BoxShape.circle,
-                  ),
-                ),
+          Stack(children: [
+            _topBarBtn(Icons.notifications_none),
+            Positioned(
+              top: 8, right: 8,
+              child: Container(
+                width: 8, height: 8,
+                decoration: const BoxDecoration(
+                    color: AppColors.purple, shape: BoxShape.circle),
               ),
-            ],
-          ),
+            ),
+          ]),
         ],
       ),
     );
   }
 
-  Widget _topBarButton(IconData icon) {
-    return Container(
-      width: 40, height: 40,
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border),
-        borderRadius: BorderRadius.circular(10),
-        color: AppColors.surface,
-      ),
-      child: Icon(icon, color: AppColors.textSecondary, size: 20),
-    );
-  }
+  Widget _topBarBtn(IconData icon) => Container(
+        width: 40, height: 40,
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(10),
+          color: AppColors.surface,
+        ),
+        child: Icon(icon, color: AppColors.textSecondary, size: 20),
+      );
 }

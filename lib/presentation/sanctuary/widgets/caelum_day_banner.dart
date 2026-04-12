@@ -20,29 +20,29 @@ class CaelumDayBanner extends ConsumerWidget {
         color: AppColors.surface,
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _item('DIA EM CAELUM', '${player?.caelumDay ?? 1}'),
           _divider(),
           _item('NÍVEL', '${player?.level ?? 1}'),
-          _divider(),
-          _item('SOMBRA', 'Estável', valueColor: AppColors.shadowStable),
         ],
       ),
     );
   }
 
-  Widget _item(String label, String value, {Color? valueColor}) {
+  Widget _item(String label, String value) {
     return Column(
       children: [
         Text(label,
             style: GoogleFonts.roboto(
-                fontSize: 9, color: AppColors.textMuted, letterSpacing: 1.5)),
+                fontSize: 9,
+                color: AppColors.textMuted,
+                letterSpacing: 1.5)),
         const SizedBox(height: 4),
         Text(value,
             style: GoogleFonts.cinzelDecorative(
                 fontSize: 14,
-                color: valueColor ?? AppColors.gold,
+                color: AppColors.gold,
                 fontWeight: FontWeight.bold)),
       ],
     );

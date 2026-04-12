@@ -61,6 +61,61 @@ class $PlayersTableTable extends PlayersTable
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(100));
+  static const VerificationMeta _attributePointsMeta =
+      const VerificationMeta('attributePoints');
+  @override
+  late final GeneratedColumn<int> attributePoints = GeneratedColumn<int>(
+      'attribute_points', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _strengthMeta =
+      const VerificationMeta('strength');
+  @override
+  late final GeneratedColumn<int> strength = GeneratedColumn<int>(
+      'strength', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _dexterityMeta =
+      const VerificationMeta('dexterity');
+  @override
+  late final GeneratedColumn<int> dexterity = GeneratedColumn<int>(
+      'dexterity', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _intelligenceMeta =
+      const VerificationMeta('intelligence');
+  @override
+  late final GeneratedColumn<int> intelligence = GeneratedColumn<int>(
+      'intelligence', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _constitutionMeta =
+      const VerificationMeta('constitution');
+  @override
+  late final GeneratedColumn<int> constitution = GeneratedColumn<int>(
+      'constitution', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _spiritMeta = const VerificationMeta('spirit');
+  @override
+  late final GeneratedColumn<int> spirit = GeneratedColumn<int>(
+      'spirit', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _charismaMeta =
+      const VerificationMeta('charisma');
+  @override
+  late final GeneratedColumn<int> charisma = GeneratedColumn<int>(
+      'charisma', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
   static const VerificationMeta _hpMeta = const VerificationMeta('hp');
   @override
   late final GeneratedColumn<int> hp = GeneratedColumn<int>(
@@ -81,14 +136,14 @@ class $PlayersTableTable extends PlayersTable
       'mp', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: false,
-      defaultValue: const Constant(100));
+      defaultValue: const Constant(90));
   static const VerificationMeta _maxMpMeta = const VerificationMeta('maxMp');
   @override
   late final GeneratedColumn<int> maxMp = GeneratedColumn<int>(
       'max_mp', aliasedName, false,
       type: DriftSqlType.int,
       requiredDuringInsert: false,
-      defaultValue: const Constant(100));
+      defaultValue: const Constant(90));
   static const VerificationMeta _goldMeta = const VerificationMeta('gold');
   @override
   late final GeneratedColumn<int> gold = GeneratedColumn<int>(
@@ -127,6 +182,14 @@ class $PlayersTableTable extends PlayersTable
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('stable'));
+  static const VerificationMeta _shadowCorruptionMeta =
+      const VerificationMeta('shadowCorruption');
+  @override
+  late final GeneratedColumn<int> shadowCorruption = GeneratedColumn<int>(
+      'shadow_corruption', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   static const VerificationMeta _classTypeMeta =
       const VerificationMeta('classType');
   @override
@@ -173,6 +236,12 @@ class $PlayersTableTable extends PlayersTable
       type: DriftSqlType.dateTime,
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
+  static const VerificationMeta _lastStreakDateMeta =
+      const VerificationMeta('lastStreakDate');
+  @override
+  late final GeneratedColumn<DateTime> lastStreakDate =
+      GeneratedColumn<DateTime>('last_streak_date', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -182,6 +251,13 @@ class $PlayersTableTable extends PlayersTable
         level,
         xp,
         xpToNext,
+        attributePoints,
+        strength,
+        dexterity,
+        intelligence,
+        constitution,
+        spirit,
+        charisma,
         hp,
         maxHp,
         mp,
@@ -191,12 +267,14 @@ class $PlayersTableTable extends PlayersTable
         streakDays,
         caelumDay,
         shadowState,
+        shadowCorruption,
         classType,
         factionType,
         narrativeMode,
         onboardingDone,
         createdAt,
-        lastLoginAt
+        lastLoginAt,
+        lastStreakDate
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -242,6 +320,40 @@ class $PlayersTableTable extends PlayersTable
       context.handle(_xpToNextMeta,
           xpToNext.isAcceptableOrUnknown(data['xp_to_next']!, _xpToNextMeta));
     }
+    if (data.containsKey('attribute_points')) {
+      context.handle(
+          _attributePointsMeta,
+          attributePoints.isAcceptableOrUnknown(
+              data['attribute_points']!, _attributePointsMeta));
+    }
+    if (data.containsKey('strength')) {
+      context.handle(_strengthMeta,
+          strength.isAcceptableOrUnknown(data['strength']!, _strengthMeta));
+    }
+    if (data.containsKey('dexterity')) {
+      context.handle(_dexterityMeta,
+          dexterity.isAcceptableOrUnknown(data['dexterity']!, _dexterityMeta));
+    }
+    if (data.containsKey('intelligence')) {
+      context.handle(
+          _intelligenceMeta,
+          intelligence.isAcceptableOrUnknown(
+              data['intelligence']!, _intelligenceMeta));
+    }
+    if (data.containsKey('constitution')) {
+      context.handle(
+          _constitutionMeta,
+          constitution.isAcceptableOrUnknown(
+              data['constitution']!, _constitutionMeta));
+    }
+    if (data.containsKey('spirit')) {
+      context.handle(_spiritMeta,
+          spirit.isAcceptableOrUnknown(data['spirit']!, _spiritMeta));
+    }
+    if (data.containsKey('charisma')) {
+      context.handle(_charismaMeta,
+          charisma.isAcceptableOrUnknown(data['charisma']!, _charismaMeta));
+    }
     if (data.containsKey('hp')) {
       context.handle(_hpMeta, hp.isAcceptableOrUnknown(data['hp']!, _hpMeta));
     }
@@ -280,6 +392,12 @@ class $PlayersTableTable extends PlayersTable
           shadowState.isAcceptableOrUnknown(
               data['shadow_state']!, _shadowStateMeta));
     }
+    if (data.containsKey('shadow_corruption')) {
+      context.handle(
+          _shadowCorruptionMeta,
+          shadowCorruption.isAcceptableOrUnknown(
+              data['shadow_corruption']!, _shadowCorruptionMeta));
+    }
     if (data.containsKey('class_type')) {
       context.handle(_classTypeMeta,
           classType.isAcceptableOrUnknown(data['class_type']!, _classTypeMeta));
@@ -312,6 +430,12 @@ class $PlayersTableTable extends PlayersTable
           lastLoginAt.isAcceptableOrUnknown(
               data['last_login_at']!, _lastLoginAtMeta));
     }
+    if (data.containsKey('last_streak_date')) {
+      context.handle(
+          _lastStreakDateMeta,
+          lastStreakDate.isAcceptableOrUnknown(
+              data['last_streak_date']!, _lastStreakDateMeta));
+    }
     return context;
   }
 
@@ -335,6 +459,20 @@ class $PlayersTableTable extends PlayersTable
           .read(DriftSqlType.int, data['${effectivePrefix}xp'])!,
       xpToNext: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}xp_to_next'])!,
+      attributePoints: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}attribute_points'])!,
+      strength: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}strength'])!,
+      dexterity: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}dexterity'])!,
+      intelligence: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}intelligence'])!,
+      constitution: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}constitution'])!,
+      spirit: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}spirit'])!,
+      charisma: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}charisma'])!,
       hp: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}hp'])!,
       maxHp: attachedDatabase.typeMapping
@@ -353,6 +491,8 @@ class $PlayersTableTable extends PlayersTable
           .read(DriftSqlType.int, data['${effectivePrefix}caelum_day'])!,
       shadowState: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}shadow_state'])!,
+      shadowCorruption: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}shadow_corruption'])!,
       classType: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}class_type']),
       factionType: attachedDatabase.typeMapping
@@ -365,6 +505,8 @@ class $PlayersTableTable extends PlayersTable
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       lastLoginAt: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}last_login_at'])!,
+      lastStreakDate: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_streak_date']),
     );
   }
 
@@ -383,6 +525,13 @@ class PlayersTableData extends DataClass
   final int level;
   final int xp;
   final int xpToNext;
+  final int attributePoints;
+  final int strength;
+  final int dexterity;
+  final int intelligence;
+  final int constitution;
+  final int spirit;
+  final int charisma;
   final int hp;
   final int maxHp;
   final int mp;
@@ -392,12 +541,14 @@ class PlayersTableData extends DataClass
   final int streakDays;
   final int caelumDay;
   final String shadowState;
+  final int shadowCorruption;
   final String? classType;
   final String? factionType;
   final String narrativeMode;
   final bool onboardingDone;
   final DateTime createdAt;
   final DateTime lastLoginAt;
+  final DateTime? lastStreakDate;
   const PlayersTableData(
       {required this.id,
       required this.email,
@@ -406,6 +557,13 @@ class PlayersTableData extends DataClass
       required this.level,
       required this.xp,
       required this.xpToNext,
+      required this.attributePoints,
+      required this.strength,
+      required this.dexterity,
+      required this.intelligence,
+      required this.constitution,
+      required this.spirit,
+      required this.charisma,
       required this.hp,
       required this.maxHp,
       required this.mp,
@@ -415,12 +573,14 @@ class PlayersTableData extends DataClass
       required this.streakDays,
       required this.caelumDay,
       required this.shadowState,
+      required this.shadowCorruption,
       this.classType,
       this.factionType,
       required this.narrativeMode,
       required this.onboardingDone,
       required this.createdAt,
-      required this.lastLoginAt});
+      required this.lastLoginAt,
+      this.lastStreakDate});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -431,6 +591,13 @@ class PlayersTableData extends DataClass
     map['level'] = Variable<int>(level);
     map['xp'] = Variable<int>(xp);
     map['xp_to_next'] = Variable<int>(xpToNext);
+    map['attribute_points'] = Variable<int>(attributePoints);
+    map['strength'] = Variable<int>(strength);
+    map['dexterity'] = Variable<int>(dexterity);
+    map['intelligence'] = Variable<int>(intelligence);
+    map['constitution'] = Variable<int>(constitution);
+    map['spirit'] = Variable<int>(spirit);
+    map['charisma'] = Variable<int>(charisma);
     map['hp'] = Variable<int>(hp);
     map['max_hp'] = Variable<int>(maxHp);
     map['mp'] = Variable<int>(mp);
@@ -440,6 +607,7 @@ class PlayersTableData extends DataClass
     map['streak_days'] = Variable<int>(streakDays);
     map['caelum_day'] = Variable<int>(caelumDay);
     map['shadow_state'] = Variable<String>(shadowState);
+    map['shadow_corruption'] = Variable<int>(shadowCorruption);
     if (!nullToAbsent || classType != null) {
       map['class_type'] = Variable<String>(classType);
     }
@@ -450,6 +618,9 @@ class PlayersTableData extends DataClass
     map['onboarding_done'] = Variable<bool>(onboardingDone);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['last_login_at'] = Variable<DateTime>(lastLoginAt);
+    if (!nullToAbsent || lastStreakDate != null) {
+      map['last_streak_date'] = Variable<DateTime>(lastStreakDate);
+    }
     return map;
   }
 
@@ -462,6 +633,13 @@ class PlayersTableData extends DataClass
       level: Value(level),
       xp: Value(xp),
       xpToNext: Value(xpToNext),
+      attributePoints: Value(attributePoints),
+      strength: Value(strength),
+      dexterity: Value(dexterity),
+      intelligence: Value(intelligence),
+      constitution: Value(constitution),
+      spirit: Value(spirit),
+      charisma: Value(charisma),
       hp: Value(hp),
       maxHp: Value(maxHp),
       mp: Value(mp),
@@ -471,6 +649,7 @@ class PlayersTableData extends DataClass
       streakDays: Value(streakDays),
       caelumDay: Value(caelumDay),
       shadowState: Value(shadowState),
+      shadowCorruption: Value(shadowCorruption),
       classType: classType == null && nullToAbsent
           ? const Value.absent()
           : Value(classType),
@@ -481,6 +660,9 @@ class PlayersTableData extends DataClass
       onboardingDone: Value(onboardingDone),
       createdAt: Value(createdAt),
       lastLoginAt: Value(lastLoginAt),
+      lastStreakDate: lastStreakDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastStreakDate),
     );
   }
 
@@ -495,6 +677,13 @@ class PlayersTableData extends DataClass
       level: serializer.fromJson<int>(json['level']),
       xp: serializer.fromJson<int>(json['xp']),
       xpToNext: serializer.fromJson<int>(json['xpToNext']),
+      attributePoints: serializer.fromJson<int>(json['attributePoints']),
+      strength: serializer.fromJson<int>(json['strength']),
+      dexterity: serializer.fromJson<int>(json['dexterity']),
+      intelligence: serializer.fromJson<int>(json['intelligence']),
+      constitution: serializer.fromJson<int>(json['constitution']),
+      spirit: serializer.fromJson<int>(json['spirit']),
+      charisma: serializer.fromJson<int>(json['charisma']),
       hp: serializer.fromJson<int>(json['hp']),
       maxHp: serializer.fromJson<int>(json['maxHp']),
       mp: serializer.fromJson<int>(json['mp']),
@@ -504,12 +693,14 @@ class PlayersTableData extends DataClass
       streakDays: serializer.fromJson<int>(json['streakDays']),
       caelumDay: serializer.fromJson<int>(json['caelumDay']),
       shadowState: serializer.fromJson<String>(json['shadowState']),
+      shadowCorruption: serializer.fromJson<int>(json['shadowCorruption']),
       classType: serializer.fromJson<String?>(json['classType']),
       factionType: serializer.fromJson<String?>(json['factionType']),
       narrativeMode: serializer.fromJson<String>(json['narrativeMode']),
       onboardingDone: serializer.fromJson<bool>(json['onboardingDone']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       lastLoginAt: serializer.fromJson<DateTime>(json['lastLoginAt']),
+      lastStreakDate: serializer.fromJson<DateTime?>(json['lastStreakDate']),
     );
   }
   @override
@@ -523,6 +714,13 @@ class PlayersTableData extends DataClass
       'level': serializer.toJson<int>(level),
       'xp': serializer.toJson<int>(xp),
       'xpToNext': serializer.toJson<int>(xpToNext),
+      'attributePoints': serializer.toJson<int>(attributePoints),
+      'strength': serializer.toJson<int>(strength),
+      'dexterity': serializer.toJson<int>(dexterity),
+      'intelligence': serializer.toJson<int>(intelligence),
+      'constitution': serializer.toJson<int>(constitution),
+      'spirit': serializer.toJson<int>(spirit),
+      'charisma': serializer.toJson<int>(charisma),
       'hp': serializer.toJson<int>(hp),
       'maxHp': serializer.toJson<int>(maxHp),
       'mp': serializer.toJson<int>(mp),
@@ -532,12 +730,14 @@ class PlayersTableData extends DataClass
       'streakDays': serializer.toJson<int>(streakDays),
       'caelumDay': serializer.toJson<int>(caelumDay),
       'shadowState': serializer.toJson<String>(shadowState),
+      'shadowCorruption': serializer.toJson<int>(shadowCorruption),
       'classType': serializer.toJson<String?>(classType),
       'factionType': serializer.toJson<String?>(factionType),
       'narrativeMode': serializer.toJson<String>(narrativeMode),
       'onboardingDone': serializer.toJson<bool>(onboardingDone),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'lastLoginAt': serializer.toJson<DateTime>(lastLoginAt),
+      'lastStreakDate': serializer.toJson<DateTime?>(lastStreakDate),
     };
   }
 
@@ -549,6 +749,13 @@ class PlayersTableData extends DataClass
           int? level,
           int? xp,
           int? xpToNext,
+          int? attributePoints,
+          int? strength,
+          int? dexterity,
+          int? intelligence,
+          int? constitution,
+          int? spirit,
+          int? charisma,
           int? hp,
           int? maxHp,
           int? mp,
@@ -558,12 +765,14 @@ class PlayersTableData extends DataClass
           int? streakDays,
           int? caelumDay,
           String? shadowState,
+          int? shadowCorruption,
           Value<String?> classType = const Value.absent(),
           Value<String?> factionType = const Value.absent(),
           String? narrativeMode,
           bool? onboardingDone,
           DateTime? createdAt,
-          DateTime? lastLoginAt}) =>
+          DateTime? lastLoginAt,
+          Value<DateTime?> lastStreakDate = const Value.absent()}) =>
       PlayersTableData(
         id: id ?? this.id,
         email: email ?? this.email,
@@ -572,6 +781,13 @@ class PlayersTableData extends DataClass
         level: level ?? this.level,
         xp: xp ?? this.xp,
         xpToNext: xpToNext ?? this.xpToNext,
+        attributePoints: attributePoints ?? this.attributePoints,
+        strength: strength ?? this.strength,
+        dexterity: dexterity ?? this.dexterity,
+        intelligence: intelligence ?? this.intelligence,
+        constitution: constitution ?? this.constitution,
+        spirit: spirit ?? this.spirit,
+        charisma: charisma ?? this.charisma,
         hp: hp ?? this.hp,
         maxHp: maxHp ?? this.maxHp,
         mp: mp ?? this.mp,
@@ -581,12 +797,15 @@ class PlayersTableData extends DataClass
         streakDays: streakDays ?? this.streakDays,
         caelumDay: caelumDay ?? this.caelumDay,
         shadowState: shadowState ?? this.shadowState,
+        shadowCorruption: shadowCorruption ?? this.shadowCorruption,
         classType: classType.present ? classType.value : this.classType,
         factionType: factionType.present ? factionType.value : this.factionType,
         narrativeMode: narrativeMode ?? this.narrativeMode,
         onboardingDone: onboardingDone ?? this.onboardingDone,
         createdAt: createdAt ?? this.createdAt,
         lastLoginAt: lastLoginAt ?? this.lastLoginAt,
+        lastStreakDate:
+            lastStreakDate.present ? lastStreakDate.value : this.lastStreakDate,
       );
   PlayersTableData copyWithCompanion(PlayersTableCompanion data) {
     return PlayersTableData(
@@ -600,6 +819,19 @@ class PlayersTableData extends DataClass
       level: data.level.present ? data.level.value : this.level,
       xp: data.xp.present ? data.xp.value : this.xp,
       xpToNext: data.xpToNext.present ? data.xpToNext.value : this.xpToNext,
+      attributePoints: data.attributePoints.present
+          ? data.attributePoints.value
+          : this.attributePoints,
+      strength: data.strength.present ? data.strength.value : this.strength,
+      dexterity: data.dexterity.present ? data.dexterity.value : this.dexterity,
+      intelligence: data.intelligence.present
+          ? data.intelligence.value
+          : this.intelligence,
+      constitution: data.constitution.present
+          ? data.constitution.value
+          : this.constitution,
+      spirit: data.spirit.present ? data.spirit.value : this.spirit,
+      charisma: data.charisma.present ? data.charisma.value : this.charisma,
       hp: data.hp.present ? data.hp.value : this.hp,
       maxHp: data.maxHp.present ? data.maxHp.value : this.maxHp,
       mp: data.mp.present ? data.mp.value : this.mp,
@@ -611,6 +843,9 @@ class PlayersTableData extends DataClass
       caelumDay: data.caelumDay.present ? data.caelumDay.value : this.caelumDay,
       shadowState:
           data.shadowState.present ? data.shadowState.value : this.shadowState,
+      shadowCorruption: data.shadowCorruption.present
+          ? data.shadowCorruption.value
+          : this.shadowCorruption,
       classType: data.classType.present ? data.classType.value : this.classType,
       factionType:
           data.factionType.present ? data.factionType.value : this.factionType,
@@ -623,6 +858,9 @@ class PlayersTableData extends DataClass
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       lastLoginAt:
           data.lastLoginAt.present ? data.lastLoginAt.value : this.lastLoginAt,
+      lastStreakDate: data.lastStreakDate.present
+          ? data.lastStreakDate.value
+          : this.lastStreakDate,
     );
   }
 
@@ -636,6 +874,13 @@ class PlayersTableData extends DataClass
           ..write('level: $level, ')
           ..write('xp: $xp, ')
           ..write('xpToNext: $xpToNext, ')
+          ..write('attributePoints: $attributePoints, ')
+          ..write('strength: $strength, ')
+          ..write('dexterity: $dexterity, ')
+          ..write('intelligence: $intelligence, ')
+          ..write('constitution: $constitution, ')
+          ..write('spirit: $spirit, ')
+          ..write('charisma: $charisma, ')
           ..write('hp: $hp, ')
           ..write('maxHp: $maxHp, ')
           ..write('mp: $mp, ')
@@ -645,12 +890,14 @@ class PlayersTableData extends DataClass
           ..write('streakDays: $streakDays, ')
           ..write('caelumDay: $caelumDay, ')
           ..write('shadowState: $shadowState, ')
+          ..write('shadowCorruption: $shadowCorruption, ')
           ..write('classType: $classType, ')
           ..write('factionType: $factionType, ')
           ..write('narrativeMode: $narrativeMode, ')
           ..write('onboardingDone: $onboardingDone, ')
           ..write('createdAt: $createdAt, ')
-          ..write('lastLoginAt: $lastLoginAt')
+          ..write('lastLoginAt: $lastLoginAt, ')
+          ..write('lastStreakDate: $lastStreakDate')
           ..write(')'))
         .toString();
   }
@@ -664,6 +911,13 @@ class PlayersTableData extends DataClass
         level,
         xp,
         xpToNext,
+        attributePoints,
+        strength,
+        dexterity,
+        intelligence,
+        constitution,
+        spirit,
+        charisma,
         hp,
         maxHp,
         mp,
@@ -673,12 +927,14 @@ class PlayersTableData extends DataClass
         streakDays,
         caelumDay,
         shadowState,
+        shadowCorruption,
         classType,
         factionType,
         narrativeMode,
         onboardingDone,
         createdAt,
-        lastLoginAt
+        lastLoginAt,
+        lastStreakDate
       ]);
   @override
   bool operator ==(Object other) =>
@@ -691,6 +947,13 @@ class PlayersTableData extends DataClass
           other.level == this.level &&
           other.xp == this.xp &&
           other.xpToNext == this.xpToNext &&
+          other.attributePoints == this.attributePoints &&
+          other.strength == this.strength &&
+          other.dexterity == this.dexterity &&
+          other.intelligence == this.intelligence &&
+          other.constitution == this.constitution &&
+          other.spirit == this.spirit &&
+          other.charisma == this.charisma &&
           other.hp == this.hp &&
           other.maxHp == this.maxHp &&
           other.mp == this.mp &&
@@ -700,12 +963,14 @@ class PlayersTableData extends DataClass
           other.streakDays == this.streakDays &&
           other.caelumDay == this.caelumDay &&
           other.shadowState == this.shadowState &&
+          other.shadowCorruption == this.shadowCorruption &&
           other.classType == this.classType &&
           other.factionType == this.factionType &&
           other.narrativeMode == this.narrativeMode &&
           other.onboardingDone == this.onboardingDone &&
           other.createdAt == this.createdAt &&
-          other.lastLoginAt == this.lastLoginAt);
+          other.lastLoginAt == this.lastLoginAt &&
+          other.lastStreakDate == this.lastStreakDate);
 }
 
 class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
@@ -716,6 +981,13 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
   final Value<int> level;
   final Value<int> xp;
   final Value<int> xpToNext;
+  final Value<int> attributePoints;
+  final Value<int> strength;
+  final Value<int> dexterity;
+  final Value<int> intelligence;
+  final Value<int> constitution;
+  final Value<int> spirit;
+  final Value<int> charisma;
   final Value<int> hp;
   final Value<int> maxHp;
   final Value<int> mp;
@@ -725,12 +997,14 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
   final Value<int> streakDays;
   final Value<int> caelumDay;
   final Value<String> shadowState;
+  final Value<int> shadowCorruption;
   final Value<String?> classType;
   final Value<String?> factionType;
   final Value<String> narrativeMode;
   final Value<bool> onboardingDone;
   final Value<DateTime> createdAt;
   final Value<DateTime> lastLoginAt;
+  final Value<DateTime?> lastStreakDate;
   const PlayersTableCompanion({
     this.id = const Value.absent(),
     this.email = const Value.absent(),
@@ -739,6 +1013,13 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.level = const Value.absent(),
     this.xp = const Value.absent(),
     this.xpToNext = const Value.absent(),
+    this.attributePoints = const Value.absent(),
+    this.strength = const Value.absent(),
+    this.dexterity = const Value.absent(),
+    this.intelligence = const Value.absent(),
+    this.constitution = const Value.absent(),
+    this.spirit = const Value.absent(),
+    this.charisma = const Value.absent(),
     this.hp = const Value.absent(),
     this.maxHp = const Value.absent(),
     this.mp = const Value.absent(),
@@ -748,12 +1029,14 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.streakDays = const Value.absent(),
     this.caelumDay = const Value.absent(),
     this.shadowState = const Value.absent(),
+    this.shadowCorruption = const Value.absent(),
     this.classType = const Value.absent(),
     this.factionType = const Value.absent(),
     this.narrativeMode = const Value.absent(),
     this.onboardingDone = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.lastLoginAt = const Value.absent(),
+    this.lastStreakDate = const Value.absent(),
   });
   PlayersTableCompanion.insert({
     this.id = const Value.absent(),
@@ -763,6 +1046,13 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.level = const Value.absent(),
     this.xp = const Value.absent(),
     this.xpToNext = const Value.absent(),
+    this.attributePoints = const Value.absent(),
+    this.strength = const Value.absent(),
+    this.dexterity = const Value.absent(),
+    this.intelligence = const Value.absent(),
+    this.constitution = const Value.absent(),
+    this.spirit = const Value.absent(),
+    this.charisma = const Value.absent(),
     this.hp = const Value.absent(),
     this.maxHp = const Value.absent(),
     this.mp = const Value.absent(),
@@ -772,12 +1062,14 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.streakDays = const Value.absent(),
     this.caelumDay = const Value.absent(),
     this.shadowState = const Value.absent(),
+    this.shadowCorruption = const Value.absent(),
     this.classType = const Value.absent(),
     this.factionType = const Value.absent(),
     this.narrativeMode = const Value.absent(),
     this.onboardingDone = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.lastLoginAt = const Value.absent(),
+    this.lastStreakDate = const Value.absent(),
   })  : email = Value(email),
         passwordHash = Value(passwordHash);
   static Insertable<PlayersTableData> custom({
@@ -788,6 +1080,13 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     Expression<int>? level,
     Expression<int>? xp,
     Expression<int>? xpToNext,
+    Expression<int>? attributePoints,
+    Expression<int>? strength,
+    Expression<int>? dexterity,
+    Expression<int>? intelligence,
+    Expression<int>? constitution,
+    Expression<int>? spirit,
+    Expression<int>? charisma,
     Expression<int>? hp,
     Expression<int>? maxHp,
     Expression<int>? mp,
@@ -797,12 +1096,14 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     Expression<int>? streakDays,
     Expression<int>? caelumDay,
     Expression<String>? shadowState,
+    Expression<int>? shadowCorruption,
     Expression<String>? classType,
     Expression<String>? factionType,
     Expression<String>? narrativeMode,
     Expression<bool>? onboardingDone,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? lastLoginAt,
+    Expression<DateTime>? lastStreakDate,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -812,6 +1113,13 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       if (level != null) 'level': level,
       if (xp != null) 'xp': xp,
       if (xpToNext != null) 'xp_to_next': xpToNext,
+      if (attributePoints != null) 'attribute_points': attributePoints,
+      if (strength != null) 'strength': strength,
+      if (dexterity != null) 'dexterity': dexterity,
+      if (intelligence != null) 'intelligence': intelligence,
+      if (constitution != null) 'constitution': constitution,
+      if (spirit != null) 'spirit': spirit,
+      if (charisma != null) 'charisma': charisma,
       if (hp != null) 'hp': hp,
       if (maxHp != null) 'max_hp': maxHp,
       if (mp != null) 'mp': mp,
@@ -821,12 +1129,14 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       if (streakDays != null) 'streak_days': streakDays,
       if (caelumDay != null) 'caelum_day': caelumDay,
       if (shadowState != null) 'shadow_state': shadowState,
+      if (shadowCorruption != null) 'shadow_corruption': shadowCorruption,
       if (classType != null) 'class_type': classType,
       if (factionType != null) 'faction_type': factionType,
       if (narrativeMode != null) 'narrative_mode': narrativeMode,
       if (onboardingDone != null) 'onboarding_done': onboardingDone,
       if (createdAt != null) 'created_at': createdAt,
       if (lastLoginAt != null) 'last_login_at': lastLoginAt,
+      if (lastStreakDate != null) 'last_streak_date': lastStreakDate,
     });
   }
 
@@ -838,6 +1148,13 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       Value<int>? level,
       Value<int>? xp,
       Value<int>? xpToNext,
+      Value<int>? attributePoints,
+      Value<int>? strength,
+      Value<int>? dexterity,
+      Value<int>? intelligence,
+      Value<int>? constitution,
+      Value<int>? spirit,
+      Value<int>? charisma,
       Value<int>? hp,
       Value<int>? maxHp,
       Value<int>? mp,
@@ -847,12 +1164,14 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       Value<int>? streakDays,
       Value<int>? caelumDay,
       Value<String>? shadowState,
+      Value<int>? shadowCorruption,
       Value<String?>? classType,
       Value<String?>? factionType,
       Value<String>? narrativeMode,
       Value<bool>? onboardingDone,
       Value<DateTime>? createdAt,
-      Value<DateTime>? lastLoginAt}) {
+      Value<DateTime>? lastLoginAt,
+      Value<DateTime?>? lastStreakDate}) {
     return PlayersTableCompanion(
       id: id ?? this.id,
       email: email ?? this.email,
@@ -861,6 +1180,13 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       level: level ?? this.level,
       xp: xp ?? this.xp,
       xpToNext: xpToNext ?? this.xpToNext,
+      attributePoints: attributePoints ?? this.attributePoints,
+      strength: strength ?? this.strength,
+      dexterity: dexterity ?? this.dexterity,
+      intelligence: intelligence ?? this.intelligence,
+      constitution: constitution ?? this.constitution,
+      spirit: spirit ?? this.spirit,
+      charisma: charisma ?? this.charisma,
       hp: hp ?? this.hp,
       maxHp: maxHp ?? this.maxHp,
       mp: mp ?? this.mp,
@@ -870,12 +1196,14 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       streakDays: streakDays ?? this.streakDays,
       caelumDay: caelumDay ?? this.caelumDay,
       shadowState: shadowState ?? this.shadowState,
+      shadowCorruption: shadowCorruption ?? this.shadowCorruption,
       classType: classType ?? this.classType,
       factionType: factionType ?? this.factionType,
       narrativeMode: narrativeMode ?? this.narrativeMode,
       onboardingDone: onboardingDone ?? this.onboardingDone,
       createdAt: createdAt ?? this.createdAt,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
+      lastStreakDate: lastStreakDate ?? this.lastStreakDate,
     );
   }
 
@@ -902,6 +1230,27 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     }
     if (xpToNext.present) {
       map['xp_to_next'] = Variable<int>(xpToNext.value);
+    }
+    if (attributePoints.present) {
+      map['attribute_points'] = Variable<int>(attributePoints.value);
+    }
+    if (strength.present) {
+      map['strength'] = Variable<int>(strength.value);
+    }
+    if (dexterity.present) {
+      map['dexterity'] = Variable<int>(dexterity.value);
+    }
+    if (intelligence.present) {
+      map['intelligence'] = Variable<int>(intelligence.value);
+    }
+    if (constitution.present) {
+      map['constitution'] = Variable<int>(constitution.value);
+    }
+    if (spirit.present) {
+      map['spirit'] = Variable<int>(spirit.value);
+    }
+    if (charisma.present) {
+      map['charisma'] = Variable<int>(charisma.value);
     }
     if (hp.present) {
       map['hp'] = Variable<int>(hp.value);
@@ -930,6 +1279,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     if (shadowState.present) {
       map['shadow_state'] = Variable<String>(shadowState.value);
     }
+    if (shadowCorruption.present) {
+      map['shadow_corruption'] = Variable<int>(shadowCorruption.value);
+    }
     if (classType.present) {
       map['class_type'] = Variable<String>(classType.value);
     }
@@ -948,6 +1300,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     if (lastLoginAt.present) {
       map['last_login_at'] = Variable<DateTime>(lastLoginAt.value);
     }
+    if (lastStreakDate.present) {
+      map['last_streak_date'] = Variable<DateTime>(lastStreakDate.value);
+    }
     return map;
   }
 
@@ -961,6 +1316,13 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
           ..write('level: $level, ')
           ..write('xp: $xp, ')
           ..write('xpToNext: $xpToNext, ')
+          ..write('attributePoints: $attributePoints, ')
+          ..write('strength: $strength, ')
+          ..write('dexterity: $dexterity, ')
+          ..write('intelligence: $intelligence, ')
+          ..write('constitution: $constitution, ')
+          ..write('spirit: $spirit, ')
+          ..write('charisma: $charisma, ')
           ..write('hp: $hp, ')
           ..write('maxHp: $maxHp, ')
           ..write('mp: $mp, ')
@@ -970,12 +1332,14 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
           ..write('streakDays: $streakDays, ')
           ..write('caelumDay: $caelumDay, ')
           ..write('shadowState: $shadowState, ')
+          ..write('shadowCorruption: $shadowCorruption, ')
           ..write('classType: $classType, ')
           ..write('factionType: $factionType, ')
           ..write('narrativeMode: $narrativeMode, ')
           ..write('onboardingDone: $onboardingDone, ')
           ..write('createdAt: $createdAt, ')
-          ..write('lastLoginAt: $lastLoginAt')
+          ..write('lastLoginAt: $lastLoginAt, ')
+          ..write('lastStreakDate: $lastStreakDate')
           ..write(')'))
         .toString();
   }
@@ -2103,6 +2467,13 @@ typedef $$PlayersTableTableCreateCompanionBuilder = PlayersTableCompanion
   Value<int> level,
   Value<int> xp,
   Value<int> xpToNext,
+  Value<int> attributePoints,
+  Value<int> strength,
+  Value<int> dexterity,
+  Value<int> intelligence,
+  Value<int> constitution,
+  Value<int> spirit,
+  Value<int> charisma,
   Value<int> hp,
   Value<int> maxHp,
   Value<int> mp,
@@ -2112,12 +2483,14 @@ typedef $$PlayersTableTableCreateCompanionBuilder = PlayersTableCompanion
   Value<int> streakDays,
   Value<int> caelumDay,
   Value<String> shadowState,
+  Value<int> shadowCorruption,
   Value<String?> classType,
   Value<String?> factionType,
   Value<String> narrativeMode,
   Value<bool> onboardingDone,
   Value<DateTime> createdAt,
   Value<DateTime> lastLoginAt,
+  Value<DateTime?> lastStreakDate,
 });
 typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
     Function({
@@ -2128,6 +2501,13 @@ typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
   Value<int> level,
   Value<int> xp,
   Value<int> xpToNext,
+  Value<int> attributePoints,
+  Value<int> strength,
+  Value<int> dexterity,
+  Value<int> intelligence,
+  Value<int> constitution,
+  Value<int> spirit,
+  Value<int> charisma,
   Value<int> hp,
   Value<int> maxHp,
   Value<int> mp,
@@ -2137,12 +2517,14 @@ typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
   Value<int> streakDays,
   Value<int> caelumDay,
   Value<String> shadowState,
+  Value<int> shadowCorruption,
   Value<String?> classType,
   Value<String?> factionType,
   Value<String> narrativeMode,
   Value<bool> onboardingDone,
   Value<DateTime> createdAt,
   Value<DateTime> lastLoginAt,
+  Value<DateTime?> lastStreakDate,
 });
 
 class $$PlayersTableTableFilterComposer
@@ -2175,6 +2557,28 @@ class $$PlayersTableTableFilterComposer
   ColumnFilters<int> get xpToNext => $composableBuilder(
       column: $table.xpToNext, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<int> get attributePoints => $composableBuilder(
+      column: $table.attributePoints,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get strength => $composableBuilder(
+      column: $table.strength, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get dexterity => $composableBuilder(
+      column: $table.dexterity, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get intelligence => $composableBuilder(
+      column: $table.intelligence, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get constitution => $composableBuilder(
+      column: $table.constitution, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get spirit => $composableBuilder(
+      column: $table.spirit, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get charisma => $composableBuilder(
+      column: $table.charisma, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<int> get hp => $composableBuilder(
       column: $table.hp, builder: (column) => ColumnFilters(column));
 
@@ -2202,6 +2606,10 @@ class $$PlayersTableTableFilterComposer
   ColumnFilters<String> get shadowState => $composableBuilder(
       column: $table.shadowState, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<int> get shadowCorruption => $composableBuilder(
+      column: $table.shadowCorruption,
+      builder: (column) => ColumnFilters(column));
+
   ColumnFilters<String> get classType => $composableBuilder(
       column: $table.classType, builder: (column) => ColumnFilters(column));
 
@@ -2220,6 +2628,10 @@ class $$PlayersTableTableFilterComposer
 
   ColumnFilters<DateTime> get lastLoginAt => $composableBuilder(
       column: $table.lastLoginAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastStreakDate => $composableBuilder(
+      column: $table.lastStreakDate,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$PlayersTableTableOrderingComposer
@@ -2253,6 +2665,30 @@ class $$PlayersTableTableOrderingComposer
   ColumnOrderings<int> get xpToNext => $composableBuilder(
       column: $table.xpToNext, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get attributePoints => $composableBuilder(
+      column: $table.attributePoints,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get strength => $composableBuilder(
+      column: $table.strength, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get dexterity => $composableBuilder(
+      column: $table.dexterity, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get intelligence => $composableBuilder(
+      column: $table.intelligence,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get constitution => $composableBuilder(
+      column: $table.constitution,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get spirit => $composableBuilder(
+      column: $table.spirit, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get charisma => $composableBuilder(
+      column: $table.charisma, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get hp => $composableBuilder(
       column: $table.hp, builder: (column) => ColumnOrderings(column));
 
@@ -2280,6 +2716,10 @@ class $$PlayersTableTableOrderingComposer
   ColumnOrderings<String> get shadowState => $composableBuilder(
       column: $table.shadowState, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get shadowCorruption => $composableBuilder(
+      column: $table.shadowCorruption,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get classType => $composableBuilder(
       column: $table.classType, builder: (column) => ColumnOrderings(column));
 
@@ -2299,6 +2739,10 @@ class $$PlayersTableTableOrderingComposer
 
   ColumnOrderings<DateTime> get lastLoginAt => $composableBuilder(
       column: $table.lastLoginAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastStreakDate => $composableBuilder(
+      column: $table.lastStreakDate,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$PlayersTableTableAnnotationComposer
@@ -2331,6 +2775,27 @@ class $$PlayersTableTableAnnotationComposer
   GeneratedColumn<int> get xpToNext =>
       $composableBuilder(column: $table.xpToNext, builder: (column) => column);
 
+  GeneratedColumn<int> get attributePoints => $composableBuilder(
+      column: $table.attributePoints, builder: (column) => column);
+
+  GeneratedColumn<int> get strength =>
+      $composableBuilder(column: $table.strength, builder: (column) => column);
+
+  GeneratedColumn<int> get dexterity =>
+      $composableBuilder(column: $table.dexterity, builder: (column) => column);
+
+  GeneratedColumn<int> get intelligence => $composableBuilder(
+      column: $table.intelligence, builder: (column) => column);
+
+  GeneratedColumn<int> get constitution => $composableBuilder(
+      column: $table.constitution, builder: (column) => column);
+
+  GeneratedColumn<int> get spirit =>
+      $composableBuilder(column: $table.spirit, builder: (column) => column);
+
+  GeneratedColumn<int> get charisma =>
+      $composableBuilder(column: $table.charisma, builder: (column) => column);
+
   GeneratedColumn<int> get hp =>
       $composableBuilder(column: $table.hp, builder: (column) => column);
 
@@ -2358,6 +2823,9 @@ class $$PlayersTableTableAnnotationComposer
   GeneratedColumn<String> get shadowState => $composableBuilder(
       column: $table.shadowState, builder: (column) => column);
 
+  GeneratedColumn<int> get shadowCorruption => $composableBuilder(
+      column: $table.shadowCorruption, builder: (column) => column);
+
   GeneratedColumn<String> get classType =>
       $composableBuilder(column: $table.classType, builder: (column) => column);
 
@@ -2375,6 +2843,9 @@ class $$PlayersTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get lastLoginAt => $composableBuilder(
       column: $table.lastLoginAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastStreakDate => $composableBuilder(
+      column: $table.lastStreakDate, builder: (column) => column);
 }
 
 class $$PlayersTableTableTableManager extends RootTableManager<
@@ -2410,6 +2881,13 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> level = const Value.absent(),
             Value<int> xp = const Value.absent(),
             Value<int> xpToNext = const Value.absent(),
+            Value<int> attributePoints = const Value.absent(),
+            Value<int> strength = const Value.absent(),
+            Value<int> dexterity = const Value.absent(),
+            Value<int> intelligence = const Value.absent(),
+            Value<int> constitution = const Value.absent(),
+            Value<int> spirit = const Value.absent(),
+            Value<int> charisma = const Value.absent(),
             Value<int> hp = const Value.absent(),
             Value<int> maxHp = const Value.absent(),
             Value<int> mp = const Value.absent(),
@@ -2419,12 +2897,14 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> streakDays = const Value.absent(),
             Value<int> caelumDay = const Value.absent(),
             Value<String> shadowState = const Value.absent(),
+            Value<int> shadowCorruption = const Value.absent(),
             Value<String?> classType = const Value.absent(),
             Value<String?> factionType = const Value.absent(),
             Value<String> narrativeMode = const Value.absent(),
             Value<bool> onboardingDone = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> lastLoginAt = const Value.absent(),
+            Value<DateTime?> lastStreakDate = const Value.absent(),
           }) =>
               PlayersTableCompanion(
             id: id,
@@ -2434,6 +2914,13 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             level: level,
             xp: xp,
             xpToNext: xpToNext,
+            attributePoints: attributePoints,
+            strength: strength,
+            dexterity: dexterity,
+            intelligence: intelligence,
+            constitution: constitution,
+            spirit: spirit,
+            charisma: charisma,
             hp: hp,
             maxHp: maxHp,
             mp: mp,
@@ -2443,12 +2930,14 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             streakDays: streakDays,
             caelumDay: caelumDay,
             shadowState: shadowState,
+            shadowCorruption: shadowCorruption,
             classType: classType,
             factionType: factionType,
             narrativeMode: narrativeMode,
             onboardingDone: onboardingDone,
             createdAt: createdAt,
             lastLoginAt: lastLoginAt,
+            lastStreakDate: lastStreakDate,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -2458,6 +2947,13 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> level = const Value.absent(),
             Value<int> xp = const Value.absent(),
             Value<int> xpToNext = const Value.absent(),
+            Value<int> attributePoints = const Value.absent(),
+            Value<int> strength = const Value.absent(),
+            Value<int> dexterity = const Value.absent(),
+            Value<int> intelligence = const Value.absent(),
+            Value<int> constitution = const Value.absent(),
+            Value<int> spirit = const Value.absent(),
+            Value<int> charisma = const Value.absent(),
             Value<int> hp = const Value.absent(),
             Value<int> maxHp = const Value.absent(),
             Value<int> mp = const Value.absent(),
@@ -2467,12 +2963,14 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> streakDays = const Value.absent(),
             Value<int> caelumDay = const Value.absent(),
             Value<String> shadowState = const Value.absent(),
+            Value<int> shadowCorruption = const Value.absent(),
             Value<String?> classType = const Value.absent(),
             Value<String?> factionType = const Value.absent(),
             Value<String> narrativeMode = const Value.absent(),
             Value<bool> onboardingDone = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> lastLoginAt = const Value.absent(),
+            Value<DateTime?> lastStreakDate = const Value.absent(),
           }) =>
               PlayersTableCompanion.insert(
             id: id,
@@ -2482,6 +2980,13 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             level: level,
             xp: xp,
             xpToNext: xpToNext,
+            attributePoints: attributePoints,
+            strength: strength,
+            dexterity: dexterity,
+            intelligence: intelligence,
+            constitution: constitution,
+            spirit: spirit,
+            charisma: charisma,
             hp: hp,
             maxHp: maxHp,
             mp: mp,
@@ -2491,12 +2996,14 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             streakDays: streakDays,
             caelumDay: caelumDay,
             shadowState: shadowState,
+            shadowCorruption: shadowCorruption,
             classType: classType,
             factionType: factionType,
             narrativeMode: narrativeMode,
             onboardingDone: onboardingDone,
             createdAt: createdAt,
             lastLoginAt: lastLoginAt,
+            lastStreakDate: lastStreakDate,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

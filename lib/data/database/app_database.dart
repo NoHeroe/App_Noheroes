@@ -11,13 +11,15 @@ import 'daos/habit_dao.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [PlayersTable, HabitsTable, HabitLogsTable],
-    daos: [PlayerDao, HabitDao])
+@DriftDatabase(
+  tables: [PlayersTable, HabitsTable, HabitLogsTable],
+  daos: [PlayerDao, HabitDao],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -26,6 +28,18 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         await m.createTable(habitsTable);
         await m.createTable(habitLogsTable);
+      }
+      if (from < 3) {
+        // Novas colunas de atributos
+        await m.addColumn(playersTable, playersTable.strength);
+        await m.addColumn(playersTable, playersTable.dexterity);
+        await m.addColumn(playersTable, playersTable.intelligence);
+        await m.addColumn(playersTable, playersTable.constitution);
+        await m.addColumn(playersTable, playersTable.spirit);
+        await m.addColumn(playersTable, playersTable.charisma);
+        await m.addColumn(playersTable, playersTable.attributePoints);
+        await m.addColumn(playersTable, playersTable.shadowCorruption);
+        await m.addColumn(playersTable, playersTable.lastStreakDate);
       }
     },
   );
