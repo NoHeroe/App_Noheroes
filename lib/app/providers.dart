@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/datasources/local/habit_local_ds.dart';
 import '../data/database/app_database.dart';
-import '../data/datasources/local/auth_local_ds.dart';
 import '../data/database/tables/players_table.dart';
+import '../data/datasources/local/auth_local_ds.dart';
+import '../data/datasources/local/habit_local_ds.dart';
 
-// Banco de dados singleton
+// Banco singleton
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
   ref.onDispose(() => db.close());
@@ -16,21 +16,26 @@ final authDsProvider = Provider<AuthLocalDs>((ref) {
   return AuthLocalDs(ref.watch(appDatabaseProvider));
 });
 
-// Estado do jogador atual
-final currentPlayerProvider = StateProvider<PlayersTableData?>((ref) => null);
-
-// Estado de loading de auth
-final authLoadingProvider = StateProvider<bool>((ref) => false);
-
-// Verifica sessão ao iniciar
-final sessionCheckProvider = FutureProvider<PlayersTableData?>((ref) async {
-  final ds = ref.watch(authDsProvider);
-  return ds.currentSession();
-});
-
 // Habit datasource
 final habitDsProvider = Provider<HabitLocalDs>((ref) {
   return HabitLocalDs(ref.watch(appDatabaseProvider));
+});
+
+// Jogador atual — StateProvider simples
+final currentPlayerProvider = StateProvider<PlayersTableData?>((ref) => null);
+
+// Loading de auth
+final authLoadingProvider = StateProvider<bool>((ref) => false);
+
+// Stream reativo do jogador — atualiza automaticamente quando banco muda
+final playerStreamProvider = StreamProvider<PlayersTableData?>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  final player = ref.watch(currentPlayerProvider);
+  if (player == null) return Stream.value(null);
+
+  return (db.select(db.playersTable)
+        ..where((t) => t.id.equals(player.id)))
+      .watchSingleOrNull();
 });
 
 // Hábitos do jogador com status do dia

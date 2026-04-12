@@ -46,15 +46,21 @@ class AuthLocalDs {
     if (player == null) return null;
     if (player.passwordHash != _hashPassword(password)) return null;
 
+    // Atualiza streak, Dia em Caelum e último login
     await _dao.touchLastLogin(player.id);
     await _saveSession(player.id);
-    return player;
+
+    // Retorna dados atualizados após touchLastLogin
+    return _dao.findById(player.id);
   }
 
   Future<PlayersTableData?> currentSession() async {
     final prefs = await SharedPreferences.getInstance();
     final id = prefs.getInt(_sessionKey);
     if (id == null) return null;
+
+    // Também roda touchLastLogin na abertura via sessão
+    await _dao.touchLastLogin(id);
     return _dao.findById(id);
   }
 

@@ -9,13 +9,16 @@ class StatBarsRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final player = ref.watch(currentPlayerProvider);
-    final hp = player?.hp ?? 100;
-    final maxHp = player?.maxHp ?? 100;
-    final mp = player?.mp ?? 100;
-    final maxMp = player?.maxMp ?? 100;
-    final xp = player?.xp ?? 0;
-    final xpToNext = player?.xpToNext ?? 100;
+    // Usa stream reativo — atualiza automaticamente
+    final playerAsync = ref.watch(playerStreamProvider);
+    final player = playerAsync.value ?? ref.watch(currentPlayerProvider);
+
+    final hp      = player?.hp ?? 100;
+    final maxHp   = player?.maxHp ?? 100;
+    final mp      = player?.mp ?? 100;
+    final maxMp   = player?.maxMp ?? 100;
+    final xp      = player?.xp ?? 0;
+    final xpToNext= player?.xpToNext ?? 100;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -60,9 +63,11 @@ class _StatBar extends StatelessWidget {
         Icon(icon, color: color, size: 14),
         const SizedBox(width: 6),
         SizedBox(width: 28,
-          child: Text(label,
-              style: GoogleFonts.roboto(
-                  fontSize: 11, color: AppColors.textMuted, letterSpacing: 1))),
+            child: Text(label,
+                style: GoogleFonts.roboto(
+                    fontSize: 11,
+                    color: AppColors.textMuted,
+                    letterSpacing: 1))),
         Expanded(
           child: ClipRRect(
             borderRadius: BorderRadius.circular(4),
