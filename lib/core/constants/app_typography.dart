@@ -1,61 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppTypography {
   AppTypography._();
 
-    // Cinzel — títulos rituais
-      static const TextStyle displayLarge = TextStyle(
-          fontFamily: 'CinzelDecorative',
-              fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                      color: AppColors.gold,
-                          letterSpacing: 2.0,
-                            );
+  static TextStyle get displayLarge => GoogleFonts.cinzelDecorative(
+    fontSize: 28,
+    fontWeight: FontWeight.bold,
+    color: AppColors.gold,
+    letterSpacing: 2.0,
+  );
 
-                              static const TextStyle displayMedium = TextStyle(
-                                  fontFamily: 'CinzelDecorative',
-                                      fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                              color: AppColors.textPrimary,
-                                                  letterSpacing: 1.5,
-                                                    );
+  static TextStyle get displayMedium => GoogleFonts.cinzelDecorative(
+    fontSize: 22,
+    fontWeight: FontWeight.bold,
+    color: AppColors.textPrimary,
+    letterSpacing: 1.5,
+  );
 
-                                                      static const TextStyle titleLarge = TextStyle(
-                                                          fontFamily: 'CinzelDecorative',
-                                                              fontSize: 18,
-                                                                  fontWeight: FontWeight.bold,
-                                                                      color: AppColors.textPrimary,
-                                                                          letterSpacing: 1.0,
-                                                                            );
+  static TextStyle get titleLarge => GoogleFonts.cinzelDecorative(
+    fontSize: 18,
+    fontWeight: FontWeight.bold,
+    color: AppColors.textPrimary,
+    letterSpacing: 1.0,
+  );
 
-                                                                              // Roboto — corpo de texto
-                                                                                static const TextStyle bodyLarge = TextStyle(
-                                                                                    fontFamily: 'Roboto',
-                                                                                        fontSize: 16,
-                                                                                            fontWeight: FontWeight.normal,
-                                                                                                color: AppColors.textPrimary,
-                                                                                                  );
+  static TextStyle get bodyLarge => GoogleFonts.roboto(
+    fontSize: 16,
+    fontWeight: FontWeight.normal,
+    color: AppColors.textPrimary,
+  );
 
-                                                                                                    static const TextStyle bodyMedium = TextStyle(
-                                                                                                        fontFamily: 'Roboto',
-                                                                                                            fontSize: 14,
-                                                                                                                fontWeight: FontWeight.normal,
-                                                                                                                    color: AppColors.textSecondary,
-                                                                                                                      );
+  static TextStyle get bodyMedium => GoogleFonts.roboto(
+    fontSize: 14,
+    fontWeight: FontWeight.normal,
+    color: AppColors.textSecondary,
+  );
 
-                                                                                                                        static const TextStyle bodySmall = TextStyle(
-                                                                                                                            fontFamily: 'Roboto',
-                                                                                                                                fontSize: 12,
-                                                                                                                                    fontWeight: FontWeight.normal,
-                                                                                                                                        color: AppColors.textMuted,
-                                                                                                                                          );
+  static TextStyle get bodySmall => GoogleFonts.roboto(
+    fontSize: 12,
+    fontWeight: FontWeight.normal,
+    color: AppColors.textMuted,
+  );
 
-                                                                                                                                            static const TextStyle labelMystic = TextStyle(
-                                                                                                                                                fontFamily: 'CinzelDecorative',
-                                                                                                                                                    fontSize: 11,
-                                                                                                                                                        fontWeight: FontWeight.normal,
-                                                                                                                                                            color: AppColors.purple,
-                                                                                                                                                                letterSpacing: 1.5,
-                                                                                                                                                                  );
-                                                                                                                                                                  }
+  static TextStyle get labelMystic => GoogleFonts.cinzelDecorative(
+    fontSize: 11,
+    fontWeight: FontWeight.normal,
+    color: AppColors.purple,
+    letterSpacing: 1.5,
+  );
+}

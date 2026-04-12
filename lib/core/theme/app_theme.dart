@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
-import '../constants/app_typography.dart';
 
 class AppTheme {
   AppTheme._();
@@ -20,12 +20,17 @@ class AppTheme {
       onSecondary: AppColors.black,
       onSurface: AppColors.textPrimary,
     ),
-    appBarTheme: const AppBarTheme(
+    textTheme: GoogleFonts.robotoTextTheme(ThemeData.dark().textTheme),
+    appBarTheme: AppBarTheme(
       backgroundColor: AppColors.black,
       elevation: 0,
       centerTitle: true,
-      titleTextStyle: AppTypography.titleLarge,
-      systemOverlayStyle: SystemUiOverlayStyle(
+      titleTextStyle: GoogleFonts.cinzelDecorative(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: AppColors.textPrimary,
+      ),
+      systemOverlayStyle: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
       ),
@@ -35,10 +40,7 @@ class AppTheme {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(
-          color: AppColors.border,
-          width: 1,
-        ),
+        side: const BorderSide(color: AppColors.border, width: 1),
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
@@ -47,54 +49,32 @@ class AppTheme {
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        textStyle: AppTypography.bodyLarge,
-      ),
-    ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        foregroundColor: AppColors.purple,
-        textStyle: AppTypography.bodyMedium,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.surfaceAlt,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: AppColors.border),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: AppColors.border),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: AppColors.purple, width: 1.5),
       ),
-      labelStyle: AppTypography.bodyMedium,
-      hintStyle: AppTypography.bodySmall,
     ),
-    dividerTheme: const DividerThemeData(
-      color: AppColors.border,
-      thickness: 1,
-    ),
+    dividerTheme: const DividerThemeData(color: AppColors.border, thickness: 1),
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       backgroundColor: AppColors.surface,
       selectedItemColor: AppColors.purple,
       unselectedItemColor: AppColors.textMuted,
       type: BottomNavigationBarType.fixed,
       elevation: 0,
-    ),
-    textTheme: const TextTheme(
-      displayLarge: AppTypography.displayLarge,
-      displayMedium: AppTypography.displayMedium,
-      titleLarge: AppTypography.titleLarge,
-      bodyLarge: AppTypography.bodyLarge,
-      bodyMedium: AppTypography.bodyMedium,
-      bodySmall: AppTypography.bodySmall,
     ),
   );
 }

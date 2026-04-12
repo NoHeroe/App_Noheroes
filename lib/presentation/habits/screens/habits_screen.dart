@@ -1,18 +1,270 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../app/providers.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../data/database/app_database.dart';
+import '../../../data/datasources/local/habit_local_ds.dart';
+import '../../../data/database/tables/habits_table.dart';
+import '../../../data/database/tables/habit_logs_table.dart';
+import '../../../data/database/daos/habit_dao.dart';
+import '../../shared/widgets/nh_bottom_nav.dart';
+import '../widgets/habit_card.dart';
+import '../widgets/create_habit_sheet.dart';
+import '../widgets/completion_dialog.dart';
 
-class HabitsScreen extends StatelessWidget {
+class HabitsScreen extends ConsumerWidget {
   const HabitsScreen({super.key});
 
-    @override
-      Widget build(BuildContext context) {
-          return const Scaffold(
-                backgroundColor: Color(0xFF000000),
-                      body: Center(
-                              child: Text(
-                                        'Rituais',
-                                                  style: TextStyle(color: Colors.white),
-                                                          ),
-                                                                ),
-                                                                    );
-                                                                      }
-                                                                      }
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final habitsAsync = ref.watch(habitsProvider);
+
+    return Scaffold(
+      backgroundColor: AppColors.black,
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(context, ref),
+                Expanded(
+                  child: habitsAsync.when(
+                    loading: () => const Center(
+                        child: CircularProgressIndicator(
+                            color: AppColors.purple)),
+                    error: (e, _) => Center(
+                        child: Text('Erro: $e',
+                            style: const TextStyle(
+                                color: AppColors.textMuted))),
+                    data: (habits) =>
+                        _buildList(context, ref, habits),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Align(
+            alignment: Alignment.bottomCenter,
+            child: NhBottomNav(currentIndex: 1),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context, WidgetRef ref) {
+    final habitsAsync = ref.watch(habitsProvider);
+    final total = habitsAsync.value?.length ?? 0;
+    final done =
+        habitsAsync.value?.where((h) => h.isDone).length ?? 0;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.border)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('MISSÕES',
+                  style: GoogleFonts.cinzelDecorative(
+                      fontSize: 16,
+                      color: AppColors.gold,
+                      letterSpacing: 2)),
+              Text('$done/$total concluídas',
+                  style: GoogleFonts.roboto(
+                      fontSize: 12, color: AppColors.textMuted)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: total > 0 ? done / total : 0,
+              backgroundColor: AppColors.border,
+              valueColor:
+                  const AlwaysStoppedAnimation(AppColors.purple),
+              minHeight: 4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildList(BuildContext context, WidgetRef ref,
+      List<HabitWithStatus> habits) {
+    final system = habits.where((h) => h.habit.isSystemHabit).toList();
+    final personal =
+        habits.where((h) => !h.habit.isSystemHabit).toList();
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+      children: [
+        // Rituais Diários
+        if (system.isNotEmpty) ...[
+          _sectionHeader('RITUAIS DIÁRIOS', Icons.wb_sunny_outlined),
+          const SizedBox(height: 10),
+          ...system.map((h) => HabitCard(
+                habitWithStatus: h,
+                onTap: () => _showCompletion(context, ref, h),
+              )),
+          const SizedBox(height: 20),
+        ],
+
+        // Missões Individuais
+        _sectionHeader('MISSÕES INDIVIDUAIS', Icons.person_outline),
+        const SizedBox(height: 10),
+        ...personal.map((h) => HabitCard(
+              habitWithStatus: h,
+              onTap: () => _showCompletion(context, ref, h),
+              onLongPress: () => _showDelete(context, ref, h.habit),
+            )),
+
+        // Botão criar missão individual
+        const SizedBox(height: 10),
+        GestureDetector(
+          onTap: () => _showCreate(context, ref),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: AppColors.purple.withOpacity(0.4)),
+              color: AppColors.purple.withOpacity(0.05),
+            ),
+            child: Row(mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.add,
+                    color: AppColors.purple, size: 18),
+                const SizedBox(width: 8),
+                Text('Nova Missão Individual',
+                    style: GoogleFonts.roboto(
+                        color: AppColors.purple, fontSize: 13)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _sectionHeader(String title, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, color: AppColors.gold, size: 14),
+        const SizedBox(width: 8),
+        Text(title,
+            style: GoogleFonts.cinzelDecorative(
+                fontSize: 11,
+                color: AppColors.gold,
+                letterSpacing: 2)),
+      ],
+    );
+  }
+
+  void _showCreate(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CreateHabitSheet(
+        onCreated: () => ref.invalidate(habitsProvider),
+      ),
+    );
+  }
+
+  void _showCompletion(
+      BuildContext context, WidgetRef ref, HabitWithStatus h) {
+    if (h.isDone && !h.habit.isRepeatable) return;
+    showDialog(
+      context: context,
+      builder: (_) => CompletionDialog(
+        habitWithStatus: h,
+        onComplete: (status) async {
+          final player = ref.read(currentPlayerProvider);
+          if (player == null) return;
+          final result =
+              await ref.read(habitDsProvider).completeHabit(
+                    habitId: h.habit.id,
+                    playerId: player.id,
+                    rank: h.habit.rank,
+                    status: status,
+                  );
+          final updated =
+              await ref.read(authDsProvider).currentSession();
+          ref.read(currentPlayerProvider.notifier).state = updated;
+          ref.invalidate(habitsProvider);
+          if (context.mounted) _showReward(context, result);
+        },
+      ),
+    );
+  }
+
+  void _showReward(BuildContext context, HabitResult result) {
+    final msg = switch (result.status) {
+      'completed' =>
+        '+${result.xpGained} XP  +${result.goldGained} Ouro ✨',
+      'partial' =>
+        '+${result.xpGained} XP  +${result.goldGained} Ouro (parcial)',
+      'niet' => 'Falha assumida. A sombra observa.',
+      _ => 'A sombra cresce.',
+    };
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg,
+          style: GoogleFonts.roboto(color: Colors.white)),
+      backgroundColor: result.status == 'completed'
+          ? AppColors.shadowAscending
+          : result.status == 'partial'
+              ? AppColors.mp
+              : AppColors.shadowChaotic,
+      duration: const Duration(seconds: 2),
+    ));
+  }
+
+  void _showDelete(
+      BuildContext context, WidgetRef ref, HabitsTableData habit) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.border),
+        ),
+        title: Text('Abandonar missão?',
+            style: GoogleFonts.cinzelDecorative(
+                color: AppColors.textPrimary, fontSize: 15)),
+        content: Text(
+          'Você se comprometeu com "${habit.title}".\nAbandonar tem um custo — sua sombra registrará isso.',
+          style: GoogleFonts.roboto(
+              color: AppColors.textSecondary, fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Manter',
+                style:
+                    GoogleFonts.roboto(color: AppColors.textMuted)),
+          ),
+          TextButton(
+            onPressed: () async {
+              await ref
+                  .read(habitDsProvider)
+                  .deletePersonalHabit(habit.id);
+              ref.invalidate(habitsProvider);
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+            child: Text('Abandonar',
+                style: GoogleFonts.roboto(color: AppColors.hp)),
+          ),
+        ],
+      ),
+    );
+  }
+}
