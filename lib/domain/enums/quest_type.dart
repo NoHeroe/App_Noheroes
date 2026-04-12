@@ -1,22 +1,21 @@
 enum QuestType {
-      daily,    // Missão diária (hábito)
-        personal, // Missão individual
-          lore,     // Missão de lore/região
-            faction,  // Missão de facção
-              shadow,   // Shadow Quest
-                event,    // Missão de evento
-                  class_,   // Missão de classe
-                  }
+  daily,
+  personal,
+  lore,
+  faction,
+  shadow,
+  event,
+  class_,
+}
 
-                  extension QuestTypeExt on QuestType {
-                    String get label => switch (this) {
-                        QuestType.daily    => 'Ritual Diário',
-                            QuestType.personal => 'Missão Pessoal',
-                                QuestType.lore     => 'Missão de Lore',
-                                    QuestType.faction  => 'Missão de Facção',
-                                        QuestType.shadow   => 'Shadow Quest',
-                                            QuestType.event    => 'Evento',
-                                                QuestType.class_   => 'Missão de Classe',
-                                                  };
-                                                  }
+extension QuestTypeExt on QuestType {
+  String get label => switch (this) {
+    QuestType.daily    => 'Ritual Diario',
+    QuestType.personal => 'Missao Pessoal',
+    QuestType.lore     => 'Missao de Lore',
+    QuestType.faction  => 'Missao de Faccao',
+    QuestType.shadow   => 'Shadow Quest',
+    QuestType.event    => 'Evento',
+    QuestType.class_   => 'Missao de Classe',
+  };
 }
