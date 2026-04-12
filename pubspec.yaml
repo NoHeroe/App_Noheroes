@@ -1,7 +1,5 @@
 name: noheroes_app
-description: >
-  NoHeroes App — soulslike de disciplina, missões, sombra, inventário e progressão.
-flutter_riverpod + Drift + Offline-first + Event-driven architecture.
+description: NoHeroes App soulslike de disciplina missoes sombra e progressao.
 publish_to: "none"
 version: 1.0.0+1
 
@@ -23,8 +21,6 @@ dependencies:
   json_annotation: ^4.9.0
   intl: ^0.19.0
   uuid: ^4.4.2
-  timezone: ^0.9.4
-  image_picker: ^1.1.2
   http: ^1.2.2
   lottie: ^3.1.2
   animations: ^2.0.11
@@ -43,23 +39,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  fonts:
-    - family: CinzelDecorative
-      fonts:
-        - asset: assets/fonts/CinzelDecorative-Regular.ttf
-        - asset: assets/fonts/CinzelDecorative-Bold.ttf
-          weight: 700
-    - family: Roboto
-      fonts:
-        - asset: assets/fonts/Roboto-Regular.ttf
-        - asset: assets/fonts/Roboto-Bold.ttf
-          weight: 700
-  assets:
-    - assets/images/
-    - assets/images/avatar/
-    - assets/images/regions/
-    - assets/images/ui/
-    - assets/icons/
-    - assets/icons/items/
-    - assets/audio/
-    - assets/data/
