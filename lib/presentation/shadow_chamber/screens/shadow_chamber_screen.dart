@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
+import '../../../data/database/daos/habit_dao.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
 
@@ -88,6 +89,8 @@ class ShadowChamberScreen extends ConsumerWidget {
                             data.phrase, corruption),
                         const SizedBox(height: 16),
                         _buildDisciplineCard(ref, player),
+                        const SizedBox(height: 16),
+                        _buildWeeklyChart(ref, player),
                         const SizedBox(height: 16),
                         _buildShadowInfo(state, data.color),
                       ],
@@ -319,4 +322,83 @@ class ShadowChamberScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+extension _WeeklyChartExtension on ShadowChamberScreen {
+
+  Widget _buildWeeklyChart(WidgetRef ref, player) {
+    if (player == null) return const SizedBox.shrink();
+    final db = ref.watch(appDatabaseProvider);
+
+    return FutureBuilder<Map<String, int>>(
+      future: HabitDao(db).getWeeklyStats(player.id),
+      builder: (context, snapshot) {
+        final data = snapshot.data ?? {};
+        if (data.isEmpty) return const SizedBox.shrink();
+
+        final maxVal = data.values.fold(0, (a, b) => a > b ? a : b);
+        final peak = maxVal == 0 ? 1 : maxVal;
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('DISCIPLINA SEMANAL',
+                  style: GoogleFonts.cinzelDecorative(
+                      fontSize: 11, color: AppColors.gold, letterSpacing: 2)),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: data.entries.map((e) {
+                  final height = (e.value / peak) * 60;
+                  final days = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+                  final isToday = e.key == days[DateTime.now().weekday % 7];
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text('${e.value}',
+                          style: GoogleFonts.roboto(
+                              fontSize: 9,
+                              color: e.value > 0
+                                  ? AppColors.shadowAscending
+                                  : AppColors.textMuted)),
+                      const SizedBox(height: 4),
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 400),
+                        width: 28,
+                        height: height.clamp(4, 60),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          color: isToday
+                              ? AppColors.gold
+                              : e.value > 0
+                                  ? AppColors.shadowAscending
+                                  : AppColors.border,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(e.key,
+                          style: GoogleFonts.roboto(
+                              fontSize: 9,
+                              color: isToday
+                                  ? AppColors.gold
+                                  : AppColors.textMuted)),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
 }

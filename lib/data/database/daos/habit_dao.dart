@@ -119,6 +119,24 @@ class HabitDao extends DatabaseAccessor<AppDatabase> with _$HabitDaoMixin {
     }
   }
 
+  // Logs dos últimos 7 dias para gráfico de disciplina
+  Future<Map<String, int>> getWeeklyStats(int playerId) async {
+    final result = <String, int>{};
+    for (int i = 6; i >= 0; i--) {
+      final day = DateTime.now().subtract(Duration(days: i));
+      final start = DateTime(day.year, day.month, day.day);
+      final end = start.add(const Duration(days: 1));
+      final logs = await (select(habitLogsTable)
+            ..where((t) => t.playerId.equals(playerId))
+            ..where((t) => t.logDate.isBetweenValues(start, end))
+            ..where((t) => t.status.isIn(['completed', 'partial'])))
+          .get();
+      final label = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][day.weekday % 7];
+      result[label] = logs.length;
+    }
+    return result;
+  }
+
   // Conta hábitos do jogador
   Future<int> countPersonalHabits(int playerId) async {
     final habits = await getPersonalHabits(playerId);

@@ -1,0 +1,42 @@
+{
+  "warrior": [
+    {"title": "Força Bruta", "description": "Complete um treino físico intenso hoje.", "category": "physical", "rank": "d", "xp": 80, "gold": 40},
+    {"title": "Resistência de Ferro", "description": "Mantenha hidratação completa por hoje.", "category": "physical", "rank": "d", "xp": 60, "gold": 30},
+    {"title": "Mente de Guerreiro", "description": "Durma no horário certo esta noite.", "category": "spiritual", "rank": "e", "xp": 50, "gold": 25}
+  ],
+  "colossus": [
+    {"title": "Carga Máxima", "description": "Execute um treino de força hoje.", "category": "physical", "rank": "c", "xp": 120, "gold": 60},
+    {"title": "Disciplina Absoluta", "description": "Complete todas as missões diárias sem falhar.", "category": "order", "rank": "d", "xp": 100, "gold": 50},
+    {"title": "Fundação Sólida", "description": "Organize seu ambiente de vida ou trabalho.", "category": "order", "rank": "e", "xp": 60, "gold": 30}
+  ],
+  "monk": [
+    {"title": "Silêncio Interno", "description": "Medite por pelo menos 10 minutos hoje.", "category": "spiritual", "rank": "d", "xp": 80, "gold": 40},
+    {"title": "Corpo como Templo", "description": "Pratique mobilidade ou alongamento.", "category": "physical", "rank": "e", "xp": 60, "gold": 30},
+    {"title": "Presença Total", "description": "Leia por 15 minutos sem distrações.", "category": "mental", "rank": "e", "xp": 70, "gold": 35}
+  ],
+  "rogue": [
+    {"title": "Movimento Preciso", "description": "Pratique agilidade ou mobilidade hoje.", "category": "physical", "rank": "d", "xp": 80, "gold": 40},
+    {"title": "Mente Afiada", "description": "Resolva um problema ou desafio mental.", "category": "mental", "rank": "d", "xp": 90, "gold": 45},
+    {"title": "Sombra e Silêncio", "description": "Complete uma tarefa sem ser interrompido.", "category": "order", "rank": "e", "xp": 60, "gold": 30}
+  ],
+  "hunter": [
+    {"title": "Olho de Caçador", "description": "Foque em uma única tarefa por 30 minutos.", "category": "mental", "rank": "d", "xp": 90, "gold": 45},
+    {"title": "Paciência Tática", "description": "Planeje suas tarefas do dia com antecedência.", "category": "order", "rank": "e", "xp": 70, "gold": 35},
+    {"title": "Corpo em Alerta", "description": "Faça exercício aeróbico ou caminhada.", "category": "physical", "rank": "e", "xp": 60, "gold": 30}
+  ],
+  "druid": [
+    {"title": "Conexão Natural", "description": "Passe tempo ao ar livre ou em contato com natureza.", "category": "spiritual", "rank": "d", "xp": 80, "gold": 40},
+    {"title": "Cura Interior", "description": "Medite e registre seus pensamentos hoje.", "category": "spiritual", "rank": "d", "xp": 90, "gold": 45},
+    {"title": "Equilíbrio Vital", "description": "Durma e acorde no horário planejado.", "category": "spiritual", "rank": "e", "xp": 60, "gold": 30}
+  ],
+  "mage": [
+    {"title": "Mente Arcana", "description": "Leia por pelo menos 20 minutos hoje.", "category": "mental", "rank": "d", "xp": 100, "gold": 50},
+    {"title": "Foco Rúnico", "description": "Estude, escreva ou aprenda algo novo.", "category": "mental", "rank": "d", "xp": 90, "gold": 45},
+    {"title": "Ritual do Conhecimento", "description": "Organize suas anotações ou planos.", "category": "order", "rank": "e", "xp": 60, "gold": 30}
+  ],
+  "shadowWeaver": [
+    {"title": "Teia das Sombras", "description": "Complete um hábito físico E um mental hoje.", "category": "physical", "rank": "c", "xp": 150, "gold": 75},
+    {"title": "Equilíbrio Sombrio", "description": "Medite e reflita sobre seus padrões.", "category": "spiritual", "rank": "d", "xp": 100, "gold": 50},
+    {"title": "Domínio Total", "description": "Complete todas as missões do dia sem exceção.", "category": "order", "rank": "c", "xp": 120, "gold": 60}
+  ]
+}

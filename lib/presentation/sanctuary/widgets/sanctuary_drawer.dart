@@ -16,7 +16,7 @@ class SanctuaryDrawer extends ConsumerWidget {
       _Item('Inventário',    Icons.inventory_2_outlined,  '/inventory'),
       _Item('Mercado',       Icons.store_outlined,         '/shop'),
       _Item('Conquistas',    Icons.emoji_events_outlined,  '/achievements'),
-      _Item('Histórico',     Icons.history,                null),
+      _Item('Histórico',     Icons.history,                '/history'),
       _Item('Amigos',        Icons.group_outlined,         null),
       _Item('Meus Produtos', Icons.book_outlined,          null),
       _Item('Configurações', Icons.settings_outlined,      null),

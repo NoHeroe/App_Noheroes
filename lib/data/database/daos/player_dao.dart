@@ -72,12 +72,22 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
     int newXpToNext = player.xpToNext;
     int newAttrPoints = player.attributePoints;
 
+    final oldLevel = player.level;
     while (newXp >= newXpToNext) {
       newXp -= newXpToNext;
       newLevel++;
       newAttrPoints++;
       newXpToNext = XpCalculator.xpToNextLevel(newLevel);
     }
+    // Bônus de scaling nos marcos (10,15,20,25,30,40,50,60,70,80,99)
+    final scalingMarcos = [10,15,20,25,30,40,50,60,70,80,99];
+    for (final marco in scalingMarcos) {
+      if (oldLevel < marco && newLevel >= marco) {
+        newAttrPoints += _scalingBonusPoints(player.classType, marco);
+      }
+    }
+    // Bônus de scaling nos marcos (10,15,20,25,30,40,50,60,70,80,99)
+
 
     final newMaxHp = XpCalculator.calcMaxHp(player.constitution, newLevel);
     final newMaxMp = XpCalculator.calcMaxMp(player.spirit, player.constitution, newLevel);
@@ -92,6 +102,19 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
       maxMp: Value(newMaxMp),
     ));
   }
+
+  // Pontos de atributo extras nos marcos de nível por classe
+  int _scalingBonusPoints(String? classType, int marco) {
+    // Tecelão evolui mais lento — menos bônus
+    if (classType == 'shadowWeaver') return 1;
+    // Marcos maiores dão mais bônus
+    if (marco >= 50) return 3;
+    if (marco >= 25) return 2;
+    return 1;
+  }
+
+  // Pontos de atributo extras nos marcos de nível por classe
+
 
   Future<void> addGold(int id, int amount) async {
     final player = await findById(id);

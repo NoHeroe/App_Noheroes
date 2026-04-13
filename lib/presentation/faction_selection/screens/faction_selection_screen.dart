@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/datasources/local/class_bonus_service.dart';
+import '../../../data/datasources/local/quest_admission_service.dart';
 
 class FactionSelectionScreen extends ConsumerStatefulWidget {
   const FactionSelectionScreen({super.key});
@@ -64,7 +65,7 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
                     fontSize: 12,
                     fontStyle: FontStyle.italic)),
             const SizedBox(height: 10),
-            Text('Mudar de facção tem custo e consequências.\nEscolha com convicção.',
+            Text('Você receberá 3 missões de admissão.\nComplete-as para entrar na facção.\nFalhar resultará em penalidade de reputação.',
                 style: GoogleFonts.roboto(
                     color: AppColors.textSecondary, fontSize: 13, height: 1.5)),
           ],
@@ -77,7 +78,7 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Jurar lealdade',
+            child: Text('Iniciar admissão',
                 style: GoogleFonts.roboto(color: _color(faction))),
           ),
         ],
@@ -88,14 +89,27 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
 
     setState(() => _loading = true);
     final db = ref.read(appDatabaseProvider);
-    await ClassBonusService(db).applyFactionChoice(player.id, faction['id'] as String);
+    await QuestAdmissionService(db).startFactionAdmission(
+      player.id,
+      faction['id'] as String,
+    );
 
     final updated = await db.managers.playersTable
         .filter((f) => f.id(player.id))
         .getSingleOrNull();
     if (mounted) {
       ref.read(currentPlayerProvider.notifier).state = updated;
-      context.go('/sanctuary');
+      ref.invalidate(habitsProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('3 missões de admissão criadas! Complete-as para entrar na facção.'),
+            backgroundColor: AppColors.mp,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+        context.go('/sanctuary');
+      }
     }
   }
 
@@ -231,9 +245,18 @@ class _FactionCardState extends State<_FactionCard> {
           color: widget.isSelected ? color.withValues(alpha: 0.1) : AppColors.surface,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: widget.isSelected ? color : AppColors.border,
+            color: data['id'] == 'error'
+                ? AppColors.purple.withValues(alpha: widget.isSelected ? 0.8 : 0.4)
+                : (widget.isSelected ? color : AppColors.border),
             width: widget.isSelected ? 1.5 : 1,
           ),
+          boxShadow: data['id'] == 'error' ? [
+            BoxShadow(
+              color: AppColors.purple.withValues(alpha: 0.2),
+              blurRadius: 10,
+              spreadRadius: 1,
+            ),
+          ] : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

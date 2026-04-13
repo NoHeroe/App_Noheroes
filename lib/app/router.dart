@@ -16,6 +16,7 @@ import '../presentation/class_selection/screens/class_selection_screen.dart';
 import '../presentation/faction_selection/screens/faction_selection_screen.dart';
 import '../presentation/dev/dev_panel_screen.dart';
 import '../presentation/battle/screens/battle_hub_screen.dart';
+import '../presentation/history/screens/history_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -37,6 +38,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/faction-selection',  builder: (c, s) => const FactionSelectionScreen()),
       GoRoute(path: '/dev',                builder: (c, s) => const DevPanelScreen()),
       GoRoute(path: '/battle',             builder: (c, s) => const BattleHubScreen()),
+      GoRoute(path: '/history',            builder: (c, s) => const HistoryScreen()),
     ],
   );
 });

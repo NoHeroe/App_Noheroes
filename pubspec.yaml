@@ -50,4 +50,6 @@ flutter:
     - assets/data/lore_quests.json
     - assets/data/classes.json
     - assets/data/factions.json
+    - assets/data/class_quests.json
+    - assets/data/faction_admission_quests.json
     - assets/fonts/

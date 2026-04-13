@@ -27,6 +27,27 @@ class HabitLocalDs {
     };
   }
 
+  // XP com bônus de classe — +30% para categorias alinhadas
+  int _calcXpWithClassBonus(String rank, String status,
+      String category, String? classType) {
+    final base = _calcXp(rank, status);
+    if (base == 0 || classType == null) return base;
+
+    final bonus = switch (classType) {
+      'warrior'      => category == 'physical'  ? 0.30 : 0.0,
+      'colossus'     => category == 'physical'  ? 0.35 : 0.0,
+      'monk'         => category == 'spiritual' ? 0.30 : 0.0,
+      'rogue'        => category == 'physical' || category == 'order' ? 0.25 : 0.0,
+      'hunter'       => category == 'mental' || category == 'order'   ? 0.25 : 0.0,
+      'druid'        => category == 'spiritual' ? 0.30 : 0.0,
+      'mage'         => category == 'mental'    ? 0.35 : 0.0,
+      'shadowWeaver' => 0.10, // bônus em tudo, menor
+      _              => 0.0,
+    };
+
+    return (base * (1 + bonus)).round();
+  }
+
   int _calcGold(String rank, String status) {
     final base = switch (rank) {
       'e' => 10, 'd' => 18, 'c' => 28,
@@ -63,14 +84,13 @@ class HabitLocalDs {
       if (log == null) {
         await _db.into(_db.habitLogsTable).insert(
           HabitLogsTableCompanion(
-            habitId: Value(habit.id),
-            playerId: Value(playerId),
-            status: const Value('failed'),
-            xpGained: const Value(0),
-            goldGained: const Value(0),
+            habitId:      Value(habit.id),
+            playerId:     Value(playerId),
+            status:       const Value('failed'),
+            xpGained:     const Value(0),
+            goldGained:   const Value(0),
             shadowImpact: const Value(-8),
-            logDate: Value(
-                yStart.add(const Duration(hours: 23, minutes: 59))),
+            logDate:      Value(yStart.add(const Duration(hours: 23, minutes: 59))),
           ),
         );
         await _playerDao.updateShadow(playerId, -8);
@@ -80,7 +100,7 @@ class HabitLocalDs {
 
   Future<List<HabitWithStatus>> getHabitsWithStatus(int playerId) async {
     final habits = await _habitDao.getHabits(playerId);
-    final logs = await _habitDao.getTodayLogs(playerId);
+    final logs   = await _habitDao.getTodayLogs(playerId);
     final logMap = {for (var l in logs) l.habitId: l};
     return habits
         .map((h) => HabitWithStatus(habit: h, todayLog: logMap[h.id]))
@@ -93,13 +113,13 @@ class HabitLocalDs {
     required String category,
   }) async {
     await _habitDao.createHabit(HabitsTableCompanion(
-      playerId: Value(playerId),
-      title: Value(title),
-      category: Value(category),
+      playerId:      Value(playerId),
+      title:         Value(title),
+      category:      Value(category),
       isSystemHabit: const Value(true),
-      isRepeatable: const Value(false),
-      xpReward: const Value(20),
-      goldReward: const Value(10),
+      isRepeatable:  const Value(false),
+      xpReward:      const Value(20),
+      goldReward:    const Value(10),
     ));
   }
 
@@ -117,18 +137,18 @@ class HabitLocalDs {
         return 'Limite de 5 missões individuais. Seja PRO para ilimitado.';
       }
     }
-    final xp = _calcXp(rank, 'completed');
+    final xp   = _calcXp(rank, 'completed');
     final gold = _calcGold(rank, 'completed');
     await _habitDao.createHabit(HabitsTableCompanion(
-      playerId: Value(playerId),
-      title: Value(title),
-      description: Value(description),
-      category: Value(category),
-      rank: Value(rank),
+      playerId:      Value(playerId),
+      title:         Value(title),
+      description:   Value(description),
+      category:      Value(category),
+      rank:          Value(rank),
       isSystemHabit: const Value(false),
-      isRepeatable: const Value(false),
-      xpReward: Value(xp),
-      goldReward: Value(gold),
+      isRepeatable:  const Value(false),
+      xpReward:      Value(xp),
+      goldReward:    Value(gold),
     ));
     return null;
   }
@@ -146,20 +166,30 @@ class HabitLocalDs {
           shadowImpact: 0, status: 'already_done');
     }
 
-    final xp = _calcXp(rank, status);
-    final gold = _calcGold(rank, status);
+    // Busca player para aplicar bônus de classe
+    final player = await _playerDao.findById(playerId);
+    final habit  = await (_db.select(_db.habitsTable)
+          ..where((t) => t.id.equals(habitId)))
+        .getSingleOrNull();
+
+    final xp = _calcXpWithClassBonus(
+      rank, status,
+      habit?.category ?? '',
+      player?.classType,
+    );
+    final gold         = _calcGold(rank, status);
     final shadowImpact = _calcShadowImpact(status);
 
     await _habitDao.logHabit(
-      habitId: habitId,
-      playerId: playerId,
-      status: status,
-      xpGained: xp,
-      goldGained: gold,
+      habitId:      habitId,
+      playerId:     playerId,
+      status:       status,
+      xpGained:     xp,
+      goldGained:   gold,
       shadowImpact: shadowImpact,
     );
 
-    if (xp > 0) await _playerDao.addXp(playerId, xp);
+    if (xp > 0)   await _playerDao.addXp(playerId, xp);
     if (gold > 0) await _playerDao.addGold(playerId, gold);
     await _playerDao.updateShadow(playerId, shadowImpact);
 
@@ -169,10 +199,10 @@ class HabitLocalDs {
     }
 
     return HabitResult(
-      xpGained: xp,
-      goldGained: gold,
+      xpGained:     xp,
+      goldGained:   gold,
       shadowImpact: shadowImpact,
-      status: status,
+      status:       status,
     );
   }
 
@@ -181,7 +211,7 @@ class HabitLocalDs {
 }
 
 class HabitWithStatus {
-  final HabitsTableData habit;
+  final HabitsTableData    habit;
   final HabitLogsTableData? todayLog;
 
   HabitWithStatus({required this.habit, required this.todayLog});
@@ -196,9 +226,9 @@ class HabitWithStatus {
 }
 
 class HabitResult {
-  final int xpGained;
-  final int goldGained;
-  final int shadowImpact;
+  final int    xpGained;
+  final int    goldGained;
+  final int    shadowImpact;
   final String status;
   HabitResult({
     required this.xpGained,

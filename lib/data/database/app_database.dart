@@ -30,7 +30,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -65,6 +65,18 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(achievementsTable);
         await m.createTable(playerAchievementsTable);
         await _seedAchievements();
+      }
+      if (from < 6) {
+        // Migração segura: adiciona colunas novas sem quebrar dados existentes
+        try {
+          await m.addColumn(playersTable, playersTable.classType);
+        } catch (_) {}
+        try {
+          await m.addColumn(playersTable, playersTable.factionType);
+        } catch (_) {}
+        try {
+          await m.addColumn(playersTable, playersTable.narrativeMode);
+        } catch (_) {}
       }
     },
   );

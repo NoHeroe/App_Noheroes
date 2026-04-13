@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/datasources/local/class_bonus_service.dart';
+import '../../../data/datasources/local/quest_admission_service.dart';
 
 class ClassSelectionScreen extends ConsumerStatefulWidget {
   const ClassSelectionScreen({super.key});
@@ -83,14 +84,24 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
     setState(() => _loading = true);
     final db = ref.read(appDatabaseProvider);
     await ClassBonusService(db).applyClassBonus(player.id, cls['id'] as String);
+    await QuestAdmissionService(db).startClassQuests(player.id, cls['id'] as String);
 
-    // Atualiza provider
     final updated = await db.managers.playersTable
         .filter((f) => f.id(player.id))
         .getSingleOrNull();
     if (mounted) {
       ref.read(currentPlayerProvider.notifier).state = updated;
-      context.go('/sanctuary');
+      ref.invalidate(habitsProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Classe confirmada! 3 missões da sua classe foram criadas.'),
+            backgroundColor: AppColors.shadowAscending,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        context.go('/sanctuary');
+      }
     }
   }
 
@@ -226,6 +237,13 @@ class _ClassCardState extends State<_ClassCard> {
             color: widget.isSelected ? color : AppColors.border,
             width: widget.isSelected ? 1.5 : 1,
           ),
+          boxShadow: data['id'] == 'shadowWeaver' ? [
+            BoxShadow(
+              color: AppColors.purple.withValues(alpha: 0.25),
+              blurRadius: 12,
+              spreadRadius: 1,
+            ),
+          ] : null,
         ),
         child: Row(
           children: [
@@ -253,7 +271,10 @@ class _ClassCardState extends State<_ClassCard> {
                     children: [
                       Text(data['name'] as String,
                           style: GoogleFonts.cinzelDecorative(
-                              fontSize: 14, color: AppColors.textPrimary)),
+                              fontSize: 14,
+                              color: data['id'] == 'shadowWeaver'
+                                  ? AppColors.purple
+                                  : AppColors.textPrimary)),
                       if (isSpecial)
                         Container(
                           padding: const EdgeInsets.symmetric(

@@ -9,6 +9,7 @@ import '../../../data/database/tables/habits_table.dart';
 import '../../../data/database/tables/habit_logs_table.dart';
 import '../../../data/database/daos/habit_dao.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
+import '../../../data/datasources/local/achievement_service.dart';
 import '../widgets/habit_card.dart';
 import '../widgets/create_habit_sheet.dart';
 import '../widgets/completion_dialog.dart';
@@ -55,9 +56,10 @@ class HabitsScreen extends ConsumerWidget {
 
   Widget _buildHeader(BuildContext context, WidgetRef ref) {
     final habitsAsync = ref.watch(habitsProvider);
+    final player = ref.watch(currentPlayerProvider);
     final total = habitsAsync.value?.length ?? 0;
-    final done =
-        habitsAsync.value?.where((h) => h.isDone).length ?? 0;
+    final done  = habitsAsync.value?.where((h) => h.isDone).length ?? 0;
+    final streak = player?.streakDays ?? 0;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
@@ -75,9 +77,36 @@ class HabitsScreen extends ConsumerWidget {
                       fontSize: 16,
                       color: AppColors.gold,
                       letterSpacing: 2)),
-              Text('$done/$total concluídas',
-                  style: GoogleFonts.roboto(
-                      fontSize: 12, color: AppColors.textMuted)),
+              Row(
+                children: [
+                  if (streak > 0) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.gold.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color: AppColors.gold.withValues(alpha: 0.4)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('🔥', style: TextStyle(fontSize: 12)),
+                          const SizedBox(width: 4),
+                          Text('$streak dias',
+                              style: GoogleFonts.roboto(
+                                  fontSize: 11, color: AppColors.gold)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Text('$done/$total',
+                      style: GoogleFonts.roboto(
+                          fontSize: 12, color: AppColors.textMuted)),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -200,6 +229,20 @@ class HabitsScreen extends ConsumerWidget {
               await ref.read(authDsProvider).currentSession();
           ref.read(currentPlayerProvider.notifier).state = updated;
           ref.invalidate(habitsProvider);
+
+          // Verifica conquistas
+          if (updated != null) {
+            final dao = ref.read(habitDsProvider);
+            final allHabits = await dao.getHabitsWithStatus(updated.id);
+            final totalDone = allHabits.where((h) => h.isDone).length;
+            final db = ref.read(appDatabaseProvider);
+            final newAchievements = await AchievementService(db)
+                .checkAndUnlock(updated, totalDone);
+            if (context.mounted && newAchievements.isNotEmpty) {
+              _showAchievementToast(context, newAchievements.first);
+            }
+          }
+
           if (context.mounted) _showReward(context, result);
         },
       ),
@@ -224,6 +267,38 @@ class HabitsScreen extends ConsumerWidget {
               ? AppColors.mp
               : AppColors.shadowChaotic,
       duration: const Duration(seconds: 2),
+    ));
+  }
+
+  void _showAchievementToast(BuildContext context, String title) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Row(
+        children: [
+          const Icon(Icons.emoji_events, color: AppColors.gold, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Conquista desbloqueada!',
+                    style: GoogleFonts.cinzelDecorative(
+                        fontSize: 11, color: AppColors.gold)),
+                Text(title,
+                    style: GoogleFonts.roboto(
+                        fontSize: 12, color: Colors.white)),
+              ],
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: AppColors.surface,
+      duration: const Duration(seconds: 4),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: AppColors.gold),
+      ),
     ));
   }
 

@@ -1,0 +1,42 @@
+{
+  "guild": [
+    {"title": "Primeiro Passo do Aventureiro", "description": "Complete qualquer ritual diário hoje.", "category": "order", "rank": "e", "xp": 60, "gold": 30},
+    {"title": "Disposição de Guilda", "description": "Organize uma área do seu ambiente.", "category": "order", "rank": "e", "xp": 60, "gold": 30},
+    {"title": "Espírito Coletivo", "description": "Mantenha foco em uma tarefa por 20 minutos.", "category": "mental", "rank": "e", "xp": 70, "gold": 35}
+  ],
+  "moon_clan": [
+    {"title": "Movimento Silencioso", "description": "Complete uma tarefa sem ser interrompido.", "category": "order", "rank": "d", "xp": 90, "gold": 45},
+    {"title": "Sombra da Lua", "description": "Medite em silêncio absoluto por 15 minutos.", "category": "spiritual", "rank": "d", "xp": 100, "gold": 50},
+    {"title": "Precisão Lunar", "description": "Execute uma tarefa física com máxima atenção.", "category": "physical", "rank": "d", "xp": 90, "gold": 45}
+  ],
+  "sun_clan": [
+    {"title": "Força do Sol", "description": "Complete um treino físico intenso.", "category": "physical", "rank": "d", "xp": 100, "gold": 50},
+    {"title": "Sabedoria Solar", "description": "Leia ou estude por 20 minutos.", "category": "mental", "rank": "d", "xp": 90, "gold": 45},
+    {"title": "Glória Visível", "description": "Complete todas as missões do dia.", "category": "order", "rank": "d", "xp": 110, "gold": 55}
+  ],
+  "black_legion": [
+    {"title": "Ordem da Legião", "description": "Execute um treino físico pesado sem parar.", "category": "physical", "rank": "c", "xp": 130, "gold": 65},
+    {"title": "Lealdade Total", "description": "Complete todas as missões sem falhar nenhuma.", "category": "order", "rank": "c", "xp": 140, "gold": 70},
+    {"title": "Disciplina de Guerra", "description": "Acorde e durma no horário por 2 dias seguidos.", "category": "spiritual", "rank": "d", "xp": 100, "gold": 50}
+  ],
+  "new_order": [
+    {"title": "Resistência Antiga", "description": "Complete um desafio físico que você evitava.", "category": "physical", "rank": "d", "xp": 100, "gold": 50},
+    {"title": "Cautela e Planejamento", "description": "Planeje suas tarefas do dia antes de começar.", "category": "order", "rank": "e", "xp": 80, "gold": 40},
+    {"title": "Renascimento Pessoal", "description": "Reflita e escreva sobre seus objetivos.", "category": "mental", "rank": "d", "xp": 90, "gold": 45}
+  ],
+  "trinity": [
+    {"title": "Ritual do Vazio", "description": "Medite por 20 minutos em total silêncio.", "category": "spiritual", "rank": "d", "xp": 110, "gold": 55},
+    {"title": "Espelho da Sombra", "description": "Escreva sobre uma fraqueza sua honestamente.", "category": "mental", "rank": "d", "xp": 100, "gold": 50},
+    {"title": "Pacto com a Escuridão", "description": "Complete um hábito espiritual E um mental.", "category": "spiritual", "rank": "c", "xp": 130, "gold": 65}
+  ],
+  "renegades": [
+    {"title": "Sobrevivência Própria", "description": "Complete um treino físico sem auxílio externo.", "category": "physical", "rank": "d", "xp": 100, "gold": 50},
+    {"title": "Ouro Acima de Tudo", "description": "Complete todas as missões do dia.", "category": "order", "rank": "d", "xp": 90, "gold": 45},
+    {"title": "Liberdade Absoluta", "description": "Execute uma tarefa fora da sua rotina normal.", "category": "mental", "rank": "d", "xp": 90, "gold": 45}
+  ],
+  "error": [
+    {"title": "Invisível e Eficiente", "description": "Complete 3 missões diferentes em um único dia.", "category": "order", "rank": "c", "xp": 150, "gold": 75},
+    {"title": "Atravessar Dimensões", "description": "Complete hábito físico, mental e espiritual hoje.", "category": "spiritual", "rank": "c", "xp": 160, "gold": 80},
+    {"title": "Operação Silenciosa", "description": "Execute uma tarefa difícil sem contar para ninguém.", "category": "order", "rank": "c", "xp": 150, "gold": 75}
+  ]
+}

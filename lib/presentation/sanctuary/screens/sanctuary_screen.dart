@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/npc_session.dart';
+import '../../../data/datasources/local/quest_admission_service.dart';
 import '../widgets/caelum_day_banner.dart';
 import '../widgets/shadow_status_card.dart';
 import '../widgets/npc_dialogue_card.dart';
@@ -44,6 +45,36 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     if (player == null) return;
     await ref.read(habitDsProvider).applyDailyReset(player.id);
     ref.invalidate(habitsProvider);
+    await _checkFactionAdmission();
+  }
+
+  Future<void> _checkFactionAdmission() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final faction = player.factionType ?? '';
+
+    final factionId = faction.replaceFirst('pending:', '');
+    final db = ref.read(appDatabaseProvider);
+    final service = QuestAdmissionService(db);
+    final passed = await service.checkFactionAdmission(player.id, factionId);
+
+    if (passed && mounted) {
+      await service.confirmFaction(player.id, factionId);
+      final updated = await db.managers.playersTable
+          .filter((f) => f.id(player.id))
+          .getSingleOrNull();
+      ref.read(currentPlayerProvider.notifier).state = updated;
+      ref.invalidate(habitsProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Admissão aprovada! Bem-vindo à facção.'),
+            backgroundColor: AppColors.shadowAscending,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _checkNpcDialog() async {
