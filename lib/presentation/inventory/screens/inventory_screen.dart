@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
@@ -45,12 +46,34 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                   child: Row(
                     children: [
+                      GestureDetector(
+                        onTap: () => context.go('/sanctuary'),
+                        child: const Icon(Icons.arrow_back_ios, color: AppColors.textSecondary, size: 18),
+                      ),
+                      const SizedBox(width: 12),
                       Text('INVENTÁRIO',
                           style: GoogleFonts.cinzelDecorative(
                               fontSize: 16,
                               color: AppColors.gold,
                               letterSpacing: 2)),
                       const Spacer(),
+                      GestureDetector(
+                        onTap: () => context.go('/shop'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [
+                            const Icon(Icons.store_outlined, color: AppColors.gold, size: 14),
+                            const SizedBox(width: 4),
+                            Text('Mercado', style: GoogleFonts.roboto(fontSize: 11, color: AppColors.gold)),
+                          ]),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       inventoryAsync.when(
                         data: (inv) => Text(
                             '${inv.length} itens',

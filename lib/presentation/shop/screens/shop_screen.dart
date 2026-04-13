@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
@@ -27,12 +28,34 @@ class ShopScreen extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                   child: Row(
                     children: [
+                      GestureDetector(
+                        onTap: () => context.go('/sanctuary'),
+                        child: const Icon(Icons.arrow_back_ios, color: AppColors.textSecondary, size: 18),
+                      ),
+                      const SizedBox(width: 12),
                       Text('MERCADO',
                           style: GoogleFonts.cinzelDecorative(
                               fontSize: 16,
                               color: AppColors.gold,
                               letterSpacing: 2)),
                       const Spacer(),
+                      GestureDetector(
+                        onTap: () => context.go('/inventory'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [
+                            const Icon(Icons.inventory_2_outlined, color: AppColors.textSecondary, size: 14),
+                            const SizedBox(width: 4),
+                            Text('Inventário', style: GoogleFonts.roboto(fontSize: 11, color: AppColors.textSecondary)),
+                          ]),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),

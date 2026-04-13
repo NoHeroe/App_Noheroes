@@ -126,7 +126,7 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                      child: const Column(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(height: 8),
@@ -137,6 +137,8 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
                           ShadowStatusCard(),
                           SizedBox(height: 20),
                           DailyMissionsCard(),
+                          SizedBox(height: 20),
+                          _PlayButton(),
                           SizedBox(height: 20),
                         ],
                       ),
@@ -251,4 +253,53 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
         ),
         child: Icon(icon, color: AppColors.textSecondary, size: 20),
       );
+}
+class _PlayButton extends StatelessWidget {
+  const _PlayButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.go('/battle'),
+      child: Container(
+        width: double.infinity,
+        height: 56,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+              color: const Color(0xFFB33030).withValues(alpha: 0.6),
+              width: 1.5),
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF8B2020).withValues(alpha: 0.8),
+              const Color(0xFF3A0000).withValues(alpha: 0.6),
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFB33030).withValues(alpha: 0.25),
+              blurRadius: 12,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.sports_martial_arts,
+                color: Colors.white, size: 22),
+            const SizedBox(width: 10),
+            Text(
+              'ENTRAR EM COMBATE',
+              style: GoogleFonts.cinzelDecorative(
+                fontSize: 13,
+                color: Colors.white,
+                letterSpacing: 2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

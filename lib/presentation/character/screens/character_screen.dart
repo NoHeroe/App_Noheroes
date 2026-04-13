@@ -446,7 +446,7 @@ class CharacterScreen extends ConsumerWidget {
   void _showResetDialog(
       BuildContext context, WidgetRef ref, player) {
     final level = player?.level ?? 1;
-    final cost = level * 50;
+    final cost = 150;
 
     showDialog(
       context: context,
