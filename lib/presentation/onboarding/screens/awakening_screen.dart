@@ -45,8 +45,11 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
     _Scene(npc: 'Figura Desconhecida',
         text: '"Você não é de Caelum."\n\n"Sua forma aqui é uma Sombra."\n\n"Ainda está instável."\n\n"Se quiser sobreviver, vai precisar aprender rápido."',
         mood: _Mood.npc),
-    _Scene(npc: null,
-        text: '"Caelum só reage à disciplina.\n\nE sua forma sombra é moldada pelo que você faz no outro mundo."\n\nComo deseja ser chamado?',
+    _Scene(npc: 'O Vazio',
+        text: '"Caelum só reage à disciplina.\n\nE sua forma sombra é moldada pelo que você faz no outro mundo."',
+        mood: _Mood.identity),
+    _Scene(npc: 'O Vazio',
+        text: 'Como deseja ser chamado?\n\nEsse nome dará forma à sua Sombra em Caelum.',
         mood: _Mood.identity,
         isNameInput: true),
     _Scene(npc: null,
@@ -54,7 +57,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
         mood: _Mood.identity,
         isNarrativeChoice: true),
     _Scene(npc: 'Figura Desconhecida',
-        text: '"Todo ser em Caelum tem um ritual.\n\nEscolha o seu primeiro."',
+        text: '"Todo ser em Caelum tem um ritual.\n\nNão é uma tarefa — é um pacto.\n\nEscolha o que você se compromete a honrar."',
         mood: _Mood.ritual,
         isHabitChoice: true),
   ];
@@ -365,41 +368,68 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
   }
 
   Widget _buildHabitChoice() {
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+    return Column(
       children: _habits.map((h) {
         final selected = _selectedHabit == h.$1;
         return GestureDetector(
           onTap: () => setState(() => _selectedHabit = h.$1),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 16, vertical: 10),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               border: Border.all(
                   color: selected
                       ? AppColors.gold
-                      : AppColors.purple.withOpacity(0.5),
+                      : AppColors.border,
                   width: selected ? 1.5 : 1),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(12),
               color: selected
-                  ? AppColors.gold.withOpacity(0.1)
-                  : AppColors.purple.withOpacity(0.08),
+                  ? AppColors.gold.withValues(alpha: 0.08)
+                  : Colors.white.withValues(alpha: 0.03),
             ),
-            child: Text('${h.$2} ${h.$1}',
-                style: GoogleFonts.roboto(
-                    color: selected
-                        ? AppColors.gold
-                        : AppColors.textPrimary,
-                    fontSize: 13,
-                    fontWeight: selected
-                        ? FontWeight.w600
-                        : FontWeight.normal)),
+            child: Row(
+              children: [
+                Text(h.$2, style: const TextStyle(fontSize: 22)),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(h.$1,
+                          style: GoogleFonts.cinzelDecorative(
+                              fontSize: 13,
+                              color: selected
+                                  ? AppColors.gold
+                                  : AppColors.textPrimary)),
+                      Text(_habitDesc(h.$1),
+                          style: GoogleFonts.roboto(
+                              fontSize: 11,
+                              color: AppColors.textMuted)),
+                    ],
+                  ),
+                ),
+                if (selected)
+                  const Icon(Icons.check_circle,
+                      color: AppColors.gold, size: 20),
+              ],
+            ),
           ),
         );
       }).toList(),
     );
   }
+
+  String _habitDesc(String habit) => switch (habit) {
+    'Hidratação' => 'Beber água conscientemente todos os dias',
+    'Treino'     => 'Mover o corpo com intenção e disciplina',
+    'Leitura'    => 'Expandir a mente através do conhecimento',
+    'Meditação'  => 'Silenciar o ruído interno diariamente',
+    'Escrita'    => 'Registrar pensamentos e experiências',
+    'Sono'       => 'Honrar o descanso como parte da jornada',
+    _            => '',
+  };
 }
 
 class _Scene {

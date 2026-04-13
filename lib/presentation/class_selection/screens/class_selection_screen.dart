@@ -192,29 +192,39 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
       );
 }
 
-class _ClassCard extends StatelessWidget {
+class _ClassCard extends StatefulWidget {
   final Map<String, dynamic> data;
   final bool isSelected;
   final VoidCallback onTap;
   const _ClassCard({required this.data, required this.isSelected, required this.onTap});
 
-  Color get color => Color(int.parse(data['color'] as String));
+  @override
+  State<_ClassCard> createState() => _ClassCardState();
+}
+
+class _ClassCardState extends State<_ClassCard> {
+  bool _expanded = false;
+
+  Color get color => Color(int.parse(widget.data['color'] as String));
+  Map<String, dynamic> get data => widget.data;
 
   @override
   Widget build(BuildContext context) {
     final isSpecial = data['isSpecial'] == true;
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        widget.onTap();
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.12) : AppColors.surface,
+          color: widget.isSelected ? color.withValues(alpha: 0.12) : AppColors.surface,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected ? color : AppColors.border,
-            width: isSelected ? 1.5 : 1,
+            color: widget.isSelected ? color : AppColors.border,
+            width: widget.isSelected ? 1.5 : 1,
           ),
         ),
         child: Row(
@@ -236,13 +246,15 @@ class _ClassCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(data['name'] as String,
                           style: GoogleFonts.cinzelDecorative(
                               fontSize: 14, color: AppColors.textPrimary)),
-                      if (isSpecial) ...[
-                        const SizedBox(width: 8),
+                      if (isSpecial)
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
@@ -258,9 +270,7 @@ class _ClassCard extends StatelessWidget {
                                   color: AppColors.gold,
                                   letterSpacing: 1)),
                         ),
-                      ],
-                      if (data['hasVitalism'] == true) ...[
-                        const SizedBox(width: 6),
+                      if (data['hasVitalism'] == true)
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
@@ -276,7 +286,6 @@ class _ClassCard extends StatelessWidget {
                                   color: AppColors.purple,
                                   letterSpacing: 1)),
                         ),
-                      ],
                     ],
                   ),
                   const SizedBox(height: 2),
@@ -284,13 +293,44 @@ class _ClassCard extends StatelessWidget {
                       style: GoogleFonts.roboto(
                           fontSize: 11, color: color)),
                   const SizedBox(height: 6),
-                  Text(data['description'] as String,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.roboto(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                          height: 1.4)),
+                  AnimatedCrossFade(
+                    duration: const Duration(milliseconds: 200),
+                    crossFadeState: _expanded
+                        ? CrossFadeState.showSecond
+                        : CrossFadeState.showFirst,
+                    firstChild: Text(data['description'] as String,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.roboto(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                            height: 1.4)),
+                    secondChild: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(data['description'] as String,
+                            style: GoogleFonts.roboto(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                                height: 1.4)),
+                        const SizedBox(height: 6),
+                        Text('${data['philosophy']}',
+                            style: GoogleFonts.roboto(
+                                fontSize: 11,
+                                color: color,
+                                fontStyle: FontStyle.italic)),
+                        const SizedBox(height: 4),
+                        Text('Bônus XP: ${data['xpBonus']}',
+                            style: GoogleFonts.roboto(
+                                fontSize: 11,
+                                color: AppColors.textMuted)),
+                        Text('Armas: ${data['weapons']}',
+                            style: GoogleFonts.roboto(
+                                fontSize: 11,
+                                color: AppColors.textMuted)),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Text('⚠ ${data['weakness']}',
                       style: GoogleFonts.roboto(
@@ -300,7 +340,7 @@ class _ClassCard extends StatelessWidget {
                 ],
               ),
             ),
-            if (isSelected)
+            if (widget.isSelected)
               Icon(Icons.check_circle, color: color, size: 22),
           ],
         ),

@@ -197,13 +197,21 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
       );
 }
 
-class _FactionCard extends StatelessWidget {
+class _FactionCard extends StatefulWidget {
   final Map<String, dynamic> data;
   final bool isSelected;
   final VoidCallback onTap;
   const _FactionCard({required this.data, required this.isSelected, required this.onTap});
 
-  Color get color => Color(int.parse(data['color'] as String));
+  @override
+  State<_FactionCard> createState() => _FactionCardState();
+}
+
+class _FactionCardState extends State<_FactionCard> {
+  bool _expanded = false;
+
+  Color get color => Color(int.parse(widget.data['color'] as String));
+  Map<String, dynamic> get data => widget.data;
 
   @override
   Widget build(BuildContext context) {
@@ -212,17 +220,19 @@ class _FactionCard extends StatelessWidget {
     final buffs = (data['buffs'] as List).cast<String>();
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        widget.onTap();
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.1) : AppColors.surface,
+          color: widget.isSelected ? color.withValues(alpha: 0.1) : AppColors.surface,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected ? color : AppColors.border,
-            width: isSelected ? 1.5 : 1,
+            color: widget.isSelected ? color : AppColors.border,
+            width: widget.isSelected ? 1.5 : 1,
           ),
         ),
         child: Column(
@@ -261,20 +271,43 @@ class _FactionCard extends StatelessWidget {
                     Text(data['difficulty'] as String,
                         style: GoogleFonts.roboto(
                             fontSize: 10, color: AppColors.textMuted)),
-                    if (isSelected)
+                    if (widget.isSelected)
                       Icon(Icons.check_circle, color: color, size: 20),
                   ],
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            Text(data['description'] as String,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.roboto(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                    height: 1.4)),
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 200),
+              crossFadeState: _expanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              firstChild: Text(data['description'] as String,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.roboto(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                      height: 1.4)),
+              secondChild: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(data['description'] as String,
+                      style: GoogleFonts.roboto(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          height: 1.4)),
+                  const SizedBox(height: 6),
+                  Text('Líder: ${data['leader']}',
+                      style: GoogleFonts.roboto(
+                          fontSize: 11, color: AppColors.textMuted)),
+                  Text('Dificuldade: ${data['difficulty']}',
+                      style: GoogleFonts.roboto(
+                          fontSize: 11, color: color)),
+                ],
+              ),
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 6,
