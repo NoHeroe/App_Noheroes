@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../widgets/caelum_day_banner.dart';
 import '../widgets/shadow_status_card.dart';
+import '../widgets/npc_dialogue_card.dart';
 import '../widgets/stat_bars_row.dart';
 import '../widgets/daily_missions_card.dart';
 import '../widgets/sanctuary_drawer.dart';
@@ -20,6 +22,7 @@ class SanctuaryScreen extends ConsumerStatefulWidget {
 
 class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _showNpc = true;
 
   @override
   void initState() {
@@ -28,7 +31,10 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
     ));
-    WidgetsBinding.instance.addPostFrameCallback((_) => _runDailyReset());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _runDailyReset();
+      _checkLevelTriggers();
+    });
   }
 
   Future<void> _runDailyReset() async {
@@ -36,6 +42,18 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     if (player == null) return;
     await ref.read(habitDsProvider).applyDailyReset(player.id);
     ref.invalidate(habitsProvider);
+  }
+
+  void _checkLevelTriggers() {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    if (player.level >= 5 && (player.classType == null || player.classType!.isEmpty)) {
+      context.go('/class-selection');
+      return;
+    }
+    if (player.level >= 7 && (player.factionType == null || player.factionType!.isEmpty)) {
+      context.go('/faction-selection');
+    }
   }
 
   Future<bool> _onWillPop() async {
@@ -119,6 +137,12 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
               alignment: Alignment.bottomCenter,
               child: NhBottomNav(currentIndex: 0),
             ),
+            if (_showNpc)
+              NpcDialogueOverlay(
+                shadowState: ref.read(currentPlayerProvider)?.shadowState ?? 'stable',
+                caelumDay: ref.read(currentPlayerProvider)?.caelumDay ?? 1,
+                onDismiss: () => setState(() => _showNpc = false),
+              ),
           ],
         ),
       ),

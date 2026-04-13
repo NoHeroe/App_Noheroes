@@ -12,6 +12,8 @@ import '../presentation/shadow_chamber/screens/shadow_chamber_screen.dart';
 import '../presentation/inventory/screens/inventory_screen.dart';
 import '../presentation/shop/screens/shop_screen.dart';
 import '../presentation/achievements/screens/achievements_screen.dart';
+import '../presentation/class_selection/screens/class_selection_screen.dart';
+import '../presentation/faction_selection/screens/faction_selection_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -28,7 +30,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/shadow',       builder: (c, s) => const ShadowChamberScreen()),
       GoRoute(path: '/inventory',    builder: (c, s) => const InventoryScreen()),
       GoRoute(path: '/shop',         builder: (c, s) => const ShopScreen()),
-      GoRoute(path: '/achievements', builder: (c, s) => const AchievementsScreen()),
+      GoRoute(path: '/achievements',       builder: (c, s) => const AchievementsScreen()),
+      GoRoute(path: '/class-selection',    builder: (c, s) => const ClassSelectionScreen()),
+      GoRoute(path: '/faction-selection',  builder: (c, s) => const FactionSelectionScreen()),
     ],
   );
 });

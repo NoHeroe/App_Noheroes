@@ -1,0 +1,136 @@
+{
+  "factions": [
+    {
+      "id": "guild",
+      "name": "Guilda de Aventureiros",
+      "subtitle": "Neutra. Aberta. Universal.",
+      "philosophy": "Ajudar é nossa natureza.",
+      "description": "A facção mais acessível de Caelum. Aceita qualquer classe, qualquer origem. Ideal para quem quer liberdade e conteúdo variado sem compromisso político.",
+      "leader": "Alto Conselho da Guilda",
+      "recommended": true,
+      "buffs": [
+        "Custos da guilda zerados",
+        "Loja com descontos especiais",
+        "+5% reputação com todas as facções",
+        "Ganho de ouro aumentado",
+        "Missões especiais exclusivas"
+      ],
+      "color": "0xFFC2A05A",
+      "difficulty": "Fácil"
+    },
+    {
+      "id": "moon_clan",
+      "name": "Clã da Lua",
+      "subtitle": "Silêncio. Precisão. Honra.",
+      "philosophy": "Limpo, rápido e sem rastros.",
+      "description": "Assassinos silenciosos. Guardiões da inteligência de Caelum. Testam cada candidato com cautela extrema. Só aceitam quem prova valor real.",
+      "leader": "Azuos — o Renascido",
+      "recommended": false,
+      "buffs": [
+        "+10% Destreza",
+        "+10% Força",
+        "+11% drop de loot de missões"
+      ],
+      "color": "0xFF3070B3",
+      "difficulty": "Difícil"
+    },
+    {
+      "id": "sun_clan",
+      "name": "Clã do Sol",
+      "subtitle": "Força. Glória. Sabedoria.",
+      "philosophy": "Força, glória e sabedoria.",
+      "description": "Guardiões luminosos, magos e protetores. Centrados em poder econômico e influência. Recebem bem quem tem ambição e disciplina.",
+      "leader": "Koda — o Próspero",
+      "recommended": false,
+      "buffs": [
+        "+22% Inteligência",
+        "+9% ouro extra por missão"
+      ],
+      "color": "0xFFC2A05A",
+      "difficulty": "Médio"
+    },
+    {
+      "id": "black_legion",
+      "name": "Legião Negra",
+      "subtitle": "Morte aos traidores.",
+      "philosophy": "Poder sem desculpas. Lealdade ou morte.",
+      "description": "A maior força militar de Caelum. Domínio territorial, guerreiros lendários e caçadores de dragões. Exige comprometimento total.",
+      "leader": "Yuna Lannatary — a Imperatriz das Sombras",
+      "recommended": false,
+      "buffs": [
+        "+15% Força",
+        "+15% chance drop físico",
+        "+1% drop geral"
+      ],
+      "color": "0xFF8B2020",
+      "difficulty": "Difícil"
+    },
+    {
+      "id": "new_order",
+      "name": "Nova Ordem",
+      "subtitle": "Resistência. Cautela. Renascimento.",
+      "philosophy": "Resistência, cautela e renascimento.",
+      "description": "Remanescentes das antigas nações que recusaram a Legião. Fragmentados, mas resilientes. Confiam devagar, mas lealmente.",
+      "leader": "Conselho de Remanescentes",
+      "recommended": false,
+      "buffs": [
+        "+15% Constituição",
+        "+12% drop de resistência",
+        "+1% drop lendário"
+      ],
+      "color": "0xFF6B4FA0",
+      "difficulty": "Médio"
+    },
+    {
+      "id": "trinity",
+      "name": "Culto da Trindade",
+      "subtitle": "Sombra é verdade.",
+      "philosophy": "Sombra é verdade. O Vazio revela.",
+      "description": "Sacerdotes do Vazio. Veneiam anomalias dimensionais e estudam a sombra como força sagrada. Conexão direta com o Shadow System.",
+      "leader": "??? — Sacerdote Anônimo",
+      "recommended": false,
+      "buffs": [
+        "+7% todos os atributos",
+        "+7% drop de vitalidade",
+        "+5% drop místico",
+        "Rituais de sombra exclusivos"
+      ],
+      "color": "0xFF4FA06B",
+      "difficulty": "Médio"
+    },
+    {
+      "id": "renegades",
+      "name": "Os Renegados",
+      "subtitle": "Ouro acima de lealdade.",
+      "philosophy": "Ouro acima de lealdade. Liberdade acima de tudo.",
+      "description": "Mercenários, contrabandistas e controladores do mercado negro. Sem ideologia. Sem moral rígida. Pragmáticos acima de tudo.",
+      "leader": "Nenhum — sistema de bastiões",
+      "recommended": false,
+      "buffs": [
+        "+7% todos os atributos",
+        "+7% drop de dano mágico",
+        "+5% drop místico"
+      ],
+      "color": "0xFFB36B00",
+      "difficulty": "Médio"
+    },
+    {
+      "id": "error",
+      "name": "Facção ERROR",
+      "subtitle": "Caçar o impossível.",
+      "philosophy": "Permaneça invisível. Atravesse dimensões.",
+      "description": "Facção secreta ligada a Chrysalis. Operadores dimensionais. Acesso ao mercado de seivas e itens impossíveis. Apenas para os mais disciplinados.",
+      "leader": "??? — Operador Oculto",
+      "recommended": false,
+      "buffs": [
+        "Acesso ao mercado de seivas",
+        "+10% XP geral",
+        "Itens e encantamentos exclusivos via seiva",
+        "Drop de seivas aumentado"
+      ],
+      "color": "0xFF1A1A2E",
+      "difficulty": "Muito Difícil",
+      "isSecret": true
+    }
+  ]
+}
