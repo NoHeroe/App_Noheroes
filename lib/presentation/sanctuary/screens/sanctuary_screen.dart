@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/npc_session.dart';
 import '../widgets/caelum_day_banner.dart';
 import '../widgets/shadow_status_card.dart';
 import '../widgets/npc_dialogue_card.dart';
@@ -22,7 +23,7 @@ class SanctuaryScreen extends ConsumerStatefulWidget {
 
 class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  bool _showNpc = true;
+  bool _showNpc = false;
 
   @override
   void initState() {
@@ -34,6 +35,7 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _runDailyReset();
       _checkLevelTriggers();
+      await _checkNpcDialog();
     });
   }
 
@@ -42,6 +44,16 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     if (player == null) return;
     await ref.read(habitDsProvider).applyDailyReset(player.id);
     ref.invalidate(habitsProvider);
+  }
+
+  Future<void> _checkNpcDialog() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final show = await NpcSession.shouldShow(player.caelumDay);
+    if (show && mounted) {
+      setState(() => _showNpc = true);
+      await NpcSession.markShown(player.caelumDay);
+    }
   }
 
   void _checkLevelTriggers() {
@@ -170,6 +182,19 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
           GestureDetector(
             onTap: () => _scaffoldKey.currentState?.openDrawer(),
             child: _btn(Icons.menu),
+          ),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: () => context.go('/dev'),
+            child: Container(
+              width: 32, height: 32,
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.hp.withValues(alpha: 0.4)),
+                borderRadius: BorderRadius.circular(8),
+                color: AppColors.hp.withValues(alpha: 0.08),
+              ),
+              child: const Icon(Icons.bug_report, color: AppColors.hp, size: 16),
+            ),
           ),
           const Expanded(
             child: Center(

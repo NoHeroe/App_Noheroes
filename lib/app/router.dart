@@ -14,6 +14,7 @@ import '../presentation/shop/screens/shop_screen.dart';
 import '../presentation/achievements/screens/achievements_screen.dart';
 import '../presentation/class_selection/screens/class_selection_screen.dart';
 import '../presentation/faction_selection/screens/faction_selection_screen.dart';
+import '../presentation/dev/dev_panel_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -33,6 +34,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/achievements',       builder: (c, s) => const AchievementsScreen()),
       GoRoute(path: '/class-selection',    builder: (c, s) => const ClassSelectionScreen()),
       GoRoute(path: '/faction-selection',  builder: (c, s) => const FactionSelectionScreen()),
+      GoRoute(path: '/dev',                builder: (c, s) => const DevPanelScreen()),
     ],
   );
 });
