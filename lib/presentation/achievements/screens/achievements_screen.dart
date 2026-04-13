@@ -1,9 +1,9 @@
-import '../../../data/database/app_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../data/database/app_database.dart';
 import '../../../data/database/daos/achievement_dao.dart';
 
 class AchievementsScreen extends ConsumerWidget {
@@ -19,6 +19,7 @@ class AchievementsScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
+            // Header
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
               child: Row(
@@ -35,12 +36,11 @@ class AchievementsScreen extends ConsumerWidget {
                           color: AppColors.gold,
                           letterSpacing: 2)),
                   const Spacer(),
-                  unlockedAsync.when(
-                    data: (u) => allAsync.when(
-                      data: (a) => Text('${u.length}/${a.length}',
+                  allAsync.when(
+                    data: (all) => unlockedAsync.when(
+                      data: (u) => Text('${u.length}/${all.length}',
                           style: GoogleFonts.roboto(
-                              fontSize: 12,
-                              color: AppColors.textMuted)),
+                              fontSize: 12, color: AppColors.textMuted)),
                       loading: () => const SizedBox(),
                       error: (_, __) => const SizedBox(),
                     ),
@@ -51,33 +51,78 @@ class AchievementsScreen extends ConsumerWidget {
               ),
             ),
 
+            // Lista
             Expanded(
               child: allAsync.when(
                 loading: () => const Center(
                     child: CircularProgressIndicator(
                         color: AppColors.purple)),
-                error: (e, _) => Center(
-                    child: Text('Erro: $e',
-                        style: const TextStyle(
-                            color: AppColors.textMuted))),
+                error: (e, stack) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline,
+                            color: AppColors.hp, size: 40),
+                        const SizedBox(height: 12),
+                        Text('Erro ao carregar conquistas:',
+                            style: GoogleFonts.roboto(
+                                color: AppColors.textMuted,
+                                fontSize: 13)),
+                        const SizedBox(height: 8),
+                        Text(e.toString(),
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.roboto(
+                                color: AppColors.hp, fontSize: 11)),
+                      ],
+                    ),
+                  ),
+                ),
                 data: (all) => unlockedAsync.when(
                   loading: () => const Center(
                       child: CircularProgressIndicator(
                           color: AppColors.purple)),
-                  error: (_, __) => const SizedBox(),
+                  error: (e, _) => Center(
+                    child: Text('Erro: $e',
+                        style: GoogleFonts.roboto(
+                            color: AppColors.hp, fontSize: 12)),
+                  ),
                   data: (unlocked) {
                     final unlockedKeys =
                         unlocked.map((u) => u.achievementKey).toSet();
+
+                    if (all.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.emoji_events_outlined,
+                                color: AppColors.textMuted.withValues(alpha: 0.3),
+                                size: 48),
+                            const SizedBox(height: 12),
+                            Text('Nenhuma conquista encontrada.',
+                                style: GoogleFonts.roboto(
+                                    color: AppColors.textMuted,
+                                    fontSize: 13)),
+                            const SizedBox(height: 8),
+                            Text('O banco pode precisar ser reiniciado.',
+                                style: GoogleFonts.roboto(
+                                    color: AppColors.textMuted
+                                        .withValues(alpha: 0.6),
+                                    fontSize: 11)),
+                          ],
+                        ),
+                      );
+                    }
+
                     return ListView.builder(
-                      padding:
-                          const EdgeInsets.fromLTRB(16, 0, 16, 40),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
                       itemCount: all.length,
                       itemBuilder: (_, i) {
                         final a = all[i];
                         final done = unlockedKeys.contains(a.key);
-                        if (a.isSecret && !done) {
-                          return _SecretCard();
-                        }
+                        if (a.isSecret && !done) return _SecretCard();
                         return _AchievementCard(
                             achievement: a, unlocked: done);
                       },
@@ -101,13 +146,13 @@ class _AchievementCard extends StatelessWidget {
       {required this.achievement, required this.unlocked});
 
   Color get _catColor => switch (achievement.category) {
-    'progression' => AppColors.xp,
-    'habits'      => AppColors.shadowStable,
-    'shadow'      => AppColors.shadowChaotic,
-    'exploration' => AppColors.gold,
-    'social'      => AppColors.mp,
-    _ => AppColors.purple,
-  };
+        'progression' => AppColors.xp,
+        'habits'      => AppColors.shadowStable,
+        'shadow'      => AppColors.shadowChaotic,
+        'exploration' => AppColors.gold,
+        'social'      => AppColors.mp,
+        _             => AppColors.purple,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -119,7 +164,7 @@ class _AchievementCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: unlocked
-              ? _catColor.withOpacity(0.5)
+              ? _catColor.withValues(alpha: 0.5)
               : AppColors.border,
         ),
       ),
@@ -130,11 +175,11 @@ class _AchievementCard extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: unlocked
-                  ? _catColor.withOpacity(0.15)
+                  ? _catColor.withValues(alpha: 0.15)
                   : AppColors.surfaceAlt,
               border: Border.all(
                 color: unlocked
-                    ? _catColor.withOpacity(0.5)
+                    ? _catColor.withValues(alpha: 0.5)
                     : AppColors.border,
               ),
             ),
@@ -160,8 +205,7 @@ class _AchievementCard extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(achievement.description,
                     style: GoogleFonts.roboto(
-                        fontSize: 11,
-                        color: AppColors.textMuted)),
+                        fontSize: 11, color: AppColors.textMuted)),
                 if (unlocked) ...[
                   const SizedBox(height: 4),
                   Row(children: [

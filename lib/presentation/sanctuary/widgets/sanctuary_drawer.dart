@@ -13,13 +13,13 @@ class SanctuaryDrawer extends ConsumerWidget {
     final player = ref.watch(currentPlayerProvider);
 
     final items = [
-      _Item('Inventário',       Icons.inventory_2_outlined, '/inventory'),
-      _Item('Mercado',          Icons.store_outlined,       '/shop'),
-      _Item('Histórico',        Icons.history,              null),
-      _Item('Conquistas',       Icons.emoji_events_outlined,null),
-      _Item('Amigos',           Icons.group_outlined,       null),
-      _Item('Meus Produtos',    Icons.book_outlined,        null),
-      _Item('Configurações',    Icons.settings_outlined,    null),
+      _Item('Inventário',    Icons.inventory_2_outlined,  '/inventory'),
+      _Item('Mercado',       Icons.store_outlined,         '/shop'),
+      _Item('Conquistas',    Icons.emoji_events_outlined,  '/achievements'),
+      _Item('Histórico',     Icons.history,                null),
+      _Item('Amigos',        Icons.group_outlined,         null),
+      _Item('Meus Produtos', Icons.book_outlined,          null),
+      _Item('Configurações', Icons.settings_outlined,      null),
     ];
 
     return Drawer(
@@ -27,7 +27,6 @@ class SanctuaryDrawer extends ConsumerWidget {
       child: SafeArea(
         child: Column(
           children: [
-            // Header
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
@@ -61,7 +60,6 @@ class SanctuaryDrawer extends ConsumerWidget {
                 ],
               ),
             ),
-
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -82,8 +80,6 @@ class SanctuaryDrawer extends ConsumerWidget {
                 )).toList(),
               ),
             ),
-
-            // Logout
             Container(
               decoration: const BoxDecoration(
                 border: Border(top: BorderSide(color: AppColors.border)),
