@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import '../../database/app_database.dart';
 import '../../database/daos/habit_dao.dart';
 import '../../database/daos/player_dao.dart';
+import '../../../core/utils/notification_service.dart';
 import '../../database/tables/habits_table.dart';
 import '../../database/tables/habit_logs_table.dart';
 
@@ -72,7 +73,6 @@ class HabitLocalDs {
                 yStart.add(const Duration(hours: 23, minutes: 59))),
           ),
         );
-        // Aplica impacto na sombra
         await _playerDao.updateShadow(playerId, -8);
       }
     }
@@ -159,10 +159,14 @@ class HabitLocalDs {
       shadowImpact: shadowImpact,
     );
 
-    // Aplica recompensas
     if (xp > 0) await _playerDao.addXp(playerId, xp);
     if (gold > 0) await _playerDao.addGold(playerId, gold);
     await _playerDao.updateShadow(playerId, shadowImpact);
+
+    final updated = await _playerDao.findById(playerId);
+    if (updated != null) {
+      await NotificationService.notifyShadowState(updated.shadowState);
+    }
 
     return HabitResult(
       xpGained: xp,
