@@ -43,3 +43,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/data/shadow_phrases.json
+    - assets/data/npc_dialogues.json
+    - assets/data/lore_quests.json
+    - assets/fonts/

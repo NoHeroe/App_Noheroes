@@ -1,0 +1,46 @@
+{
+  "unknown_figure": {
+    "name": "Figura Desconhecida",
+    "title": "O que te encontrou nas ruínas",
+    "daily_by_shadow_state": {
+      "stable": [
+        "Você mantém o passo. Caelum percebe isso.",
+        "O equilíbrio que você carrega é raro aqui. Preserve-o.",
+        "Seus rituais constroem algo invisível — mas real.",
+        "Ainda estável. Mais do que a maioria dura."
+      ],
+      "unstable": [
+        "Sinto a instabilidade em você. Cuidado com o que deixa crescer.",
+        "Caelum reage ao que você sente. Recomece antes que o mundo reaja também.",
+        "Você está vacilando. Eu vi muitos começarem assim.",
+        "A sombra cresce onde a disciplina falha. Você sabe disso."
+      ],
+      "chaotic": [
+        "O caos que você carrega não é de Caelum. É seu.",
+        "Eu te avisei. Agora você precisa escolher: enfrenta ou se perde.",
+        "Outros convocados que chegaram aqui assim... nem todos voltaram.",
+        "Pare. Respire. Recomece. Não é fraqueza — é sobrevivência."
+      ],
+      "abyssal": [
+        "Não posso fazer isso por você. Só você pode enfrentar o que está dentro.",
+        "Eu já vi esse estado antes. Poucos saem sem cicatrizes. Mas saem.",
+        "O abismo que você sente não é o fim. É um espelho.",
+        "Se você chegou até aqui, ainda há algo lutando dentro de você."
+      ],
+      "ascending": [
+        "Você superou algo que muitos evitam a vida toda.",
+        "A ascensão tem um sabor amargo no início. Mas é real.",
+        "Eu sabia que você chegaria aqui. Demorou, mas chegou.",
+        "Continue assim. Caelum precisa de quem não desiste de si mesmo."
+      ]
+    },
+    "by_caelum_day": {
+      "1": "Você acabou de chegar. Caelum ainda está te avaliando.",
+      "7": "Sete dias. Você ainda está aqui. Isso já diz muito.",
+      "14": "Duas semanas em Caelum. A maioria dos convocados não dura tanto.",
+      "30": "Um mês. Sua forma está mais sólida do que quando você chegou.",
+      "50": "Cinquenta dias. Você não é mais um estranho aqui.",
+      "100": "Cem dias em Caelum. Muito poucos chegam aqui. Você é diferente."
+    }
+  }
+}

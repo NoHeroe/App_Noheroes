@@ -1,0 +1,37 @@
+{
+  "stable": [
+    "Sua sombra observa em silêncio. O equilíbrio persiste.",
+    "A escuridão dentro de você está quieta. Por enquanto.",
+    "Você manteve o ritmo. A sombra reconhece isso.",
+    "Disciplina é o único idioma que sua sombra respeita.",
+    "O silêncio da sombra não é paz — é respeito."
+  ],
+  "unstable": [
+    "Algo dentro de você está inquieto. Atenção.",
+    "Você falhou. Sua sombra anotou cada desvio.",
+    "As rachaduras começam pequenas. Não as ignore.",
+    "Instabilidade detectada. Retome seus rituais antes que piore.",
+    "Sua sombra está acordando. Você a deixou acordar."
+  ],
+  "chaotic": [
+    "A sombra se agita. Você está perdendo o controle.",
+    "Padrão de falhas detectado. A penalidade se aproxima.",
+    "Você escolheu a fuga. Sua sombra escolheu crescer.",
+    "O caos não acontece de repente — você o construiu dia a dia.",
+    "Cada ritual ignorado foi um passo em direção a mim."
+  ],
+  "abyssal": [
+    "Você está à beira do abismo. Enfrente-o antes que seja tarde.",
+    "Estado crítico. Eu sou tudo que resta de você aqui.",
+    "Você me alimentou por dias. Agora sou forte demais para ignorar.",
+    "O abismo não te busca. Você veio até ele.",
+    "Não existe fuga agora. Apenas Luta."
+  ],
+  "ascending": [
+    "Sua sombra recua. A luz emerge da disciplina.",
+    "Você me enfrentou. Poucos chegam até aqui.",
+    "A ascensão não é vitória — é recomeço com mais peso.",
+    "Sua consistência me enfraquece. Continue.",
+    "Eu nunca desapareço. Mas posso ser contida. Você provou isso."
+  ]
+}

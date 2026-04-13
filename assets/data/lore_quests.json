@@ -1,0 +1,123 @@
+{
+  "lore_quests": [
+    {
+      "id": "lq_001",
+      "title": "O Chamado do Vazio",
+      "description": "Você ouviu algo ao atravessar o Vazio. Uma voz que não era sua. Investigue o Santuário em busca de ecos desse chamado.",
+      "unlock_level": 1,
+      "unlock_day": 1,
+      "reward_xp": 120,
+      "reward_gold": 50,
+      "narrative": "A Figura Desconhecida te observa de longe. Ela sabe o que você ouviu.",
+      "completed_narrative": "O eco persiste. Não era uma voz — era um aviso.",
+      "steps": [
+        "Faça login por 3 dias seguidos",
+        "Complete 5 rituais diários"
+      ]
+    },
+    {
+      "id": "lq_002",
+      "title": "Sombra Primeira",
+      "description": "Toda sombra tem uma origem. A sua também. Visite a Câmara das Sombras e observe o que você carregou até aqui.",
+      "unlock_level": 3,
+      "unlock_day": 3,
+      "reward_xp": 200,
+      "reward_gold": 80,
+      "narrative": "A sombra não nasceu com você em Caelum. Ela veio antes.",
+      "completed_narrative": "Você a viu. Agora não pode mais fingir que não existe.",
+      "steps": [
+        "Visite a Câmara das Sombras",
+        "Complete 1 ritual com status 'completed'"
+      ]
+    },
+    {
+      "id": "lq_003",
+      "title": "A Figura nas Ruínas",
+      "description": "A Figura Desconhecida não apareceu por acaso. Ela te seguiu desde o começo. Encontre-a no Santuário.",
+      "unlock_level": 4,
+      "unlock_day": 5,
+      "reward_xp": 300,
+      "reward_gold": 120,
+      "narrative": "Ela sabe seu nome. Não o que você escolheu — o verdadeiro.",
+      "completed_narrative": "Ela não respondeu todas as perguntas. Mas você sabe que ela voltará.",
+      "steps": [
+        "Alcance o nível 4",
+        "Mantenha a sombra estável por 2 dias"
+      ]
+    },
+    {
+      "id": "lq_004",
+      "title": "O Ritual da Classe",
+      "description": "Caelum não aceita indefinição. Você precisa declarar quem é antes que o mundo decida por você.",
+      "unlock_level": 5,
+      "unlock_day": 7,
+      "reward_xp": 500,
+      "reward_gold": 200,
+      "narrative": "Cada classe carrega um peso diferente. Escolha com intenção.",
+      "completed_narrative": "Você tem uma forma agora. Caelum reconhece isso.",
+      "steps": [
+        "Alcance o nível 5",
+        "Escolha sua classe"
+      ]
+    },
+    {
+      "id": "lq_005",
+      "title": "Ecos de Kaleidos",
+      "description": "Fragmentos de memória chegam até você em sonhos. Imagens de uma cidade que não existe mais. Quem você era antes do Vazio?",
+      "unlock_level": 7,
+      "unlock_day": 10,
+      "reward_xp": 450,
+      "reward_gold": 180,
+      "narrative": "Kaleidos foi destruída por algo que ninguém deveria ter invocado.",
+      "completed_narrative": "Os fragmentos continuam chegando. Isso não vai parar cedo.",
+      "steps": [
+        "Complete 15 rituais no total",
+        "Mantenha streak por 5 dias"
+      ]
+    },
+    {
+      "id": "lq_006",
+      "title": "A Escolha das Facções",
+      "description": "Caelum está em guerra silenciosa. Cada facção te observa e aguarda sua decisão. Escolher um lado define seus inimigos tanto quanto seus aliados.",
+      "unlock_level": 7,
+      "unlock_day": 12,
+      "reward_xp": 600,
+      "reward_gold": 250,
+      "narrative": "Neutralidade em Caelum é uma ilusão. Ou você escolhe, ou é escolhido.",
+      "completed_narrative": "Sua facção sabe que você existe. O mundo mudou um pouco.",
+      "steps": [
+        "Alcance o nível 7",
+        "Escolha sua facção"
+      ]
+    },
+    {
+      "id": "lq_007",
+      "title": "O Peso do Abismo",
+      "description": "Você sobreviveu a uma queda. Isso não é comum em Caelum. A Figura Desconhecida quer entender como.",
+      "unlock_level": 8,
+      "unlock_day": 14,
+      "reward_xp": 700,
+      "reward_gold": 300,
+      "narrative": "Sobreviver ao abismo deixa marcas. As suas são visíveis para quem sabe olhar.",
+      "completed_narrative": "Ela disse apenas: 'Interessante.' Você não sabe se isso é bom.",
+      "steps": [
+        "Tenha a sombra em estado 'abyssal' e recupere para 'stable'",
+        "Complete 3 rituais após a recuperação"
+      ]
+    },
+    {
+      "id": "lq_008",
+      "title": "Trinta Dias em Caelum",
+      "description": "Trinta dias. Para a maioria dos convocados, isso é um milagre. Para você, é apenas o começo.",
+      "unlock_level": 1,
+      "unlock_day": 30,
+      "reward_xp": 1000,
+      "reward_gold": 500,
+      "narrative": "Caelum começa a te reconhecer como permanente, não como anomalia passageira.",
+      "completed_narrative": "Você pertence a dois mundos agora. Não há como desfazer isso.",
+      "steps": [
+        "Sobreviver 30 dias em Caelum"
+      ]
+    }
+  ]
+}

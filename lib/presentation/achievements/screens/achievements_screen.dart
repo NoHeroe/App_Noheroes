@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
@@ -25,7 +26,7 @@ class AchievementsScreen extends ConsumerWidget {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () => context.go('/sanctuary'),
                     child: const Icon(Icons.arrow_back_ios,
                         color: AppColors.textSecondary, size: 20),
                   ),
