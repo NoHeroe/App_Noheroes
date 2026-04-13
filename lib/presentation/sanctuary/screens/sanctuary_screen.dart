@@ -38,52 +38,89 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     ref.invalidate(habitsProvider);
   }
 
+  Future<bool> _onWillPop() async {
+    final shouldExit = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.border),
+        ),
+        title: Text('Sair de Caelum?',
+            style: GoogleFonts.cinzelDecorative(
+                color: AppColors.textPrimary, fontSize: 15)),
+        content: Text('Sua sombra permanecerá aguardando.',
+            style: GoogleFonts.roboto(color: AppColors.textSecondary)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Ficar',
+                style: GoogleFonts.roboto(color: AppColors.textMuted)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Sair',
+                style: GoogleFonts.roboto(color: AppColors.hp)),
+          ),
+        ],
+      ),
+    );
+    return shouldExit ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final player = ref.watch(currentPlayerProvider);
 
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: AppColors.black,
-      drawer: const SanctuaryDrawer(),
-      body: Stack(
-        children: [
-          _buildAtmosphere(),
-          SafeArea(
-            child: Column(
-              children: [
-                _buildTopBar(context, player?.gold ?? 0),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                    child: const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 8),
-                        // 1. Barras HP/MP/XP primeiro
-                        StatBarsRow(),
-                        SizedBox(height: 12),
-                        // 2. Banner Caelum/Nível (sem sombra)
-                        CaelumDayBanner(),
-                        SizedBox(height: 16),
-                        // 3. Card da Sombra
-                        ShadowStatusCard(),
-                        SizedBox(height: 20),
-                        // 4. Missões do dia
-                        DailyMissionsCard(),
-                        SizedBox(height: 20),
-                      ],
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        final shouldExit = await _onWillPop();
+        if (shouldExit && context.mounted) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: AppColors.black,
+        drawer: const SanctuaryDrawer(),
+        body: Stack(
+          children: [
+            _buildAtmosphere(),
+            SafeArea(
+              child: Column(
+                children: [
+                  _buildTopBar(context, player?.gold ?? 0),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                      child: const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: 8),
+                          StatBarsRow(),
+                          SizedBox(height: 12),
+                          CaelumDayBanner(),
+                          SizedBox(height: 16),
+                          ShadowStatusCard(),
+                          SizedBox(height: 20),
+                          DailyMissionsCard(),
+                          SizedBox(height: 20),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const Align(
-            alignment: Alignment.bottomCenter,
-            child: NhBottomNav(currentIndex: 0),
-          ),
-        ],
+            const Align(
+              alignment: Alignment.bottomCenter,
+              child: NhBottomNav(currentIndex: 0),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -108,7 +145,7 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
         children: [
           GestureDetector(
             onTap: () => _scaffoldKey.currentState?.openDrawer(),
-            child: _topBarBtn(Icons.menu),
+            child: _btn(Icons.menu),
           ),
           const Expanded(
             child: Center(
@@ -140,13 +177,14 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
           ),
           const SizedBox(width: 8),
           Stack(children: [
-            _topBarBtn(Icons.notifications_none),
+            _btn(Icons.notifications_none),
             Positioned(
               top: 8, right: 8,
               child: Container(
                 width: 8, height: 8,
                 decoration: const BoxDecoration(
-                    color: AppColors.purple, shape: BoxShape.circle),
+                    color: AppColors.purple,
+                    shape: BoxShape.circle),
               ),
             ),
           ]),
@@ -155,7 +193,7 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     );
   }
 
-  Widget _topBarBtn(IconData icon) => Container(
+  Widget _btn(IconData icon) => Container(
         width: 40, height: 40,
         decoration: BoxDecoration(
           border: Border.all(color: AppColors.border),

@@ -11,22 +11,24 @@ import '../presentation/regions/screens/regions_screen.dart';
 import '../presentation/shadow_chamber/screens/shadow_chamber_screen.dart';
 import '../presentation/inventory/screens/inventory_screen.dart';
 import '../presentation/shop/screens/shop_screen.dart';
+import '../presentation/achievements/screens/achievements_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     routes: [
-      GoRoute(path: '/',          builder: (c, s) => const SplashScreen()),
-      GoRoute(path: '/login',     builder: (c, s) => const LoginScreen()),
-      GoRoute(path: '/register',  builder: (c, s) => const RegisterScreen()),
-      GoRoute(path: '/awakening', builder: (c, s) => const AwakeningScreen()),
-      GoRoute(path: '/sanctuary', builder: (c, s) => const SanctuaryScreen()),
-      GoRoute(path: '/habits',    builder: (c, s) => const HabitsScreen()),
-      GoRoute(path: '/character', builder: (c, s) => const CharacterScreen()),
-      GoRoute(path: '/regions',   builder: (c, s) => const RegionsScreen()),
-      GoRoute(path: '/shadow',    builder: (c, s) => const ShadowChamberScreen()),
-      GoRoute(path: '/inventory', builder: (c, s) => const InventoryScreen()),
-      GoRoute(path: '/shop',      builder: (c, s) => const ShopScreen()),
+      GoRoute(path: '/',             builder: (c, s) => const SplashScreen()),
+      GoRoute(path: '/login',        builder: (c, s) => const LoginScreen()),
+      GoRoute(path: '/register',     builder: (c, s) => const RegisterScreen()),
+      GoRoute(path: '/awakening',    builder: (c, s) => const AwakeningScreen()),
+      GoRoute(path: '/sanctuary',    builder: (c, s) => const SanctuaryScreen()),
+      GoRoute(path: '/habits',       builder: (c, s) => const HabitsScreen()),
+      GoRoute(path: '/character',    builder: (c, s) => const CharacterScreen()),
+      GoRoute(path: '/regions',      builder: (c, s) => const RegionsScreen()),
+      GoRoute(path: '/shadow',       builder: (c, s) => const ShadowChamberScreen()),
+      GoRoute(path: '/inventory',    builder: (c, s) => const InventoryScreen()),
+      GoRoute(path: '/shop',         builder: (c, s) => const ShopScreen()),
+      GoRoute(path: '/achievements', builder: (c, s) => const AchievementsScreen()),
     ],
   );
 });

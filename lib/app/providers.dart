@@ -1,3 +1,6 @@
+import '../data/database/daos/achievement_dao.dart';
+import '../data/database/tables/player_achievements_table.dart';
+import '../data/database/tables/achievements_table.dart';
 import '../data/database/daos/inventory_dao.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/database/app_database.dart';
@@ -63,4 +66,16 @@ final shopProvider = FutureProvider<List<ShopWithItem>>((ref) async {
   final player = ref.watch(currentPlayerProvider);
   if (player == null) return [];
   return ref.watch(inventoryDaoProvider).getShopItems(player.level);
+});
+
+// Achievement providers
+final achievementsProvider = FutureProvider<List<AchievementsTableData>>((ref) {
+  return AchievementDao(ref.watch(appDatabaseProvider)).getAllAchievements();
+});
+
+final unlockedAchievementsProvider =
+    FutureProvider<List<PlayerAchievementsTableData>>((ref) async {
+  final player = ref.watch(currentPlayerProvider);
+  if (player == null) return [];
+  return AchievementDao(ref.watch(appDatabaseProvider)).getUnlocked(player.id);
 });

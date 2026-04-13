@@ -3980,6 +3980,780 @@ class ShopItemsTableCompanion extends UpdateCompanion<ShopItemsTableData> {
   }
 }
 
+class $AchievementsTableTable extends AchievementsTable
+    with TableInfo<$AchievementsTableTable, AchievementsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AchievementsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+      'key', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+      'title', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _categoryMeta =
+      const VerificationMeta('category');
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+      'category', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _iconNameMeta =
+      const VerificationMeta('iconName');
+  @override
+  late final GeneratedColumn<String> iconName = GeneratedColumn<String>(
+      'icon_name', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('star'));
+  static const VerificationMeta _xpRewardMeta =
+      const VerificationMeta('xpReward');
+  @override
+  late final GeneratedColumn<int> xpReward = GeneratedColumn<int>(
+      'xp_reward', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(50));
+  static const VerificationMeta _goldRewardMeta =
+      const VerificationMeta('goldReward');
+  @override
+  late final GeneratedColumn<int> goldReward = GeneratedColumn<int>(
+      'gold_reward', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(25));
+  static const VerificationMeta _gemRewardMeta =
+      const VerificationMeta('gemReward');
+  @override
+  late final GeneratedColumn<int> gemReward = GeneratedColumn<int>(
+      'gem_reward', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _isSecretMeta =
+      const VerificationMeta('isSecret');
+  @override
+  late final GeneratedColumn<bool> isSecret = GeneratedColumn<bool>(
+      'is_secret', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_secret" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        key,
+        title,
+        description,
+        category,
+        iconName,
+        xpReward,
+        goldReward,
+        gemReward,
+        isSecret
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'achievements';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<AchievementsTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('key')) {
+      context.handle(
+          _keyMeta, key.isAcceptableOrUnknown(data['key']!, _keyMeta));
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('category')) {
+      context.handle(_categoryMeta,
+          category.isAcceptableOrUnknown(data['category']!, _categoryMeta));
+    } else if (isInserting) {
+      context.missing(_categoryMeta);
+    }
+    if (data.containsKey('icon_name')) {
+      context.handle(_iconNameMeta,
+          iconName.isAcceptableOrUnknown(data['icon_name']!, _iconNameMeta));
+    }
+    if (data.containsKey('xp_reward')) {
+      context.handle(_xpRewardMeta,
+          xpReward.isAcceptableOrUnknown(data['xp_reward']!, _xpRewardMeta));
+    }
+    if (data.containsKey('gold_reward')) {
+      context.handle(
+          _goldRewardMeta,
+          goldReward.isAcceptableOrUnknown(
+              data['gold_reward']!, _goldRewardMeta));
+    }
+    if (data.containsKey('gem_reward')) {
+      context.handle(_gemRewardMeta,
+          gemReward.isAcceptableOrUnknown(data['gem_reward']!, _gemRewardMeta));
+    }
+    if (data.containsKey('is_secret')) {
+      context.handle(_isSecretMeta,
+          isSecret.isAcceptableOrUnknown(data['is_secret']!, _isSecretMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AchievementsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AchievementsTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      key: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}key'])!,
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      category: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}category'])!,
+      iconName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}icon_name'])!,
+      xpReward: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}xp_reward'])!,
+      goldReward: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}gold_reward'])!,
+      gemReward: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}gem_reward'])!,
+      isSecret: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_secret'])!,
+    );
+  }
+
+  @override
+  $AchievementsTableTable createAlias(String alias) {
+    return $AchievementsTableTable(attachedDatabase, alias);
+  }
+}
+
+class AchievementsTableData extends DataClass
+    implements Insertable<AchievementsTableData> {
+  final int id;
+  final String key;
+  final String title;
+  final String description;
+  final String category;
+  final String iconName;
+  final int xpReward;
+  final int goldReward;
+  final int gemReward;
+  final bool isSecret;
+  const AchievementsTableData(
+      {required this.id,
+      required this.key,
+      required this.title,
+      required this.description,
+      required this.category,
+      required this.iconName,
+      required this.xpReward,
+      required this.goldReward,
+      required this.gemReward,
+      required this.isSecret});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['key'] = Variable<String>(key);
+    map['title'] = Variable<String>(title);
+    map['description'] = Variable<String>(description);
+    map['category'] = Variable<String>(category);
+    map['icon_name'] = Variable<String>(iconName);
+    map['xp_reward'] = Variable<int>(xpReward);
+    map['gold_reward'] = Variable<int>(goldReward);
+    map['gem_reward'] = Variable<int>(gemReward);
+    map['is_secret'] = Variable<bool>(isSecret);
+    return map;
+  }
+
+  AchievementsTableCompanion toCompanion(bool nullToAbsent) {
+    return AchievementsTableCompanion(
+      id: Value(id),
+      key: Value(key),
+      title: Value(title),
+      description: Value(description),
+      category: Value(category),
+      iconName: Value(iconName),
+      xpReward: Value(xpReward),
+      goldReward: Value(goldReward),
+      gemReward: Value(gemReward),
+      isSecret: Value(isSecret),
+    );
+  }
+
+  factory AchievementsTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AchievementsTableData(
+      id: serializer.fromJson<int>(json['id']),
+      key: serializer.fromJson<String>(json['key']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String>(json['description']),
+      category: serializer.fromJson<String>(json['category']),
+      iconName: serializer.fromJson<String>(json['iconName']),
+      xpReward: serializer.fromJson<int>(json['xpReward']),
+      goldReward: serializer.fromJson<int>(json['goldReward']),
+      gemReward: serializer.fromJson<int>(json['gemReward']),
+      isSecret: serializer.fromJson<bool>(json['isSecret']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'key': serializer.toJson<String>(key),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String>(description),
+      'category': serializer.toJson<String>(category),
+      'iconName': serializer.toJson<String>(iconName),
+      'xpReward': serializer.toJson<int>(xpReward),
+      'goldReward': serializer.toJson<int>(goldReward),
+      'gemReward': serializer.toJson<int>(gemReward),
+      'isSecret': serializer.toJson<bool>(isSecret),
+    };
+  }
+
+  AchievementsTableData copyWith(
+          {int? id,
+          String? key,
+          String? title,
+          String? description,
+          String? category,
+          String? iconName,
+          int? xpReward,
+          int? goldReward,
+          int? gemReward,
+          bool? isSecret}) =>
+      AchievementsTableData(
+        id: id ?? this.id,
+        key: key ?? this.key,
+        title: title ?? this.title,
+        description: description ?? this.description,
+        category: category ?? this.category,
+        iconName: iconName ?? this.iconName,
+        xpReward: xpReward ?? this.xpReward,
+        goldReward: goldReward ?? this.goldReward,
+        gemReward: gemReward ?? this.gemReward,
+        isSecret: isSecret ?? this.isSecret,
+      );
+  AchievementsTableData copyWithCompanion(AchievementsTableCompanion data) {
+    return AchievementsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      key: data.key.present ? data.key.value : this.key,
+      title: data.title.present ? data.title.value : this.title,
+      description:
+          data.description.present ? data.description.value : this.description,
+      category: data.category.present ? data.category.value : this.category,
+      iconName: data.iconName.present ? data.iconName.value : this.iconName,
+      xpReward: data.xpReward.present ? data.xpReward.value : this.xpReward,
+      goldReward:
+          data.goldReward.present ? data.goldReward.value : this.goldReward,
+      gemReward: data.gemReward.present ? data.gemReward.value : this.gemReward,
+      isSecret: data.isSecret.present ? data.isSecret.value : this.isSecret,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AchievementsTableData(')
+          ..write('id: $id, ')
+          ..write('key: $key, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('category: $category, ')
+          ..write('iconName: $iconName, ')
+          ..write('xpReward: $xpReward, ')
+          ..write('goldReward: $goldReward, ')
+          ..write('gemReward: $gemReward, ')
+          ..write('isSecret: $isSecret')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, key, title, description, category,
+      iconName, xpReward, goldReward, gemReward, isSecret);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AchievementsTableData &&
+          other.id == this.id &&
+          other.key == this.key &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.category == this.category &&
+          other.iconName == this.iconName &&
+          other.xpReward == this.xpReward &&
+          other.goldReward == this.goldReward &&
+          other.gemReward == this.gemReward &&
+          other.isSecret == this.isSecret);
+}
+
+class AchievementsTableCompanion
+    extends UpdateCompanion<AchievementsTableData> {
+  final Value<int> id;
+  final Value<String> key;
+  final Value<String> title;
+  final Value<String> description;
+  final Value<String> category;
+  final Value<String> iconName;
+  final Value<int> xpReward;
+  final Value<int> goldReward;
+  final Value<int> gemReward;
+  final Value<bool> isSecret;
+  const AchievementsTableCompanion({
+    this.id = const Value.absent(),
+    this.key = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.category = const Value.absent(),
+    this.iconName = const Value.absent(),
+    this.xpReward = const Value.absent(),
+    this.goldReward = const Value.absent(),
+    this.gemReward = const Value.absent(),
+    this.isSecret = const Value.absent(),
+  });
+  AchievementsTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String key,
+    required String title,
+    required String description,
+    required String category,
+    this.iconName = const Value.absent(),
+    this.xpReward = const Value.absent(),
+    this.goldReward = const Value.absent(),
+    this.gemReward = const Value.absent(),
+    this.isSecret = const Value.absent(),
+  })  : key = Value(key),
+        title = Value(title),
+        description = Value(description),
+        category = Value(category);
+  static Insertable<AchievementsTableData> custom({
+    Expression<int>? id,
+    Expression<String>? key,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<String>? category,
+    Expression<String>? iconName,
+    Expression<int>? xpReward,
+    Expression<int>? goldReward,
+    Expression<int>? gemReward,
+    Expression<bool>? isSecret,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (key != null) 'key': key,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (category != null) 'category': category,
+      if (iconName != null) 'icon_name': iconName,
+      if (xpReward != null) 'xp_reward': xpReward,
+      if (goldReward != null) 'gold_reward': goldReward,
+      if (gemReward != null) 'gem_reward': gemReward,
+      if (isSecret != null) 'is_secret': isSecret,
+    });
+  }
+
+  AchievementsTableCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? key,
+      Value<String>? title,
+      Value<String>? description,
+      Value<String>? category,
+      Value<String>? iconName,
+      Value<int>? xpReward,
+      Value<int>? goldReward,
+      Value<int>? gemReward,
+      Value<bool>? isSecret}) {
+    return AchievementsTableCompanion(
+      id: id ?? this.id,
+      key: key ?? this.key,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      iconName: iconName ?? this.iconName,
+      xpReward: xpReward ?? this.xpReward,
+      goldReward: goldReward ?? this.goldReward,
+      gemReward: gemReward ?? this.gemReward,
+      isSecret: isSecret ?? this.isSecret,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (iconName.present) {
+      map['icon_name'] = Variable<String>(iconName.value);
+    }
+    if (xpReward.present) {
+      map['xp_reward'] = Variable<int>(xpReward.value);
+    }
+    if (goldReward.present) {
+      map['gold_reward'] = Variable<int>(goldReward.value);
+    }
+    if (gemReward.present) {
+      map['gem_reward'] = Variable<int>(gemReward.value);
+    }
+    if (isSecret.present) {
+      map['is_secret'] = Variable<bool>(isSecret.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AchievementsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('key: $key, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('category: $category, ')
+          ..write('iconName: $iconName, ')
+          ..write('xpReward: $xpReward, ')
+          ..write('goldReward: $goldReward, ')
+          ..write('gemReward: $gemReward, ')
+          ..write('isSecret: $isSecret')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PlayerAchievementsTableTable extends PlayerAchievementsTable
+    with TableInfo<$PlayerAchievementsTableTable, PlayerAchievementsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlayerAchievementsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _achievementKeyMeta =
+      const VerificationMeta('achievementKey');
+  @override
+  late final GeneratedColumn<String> achievementKey = GeneratedColumn<String>(
+      'achievement_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _unlockedAtMeta =
+      const VerificationMeta('unlockedAt');
+  @override
+  late final GeneratedColumn<DateTime> unlockedAt = GeneratedColumn<DateTime>(
+      'unlocked_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, playerId, achievementKey, unlockedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'player_achievements';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<PlayerAchievementsTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('achievement_key')) {
+      context.handle(
+          _achievementKeyMeta,
+          achievementKey.isAcceptableOrUnknown(
+              data['achievement_key']!, _achievementKeyMeta));
+    } else if (isInserting) {
+      context.missing(_achievementKeyMeta);
+    }
+    if (data.containsKey('unlocked_at')) {
+      context.handle(
+          _unlockedAtMeta,
+          unlockedAt.isAcceptableOrUnknown(
+              data['unlocked_at']!, _unlockedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PlayerAchievementsTableData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlayerAchievementsTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      achievementKey: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}achievement_key'])!,
+      unlockedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}unlocked_at'])!,
+    );
+  }
+
+  @override
+  $PlayerAchievementsTableTable createAlias(String alias) {
+    return $PlayerAchievementsTableTable(attachedDatabase, alias);
+  }
+}
+
+class PlayerAchievementsTableData extends DataClass
+    implements Insertable<PlayerAchievementsTableData> {
+  final int id;
+  final int playerId;
+  final String achievementKey;
+  final DateTime unlockedAt;
+  const PlayerAchievementsTableData(
+      {required this.id,
+      required this.playerId,
+      required this.achievementKey,
+      required this.unlockedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['achievement_key'] = Variable<String>(achievementKey);
+    map['unlocked_at'] = Variable<DateTime>(unlockedAt);
+    return map;
+  }
+
+  PlayerAchievementsTableCompanion toCompanion(bool nullToAbsent) {
+    return PlayerAchievementsTableCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      achievementKey: Value(achievementKey),
+      unlockedAt: Value(unlockedAt),
+    );
+  }
+
+  factory PlayerAchievementsTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlayerAchievementsTableData(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      achievementKey: serializer.fromJson<String>(json['achievementKey']),
+      unlockedAt: serializer.fromJson<DateTime>(json['unlockedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'achievementKey': serializer.toJson<String>(achievementKey),
+      'unlockedAt': serializer.toJson<DateTime>(unlockedAt),
+    };
+  }
+
+  PlayerAchievementsTableData copyWith(
+          {int? id,
+          int? playerId,
+          String? achievementKey,
+          DateTime? unlockedAt}) =>
+      PlayerAchievementsTableData(
+        id: id ?? this.id,
+        playerId: playerId ?? this.playerId,
+        achievementKey: achievementKey ?? this.achievementKey,
+        unlockedAt: unlockedAt ?? this.unlockedAt,
+      );
+  PlayerAchievementsTableData copyWithCompanion(
+      PlayerAchievementsTableCompanion data) {
+    return PlayerAchievementsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      achievementKey: data.achievementKey.present
+          ? data.achievementKey.value
+          : this.achievementKey,
+      unlockedAt:
+          data.unlockedAt.present ? data.unlockedAt.value : this.unlockedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerAchievementsTableData(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('achievementKey: $achievementKey, ')
+          ..write('unlockedAt: $unlockedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, playerId, achievementKey, unlockedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlayerAchievementsTableData &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.achievementKey == this.achievementKey &&
+          other.unlockedAt == this.unlockedAt);
+}
+
+class PlayerAchievementsTableCompanion
+    extends UpdateCompanion<PlayerAchievementsTableData> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> achievementKey;
+  final Value<DateTime> unlockedAt;
+  const PlayerAchievementsTableCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.achievementKey = const Value.absent(),
+    this.unlockedAt = const Value.absent(),
+  });
+  PlayerAchievementsTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String achievementKey,
+    this.unlockedAt = const Value.absent(),
+  })  : playerId = Value(playerId),
+        achievementKey = Value(achievementKey);
+  static Insertable<PlayerAchievementsTableData> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? achievementKey,
+    Expression<DateTime>? unlockedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (achievementKey != null) 'achievement_key': achievementKey,
+      if (unlockedAt != null) 'unlocked_at': unlockedAt,
+    });
+  }
+
+  PlayerAchievementsTableCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? playerId,
+      Value<String>? achievementKey,
+      Value<DateTime>? unlockedAt}) {
+    return PlayerAchievementsTableCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      achievementKey: achievementKey ?? this.achievementKey,
+      unlockedAt: unlockedAt ?? this.unlockedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (achievementKey.present) {
+      map['achievement_key'] = Variable<String>(achievementKey.value);
+    }
+    if (unlockedAt.present) {
+      map['unlocked_at'] = Variable<DateTime>(unlockedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerAchievementsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('achievementKey: $achievementKey, ')
+          ..write('unlockedAt: $unlockedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3989,9 +4763,15 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ItemsTableTable itemsTable = $ItemsTableTable(this);
   late final $InventoryTableTable inventoryTable = $InventoryTableTable(this);
   late final $ShopItemsTableTable shopItemsTable = $ShopItemsTableTable(this);
+  late final $AchievementsTableTable achievementsTable =
+      $AchievementsTableTable(this);
+  late final $PlayerAchievementsTableTable playerAchievementsTable =
+      $PlayerAchievementsTableTable(this);
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
   late final HabitDao habitDao = HabitDao(this as AppDatabase);
   late final InventoryDao inventoryDao = InventoryDao(this as AppDatabase);
+  late final AchievementDao achievementDao =
+      AchievementDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4002,7 +4782,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         habitLogsTable,
         itemsTable,
         inventoryTable,
-        shopItemsTable
+        shopItemsTable,
+        achievementsTable,
+        playerAchievementsTable
       ];
 }
 
@@ -5839,6 +6621,413 @@ typedef $$ShopItemsTableTableProcessedTableManager = ProcessedTableManager<
     ),
     ShopItemsTableData,
     PrefetchHooks Function()>;
+typedef $$AchievementsTableTableCreateCompanionBuilder
+    = AchievementsTableCompanion Function({
+  Value<int> id,
+  required String key,
+  required String title,
+  required String description,
+  required String category,
+  Value<String> iconName,
+  Value<int> xpReward,
+  Value<int> goldReward,
+  Value<int> gemReward,
+  Value<bool> isSecret,
+});
+typedef $$AchievementsTableTableUpdateCompanionBuilder
+    = AchievementsTableCompanion Function({
+  Value<int> id,
+  Value<String> key,
+  Value<String> title,
+  Value<String> description,
+  Value<String> category,
+  Value<String> iconName,
+  Value<int> xpReward,
+  Value<int> goldReward,
+  Value<int> gemReward,
+  Value<bool> isSecret,
+});
+
+class $$AchievementsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $AchievementsTableTable> {
+  $$AchievementsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get key => $composableBuilder(
+      column: $table.key, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get category => $composableBuilder(
+      column: $table.category, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get iconName => $composableBuilder(
+      column: $table.iconName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get xpReward => $composableBuilder(
+      column: $table.xpReward, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get goldReward => $composableBuilder(
+      column: $table.goldReward, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get gemReward => $composableBuilder(
+      column: $table.gemReward, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isSecret => $composableBuilder(
+      column: $table.isSecret, builder: (column) => ColumnFilters(column));
+}
+
+class $$AchievementsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $AchievementsTableTable> {
+  $$AchievementsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get key => $composableBuilder(
+      column: $table.key, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get category => $composableBuilder(
+      column: $table.category, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get iconName => $composableBuilder(
+      column: $table.iconName, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get xpReward => $composableBuilder(
+      column: $table.xpReward, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get goldReward => $composableBuilder(
+      column: $table.goldReward, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get gemReward => $composableBuilder(
+      column: $table.gemReward, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isSecret => $composableBuilder(
+      column: $table.isSecret, builder: (column) => ColumnOrderings(column));
+}
+
+class $$AchievementsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AchievementsTableTable> {
+  $$AchievementsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get iconName =>
+      $composableBuilder(column: $table.iconName, builder: (column) => column);
+
+  GeneratedColumn<int> get xpReward =>
+      $composableBuilder(column: $table.xpReward, builder: (column) => column);
+
+  GeneratedColumn<int> get goldReward => $composableBuilder(
+      column: $table.goldReward, builder: (column) => column);
+
+  GeneratedColumn<int> get gemReward =>
+      $composableBuilder(column: $table.gemReward, builder: (column) => column);
+
+  GeneratedColumn<bool> get isSecret =>
+      $composableBuilder(column: $table.isSecret, builder: (column) => column);
+}
+
+class $$AchievementsTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $AchievementsTableTable,
+    AchievementsTableData,
+    $$AchievementsTableTableFilterComposer,
+    $$AchievementsTableTableOrderingComposer,
+    $$AchievementsTableTableAnnotationComposer,
+    $$AchievementsTableTableCreateCompanionBuilder,
+    $$AchievementsTableTableUpdateCompanionBuilder,
+    (
+      AchievementsTableData,
+      BaseReferences<_$AppDatabase, $AchievementsTableTable,
+          AchievementsTableData>
+    ),
+    AchievementsTableData,
+    PrefetchHooks Function()> {
+  $$AchievementsTableTableTableManager(
+      _$AppDatabase db, $AchievementsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AchievementsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AchievementsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AchievementsTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> key = const Value.absent(),
+            Value<String> title = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<String> category = const Value.absent(),
+            Value<String> iconName = const Value.absent(),
+            Value<int> xpReward = const Value.absent(),
+            Value<int> goldReward = const Value.absent(),
+            Value<int> gemReward = const Value.absent(),
+            Value<bool> isSecret = const Value.absent(),
+          }) =>
+              AchievementsTableCompanion(
+            id: id,
+            key: key,
+            title: title,
+            description: description,
+            category: category,
+            iconName: iconName,
+            xpReward: xpReward,
+            goldReward: goldReward,
+            gemReward: gemReward,
+            isSecret: isSecret,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String key,
+            required String title,
+            required String description,
+            required String category,
+            Value<String> iconName = const Value.absent(),
+            Value<int> xpReward = const Value.absent(),
+            Value<int> goldReward = const Value.absent(),
+            Value<int> gemReward = const Value.absent(),
+            Value<bool> isSecret = const Value.absent(),
+          }) =>
+              AchievementsTableCompanion.insert(
+            id: id,
+            key: key,
+            title: title,
+            description: description,
+            category: category,
+            iconName: iconName,
+            xpReward: xpReward,
+            goldReward: goldReward,
+            gemReward: gemReward,
+            isSecret: isSecret,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$AchievementsTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $AchievementsTableTable,
+    AchievementsTableData,
+    $$AchievementsTableTableFilterComposer,
+    $$AchievementsTableTableOrderingComposer,
+    $$AchievementsTableTableAnnotationComposer,
+    $$AchievementsTableTableCreateCompanionBuilder,
+    $$AchievementsTableTableUpdateCompanionBuilder,
+    (
+      AchievementsTableData,
+      BaseReferences<_$AppDatabase, $AchievementsTableTable,
+          AchievementsTableData>
+    ),
+    AchievementsTableData,
+    PrefetchHooks Function()>;
+typedef $$PlayerAchievementsTableTableCreateCompanionBuilder
+    = PlayerAchievementsTableCompanion Function({
+  Value<int> id,
+  required int playerId,
+  required String achievementKey,
+  Value<DateTime> unlockedAt,
+});
+typedef $$PlayerAchievementsTableTableUpdateCompanionBuilder
+    = PlayerAchievementsTableCompanion Function({
+  Value<int> id,
+  Value<int> playerId,
+  Value<String> achievementKey,
+  Value<DateTime> unlockedAt,
+});
+
+class $$PlayerAchievementsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PlayerAchievementsTableTable> {
+  $$PlayerAchievementsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get achievementKey => $composableBuilder(
+      column: $table.achievementKey,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get unlockedAt => $composableBuilder(
+      column: $table.unlockedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$PlayerAchievementsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlayerAchievementsTableTable> {
+  $$PlayerAchievementsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get achievementKey => $composableBuilder(
+      column: $table.achievementKey,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get unlockedAt => $composableBuilder(
+      column: $table.unlockedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$PlayerAchievementsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlayerAchievementsTableTable> {
+  $$PlayerAchievementsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get achievementKey => $composableBuilder(
+      column: $table.achievementKey, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get unlockedAt => $composableBuilder(
+      column: $table.unlockedAt, builder: (column) => column);
+}
+
+class $$PlayerAchievementsTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlayerAchievementsTableTable,
+    PlayerAchievementsTableData,
+    $$PlayerAchievementsTableTableFilterComposer,
+    $$PlayerAchievementsTableTableOrderingComposer,
+    $$PlayerAchievementsTableTableAnnotationComposer,
+    $$PlayerAchievementsTableTableCreateCompanionBuilder,
+    $$PlayerAchievementsTableTableUpdateCompanionBuilder,
+    (
+      PlayerAchievementsTableData,
+      BaseReferences<_$AppDatabase, $PlayerAchievementsTableTable,
+          PlayerAchievementsTableData>
+    ),
+    PlayerAchievementsTableData,
+    PrefetchHooks Function()> {
+  $$PlayerAchievementsTableTableTableManager(
+      _$AppDatabase db, $PlayerAchievementsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlayerAchievementsTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlayerAchievementsTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlayerAchievementsTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> playerId = const Value.absent(),
+            Value<String> achievementKey = const Value.absent(),
+            Value<DateTime> unlockedAt = const Value.absent(),
+          }) =>
+              PlayerAchievementsTableCompanion(
+            id: id,
+            playerId: playerId,
+            achievementKey: achievementKey,
+            unlockedAt: unlockedAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int playerId,
+            required String achievementKey,
+            Value<DateTime> unlockedAt = const Value.absent(),
+          }) =>
+              PlayerAchievementsTableCompanion.insert(
+            id: id,
+            playerId: playerId,
+            achievementKey: achievementKey,
+            unlockedAt: unlockedAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PlayerAchievementsTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $PlayerAchievementsTableTable,
+        PlayerAchievementsTableData,
+        $$PlayerAchievementsTableTableFilterComposer,
+        $$PlayerAchievementsTableTableOrderingComposer,
+        $$PlayerAchievementsTableTableAnnotationComposer,
+        $$PlayerAchievementsTableTableCreateCompanionBuilder,
+        $$PlayerAchievementsTableTableUpdateCompanionBuilder,
+        (
+          PlayerAchievementsTableData,
+          BaseReferences<_$AppDatabase, $PlayerAchievementsTableTable,
+              PlayerAchievementsTableData>
+        ),
+        PlayerAchievementsTableData,
+        PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5855,4 +7044,9 @@ class $AppDatabaseManager {
       $$InventoryTableTableTableManager(_db, _db.inventoryTable);
   $$ShopItemsTableTableTableManager get shopItemsTable =>
       $$ShopItemsTableTableTableManager(_db, _db.shopItemsTable);
+  $$AchievementsTableTableTableManager get achievementsTable =>
+      $$AchievementsTableTableTableManager(_db, _db.achievementsTable);
+  $$PlayerAchievementsTableTableTableManager get playerAchievementsTable =>
+      $$PlayerAchievementsTableTableTableManager(
+          _db, _db.playerAchievementsTable);
 }
