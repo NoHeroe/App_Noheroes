@@ -1,3 +1,4 @@
+import '../data/database/daos/inventory_dao.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/database/app_database.dart';
 import '../data/database/tables/players_table.dart';
@@ -43,4 +44,23 @@ final habitsProvider = FutureProvider<List<HabitWithStatus>>((ref) async {
   final player = ref.watch(currentPlayerProvider);
   if (player == null) return [];
   return ref.watch(habitDsProvider).getHabitsWithStatus(player.id);
+});
+
+// Inventory DAO provider
+final inventoryDaoProvider = Provider((ref) {
+  return InventoryDao(ref.watch(appDatabaseProvider));
+});
+
+// Inventário do jogador
+final inventoryProvider = FutureProvider<List<InventoryWithItem>>((ref) async {
+  final player = ref.watch(currentPlayerProvider);
+  if (player == null) return [];
+  return ref.watch(inventoryDaoProvider).getInventory(player.id);
+});
+
+// Loja
+final shopProvider = FutureProvider<List<ShopWithItem>>((ref) async {
+  final player = ref.watch(currentPlayerProvider);
+  if (player == null) return [];
+  return ref.watch(inventoryDaoProvider).getShopItems(player.level);
 });

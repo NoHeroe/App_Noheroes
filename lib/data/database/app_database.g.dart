@@ -2442,20 +2442,1568 @@ class HabitLogsTableCompanion extends UpdateCompanion<HabitLogsTableData> {
   }
 }
 
+class $ItemsTableTable extends ItemsTable
+    with TableInfo<$ItemsTableTable, ItemsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ItemsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _rarityMeta = const VerificationMeta('rarity');
+  @override
+  late final GeneratedColumn<String> rarity = GeneratedColumn<String>(
+      'rarity', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('common'));
+  static const VerificationMeta _slotMeta = const VerificationMeta('slot');
+  @override
+  late final GeneratedColumn<String> slot = GeneratedColumn<String>(
+      'slot', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _goldValueMeta =
+      const VerificationMeta('goldValue');
+  @override
+  late final GeneratedColumn<int> goldValue = GeneratedColumn<int>(
+      'gold_value', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(10));
+  static const VerificationMeta _gemValueMeta =
+      const VerificationMeta('gemValue');
+  @override
+  late final GeneratedColumn<int> gemValue = GeneratedColumn<int>(
+      'gem_value', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _strBonusMeta =
+      const VerificationMeta('strBonus');
+  @override
+  late final GeneratedColumn<int> strBonus = GeneratedColumn<int>(
+      'str_bonus', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _dexBonusMeta =
+      const VerificationMeta('dexBonus');
+  @override
+  late final GeneratedColumn<int> dexBonus = GeneratedColumn<int>(
+      'dex_bonus', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _intBonusMeta =
+      const VerificationMeta('intBonus');
+  @override
+  late final GeneratedColumn<int> intBonus = GeneratedColumn<int>(
+      'int_bonus', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _conBonusMeta =
+      const VerificationMeta('conBonus');
+  @override
+  late final GeneratedColumn<int> conBonus = GeneratedColumn<int>(
+      'con_bonus', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _spiBonusMeta =
+      const VerificationMeta('spiBonus');
+  @override
+  late final GeneratedColumn<int> spiBonus = GeneratedColumn<int>(
+      'spi_bonus', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _hpBonusMeta =
+      const VerificationMeta('hpBonus');
+  @override
+  late final GeneratedColumn<int> hpBonus = GeneratedColumn<int>(
+      'hp_bonus', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _mpBonusMeta =
+      const VerificationMeta('mpBonus');
+  @override
+  late final GeneratedColumn<int> mpBonus = GeneratedColumn<int>(
+      'mp_bonus', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _isConsumableMeta =
+      const VerificationMeta('isConsumable');
+  @override
+  late final GeneratedColumn<bool> isConsumable = GeneratedColumn<bool>(
+      'is_consumable', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_consumable" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isStackableMeta =
+      const VerificationMeta('isStackable');
+  @override
+  late final GeneratedColumn<bool> isStackable = GeneratedColumn<bool>(
+      'is_stackable', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_stackable" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _iconNameMeta =
+      const VerificationMeta('iconName');
+  @override
+  late final GeneratedColumn<String> iconName = GeneratedColumn<String>(
+      'icon_name', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('item'));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        description,
+        type,
+        rarity,
+        slot,
+        goldValue,
+        gemValue,
+        strBonus,
+        dexBonus,
+        intBonus,
+        conBonus,
+        spiBonus,
+        hpBonus,
+        mpBonus,
+        isConsumable,
+        isStackable,
+        iconName
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'items';
+  @override
+  VerificationContext validateIntegrity(Insertable<ItemsTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('rarity')) {
+      context.handle(_rarityMeta,
+          rarity.isAcceptableOrUnknown(data['rarity']!, _rarityMeta));
+    }
+    if (data.containsKey('slot')) {
+      context.handle(
+          _slotMeta, slot.isAcceptableOrUnknown(data['slot']!, _slotMeta));
+    }
+    if (data.containsKey('gold_value')) {
+      context.handle(_goldValueMeta,
+          goldValue.isAcceptableOrUnknown(data['gold_value']!, _goldValueMeta));
+    }
+    if (data.containsKey('gem_value')) {
+      context.handle(_gemValueMeta,
+          gemValue.isAcceptableOrUnknown(data['gem_value']!, _gemValueMeta));
+    }
+    if (data.containsKey('str_bonus')) {
+      context.handle(_strBonusMeta,
+          strBonus.isAcceptableOrUnknown(data['str_bonus']!, _strBonusMeta));
+    }
+    if (data.containsKey('dex_bonus')) {
+      context.handle(_dexBonusMeta,
+          dexBonus.isAcceptableOrUnknown(data['dex_bonus']!, _dexBonusMeta));
+    }
+    if (data.containsKey('int_bonus')) {
+      context.handle(_intBonusMeta,
+          intBonus.isAcceptableOrUnknown(data['int_bonus']!, _intBonusMeta));
+    }
+    if (data.containsKey('con_bonus')) {
+      context.handle(_conBonusMeta,
+          conBonus.isAcceptableOrUnknown(data['con_bonus']!, _conBonusMeta));
+    }
+    if (data.containsKey('spi_bonus')) {
+      context.handle(_spiBonusMeta,
+          spiBonus.isAcceptableOrUnknown(data['spi_bonus']!, _spiBonusMeta));
+    }
+    if (data.containsKey('hp_bonus')) {
+      context.handle(_hpBonusMeta,
+          hpBonus.isAcceptableOrUnknown(data['hp_bonus']!, _hpBonusMeta));
+    }
+    if (data.containsKey('mp_bonus')) {
+      context.handle(_mpBonusMeta,
+          mpBonus.isAcceptableOrUnknown(data['mp_bonus']!, _mpBonusMeta));
+    }
+    if (data.containsKey('is_consumable')) {
+      context.handle(
+          _isConsumableMeta,
+          isConsumable.isAcceptableOrUnknown(
+              data['is_consumable']!, _isConsumableMeta));
+    }
+    if (data.containsKey('is_stackable')) {
+      context.handle(
+          _isStackableMeta,
+          isStackable.isAcceptableOrUnknown(
+              data['is_stackable']!, _isStackableMeta));
+    }
+    if (data.containsKey('icon_name')) {
+      context.handle(_iconNameMeta,
+          iconName.isAcceptableOrUnknown(data['icon_name']!, _iconNameMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ItemsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ItemsTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      rarity: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}rarity'])!,
+      slot: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}slot']),
+      goldValue: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}gold_value'])!,
+      gemValue: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}gem_value'])!,
+      strBonus: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}str_bonus'])!,
+      dexBonus: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}dex_bonus'])!,
+      intBonus: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}int_bonus'])!,
+      conBonus: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}con_bonus'])!,
+      spiBonus: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}spi_bonus'])!,
+      hpBonus: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}hp_bonus'])!,
+      mpBonus: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}mp_bonus'])!,
+      isConsumable: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_consumable'])!,
+      isStackable: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_stackable'])!,
+      iconName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}icon_name'])!,
+    );
+  }
+
+  @override
+  $ItemsTableTable createAlias(String alias) {
+    return $ItemsTableTable(attachedDatabase, alias);
+  }
+}
+
+class ItemsTableData extends DataClass implements Insertable<ItemsTableData> {
+  final int id;
+  final String name;
+  final String description;
+  final String type;
+  final String rarity;
+  final String? slot;
+  final int goldValue;
+  final int gemValue;
+  final int strBonus;
+  final int dexBonus;
+  final int intBonus;
+  final int conBonus;
+  final int spiBonus;
+  final int hpBonus;
+  final int mpBonus;
+  final bool isConsumable;
+  final bool isStackable;
+  final String iconName;
+  const ItemsTableData(
+      {required this.id,
+      required this.name,
+      required this.description,
+      required this.type,
+      required this.rarity,
+      this.slot,
+      required this.goldValue,
+      required this.gemValue,
+      required this.strBonus,
+      required this.dexBonus,
+      required this.intBonus,
+      required this.conBonus,
+      required this.spiBonus,
+      required this.hpBonus,
+      required this.mpBonus,
+      required this.isConsumable,
+      required this.isStackable,
+      required this.iconName});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    map['description'] = Variable<String>(description);
+    map['type'] = Variable<String>(type);
+    map['rarity'] = Variable<String>(rarity);
+    if (!nullToAbsent || slot != null) {
+      map['slot'] = Variable<String>(slot);
+    }
+    map['gold_value'] = Variable<int>(goldValue);
+    map['gem_value'] = Variable<int>(gemValue);
+    map['str_bonus'] = Variable<int>(strBonus);
+    map['dex_bonus'] = Variable<int>(dexBonus);
+    map['int_bonus'] = Variable<int>(intBonus);
+    map['con_bonus'] = Variable<int>(conBonus);
+    map['spi_bonus'] = Variable<int>(spiBonus);
+    map['hp_bonus'] = Variable<int>(hpBonus);
+    map['mp_bonus'] = Variable<int>(mpBonus);
+    map['is_consumable'] = Variable<bool>(isConsumable);
+    map['is_stackable'] = Variable<bool>(isStackable);
+    map['icon_name'] = Variable<String>(iconName);
+    return map;
+  }
+
+  ItemsTableCompanion toCompanion(bool nullToAbsent) {
+    return ItemsTableCompanion(
+      id: Value(id),
+      name: Value(name),
+      description: Value(description),
+      type: Value(type),
+      rarity: Value(rarity),
+      slot: slot == null && nullToAbsent ? const Value.absent() : Value(slot),
+      goldValue: Value(goldValue),
+      gemValue: Value(gemValue),
+      strBonus: Value(strBonus),
+      dexBonus: Value(dexBonus),
+      intBonus: Value(intBonus),
+      conBonus: Value(conBonus),
+      spiBonus: Value(spiBonus),
+      hpBonus: Value(hpBonus),
+      mpBonus: Value(mpBonus),
+      isConsumable: Value(isConsumable),
+      isStackable: Value(isStackable),
+      iconName: Value(iconName),
+    );
+  }
+
+  factory ItemsTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ItemsTableData(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      description: serializer.fromJson<String>(json['description']),
+      type: serializer.fromJson<String>(json['type']),
+      rarity: serializer.fromJson<String>(json['rarity']),
+      slot: serializer.fromJson<String?>(json['slot']),
+      goldValue: serializer.fromJson<int>(json['goldValue']),
+      gemValue: serializer.fromJson<int>(json['gemValue']),
+      strBonus: serializer.fromJson<int>(json['strBonus']),
+      dexBonus: serializer.fromJson<int>(json['dexBonus']),
+      intBonus: serializer.fromJson<int>(json['intBonus']),
+      conBonus: serializer.fromJson<int>(json['conBonus']),
+      spiBonus: serializer.fromJson<int>(json['spiBonus']),
+      hpBonus: serializer.fromJson<int>(json['hpBonus']),
+      mpBonus: serializer.fromJson<int>(json['mpBonus']),
+      isConsumable: serializer.fromJson<bool>(json['isConsumable']),
+      isStackable: serializer.fromJson<bool>(json['isStackable']),
+      iconName: serializer.fromJson<String>(json['iconName']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'description': serializer.toJson<String>(description),
+      'type': serializer.toJson<String>(type),
+      'rarity': serializer.toJson<String>(rarity),
+      'slot': serializer.toJson<String?>(slot),
+      'goldValue': serializer.toJson<int>(goldValue),
+      'gemValue': serializer.toJson<int>(gemValue),
+      'strBonus': serializer.toJson<int>(strBonus),
+      'dexBonus': serializer.toJson<int>(dexBonus),
+      'intBonus': serializer.toJson<int>(intBonus),
+      'conBonus': serializer.toJson<int>(conBonus),
+      'spiBonus': serializer.toJson<int>(spiBonus),
+      'hpBonus': serializer.toJson<int>(hpBonus),
+      'mpBonus': serializer.toJson<int>(mpBonus),
+      'isConsumable': serializer.toJson<bool>(isConsumable),
+      'isStackable': serializer.toJson<bool>(isStackable),
+      'iconName': serializer.toJson<String>(iconName),
+    };
+  }
+
+  ItemsTableData copyWith(
+          {int? id,
+          String? name,
+          String? description,
+          String? type,
+          String? rarity,
+          Value<String?> slot = const Value.absent(),
+          int? goldValue,
+          int? gemValue,
+          int? strBonus,
+          int? dexBonus,
+          int? intBonus,
+          int? conBonus,
+          int? spiBonus,
+          int? hpBonus,
+          int? mpBonus,
+          bool? isConsumable,
+          bool? isStackable,
+          String? iconName}) =>
+      ItemsTableData(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        description: description ?? this.description,
+        type: type ?? this.type,
+        rarity: rarity ?? this.rarity,
+        slot: slot.present ? slot.value : this.slot,
+        goldValue: goldValue ?? this.goldValue,
+        gemValue: gemValue ?? this.gemValue,
+        strBonus: strBonus ?? this.strBonus,
+        dexBonus: dexBonus ?? this.dexBonus,
+        intBonus: intBonus ?? this.intBonus,
+        conBonus: conBonus ?? this.conBonus,
+        spiBonus: spiBonus ?? this.spiBonus,
+        hpBonus: hpBonus ?? this.hpBonus,
+        mpBonus: mpBonus ?? this.mpBonus,
+        isConsumable: isConsumable ?? this.isConsumable,
+        isStackable: isStackable ?? this.isStackable,
+        iconName: iconName ?? this.iconName,
+      );
+  ItemsTableData copyWithCompanion(ItemsTableCompanion data) {
+    return ItemsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      description:
+          data.description.present ? data.description.value : this.description,
+      type: data.type.present ? data.type.value : this.type,
+      rarity: data.rarity.present ? data.rarity.value : this.rarity,
+      slot: data.slot.present ? data.slot.value : this.slot,
+      goldValue: data.goldValue.present ? data.goldValue.value : this.goldValue,
+      gemValue: data.gemValue.present ? data.gemValue.value : this.gemValue,
+      strBonus: data.strBonus.present ? data.strBonus.value : this.strBonus,
+      dexBonus: data.dexBonus.present ? data.dexBonus.value : this.dexBonus,
+      intBonus: data.intBonus.present ? data.intBonus.value : this.intBonus,
+      conBonus: data.conBonus.present ? data.conBonus.value : this.conBonus,
+      spiBonus: data.spiBonus.present ? data.spiBonus.value : this.spiBonus,
+      hpBonus: data.hpBonus.present ? data.hpBonus.value : this.hpBonus,
+      mpBonus: data.mpBonus.present ? data.mpBonus.value : this.mpBonus,
+      isConsumable: data.isConsumable.present
+          ? data.isConsumable.value
+          : this.isConsumable,
+      isStackable:
+          data.isStackable.present ? data.isStackable.value : this.isStackable,
+      iconName: data.iconName.present ? data.iconName.value : this.iconName,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemsTableData(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('type: $type, ')
+          ..write('rarity: $rarity, ')
+          ..write('slot: $slot, ')
+          ..write('goldValue: $goldValue, ')
+          ..write('gemValue: $gemValue, ')
+          ..write('strBonus: $strBonus, ')
+          ..write('dexBonus: $dexBonus, ')
+          ..write('intBonus: $intBonus, ')
+          ..write('conBonus: $conBonus, ')
+          ..write('spiBonus: $spiBonus, ')
+          ..write('hpBonus: $hpBonus, ')
+          ..write('mpBonus: $mpBonus, ')
+          ..write('isConsumable: $isConsumable, ')
+          ..write('isStackable: $isStackable, ')
+          ..write('iconName: $iconName')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      name,
+      description,
+      type,
+      rarity,
+      slot,
+      goldValue,
+      gemValue,
+      strBonus,
+      dexBonus,
+      intBonus,
+      conBonus,
+      spiBonus,
+      hpBonus,
+      mpBonus,
+      isConsumable,
+      isStackable,
+      iconName);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ItemsTableData &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.description == this.description &&
+          other.type == this.type &&
+          other.rarity == this.rarity &&
+          other.slot == this.slot &&
+          other.goldValue == this.goldValue &&
+          other.gemValue == this.gemValue &&
+          other.strBonus == this.strBonus &&
+          other.dexBonus == this.dexBonus &&
+          other.intBonus == this.intBonus &&
+          other.conBonus == this.conBonus &&
+          other.spiBonus == this.spiBonus &&
+          other.hpBonus == this.hpBonus &&
+          other.mpBonus == this.mpBonus &&
+          other.isConsumable == this.isConsumable &&
+          other.isStackable == this.isStackable &&
+          other.iconName == this.iconName);
+}
+
+class ItemsTableCompanion extends UpdateCompanion<ItemsTableData> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String> description;
+  final Value<String> type;
+  final Value<String> rarity;
+  final Value<String?> slot;
+  final Value<int> goldValue;
+  final Value<int> gemValue;
+  final Value<int> strBonus;
+  final Value<int> dexBonus;
+  final Value<int> intBonus;
+  final Value<int> conBonus;
+  final Value<int> spiBonus;
+  final Value<int> hpBonus;
+  final Value<int> mpBonus;
+  final Value<bool> isConsumable;
+  final Value<bool> isStackable;
+  final Value<String> iconName;
+  const ItemsTableCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.description = const Value.absent(),
+    this.type = const Value.absent(),
+    this.rarity = const Value.absent(),
+    this.slot = const Value.absent(),
+    this.goldValue = const Value.absent(),
+    this.gemValue = const Value.absent(),
+    this.strBonus = const Value.absent(),
+    this.dexBonus = const Value.absent(),
+    this.intBonus = const Value.absent(),
+    this.conBonus = const Value.absent(),
+    this.spiBonus = const Value.absent(),
+    this.hpBonus = const Value.absent(),
+    this.mpBonus = const Value.absent(),
+    this.isConsumable = const Value.absent(),
+    this.isStackable = const Value.absent(),
+    this.iconName = const Value.absent(),
+  });
+  ItemsTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    this.description = const Value.absent(),
+    required String type,
+    this.rarity = const Value.absent(),
+    this.slot = const Value.absent(),
+    this.goldValue = const Value.absent(),
+    this.gemValue = const Value.absent(),
+    this.strBonus = const Value.absent(),
+    this.dexBonus = const Value.absent(),
+    this.intBonus = const Value.absent(),
+    this.conBonus = const Value.absent(),
+    this.spiBonus = const Value.absent(),
+    this.hpBonus = const Value.absent(),
+    this.mpBonus = const Value.absent(),
+    this.isConsumable = const Value.absent(),
+    this.isStackable = const Value.absent(),
+    this.iconName = const Value.absent(),
+  })  : name = Value(name),
+        type = Value(type);
+  static Insertable<ItemsTableData> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<String>? description,
+    Expression<String>? type,
+    Expression<String>? rarity,
+    Expression<String>? slot,
+    Expression<int>? goldValue,
+    Expression<int>? gemValue,
+    Expression<int>? strBonus,
+    Expression<int>? dexBonus,
+    Expression<int>? intBonus,
+    Expression<int>? conBonus,
+    Expression<int>? spiBonus,
+    Expression<int>? hpBonus,
+    Expression<int>? mpBonus,
+    Expression<bool>? isConsumable,
+    Expression<bool>? isStackable,
+    Expression<String>? iconName,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (type != null) 'type': type,
+      if (rarity != null) 'rarity': rarity,
+      if (slot != null) 'slot': slot,
+      if (goldValue != null) 'gold_value': goldValue,
+      if (gemValue != null) 'gem_value': gemValue,
+      if (strBonus != null) 'str_bonus': strBonus,
+      if (dexBonus != null) 'dex_bonus': dexBonus,
+      if (intBonus != null) 'int_bonus': intBonus,
+      if (conBonus != null) 'con_bonus': conBonus,
+      if (spiBonus != null) 'spi_bonus': spiBonus,
+      if (hpBonus != null) 'hp_bonus': hpBonus,
+      if (mpBonus != null) 'mp_bonus': mpBonus,
+      if (isConsumable != null) 'is_consumable': isConsumable,
+      if (isStackable != null) 'is_stackable': isStackable,
+      if (iconName != null) 'icon_name': iconName,
+    });
+  }
+
+  ItemsTableCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? name,
+      Value<String>? description,
+      Value<String>? type,
+      Value<String>? rarity,
+      Value<String?>? slot,
+      Value<int>? goldValue,
+      Value<int>? gemValue,
+      Value<int>? strBonus,
+      Value<int>? dexBonus,
+      Value<int>? intBonus,
+      Value<int>? conBonus,
+      Value<int>? spiBonus,
+      Value<int>? hpBonus,
+      Value<int>? mpBonus,
+      Value<bool>? isConsumable,
+      Value<bool>? isStackable,
+      Value<String>? iconName}) {
+    return ItemsTableCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      type: type ?? this.type,
+      rarity: rarity ?? this.rarity,
+      slot: slot ?? this.slot,
+      goldValue: goldValue ?? this.goldValue,
+      gemValue: gemValue ?? this.gemValue,
+      strBonus: strBonus ?? this.strBonus,
+      dexBonus: dexBonus ?? this.dexBonus,
+      intBonus: intBonus ?? this.intBonus,
+      conBonus: conBonus ?? this.conBonus,
+      spiBonus: spiBonus ?? this.spiBonus,
+      hpBonus: hpBonus ?? this.hpBonus,
+      mpBonus: mpBonus ?? this.mpBonus,
+      isConsumable: isConsumable ?? this.isConsumable,
+      isStackable: isStackable ?? this.isStackable,
+      iconName: iconName ?? this.iconName,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (rarity.present) {
+      map['rarity'] = Variable<String>(rarity.value);
+    }
+    if (slot.present) {
+      map['slot'] = Variable<String>(slot.value);
+    }
+    if (goldValue.present) {
+      map['gold_value'] = Variable<int>(goldValue.value);
+    }
+    if (gemValue.present) {
+      map['gem_value'] = Variable<int>(gemValue.value);
+    }
+    if (strBonus.present) {
+      map['str_bonus'] = Variable<int>(strBonus.value);
+    }
+    if (dexBonus.present) {
+      map['dex_bonus'] = Variable<int>(dexBonus.value);
+    }
+    if (intBonus.present) {
+      map['int_bonus'] = Variable<int>(intBonus.value);
+    }
+    if (conBonus.present) {
+      map['con_bonus'] = Variable<int>(conBonus.value);
+    }
+    if (spiBonus.present) {
+      map['spi_bonus'] = Variable<int>(spiBonus.value);
+    }
+    if (hpBonus.present) {
+      map['hp_bonus'] = Variable<int>(hpBonus.value);
+    }
+    if (mpBonus.present) {
+      map['mp_bonus'] = Variable<int>(mpBonus.value);
+    }
+    if (isConsumable.present) {
+      map['is_consumable'] = Variable<bool>(isConsumable.value);
+    }
+    if (isStackable.present) {
+      map['is_stackable'] = Variable<bool>(isStackable.value);
+    }
+    if (iconName.present) {
+      map['icon_name'] = Variable<String>(iconName.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('type: $type, ')
+          ..write('rarity: $rarity, ')
+          ..write('slot: $slot, ')
+          ..write('goldValue: $goldValue, ')
+          ..write('gemValue: $gemValue, ')
+          ..write('strBonus: $strBonus, ')
+          ..write('dexBonus: $dexBonus, ')
+          ..write('intBonus: $intBonus, ')
+          ..write('conBonus: $conBonus, ')
+          ..write('spiBonus: $spiBonus, ')
+          ..write('hpBonus: $hpBonus, ')
+          ..write('mpBonus: $mpBonus, ')
+          ..write('isConsumable: $isConsumable, ')
+          ..write('isStackable: $isStackable, ')
+          ..write('iconName: $iconName')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $InventoryTableTable extends InventoryTable
+    with TableInfo<$InventoryTableTable, InventoryTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $InventoryTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<int> itemId = GeneratedColumn<int>(
+      'item_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _quantityMeta =
+      const VerificationMeta('quantity');
+  @override
+  late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
+      'quantity', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _isEquippedMeta =
+      const VerificationMeta('isEquipped');
+  @override
+  late final GeneratedColumn<bool> isEquipped = GeneratedColumn<bool>(
+      'is_equipped', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_equipped" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _equippedSlotMeta =
+      const VerificationMeta('equippedSlot');
+  @override
+  late final GeneratedColumn<String> equippedSlot = GeneratedColumn<String>(
+      'equipped_slot', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _acquiredAtMeta =
+      const VerificationMeta('acquiredAt');
+  @override
+  late final GeneratedColumn<DateTime> acquiredAt = GeneratedColumn<DateTime>(
+      'acquired_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, playerId, itemId, quantity, isEquipped, equippedSlot, acquiredAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'inventory';
+  @override
+  VerificationContext validateIntegrity(Insertable<InventoryTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(_itemIdMeta,
+          itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta));
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(_quantityMeta,
+          quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta));
+    }
+    if (data.containsKey('is_equipped')) {
+      context.handle(
+          _isEquippedMeta,
+          isEquipped.isAcceptableOrUnknown(
+              data['is_equipped']!, _isEquippedMeta));
+    }
+    if (data.containsKey('equipped_slot')) {
+      context.handle(
+          _equippedSlotMeta,
+          equippedSlot.isAcceptableOrUnknown(
+              data['equipped_slot']!, _equippedSlotMeta));
+    }
+    if (data.containsKey('acquired_at')) {
+      context.handle(
+          _acquiredAtMeta,
+          acquiredAt.isAcceptableOrUnknown(
+              data['acquired_at']!, _acquiredAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  InventoryTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return InventoryTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      itemId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}item_id'])!,
+      quantity: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}quantity'])!,
+      isEquipped: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_equipped'])!,
+      equippedSlot: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}equipped_slot']),
+      acquiredAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}acquired_at'])!,
+    );
+  }
+
+  @override
+  $InventoryTableTable createAlias(String alias) {
+    return $InventoryTableTable(attachedDatabase, alias);
+  }
+}
+
+class InventoryTableData extends DataClass
+    implements Insertable<InventoryTableData> {
+  final int id;
+  final int playerId;
+  final int itemId;
+  final int quantity;
+  final bool isEquipped;
+  final String? equippedSlot;
+  final DateTime acquiredAt;
+  const InventoryTableData(
+      {required this.id,
+      required this.playerId,
+      required this.itemId,
+      required this.quantity,
+      required this.isEquipped,
+      this.equippedSlot,
+      required this.acquiredAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['item_id'] = Variable<int>(itemId);
+    map['quantity'] = Variable<int>(quantity);
+    map['is_equipped'] = Variable<bool>(isEquipped);
+    if (!nullToAbsent || equippedSlot != null) {
+      map['equipped_slot'] = Variable<String>(equippedSlot);
+    }
+    map['acquired_at'] = Variable<DateTime>(acquiredAt);
+    return map;
+  }
+
+  InventoryTableCompanion toCompanion(bool nullToAbsent) {
+    return InventoryTableCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      itemId: Value(itemId),
+      quantity: Value(quantity),
+      isEquipped: Value(isEquipped),
+      equippedSlot: equippedSlot == null && nullToAbsent
+          ? const Value.absent()
+          : Value(equippedSlot),
+      acquiredAt: Value(acquiredAt),
+    );
+  }
+
+  factory InventoryTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return InventoryTableData(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      itemId: serializer.fromJson<int>(json['itemId']),
+      quantity: serializer.fromJson<int>(json['quantity']),
+      isEquipped: serializer.fromJson<bool>(json['isEquipped']),
+      equippedSlot: serializer.fromJson<String?>(json['equippedSlot']),
+      acquiredAt: serializer.fromJson<DateTime>(json['acquiredAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'itemId': serializer.toJson<int>(itemId),
+      'quantity': serializer.toJson<int>(quantity),
+      'isEquipped': serializer.toJson<bool>(isEquipped),
+      'equippedSlot': serializer.toJson<String?>(equippedSlot),
+      'acquiredAt': serializer.toJson<DateTime>(acquiredAt),
+    };
+  }
+
+  InventoryTableData copyWith(
+          {int? id,
+          int? playerId,
+          int? itemId,
+          int? quantity,
+          bool? isEquipped,
+          Value<String?> equippedSlot = const Value.absent(),
+          DateTime? acquiredAt}) =>
+      InventoryTableData(
+        id: id ?? this.id,
+        playerId: playerId ?? this.playerId,
+        itemId: itemId ?? this.itemId,
+        quantity: quantity ?? this.quantity,
+        isEquipped: isEquipped ?? this.isEquipped,
+        equippedSlot:
+            equippedSlot.present ? equippedSlot.value : this.equippedSlot,
+        acquiredAt: acquiredAt ?? this.acquiredAt,
+      );
+  InventoryTableData copyWithCompanion(InventoryTableCompanion data) {
+    return InventoryTableData(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      isEquipped:
+          data.isEquipped.present ? data.isEquipped.value : this.isEquipped,
+      equippedSlot: data.equippedSlot.present
+          ? data.equippedSlot.value
+          : this.equippedSlot,
+      acquiredAt:
+          data.acquiredAt.present ? data.acquiredAt.value : this.acquiredAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InventoryTableData(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('itemId: $itemId, ')
+          ..write('quantity: $quantity, ')
+          ..write('isEquipped: $isEquipped, ')
+          ..write('equippedSlot: $equippedSlot, ')
+          ..write('acquiredAt: $acquiredAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id, playerId, itemId, quantity, isEquipped, equippedSlot, acquiredAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is InventoryTableData &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.itemId == this.itemId &&
+          other.quantity == this.quantity &&
+          other.isEquipped == this.isEquipped &&
+          other.equippedSlot == this.equippedSlot &&
+          other.acquiredAt == this.acquiredAt);
+}
+
+class InventoryTableCompanion extends UpdateCompanion<InventoryTableData> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<int> itemId;
+  final Value<int> quantity;
+  final Value<bool> isEquipped;
+  final Value<String?> equippedSlot;
+  final Value<DateTime> acquiredAt;
+  const InventoryTableCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.isEquipped = const Value.absent(),
+    this.equippedSlot = const Value.absent(),
+    this.acquiredAt = const Value.absent(),
+  });
+  InventoryTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required int itemId,
+    this.quantity = const Value.absent(),
+    this.isEquipped = const Value.absent(),
+    this.equippedSlot = const Value.absent(),
+    this.acquiredAt = const Value.absent(),
+  })  : playerId = Value(playerId),
+        itemId = Value(itemId);
+  static Insertable<InventoryTableData> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<int>? itemId,
+    Expression<int>? quantity,
+    Expression<bool>? isEquipped,
+    Expression<String>? equippedSlot,
+    Expression<DateTime>? acquiredAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (itemId != null) 'item_id': itemId,
+      if (quantity != null) 'quantity': quantity,
+      if (isEquipped != null) 'is_equipped': isEquipped,
+      if (equippedSlot != null) 'equipped_slot': equippedSlot,
+      if (acquiredAt != null) 'acquired_at': acquiredAt,
+    });
+  }
+
+  InventoryTableCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? playerId,
+      Value<int>? itemId,
+      Value<int>? quantity,
+      Value<bool>? isEquipped,
+      Value<String?>? equippedSlot,
+      Value<DateTime>? acquiredAt}) {
+    return InventoryTableCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      itemId: itemId ?? this.itemId,
+      quantity: quantity ?? this.quantity,
+      isEquipped: isEquipped ?? this.isEquipped,
+      equippedSlot: equippedSlot ?? this.equippedSlot,
+      acquiredAt: acquiredAt ?? this.acquiredAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<int>(itemId.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<int>(quantity.value);
+    }
+    if (isEquipped.present) {
+      map['is_equipped'] = Variable<bool>(isEquipped.value);
+    }
+    if (equippedSlot.present) {
+      map['equipped_slot'] = Variable<String>(equippedSlot.value);
+    }
+    if (acquiredAt.present) {
+      map['acquired_at'] = Variable<DateTime>(acquiredAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InventoryTableCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('itemId: $itemId, ')
+          ..write('quantity: $quantity, ')
+          ..write('isEquipped: $isEquipped, ')
+          ..write('equippedSlot: $equippedSlot, ')
+          ..write('acquiredAt: $acquiredAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ShopItemsTableTable extends ShopItemsTable
+    with TableInfo<$ShopItemsTableTable, ShopItemsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ShopItemsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<int> itemId = GeneratedColumn<int>(
+      'item_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _currencyMeta =
+      const VerificationMeta('currency');
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+      'currency', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('gold'));
+  static const VerificationMeta _priceMeta = const VerificationMeta('price');
+  @override
+  late final GeneratedColumn<int> price = GeneratedColumn<int>(
+      'price', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _isAvailableMeta =
+      const VerificationMeta('isAvailable');
+  @override
+  late final GeneratedColumn<bool> isAvailable = GeneratedColumn<bool>(
+      'is_available', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_available" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _requiredLevelMeta =
+      const VerificationMeta('requiredLevel');
+  @override
+  late final GeneratedColumn<int> requiredLevel = GeneratedColumn<int>(
+      'required_level', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, itemId, currency, price, isAvailable, requiredLevel];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'shop_items';
+  @override
+  VerificationContext validateIntegrity(Insertable<ShopItemsTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(_itemIdMeta,
+          itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta));
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('currency')) {
+      context.handle(_currencyMeta,
+          currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta));
+    }
+    if (data.containsKey('price')) {
+      context.handle(
+          _priceMeta, price.isAcceptableOrUnknown(data['price']!, _priceMeta));
+    } else if (isInserting) {
+      context.missing(_priceMeta);
+    }
+    if (data.containsKey('is_available')) {
+      context.handle(
+          _isAvailableMeta,
+          isAvailable.isAcceptableOrUnknown(
+              data['is_available']!, _isAvailableMeta));
+    }
+    if (data.containsKey('required_level')) {
+      context.handle(
+          _requiredLevelMeta,
+          requiredLevel.isAcceptableOrUnknown(
+              data['required_level']!, _requiredLevelMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ShopItemsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ShopItemsTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      itemId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}item_id'])!,
+      currency: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}currency'])!,
+      price: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}price'])!,
+      isAvailable: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_available'])!,
+      requiredLevel: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}required_level'])!,
+    );
+  }
+
+  @override
+  $ShopItemsTableTable createAlias(String alias) {
+    return $ShopItemsTableTable(attachedDatabase, alias);
+  }
+}
+
+class ShopItemsTableData extends DataClass
+    implements Insertable<ShopItemsTableData> {
+  final int id;
+  final int itemId;
+  final String currency;
+  final int price;
+  final bool isAvailable;
+  final int requiredLevel;
+  const ShopItemsTableData(
+      {required this.id,
+      required this.itemId,
+      required this.currency,
+      required this.price,
+      required this.isAvailable,
+      required this.requiredLevel});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['item_id'] = Variable<int>(itemId);
+    map['currency'] = Variable<String>(currency);
+    map['price'] = Variable<int>(price);
+    map['is_available'] = Variable<bool>(isAvailable);
+    map['required_level'] = Variable<int>(requiredLevel);
+    return map;
+  }
+
+  ShopItemsTableCompanion toCompanion(bool nullToAbsent) {
+    return ShopItemsTableCompanion(
+      id: Value(id),
+      itemId: Value(itemId),
+      currency: Value(currency),
+      price: Value(price),
+      isAvailable: Value(isAvailable),
+      requiredLevel: Value(requiredLevel),
+    );
+  }
+
+  factory ShopItemsTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ShopItemsTableData(
+      id: serializer.fromJson<int>(json['id']),
+      itemId: serializer.fromJson<int>(json['itemId']),
+      currency: serializer.fromJson<String>(json['currency']),
+      price: serializer.fromJson<int>(json['price']),
+      isAvailable: serializer.fromJson<bool>(json['isAvailable']),
+      requiredLevel: serializer.fromJson<int>(json['requiredLevel']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'itemId': serializer.toJson<int>(itemId),
+      'currency': serializer.toJson<String>(currency),
+      'price': serializer.toJson<int>(price),
+      'isAvailable': serializer.toJson<bool>(isAvailable),
+      'requiredLevel': serializer.toJson<int>(requiredLevel),
+    };
+  }
+
+  ShopItemsTableData copyWith(
+          {int? id,
+          int? itemId,
+          String? currency,
+          int? price,
+          bool? isAvailable,
+          int? requiredLevel}) =>
+      ShopItemsTableData(
+        id: id ?? this.id,
+        itemId: itemId ?? this.itemId,
+        currency: currency ?? this.currency,
+        price: price ?? this.price,
+        isAvailable: isAvailable ?? this.isAvailable,
+        requiredLevel: requiredLevel ?? this.requiredLevel,
+      );
+  ShopItemsTableData copyWithCompanion(ShopItemsTableCompanion data) {
+    return ShopItemsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      currency: data.currency.present ? data.currency.value : this.currency,
+      price: data.price.present ? data.price.value : this.price,
+      isAvailable:
+          data.isAvailable.present ? data.isAvailable.value : this.isAvailable,
+      requiredLevel: data.requiredLevel.present
+          ? data.requiredLevel.value
+          : this.requiredLevel,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShopItemsTableData(')
+          ..write('id: $id, ')
+          ..write('itemId: $itemId, ')
+          ..write('currency: $currency, ')
+          ..write('price: $price, ')
+          ..write('isAvailable: $isAvailable, ')
+          ..write('requiredLevel: $requiredLevel')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, itemId, currency, price, isAvailable, requiredLevel);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ShopItemsTableData &&
+          other.id == this.id &&
+          other.itemId == this.itemId &&
+          other.currency == this.currency &&
+          other.price == this.price &&
+          other.isAvailable == this.isAvailable &&
+          other.requiredLevel == this.requiredLevel);
+}
+
+class ShopItemsTableCompanion extends UpdateCompanion<ShopItemsTableData> {
+  final Value<int> id;
+  final Value<int> itemId;
+  final Value<String> currency;
+  final Value<int> price;
+  final Value<bool> isAvailable;
+  final Value<int> requiredLevel;
+  const ShopItemsTableCompanion({
+    this.id = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.price = const Value.absent(),
+    this.isAvailable = const Value.absent(),
+    this.requiredLevel = const Value.absent(),
+  });
+  ShopItemsTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int itemId,
+    this.currency = const Value.absent(),
+    required int price,
+    this.isAvailable = const Value.absent(),
+    this.requiredLevel = const Value.absent(),
+  })  : itemId = Value(itemId),
+        price = Value(price);
+  static Insertable<ShopItemsTableData> custom({
+    Expression<int>? id,
+    Expression<int>? itemId,
+    Expression<String>? currency,
+    Expression<int>? price,
+    Expression<bool>? isAvailable,
+    Expression<int>? requiredLevel,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (itemId != null) 'item_id': itemId,
+      if (currency != null) 'currency': currency,
+      if (price != null) 'price': price,
+      if (isAvailable != null) 'is_available': isAvailable,
+      if (requiredLevel != null) 'required_level': requiredLevel,
+    });
+  }
+
+  ShopItemsTableCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? itemId,
+      Value<String>? currency,
+      Value<int>? price,
+      Value<bool>? isAvailable,
+      Value<int>? requiredLevel}) {
+    return ShopItemsTableCompanion(
+      id: id ?? this.id,
+      itemId: itemId ?? this.itemId,
+      currency: currency ?? this.currency,
+      price: price ?? this.price,
+      isAvailable: isAvailable ?? this.isAvailable,
+      requiredLevel: requiredLevel ?? this.requiredLevel,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<int>(itemId.value);
+    }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
+    if (price.present) {
+      map['price'] = Variable<int>(price.value);
+    }
+    if (isAvailable.present) {
+      map['is_available'] = Variable<bool>(isAvailable.value);
+    }
+    if (requiredLevel.present) {
+      map['required_level'] = Variable<int>(requiredLevel.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShopItemsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('itemId: $itemId, ')
+          ..write('currency: $currency, ')
+          ..write('price: $price, ')
+          ..write('isAvailable: $isAvailable, ')
+          ..write('requiredLevel: $requiredLevel')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $PlayersTableTable playersTable = $PlayersTableTable(this);
   late final $HabitsTableTable habitsTable = $HabitsTableTable(this);
   late final $HabitLogsTableTable habitLogsTable = $HabitLogsTableTable(this);
+  late final $ItemsTableTable itemsTable = $ItemsTableTable(this);
+  late final $InventoryTableTable inventoryTable = $InventoryTableTable(this);
+  late final $ShopItemsTableTable shopItemsTable = $ShopItemsTableTable(this);
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
   late final HabitDao habitDao = HabitDao(this as AppDatabase);
+  late final InventoryDao inventoryDao = InventoryDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [playersTable, habitsTable, habitLogsTable];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+        playersTable,
+        habitsTable,
+        habitLogsTable,
+        itemsTable,
+        inventoryTable,
+        shopItemsTable
+      ];
 }
 
 typedef $$PlayersTableTableCreateCompanionBuilder = PlayersTableCompanion
@@ -3547,6 +5095,750 @@ typedef $$HabitLogsTableTableProcessedTableManager = ProcessedTableManager<
     ),
     HabitLogsTableData,
     PrefetchHooks Function()>;
+typedef $$ItemsTableTableCreateCompanionBuilder = ItemsTableCompanion Function({
+  Value<int> id,
+  required String name,
+  Value<String> description,
+  required String type,
+  Value<String> rarity,
+  Value<String?> slot,
+  Value<int> goldValue,
+  Value<int> gemValue,
+  Value<int> strBonus,
+  Value<int> dexBonus,
+  Value<int> intBonus,
+  Value<int> conBonus,
+  Value<int> spiBonus,
+  Value<int> hpBonus,
+  Value<int> mpBonus,
+  Value<bool> isConsumable,
+  Value<bool> isStackable,
+  Value<String> iconName,
+});
+typedef $$ItemsTableTableUpdateCompanionBuilder = ItemsTableCompanion Function({
+  Value<int> id,
+  Value<String> name,
+  Value<String> description,
+  Value<String> type,
+  Value<String> rarity,
+  Value<String?> slot,
+  Value<int> goldValue,
+  Value<int> gemValue,
+  Value<int> strBonus,
+  Value<int> dexBonus,
+  Value<int> intBonus,
+  Value<int> conBonus,
+  Value<int> spiBonus,
+  Value<int> hpBonus,
+  Value<int> mpBonus,
+  Value<bool> isConsumable,
+  Value<bool> isStackable,
+  Value<String> iconName,
+});
+
+class $$ItemsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ItemsTableTable> {
+  $$ItemsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get rarity => $composableBuilder(
+      column: $table.rarity, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get slot => $composableBuilder(
+      column: $table.slot, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get goldValue => $composableBuilder(
+      column: $table.goldValue, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get gemValue => $composableBuilder(
+      column: $table.gemValue, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get strBonus => $composableBuilder(
+      column: $table.strBonus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get dexBonus => $composableBuilder(
+      column: $table.dexBonus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get intBonus => $composableBuilder(
+      column: $table.intBonus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get conBonus => $composableBuilder(
+      column: $table.conBonus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get spiBonus => $composableBuilder(
+      column: $table.spiBonus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get hpBonus => $composableBuilder(
+      column: $table.hpBonus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get mpBonus => $composableBuilder(
+      column: $table.mpBonus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isConsumable => $composableBuilder(
+      column: $table.isConsumable, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isStackable => $composableBuilder(
+      column: $table.isStackable, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get iconName => $composableBuilder(
+      column: $table.iconName, builder: (column) => ColumnFilters(column));
+}
+
+class $$ItemsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ItemsTableTable> {
+  $$ItemsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get rarity => $composableBuilder(
+      column: $table.rarity, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get slot => $composableBuilder(
+      column: $table.slot, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get goldValue => $composableBuilder(
+      column: $table.goldValue, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get gemValue => $composableBuilder(
+      column: $table.gemValue, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get strBonus => $composableBuilder(
+      column: $table.strBonus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get dexBonus => $composableBuilder(
+      column: $table.dexBonus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get intBonus => $composableBuilder(
+      column: $table.intBonus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get conBonus => $composableBuilder(
+      column: $table.conBonus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get spiBonus => $composableBuilder(
+      column: $table.spiBonus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get hpBonus => $composableBuilder(
+      column: $table.hpBonus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get mpBonus => $composableBuilder(
+      column: $table.mpBonus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isConsumable => $composableBuilder(
+      column: $table.isConsumable,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isStackable => $composableBuilder(
+      column: $table.isStackable, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get iconName => $composableBuilder(
+      column: $table.iconName, builder: (column) => ColumnOrderings(column));
+}
+
+class $$ItemsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ItemsTableTable> {
+  $$ItemsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get rarity =>
+      $composableBuilder(column: $table.rarity, builder: (column) => column);
+
+  GeneratedColumn<String> get slot =>
+      $composableBuilder(column: $table.slot, builder: (column) => column);
+
+  GeneratedColumn<int> get goldValue =>
+      $composableBuilder(column: $table.goldValue, builder: (column) => column);
+
+  GeneratedColumn<int> get gemValue =>
+      $composableBuilder(column: $table.gemValue, builder: (column) => column);
+
+  GeneratedColumn<int> get strBonus =>
+      $composableBuilder(column: $table.strBonus, builder: (column) => column);
+
+  GeneratedColumn<int> get dexBonus =>
+      $composableBuilder(column: $table.dexBonus, builder: (column) => column);
+
+  GeneratedColumn<int> get intBonus =>
+      $composableBuilder(column: $table.intBonus, builder: (column) => column);
+
+  GeneratedColumn<int> get conBonus =>
+      $composableBuilder(column: $table.conBonus, builder: (column) => column);
+
+  GeneratedColumn<int> get spiBonus =>
+      $composableBuilder(column: $table.spiBonus, builder: (column) => column);
+
+  GeneratedColumn<int> get hpBonus =>
+      $composableBuilder(column: $table.hpBonus, builder: (column) => column);
+
+  GeneratedColumn<int> get mpBonus =>
+      $composableBuilder(column: $table.mpBonus, builder: (column) => column);
+
+  GeneratedColumn<bool> get isConsumable => $composableBuilder(
+      column: $table.isConsumable, builder: (column) => column);
+
+  GeneratedColumn<bool> get isStackable => $composableBuilder(
+      column: $table.isStackable, builder: (column) => column);
+
+  GeneratedColumn<String> get iconName =>
+      $composableBuilder(column: $table.iconName, builder: (column) => column);
+}
+
+class $$ItemsTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ItemsTableTable,
+    ItemsTableData,
+    $$ItemsTableTableFilterComposer,
+    $$ItemsTableTableOrderingComposer,
+    $$ItemsTableTableAnnotationComposer,
+    $$ItemsTableTableCreateCompanionBuilder,
+    $$ItemsTableTableUpdateCompanionBuilder,
+    (
+      ItemsTableData,
+      BaseReferences<_$AppDatabase, $ItemsTableTable, ItemsTableData>
+    ),
+    ItemsTableData,
+    PrefetchHooks Function()> {
+  $$ItemsTableTableTableManager(_$AppDatabase db, $ItemsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ItemsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ItemsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ItemsTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<String> rarity = const Value.absent(),
+            Value<String?> slot = const Value.absent(),
+            Value<int> goldValue = const Value.absent(),
+            Value<int> gemValue = const Value.absent(),
+            Value<int> strBonus = const Value.absent(),
+            Value<int> dexBonus = const Value.absent(),
+            Value<int> intBonus = const Value.absent(),
+            Value<int> conBonus = const Value.absent(),
+            Value<int> spiBonus = const Value.absent(),
+            Value<int> hpBonus = const Value.absent(),
+            Value<int> mpBonus = const Value.absent(),
+            Value<bool> isConsumable = const Value.absent(),
+            Value<bool> isStackable = const Value.absent(),
+            Value<String> iconName = const Value.absent(),
+          }) =>
+              ItemsTableCompanion(
+            id: id,
+            name: name,
+            description: description,
+            type: type,
+            rarity: rarity,
+            slot: slot,
+            goldValue: goldValue,
+            gemValue: gemValue,
+            strBonus: strBonus,
+            dexBonus: dexBonus,
+            intBonus: intBonus,
+            conBonus: conBonus,
+            spiBonus: spiBonus,
+            hpBonus: hpBonus,
+            mpBonus: mpBonus,
+            isConsumable: isConsumable,
+            isStackable: isStackable,
+            iconName: iconName,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String name,
+            Value<String> description = const Value.absent(),
+            required String type,
+            Value<String> rarity = const Value.absent(),
+            Value<String?> slot = const Value.absent(),
+            Value<int> goldValue = const Value.absent(),
+            Value<int> gemValue = const Value.absent(),
+            Value<int> strBonus = const Value.absent(),
+            Value<int> dexBonus = const Value.absent(),
+            Value<int> intBonus = const Value.absent(),
+            Value<int> conBonus = const Value.absent(),
+            Value<int> spiBonus = const Value.absent(),
+            Value<int> hpBonus = const Value.absent(),
+            Value<int> mpBonus = const Value.absent(),
+            Value<bool> isConsumable = const Value.absent(),
+            Value<bool> isStackable = const Value.absent(),
+            Value<String> iconName = const Value.absent(),
+          }) =>
+              ItemsTableCompanion.insert(
+            id: id,
+            name: name,
+            description: description,
+            type: type,
+            rarity: rarity,
+            slot: slot,
+            goldValue: goldValue,
+            gemValue: gemValue,
+            strBonus: strBonus,
+            dexBonus: dexBonus,
+            intBonus: intBonus,
+            conBonus: conBonus,
+            spiBonus: spiBonus,
+            hpBonus: hpBonus,
+            mpBonus: mpBonus,
+            isConsumable: isConsumable,
+            isStackable: isStackable,
+            iconName: iconName,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$ItemsTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ItemsTableTable,
+    ItemsTableData,
+    $$ItemsTableTableFilterComposer,
+    $$ItemsTableTableOrderingComposer,
+    $$ItemsTableTableAnnotationComposer,
+    $$ItemsTableTableCreateCompanionBuilder,
+    $$ItemsTableTableUpdateCompanionBuilder,
+    (
+      ItemsTableData,
+      BaseReferences<_$AppDatabase, $ItemsTableTable, ItemsTableData>
+    ),
+    ItemsTableData,
+    PrefetchHooks Function()>;
+typedef $$InventoryTableTableCreateCompanionBuilder = InventoryTableCompanion
+    Function({
+  Value<int> id,
+  required int playerId,
+  required int itemId,
+  Value<int> quantity,
+  Value<bool> isEquipped,
+  Value<String?> equippedSlot,
+  Value<DateTime> acquiredAt,
+});
+typedef $$InventoryTableTableUpdateCompanionBuilder = InventoryTableCompanion
+    Function({
+  Value<int> id,
+  Value<int> playerId,
+  Value<int> itemId,
+  Value<int> quantity,
+  Value<bool> isEquipped,
+  Value<String?> equippedSlot,
+  Value<DateTime> acquiredAt,
+});
+
+class $$InventoryTableTableFilterComposer
+    extends Composer<_$AppDatabase, $InventoryTableTable> {
+  $$InventoryTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get itemId => $composableBuilder(
+      column: $table.itemId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get quantity => $composableBuilder(
+      column: $table.quantity, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isEquipped => $composableBuilder(
+      column: $table.isEquipped, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get equippedSlot => $composableBuilder(
+      column: $table.equippedSlot, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get acquiredAt => $composableBuilder(
+      column: $table.acquiredAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$InventoryTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $InventoryTableTable> {
+  $$InventoryTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get itemId => $composableBuilder(
+      column: $table.itemId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get quantity => $composableBuilder(
+      column: $table.quantity, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isEquipped => $composableBuilder(
+      column: $table.isEquipped, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get equippedSlot => $composableBuilder(
+      column: $table.equippedSlot,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get acquiredAt => $composableBuilder(
+      column: $table.acquiredAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$InventoryTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $InventoryTableTable> {
+  $$InventoryTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<int> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<int> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<bool> get isEquipped => $composableBuilder(
+      column: $table.isEquipped, builder: (column) => column);
+
+  GeneratedColumn<String> get equippedSlot => $composableBuilder(
+      column: $table.equippedSlot, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get acquiredAt => $composableBuilder(
+      column: $table.acquiredAt, builder: (column) => column);
+}
+
+class $$InventoryTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $InventoryTableTable,
+    InventoryTableData,
+    $$InventoryTableTableFilterComposer,
+    $$InventoryTableTableOrderingComposer,
+    $$InventoryTableTableAnnotationComposer,
+    $$InventoryTableTableCreateCompanionBuilder,
+    $$InventoryTableTableUpdateCompanionBuilder,
+    (
+      InventoryTableData,
+      BaseReferences<_$AppDatabase, $InventoryTableTable, InventoryTableData>
+    ),
+    InventoryTableData,
+    PrefetchHooks Function()> {
+  $$InventoryTableTableTableManager(
+      _$AppDatabase db, $InventoryTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$InventoryTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$InventoryTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$InventoryTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> playerId = const Value.absent(),
+            Value<int> itemId = const Value.absent(),
+            Value<int> quantity = const Value.absent(),
+            Value<bool> isEquipped = const Value.absent(),
+            Value<String?> equippedSlot = const Value.absent(),
+            Value<DateTime> acquiredAt = const Value.absent(),
+          }) =>
+              InventoryTableCompanion(
+            id: id,
+            playerId: playerId,
+            itemId: itemId,
+            quantity: quantity,
+            isEquipped: isEquipped,
+            equippedSlot: equippedSlot,
+            acquiredAt: acquiredAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int playerId,
+            required int itemId,
+            Value<int> quantity = const Value.absent(),
+            Value<bool> isEquipped = const Value.absent(),
+            Value<String?> equippedSlot = const Value.absent(),
+            Value<DateTime> acquiredAt = const Value.absent(),
+          }) =>
+              InventoryTableCompanion.insert(
+            id: id,
+            playerId: playerId,
+            itemId: itemId,
+            quantity: quantity,
+            isEquipped: isEquipped,
+            equippedSlot: equippedSlot,
+            acquiredAt: acquiredAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$InventoryTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $InventoryTableTable,
+    InventoryTableData,
+    $$InventoryTableTableFilterComposer,
+    $$InventoryTableTableOrderingComposer,
+    $$InventoryTableTableAnnotationComposer,
+    $$InventoryTableTableCreateCompanionBuilder,
+    $$InventoryTableTableUpdateCompanionBuilder,
+    (
+      InventoryTableData,
+      BaseReferences<_$AppDatabase, $InventoryTableTable, InventoryTableData>
+    ),
+    InventoryTableData,
+    PrefetchHooks Function()>;
+typedef $$ShopItemsTableTableCreateCompanionBuilder = ShopItemsTableCompanion
+    Function({
+  Value<int> id,
+  required int itemId,
+  Value<String> currency,
+  required int price,
+  Value<bool> isAvailable,
+  Value<int> requiredLevel,
+});
+typedef $$ShopItemsTableTableUpdateCompanionBuilder = ShopItemsTableCompanion
+    Function({
+  Value<int> id,
+  Value<int> itemId,
+  Value<String> currency,
+  Value<int> price,
+  Value<bool> isAvailable,
+  Value<int> requiredLevel,
+});
+
+class $$ShopItemsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ShopItemsTableTable> {
+  $$ShopItemsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get itemId => $composableBuilder(
+      column: $table.itemId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get currency => $composableBuilder(
+      column: $table.currency, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get price => $composableBuilder(
+      column: $table.price, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isAvailable => $composableBuilder(
+      column: $table.isAvailable, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get requiredLevel => $composableBuilder(
+      column: $table.requiredLevel, builder: (column) => ColumnFilters(column));
+}
+
+class $$ShopItemsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ShopItemsTableTable> {
+  $$ShopItemsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get itemId => $composableBuilder(
+      column: $table.itemId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get currency => $composableBuilder(
+      column: $table.currency, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get price => $composableBuilder(
+      column: $table.price, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isAvailable => $composableBuilder(
+      column: $table.isAvailable, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get requiredLevel => $composableBuilder(
+      column: $table.requiredLevel,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$ShopItemsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ShopItemsTableTable> {
+  $$ShopItemsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
+
+  GeneratedColumn<int> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => column);
+
+  GeneratedColumn<bool> get isAvailable => $composableBuilder(
+      column: $table.isAvailable, builder: (column) => column);
+
+  GeneratedColumn<int> get requiredLevel => $composableBuilder(
+      column: $table.requiredLevel, builder: (column) => column);
+}
+
+class $$ShopItemsTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ShopItemsTableTable,
+    ShopItemsTableData,
+    $$ShopItemsTableTableFilterComposer,
+    $$ShopItemsTableTableOrderingComposer,
+    $$ShopItemsTableTableAnnotationComposer,
+    $$ShopItemsTableTableCreateCompanionBuilder,
+    $$ShopItemsTableTableUpdateCompanionBuilder,
+    (
+      ShopItemsTableData,
+      BaseReferences<_$AppDatabase, $ShopItemsTableTable, ShopItemsTableData>
+    ),
+    ShopItemsTableData,
+    PrefetchHooks Function()> {
+  $$ShopItemsTableTableTableManager(
+      _$AppDatabase db, $ShopItemsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ShopItemsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ShopItemsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ShopItemsTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> itemId = const Value.absent(),
+            Value<String> currency = const Value.absent(),
+            Value<int> price = const Value.absent(),
+            Value<bool> isAvailable = const Value.absent(),
+            Value<int> requiredLevel = const Value.absent(),
+          }) =>
+              ShopItemsTableCompanion(
+            id: id,
+            itemId: itemId,
+            currency: currency,
+            price: price,
+            isAvailable: isAvailable,
+            requiredLevel: requiredLevel,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int itemId,
+            Value<String> currency = const Value.absent(),
+            required int price,
+            Value<bool> isAvailable = const Value.absent(),
+            Value<int> requiredLevel = const Value.absent(),
+          }) =>
+              ShopItemsTableCompanion.insert(
+            id: id,
+            itemId: itemId,
+            currency: currency,
+            price: price,
+            isAvailable: isAvailable,
+            requiredLevel: requiredLevel,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$ShopItemsTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ShopItemsTableTable,
+    ShopItemsTableData,
+    $$ShopItemsTableTableFilterComposer,
+    $$ShopItemsTableTableOrderingComposer,
+    $$ShopItemsTableTableAnnotationComposer,
+    $$ShopItemsTableTableCreateCompanionBuilder,
+    $$ShopItemsTableTableUpdateCompanionBuilder,
+    (
+      ShopItemsTableData,
+      BaseReferences<_$AppDatabase, $ShopItemsTableTable, ShopItemsTableData>
+    ),
+    ShopItemsTableData,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3557,4 +5849,10 @@ class $AppDatabaseManager {
       $$HabitsTableTableTableManager(_db, _db.habitsTable);
   $$HabitLogsTableTableTableManager get habitLogsTable =>
       $$HabitLogsTableTableTableManager(_db, _db.habitLogsTable);
+  $$ItemsTableTableTableManager get itemsTable =>
+      $$ItemsTableTableTableManager(_db, _db.itemsTable);
+  $$InventoryTableTableTableManager get inventoryTable =>
+      $$InventoryTableTableTableManager(_db, _db.inventoryTable);
+  $$ShopItemsTableTableTableManager get shopItemsTable =>
+      $$ShopItemsTableTableTableManager(_db, _db.shopItemsTable);
 }

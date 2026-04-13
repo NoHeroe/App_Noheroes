@@ -11,17 +11,15 @@ class SanctuaryDrawer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final player = ref.watch(currentPlayerProvider);
-    final shadowName = player?.shadowName ?? 'Sombra';
-    final level = player?.level ?? 1;
-    final email = player?.email ?? '';
 
     final items = [
-      _DrawerItem('Perfil', Icons.person_outline, () {}),
-      _DrawerItem('Histórico de Missões', Icons.history, () {}),
-      _DrawerItem('Conquistas', Icons.emoji_events_outlined, () {}),
-      _DrawerItem('Lista de Amigos', Icons.group_outlined, () {}),
-      _DrawerItem('Meus Produtos', Icons.book_outlined, () {}),
-      _DrawerItem('Configurações', Icons.settings_outlined, () {}),
+      _Item('Inventário',       Icons.inventory_2_outlined, '/inventory'),
+      _Item('Mercado',          Icons.store_outlined,       '/shop'),
+      _Item('Histórico',        Icons.history,              null),
+      _Item('Conquistas',       Icons.emoji_events_outlined,null),
+      _Item('Amigos',           Icons.group_outlined,       null),
+      _Item('Meus Produtos',    Icons.book_outlined,        null),
+      _Item('Configurações',    Icons.settings_outlined,    null),
     ];
 
     return Drawer(
@@ -29,6 +27,7 @@ class SanctuaryDrawer extends ConsumerWidget {
       child: SafeArea(
         child: Column(
           children: [
+            // Header
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
@@ -39,8 +38,7 @@ class SanctuaryDrawer extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 56,
-                    height: 56,
+                    width: 56, height: 56,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(color: AppColors.purple),
@@ -50,35 +48,53 @@ class SanctuaryDrawer extends ConsumerWidget {
                         color: AppColors.purple, size: 28),
                   ),
                   const SizedBox(height: 12),
-                  Text(shadowName,
+                  Text(player?.shadowName ?? 'Sombra',
                       style: GoogleFonts.cinzelDecorative(
                           fontSize: 18, color: AppColors.textPrimary)),
                   const SizedBox(height: 4),
-                  Text('Nível $level · Sombra Sem Classe',
+                  Text('Nível ${player?.level ?? 1} · Sem Classe',
                       style: GoogleFonts.roboto(
                           fontSize: 12, color: AppColors.textMuted)),
-                  const SizedBox(height: 2),
-                  Text(email,
+                  Text(player?.email ?? '',
                       style: GoogleFonts.roboto(
                           fontSize: 11, color: AppColors.textMuted)),
                 ],
               ),
             ),
+
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                children:
-                    items.map((item) => _DrawerTile(item: item)).toList(),
+                children: items.map((item) => ListTile(
+                  leading: Icon(item.icon,
+                      color: AppColors.textSecondary, size: 20),
+                  title: Text(item.label,
+                      style: GoogleFonts.roboto(
+                          fontSize: 14, color: AppColors.textPrimary)),
+                  trailing: const Icon(Icons.chevron_right,
+                      color: AppColors.textMuted, size: 18),
+                  onTap: item.route != null
+                      ? () {
+                          Navigator.pop(context);
+                          context.go(item.route!);
+                        }
+                      : null,
+                )).toList(),
               ),
             ),
+
+            // Logout
             Container(
               decoration: const BoxDecoration(
                 border: Border(top: BorderSide(color: AppColors.border)),
               ),
-              child: _DrawerTile(
-                item: _DrawerItem('Sair', Icons.logout,
-                    () => _showLogoutDialog(context, ref)),
-                isLogout: true,
+              child: ListTile(
+                leading: const Icon(Icons.logout,
+                    color: AppColors.hp, size: 20),
+                title: Text('Sair',
+                    style: GoogleFonts.roboto(
+                        fontSize: 14, color: AppColors.hp)),
+                onTap: () => _logout(context, ref),
               ),
             ),
           ],
@@ -87,7 +103,7 @@ class SanctuaryDrawer extends ConsumerWidget {
     );
   }
 
-  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
+  void _logout(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -99,7 +115,7 @@ class SanctuaryDrawer extends ConsumerWidget {
         title: Text('Sair de Caelum?',
             style: GoogleFonts.cinzelDecorative(
                 color: AppColors.textPrimary, fontSize: 16)),
-        content: Text('Sua sombra permanecerá aguardando seu retorno.',
+        content: Text('Sua sombra permanecerá aguardando.',
             style: GoogleFonts.roboto(color: AppColors.textSecondary)),
         actions: [
           TextButton(
@@ -125,32 +141,9 @@ class SanctuaryDrawer extends ConsumerWidget {
   }
 }
 
-class _DrawerItem {
+class _Item {
   final String label;
   final IconData icon;
-  final VoidCallback onTap;
-  _DrawerItem(this.label, this.icon, this.onTap);
-}
-
-class _DrawerTile extends StatelessWidget {
-  final _DrawerItem item;
-  final bool isLogout;
-  const _DrawerTile({required this.item, this.isLogout = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      onTap: item.onTap,
-      leading: Icon(item.icon,
-          color: isLogout ? AppColors.hp : AppColors.textSecondary, size: 20),
-      title: Text(item.label,
-          style: GoogleFonts.roboto(
-              fontSize: 14,
-              color: isLogout ? AppColors.hp : AppColors.textPrimary)),
-      trailing: isLogout
-          ? null
-          : const Icon(Icons.chevron_right,
-              color: AppColors.textMuted, size: 18),
-    );
-  }
+  final String? route;
+  _Item(this.label, this.icon, this.route);
 }
