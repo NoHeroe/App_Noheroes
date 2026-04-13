@@ -130,6 +130,7 @@ class HabitLocalDs {
     required String category,
     required String rank,
     required bool isFreeUser,
+    String? requirements,
   }) async {
     if (isFreeUser) {
       final count = await _habitDao.countPersonalHabits(playerId);
@@ -149,6 +150,7 @@ class HabitLocalDs {
       isRepeatable:  const Value(false),
       xpReward:      Value(xp),
       goldReward:    Value(gold),
+      requirements:  Value(requirements),
     ));
     return null;
   }

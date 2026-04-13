@@ -6,6 +6,7 @@ import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/database/daos/player_dao.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
+import '../widgets/stats_panel.dart';
 
 class CharacterScreen extends ConsumerWidget {
   const CharacterScreen({super.key});
@@ -67,6 +68,8 @@ class CharacterScreen extends ConsumerWidget {
 
                         // Atributos + distribuição
                         _buildAttributes(context, ref, player),
+                        const SizedBox(height: 12),
+                        if (player != null) StatsPanel(player: player),
                       ],
                     ),
                   ),

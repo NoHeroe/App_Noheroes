@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/requirements_helper.dart';
 
 class CreateHabitSheet extends ConsumerStatefulWidget {
   final VoidCallback onCreated;
@@ -14,24 +15,42 @@ class CreateHabitSheet extends ConsumerStatefulWidget {
 
 class _CreateHabitSheetState extends ConsumerState<CreateHabitSheet> {
   final _titleCtrl = TextEditingController();
-  final _descCtrl = TextEditingController();
-  String _category = 'physical';
-  bool _isRepeatable = false;
-  bool _loading = false;
+  final _descCtrl  = TextEditingController();
+  String _category    = 'physical';
+  bool   _isRepeatable = false;
+  bool   _loading     = false;
   String? _error;
 
+  // Sub-requisitos
+  final List<RequirementItem> _requirements = [];
+  final _reqLabelCtrl  = TextEditingController();
+  final _reqTargetCtrl = TextEditingController();
+
   final _categories = [
-    ('physical',  'Físico',    Icons.fitness_center,      AppColors.hp),
-    ('mental',    'Mental',    Icons.psychology_outlined,  AppColors.mp),
-    ('spiritual', 'Espiritual',Icons.self_improvement,     AppColors.shadowStable),
-    ('order',     'Ordem',     Icons.checklist,            AppColors.gold),
+    ('physical',  'Físico',     Icons.fitness_center,     AppColors.hp),
+    ('mental',    'Mental',     Icons.psychology_outlined, AppColors.mp),
+    ('spiritual', 'Espiritual', Icons.self_improvement,    AppColors.shadowStable),
+    ('order',     'Ordem',      Icons.checklist,           AppColors.gold),
   ];
 
   @override
   void dispose() {
     _titleCtrl.dispose();
     _descCtrl.dispose();
+    _reqLabelCtrl.dispose();
+    _reqTargetCtrl.dispose();
     super.dispose();
+  }
+
+  void _addRequirement() {
+    final label  = _reqLabelCtrl.text.trim();
+    final target = int.tryParse(_reqTargetCtrl.text.trim()) ?? 0;
+    if (label.isEmpty || target <= 0) return;
+    setState(() {
+      _requirements.add(RequirementItem(label: label, target: target));
+      _reqLabelCtrl.clear();
+      _reqTargetCtrl.clear();
+    });
   }
 
   Future<void> _create() async {
@@ -44,17 +63,18 @@ class _CreateHabitSheetState extends ConsumerState<CreateHabitSheet> {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
 
-    // Rank é definido pelo rank do jogador (por ora todos começam em E)
-    final playerRank = 'e';
+    final reqJson = _requirements.isEmpty
+        ? null
+        : RequirementsHelper.serialize(_requirements);
 
     final error = await ref.read(habitDsProvider).createPersonalHabit(
-      playerId: player.id,
-      title: _titleCtrl.text.trim(),
+      playerId:    player.id,
+      title:       _titleCtrl.text.trim(),
       description: _descCtrl.text.trim(),
-      category: _category,
-      rank: playerRank,
-      // isRepeatable removido
-      isFreeUser: true,
+      category:    _category,
+      rank:        'e',
+      isFreeUser:  true,
+      requirements: reqJson,
     );
 
     setState(() => _loading = false);
@@ -67,6 +87,11 @@ class _CreateHabitSheetState extends ConsumerState<CreateHabitSheet> {
     widget.onCreated();
     if (mounted) Navigator.pop(context);
   }
+
+  Color get _catColor => _categories
+      .firstWhere((c) => c.$1 == _category,
+          orElse: () => _categories.first)
+      .$4;
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +123,7 @@ class _CreateHabitSheetState extends ConsumerState<CreateHabitSheet> {
                     fontSize: 16, color: AppColors.textPrimary)),
             const SizedBox(height: 4),
             Text(
-              'Você se comprometerá com esta missão.\nA intensidade é definida pelo seu Rank atual.',
+              'Você se comprometerá com esta missão.',
               style: GoogleFonts.roboto(fontSize: 12, color: AppColors.textMuted),
             ),
             const SizedBox(height: 20),
@@ -116,13 +141,14 @@ class _CreateHabitSheetState extends ConsumerState<CreateHabitSheet> {
               controller: _descCtrl,
               style: GoogleFonts.roboto(color: AppColors.textPrimary),
               maxLines: 2,
-              decoration: _inputDec('Descrição (opcional)', Icons.notes),
+              decoration: _inputDec('Descrição (o que precisa fazer)', Icons.notes),
             ),
             const SizedBox(height: 16),
 
             // Categoria
             Text('Categoria',
-                style: GoogleFonts.roboto(fontSize: 12, color: AppColors.textMuted)),
+                style: GoogleFonts.roboto(
+                    fontSize: 12, color: AppColors.textMuted)),
             const SizedBox(height: 8),
             Row(
               children: _categories.map((c) {
@@ -134,7 +160,9 @@ class _CreateHabitSheetState extends ConsumerState<CreateHabitSheet> {
                       margin: const EdgeInsets.only(right: 6),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color: selected ? c.$4.withOpacity(0.15) : Colors.transparent,
+                        color: selected
+                            ? c.$4.withValues(alpha: 0.15)
+                            : Colors.transparent,
                         border: Border.all(
                             color: selected ? c.$4 : AppColors.border),
                         borderRadius: BorderRadius.circular(10),
@@ -148,13 +176,97 @@ class _CreateHabitSheetState extends ConsumerState<CreateHabitSheet> {
                           Text(c.$2,
                               style: GoogleFonts.roboto(
                                   fontSize: 10,
-                                  color: selected ? c.$4 : AppColors.textMuted)),
+                                  color: selected
+                                      ? c.$4
+                                      : AppColors.textMuted)),
                         ],
                       ),
                     ),
                   ),
                 );
               }).toList(),
+            ),
+            const SizedBox(height: 16),
+
+            // Sub-requisitos
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Requisitos (opcional)',
+                    style: GoogleFonts.roboto(
+                        fontSize: 12, color: AppColors.textMuted)),
+                Text('${_requirements.length} adicionados',
+                    style: GoogleFonts.roboto(
+                        fontSize: 10, color: AppColors.textMuted)),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Lista de requisitos
+            ..._requirements.asMap().entries.map((e) => Container(
+              margin: const EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: _catColor.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: _catColor.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.check_box_outline_blank,
+                      color: _catColor, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text('${e.value.label} — ${e.value.target}x',
+                        style: GoogleFonts.roboto(
+                            fontSize: 12, color: AppColors.textPrimary)),
+                  ),
+                  GestureDetector(
+                    onTap: () => setState(() => _requirements.removeAt(e.key)),
+                    child: const Icon(Icons.close,
+                        color: AppColors.textMuted, size: 16),
+                  ),
+                ],
+              ),
+            )),
+
+            // Adicionar requisito
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: TextField(
+                    controller: _reqLabelCtrl,
+                    style: GoogleFonts.roboto(
+                        color: AppColors.textPrimary, fontSize: 13),
+                    decoration: _inputDec('Ex: Flexões', Icons.label_outline),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _reqTargetCtrl,
+                    keyboardType: TextInputType.number,
+                    style: GoogleFonts.roboto(
+                        color: AppColors.textPrimary, fontSize: 13),
+                    decoration: _inputDec('Qtd', Icons.numbers),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: _addRequirement,
+                  child: Container(
+                    width: 44, height: 44,
+                    decoration: BoxDecoration(
+                      color: _catColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: _catColor.withValues(alpha: 0.5)),
+                    ),
+                    child: Icon(Icons.add, color: _catColor, size: 20),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
 
@@ -173,10 +285,12 @@ class _CreateHabitSheetState extends ConsumerState<CreateHabitSheet> {
                     children: [
                       Text('Missão repetível',
                           style: GoogleFonts.roboto(
-                              fontSize: 13, color: AppColors.textPrimary)),
+                              fontSize: 13,
+                              color: AppColors.textPrimary)),
                       Text('Pode ser completada múltiplas vezes por dia',
                           style: GoogleFonts.roboto(
-                              fontSize: 11, color: AppColors.textMuted)),
+                              fontSize: 11,
+                              color: AppColors.textMuted)),
                     ],
                   ),
                 ),
@@ -186,7 +300,8 @@ class _CreateHabitSheetState extends ConsumerState<CreateHabitSheet> {
             if (_error != null) ...[
               const SizedBox(height: 8),
               Text(_error!,
-                  style: GoogleFonts.roboto(color: AppColors.hp, fontSize: 12)),
+                  style: GoogleFonts.roboto(
+                      color: AppColors.hp, fontSize: 12)),
             ],
 
             const SizedBox(height: 20),
@@ -232,7 +347,8 @@ class _CreateHabitSheetState extends ConsumerState<CreateHabitSheet> {
           borderSide: const BorderSide(color: AppColors.border)),
       focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.purple, width: 1.5)),
+          borderSide:
+              const BorderSide(color: AppColors.purple, width: 1.5)),
     );
   }
 }

@@ -18,5 +18,7 @@ class HabitsTable extends Table {
   IntColumn get goldReward => integer().withDefault(const Constant(10))();
   IntColumn get streakCount => integer().withDefault(const Constant(0))();
   IntColumn get totalCompleted => integer().withDefault(const Constant(0))();
+  // JSON: [{"label":"10 flexões","target":10,"done":0}, ...]
+  TextColumn get requirements => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }

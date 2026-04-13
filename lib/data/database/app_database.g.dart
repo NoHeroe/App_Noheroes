@@ -1454,6 +1454,12 @@ class $HabitsTableTable extends HabitsTable
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
+  static const VerificationMeta _requirementsMeta =
+      const VerificationMeta('requirements');
+  @override
+  late final GeneratedColumn<String> requirements = GeneratedColumn<String>(
+      'requirements', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -1477,6 +1483,7 @@ class $HabitsTableTable extends HabitsTable
         goldReward,
         streakCount,
         totalCompleted,
+        requirements,
         createdAt
       ];
   @override
@@ -1558,6 +1565,12 @@ class $HabitsTableTable extends HabitsTable
           totalCompleted.isAcceptableOrUnknown(
               data['total_completed']!, _totalCompletedMeta));
     }
+    if (data.containsKey('requirements')) {
+      context.handle(
+          _requirementsMeta,
+          requirements.isAcceptableOrUnknown(
+              data['requirements']!, _requirementsMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -1597,6 +1610,8 @@ class $HabitsTableTable extends HabitsTable
           .read(DriftSqlType.int, data['${effectivePrefix}streak_count'])!,
       totalCompleted: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}total_completed'])!,
+      requirements: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}requirements']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
@@ -1622,6 +1637,7 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
   final int goldReward;
   final int streakCount;
   final int totalCompleted;
+  final String? requirements;
   final DateTime createdAt;
   const HabitsTableData(
       {required this.id,
@@ -1637,6 +1653,7 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       required this.goldReward,
       required this.streakCount,
       required this.totalCompleted,
+      this.requirements,
       required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1654,6 +1671,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
     map['gold_reward'] = Variable<int>(goldReward);
     map['streak_count'] = Variable<int>(streakCount);
     map['total_completed'] = Variable<int>(totalCompleted);
+    if (!nullToAbsent || requirements != null) {
+      map['requirements'] = Variable<String>(requirements);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -1673,6 +1693,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       goldReward: Value(goldReward),
       streakCount: Value(streakCount),
       totalCompleted: Value(totalCompleted),
+      requirements: requirements == null && nullToAbsent
+          ? const Value.absent()
+          : Value(requirements),
       createdAt: Value(createdAt),
     );
   }
@@ -1694,6 +1717,7 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       goldReward: serializer.fromJson<int>(json['goldReward']),
       streakCount: serializer.fromJson<int>(json['streakCount']),
       totalCompleted: serializer.fromJson<int>(json['totalCompleted']),
+      requirements: serializer.fromJson<String?>(json['requirements']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -1714,6 +1738,7 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       'goldReward': serializer.toJson<int>(goldReward),
       'streakCount': serializer.toJson<int>(streakCount),
       'totalCompleted': serializer.toJson<int>(totalCompleted),
+      'requirements': serializer.toJson<String?>(requirements),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -1732,6 +1757,7 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
           int? goldReward,
           int? streakCount,
           int? totalCompleted,
+          Value<String?> requirements = const Value.absent(),
           DateTime? createdAt}) =>
       HabitsTableData(
         id: id ?? this.id,
@@ -1747,6 +1773,8 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
         goldReward: goldReward ?? this.goldReward,
         streakCount: streakCount ?? this.streakCount,
         totalCompleted: totalCompleted ?? this.totalCompleted,
+        requirements:
+            requirements.present ? requirements.value : this.requirements,
         createdAt: createdAt ?? this.createdAt,
       );
   HabitsTableData copyWithCompanion(HabitsTableCompanion data) {
@@ -1773,6 +1801,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       totalCompleted: data.totalCompleted.present
           ? data.totalCompleted.value
           : this.totalCompleted,
+      requirements: data.requirements.present
+          ? data.requirements.value
+          : this.requirements,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -1793,6 +1824,7 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
           ..write('goldReward: $goldReward, ')
           ..write('streakCount: $streakCount, ')
           ..write('totalCompleted: $totalCompleted, ')
+          ..write('requirements: $requirements, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -1813,6 +1845,7 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       goldReward,
       streakCount,
       totalCompleted,
+      requirements,
       createdAt);
   @override
   bool operator ==(Object other) =>
@@ -1831,6 +1864,7 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
           other.goldReward == this.goldReward &&
           other.streakCount == this.streakCount &&
           other.totalCompleted == this.totalCompleted &&
+          other.requirements == this.requirements &&
           other.createdAt == this.createdAt);
 }
 
@@ -1848,6 +1882,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
   final Value<int> goldReward;
   final Value<int> streakCount;
   final Value<int> totalCompleted;
+  final Value<String?> requirements;
   final Value<DateTime> createdAt;
   const HabitsTableCompanion({
     this.id = const Value.absent(),
@@ -1863,6 +1898,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     this.goldReward = const Value.absent(),
     this.streakCount = const Value.absent(),
     this.totalCompleted = const Value.absent(),
+    this.requirements = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   HabitsTableCompanion.insert({
@@ -1879,6 +1915,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     this.goldReward = const Value.absent(),
     this.streakCount = const Value.absent(),
     this.totalCompleted = const Value.absent(),
+    this.requirements = const Value.absent(),
     this.createdAt = const Value.absent(),
   })  : playerId = Value(playerId),
         title = Value(title),
@@ -1897,6 +1934,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     Expression<int>? goldReward,
     Expression<int>? streakCount,
     Expression<int>? totalCompleted,
+    Expression<String>? requirements,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -1913,6 +1951,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
       if (goldReward != null) 'gold_reward': goldReward,
       if (streakCount != null) 'streak_count': streakCount,
       if (totalCompleted != null) 'total_completed': totalCompleted,
+      if (requirements != null) 'requirements': requirements,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -1931,6 +1970,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
       Value<int>? goldReward,
       Value<int>? streakCount,
       Value<int>? totalCompleted,
+      Value<String?>? requirements,
       Value<DateTime>? createdAt}) {
     return HabitsTableCompanion(
       id: id ?? this.id,
@@ -1946,6 +1986,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
       goldReward: goldReward ?? this.goldReward,
       streakCount: streakCount ?? this.streakCount,
       totalCompleted: totalCompleted ?? this.totalCompleted,
+      requirements: requirements ?? this.requirements,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -1992,6 +2033,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     if (totalCompleted.present) {
       map['total_completed'] = Variable<int>(totalCompleted.value);
     }
+    if (requirements.present) {
+      map['requirements'] = Variable<String>(requirements.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2014,6 +2058,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
           ..write('goldReward: $goldReward, ')
           ..write('streakCount: $streakCount, ')
           ..write('totalCompleted: $totalCompleted, ')
+          ..write('requirements: $requirements, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -5372,6 +5417,7 @@ typedef $$HabitsTableTableCreateCompanionBuilder = HabitsTableCompanion
   Value<int> goldReward,
   Value<int> streakCount,
   Value<int> totalCompleted,
+  Value<String?> requirements,
   Value<DateTime> createdAt,
 });
 typedef $$HabitsTableTableUpdateCompanionBuilder = HabitsTableCompanion
@@ -5389,6 +5435,7 @@ typedef $$HabitsTableTableUpdateCompanionBuilder = HabitsTableCompanion
   Value<int> goldReward,
   Value<int> streakCount,
   Value<int> totalCompleted,
+  Value<String?> requirements,
   Value<DateTime> createdAt,
 });
 
@@ -5440,6 +5487,9 @@ class $$HabitsTableTableFilterComposer
   ColumnFilters<int> get totalCompleted => $composableBuilder(
       column: $table.totalCompleted,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get requirements => $composableBuilder(
+      column: $table.requirements, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -5496,6 +5546,10 @@ class $$HabitsTableTableOrderingComposer
       column: $table.totalCompleted,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get requirements => $composableBuilder(
+      column: $table.requirements,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 }
@@ -5548,6 +5602,9 @@ class $$HabitsTableTableAnnotationComposer
   GeneratedColumn<int> get totalCompleted => $composableBuilder(
       column: $table.totalCompleted, builder: (column) => column);
 
+  GeneratedColumn<String> get requirements => $composableBuilder(
+      column: $table.requirements, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 }
@@ -5591,6 +5648,7 @@ class $$HabitsTableTableTableManager extends RootTableManager<
             Value<int> goldReward = const Value.absent(),
             Value<int> streakCount = const Value.absent(),
             Value<int> totalCompleted = const Value.absent(),
+            Value<String?> requirements = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
           }) =>
               HabitsTableCompanion(
@@ -5607,6 +5665,7 @@ class $$HabitsTableTableTableManager extends RootTableManager<
             goldReward: goldReward,
             streakCount: streakCount,
             totalCompleted: totalCompleted,
+            requirements: requirements,
             createdAt: createdAt,
           ),
           createCompanionCallback: ({
@@ -5623,6 +5682,7 @@ class $$HabitsTableTableTableManager extends RootTableManager<
             Value<int> goldReward = const Value.absent(),
             Value<int> streakCount = const Value.absent(),
             Value<int> totalCompleted = const Value.absent(),
+            Value<String?> requirements = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
           }) =>
               HabitsTableCompanion.insert(
@@ -5639,6 +5699,7 @@ class $$HabitsTableTableTableManager extends RootTableManager<
             goldReward: goldReward,
             streakCount: streakCount,
             totalCompleted: totalCompleted,
+            requirements: requirements,
             createdAt: createdAt,
           ),
           withReferenceMapper: (p0) => p0
