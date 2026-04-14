@@ -210,9 +210,6 @@ class HabitLocalDs {
     if (gold > 0) await _playerDao.addGold(playerId, gold);
     await _playerDao.updateShadow(playerId, shadowImpact);
 
-    // Recalcula guildRank automaticamente após completar missão
-    await _recalcGuildRank(playerId);
-
     final updated = await _playerDao.findById(playerId);
     if (updated != null) {
       await NotificationService.notifyShadowState(updated.shadowState);
@@ -224,31 +221,6 @@ class HabitLocalDs {
       shadowImpact: shadowImpact,
       status:       status,
     );
-  }
-
-  /// Recalcula e persiste o guildRank do jogador com base no histórico real
-  Future<void> _recalcGuildRank(int playerId) async {
-    final player = await _playerDao.findById(playerId);
-    if (player == null) return;
-
-    final logs = await (_db.select(_db.habitLogsTable)
-          ..where((t) => t.playerId.equals(playerId))
-          ..where((t) => t.status.isIn(['completed', 'partial'])))
-        .get();
-
-    final totalXp     = logs.fold(0, (sum, l) => sum + l.xpGained);
-    final totalQuests = logs.length;
-
-    final newRank = GuildRankSystem.calcRank(
-      totalXp:     totalXp,
-      totalQuests: totalQuests,
-    );
-
-    if (newRank.name != player.guildRank) {
-      await (_db.update(_db.playersTable)
-            ..where((t) => t.id.equals(playerId)))
-          .write(PlayersTableCompanion(guildRank: Value(newRank.name)));
-    }
   }
 
   Future<void> deletePersonalHabit(int habitId) =>

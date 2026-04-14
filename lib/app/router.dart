@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../presentation/guild/screens/guild_screen.dart';
 import '../presentation/splash/screens/splash_screen.dart';
 import '../presentation/auth/screens/login_screen.dart';
 import '../presentation/auth/screens/register_screen.dart';
@@ -32,6 +33,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/regions',      builder: (c, s) => const RegionsScreen()),
       GoRoute(path: '/shadow',       builder: (c, s) => const ShadowChamberScreen()),
       GoRoute(path: '/inventory',    builder: (c, s) => const InventoryScreen()),
+      GoRoute(
+        path: '/guild',
+        builder: (context, state) => const GuildScreen(),
+      ),
       GoRoute(path: '/shop',         builder: (c, s) => const ShopScreen()),
       GoRoute(path: '/achievements',       builder: (c, s) => const AchievementsScreen()),
       GoRoute(path: '/class-selection',    builder: (c, s) => const ClassSelectionScreen()),

@@ -3,6 +3,7 @@ import '../app_database.dart';
 import '../tables/items_table.dart';
 import '../tables/inventory_table.dart';
 import '../tables/shop_items_table.dart';
+import 'guild_dao.dart';
 
 part 'inventory_dao.g.dart';
 
@@ -89,6 +90,13 @@ class InventoryDao extends DatabaseAccessor<AppDatabase>
         playerId: Value(playerId),
         itemId: Value(itemId),
       ));
+    }
+
+    // Registra gasto no guild_status para missão de admissão
+    if (currency == 'gold') {
+      try {
+        await GuildDao(db).addGoldSpent(playerId, price);
+      } catch (_) {}
     }
 
     return null; // sucesso

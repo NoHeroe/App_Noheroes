@@ -11,6 +11,7 @@ import '../../../data/datasources/local/achievement_service.dart';
 import '../widgets/habit_card.dart';
 import '../widgets/create_habit_sheet.dart';
 import '../widgets/completion_dialog.dart';
+import '../../shared/widgets/reward_toast.dart';
 
 class HabitsScreen extends ConsumerWidget {
   const HabitsScreen({super.key});
@@ -292,69 +293,26 @@ class HabitsScreen extends ConsumerWidget {
             final db = ref.read(appDatabaseProvider);
             final newAchievements =
                 await AchievementService(db).checkAndUnlock(updated);
-            if (context.mounted && newAchievements.isNotEmpty) {
-              _showAchievementToast(context, newAchievements.first);
+            if (context.mounted) {
+              // Conquista + recompensa juntos, sem delay
+              final achievement = newAchievements.isNotEmpty
+                  ? newAchievements.first
+                  : null;
+              RewardToast.show(
+                context,
+                source: h.habit.title,
+                xp: result.xpGained,
+                gold: result.goldGained,
+                achievementTitle: achievement,
+              );
             }
           }
-
-          if (context.mounted) _showReward(context, result);
         },
       ),
     );
   }
 
-  void _showReward(BuildContext context, HabitResult result) {
-    final msg = switch (result.status) {
-      'completed' =>
-        '+${result.xpGained} XP  +${result.goldGained} Ouro ✨',
-      'partial' =>
-        '+${result.xpGained} XP  +${result.goldGained} Ouro (parcial)',
-      'niet' => 'Falha assumida. A sombra observa.',
-      _      => 'A sombra cresce.',
-    };
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg,
-          style: GoogleFonts.roboto(color: Colors.white)),
-      backgroundColor: result.status == 'completed'
-          ? AppColors.shadowAscending
-          : result.status == 'partial'
-              ? AppColors.mp
-              : AppColors.shadowChaotic,
-      duration: const Duration(seconds: 2),
-    ));
-  }
 
-  void _showAchievementToast(BuildContext context, String title) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Row(
-        children: [
-          const Icon(Icons.emoji_events, color: AppColors.gold, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Conquista desbloqueada!',
-                    style: GoogleFonts.cinzelDecorative(
-                        fontSize: 11, color: AppColors.gold)),
-                Text(title,
-                    style: GoogleFonts.roboto(
-                        fontSize: 12, color: Colors.white)),
-              ],
-            ),
-          ),
-        ],
-      ),
-      backgroundColor: AppColors.surface,
-      duration: const Duration(seconds: 4),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.gold),
-      ),
-    ));
-  }
 
   void _showDelete(
       BuildContext context, WidgetRef ref, HabitsTableData habit) {

@@ -4962,6 +4962,445 @@ class PlayerAchievementsTableCompanion
   }
 }
 
+class $GuildStatusTableTable extends GuildStatusTable
+    with TableInfo<$GuildStatusTableTable, GuildStatusTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GuildStatusTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
+  static const VerificationMeta _guildRankMeta =
+      const VerificationMeta('guildRank');
+  @override
+  late final GeneratedColumn<String> guildRank = GeneratedColumn<String>(
+      'guild_rank', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('none'));
+  static const VerificationMeta _guildReputationMeta =
+      const VerificationMeta('guildReputation');
+  @override
+  late final GeneratedColumn<int> guildReputation = GeneratedColumn<int>(
+      'guild_reputation', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _collarLevelMeta =
+      const VerificationMeta('collarLevel');
+  @override
+  late final GeneratedColumn<int> collarLevel = GeneratedColumn<int>(
+      'collar_level', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _totalGoldSpentMeta =
+      const VerificationMeta('totalGoldSpent');
+  @override
+  late final GeneratedColumn<int> totalGoldSpent = GeneratedColumn<int>(
+      'total_gold_spent', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _joinedAtMeta =
+      const VerificationMeta('joinedAt');
+  @override
+  late final GeneratedColumn<DateTime> joinedAt = GeneratedColumn<DateTime>(
+      'joined_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _ascensionCooldownMeta =
+      const VerificationMeta('ascensionCooldown');
+  @override
+  late final GeneratedColumn<DateTime> ascensionCooldown =
+      GeneratedColumn<DateTime>('ascension_cooldown', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        playerId,
+        guildRank,
+        guildReputation,
+        collarLevel,
+        totalGoldSpent,
+        joinedAt,
+        ascensionCooldown
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'guild_status';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<GuildStatusTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('guild_rank')) {
+      context.handle(_guildRankMeta,
+          guildRank.isAcceptableOrUnknown(data['guild_rank']!, _guildRankMeta));
+    }
+    if (data.containsKey('guild_reputation')) {
+      context.handle(
+          _guildReputationMeta,
+          guildReputation.isAcceptableOrUnknown(
+              data['guild_reputation']!, _guildReputationMeta));
+    }
+    if (data.containsKey('collar_level')) {
+      context.handle(
+          _collarLevelMeta,
+          collarLevel.isAcceptableOrUnknown(
+              data['collar_level']!, _collarLevelMeta));
+    }
+    if (data.containsKey('total_gold_spent')) {
+      context.handle(
+          _totalGoldSpentMeta,
+          totalGoldSpent.isAcceptableOrUnknown(
+              data['total_gold_spent']!, _totalGoldSpentMeta));
+    }
+    if (data.containsKey('joined_at')) {
+      context.handle(_joinedAtMeta,
+          joinedAt.isAcceptableOrUnknown(data['joined_at']!, _joinedAtMeta));
+    }
+    if (data.containsKey('ascension_cooldown')) {
+      context.handle(
+          _ascensionCooldownMeta,
+          ascensionCooldown.isAcceptableOrUnknown(
+              data['ascension_cooldown']!, _ascensionCooldownMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GuildStatusTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GuildStatusTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      guildRank: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}guild_rank'])!,
+      guildReputation: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}guild_reputation'])!,
+      collarLevel: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}collar_level'])!,
+      totalGoldSpent: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}total_gold_spent'])!,
+      joinedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}joined_at']),
+      ascensionCooldown: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}ascension_cooldown']),
+    );
+  }
+
+  @override
+  $GuildStatusTableTable createAlias(String alias) {
+    return $GuildStatusTableTable(attachedDatabase, alias);
+  }
+}
+
+class GuildStatusTableData extends DataClass
+    implements Insertable<GuildStatusTableData> {
+  final int id;
+  final int playerId;
+  final String guildRank;
+  final int guildReputation;
+  final int collarLevel;
+  final int totalGoldSpent;
+  final DateTime? joinedAt;
+  final DateTime? ascensionCooldown;
+  const GuildStatusTableData(
+      {required this.id,
+      required this.playerId,
+      required this.guildRank,
+      required this.guildReputation,
+      required this.collarLevel,
+      required this.totalGoldSpent,
+      this.joinedAt,
+      this.ascensionCooldown});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['guild_rank'] = Variable<String>(guildRank);
+    map['guild_reputation'] = Variable<int>(guildReputation);
+    map['collar_level'] = Variable<int>(collarLevel);
+    map['total_gold_spent'] = Variable<int>(totalGoldSpent);
+    if (!nullToAbsent || joinedAt != null) {
+      map['joined_at'] = Variable<DateTime>(joinedAt);
+    }
+    if (!nullToAbsent || ascensionCooldown != null) {
+      map['ascension_cooldown'] = Variable<DateTime>(ascensionCooldown);
+    }
+    return map;
+  }
+
+  GuildStatusTableCompanion toCompanion(bool nullToAbsent) {
+    return GuildStatusTableCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      guildRank: Value(guildRank),
+      guildReputation: Value(guildReputation),
+      collarLevel: Value(collarLevel),
+      totalGoldSpent: Value(totalGoldSpent),
+      joinedAt: joinedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(joinedAt),
+      ascensionCooldown: ascensionCooldown == null && nullToAbsent
+          ? const Value.absent()
+          : Value(ascensionCooldown),
+    );
+  }
+
+  factory GuildStatusTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GuildStatusTableData(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      guildRank: serializer.fromJson<String>(json['guildRank']),
+      guildReputation: serializer.fromJson<int>(json['guildReputation']),
+      collarLevel: serializer.fromJson<int>(json['collarLevel']),
+      totalGoldSpent: serializer.fromJson<int>(json['totalGoldSpent']),
+      joinedAt: serializer.fromJson<DateTime?>(json['joinedAt']),
+      ascensionCooldown:
+          serializer.fromJson<DateTime?>(json['ascensionCooldown']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'guildRank': serializer.toJson<String>(guildRank),
+      'guildReputation': serializer.toJson<int>(guildReputation),
+      'collarLevel': serializer.toJson<int>(collarLevel),
+      'totalGoldSpent': serializer.toJson<int>(totalGoldSpent),
+      'joinedAt': serializer.toJson<DateTime?>(joinedAt),
+      'ascensionCooldown': serializer.toJson<DateTime?>(ascensionCooldown),
+    };
+  }
+
+  GuildStatusTableData copyWith(
+          {int? id,
+          int? playerId,
+          String? guildRank,
+          int? guildReputation,
+          int? collarLevel,
+          int? totalGoldSpent,
+          Value<DateTime?> joinedAt = const Value.absent(),
+          Value<DateTime?> ascensionCooldown = const Value.absent()}) =>
+      GuildStatusTableData(
+        id: id ?? this.id,
+        playerId: playerId ?? this.playerId,
+        guildRank: guildRank ?? this.guildRank,
+        guildReputation: guildReputation ?? this.guildReputation,
+        collarLevel: collarLevel ?? this.collarLevel,
+        totalGoldSpent: totalGoldSpent ?? this.totalGoldSpent,
+        joinedAt: joinedAt.present ? joinedAt.value : this.joinedAt,
+        ascensionCooldown: ascensionCooldown.present
+            ? ascensionCooldown.value
+            : this.ascensionCooldown,
+      );
+  GuildStatusTableData copyWithCompanion(GuildStatusTableCompanion data) {
+    return GuildStatusTableData(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      guildRank: data.guildRank.present ? data.guildRank.value : this.guildRank,
+      guildReputation: data.guildReputation.present
+          ? data.guildReputation.value
+          : this.guildReputation,
+      collarLevel:
+          data.collarLevel.present ? data.collarLevel.value : this.collarLevel,
+      totalGoldSpent: data.totalGoldSpent.present
+          ? data.totalGoldSpent.value
+          : this.totalGoldSpent,
+      joinedAt: data.joinedAt.present ? data.joinedAt.value : this.joinedAt,
+      ascensionCooldown: data.ascensionCooldown.present
+          ? data.ascensionCooldown.value
+          : this.ascensionCooldown,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GuildStatusTableData(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('guildRank: $guildRank, ')
+          ..write('guildReputation: $guildReputation, ')
+          ..write('collarLevel: $collarLevel, ')
+          ..write('totalGoldSpent: $totalGoldSpent, ')
+          ..write('joinedAt: $joinedAt, ')
+          ..write('ascensionCooldown: $ascensionCooldown')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, playerId, guildRank, guildReputation,
+      collarLevel, totalGoldSpent, joinedAt, ascensionCooldown);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GuildStatusTableData &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.guildRank == this.guildRank &&
+          other.guildReputation == this.guildReputation &&
+          other.collarLevel == this.collarLevel &&
+          other.totalGoldSpent == this.totalGoldSpent &&
+          other.joinedAt == this.joinedAt &&
+          other.ascensionCooldown == this.ascensionCooldown);
+}
+
+class GuildStatusTableCompanion extends UpdateCompanion<GuildStatusTableData> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> guildRank;
+  final Value<int> guildReputation;
+  final Value<int> collarLevel;
+  final Value<int> totalGoldSpent;
+  final Value<DateTime?> joinedAt;
+  final Value<DateTime?> ascensionCooldown;
+  const GuildStatusTableCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.guildRank = const Value.absent(),
+    this.guildReputation = const Value.absent(),
+    this.collarLevel = const Value.absent(),
+    this.totalGoldSpent = const Value.absent(),
+    this.joinedAt = const Value.absent(),
+    this.ascensionCooldown = const Value.absent(),
+  });
+  GuildStatusTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    this.guildRank = const Value.absent(),
+    this.guildReputation = const Value.absent(),
+    this.collarLevel = const Value.absent(),
+    this.totalGoldSpent = const Value.absent(),
+    this.joinedAt = const Value.absent(),
+    this.ascensionCooldown = const Value.absent(),
+  }) : playerId = Value(playerId);
+  static Insertable<GuildStatusTableData> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? guildRank,
+    Expression<int>? guildReputation,
+    Expression<int>? collarLevel,
+    Expression<int>? totalGoldSpent,
+    Expression<DateTime>? joinedAt,
+    Expression<DateTime>? ascensionCooldown,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (guildRank != null) 'guild_rank': guildRank,
+      if (guildReputation != null) 'guild_reputation': guildReputation,
+      if (collarLevel != null) 'collar_level': collarLevel,
+      if (totalGoldSpent != null) 'total_gold_spent': totalGoldSpent,
+      if (joinedAt != null) 'joined_at': joinedAt,
+      if (ascensionCooldown != null) 'ascension_cooldown': ascensionCooldown,
+    });
+  }
+
+  GuildStatusTableCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? playerId,
+      Value<String>? guildRank,
+      Value<int>? guildReputation,
+      Value<int>? collarLevel,
+      Value<int>? totalGoldSpent,
+      Value<DateTime?>? joinedAt,
+      Value<DateTime?>? ascensionCooldown}) {
+    return GuildStatusTableCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      guildRank: guildRank ?? this.guildRank,
+      guildReputation: guildReputation ?? this.guildReputation,
+      collarLevel: collarLevel ?? this.collarLevel,
+      totalGoldSpent: totalGoldSpent ?? this.totalGoldSpent,
+      joinedAt: joinedAt ?? this.joinedAt,
+      ascensionCooldown: ascensionCooldown ?? this.ascensionCooldown,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (guildRank.present) {
+      map['guild_rank'] = Variable<String>(guildRank.value);
+    }
+    if (guildReputation.present) {
+      map['guild_reputation'] = Variable<int>(guildReputation.value);
+    }
+    if (collarLevel.present) {
+      map['collar_level'] = Variable<int>(collarLevel.value);
+    }
+    if (totalGoldSpent.present) {
+      map['total_gold_spent'] = Variable<int>(totalGoldSpent.value);
+    }
+    if (joinedAt.present) {
+      map['joined_at'] = Variable<DateTime>(joinedAt.value);
+    }
+    if (ascensionCooldown.present) {
+      map['ascension_cooldown'] = Variable<DateTime>(ascensionCooldown.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GuildStatusTableCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('guildRank: $guildRank, ')
+          ..write('guildReputation: $guildReputation, ')
+          ..write('collarLevel: $collarLevel, ')
+          ..write('totalGoldSpent: $totalGoldSpent, ')
+          ..write('joinedAt: $joinedAt, ')
+          ..write('ascensionCooldown: $ascensionCooldown')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4975,11 +5414,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $AchievementsTableTable(this);
   late final $PlayerAchievementsTableTable playerAchievementsTable =
       $PlayerAchievementsTableTable(this);
+  late final $GuildStatusTableTable guildStatusTable =
+      $GuildStatusTableTable(this);
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
   late final HabitDao habitDao = HabitDao(this as AppDatabase);
   late final InventoryDao inventoryDao = InventoryDao(this as AppDatabase);
   late final AchievementDao achievementDao =
       AchievementDao(this as AppDatabase);
+  late final GuildDao guildDao = GuildDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4992,7 +5434,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         inventoryTable,
         shopItemsTable,
         achievementsTable,
-        playerAchievementsTable
+        playerAchievementsTable,
+        guildStatusTable
       ];
 }
 
@@ -7314,6 +7757,227 @@ typedef $$PlayerAchievementsTableTableProcessedTableManager
         ),
         PlayerAchievementsTableData,
         PrefetchHooks Function()>;
+typedef $$GuildStatusTableTableCreateCompanionBuilder
+    = GuildStatusTableCompanion Function({
+  Value<int> id,
+  required int playerId,
+  Value<String> guildRank,
+  Value<int> guildReputation,
+  Value<int> collarLevel,
+  Value<int> totalGoldSpent,
+  Value<DateTime?> joinedAt,
+  Value<DateTime?> ascensionCooldown,
+});
+typedef $$GuildStatusTableTableUpdateCompanionBuilder
+    = GuildStatusTableCompanion Function({
+  Value<int> id,
+  Value<int> playerId,
+  Value<String> guildRank,
+  Value<int> guildReputation,
+  Value<int> collarLevel,
+  Value<int> totalGoldSpent,
+  Value<DateTime?> joinedAt,
+  Value<DateTime?> ascensionCooldown,
+});
+
+class $$GuildStatusTableTableFilterComposer
+    extends Composer<_$AppDatabase, $GuildStatusTableTable> {
+  $$GuildStatusTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get guildRank => $composableBuilder(
+      column: $table.guildRank, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get guildReputation => $composableBuilder(
+      column: $table.guildReputation,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get collarLevel => $composableBuilder(
+      column: $table.collarLevel, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalGoldSpent => $composableBuilder(
+      column: $table.totalGoldSpent,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get joinedAt => $composableBuilder(
+      column: $table.joinedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get ascensionCooldown => $composableBuilder(
+      column: $table.ascensionCooldown,
+      builder: (column) => ColumnFilters(column));
+}
+
+class $$GuildStatusTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $GuildStatusTableTable> {
+  $$GuildStatusTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get guildRank => $composableBuilder(
+      column: $table.guildRank, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get guildReputation => $composableBuilder(
+      column: $table.guildReputation,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get collarLevel => $composableBuilder(
+      column: $table.collarLevel, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalGoldSpent => $composableBuilder(
+      column: $table.totalGoldSpent,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get joinedAt => $composableBuilder(
+      column: $table.joinedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get ascensionCooldown => $composableBuilder(
+      column: $table.ascensionCooldown,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$GuildStatusTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GuildStatusTableTable> {
+  $$GuildStatusTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get guildRank =>
+      $composableBuilder(column: $table.guildRank, builder: (column) => column);
+
+  GeneratedColumn<int> get guildReputation => $composableBuilder(
+      column: $table.guildReputation, builder: (column) => column);
+
+  GeneratedColumn<int> get collarLevel => $composableBuilder(
+      column: $table.collarLevel, builder: (column) => column);
+
+  GeneratedColumn<int> get totalGoldSpent => $composableBuilder(
+      column: $table.totalGoldSpent, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get joinedAt =>
+      $composableBuilder(column: $table.joinedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get ascensionCooldown => $composableBuilder(
+      column: $table.ascensionCooldown, builder: (column) => column);
+}
+
+class $$GuildStatusTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $GuildStatusTableTable,
+    GuildStatusTableData,
+    $$GuildStatusTableTableFilterComposer,
+    $$GuildStatusTableTableOrderingComposer,
+    $$GuildStatusTableTableAnnotationComposer,
+    $$GuildStatusTableTableCreateCompanionBuilder,
+    $$GuildStatusTableTableUpdateCompanionBuilder,
+    (
+      GuildStatusTableData,
+      BaseReferences<_$AppDatabase, $GuildStatusTableTable,
+          GuildStatusTableData>
+    ),
+    GuildStatusTableData,
+    PrefetchHooks Function()> {
+  $$GuildStatusTableTableTableManager(
+      _$AppDatabase db, $GuildStatusTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GuildStatusTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GuildStatusTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GuildStatusTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> playerId = const Value.absent(),
+            Value<String> guildRank = const Value.absent(),
+            Value<int> guildReputation = const Value.absent(),
+            Value<int> collarLevel = const Value.absent(),
+            Value<int> totalGoldSpent = const Value.absent(),
+            Value<DateTime?> joinedAt = const Value.absent(),
+            Value<DateTime?> ascensionCooldown = const Value.absent(),
+          }) =>
+              GuildStatusTableCompanion(
+            id: id,
+            playerId: playerId,
+            guildRank: guildRank,
+            guildReputation: guildReputation,
+            collarLevel: collarLevel,
+            totalGoldSpent: totalGoldSpent,
+            joinedAt: joinedAt,
+            ascensionCooldown: ascensionCooldown,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int playerId,
+            Value<String> guildRank = const Value.absent(),
+            Value<int> guildReputation = const Value.absent(),
+            Value<int> collarLevel = const Value.absent(),
+            Value<int> totalGoldSpent = const Value.absent(),
+            Value<DateTime?> joinedAt = const Value.absent(),
+            Value<DateTime?> ascensionCooldown = const Value.absent(),
+          }) =>
+              GuildStatusTableCompanion.insert(
+            id: id,
+            playerId: playerId,
+            guildRank: guildRank,
+            guildReputation: guildReputation,
+            collarLevel: collarLevel,
+            totalGoldSpent: totalGoldSpent,
+            joinedAt: joinedAt,
+            ascensionCooldown: ascensionCooldown,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$GuildStatusTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $GuildStatusTableTable,
+    GuildStatusTableData,
+    $$GuildStatusTableTableFilterComposer,
+    $$GuildStatusTableTableOrderingComposer,
+    $$GuildStatusTableTableAnnotationComposer,
+    $$GuildStatusTableTableCreateCompanionBuilder,
+    $$GuildStatusTableTableUpdateCompanionBuilder,
+    (
+      GuildStatusTableData,
+      BaseReferences<_$AppDatabase, $GuildStatusTableTable,
+          GuildStatusTableData>
+    ),
+    GuildStatusTableData,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -7335,4 +7999,6 @@ class $AppDatabaseManager {
   $$PlayerAchievementsTableTableTableManager get playerAchievementsTable =>
       $$PlayerAchievementsTableTableTableManager(
           _db, _db.playerAchievementsTable);
+  $$GuildStatusTableTableTableManager get guildStatusTable =>
+      $$GuildStatusTableTableTableManager(_db, _db.guildStatusTable);
 }

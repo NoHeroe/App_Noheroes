@@ -13,6 +13,7 @@ import '../widgets/npc_dialogue_card.dart';
 import '../widgets/stat_bars_row.dart';
 import '../widgets/sanctuary_drawer.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
+import '../../guild/screens/guild_screen.dart';
 
 class SanctuaryScreen extends ConsumerStatefulWidget {
   const SanctuaryScreen({super.key});
@@ -340,69 +341,130 @@ class _PlayButton extends StatelessWidget {
   }
 }
 
-class _SecondaryButtons extends StatelessWidget {
+class _SecondaryButtons extends ConsumerWidget {
   const _SecondaryButtons();
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final player = ref.watch(currentPlayerProvider);
+    final level = player?.level ?? 1;
+    final guildUnlocked = level >= 6;
+
+    return Column(
       children: [
-        Expanded(
-          child: GestureDetector(
-            onTap: () {}, // TODO: rota biblioteca
-            child: Container(
-              height: 48,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: const Color(0xFFC2A05A).withValues(alpha: 0.5)),
-                color: const Color(0xFFC2A05A).withValues(alpha: 0.06),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.menu_book_outlined,
-                      color: Color(0xFFC2A05A), size: 18),
-                  const SizedBox(width: 8),
-                  Text('Biblioteca',
-                      style: GoogleFonts.cinzelDecorative(
-                          fontSize: 11,
-                          color: const Color(0xFFC2A05A),
-                          letterSpacing: 1)),
-                ],
+        // Linha 1: Biblioteca + Vitalismo
+        Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () {}, // TODO: rota biblioteca
+                child: _SecBtn(
+                  icon: Icons.menu_book_outlined,
+                  label: 'Biblioteca',
+                  color: const Color(0xFFC2A05A),
+                ),
               ),
             ),
-          ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: GestureDetector(
+                onTap: () {}, // TODO: rota vitalismo
+                child: _SecBtn(
+                  icon: Icons.bolt_outlined,
+                  label: 'Vitalismo',
+                  color: const Color(0xFF8B3DFF),
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: GestureDetector(
-            onTap: () {}, // TODO: rota vitalismo
-            child: Container(
-              height: 48,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: const Color(0xFF8B3DFF).withValues(alpha: 0.5)),
-                color: const Color(0xFF8B3DFF).withValues(alpha: 0.06),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.bolt_outlined,
-                      color: Color(0xFF8B3DFF), size: 18),
-                  const SizedBox(width: 8),
-                  Text('Vitalismo',
-                      style: GoogleFonts.cinzelDecorative(
-                          fontSize: 11,
-                          color: const Color(0xFF8B3DFF),
-                          letterSpacing: 1)),
-                ],
-              ),
+        const SizedBox(height: 10),
+        // Linha 2: Guilda (largura total)
+        GestureDetector(
+          onTap: () {
+            if (guildUnlocked) {
+              context.go('/guild');
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(
+                  'A Guilda de Aventureiros abre no Nível 6.',
+                  style: GoogleFonts.roboto(color: Colors.white),
+                ),
+                backgroundColor: AppColors.surface,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: const BorderSide(color: AppColors.border),
+                ),
+                duration: const Duration(seconds: 2),
+              ));
+            }
+          },
+          child: Container(
+            width: double.infinity,
+            height: 48,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: guildUnlocked
+                      ? AppColors.gold.withValues(alpha: 0.5)
+                      : AppColors.border),
+              color: guildUnlocked
+                  ? AppColors.gold.withValues(alpha: 0.06)
+                  : AppColors.surface,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  guildUnlocked ? Icons.shield_outlined : Icons.lock_outline,
+                  color: guildUnlocked ? AppColors.gold : AppColors.textMuted,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  guildUnlocked ? 'Guilda de Aventureiros' : 'Guilda  (Nível 6)',
+                  style: GoogleFonts.cinzelDecorative(
+                      fontSize: 11,
+                      color: guildUnlocked
+                          ? AppColors.gold
+                          : AppColors.textMuted,
+                      letterSpacing: 1),
+                ),
+              ],
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SecBtn extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  const _SecBtn({required this.icon, required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+        color: color.withValues(alpha: 0.06),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Text(label,
+              style: GoogleFonts.cinzelDecorative(
+                  fontSize: 11, color: color, letterSpacing: 1)),
+        ],
+      ),
     );
   }
 }
