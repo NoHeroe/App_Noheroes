@@ -44,4 +44,22 @@ class AchievementDao extends DatabaseAccessor<AppDatabase>
       ),
     );
   }
+
+  // Conquistas desbloqueadas mas ainda não coletadas
+  Future<List<PlayerAchievementsTableData>> getPending(int playerId) {
+    return (select(playerAchievementsTable)
+          ..where((t) => t.playerId.equals(playerId))
+          ..where((t) => t.collectedAt.isNull()))
+        .get();
+  }
+
+  // Marca conquista como coletada
+  Future<void> collect(int playerId, String key) async {
+    await (update(playerAchievementsTable)
+          ..where((t) => t.playerId.equals(playerId))
+          ..where((t) => t.achievementKey.equals(key)))
+        .write(PlayerAchievementsTableCompanion(
+      collectedAt: Value(DateTime.now()),
+    ));
+  }
 }

@@ -1,16 +1,20 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NpcSession {
-  static const _key = 'npc_last_shown_day';
+  static const _keyDay = 'npc_last_shown_day';
+  static const _keyShadow = 'npc_last_shadow_state';
 
-  static Future<bool> shouldShow(int caelumDay) async {
+  /// Mostra se mudou o dia OU se o estado da sombra mudou
+  static Future<bool> shouldShow(int caelumDay, String shadowState) async {
     final prefs = await SharedPreferences.getInstance();
-    final last = prefs.getInt(_key) ?? -1;
-    return last != caelumDay;
+    final lastDay = prefs.getInt(_keyDay) ?? -1;
+    final lastShadow = prefs.getString(_keyShadow) ?? '';
+    return lastDay != caelumDay || lastShadow != shadowState;
   }
 
-  static Future<void> markShown(int caelumDay) async {
+  static Future<void> markShown(int caelumDay, String shadowState) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_key, caelumDay);
+    await prefs.setInt(_keyDay, caelumDay);
+    await prefs.setString(_keyShadow, shadowState);
   }
 }

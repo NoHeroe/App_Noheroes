@@ -6,6 +6,15 @@ import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/database/app_database.dart';
 import '../../../data/database/daos/achievement_dao.dart';
+import '../../../data/database/daos/player_dao.dart';
+import '../../shared/widgets/reward_toast.dart';
+
+final pendingAchievementsProvider =
+    FutureProvider.autoDispose<List<PlayerAchievementsTableData>>((ref) async {
+  final player = ref.watch(currentPlayerProvider);
+  if (player == null) return [];
+  return AchievementDao(ref.watch(appDatabaseProvider)).getPending(player.id);
+});
 
 class AchievementsScreen extends ConsumerWidget {
   const AchievementsScreen({super.key});
@@ -90,8 +99,12 @@ class AchievementsScreen extends ConsumerWidget {
                             color: AppColors.hp, fontSize: 12)),
                   ),
                   data: (unlocked) {
-                    final unlockedKeys =
-                        unlocked.map((u) => u.achievementKey).toSet();
+                    final collectedKeys = unlocked
+                        .where((u) => u.collectedAt != null)
+                        .map((u) => u.achievementKey).toSet();
+                    final pendingKeys = unlocked
+                        .where((u) => u.collectedAt == null)
+                        .map((u) => u.achievementKey).toSet();
 
                     if (all.isEmpty) {
                       return Center(
@@ -106,12 +119,6 @@ class AchievementsScreen extends ConsumerWidget {
                                 style: GoogleFonts.roboto(
                                     color: AppColors.textMuted,
                                     fontSize: 13)),
-                            const SizedBox(height: 8),
-                            Text('O banco pode precisar ser reiniciado.',
-                                style: GoogleFonts.roboto(
-                                    color: AppColors.textMuted
-                                        .withValues(alpha: 0.6),
-                                    fontSize: 11)),
                           ],
                         ),
                       );
@@ -120,12 +127,42 @@ class AchievementsScreen extends ConsumerWidget {
                     return ListView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
                       itemCount: all.length,
-                      itemBuilder: (_, i) {
+                      itemBuilder: (ctx, i) {
                         final a = all[i];
-                        final done = unlockedKeys.contains(a.key);
-                        if (a.isSecret && !done) return _SecretCard();
+                        final collected = collectedKeys.contains(a.key);
+                        final pending = pendingKeys.contains(a.key);
+                        if (a.isSecret && !collected && !pending)
+                          return _SecretCard();
                         return _AchievementCard(
-                            achievement: a, unlocked: done);
+                          achievement: a,
+                          collected: collected,
+                          pending: pending,
+                          onCollect: pending ? () async {
+                            final db = ref.read(appDatabaseProvider);
+                            final dao = AchievementDao(db);
+                            final playerDao = PlayerDao(db);
+                            final player = ref.read(currentPlayerProvider);
+                            if (player == null) return;
+                            await dao.collect(player.id, a.key);
+                            if (a.xpReward > 0)
+                              await playerDao.addXp(player.id, a.xpReward);
+                            if (a.goldReward > 0)
+                              await playerDao.addGold(player.id, a.goldReward);
+                            ref.invalidate(unlockedAchievementsProvider);
+                            final updated = await ref.read(authDsProvider)
+                                .currentSession();
+                            ref.read(currentPlayerProvider.notifier)
+                                .state = updated;
+                            if (ctx.mounted) {
+                              RewardToast.show(ctx,
+                                source: a.title,
+                                xp: a.xpReward,
+                                gold: a.goldReward,
+                                gems: a.gemReward,
+                              );
+                            }
+                          } : null,
+                        );
                       },
                     );
                   },
@@ -141,10 +178,18 @@ class AchievementsScreen extends ConsumerWidget {
 
 class _AchievementCard extends StatelessWidget {
   final AchievementsTableData achievement;
-  final bool unlocked;
+  final bool collected;
+  final bool pending;
+  final VoidCallback? onCollect;
 
-  const _AchievementCard(
-      {required this.achievement, required this.unlocked});
+  const _AchievementCard({
+    required this.achievement,
+    required this.collected,
+    required this.pending,
+    this.onCollect,
+  });
+
+  bool get unlocked => collected || pending;
 
   Color get _catColor => switch (achievement.category) {
         'progression' => AppColors.xp,
@@ -228,9 +273,26 @@ class _AchievementCard extends StatelessWidget {
               ],
             ),
           ),
-          if (unlocked)
+          if (collected)
             const Icon(Icons.check_circle,
-                color: AppColors.shadowAscending, size: 20),
+                color: AppColors.shadowAscending, size: 20)
+          else if (pending)
+            GestureDetector(
+              onTap: onCollect,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                      color: AppColors.gold.withValues(alpha: 0.5)),
+                ),
+                child: Text('Coletar',
+                    style: GoogleFonts.cinzelDecorative(
+                        fontSize: 10, color: AppColors.gold)),
+              ),
+            ),
         ],
       ),
     );

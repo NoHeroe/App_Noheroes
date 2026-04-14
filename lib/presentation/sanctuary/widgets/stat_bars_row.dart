@@ -25,6 +25,10 @@ class StatBarsRow extends ConsumerWidget {
     final vitMax = hasVitalism ? (maxHp * 1.9).round() : 0;
     final vitVal = hasVitalism ? (hp * 1.9).round().clamp(0, vitMax) : 0;
 
+    final classChosen = player?.classType != null &&
+        player!.classType!.isNotEmpty;
+    final hasMana = classChosen && !hasVitalism;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -37,16 +41,18 @@ class StatBarsRow extends ConsumerWidget {
           _StatBar(label: 'HP', value: hp, max: maxHp,
               color: AppColors.hp, icon: Icons.favorite),
           const SizedBox(height: 10),
-          _StatBar(label: 'MP', value: mp, max: maxMp,
-              color: AppColors.mp, icon: Icons.auto_awesome),
-          const SizedBox(height: 10),
-          _StatBar(label: 'XP', value: xp, max: xpToNext,
-              color: AppColors.xp, icon: Icons.star),
+          // Vitalismo substitui MP; sem classe = sem barra secundária
           if (hasVitalism) ...[
-            const SizedBox(height: 10),
             _StatBar(label: 'VT', value: vitVal, max: vitMax,
                 color: AppColors.purple, icon: Icons.bolt),
+            const SizedBox(height: 10),
+          ] else if (hasMana) ...[
+            _StatBar(label: 'MP', value: mp, max: maxMp,
+                color: AppColors.mp, icon: Icons.auto_awesome),
+            const SizedBox(height: 10),
           ],
+          _StatBar(label: 'XP', value: xp, max: xpToNext,
+              color: AppColors.xp, icon: Icons.star),
         ],
       ),
     );

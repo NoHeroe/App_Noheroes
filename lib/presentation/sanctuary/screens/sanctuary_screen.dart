@@ -80,10 +80,11 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
   Future<void> _checkNpcDialog() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
-    final show = await NpcSession.shouldShow(player.caelumDay);
+    final show = await NpcSession.shouldShow(
+        player.caelumDay, player.shadowState);
     if (show && mounted) {
       setState(() => _showNpc = true);
-      await NpcSession.markShown(player.caelumDay);
+      await NpcSession.markShown(player.caelumDay, player.shadowState);
     }
   }
 

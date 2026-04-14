@@ -8,4 +8,6 @@ class PlayerAchievementsTable extends Table {
   IntColumn get playerId => integer()();
   TextColumn get achievementKey => text()();
   DateTimeColumn get unlockedAt => dateTime().withDefault(currentDateAndTime)();
+  // null = pendente para coletar, preenchido = coletado
+  DateTimeColumn get collectedAt => dateTime().nullable()();
 }

@@ -1,16 +1,12 @@
 import 'package:drift/drift.dart';
 import '../../../data/database/app_database.dart';
 import '../../../data/database/daos/achievement_dao.dart';
-import '../../../data/database/daos/player_dao.dart';
-import '../../../data/database/tables/players_table.dart';
 
 class AchievementService {
   final AppDatabase _db;
   AchievementService(this._db);
 
   AchievementDao get _dao => AchievementDao(_db);
-  PlayerDao get _playerDao => PlayerDao(_db);
-
   Future<void> ensureAchievementsSeedExists() async {
     final all = await _dao.getAllAchievements();
     if (all.isEmpty) {
@@ -91,22 +87,7 @@ class AchievementService {
       if (achievement == null) return;
 
       await _dao.unlock(player.id, key);
-
-      if (achievement.xpReward > 0) {
-        await _playerDao.addXp(player.id, achievement.xpReward);
-      }
-      if (achievement.goldReward > 0) {
-        await _playerDao.addGold(player.id, achievement.goldReward);
-      }
-      // Fix: entrega gemReward via update direto
-      if (achievement.gemReward > 0) {
-        await (_db.update(_db.playersTable)
-              ..where((t) => t.id.equals(player.id)))
-            .write(PlayersTableCompanion(
-          gems: Value(player.gems + achievement.gemReward),
-        ));
-      }
-
+      // Recompensas entregues manualmente pelo jogador na tela de conquistas
       unlocked.add(achievement.title);
     }
 
@@ -130,7 +111,8 @@ class AchievementService {
     if (player.streakDays >= 30)  await tryUnlock('streak_30');
     if (player.streakDays >= 100) await tryUnlock('streak_100');
 
-    if (player.shadowState == 'stable')    await tryUnlock('shadow_stable');
+    if (player.shadowState == 'stable' && player.caelumDay >= 3 && totalHabitsCompleted >= 3)
+      await tryUnlock('shadow_stable');
     if (player.shadowState == 'ascending') await tryUnlock('shadow_ascend');
 
     if (player.classType != null && player.classType!.isNotEmpty) {

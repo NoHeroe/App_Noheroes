@@ -4724,9 +4724,15 @@ class $PlayerAchievementsTableTable extends PlayerAchievementsTable
       type: DriftSqlType.dateTime,
       requiredDuringInsert: false,
       defaultValue: currentDateAndTime);
+  static const VerificationMeta _collectedAtMeta =
+      const VerificationMeta('collectedAt');
+  @override
+  late final GeneratedColumn<DateTime> collectedAt = GeneratedColumn<DateTime>(
+      'collected_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, playerId, achievementKey, unlockedAt];
+      [id, playerId, achievementKey, unlockedAt, collectedAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -4761,6 +4767,12 @@ class $PlayerAchievementsTableTable extends PlayerAchievementsTable
           unlockedAt.isAcceptableOrUnknown(
               data['unlocked_at']!, _unlockedAtMeta));
     }
+    if (data.containsKey('collected_at')) {
+      context.handle(
+          _collectedAtMeta,
+          collectedAt.isAcceptableOrUnknown(
+              data['collected_at']!, _collectedAtMeta));
+    }
     return context;
   }
 
@@ -4779,6 +4791,8 @@ class $PlayerAchievementsTableTable extends PlayerAchievementsTable
           DriftSqlType.string, data['${effectivePrefix}achievement_key'])!,
       unlockedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}unlocked_at'])!,
+      collectedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}collected_at']),
     );
   }
 
@@ -4794,11 +4808,13 @@ class PlayerAchievementsTableData extends DataClass
   final int playerId;
   final String achievementKey;
   final DateTime unlockedAt;
+  final DateTime? collectedAt;
   const PlayerAchievementsTableData(
       {required this.id,
       required this.playerId,
       required this.achievementKey,
-      required this.unlockedAt});
+      required this.unlockedAt,
+      this.collectedAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4806,6 +4822,9 @@ class PlayerAchievementsTableData extends DataClass
     map['player_id'] = Variable<int>(playerId);
     map['achievement_key'] = Variable<String>(achievementKey);
     map['unlocked_at'] = Variable<DateTime>(unlockedAt);
+    if (!nullToAbsent || collectedAt != null) {
+      map['collected_at'] = Variable<DateTime>(collectedAt);
+    }
     return map;
   }
 
@@ -4815,6 +4834,9 @@ class PlayerAchievementsTableData extends DataClass
       playerId: Value(playerId),
       achievementKey: Value(achievementKey),
       unlockedAt: Value(unlockedAt),
+      collectedAt: collectedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(collectedAt),
     );
   }
 
@@ -4826,6 +4848,7 @@ class PlayerAchievementsTableData extends DataClass
       playerId: serializer.fromJson<int>(json['playerId']),
       achievementKey: serializer.fromJson<String>(json['achievementKey']),
       unlockedAt: serializer.fromJson<DateTime>(json['unlockedAt']),
+      collectedAt: serializer.fromJson<DateTime?>(json['collectedAt']),
     );
   }
   @override
@@ -4836,6 +4859,7 @@ class PlayerAchievementsTableData extends DataClass
       'playerId': serializer.toJson<int>(playerId),
       'achievementKey': serializer.toJson<String>(achievementKey),
       'unlockedAt': serializer.toJson<DateTime>(unlockedAt),
+      'collectedAt': serializer.toJson<DateTime?>(collectedAt),
     };
   }
 
@@ -4843,12 +4867,14 @@ class PlayerAchievementsTableData extends DataClass
           {int? id,
           int? playerId,
           String? achievementKey,
-          DateTime? unlockedAt}) =>
+          DateTime? unlockedAt,
+          Value<DateTime?> collectedAt = const Value.absent()}) =>
       PlayerAchievementsTableData(
         id: id ?? this.id,
         playerId: playerId ?? this.playerId,
         achievementKey: achievementKey ?? this.achievementKey,
         unlockedAt: unlockedAt ?? this.unlockedAt,
+        collectedAt: collectedAt.present ? collectedAt.value : this.collectedAt,
       );
   PlayerAchievementsTableData copyWithCompanion(
       PlayerAchievementsTableCompanion data) {
@@ -4860,6 +4886,8 @@ class PlayerAchievementsTableData extends DataClass
           : this.achievementKey,
       unlockedAt:
           data.unlockedAt.present ? data.unlockedAt.value : this.unlockedAt,
+      collectedAt:
+          data.collectedAt.present ? data.collectedAt.value : this.collectedAt,
     );
   }
 
@@ -4869,13 +4897,15 @@ class PlayerAchievementsTableData extends DataClass
           ..write('id: $id, ')
           ..write('playerId: $playerId, ')
           ..write('achievementKey: $achievementKey, ')
-          ..write('unlockedAt: $unlockedAt')
+          ..write('unlockedAt: $unlockedAt, ')
+          ..write('collectedAt: $collectedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, playerId, achievementKey, unlockedAt);
+  int get hashCode =>
+      Object.hash(id, playerId, achievementKey, unlockedAt, collectedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4883,7 +4913,8 @@ class PlayerAchievementsTableData extends DataClass
           other.id == this.id &&
           other.playerId == this.playerId &&
           other.achievementKey == this.achievementKey &&
-          other.unlockedAt == this.unlockedAt);
+          other.unlockedAt == this.unlockedAt &&
+          other.collectedAt == this.collectedAt);
 }
 
 class PlayerAchievementsTableCompanion
@@ -4892,17 +4923,20 @@ class PlayerAchievementsTableCompanion
   final Value<int> playerId;
   final Value<String> achievementKey;
   final Value<DateTime> unlockedAt;
+  final Value<DateTime?> collectedAt;
   const PlayerAchievementsTableCompanion({
     this.id = const Value.absent(),
     this.playerId = const Value.absent(),
     this.achievementKey = const Value.absent(),
     this.unlockedAt = const Value.absent(),
+    this.collectedAt = const Value.absent(),
   });
   PlayerAchievementsTableCompanion.insert({
     this.id = const Value.absent(),
     required int playerId,
     required String achievementKey,
     this.unlockedAt = const Value.absent(),
+    this.collectedAt = const Value.absent(),
   })  : playerId = Value(playerId),
         achievementKey = Value(achievementKey);
   static Insertable<PlayerAchievementsTableData> custom({
@@ -4910,12 +4944,14 @@ class PlayerAchievementsTableCompanion
     Expression<int>? playerId,
     Expression<String>? achievementKey,
     Expression<DateTime>? unlockedAt,
+    Expression<DateTime>? collectedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (playerId != null) 'player_id': playerId,
       if (achievementKey != null) 'achievement_key': achievementKey,
       if (unlockedAt != null) 'unlocked_at': unlockedAt,
+      if (collectedAt != null) 'collected_at': collectedAt,
     });
   }
 
@@ -4923,12 +4959,14 @@ class PlayerAchievementsTableCompanion
       {Value<int>? id,
       Value<int>? playerId,
       Value<String>? achievementKey,
-      Value<DateTime>? unlockedAt}) {
+      Value<DateTime>? unlockedAt,
+      Value<DateTime?>? collectedAt}) {
     return PlayerAchievementsTableCompanion(
       id: id ?? this.id,
       playerId: playerId ?? this.playerId,
       achievementKey: achievementKey ?? this.achievementKey,
       unlockedAt: unlockedAt ?? this.unlockedAt,
+      collectedAt: collectedAt ?? this.collectedAt,
     );
   }
 
@@ -4947,6 +4985,9 @@ class PlayerAchievementsTableCompanion
     if (unlockedAt.present) {
       map['unlocked_at'] = Variable<DateTime>(unlockedAt.value);
     }
+    if (collectedAt.present) {
+      map['collected_at'] = Variable<DateTime>(collectedAt.value);
+    }
     return map;
   }
 
@@ -4956,7 +4997,8 @@ class PlayerAchievementsTableCompanion
           ..write('id: $id, ')
           ..write('playerId: $playerId, ')
           ..write('achievementKey: $achievementKey, ')
-          ..write('unlockedAt: $unlockedAt')
+          ..write('unlockedAt: $unlockedAt, ')
+          ..write('collectedAt: $collectedAt')
           ..write(')'))
         .toString();
   }
@@ -7602,6 +7644,7 @@ typedef $$PlayerAchievementsTableTableCreateCompanionBuilder
   required int playerId,
   required String achievementKey,
   Value<DateTime> unlockedAt,
+  Value<DateTime?> collectedAt,
 });
 typedef $$PlayerAchievementsTableTableUpdateCompanionBuilder
     = PlayerAchievementsTableCompanion Function({
@@ -7609,6 +7652,7 @@ typedef $$PlayerAchievementsTableTableUpdateCompanionBuilder
   Value<int> playerId,
   Value<String> achievementKey,
   Value<DateTime> unlockedAt,
+  Value<DateTime?> collectedAt,
 });
 
 class $$PlayerAchievementsTableTableFilterComposer
@@ -7632,6 +7676,9 @@ class $$PlayerAchievementsTableTableFilterComposer
 
   ColumnFilters<DateTime> get unlockedAt => $composableBuilder(
       column: $table.unlockedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get collectedAt => $composableBuilder(
+      column: $table.collectedAt, builder: (column) => ColumnFilters(column));
 }
 
 class $$PlayerAchievementsTableTableOrderingComposer
@@ -7655,6 +7702,9 @@ class $$PlayerAchievementsTableTableOrderingComposer
 
   ColumnOrderings<DateTime> get unlockedAt => $composableBuilder(
       column: $table.unlockedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get collectedAt => $composableBuilder(
+      column: $table.collectedAt, builder: (column) => ColumnOrderings(column));
 }
 
 class $$PlayerAchievementsTableTableAnnotationComposer
@@ -7677,6 +7727,9 @@ class $$PlayerAchievementsTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get unlockedAt => $composableBuilder(
       column: $table.unlockedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get collectedAt => $composableBuilder(
+      column: $table.collectedAt, builder: (column) => column);
 }
 
 class $$PlayerAchievementsTableTableTableManager extends RootTableManager<
@@ -7714,24 +7767,28 @@ class $$PlayerAchievementsTableTableTableManager extends RootTableManager<
             Value<int> playerId = const Value.absent(),
             Value<String> achievementKey = const Value.absent(),
             Value<DateTime> unlockedAt = const Value.absent(),
+            Value<DateTime?> collectedAt = const Value.absent(),
           }) =>
               PlayerAchievementsTableCompanion(
             id: id,
             playerId: playerId,
             achievementKey: achievementKey,
             unlockedAt: unlockedAt,
+            collectedAt: collectedAt,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
             required int playerId,
             required String achievementKey,
             Value<DateTime> unlockedAt = const Value.absent(),
+            Value<DateTime?> collectedAt = const Value.absent(),
           }) =>
               PlayerAchievementsTableCompanion.insert(
             id: id,
             playerId: playerId,
             achievementKey: achievementKey,
             unlockedAt: unlockedAt,
+            collectedAt: collectedAt,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

@@ -3,8 +3,14 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/requirements_helper.dart';
 import '../../../data/datasources/local/habit_local_ds.dart';
+import '../../../core/utils/guild_rank.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../app/providers.dart';
+import '../../../core/utils/guild_rank.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../app/providers.dart';
 
-class HabitCard extends StatefulWidget {
+class HabitCard extends ConsumerStatefulWidget {
   final HabitWithStatus habitWithStatus;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
@@ -17,10 +23,10 @@ class HabitCard extends StatefulWidget {
   });
 
   @override
-  State<HabitCard> createState() => _HabitCardState();
+  ConsumerState<HabitCard> createState() => _HabitCardState();
 }
 
-class _HabitCardState extends State<HabitCard> {
+class _HabitCardState extends ConsumerState<HabitCard> {
   bool _expanded = false;
 
   HabitWithStatus get h => widget.habitWithStatus;
@@ -160,13 +166,18 @@ class _HabitCardState extends State<HabitCard> {
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Row(
+                        Builder(builder: (ctx) {
+                            final player = ref.watch(currentPlayerProvider);
+                            final gRank = GuildRankSystem.fromString(player?.guildRank ?? 'e');
+                            final xp = GuildRankSystem.adaptXp(h.habit.xpReward, gRank);
+                            final gold = GuildRankSystem.adaptGold(h.habit.goldReward, gRank);
+                            return Row(
                           children: [
-                            Text('+${h.habit.xpReward} XP',
+                            Text('+$xp XP',
                                 style: GoogleFonts.roboto(
                                     fontSize: 11, color: AppColors.xp)),
                             const SizedBox(width: 8),
-                            Text('+${h.habit.goldReward} 🪙',
+                            Text('+$gold 🪙',
                                 style: GoogleFonts.roboto(
                                     fontSize: 11, color: AppColors.gold)),
                             const Spacer(),
@@ -174,7 +185,8 @@ class _HabitCardState extends State<HabitCard> {
                                 style: GoogleFonts.roboto(
                                     fontSize: 11, color: _statusColor)),
                           ],
-                        ),
+                        );
+                        }),
                       ],
                     ),
                   ),

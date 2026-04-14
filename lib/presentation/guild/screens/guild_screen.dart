@@ -8,7 +8,7 @@ import '../../../data/database/app_database.dart';
 import '../../../data/database/tables/items_table.dart';
 import '../../../data/database/tables/inventory_table.dart';
 import 'package:drift/drift.dart' hide Column;
-import '../../shared/widgets/npc_tutorial_popup.dart';
+import '../../shared/widgets/npc_dialog_overlay.dart';
 import '../../shared/widgets/reward_toast.dart';
 
 // Provider do status da guilda
@@ -89,9 +89,7 @@ class GuildScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.arrow_back_ios,
                 color: AppColors.textMuted, size: 18),
-            onPressed: (context as Element).findAncestorStateOfType<NavigatorState>() != null
-                ? () => Navigator.pop(context)
-                : null,
+            onPressed: () => Navigator.of(context).pop(),
           ),
           const SizedBox(width: 4),
           // Emblema
@@ -443,13 +441,12 @@ class GuildScreen extends ConsumerWidget {
       );
       await Future.delayed(const Duration(milliseconds: 400));
       if (context.mounted) {
-        NpcTutorialPopup.show(
+        NpcDialogOverlay.show(
           context,
           npcName: 'Noryan Gray',
           npcTitle: 'Mestre da Guilda',
           message:
-              'Bem-vindo, aventureiro. Você agora carrega o Colar da Guilda — não é enfeite, é responsabilidade.\n\nSeu Rank é E. A partir daqui, missões da Guilda, reputação e Testes de Ascensão definirão até onde você chega.\n\nA Guilda está aberta. Use com inteligência.',
-          buttonLabel: 'Entendido, Mestre',
+              'Você agora carrega o Colar da Guilda. Não é enfeite — é responsabilidade. Seu Rank é E. Missões da Guilda e Testes de Ascensão definirão até onde você chega.',
         );
       }
     }
