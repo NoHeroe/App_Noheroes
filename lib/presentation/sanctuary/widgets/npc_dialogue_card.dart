@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/asset_loader.dart';
+import '../../../data/datasources/local/npc_reputation_service.dart';
 
 class NpcDialogueOverlay extends StatefulWidget {
   final String shadowState;
   final int caelumDay;
+  final String? factionType;
   final VoidCallback onDismiss;
 
   const NpcDialogueOverlay({
     super.key,
     required this.shadowState,
     required this.caelumDay,
+    this.factionType,
     required this.onDismiss,
   });
 
@@ -43,13 +46,21 @@ class _NpcDialogueOverlayState extends State<NpcDialogueOverlay>
     _loadAndShow();
   }
 
+  String _npcName = '???';
+  String _npcTitle = '';
+
   Future<void> _loadAndShow() async {
-    final text = await AssetLoader.getNpcDailyDialogue(
-      widget.shadowState,
-      widget.caelumDay,
+    final data = await AssetLoader.getNpcForPlayer(
+      factionType: widget.factionType,
+      shadowState: widget.shadowState,
+      caelumDay: widget.caelumDay,
     );
     if (mounted) {
-      setState(() => _dialogue = text);
+      setState(() {
+        _dialogue = data['dialogue'] ?? '';
+        _npcName = data['name'] ?? '???';
+        _npcTitle = data['title'] ?? '';
+      });
       _ctrl.forward();
     }
   }
@@ -114,9 +125,9 @@ class _NpcDialogueOverlayState extends State<NpcDialogueOverlay>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '???',
+                        _npcName.length > 8 ? '${_npcName.substring(0, 7)}...' : _npcName,
                         style: GoogleFonts.cinzelDecorative(
-                          fontSize: 9,
+                          fontSize: 8,
                           color: AppColors.gold,
                           letterSpacing: 1,
                         ),
@@ -152,7 +163,7 @@ class _NpcDialogueOverlayState extends State<NpcDialogueOverlay>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'FIGURA DESCONHECIDA',
+                            _npcTitle.toUpperCase(),
                             style: GoogleFonts.roboto(
                               fontSize: 8,
                               color: AppColors.gold,

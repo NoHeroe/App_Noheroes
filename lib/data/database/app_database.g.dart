@@ -5443,6 +5443,353 @@ class GuildStatusTableCompanion extends UpdateCompanion<GuildStatusTableData> {
   }
 }
 
+class $NpcReputationTableTable extends NpcReputationTable
+    with TableInfo<$NpcReputationTableTable, NpcReputationTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $NpcReputationTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _npcIdMeta = const VerificationMeta('npcId');
+  @override
+  late final GeneratedColumn<String> npcId = GeneratedColumn<String>(
+      'npc_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _reputationMeta =
+      const VerificationMeta('reputation');
+  @override
+  late final GeneratedColumn<int> reputation = GeneratedColumn<int>(
+      'reputation', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(50));
+  static const VerificationMeta _lastGainAtMeta =
+      const VerificationMeta('lastGainAt');
+  @override
+  late final GeneratedColumn<DateTime> lastGainAt = GeneratedColumn<DateTime>(
+      'last_gain_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _dailyGainedMeta =
+      const VerificationMeta('dailyGained');
+  @override
+  late final GeneratedColumn<int> dailyGained = GeneratedColumn<int>(
+      'daily_gained', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, playerId, npcId, reputation, lastGainAt, dailyGained];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'npc_reputation';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<NpcReputationTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('npc_id')) {
+      context.handle(
+          _npcIdMeta, npcId.isAcceptableOrUnknown(data['npc_id']!, _npcIdMeta));
+    } else if (isInserting) {
+      context.missing(_npcIdMeta);
+    }
+    if (data.containsKey('reputation')) {
+      context.handle(
+          _reputationMeta,
+          reputation.isAcceptableOrUnknown(
+              data['reputation']!, _reputationMeta));
+    }
+    if (data.containsKey('last_gain_at')) {
+      context.handle(
+          _lastGainAtMeta,
+          lastGainAt.isAcceptableOrUnknown(
+              data['last_gain_at']!, _lastGainAtMeta));
+    }
+    if (data.containsKey('daily_gained')) {
+      context.handle(
+          _dailyGainedMeta,
+          dailyGained.isAcceptableOrUnknown(
+              data['daily_gained']!, _dailyGainedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  NpcReputationTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return NpcReputationTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      npcId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}npc_id'])!,
+      reputation: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}reputation'])!,
+      lastGainAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}last_gain_at']),
+      dailyGained: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}daily_gained'])!,
+    );
+  }
+
+  @override
+  $NpcReputationTableTable createAlias(String alias) {
+    return $NpcReputationTableTable(attachedDatabase, alias);
+  }
+}
+
+class NpcReputationTableData extends DataClass
+    implements Insertable<NpcReputationTableData> {
+  final int id;
+  final int playerId;
+  final String npcId;
+  final int reputation;
+  final DateTime? lastGainAt;
+  final int dailyGained;
+  const NpcReputationTableData(
+      {required this.id,
+      required this.playerId,
+      required this.npcId,
+      required this.reputation,
+      this.lastGainAt,
+      required this.dailyGained});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['npc_id'] = Variable<String>(npcId);
+    map['reputation'] = Variable<int>(reputation);
+    if (!nullToAbsent || lastGainAt != null) {
+      map['last_gain_at'] = Variable<DateTime>(lastGainAt);
+    }
+    map['daily_gained'] = Variable<int>(dailyGained);
+    return map;
+  }
+
+  NpcReputationTableCompanion toCompanion(bool nullToAbsent) {
+    return NpcReputationTableCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      npcId: Value(npcId),
+      reputation: Value(reputation),
+      lastGainAt: lastGainAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastGainAt),
+      dailyGained: Value(dailyGained),
+    );
+  }
+
+  factory NpcReputationTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return NpcReputationTableData(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      npcId: serializer.fromJson<String>(json['npcId']),
+      reputation: serializer.fromJson<int>(json['reputation']),
+      lastGainAt: serializer.fromJson<DateTime?>(json['lastGainAt']),
+      dailyGained: serializer.fromJson<int>(json['dailyGained']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'npcId': serializer.toJson<String>(npcId),
+      'reputation': serializer.toJson<int>(reputation),
+      'lastGainAt': serializer.toJson<DateTime?>(lastGainAt),
+      'dailyGained': serializer.toJson<int>(dailyGained),
+    };
+  }
+
+  NpcReputationTableData copyWith(
+          {int? id,
+          int? playerId,
+          String? npcId,
+          int? reputation,
+          Value<DateTime?> lastGainAt = const Value.absent(),
+          int? dailyGained}) =>
+      NpcReputationTableData(
+        id: id ?? this.id,
+        playerId: playerId ?? this.playerId,
+        npcId: npcId ?? this.npcId,
+        reputation: reputation ?? this.reputation,
+        lastGainAt: lastGainAt.present ? lastGainAt.value : this.lastGainAt,
+        dailyGained: dailyGained ?? this.dailyGained,
+      );
+  NpcReputationTableData copyWithCompanion(NpcReputationTableCompanion data) {
+    return NpcReputationTableData(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      npcId: data.npcId.present ? data.npcId.value : this.npcId,
+      reputation:
+          data.reputation.present ? data.reputation.value : this.reputation,
+      lastGainAt:
+          data.lastGainAt.present ? data.lastGainAt.value : this.lastGainAt,
+      dailyGained:
+          data.dailyGained.present ? data.dailyGained.value : this.dailyGained,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NpcReputationTableData(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('npcId: $npcId, ')
+          ..write('reputation: $reputation, ')
+          ..write('lastGainAt: $lastGainAt, ')
+          ..write('dailyGained: $dailyGained')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, playerId, npcId, reputation, lastGainAt, dailyGained);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is NpcReputationTableData &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.npcId == this.npcId &&
+          other.reputation == this.reputation &&
+          other.lastGainAt == this.lastGainAt &&
+          other.dailyGained == this.dailyGained);
+}
+
+class NpcReputationTableCompanion
+    extends UpdateCompanion<NpcReputationTableData> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> npcId;
+  final Value<int> reputation;
+  final Value<DateTime?> lastGainAt;
+  final Value<int> dailyGained;
+  const NpcReputationTableCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.npcId = const Value.absent(),
+    this.reputation = const Value.absent(),
+    this.lastGainAt = const Value.absent(),
+    this.dailyGained = const Value.absent(),
+  });
+  NpcReputationTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String npcId,
+    this.reputation = const Value.absent(),
+    this.lastGainAt = const Value.absent(),
+    this.dailyGained = const Value.absent(),
+  })  : playerId = Value(playerId),
+        npcId = Value(npcId);
+  static Insertable<NpcReputationTableData> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? npcId,
+    Expression<int>? reputation,
+    Expression<DateTime>? lastGainAt,
+    Expression<int>? dailyGained,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (npcId != null) 'npc_id': npcId,
+      if (reputation != null) 'reputation': reputation,
+      if (lastGainAt != null) 'last_gain_at': lastGainAt,
+      if (dailyGained != null) 'daily_gained': dailyGained,
+    });
+  }
+
+  NpcReputationTableCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? playerId,
+      Value<String>? npcId,
+      Value<int>? reputation,
+      Value<DateTime?>? lastGainAt,
+      Value<int>? dailyGained}) {
+    return NpcReputationTableCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      npcId: npcId ?? this.npcId,
+      reputation: reputation ?? this.reputation,
+      lastGainAt: lastGainAt ?? this.lastGainAt,
+      dailyGained: dailyGained ?? this.dailyGained,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (npcId.present) {
+      map['npc_id'] = Variable<String>(npcId.value);
+    }
+    if (reputation.present) {
+      map['reputation'] = Variable<int>(reputation.value);
+    }
+    if (lastGainAt.present) {
+      map['last_gain_at'] = Variable<DateTime>(lastGainAt.value);
+    }
+    if (dailyGained.present) {
+      map['daily_gained'] = Variable<int>(dailyGained.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('NpcReputationTableCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('npcId: $npcId, ')
+          ..write('reputation: $reputation, ')
+          ..write('lastGainAt: $lastGainAt, ')
+          ..write('dailyGained: $dailyGained')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5458,6 +5805,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $PlayerAchievementsTableTable(this);
   late final $GuildStatusTableTable guildStatusTable =
       $GuildStatusTableTable(this);
+  late final $NpcReputationTableTable npcReputationTable =
+      $NpcReputationTableTable(this);
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
   late final HabitDao habitDao = HabitDao(this as AppDatabase);
   late final InventoryDao inventoryDao = InventoryDao(this as AppDatabase);
@@ -5477,7 +5826,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         shopItemsTable,
         achievementsTable,
         playerAchievementsTable,
-        guildStatusTable
+        guildStatusTable,
+        npcReputationTable
       ];
 }
 
@@ -8035,6 +8385,192 @@ typedef $$GuildStatusTableTableProcessedTableManager = ProcessedTableManager<
     ),
     GuildStatusTableData,
     PrefetchHooks Function()>;
+typedef $$NpcReputationTableTableCreateCompanionBuilder
+    = NpcReputationTableCompanion Function({
+  Value<int> id,
+  required int playerId,
+  required String npcId,
+  Value<int> reputation,
+  Value<DateTime?> lastGainAt,
+  Value<int> dailyGained,
+});
+typedef $$NpcReputationTableTableUpdateCompanionBuilder
+    = NpcReputationTableCompanion Function({
+  Value<int> id,
+  Value<int> playerId,
+  Value<String> npcId,
+  Value<int> reputation,
+  Value<DateTime?> lastGainAt,
+  Value<int> dailyGained,
+});
+
+class $$NpcReputationTableTableFilterComposer
+    extends Composer<_$AppDatabase, $NpcReputationTableTable> {
+  $$NpcReputationTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get npcId => $composableBuilder(
+      column: $table.npcId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get reputation => $composableBuilder(
+      column: $table.reputation, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastGainAt => $composableBuilder(
+      column: $table.lastGainAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get dailyGained => $composableBuilder(
+      column: $table.dailyGained, builder: (column) => ColumnFilters(column));
+}
+
+class $$NpcReputationTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $NpcReputationTableTable> {
+  $$NpcReputationTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get npcId => $composableBuilder(
+      column: $table.npcId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get reputation => $composableBuilder(
+      column: $table.reputation, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastGainAt => $composableBuilder(
+      column: $table.lastGainAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get dailyGained => $composableBuilder(
+      column: $table.dailyGained, builder: (column) => ColumnOrderings(column));
+}
+
+class $$NpcReputationTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $NpcReputationTableTable> {
+  $$NpcReputationTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get npcId =>
+      $composableBuilder(column: $table.npcId, builder: (column) => column);
+
+  GeneratedColumn<int> get reputation => $composableBuilder(
+      column: $table.reputation, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastGainAt => $composableBuilder(
+      column: $table.lastGainAt, builder: (column) => column);
+
+  GeneratedColumn<int> get dailyGained => $composableBuilder(
+      column: $table.dailyGained, builder: (column) => column);
+}
+
+class $$NpcReputationTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $NpcReputationTableTable,
+    NpcReputationTableData,
+    $$NpcReputationTableTableFilterComposer,
+    $$NpcReputationTableTableOrderingComposer,
+    $$NpcReputationTableTableAnnotationComposer,
+    $$NpcReputationTableTableCreateCompanionBuilder,
+    $$NpcReputationTableTableUpdateCompanionBuilder,
+    (
+      NpcReputationTableData,
+      BaseReferences<_$AppDatabase, $NpcReputationTableTable,
+          NpcReputationTableData>
+    ),
+    NpcReputationTableData,
+    PrefetchHooks Function()> {
+  $$NpcReputationTableTableTableManager(
+      _$AppDatabase db, $NpcReputationTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$NpcReputationTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$NpcReputationTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$NpcReputationTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> playerId = const Value.absent(),
+            Value<String> npcId = const Value.absent(),
+            Value<int> reputation = const Value.absent(),
+            Value<DateTime?> lastGainAt = const Value.absent(),
+            Value<int> dailyGained = const Value.absent(),
+          }) =>
+              NpcReputationTableCompanion(
+            id: id,
+            playerId: playerId,
+            npcId: npcId,
+            reputation: reputation,
+            lastGainAt: lastGainAt,
+            dailyGained: dailyGained,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int playerId,
+            required String npcId,
+            Value<int> reputation = const Value.absent(),
+            Value<DateTime?> lastGainAt = const Value.absent(),
+            Value<int> dailyGained = const Value.absent(),
+          }) =>
+              NpcReputationTableCompanion.insert(
+            id: id,
+            playerId: playerId,
+            npcId: npcId,
+            reputation: reputation,
+            lastGainAt: lastGainAt,
+            dailyGained: dailyGained,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$NpcReputationTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $NpcReputationTableTable,
+    NpcReputationTableData,
+    $$NpcReputationTableTableFilterComposer,
+    $$NpcReputationTableTableOrderingComposer,
+    $$NpcReputationTableTableAnnotationComposer,
+    $$NpcReputationTableTableCreateCompanionBuilder,
+    $$NpcReputationTableTableUpdateCompanionBuilder,
+    (
+      NpcReputationTableData,
+      BaseReferences<_$AppDatabase, $NpcReputationTableTable,
+          NpcReputationTableData>
+    ),
+    NpcReputationTableData,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -8058,4 +8594,6 @@ class $AppDatabaseManager {
           _db, _db.playerAchievementsTable);
   $$GuildStatusTableTableTableManager get guildStatusTable =>
       $$GuildStatusTableTableTableManager(_db, _db.guildStatusTable);
+  $$NpcReputationTableTableTableManager get npcReputationTable =>
+      $$NpcReputationTableTableTableManager(_db, _db.npcReputationTable);
 }

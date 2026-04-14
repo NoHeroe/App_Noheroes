@@ -17,6 +17,7 @@ import 'daos/inventory_dao.dart';
 import 'daos/achievement_dao.dart';
 import 'daos/guild_dao.dart';
 import 'tables/guild_status_table.dart';
+import 'tables/npc_reputation_table.dart';
 
 part 'app_database.g.dart';
 
@@ -26,6 +27,7 @@ part 'app_database.g.dart';
     ItemsTable, InventoryTable, ShopItemsTable,
     AchievementsTable, PlayerAchievementsTable,
     GuildStatusTable,
+    NpcReputationTable,
   ],
   daos: [PlayerDao, HabitDao, InventoryDao, AchievementDao, GuildDao],
 )
@@ -33,7 +35,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -100,6 +102,11 @@ class AppDatabase extends _$AppDatabase {
         try {
           await m.addColumn(playerAchievementsTable,
               playerAchievementsTable.collectedAt);
+        } catch (_) {}
+      }
+      if (from < 12) {
+        try {
+          await m.createTable(npcReputationTable);
         } catch (_) {}
       }
     },

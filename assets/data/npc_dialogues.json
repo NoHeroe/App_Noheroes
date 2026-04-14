@@ -42,5 +42,372 @@
       "50": "Cinquenta dias. Você não é mais um estranho aqui.",
       "100": "Cem dias em Caelum. Muito poucos chegam aqui. Você é diferente."
     }
+  },
+
+  "noryan_gray": {
+    "name": "Noryan Gray",
+    "title": "Mestre da Guilda",
+    "daily_by_shadow_state": {
+      "stable": [
+        "Disciplina visível. A Guilda registra isso.",
+        "Você está mantendo o ritmo. Continue.",
+        "Aventureiros estáveis duram mais. Lembre disso.",
+        "Seu Colar responde à sua constância. Bom sinal."
+      ],
+      "unstable": [
+        "Instabilidade é o primeiro passo para o fracasso. Cuide-se.",
+        "Vi aventureiros melhores que você quebrarem por menos. Atenção.",
+        "A Guilda não pune fraqueza — mas observa tudo.",
+        "Recomece antes que sua reputação sofra consequências."
+      ],
+      "chaotic": [
+        "Esse estado é perigoso para missões de alto risco. Evite-as.",
+        "Caos interno gera erros externos. Simples assim.",
+        "Não é julgamento — é aviso. Estabilize antes de avançar.",
+        "Já vi o que o caos faz com aventureiros promissores."
+      ],
+      "abyssal": [
+        "Isso está além do que posso resolver por você. Procure ajuda.",
+        "A Guilda tem recursos de suporte. Use-os.",
+        "Sobreviver ao abismo é uma conquista. Mas não fique lá.",
+        "Aventureiros no abismo não completam missões. Volte primeiro."
+      ],
+      "ascending": [
+        "Ascensão real. Isso abre portas na Guilda.",
+        "Poucas pessoas chegam aqui. Menos ainda se mantêm.",
+        "Estou observando seu progresso com interesse.",
+        "O Colar responde à sua ascensão. Sinta isso."
+      ]
+    },
+    "by_reputation": {
+      "hostile": "Sua reputação com a Guilda está comprometida. Corrija isso.",
+      "distrustful": "Ainda não confio plenamente em você. Prove seu valor.",
+      "neutral": "Você é um aventureiro da Guilda. Nada mais, nada menos.",
+      "ally": "Você tem mostrado comprometimento. A Guilda reconhece.",
+      "loyal": "Sua lealdade à Guilda é genuína. Isso tem peso aqui.",
+      "devout": "Raros aventureiros chegam a esse nível de comprometimento. Respeito."
+    }
+  },
+
+  "azuos": {
+    "name": "Azuos",
+    "title": "Líder do Clã da Lua",
+    "faction": "moon_clan",
+    "daily_by_shadow_state": {
+      "stable": [
+        "O vazio observa os que mantêm equilíbrio. Você está no caminho.",
+        "Estabilidade é força silenciosa. Eu reconheço isso.",
+        "Seus rituais ressoam com o ciclo lunar. Continue.",
+        "Equilíbrio interno reflete no externo. Isso é bom."
+      ],
+      "unstable": [
+        "A lua não se move com pressa. Encontre seu ritmo.",
+        "Instabilidade atrai o que não deve ser atraído. Confia em mim.",
+        "O Clã da Lua valoriza constância. Você está perdendo isso.",
+        "Reequilibre antes que a maré mude contra você."
+      ],
+      "chaotic": [
+        "O caos pode te ofuscar. Eu já vivi isso.",
+        "Membros do Clã não se entregam ao caos. Lembre-se disso.",
+        "Isso me preocupa. Recomece seus rituais.",
+        "A sombra caótica não é poder — é desordem."
+      ],
+      "abyssal": [
+        "O abismo atrai o Vazio. Afaste-se dele.",
+        "Nunca vi alguém tão corrompido.. Volte.",
+        "A lua ainda brilha para você. Mas precisa olhar para cima.",
+        "Use os rituais do Clã. Eles existem para momentos como esse."
+      ],
+      "ascending": [
+        "A ascensão é rara. Você a alcançou.",
+        "O Clã da Lua reconhece sua elevação.",
+        "Esse estado abre portas que poucos acessam.",
+        "Continue assim. A lua guia os que sobem."
+      ]
+    },
+    "by_reputation": {
+      "hostile": "Você me decepcionou. Há muito a reparar.",
+      "distrustful": "Ainda não provei que posso confiar em você completamente.",
+      "neutral": "Você é do Clã. Por enquanto, isso basta.",
+      "ally": "O Clã da Lua começa a confiar em você, eu ainda não.",
+      "loyal": "Sua lealdade ao Clã é verdadeira. Isso tem valor.",
+      "devout": "Você é um dos nossos mais dedicados. A lua sorri para você."
+    }
+  },
+
+  "koda": {
+    "name": "Koda",
+    "title": "Líder do Clã do Sol",
+    "faction": "sun_clan",
+    "daily_by_shadow_state": {
+      "stable": [
+        "O sol brilha para quem mantém o fogo interno aceso.",
+        "Estabilidade é a fundação da força. Você a tem.",
+        "O Clã do Sol reconhece sua constância.",
+        "Continue ardendo sem se consumir."
+      ],
+      "unstable": [
+        "Chamas vacilantes se apagam. Mantenha a chama acesa.",
+        "O sol não hesita. Já você ..está hesitando.",
+        "Reacenda seus rituais antes que a brasa esfrie.",
+        "Instabilidade é o início do fim para guerreiros do sol."
+      ],
+      "chaotic": [
+        "Fogo sem controle destrói tudo ao redor. Já vi acontecer.",
+        "O caos que você carrega não é responsabilidade do Clã. Controle-se.",
+        "Guerreiros do sol queimam com propósito — não com descontrole.",
+        "Isso me preocupa. Reestabeleça sua disciplina."
+      ],
+      "abyssal": [
+        "Quando o sol se apaga, o frio toma conta. Não deixe isso acontecer.",
+        "O Clã do Sol não abandona os seus. Mas você precisa lutar.",
+        "Acenda uma chama pequena. Depois uma maior.",
+        "O abismo é para os que desistem. Você não é um desses."
+      ],
+      "ascending": [
+        "Isso é o fogo em sua forma mais pura. Sentiu?",
+        "Ascensão de um membro do Clã é vitória de todos.",
+        "Poucos chegam aqui com essa intensidade. Impressionante.",
+        "O Clã do Sol celebra sua ascensão."
+      ]
+    },
+    "by_reputation": {
+      "hostile": "Você traiu a confiança do Clã. Eu devia ter previsto isso.",
+      "distrustful": "Suas ações precisam provar mais do que suas palavras.",
+      "neutral": "Você é do Clã do Sol. Honre isso.",
+      "ally": "O Clã começa a ver seu valor real.",
+      "loyal": "Sua lealdade aquece o Clã inteiro.",
+      "devout": "Você é a chama que nunca se apaga. Isso é mérito de seu esforço!"
+    }
+  },
+
+  "yuna_lannatary": {
+    "name": "Yuna Lannatary",
+    "title": "Comandante da Legião Negra",
+    "faction": "black_legion",
+    "daily_by_shadow_state": {
+      "stable": [
+        "Estabilidade em campo é diferencial. A Legião valoriza isso.",
+        "Soldados estáveis executam melhor. Continue.",
+        "Sua constância é uma arma. Use-a.",
+        "A Legião não tem espaço para fraqueza. Você entende."
+      ],
+      "unstable": [
+        "Instabilidade em combate mata. Resolva isso.",
+        "A Legião Negra não tolera vacilação. Corrija-se.",
+        "Vi soldados melhores falharem por menos.",
+        "Reestabeleça sua disciplina antes da próxima missão."
+      ],
+      "chaotic": [
+        "Caos é inimigo da estratégia. Controle-se.",
+        "A Legião não usa soldados fora de controle. Fraco.",
+        "Esse seu estado compromete missões críticas. Resolva.",
+        "Disciplina ou consequências. Escolha."
+      ],
+      "abyssal": [
+        "Isso está além do campo de batalha. Recupere-se primeiro.",
+        "Nenhuma missão vale um soldado destruído. Descanse.",
+        "A Legião já lidou com muitas calamidades — é bom não se tornar uma também.",
+        "Volte quando estiver pronto. A Legião espera."
+      ],
+      "ascending": [
+        "Ascensão em campo é rara. Você me surpreendeu.",
+        "A Legião Negra reconhece força real quando a vê.",
+        "Esse estado abre operações de alto nível para você.",
+        "Impressionante. Esperava menos."
+      ]
+    },
+    "by_reputation": {
+      "hostile": "Você comprometeu operações da Legião. Há um preço a pagar.",
+      "distrustful": "Suas ações ainda não convencem a Legião.",
+      "neutral": "Você é soldado da Legião. Não temos o que conversar.",
+      "ally": "A Legião começa a contar com você de verdade.",
+      "loyal": "Sua lealdade à Legião é reconhecida nos altos escalões.",
+      "devout": "Você é um dos melhores da Legião. Isso é dito raramente."
+    }
+  },
+
+  "new_order_agent": {
+    "name": "Agente da Nova Ordem",
+    "title": "Representante da Nova Ordem",
+    "faction": "new_order",
+    "daily_by_shadow_state": {
+      "stable": [
+        "Ordem requer estabilidade. Você a demonstra.",
+        "A Nova Ordem valoriza mentes claras. A sua está.",
+        "Constância é a base de toda estrutura. Continue.",
+        "Seu equilíbrio serve ao propósito maior."
+      ],
+      "unstable": [
+        "Instabilidade ameaça a ordem. Corrija-se.",
+        "A Nova Ordem não prospera no caos interno. Atue.",
+        "Reestabeleça o controle antes de agir em nome da Ordem.",
+        "Mentes instáveis tomam decisões erradas."
+      ],
+      "chaotic": [
+        "Isso contradiz tudo que a Nova Ordem representa.",
+        "Caos é o inimigo. Inclusive o interno.",
+        "Corrija isso imediatamente. A Ordem observa.",
+        "Esse estado é incompatível com nossas operações."
+      ],
+      "abyssal": [
+        "Recupere-se. A Ordem precisa de você funcional.",
+        "O abismo não serve aos planos da Nova Ordem.",
+        "Volte ao estado operacional antes de qualquer missão.",
+        "Sua recuperação é prioridade agora."
+      ],
+      "ascending": [
+        "Excelente. Isso serve perfeitamente aos planos da Ordem.",
+        "Ascensão controlada é o ideal da Nova Ordem.",
+        "Você demonstra o que pregamos. Bom.",
+        "Esse estado maximiza sua eficiência para a Ordem."
+      ]
+    },
+    "by_reputation": {
+      "hostile": "Você agiu contra os interesses da Ordem. Isso tem consequências.",
+      "distrustful": "Suas ações ainda levantam questões para a Nova Ordem.",
+      "neutral": "Você serve à Nova Ordem. Cumpra seu papel.",
+      "ally": "A Nova Ordem reconhece sua contribuição.",
+      "loyal": "Sua dedicação à Ordem é notada nos altos escalões.",
+      "devout": "Você é um pilar da Nova Ordem. Raros chegam aqui."
+    }
+  },
+
+  "trinity_priest": {
+    "name": "Sacerdote da Trindade",
+    "title": "Guardião dos Três Aspectos",
+    "faction": "trinity",
+    "daily_by_shadow_state": {
+      "stable": [
+        "Os Três Aspectos reconhecem seu equilíbrio.",
+        "Estabilidade é oferenda aos Aspectos. Continue.",
+        "Sua harmonia interna ressoa com a Trindade.",
+        "O equilíbrio que você carrega é sagrado aqui."
+      ],
+      "unstable": [
+        "Um dos Aspectos está perturbado em você. Cuide-se.",
+        "A Trindade sente sua instabilidade. Reconecte-se.",
+        "Rituais de reequilíbrio são necessários agora.",
+        "Instabilidade afasta a graça dos Aspectos."
+      ],
+      "chaotic": [
+        "O caos ofende os Três Aspectos. Purifique-se.",
+        "Isso não pode continuar. Os Aspectos se afastam.",
+        "Rituais de purificação são urgentes para você.",
+        "O caos que você carrega precisa ser exorcizado."
+      ],
+      "abyssal": [
+        "O abismo toca o Aspecto das Trevas. Com cuidado.",
+        "A Trindade não abandona os seus, mesmo no abismo.",
+        "Rituais profundos podem ajudá-lo a voltar. Venha.",
+        "Mesmo no fundo, os Três Aspectos te observam."
+      ],
+      "ascending": [
+        "A ascensão toca o Aspecto da Luz. Sagrado.",
+        "Os Três Aspectos se alegram com sua elevação.",
+        "Isso é raro e belo. A Trindade te abençoa.",
+        "Sua ascensão abre rituais que poucos acessam."
+      ]
+    },
+    "by_reputation": {
+      "hostile": "Você ofendeu os Aspectos. Há purificação a fazer.",
+      "distrustful": "A Trindade ainda não te recebe completamente.",
+      "neutral": "Você caminha sob a observação dos Três Aspectos.",
+      "ally": "Os Aspectos começam a reconhecê-lo como um dos seus.",
+      "loyal": "Sua devoção à Trindade é genuína e reconhecida.",
+      "devout": "Você é um dos mais devotos que os Aspectos já viram."
+    }
+  },
+
+  "renegade_leader": {
+    "name": "Líder dos Renegados",
+    "title": "Voz dos Sem Facção",
+    "faction": "renegades",
+    "daily_by_shadow_state": {
+      "stable": [
+        "Estabilidade sem correntes. Isso é liberdade real.",
+        "Os Renegados reconhecem quem se mantém de pé sozinho.",
+        "Você mantém o ritmo sem precisar de aprovação. Bom.",
+        "Isso é o que os Renegados representam. Continue."
+      ],
+      "unstable": [
+        "Instabilidade é vulnerabilidade. Cuide-se.",
+        "Renegados não têm rede de apoio. Você precisa ser sua própria.",
+        "Reestabeleça antes que outros explorem sua fraqueza.",
+        "Sem estrutura de facção, você precisa ser mais forte. Volte ao foco."
+      ],
+      "chaotic": [
+        "Caos sem propósito é autodestruição. Diferente de liberdade.",
+        "Os Renegados escolhem o caos com intenção. Não assim.",
+        "Isso preocupa até nós. Reestabeleça o controle.",
+        "Há uma diferença entre ser livre e se perder. Você está se perdendo."
+      ],
+      "abyssal": [
+        "Sem estrutura de facção no abismo, você está sozinho. Lembre disso.",
+        "Os Renegados sobrevivem por força própria. Acesse a sua.",
+        "Você escolheu esse caminho. Agora precisa sair dele também.",
+        "O abismo não escolhe facções. Saia de lá."
+      ],
+      "ascending": [
+        "Ascensão sem correntes. Isso é o ideal dos Renegados.",
+        "Você subiu por conta própria. Isso vale mais aqui.",
+        "Os Renegados respeitam quem sobe sem ajuda de facção.",
+        "Isso é raro. E real."
+      ]
+    },
+    "by_reputation": {
+      "hostile": "Você traiçoou o código dos Renegados. Isso tem peso.",
+      "distrustful": "Ainda não sei se posso contar com você.",
+      "neutral": "Você é um Renegado. Sem mais.",
+      "ally": "Começo a confiar em você de verdade.",
+      "loyal": "Sua lealdade aqui significa algo diferente — e mais profundo.",
+      "devout": "Você é um dos Renegados mais verdadeiros que já vi."
+    }
+  },
+
+  "chrysalis_agent": {
+    "name": "Agente Chrysalis",
+    "title": "Operador da Facção ERROR",
+    "faction": "error",
+    "daily_by_shadow_state": {
+      "stable": [
+        "Estabilidade é previsibilidade. Útil para nossos propósitos.",
+        "Você funciona bem. Por enquanto.",
+        "A ERROR valoriza agentes funcionais. Você está no padrão.",
+        "Continue estável. Instabilidade gera variáveis desnecessárias."
+      ],
+      "unstable": [
+        "Instabilidade pode ser explorada — por nós ou contra você.",
+        "A ERROR observa suas variáveis. Cuidado.",
+        "Agentes instáveis são riscos operacionais.",
+        "Corrija isso antes que alguém note além de mim."
+      ],
+      "chaotic": [
+        "Interessante. O caos tem seus usos... em doses controladas.",
+        "Isso pode ser útil ou destrutivo. Depende de você.",
+        "A ERROR não desperdiça potencial. Nem mesmo caótico.",
+        "Controle o caos ou ele te controla. Escolha consciente."
+      ],
+      "abyssal": [
+        "O abismo é onde segredos se formam. Ou se destroem.",
+        "Isso está além dos parâmetros normais. Fascinante.",
+        "A ERROR já operou no abismo. Há saídas. Procure-as.",
+        "Você tocou algo que poucos tocam. Sobreviva."
+      ],
+      "ascending": [
+        "Ascensão mapeada e registrada. A ERROR observa com interesse.",
+        "Isso abre possibilidades que não discuto em público.",
+        "Você superou parâmetros esperados. Impressionante.",
+        "A ERROR tem interesse especial em agentes como você."
+      ]
+    },
+    "by_reputation": {
+      "hostile": "Você tornou-se um problema. A ERROR resolve problemas.",
+      "distrustful": "Suas ações levantam questões que precisam de resposta.",
+      "neutral": "Você opera para a ERROR. Cumpra o protocolo.",
+      "ally": "A ERROR começa a incluir você em operações maiores.",
+      "loyal": "Sua lealdade está registrada nos arquivos mais restritos.",
+      "devout": "Você é um dos nossos agentes mais valiosos. Isso é raro."
+    }
   }
 }

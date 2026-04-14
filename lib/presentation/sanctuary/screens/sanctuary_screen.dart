@@ -6,10 +6,12 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/npc_session.dart';
+import '../../../data/datasources/local/npc_reputation_service.dart';
 import '../../../data/datasources/local/quest_admission_service.dart';
 import '../widgets/caelum_day_banner.dart';
 import '../widgets/shadow_status_card.dart';
 import '../widgets/npc_dialogue_card.dart';
+import '../../../core/utils/asset_loader.dart';
 import '../widgets/stat_bars_row.dart';
 import '../widgets/sanctuary_drawer.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
@@ -85,6 +87,11 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     if (show && mounted) {
       setState(() => _showNpc = true);
       await NpcSession.markShown(player.caelumDay, player.shadowState);
+      // Ganha +2 rep com NPC da facção ao ver diálogo
+      final db = ref.read(appDatabaseProvider);
+      final npcId = AssetLoader.npcIdForFaction(player.factionType);
+      await NpcReputationService(db)
+          .addReputation(player.id, npcId, 2);
     }
   }
 
@@ -187,6 +194,7 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
               NpcDialogueOverlay(
                 shadowState: ref.read(currentPlayerProvider)?.shadowState ?? 'stable',
                 caelumDay: ref.read(currentPlayerProvider)?.caelumDay ?? 1,
+                factionType: ref.read(currentPlayerProvider)?.factionType,
                 onDismiss: () => setState(() => _showNpc = false),
               ),
           ],

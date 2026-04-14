@@ -56,5 +56,64 @@ class AssetLoader {
     }).toList();
   }
 
+  // Retorna o npcId correto para o jogador baseado na facção
+  static String npcIdForFaction(String? factionType) {
+    if (factionType == null || factionType.isEmpty ||
+        factionType.startsWith('pending:')) {
+      return 'unknown_figure';
+    }
+    return switch (factionType) {
+      'moon_clan'    => 'azuos',
+      'sun_clan'     => 'koda',
+      'black_legion' => 'yuna_lannatary',
+      'new_order'    => 'new_order_agent',
+      'trinity'      => 'trinity_priest',
+      'renegades'    => 'renegade_leader',
+      'error'        => 'chrysalis_agent',
+      'guild'        => 'noryan_gray',
+      _              => 'unknown_figure',
+    };
+  }
+
+  // Busca diálogo diário do NPC correto por facção + estado da sombra
+  static Future<Map<String, String>> getNpcForPlayer({
+    required String? factionType,
+    required String shadowState,
+    required int caelumDay,
+    String reputationKey = 'neutral',
+  }) async {
+    final data = await _load('assets/data/npc_dialogues.json');
+    final npcId = npcIdForFaction(factionType);
+    final npc = data[npcId] as Map<String, dynamic>;
+
+    // Verifica dia especial primeiro
+    final byDay = npc['by_caelum_day'] as Map<String, dynamic>? ?? {};
+    String dialogue;
+    if (byDay.containsKey('$caelumDay')) {
+      dialogue = byDay['$caelumDay'] as String;
+    } else {
+      final byState = (npc['daily_by_shadow_state']
+          as Map<String, dynamic>? ?? {});
+      final phrases =
+          (byState[shadowState] as List?)?.cast<String>() ?? [];
+      dialogue = phrases.isEmpty
+          ? 'Caelum observa.'
+          : phrases[DateTime.now().millisecond % phrases.length];
+    }
+
+    // Diálogo de reputação (se disponível)
+    final byRep = npc['by_reputation'] as Map<String, dynamic>? ?? {};
+    final repDialogue = byRep[reputationKey] as String? ?? '';
+
+    return {
+      'npcId': npcId,
+      'name': npc['name'] as String? ?? '???',
+      'title': npc['title'] as String? ?? '',
+      'dialogue': dialogue,
+      'repDialogue': repDialogue,
+    };
+  }
+
   static void clearCache() => _cache.clear();
 }
+
