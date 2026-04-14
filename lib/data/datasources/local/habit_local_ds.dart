@@ -3,6 +3,7 @@ import '../../database/app_database.dart';
 import '../../database/daos/habit_dao.dart';
 import '../../database/daos/player_dao.dart';
 import '../../../core/utils/notification_service.dart';
+import '../../../core/utils/guild_rank.dart';
 import '../../database/tables/habits_table.dart';
 import '../../database/tables/habit_logs_table.dart';
 
@@ -177,18 +178,23 @@ class HabitLocalDs {
           shadowImpact: 0, status: 'already_done');
     }
 
-    // Busca player para aplicar bônus de classe
     final player = await _playerDao.findById(playerId);
     final habit  = await (_db.select(_db.habitsTable)
           ..where((t) => t.id.equals(habitId)))
         .getSingleOrNull();
 
-    final xp = _calcXpWithClassBonus(
+    // Calcula base com bônus de classe
+    final baseXp = _calcXpWithClassBonus(
       rank, status,
       habit?.category ?? '',
       player?.classType,
     );
-    final gold         = _calcGold(rank, status);
+    final baseGold = _calcGold(rank, status);
+
+    // Escala recompensas pelo Rank da Guilda
+    final guildRank = GuildRankSystem.fromString(player?.guildRank ?? 'e');
+    final xp   = GuildRankSystem.adaptXp(baseXp, guildRank);
+    final gold = GuildRankSystem.adaptGold(baseGold, guildRank);
     final shadowImpact = _calcShadowImpact(status);
 
     await _habitDao.logHabit(
@@ -204,6 +210,9 @@ class HabitLocalDs {
     if (gold > 0) await _playerDao.addGold(playerId, gold);
     await _playerDao.updateShadow(playerId, shadowImpact);
 
+    // Recalcula guildRank automaticamente após completar missão
+    await _recalcGuildRank(playerId);
+
     final updated = await _playerDao.findById(playerId);
     if (updated != null) {
       await NotificationService.notifyShadowState(updated.shadowState);
@@ -215,6 +224,31 @@ class HabitLocalDs {
       shadowImpact: shadowImpact,
       status:       status,
     );
+  }
+
+  /// Recalcula e persiste o guildRank do jogador com base no histórico real
+  Future<void> _recalcGuildRank(int playerId) async {
+    final player = await _playerDao.findById(playerId);
+    if (player == null) return;
+
+    final logs = await (_db.select(_db.habitLogsTable)
+          ..where((t) => t.playerId.equals(playerId))
+          ..where((t) => t.status.isIn(['completed', 'partial'])))
+        .get();
+
+    final totalXp     = logs.fold(0, (sum, l) => sum + l.xpGained);
+    final totalQuests = logs.length;
+
+    final newRank = GuildRankSystem.calcRank(
+      totalXp:     totalXp,
+      totalQuests: totalQuests,
+    );
+
+    if (newRank.name != player.guildRank) {
+      await (_db.update(_db.playersTable)
+            ..where((t) => t.id.equals(playerId)))
+          .write(PlayersTableCompanion(guildRank: Value(newRank.name)));
+    }
   }
 
   Future<void> deletePersonalHabit(int habitId) =>
