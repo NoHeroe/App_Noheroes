@@ -225,6 +225,7 @@ class _ClassCardState extends State<_ClassCard> {
     return GestureDetector(
       onTap: () {
         widget.onTap();
+        setState(() => _expanded = !_expanded);
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),

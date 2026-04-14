@@ -70,11 +70,18 @@ class HabitLocalDs {
 
   Future<void> applyDailyReset(int playerId) async {
     final habits = await _habitDao.getHabits(playerId);
-    final yesterday = DateTime.now().subtract(const Duration(days: 1));
-    final yStart = DateTime(yesterday.year, yesterday.month, yesterday.day);
-    final yEnd = yStart.add(const Duration(days: 1));
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final yStart = yesterday;
+    final yEnd = today;
 
     for (final habit in habits) {
+      // Só penaliza hábitos criados antes de hoje
+      final habitCreated = DateTime(
+        habit.createdAt.year, habit.createdAt.month, habit.createdAt.day);
+      if (!habitCreated.isBefore(today)) continue;
+
       final log = await (_db.select(_db.habitLogsTable)
             ..where((t) => t.habitId.equals(habit.id))
             ..where((t) => t.playerId.equals(playerId))

@@ -11,7 +11,6 @@ import '../widgets/caelum_day_banner.dart';
 import '../widgets/shadow_status_card.dart';
 import '../widgets/npc_dialogue_card.dart';
 import '../widgets/stat_bars_row.dart';
-import '../widgets/daily_missions_card.dart';
 import '../widgets/sanctuary_drawer.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
 
@@ -153,7 +152,7 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
             SafeArea(
               child: Column(
                 children: [
-                  _buildTopBar(context, player?.gold ?? 0),
+                  _buildTopBar(context, player?.gold ?? 0, player?.gems ?? 0),
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
@@ -167,9 +166,9 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
                           SizedBox(height: 16),
                           ShadowStatusCard(),
                           SizedBox(height: 20),
-                          DailyMissionsCard(),
-                          SizedBox(height: 20),
                           _PlayButton(),
+                          SizedBox(height: 10),
+                          _SecondaryButtons(),
                           SizedBox(height: 20),
                         ],
                       ),
@@ -207,7 +206,7 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     );
   }
 
-  Widget _buildTopBar(BuildContext context, int gold) {
+  Widget _buildTopBar(BuildContext context, int gold, int gems) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -229,33 +228,22 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
               child: const Icon(Icons.bug_report, color: AppColors.hp, size: 16),
             ),
           ),
-          const Expanded(
+          Expanded(
             child: Center(
               child: Text('SANTUÁRIO',
-                  style: TextStyle(
-                    fontFamily: 'CinzelDecorative',
+                  style: GoogleFonts.cinzelDecorative(
                     fontSize: 13,
                     color: AppColors.gold,
                     letterSpacing: 3,
                   )),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.border),
-              borderRadius: BorderRadius.circular(10),
-              color: AppColors.surface,
-            ),
-            child: Row(children: [
-              const Text('🪙', style: TextStyle(fontSize: 13)),
-              const SizedBox(width: 4),
-              Text('$gold',
-                  style: GoogleFonts.roboto(
-                      fontSize: 13,
-                      color: AppColors.gold,
-                      fontWeight: FontWeight.w600)),
-            ]),
+          Row(
+            children: [
+              _currencyChip('🪙', '$gold', AppColors.gold),
+              const SizedBox(width: 6),
+              _currencyChip('💎', '$gems', AppColors.purple),
+            ],
           ),
           const SizedBox(width: 8),
           Stack(children: [
@@ -274,6 +262,23 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       ),
     );
   }
+
+  Widget _currencyChip(String emoji, String value, Color color) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(8),
+          color: AppColors.surface,
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Text(emoji, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 4),
+          Text(value,
+              style: GoogleFonts.roboto(
+                  fontSize: 12, color: color,
+                  fontWeight: FontWeight.w600)),
+        ]),
+      );
 
   Widget _btn(IconData icon) => Container(
         width: 40, height: 40,
@@ -331,6 +336,73 @@ class _PlayButton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SecondaryButtons extends StatelessWidget {
+  const _SecondaryButtons();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: () {}, // TODO: rota biblioteca
+            child: Container(
+              height: 48,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: const Color(0xFFC2A05A).withValues(alpha: 0.5)),
+                color: const Color(0xFFC2A05A).withValues(alpha: 0.06),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.menu_book_outlined,
+                      color: Color(0xFFC2A05A), size: 18),
+                  const SizedBox(width: 8),
+                  Text('Biblioteca',
+                      style: GoogleFonts.cinzelDecorative(
+                          fontSize: 11,
+                          color: const Color(0xFFC2A05A),
+                          letterSpacing: 1)),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: GestureDetector(
+            onTap: () {}, // TODO: rota vitalismo
+            child: Container(
+              height: 48,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: const Color(0xFF8B3DFF).withValues(alpha: 0.5)),
+                color: const Color(0xFF8B3DFF).withValues(alpha: 0.06),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.bolt_outlined,
+                      color: Color(0xFF8B3DFF), size: 18),
+                  const SizedBox(width: 8),
+                  Text('Vitalismo',
+                      style: GoogleFonts.cinzelDecorative(
+                          fontSize: 11,
+                          color: const Color(0xFF8B3DFF),
+                          letterSpacing: 1)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

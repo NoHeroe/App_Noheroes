@@ -202,8 +202,6 @@ class ShadowChamberScreen extends ConsumerWidget {
           _stateBar('Corrupção', corruption, 100, AppColors.shadowChaotic),
           const SizedBox(height: 8),
           _stateBar('Estabilidade', 100 - corruption, 100, AppColors.shadowStable),
-          const SizedBox(height: 8),
-          _stateBar('Vitalismo', 0, 100, AppColors.gold),
         ],
       ),
     );

@@ -1,9 +1,10 @@
 class XpCalculator {
   static int xpToNextLevel(int level) {
-    if (level <= 25) return 100 + (level - 1) * 50;
-    if (level <= 50) return 1350 + (level - 26) * 75;
-    if (level <= 75) return 3225 + (level - 51) * 100;
-    return 5725 + (level - 76) * 200;
+    // Soulslike: progressão mais lenta e pesada
+    if (level <= 25) return 200 + (level - 1) * 80;
+    if (level <= 50) return 2200 + (level - 26) * 120;
+    if (level <= 75) return 5200 + (level - 51) * 180;
+    return 9700 + (level - 76) * 350;
   }
 
   static int calcMaxHp(int constitution, int level) {

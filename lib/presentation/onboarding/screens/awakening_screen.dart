@@ -220,8 +220,8 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
                     position: _contentSlide,
                     child: FadeTransition(
                       opacity: _contentFade,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

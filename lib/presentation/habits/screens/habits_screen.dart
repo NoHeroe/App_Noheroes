@@ -230,12 +230,15 @@ class HabitsScreen extends ConsumerWidget {
           ref.read(currentPlayerProvider.notifier).state = updated;
           ref.invalidate(habitsProvider);
 
-          // Verifica conquistas
+          // Verifica conquistas — usa total histórico de hábitos completados
           if (updated != null) {
-            final dao = ref.read(habitDsProvider);
-            final allHabits = await dao.getHabitsWithStatus(updated.id);
-            final totalDone = allHabits.where((h) => h.isDone).length;
             final db = ref.read(appDatabaseProvider);
+            // Conta total histórico de logs completed/partial
+            final allLogs = await (db.select(db.habitLogsTable)
+                  ..where((t) => t.playerId.equals(updated.id))
+                  ..where((t) => t.status.isIn(['completed', 'partial'])))
+                .get();
+            final totalDone = allLogs.length;
             final newAchievements = await AchievementService(db)
                 .checkAndUnlock(updated, totalDone);
             if (context.mounted && newAchievements.isNotEmpty) {

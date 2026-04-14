@@ -19,6 +19,11 @@ class StatBarsRow extends ConsumerWidget {
     final maxMp   = player?.maxMp ?? 100;
     final xp      = player?.xp ?? 0;
     final xpToNext= player?.xpToNext ?? 100;
+    final hasVitalism = ['warrior','colossus','rogue','hunter','shadowWeaver']
+        .contains(player?.classType);
+    // Vitalismo = 190% do HP base
+    final vitMax = hasVitalism ? (maxHp * 1.9).round() : 0;
+    final vitVal = hasVitalism ? (hp * 1.9).round().clamp(0, vitMax) : 0;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -37,6 +42,11 @@ class StatBarsRow extends ConsumerWidget {
           const SizedBox(height: 10),
           _StatBar(label: 'XP', value: xp, max: xpToNext,
               color: AppColors.xp, icon: Icons.star),
+          if (hasVitalism) ...[
+            const SizedBox(height: 10),
+            _StatBar(label: 'VT', value: vitVal, max: vitMax,
+                color: AppColors.purple, icon: Icons.bolt),
+          ],
         ],
       ),
     );
