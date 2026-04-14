@@ -7,9 +7,19 @@
       "description": "O Guerreiro vive no limite entre resistir e avançar. Forte, equilibrado, construído para durar nas batalhas mais longas. Enfrenta o que outros fogem.",
       "philosophy": "Cada golpe sofrido é uma lição. Cada vitória é construída com suor.",
       "hasVitalism": true,
-      "primaryAttributes": ["Força", "Vigor"],
+      "primaryAttributes": [
+        "Força",
+        "Vigor"
+      ],
       "weakness": "Vulnerável a ataques mágicos",
-      "baseStats": {"strength": 4, "constitution": 3, "dexterity": 2, "intelligence": 1, "spirit": 1, "charisma": 1},
+      "baseStats": {
+        "strength": 4,
+        "constitution": 3,
+        "dexterity": 2,
+        "intelligence": 1,
+        "spirit": 1,
+        "charisma": 1
+      },
       "xpBonus": "Força e resistência",
       "weapons": "Espadas grandes, lâminas pesadas",
       "color": "0xFFB33030"
@@ -21,9 +31,19 @@
       "description": "O Colosso é uma força da natureza. Não há parede que ele não atravesse, não há golpe que o derrube facilmente. Paga com lentidão o que ganha em poder.",
       "philosophy": "Poder não se teme. Poder se constrói, tijolo a tijolo, treino a treino.",
       "hasVitalism": true,
-      "primaryAttributes": ["Força Máxima", "Defesa"],
+      "primaryAttributes": [
+        "Força Máxima",
+        "Defesa"
+      ],
       "weakness": "Lento",
-      "baseStats": {"strength": 5, "constitution": 4, "dexterity": 1, "intelligence": 1, "spirit": 1, "charisma": 0},
+      "baseStats": {
+        "strength": 5,
+        "constitution": 4,
+        "dexterity": 1,
+        "intelligence": 1,
+        "spirit": 1,
+        "charisma": 0
+      },
       "xpBonus": "Treinos pesados e físico intenso",
       "weapons": "Martelos, machados enormes, escudos colossais",
       "color": "0xFF8B2020"
@@ -35,9 +55,19 @@
       "description": "O Monge domina a arte de estar presente. Seu corpo é a arma e sua mente é o escudo. Não usa força bruta — usa precisão e intenção.",
       "philosophy": "A mente quieta move montanhas que os músculos não alcançam.",
       "hasVitalism": false,
-      "primaryAttributes": ["Espírito", "Agilidade"],
+      "primaryAttributes": [
+        "Espírito",
+        "Agilidade"
+      ],
       "weakness": "Dano base mais baixo",
-      "baseStats": {"strength": 2, "constitution": 2, "dexterity": 3, "intelligence": 2, "spirit": 4, "charisma": 1},
+      "baseStats": {
+        "strength": 2,
+        "constitution": 2,
+        "dexterity": 3,
+        "intelligence": 2,
+        "spirit": 4,
+        "charisma": 1
+      },
       "xpBonus": "Hábitos espirituais e artes marciais",
       "weapons": "Luvas, bastões curtos, punhos",
       "color": "0xFF4FA06B"
@@ -49,9 +79,19 @@
       "description": "O Ladino não ataca — ele resolve. Cada movimento é calculado, cada passo tem propósito. Vive entre as sombras e usa a lógica como arma.",
       "philosophy": "Velocidade não é pressa. É eficiência transformada em instinto.",
       "hasVitalism": true,
-      "primaryAttributes": ["Agilidade", "Precisão"],
+      "primaryAttributes": [
+        "Agilidade",
+        "Precisão"
+      ],
       "weakness": "Baixa resistência",
-      "baseStats": {"strength": 2, "constitution": 1, "dexterity": 5, "intelligence": 3, "spirit": 1, "charisma": 2},
+      "baseStats": {
+        "strength": 2,
+        "constitution": 1,
+        "dexterity": 5,
+        "intelligence": 3,
+        "spirit": 1,
+        "charisma": 2
+      },
       "xpBonus": "Agilidade, mobilidade e velocidade",
       "weapons": "Adagas, punhais, lâminas rápidas",
       "color": "0xFF6B4FA0"
@@ -63,9 +103,19 @@
       "description": "O Caçador não reage — antecipa. Sua força está no silêncio antes do disparo. Observa mais do que fala, e quando age, não erra.",
       "philosophy": "Paciência não é fraqueza. É a espera pelo momento certo.",
       "hasVitalism": true,
-      "primaryAttributes": ["Foco", "Agilidade"],
+      "primaryAttributes": [
+        "Foco",
+        "Agilidade"
+      ],
       "weakness": "Fraco contra combate direto",
-      "baseStats": {"strength": 2, "constitution": 2, "dexterity": 4, "intelligence": 3, "spirit": 2, "charisma": 1},
+      "baseStats": {
+        "strength": 2,
+        "constitution": 2,
+        "dexterity": 4,
+        "intelligence": 3,
+        "spirit": 2,
+        "charisma": 1
+      },
       "xpBonus": "Precisão, foco e tática",
       "weapons": "Arcos, bestas, armas de precisão",
       "color": "0xFF3070B3"
@@ -77,9 +127,19 @@
       "description": "O Druida entende que nada está separado de nada. Usa forças naturais e espirituais para moldar a realidade ao redor. Cura o que foi quebrado.",
       "philosophy": "Crescimento real acontece quando você para de resistir ao que você é.",
       "hasVitalism": false,
-      "primaryAttributes": ["Espírito", "Mana"],
+      "primaryAttributes": [
+        "Espírito",
+        "Mana"
+      ],
       "weakness": "Baixa defesa física",
-      "baseStats": {"strength": 1, "constitution": 2, "dexterity": 2, "intelligence": 3, "spirit": 5, "charisma": 1},
+      "baseStats": {
+        "strength": 1,
+        "constitution": 2,
+        "dexterity": 2,
+        "intelligence": 3,
+        "spirit": 5,
+        "charisma": 1
+      },
       "xpBonus": "Hábitos naturais e espirituais",
       "weapons": "Totens, adagas ritualísticas",
       "color": "0xFF4FA06B"
@@ -91,9 +151,19 @@
       "description": "O Mago compreende o que os outros apenas sentem. Seu poder vem do conhecimento acumulado, das runas dominadas e da mana canalizada com precisão cirúrgica.",
       "philosophy": "Conhecimento não é poder. Conhecimento aplicado com intenção — isso é poder.",
       "hasVitalism": false,
-      "primaryAttributes": ["Mana", "Intelecto"],
+      "primaryAttributes": [
+        "Mana",
+        "Intelecto"
+      ],
       "weakness": "Corpo mais frágil",
-      "baseStats": {"strength": 1, "constitution": 1, "dexterity": 2, "intelligence": 5, "spirit": 3, "charisma": 2},
+      "baseStats": {
+        "strength": 1,
+        "constitution": 1,
+        "dexterity": 2,
+        "intelligence": 5,
+        "spirit": 3,
+        "charisma": 2
+      },
       "xpBonus": "Estudo, leitura e projetos intelectuais",
       "weapons": "Cajados, grimórios, catalisadores",
       "color": "0xFF8B3DFF"
@@ -105,12 +175,21 @@
       "description": "O Tecelão Sombrio não escolhe um caminho — domina todos. Acessa o Vitalismo em sua forma mais completa e porta qualquer arma. Paga com uma evolução mais lenta e mais exigente.",
       "philosophy": "Mestria não é velocidade. É profundidade sem limites.",
       "hasVitalism": true,
-      "primaryAttributes": ["Todos os atributos"],
+      "primaryAttributes": [
+        "Todos os atributos"
+      ],
       "weakness": "Evolução mais lenta",
-      "baseStats": {"strength": 2, "constitution": 2, "dexterity": 2, "intelligence": 2, "spirit": 2, "charisma": 2},
+      "baseStats": {
+        "strength": 2,
+        "constitution": 2,
+        "dexterity": 2,
+        "intelligence": 2,
+        "spirit": 2,
+        "charisma": 2
+      },
       "xpBonus": "Tudo — porém XP por nível é maior",
       "weapons": "Todas as armas (habilidade exclusiva)",
-      "color": "0xFF1A1A2E",
+      "color": "0xFF7B2FBE",
       "isSpecial": true
     }
   ]
