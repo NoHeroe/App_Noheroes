@@ -6,8 +6,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../data/database/app_database.dart';
 import '../../../data/datasources/local/habit_local_ds.dart';
 import '../../../data/database/tables/habits_table.dart';
-import '../../../data/database/tables/habit_logs_table.dart';
-import '../../../data/database/daos/habit_dao.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
 import '../../../data/datasources/local/achievement_service.dart';
 import '../widgets/habit_card.dart';
@@ -127,32 +125,93 @@ class HabitsScreen extends ConsumerWidget {
 
   Widget _buildList(BuildContext context, WidgetRef ref,
       List<HabitWithStatus> habits) {
-    final system = habits.where((h) => h.habit.isSystemHabit).toList();
-    final personal =
-        habits.where((h) => !h.habit.isSystemHabit).toList();
+    // Separa por tipo de missão
+    // Rituais Diários: system habits sem prefixo '[' no título
+    final dailyRituals = habits
+        .where((h) => h.habit.isSystemHabit && !h.habit.title.startsWith('['))
+        .toList();
+
+    // Missões de Classe: títulos que começam com '[Guerreiro]', '[Mago]' etc.
+    final classQuests = habits
+        .where((h) =>
+            h.habit.title.startsWith('[') &&
+            !h.habit.title.toLowerCase().contains('admiss'))
+        .toList();
+
+    // Admissão de Facção: títulos que contêm '[Admissão'
+    final admissionQuests = habits
+        .where((h) =>
+            h.habit.title.toLowerCase().contains('[admiss'))
+        .toList();
+
+    // Missões Individuais: não são system habits e não têm prefixo '['
+    final personalQuests = habits
+        .where((h) =>
+            !h.habit.isSystemHabit && !h.habit.title.startsWith('['))
+        .toList();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
       children: [
-        // Rituais Diários
-        if (system.isNotEmpty) ...[
+        // ── RITUAIS DIÁRIOS ──
+        if (dailyRituals.isNotEmpty) ...[
           _sectionHeader('RITUAIS DIÁRIOS', Icons.wb_sunny_outlined),
           const SizedBox(height: 10),
-          ...system.map((h) => HabitCard(
+          ...dailyRituals.map((h) => HabitCard(
                 habitWithStatus: h,
                 onTap: () => _showCompletion(context, ref, h),
               )),
           const SizedBox(height: 20),
         ],
 
-        // Missões Individuais
+        // ── MISSÕES DE CLASSE ──
+        if (classQuests.isNotEmpty) ...[
+          _sectionHeader(
+            'MISSÕES DE CLASSE',
+            Icons.auto_fix_high_outlined,
+            color: AppColors.purple,
+          ),
+          const SizedBox(height: 10),
+          ...classQuests.map((h) => HabitCard(
+                habitWithStatus: h,
+                onTap: () => _showCompletion(context, ref, h),
+              )),
+          const SizedBox(height: 20),
+        ],
+
+        // ── ADMISSÃO DE FACÇÃO ──
+        if (admissionQuests.isNotEmpty) ...[
+          _sectionHeader(
+            'ADMISSÃO DE FACÇÃO',
+            Icons.shield_outlined,
+            color: const Color(0xFF8B2020),
+          ),
+          const SizedBox(height: 10),
+          ...admissionQuests.map((h) => HabitCard(
+                habitWithStatus: h,
+                onTap: () => _showCompletion(context, ref, h),
+              )),
+          const SizedBox(height: 20),
+        ],
+
+        // ── MISSÕES INDIVIDUAIS ──
         _sectionHeader('MISSÕES INDIVIDUAIS', Icons.person_outline),
         const SizedBox(height: 10),
-        ...personal.map((h) => HabitCard(
-              habitWithStatus: h,
-              onTap: () => _showCompletion(context, ref, h),
-              onLongPress: () => _showDelete(context, ref, h.habit),
-            )),
+        if (personalQuests.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              'Nenhuma missão individual ainda.',
+              style: GoogleFonts.roboto(
+                  fontSize: 12, color: AppColors.textMuted),
+            ),
+          )
+        else
+          ...personalQuests.map((h) => HabitCard(
+                habitWithStatus: h,
+                onTap: () => _showCompletion(context, ref, h),
+                onLongPress: () => _showDelete(context, ref, h.habit),
+              )),
 
         // Botão criar missão individual
         const SizedBox(height: 10),
@@ -164,13 +223,13 @@ class HabitsScreen extends ConsumerWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                  color: AppColors.purple.withOpacity(0.4)),
-              color: AppColors.purple.withOpacity(0.05),
+                  color: AppColors.purple.withValues(alpha: 0.4)),
+              color: AppColors.purple.withValues(alpha: 0.05),
             ),
-            child: Row(mainAxisAlignment: MainAxisAlignment.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.add,
-                    color: AppColors.purple, size: 18),
+                const Icon(Icons.add, color: AppColors.purple, size: 18),
                 const SizedBox(width: 8),
                 Text('Nova Missão Individual',
                     style: GoogleFonts.roboto(
@@ -183,16 +242,15 @@ class HabitsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _sectionHeader(String title, IconData icon) {
+  Widget _sectionHeader(String title, IconData icon, {Color? color}) {
+    final c = color ?? AppColors.gold;
     return Row(
       children: [
-        Icon(icon, color: AppColors.gold, size: 14),
+        Icon(icon, color: c, size: 14),
         const SizedBox(width: 8),
         Text(title,
             style: GoogleFonts.cinzelDecorative(
-                fontSize: 11,
-                color: AppColors.gold,
-                letterSpacing: 2)),
+                fontSize: 11, color: c, letterSpacing: 2)),
       ],
     );
   }
@@ -218,29 +276,22 @@ class HabitsScreen extends ConsumerWidget {
         onComplete: (status) async {
           final player = ref.read(currentPlayerProvider);
           if (player == null) return;
-          final result =
-              await ref.read(habitDsProvider).completeHabit(
-                    habitId: h.habit.id,
-                    playerId: player.id,
-                    rank: h.habit.rank,
-                    status: status,
-                  );
+          final result = await ref.read(habitDsProvider).completeHabit(
+                habitId:  h.habit.id,
+                playerId: player.id,
+                rank:     h.habit.rank,
+                status:   status,
+              );
           final updated =
               await ref.read(authDsProvider).currentSession();
           ref.read(currentPlayerProvider.notifier).state = updated;
           ref.invalidate(habitsProvider);
 
-          // Verifica conquistas — usa total histórico de hábitos completados
+          // Verifica conquistas — AchievementService busca histórico internamente
           if (updated != null) {
             final db = ref.read(appDatabaseProvider);
-            // Conta total histórico de logs completed/partial
-            final allLogs = await (db.select(db.habitLogsTable)
-                  ..where((t) => t.playerId.equals(updated.id))
-                  ..where((t) => t.status.isIn(['completed', 'partial'])))
-                .get();
-            final totalDone = allLogs.length;
-            final newAchievements = await AchievementService(db)
-                .checkAndUnlock(updated, totalDone);
+            final newAchievements =
+                await AchievementService(db).checkAndUnlock(updated);
             if (context.mounted && newAchievements.isNotEmpty) {
               _showAchievementToast(context, newAchievements.first);
             }
@@ -259,7 +310,7 @@ class HabitsScreen extends ConsumerWidget {
       'partial' =>
         '+${result.xpGained} XP  +${result.goldGained} Ouro (parcial)',
       'niet' => 'Falha assumida. A sombra observa.',
-      _ => 'A sombra cresce.',
+      _      => 'A sombra cresce.',
     };
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg,
@@ -327,8 +378,7 @@ class HabitsScreen extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text('Manter',
-                style:
-                    GoogleFonts.roboto(color: AppColors.textMuted)),
+                style: GoogleFonts.roboto(color: AppColors.textMuted)),
           ),
           TextButton(
             onPressed: () async {
