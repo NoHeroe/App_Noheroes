@@ -202,6 +202,14 @@ class $PlayersTableTable extends PlayersTable
   late final GeneratedColumn<String> factionType = GeneratedColumn<String>(
       'faction_type', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _guildRankMeta =
+      const VerificationMeta('guildRank');
+  @override
+  late final GeneratedColumn<String> guildRank = GeneratedColumn<String>(
+      'guild_rank', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('e'));
   static const VerificationMeta _narrativeModeMeta =
       const VerificationMeta('narrativeMode');
   @override
@@ -270,6 +278,7 @@ class $PlayersTableTable extends PlayersTable
         shadowCorruption,
         classType,
         factionType,
+        guildRank,
         narrativeMode,
         onboardingDone,
         createdAt,
@@ -408,6 +417,10 @@ class $PlayersTableTable extends PlayersTable
           factionType.isAcceptableOrUnknown(
               data['faction_type']!, _factionTypeMeta));
     }
+    if (data.containsKey('guild_rank')) {
+      context.handle(_guildRankMeta,
+          guildRank.isAcceptableOrUnknown(data['guild_rank']!, _guildRankMeta));
+    }
     if (data.containsKey('narrative_mode')) {
       context.handle(
           _narrativeModeMeta,
@@ -497,6 +510,8 @@ class $PlayersTableTable extends PlayersTable
           .read(DriftSqlType.string, data['${effectivePrefix}class_type']),
       factionType: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}faction_type']),
+      guildRank: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}guild_rank'])!,
       narrativeMode: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}narrative_mode'])!,
       onboardingDone: attachedDatabase.typeMapping
@@ -544,6 +559,7 @@ class PlayersTableData extends DataClass
   final int shadowCorruption;
   final String? classType;
   final String? factionType;
+  final String guildRank;
   final String narrativeMode;
   final bool onboardingDone;
   final DateTime createdAt;
@@ -576,6 +592,7 @@ class PlayersTableData extends DataClass
       required this.shadowCorruption,
       this.classType,
       this.factionType,
+      required this.guildRank,
       required this.narrativeMode,
       required this.onboardingDone,
       required this.createdAt,
@@ -614,6 +631,7 @@ class PlayersTableData extends DataClass
     if (!nullToAbsent || factionType != null) {
       map['faction_type'] = Variable<String>(factionType);
     }
+    map['guild_rank'] = Variable<String>(guildRank);
     map['narrative_mode'] = Variable<String>(narrativeMode);
     map['onboarding_done'] = Variable<bool>(onboardingDone);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -656,6 +674,7 @@ class PlayersTableData extends DataClass
       factionType: factionType == null && nullToAbsent
           ? const Value.absent()
           : Value(factionType),
+      guildRank: Value(guildRank),
       narrativeMode: Value(narrativeMode),
       onboardingDone: Value(onboardingDone),
       createdAt: Value(createdAt),
@@ -696,6 +715,7 @@ class PlayersTableData extends DataClass
       shadowCorruption: serializer.fromJson<int>(json['shadowCorruption']),
       classType: serializer.fromJson<String?>(json['classType']),
       factionType: serializer.fromJson<String?>(json['factionType']),
+      guildRank: serializer.fromJson<String>(json['guildRank']),
       narrativeMode: serializer.fromJson<String>(json['narrativeMode']),
       onboardingDone: serializer.fromJson<bool>(json['onboardingDone']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -733,6 +753,7 @@ class PlayersTableData extends DataClass
       'shadowCorruption': serializer.toJson<int>(shadowCorruption),
       'classType': serializer.toJson<String?>(classType),
       'factionType': serializer.toJson<String?>(factionType),
+      'guildRank': serializer.toJson<String>(guildRank),
       'narrativeMode': serializer.toJson<String>(narrativeMode),
       'onboardingDone': serializer.toJson<bool>(onboardingDone),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -768,6 +789,7 @@ class PlayersTableData extends DataClass
           int? shadowCorruption,
           Value<String?> classType = const Value.absent(),
           Value<String?> factionType = const Value.absent(),
+          String? guildRank,
           String? narrativeMode,
           bool? onboardingDone,
           DateTime? createdAt,
@@ -800,6 +822,7 @@ class PlayersTableData extends DataClass
         shadowCorruption: shadowCorruption ?? this.shadowCorruption,
         classType: classType.present ? classType.value : this.classType,
         factionType: factionType.present ? factionType.value : this.factionType,
+        guildRank: guildRank ?? this.guildRank,
         narrativeMode: narrativeMode ?? this.narrativeMode,
         onboardingDone: onboardingDone ?? this.onboardingDone,
         createdAt: createdAt ?? this.createdAt,
@@ -849,6 +872,7 @@ class PlayersTableData extends DataClass
       classType: data.classType.present ? data.classType.value : this.classType,
       factionType:
           data.factionType.present ? data.factionType.value : this.factionType,
+      guildRank: data.guildRank.present ? data.guildRank.value : this.guildRank,
       narrativeMode: data.narrativeMode.present
           ? data.narrativeMode.value
           : this.narrativeMode,
@@ -893,6 +917,7 @@ class PlayersTableData extends DataClass
           ..write('shadowCorruption: $shadowCorruption, ')
           ..write('classType: $classType, ')
           ..write('factionType: $factionType, ')
+          ..write('guildRank: $guildRank, ')
           ..write('narrativeMode: $narrativeMode, ')
           ..write('onboardingDone: $onboardingDone, ')
           ..write('createdAt: $createdAt, ')
@@ -930,6 +955,7 @@ class PlayersTableData extends DataClass
         shadowCorruption,
         classType,
         factionType,
+        guildRank,
         narrativeMode,
         onboardingDone,
         createdAt,
@@ -966,6 +992,7 @@ class PlayersTableData extends DataClass
           other.shadowCorruption == this.shadowCorruption &&
           other.classType == this.classType &&
           other.factionType == this.factionType &&
+          other.guildRank == this.guildRank &&
           other.narrativeMode == this.narrativeMode &&
           other.onboardingDone == this.onboardingDone &&
           other.createdAt == this.createdAt &&
@@ -1000,6 +1027,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
   final Value<int> shadowCorruption;
   final Value<String?> classType;
   final Value<String?> factionType;
+  final Value<String> guildRank;
   final Value<String> narrativeMode;
   final Value<bool> onboardingDone;
   final Value<DateTime> createdAt;
@@ -1032,6 +1060,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.shadowCorruption = const Value.absent(),
     this.classType = const Value.absent(),
     this.factionType = const Value.absent(),
+    this.guildRank = const Value.absent(),
     this.narrativeMode = const Value.absent(),
     this.onboardingDone = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -1065,6 +1094,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.shadowCorruption = const Value.absent(),
     this.classType = const Value.absent(),
     this.factionType = const Value.absent(),
+    this.guildRank = const Value.absent(),
     this.narrativeMode = const Value.absent(),
     this.onboardingDone = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -1099,6 +1129,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     Expression<int>? shadowCorruption,
     Expression<String>? classType,
     Expression<String>? factionType,
+    Expression<String>? guildRank,
     Expression<String>? narrativeMode,
     Expression<bool>? onboardingDone,
     Expression<DateTime>? createdAt,
@@ -1132,6 +1163,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       if (shadowCorruption != null) 'shadow_corruption': shadowCorruption,
       if (classType != null) 'class_type': classType,
       if (factionType != null) 'faction_type': factionType,
+      if (guildRank != null) 'guild_rank': guildRank,
       if (narrativeMode != null) 'narrative_mode': narrativeMode,
       if (onboardingDone != null) 'onboarding_done': onboardingDone,
       if (createdAt != null) 'created_at': createdAt,
@@ -1167,6 +1199,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       Value<int>? shadowCorruption,
       Value<String?>? classType,
       Value<String?>? factionType,
+      Value<String>? guildRank,
       Value<String>? narrativeMode,
       Value<bool>? onboardingDone,
       Value<DateTime>? createdAt,
@@ -1199,6 +1232,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       shadowCorruption: shadowCorruption ?? this.shadowCorruption,
       classType: classType ?? this.classType,
       factionType: factionType ?? this.factionType,
+      guildRank: guildRank ?? this.guildRank,
       narrativeMode: narrativeMode ?? this.narrativeMode,
       onboardingDone: onboardingDone ?? this.onboardingDone,
       createdAt: createdAt ?? this.createdAt,
@@ -1288,6 +1322,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     if (factionType.present) {
       map['faction_type'] = Variable<String>(factionType.value);
     }
+    if (guildRank.present) {
+      map['guild_rank'] = Variable<String>(guildRank.value);
+    }
     if (narrativeMode.present) {
       map['narrative_mode'] = Variable<String>(narrativeMode.value);
     }
@@ -1335,6 +1372,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
           ..write('shadowCorruption: $shadowCorruption, ')
           ..write('classType: $classType, ')
           ..write('factionType: $factionType, ')
+          ..write('guildRank: $guildRank, ')
           ..write('narrativeMode: $narrativeMode, ')
           ..write('onboardingDone: $onboardingDone, ')
           ..write('createdAt: $createdAt, ')
@@ -4986,6 +5024,7 @@ typedef $$PlayersTableTableCreateCompanionBuilder = PlayersTableCompanion
   Value<int> shadowCorruption,
   Value<String?> classType,
   Value<String?> factionType,
+  Value<String> guildRank,
   Value<String> narrativeMode,
   Value<bool> onboardingDone,
   Value<DateTime> createdAt,
@@ -5020,6 +5059,7 @@ typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
   Value<int> shadowCorruption,
   Value<String?> classType,
   Value<String?> factionType,
+  Value<String> guildRank,
   Value<String> narrativeMode,
   Value<bool> onboardingDone,
   Value<DateTime> createdAt,
@@ -5115,6 +5155,9 @@ class $$PlayersTableTableFilterComposer
 
   ColumnFilters<String> get factionType => $composableBuilder(
       column: $table.factionType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get guildRank => $composableBuilder(
+      column: $table.guildRank, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get narrativeMode => $composableBuilder(
       column: $table.narrativeMode, builder: (column) => ColumnFilters(column));
@@ -5226,6 +5269,9 @@ class $$PlayersTableTableOrderingComposer
   ColumnOrderings<String> get factionType => $composableBuilder(
       column: $table.factionType, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get guildRank => $composableBuilder(
+      column: $table.guildRank, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get narrativeMode => $composableBuilder(
       column: $table.narrativeMode,
       builder: (column) => ColumnOrderings(column));
@@ -5332,6 +5378,9 @@ class $$PlayersTableTableAnnotationComposer
   GeneratedColumn<String> get factionType => $composableBuilder(
       column: $table.factionType, builder: (column) => column);
 
+  GeneratedColumn<String> get guildRank =>
+      $composableBuilder(column: $table.guildRank, builder: (column) => column);
+
   GeneratedColumn<String> get narrativeMode => $composableBuilder(
       column: $table.narrativeMode, builder: (column) => column);
 
@@ -5400,6 +5449,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> shadowCorruption = const Value.absent(),
             Value<String?> classType = const Value.absent(),
             Value<String?> factionType = const Value.absent(),
+            Value<String> guildRank = const Value.absent(),
             Value<String> narrativeMode = const Value.absent(),
             Value<bool> onboardingDone = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -5433,6 +5483,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             shadowCorruption: shadowCorruption,
             classType: classType,
             factionType: factionType,
+            guildRank: guildRank,
             narrativeMode: narrativeMode,
             onboardingDone: onboardingDone,
             createdAt: createdAt,
@@ -5466,6 +5517,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> shadowCorruption = const Value.absent(),
             Value<String?> classType = const Value.absent(),
             Value<String?> factionType = const Value.absent(),
+            Value<String> guildRank = const Value.absent(),
             Value<String> narrativeMode = const Value.absent(),
             Value<bool> onboardingDone = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -5499,6 +5551,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             shadowCorruption: shadowCorruption,
             classType: classType,
             factionType: factionType,
+            guildRank: guildRank,
             narrativeMode: narrativeMode,
             onboardingDone: onboardingDone,
             createdAt: createdAt,
