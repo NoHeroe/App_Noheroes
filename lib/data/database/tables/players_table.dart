@@ -43,6 +43,9 @@ class PlayersTable extends Table {
   TextColumn get classType => text().nullable()();
   TextColumn get factionType => text().nullable()();
 
+  // Rank da Guilda de Aventureiros (e/d/c/b/a/s)
+  TextColumn get guildRank => text().withDefault(const Constant('e'))();
+
   // Preferências
   TextColumn get narrativeMode => text().withDefault(const Constant('longa'))();
   BoolColumn get onboardingDone => boolean().withDefault(const Constant(false))();
