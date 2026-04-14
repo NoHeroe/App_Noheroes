@@ -1,0 +1,60 @@
+{
+  "entries": [
+    {
+      "id": "caelum_world",
+      "title": "O Mundo de Caelum",
+      "category": "mundo",
+      "unlock_level": 1,
+      "unlock_day": 1,
+      "content": "Caelum é um continente suspenso entre dimensões — nem completamente real, nem completamente espiritual. Foi descoberto pela primeira vez por convocados que despertaram durante crises pessoais profundas. Ninguém sabe ao certo se Caelum os escolheu, ou se eles o criaram."
+    },
+    {
+      "id": "shadow_origin",
+      "title": "A Origem da Sombra",
+      "category": "sombra",
+      "unlock_level": 1,
+      "unlock_day": 3,
+      "content": "A Sombra não é uma entidade externa. É a projeção viva do interior do convocado — seus padrões, seus medos, suas escolhas repetidas. Em Caelum, ela toma forma física. Ignorá-la é o primeiro erro. Temê-la é o segundo."
+    },
+    {
+      "id": "guild_history",
+      "title": "A Guilda de Aventureiros",
+      "category": "guilda",
+      "unlock_level": 2,
+      "unlock_day": 5,
+      "content": "A Guilda existe desde antes da Terceira Era de Caelum. Foi fundada como resposta ao caos das guerras entre facções — um terreno neutro onde qualquer aventureiro poderia encontrar trabalho, proteção e propósito. O Colar da Guilda não é um símbolo de pertencimento. É uma promessa."
+    },
+    {
+      "id": "factions_war",
+      "title": "A Guerra das Facções",
+      "category": "facções",
+      "unlock_level": 5,
+      "unlock_day": 10,
+      "content": "As 8 facções de Caelum não chegaram ao conflito por acidente. Cada uma representa uma filosofia diferente sobre o que significa sobreviver — e o que justifica o poder. A Legião Negra acredita em força. O Clã da Lua, em equilíbrio. A Nova Ordem, em controle. Os Renegados, em nenhuma das anteriores."
+    },
+    {
+      "id": "error_faction",
+      "title": "A Facção ERROR",
+      "category": "facções",
+      "unlock_level": 7,
+      "unlock_day": 14,
+      "content": "ERROR não aparece em nenhum registro oficial de Caelum. Seus agentes operam nas sombras entre as sombras. O que se sabe: eles estudam convocados. O que se suspeita: eles sabem mais sobre a origem dos convocados do que qualquer outro grupo."
+    },
+    {
+      "id": "aureum_region",
+      "title": "Campos de Aureum",
+      "category": "regiões",
+      "unlock_level": 1,
+      "unlock_day": 1,
+      "content": "Aureum é a região de entrada de Caelum para a maioria dos convocados. Campos vastos, céu permanentemente entre o dia e o crepúsculo, e ruínas de civilizações que ninguém consegue datar. É o lugar onde tudo começa — e onde muitos ficam presos para sempre."
+    },
+    {
+      "id": "chrysalis_truth",
+      "title": "O Projeto Chrysalis",
+      "category": "segredos",
+      "unlock_level": 15,
+      "unlock_day": 30,
+      "content": "Chrysalis não é apenas uma facção. É um experimento. Os convocados não chegam a Caelum por acidente — são selecionados. Os critérios de seleção permanecem desconhecidos. O que Chrysalis faz com os dados coletados também."
+    }
+  ]
+}

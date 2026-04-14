@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
@@ -18,6 +20,7 @@ import 'daos/achievement_dao.dart';
 import 'daos/guild_dao.dart';
 import 'tables/guild_status_table.dart';
 import 'tables/npc_reputation_table.dart';
+import 'tables/diary_entries_table.dart';
 
 part 'app_database.g.dart';
 
@@ -28,6 +31,7 @@ part 'app_database.g.dart';
     AchievementsTable, PlayerAchievementsTable,
     GuildStatusTable,
     NpcReputationTable,
+    DiaryEntriesTable,
   ],
   daos: [PlayerDao, HabitDao, InventoryDao, AchievementDao, GuildDao],
 )
@@ -35,7 +39,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -109,121 +113,90 @@ class AppDatabase extends _$AppDatabase {
           await m.createTable(npcReputationTable);
         } catch (_) {}
       }
+      if (from < 13) {
+        try {
+          await m.createTable(diaryEntriesTable);
+        } catch (_) {}
+      }
+      if (from < 14) {
+        try {
+          await m.addColumn(achievementsTable, achievementsTable.rarity);
+          await m.addColumn(achievementsTable, achievementsTable.titleReward);
+          await m.addColumn(achievementsTable, achievementsTable.category2);
+        } catch (_) {}
+      }
     },
   );
 
   Future<void> _seedShopItems() async {
-    final items = [
-      (ItemsTableCompanion(
-        name: const Value('Pocao de Cura Fraca'),
-        description: const Value('Restaura 30 HP.'),
-        type: const Value('consumable'),
-        rarity: const Value('common'),
-        goldValue: const Value(25),
-        hpBonus: const Value(30),
-        isConsumable: const Value(true),
-        isStackable: const Value(true),
-        iconName: const Value('potion_hp'),
-      ), 25, 1),
-      (ItemsTableCompanion(
-        name: const Value('Pocao de Mana Fraca'),
-        description: const Value('Restaura 30 MP.'),
-        type: const Value('consumable'),
-        rarity: const Value('common'),
-        goldValue: const Value(25),
-        mpBonus: const Value(30),
-        isConsumable: const Value(true),
-        isStackable: const Value(true),
-        iconName: const Value('potion_mp'),
-      ), 25, 1),
-      (ItemsTableCompanion(
-        name: const Value('Runa do Iniciante'),
-        description: const Value('Fragmento de poder runico. +2 Forca.'),
-        type: const Value('material'),
-        rarity: const Value('uncommon'),
-        goldValue: const Value(50),
-        strBonus: const Value(2),
-        isStackable: const Value(true),
-        iconName: const Value('rune'),
-      ), 50, 3),
-      (ItemsTableCompanion(
-        name: const Value('Adaga das Sombras'),
-        description: const Value('Lamina forjada na escuridao. +3 Destreza.'),
-        type: const Value('weapon'),
-        rarity: const Value('uncommon'),
-        slot: const Value('weapon'),
-        goldValue: const Value(120),
-        dexBonus: const Value(3),
-        iconName: const Value('dagger'),
-      ), 120, 5),
-      (ItemsTableCompanion(
-        name: const Value('Manto do Aprendiz'),
-        description: const Value('Armadura leve. +2 Constituicao.'),
-        type: const Value('armor'),
-        rarity: const Value('common'),
-        slot: const Value('chest'),
-        goldValue: const Value(80),
-        conBonus: const Value(2),
-        iconName: const Value('armor'),
-      ), 80, 3),
-      (ItemsTableCompanion(
-        name: const Value('Amuleto Espiritual'),
-        description: const Value('Canaliza energia interna. +3 Espirito.'),
-        type: const Value('accessory'),
-        rarity: const Value('uncommon'),
-        slot: const Value('accessory'),
-        goldValue: const Value(100),
-        spiBonus: const Value(3),
-        iconName: const Value('amulet'),
-      ), 100, 5),
-    ];
+    try {
+      final raw = await rootBundle.loadString('assets/data/items.json');
+      final data = json.decode(raw) as Map<String, dynamic>;
+      final list = (data['items'] as List).cast<Map<String, dynamic>>();
+      for (final item in list) {
+        // Verifica se já existe pelo nome
+        final existing = await (select(itemsTable)
+              ..where((t) => t.name.equals(item['name'] as String)))
+            .getSingleOrNull();
+        if (existing != null) continue;
 
-    for (final data in items) {
-      final id = await into(itemsTable).insert(data.$1);
-      await into(shopItemsTable).insert(ShopItemsTableCompanion(
-        itemId: Value(id),
-        price: Value(data.$2),
-        requiredLevel: Value(data.$3),
-      ));
+        final id = await into(itemsTable).insert(ItemsTableCompanion(
+          name:        Value(item['name'] as String),
+          description: Value(item['description'] as String),
+          type:        Value(item['type'] as String),
+          rarity:      Value(item['rarity'] as String? ?? 'common'),
+          slot:        Value(item['slot'] as String?),
+          goldValue:   Value(item['gold_value'] as int? ?? 0),
+          hpBonus:     Value(item['hp_bonus'] as int? ?? 0),
+          mpBonus:     Value(item['mp_bonus'] as int? ?? 0),
+          strBonus:    Value(item['str_bonus'] as int? ?? 0),
+          dexBonus:    Value(item['dex_bonus'] as int? ?? 0),
+          intBonus:    Value(item['int_bonus'] as int? ?? 0),
+          conBonus:    Value(item['con_bonus'] as int? ?? 0),
+          spiBonus:    Value(item['spi_bonus'] as int? ?? 0),
+          isConsumable: Value(item['is_consumable'] as bool? ?? false),
+          isStackable:  Value(item['is_stackable'] as bool? ?? false),
+          iconName:    Value(item['icon'] as String? ?? 'item'),
+        ));
+
+        // Adiciona à loja se shop == true
+        if (item['shop'] == true) {
+          await into(shopItemsTable).insert(ShopItemsTableCompanion(
+            itemId:        Value(id),
+            price:         Value(item['gold_value'] as int? ?? 0),
+            requiredLevel: Value(item['required_level'] as int? ?? 1),
+          ));
+        }
+      }
+    } catch (e) {
+      // Fallback silencioso
     }
   }
 
   Future<void> _seedAchievements() async {
-    final achievements = [
-      // Progressão
-      ('first_level',    'Primeiro Passo',        'Atingiu o Nivel 2.',              'progression', 50,  25,  0,  false),
-      ('level_5',        'Forma Tomando Shape',   'Atingiu o Nivel 5.',              'progression', 150, 75,  1,  false),
-      ('level_10',       'Sombra Reconhecida',    'Atingiu o Nivel 10.',             'progression', 300, 150, 2,  false),
-      ('caelum_7',       'Uma Semana em Caelum',  '7 dias em Caelum.',               'progression', 100, 50,  1,  false),
-      ('caelum_30',      'Um Mes em Caelum',      '30 dias em Caelum.',              'progression', 300, 150, 3,  false),
-      // Habitos
-      ('first_habit',    'Primeiro Ritual',       'Completou seu primeiro ritual.',  'habits',      50,  25,  0,  false),
-      ('habit_10',       'Disciplina Inicial',    '10 rituais completados.',         'habits',      100, 50,  0,  false),
-      ('habit_50',       'Caminho da Disciplina', '50 rituais completados.',         'habits',      200, 100, 1,  false),
-      ('habit_100',      'Cem Rituais',           '100 rituais completados.',        'habits',      400, 200, 2,  false),
-      ('streak_7',       'Semana Impecavel',      '7 dias de streak.',               'habits',      150, 75,  1,  false),
-      ('streak_30',      'Mes Sem Falhas',        '30 dias de streak.',              'habits',      500, 250, 3,  false),
-      // Sombra
-      ('shadow_stable',  'Equilibrio Interno',    'Manteve sombra estavel por 3d.',  'shadow',      100, 50,  0,  false),
-      ('shadow_ascend',  'Ascensao',              'Atingiu estado Ascendente.',      'shadow',      200, 100, 2,  true),
-      ('shadow_boss',    'Confronto Interno',     'Derrotou um Shadow Boss.',        'shadow',      500, 250, 5,  true),
-      // Exploracao
-      ('first_item',     'Primeiro Tesouro',      'Adquiriu seu primeiro item.',     'exploration', 75,  35,  0,  false),
-      ('first_buy',      'Mercador de Caelum',    'Comprou algo na loja.',           'exploration', 50,  25,  0,  false),
-      ('gold_500',       'Acumulador',            'Acumulou 500 de ouro.',           'exploration', 100, 0,   1,  false),
-    ];
-
-    for (final a in achievements) {
-      await into(achievementsTable).insert(AchievementsTableCompanion(
-        key:         Value(a.$1),
-        title:       Value(a.$2),
-        description: Value(a.$3),
-        category:    Value(a.$4),
-        xpReward:    Value(a.$5),
-        goldReward:  Value(a.$6),
-        gemReward:   Value(a.$7),
-        isSecret:    Value(a.$8),
-      ));
+    try {
+      final raw = await rootBundle.loadString('assets/data/achievements.json');
+      final data = json.decode(raw) as Map<String, dynamic>;
+      final list = (data['achievements'] as List).cast<Map<String, dynamic>>();
+      for (final a in list) {
+        await into(achievementsTable).insert(
+          AchievementsTableCompanion(
+            key:         Value(a['key'] as String),
+            title:       Value(a['title'] as String),
+            description: Value(a['description'] as String),
+            category:    Value(a['category'] as String),
+            xpReward:    Value(a['xp'] as int? ?? 0),
+            goldReward:  Value(a['gold'] as int? ?? 0),
+            gemReward:   Value(a['gems'] as int? ?? 0),
+            isSecret:    Value(a['secret'] as bool? ?? false),
+            rarity:      Value(a['rarity'] as String? ?? 'common'),
+            titleReward: Value(a['title_reward'] as String?),
+          ),
+          mode: InsertMode.insertOrIgnore,
+        );
+      }
+    } catch (e) {
+      // Fallback se asset não carregado ainda
     }
   }
 

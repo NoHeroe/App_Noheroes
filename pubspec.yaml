@@ -48,9 +48,14 @@ flutter:
     - assets/data/shadow_phrases.json
     - assets/data/npc_dialogues.json
     - assets/data/lore_quests.json
+    - assets/data/lore_entries.json
+    - assets/data/library_works.json
     - assets/data/classes.json
     - assets/data/factions.json
     - assets/data/class_quests.json
     - assets/data/faction_admission_quests.json
     - assets/data/quest_templates.json
+    - assets/data/achievements.json
+    - assets/data/items.json
+    - assets/data/shadow_quests.json
     - assets/fonts/

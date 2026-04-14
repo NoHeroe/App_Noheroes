@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:drift/drift.dart';
+import 'package:flutter/services.dart';
 import '../../../data/database/app_database.dart';
 import '../../../data/database/daos/achievement_dao.dart';
 
@@ -17,54 +19,28 @@ class AchievementService {
   }
 
   Future<void> _seedAchievements() async {
-    final achievements = [
-      ('first_level',    'Primeiro Passo',          'Atingiu o Nível 2.',             'progression', 50,   25,  0, false),
-      ('level_5',        'Forma Tomando Shape',      'Atingiu o Nível 5.',             'progression', 150,  75,  1, false),
-      ('level_10',       'Sombra Reconhecida',       'Atingiu o Nível 10.',            'progression', 300,  150, 2, false),
-      ('level_25',       'Despertar Vitalista',      'Atingiu o Nível 25.',            'progression', 500,  250, 3, false),
-      ('level_50',       'Meio Caminho',             'Atingiu o Nível 50.',            'progression', 800,  400, 5, false),
-      ('caelum_7',       'Uma Semana em Caelum',     '7 dias em Caelum.',              'progression', 100,  50,  1, false),
-      ('caelum_30',      'Um Mês em Caelum',         '30 dias em Caelum.',             'progression', 300,  150, 3, false),
-      ('caelum_100',     'Cem Dias em Caelum',       '100 dias em Caelum.',            'progression', 600,  300, 5, false),
-      ('first_habit',    'Primeiro Ritual',          'Completou seu primeiro ritual.', 'habits',      50,   25,  0, false),
-      ('habit_10',       'Disciplina Inicial',       '10 rituais completados.',        'habits',      100,  50,  0, false),
-      ('habit_50',       'Caminho da Disciplina',    '50 rituais completados.',        'habits',      200,  100, 1, false),
-      ('habit_100',      'Cem Rituais',              '100 rituais completados.',       'habits',      400,  200, 2, false),
-      ('habit_300',      'Trezentos Rituais',        '300 rituais completados.',       'habits',      800,  400, 4, false),
-      ('streak_7',       'Semana Impecável',         '7 dias de streak.',              'habits',      150,  75,  1, false),
-      ('streak_30',      'Mês Sem Falhas',           '30 dias de streak.',             'habits',      500,  250, 3, false),
-      ('streak_100',     'Cem Dias Consecutivos',    '100 dias de streak.',            'habits',      1000, 500, 5, true),
-      ('shadow_stable',  'Equilíbrio Interno',       'Manteve sombra estável.',        'shadow',      100,  50,  0, false),
-      ('shadow_ascend',  'Ascensão',                 'Atingiu estado Ascendente.',     'shadow',      200,  100, 2, true),
-      ('shadow_boss',    'Confronto Interno',        'Derrotou um Shadow Boss.',       'shadow',      500,  250, 5, true),
-      ('class_chosen',   'Um Caminho Escolhido',     'Escolheu sua classe.',           'progression', 200,  100, 1, false),
-      ('faction_joined', 'Lealdade Jurada',          'Entrou em uma facção.',          'progression', 200,  100, 1, false),
-      ('guild_rank_d',   'Aventureiro Reconhecido',  'Atingiu Rank D na Guilda.',      'progression', 300,  150, 2, false),
-      ('guild_rank_c',   'Veterano de Caelum',       'Atingiu Rank C na Guilda.',      'progression', 500,  250, 3, false),
-      ('guild_rank_s',   'Lenda de Caelum',          'Atingiu o lendário Rank S.',     'progression', 2000, 1000,10, true),
-      ('first_item',     'Primeiro Tesouro',         'Adquiriu seu primeiro item.',    'exploration', 75,   35,  0, false),
-      ('first_buy',      'Mercador de Caelum',       'Comprou algo na loja.',          'exploration', 50,   25,  0, false),
-      ('gold_500',       'Acumulador',               'Acumulou 500 de ouro.',          'exploration', 100,  0,   1, false),
-      ('gold_5000',      'Tesouro de Caelum',        'Acumulou 5000 de ouro.',         'exploration', 300,  0,   3, false),
-    ];
-
-    for (final a in achievements) {
-      try {
+    try {
+      final raw = await rootBundle.loadString('assets/data/achievements.json');
+      final data = json.decode(raw) as Map<String, dynamic>;
+      final list = (data['achievements'] as List).cast<Map<String, dynamic>>();
+      for (final a in list) {
         await _db.into(_db.achievementsTable).insert(
           AchievementsTableCompanion(
-            key:         Value(a.$1),
-            title:       Value(a.$2),
-            description: Value(a.$3),
-            category:    Value(a.$4),
-            xpReward:    Value(a.$5),
-            goldReward:  Value(a.$6),
-            gemReward:   Value(a.$7),
-            isSecret:    Value(a.$8),
+            key:         Value(a['key'] as String),
+            title:       Value(a['title'] as String),
+            description: Value(a['description'] as String),
+            category:    Value(a['category'] as String),
+            xpReward:    Value(a['xp'] as int? ?? 0),
+            goldReward:  Value(a['gold'] as int? ?? 0),
+            gemReward:   Value(a['gems'] as int? ?? 0),
+            isSecret:    Value(a['secret'] as bool? ?? false),
+            rarity:      Value(a['rarity'] as String? ?? 'common'),
+            titleReward: Value(a['title_reward'] as String?),
           ),
           mode: InsertMode.insertOrIgnore,
         );
-      } catch (_) {}
-    }
+      }
+    } catch (_) {}
   }
 
   /// Verifica e desbloqueia conquistas. Busca histórico internamente.

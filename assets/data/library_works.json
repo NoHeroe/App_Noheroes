@@ -1,0 +1,74 @@
+{
+  "works": [
+    {
+      "id": "noheroes_vol1",
+      "title": "NoHeroes — Volume 1",
+      "author": "Universo NoHeroes",
+      "type": "novela",
+      "description": "O início da jornada dos convocados em Caelum. A chegada, as primeiras escolhas, e o despertar da Sombra.",
+      "cover": "noheroes_vol1",
+      "unlock_level": 1,
+      "requires_purchase": false,
+      "requires_pass": false,
+      "is_free": true,
+      "lore_contribution": true,
+      "lore_id": "caelum_origin"
+    },
+    {
+      "id": "codex_factions",
+      "title": "Codex das Facções",
+      "author": "Arquivo da Guilda",
+      "type": "livro",
+      "description": "Registros históricos sobre as 8 facções de Caelum — suas origens, conflitos e segredos.",
+      "cover": "codex_factions",
+      "unlock_level": 5,
+      "requires_purchase": true,
+      "requires_pass": false,
+      "is_free": false,
+      "lore_contribution": true,
+      "lore_id": "factions_history"
+    },
+    {
+      "id": "shadow_chronicles",
+      "title": "Crônicas da Sombra",
+      "author": "Desconhecido",
+      "type": "novela",
+      "description": "Relatos de convocados que chegaram ao estado Abissal e voltaram. Ou não voltaram.",
+      "cover": "shadow_chronicles",
+      "unlock_level": 7,
+      "requires_purchase": true,
+      "requires_pass": false,
+      "is_free": false,
+      "lore_contribution": true,
+      "lore_id": "shadow_deep"
+    },
+    {
+      "id": "noryan_memoirs",
+      "title": "Memórias de Noryan Gray",
+      "author": "Noryan Gray",
+      "type": "livro",
+      "description": "O Mestre da Guilda escreve sobre décadas em Caelum. Guerras, traições, e o verdadeiro custo do Colar.",
+      "cover": "noryan_memoirs",
+      "unlock_level": 10,
+      "requires_purchase": false,
+      "requires_pass": true,
+      "is_free": false,
+      "lore_contribution": true,
+      "lore_id": "guild_deep"
+    },
+    {
+      "id": "chrysalis_files",
+      "title": "Arquivos Chrysalis — RESTRITO",
+      "author": "ERROR",
+      "type": "livro",
+      "description": "Documentos classificados da facção ERROR. Acesso requer verificação de identidade.",
+      "cover": "chrysalis_files",
+      "unlock_level": 15,
+      "requires_purchase": false,
+      "requires_pass": true,
+      "is_free": false,
+      "lore_contribution": true,
+      "lore_id": "error_secrets"
+    }
+  ]
+}

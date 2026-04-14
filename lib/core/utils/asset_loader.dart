@@ -114,6 +114,32 @@ class AssetLoader {
     };
   }
 
+  // Lore entries disponíveis por nível + dia
+  static Future<List<Map<String, dynamic>>> getAvailableLoreEntries({
+    required int playerLevel,
+    required int caelumDay,
+  }) async {
+    final data = await _load('assets/data/lore_entries.json');
+    final entries = (data['entries'] as List).cast<Map<String, dynamic>>();
+    return entries.where((e) {
+      final minLevel = e['unlock_level'] as int? ?? 1;
+      final minDay   = e['unlock_day']   as int? ?? 1;
+      return playerLevel >= minLevel && caelumDay >= minDay;
+    }).toList();
+  }
+
+  static Future<List<Map<String, dynamic>>> getAllLoreEntries() async {
+    final data = await _load('assets/data/lore_entries.json');
+    return (data['entries'] as List).cast<Map<String, dynamic>>();
+  }
+
+  // Obras da livraria dimensional
+  static Future<List<Map<String, dynamic>>> getLibraryWorks() async {
+    final data = await _load('assets/data/library_works.json');
+    return (data['works'] as List).cast<Map<String, dynamic>>();
+  }
+
   static void clearCache() => _cache.clear();
 }
+
 

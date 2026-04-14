@@ -7,6 +7,7 @@ import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/npc_session.dart';
 import '../../../data/datasources/local/npc_reputation_service.dart';
+import '../../../data/datasources/local/shadow_quest_service.dart';
 import '../../../data/datasources/local/quest_admission_service.dart';
 import '../widgets/caelum_day_banner.dart';
 import '../widgets/shadow_status_card.dart';
@@ -48,6 +49,19 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     await ref.read(habitDsProvider).applyDailyReset(player.id);
     ref.invalidate(habitsProvider);
     await _checkFactionAdmission();
+    await _checkShadowQuests();
+  }
+
+  Future<void> _checkShadowQuests() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final db = ref.read(appDatabaseProvider);
+    final service = ShadowQuestService(db);
+    await service.clearOldShadowQuests(player.id, player.shadowState);
+    final assigned = await service.checkAndAssign(player.id, player.shadowState);
+    if (assigned.isNotEmpty && mounted) {
+      ref.invalidate(habitsProvider);
+    }
   }
 
   Future<void> _checkFactionAdmission() async {
@@ -366,7 +380,7 @@ class _SecondaryButtons extends ConsumerWidget {
           children: [
             Expanded(
               child: GestureDetector(
-                onTap: () {}, // TODO: rota biblioteca
+                onTap: () => context.go('/library'),
                 child: _SecBtn(
                   icon: Icons.menu_book_outlined,
                   label: 'Biblioteca',

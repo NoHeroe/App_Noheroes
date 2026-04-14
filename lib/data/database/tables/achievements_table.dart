@@ -14,4 +14,7 @@ class AchievementsTable extends Table {
   IntColumn get goldReward => integer().withDefault(const Constant(25))();
   IntColumn get gemReward => integer().withDefault(const Constant(0))();
   BoolColumn get isSecret => boolean().withDefault(const Constant(false))();
+  TextColumn get rarity => text().withDefault(const Constant('common'))();
+  TextColumn get titleReward => text().nullable()();
+  TextColumn get category2 => text().nullable()(); // subcategoria
 }

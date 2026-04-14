@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../presentation/guild/screens/guild_screen.dart';
 import '../presentation/reputation/screens/reputation_screen.dart';
+import '../presentation/library/screens/library_screen.dart';
 import '../presentation/splash/screens/splash_screen.dart';
 import '../presentation/auth/screens/login_screen.dart';
 import '../presentation/auth/screens/register_screen.dart';
@@ -34,6 +35,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/regions',      builder: (c, s) => const RegionsScreen()),
       GoRoute(path: '/shadow',       builder: (c, s) => const ShadowChamberScreen()),
       GoRoute(path: '/inventory',    builder: (c, s) => const InventoryScreen()),
+      GoRoute(
+        path: '/library',
+        builder: (context, state) => const LibraryScreen(),
+      ),
       GoRoute(
         path: '/reputation',
         builder: (context, state) => const ReputationScreen(),

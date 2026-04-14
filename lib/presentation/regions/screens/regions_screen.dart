@@ -1,159 +1,270 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../shared/widgets/nh_bottom_nav.dart';
+import 'region_detail_screen.dart';
 
-class RegionsScreen extends StatelessWidget {
+const _regions = [
+  {
+    'id': 'aureum',
+    'name': 'Campos de Aureum',
+    'subtitle': 'Região inicial de Caelum',
+    'description': 'Campos vastos entre o dia e o crepúsculo. Ruínas de civilizações que ninguém consegue datar. É onde tudo começa.',
+    'unlock_level': 1,
+    'color': 0xFFC2A05A,
+    'icon': 'wb_twilight',
+    'npcs': ['Figura Desconhecida', 'Noryan Gray'],
+    'quests_available': true,
+  },
+  {
+    'id': 'ruins',
+    'name': 'Ruínas Exteriores',
+    'subtitle': 'Vestígios da Primeira Era',
+    'description': 'Ruínas que guardam segredos da Primeira Era de Caelum. Perigo moderado. Recompensas consideráveis.',
+    'unlock_level': 3,
+    'color': 0xFF8B6914,
+    'icon': 'account_balance',
+    'npcs': ['Guardião das Ruínas'],
+    'quests_available': true,
+  },
+  {
+    'id': 'white_forest',
+    'name': 'Floresta Branca',
+    'subtitle': 'Onde a luz não chega ao chão',
+    'description': 'Uma floresta densa onde a luz solar nunca toca o solo. Habitada por entidades que nem sempre são hostis.',
+    'unlock_level': 8,
+    'color': 0xFF4FA06B,
+    'icon': 'forest',
+    'npcs': ['Espírito da Floresta'],
+    'quests_available': true,
+  },
+  {
+    'id': 'shattered_valley',
+    'name': 'Vale Estilhaçado',
+    'subtitle': 'Fragmentos de um mundo partido',
+    'description': 'Um vale onde a realidade parece fragmentada. Plataformas de terra flutuam sem explicação. Origem desconhecida.',
+    'unlock_level': 12,
+    'color': 0xFF6B4FA0,
+    'icon': 'landscape',
+    'npcs': ['Andarilho do Vale'],
+    'quests_available': true,
+  },
+  {
+    'id': 'vallarys',
+    'name': 'Vallarys',
+    'subtitle': 'Cidade dos Portais',
+    'description': 'Uma cidade construída ao redor de portais dimensionais. Centro de comércio e poder político de Caelum.',
+    'unlock_level': 20,
+    'color': 0xFF3070B3,
+    'icon': 'blur_circular',
+    'npcs': ['Operadores de Vallarys'],
+    'quests_available': false,
+  },
+  {
+    'id': 'nova_draconis',
+    'name': 'Nova Draconis',
+    'subtitle': 'Território dos Draconianos',
+    'description': 'Lar dos Draconianos. Território hostil para os não iniciados. Riquezas imensas para os corajosos.',
+    'unlock_level': 30,
+    'color': 0xFFB33030,
+    'icon': 'whatshot',
+    'npcs': ['Draconianos'],
+    'quests_available': false,
+  },
+];
+
+class RegionsScreen extends ConsumerWidget {
   const RegionsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final regions = [
-      _Region('Ruínas Exteriores', 'O ponto de partida. Fragmentos de Caelum.',
-          Icons.castle_outlined, AppColors.textMuted, true, 'Desbloqueada'),
-      _Region('Vale Estilhaçado', 'Ventos cortantes e ecos do Vazio.',
-          Icons.terrain, AppColors.textMuted, false, 'Nível 5'),
-      _Region('Floresta Branca', 'Névoa eterna. Criaturas silenciosas.',
-          Icons.forest_outlined, AppColors.shadowStable, false, 'Nível 8'),
-      _Region('Campos de Aureum', 'Planícies douradas com ruínas sagradas.',
-          Icons.wb_sunny_outlined, AppColors.gold, false, 'Nível 12'),
-      _Region('Nova Draconis', 'Território de fogo e escamas antigas.',
-          Icons.local_fire_department_outlined, AppColors.hp, false, 'Nível 20'),
-      _Region('Thanam', 'A raiz do mundo. Poucos retornam.',
-          Icons.dark_mode_outlined, AppColors.purple, false, 'Nível 35'),
-      _Region('Fendas Dimensionais', 'Instabilidade pura. Recompensas únicas.',
-          Icons.blur_on, AppColors.xp, false, 'Evento especial'),
-    ];
+  Widget build(BuildContext context, WidgetRef ref) {
+    final player = ref.watch(currentPlayerProvider);
+    final level = player?.level ?? 1;
 
     return Scaffold(
       backgroundColor: AppColors.black,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                  child: Row(
-                    children: [
-                      Text('REGIÕES',
-                          style: GoogleFonts.cinzelDecorative(
-                              fontSize: 16,
-                              color: AppColors.gold,
-                              letterSpacing: 2)),
-                      const Spacer(),
-                      Text('1/7 desbloqueadas',
-                          style: GoogleFonts.roboto(
-                              fontSize: 12, color: AppColors.textMuted)),
-                    ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: const Icon(Icons.arrow_back_ios,
+                        color: AppColors.textSecondary, size: 20),
                   ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
-                    itemCount: regions.length,
-                    itemBuilder: (_, i) => _RegionCard(region: regions[i]),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Align(
-            alignment: Alignment.bottomCenter,
-            child: NhBottomNav(currentIndex: 3),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Region {
-  final String name;
-  final String desc;
-  final IconData icon;
-  final Color color;
-  final bool unlocked;
-  final String requirement;
-  _Region(this.name, this.desc, this.icon, this.color,
-      this.unlocked, this.requirement);
-}
-
-class _RegionCard extends StatelessWidget {
-  final _Region region;
-  const _RegionCard({super.key, required this.region});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: region.unlocked
-              ? region.color.withOpacity(0.5)
-              : AppColors.border,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48, height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: region.unlocked
-                  ? region.color.withOpacity(0.15)
-                  : AppColors.surfaceAlt,
-            ),
-            child: Icon(region.icon,
-                color: region.unlocked
-                    ? region.color
-                    : AppColors.textMuted,
-                size: 22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(region.name,
-                    style: GoogleFonts.cinzelDecorative(
-                        fontSize: 13,
-                        color: region.unlocked
-                            ? AppColors.textPrimary
-                            : AppColors.textMuted)),
-                const SizedBox(height: 4),
-                Text(region.desc,
-                    style: GoogleFonts.roboto(
-                        fontSize: 11, color: AppColors.textMuted)),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: region.unlocked
-                  ? region.color.withOpacity(0.1)
-                  : AppColors.surfaceAlt,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: region.unlocked
-                    ? region.color.withOpacity(0.4)
-                    : AppColors.border,
+                  const SizedBox(width: 12),
+                  Text('REGIÕES',
+                      style: GoogleFonts.cinzelDecorative(
+                          fontSize: 16,
+                          color: AppColors.gold,
+                          letterSpacing: 2)),
+                  const Spacer(),
+                  Text('Nível $level',
+                      style: GoogleFonts.roboto(
+                          fontSize: 12, color: AppColors.textMuted)),
+                ],
               ),
             ),
-            child: Text(
-              region.unlocked ? 'Acessar' : region.requirement,
-              style: GoogleFonts.roboto(
-                  fontSize: 10,
-                  color: region.unlocked
-                      ? region.color
-                      : AppColors.textMuted),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
+                itemCount: _regions.length,
+                itemBuilder: (ctx, i) {
+                  final r = _regions[i];
+                  final unlockLevel = r['unlock_level'] as int;
+                  final locked = level < unlockLevel;
+                  final color = Color(r['color'] as int);
+
+                  return GestureDetector(
+                    onTap: () {
+                      if (locked) {
+                        ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+                          content: Text(
+                            'Desbloqueado no Nível $unlockLevel.',
+                            style: GoogleFonts.roboto(color: Colors.white),
+                          ),
+                          backgroundColor: AppColors.surface,
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 2),
+                        ));
+                        return;
+                      }
+                      Navigator.push(
+                        ctx,
+                        MaterialPageRoute(
+                          builder: (_) => RegionDetailScreen(region: r),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: locked
+                              ? AppColors.border
+                              : color.withValues(alpha: 0.4),
+                          width: locked ? 1 : 1.5,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          // Banner da região
+                          Container(
+                            height: 80,
+                            decoration: BoxDecoration(
+                              borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(14)),
+                              gradient: LinearGradient(
+                                colors: locked
+                                    ? [
+                                        AppColors.surfaceAlt,
+                                        AppColors.surface,
+                                      ]
+                                    : [
+                                        color.withValues(alpha: 0.3),
+                                        color.withValues(alpha: 0.05),
+                                      ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    locked
+                                        ? Icons.lock_outline
+                                        : Icons.explore_outlined,
+                                    color: locked
+                                        ? AppColors.textMuted
+                                        : color,
+                                    size: 32,
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          r['name'] as String,
+                                          style: GoogleFonts.cinzelDecorative(
+                                            fontSize: 13,
+                                            color: locked
+                                                ? AppColors.textMuted
+                                                : AppColors.textPrimary,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          r['subtitle'] as String,
+                                          style: GoogleFonts.roboto(
+                                            fontSize: 10,
+                                            color: locked
+                                                ? AppColors.textMuted
+                                                : color,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  if (locked)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surfaceAlt,
+                                        borderRadius:
+                                            BorderRadius.circular(6),
+                                        border: Border.all(
+                                            color: AppColors.border),
+                                      ),
+                                      child: Text(
+                                        'Nv. $unlockLevel',
+                                        style: GoogleFonts.roboto(
+                                            fontSize: 10,
+                                            color: AppColors.textMuted),
+                                      ),
+                                    )
+                                  else
+                                    Icon(Icons.chevron_right,
+                                        color: color, size: 20),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // Descrição
+                          if (!locked)
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                  16, 10, 16, 12),
+                              child: Text(
+                                r['description'] as String,
+                                style: GoogleFonts.roboto(
+                                  fontSize: 11,
+                                  color: AppColors.textSecondary,
+                                  height: 1.5,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -1,0 +1,24 @@
+{
+  "shadow_quests": [
+    {"key":"sq_unstable_1","title":"A Sombra Acorda","description":"Sua sombra ficou instável. Complete 3 rituais hoje para estabilizá-la.","trigger_state":"unstable","category":"physical","rank":"e","xp":40,"gold":20,"auto_assign":true},
+    {"key":"sq_unstable_2","title":"Retomada","description":"Instabilidade detectada. Conclua 1 missão diária sem falhar.","trigger_state":"unstable","category":"mental","rank":"e","xp":30,"gold":15,"auto_assign":true},
+    {"key":"sq_unstable_3","title":"Reequilíbrio","description":"A sombra precisa de atenção. Complete sua missão mais difícil do dia.","trigger_state":"unstable","category":"spiritual","rank":"d","xp":50,"gold":25,"auto_assign":true},
+    {"key":"sq_unstable_4","title":"Foco Interno","description":"Dispersão detectada. Realize 2 hábitos de ordem hoje.","trigger_state":"unstable","category":"order","rank":"d","xp":45,"gold":22,"auto_assign":true},
+    {"key":"sq_unstable_5","title":"Âncora","description":"A sombra deriva. Complete um hábito espiritual agora.","trigger_state":"unstable","category":"spiritual","rank":"e","xp":35,"gold":18,"auto_assign":true},
+    {"key":"sq_chaotic_1","title":"Confronto Necessário","description":"Sua sombra está caótica. Enfrente 5 rituais hoje sem desistir.","trigger_state":"chaotic","category":"physical","rank":"c","xp":100,"gold":50,"auto_assign":true},
+    {"key":"sq_chaotic_2","title":"Padrão Quebrado","description":"Caos interno detectado. Não falhe nenhuma missão por 2 dias.","trigger_state":"chaotic","category":"order","rank":"c","xp":120,"gold":60,"auto_assign":true},
+    {"key":"sq_chaotic_3","title":"O Espelho Caótico","description":"A sombra mostra seus padrões. Complete 3 missões de categorias diferentes.","trigger_state":"chaotic","category":"mental","rank":"c","xp":110,"gold":55,"auto_assign":true},
+    {"key":"sq_chaotic_4","title":"Ritual de Contenção","description":"Caos crescente. Complete todos os rituais diários hoje.","trigger_state":"chaotic","category":"spiritual","rank":"b","xp":150,"gold":75,"auto_assign":true},
+    {"key":"sq_chaotic_5","title":"Força de Vontade","description":"A sombra testa seus limites. Conclua 1 missão de rank C ou superior.","trigger_state":"chaotic","category":"physical","rank":"c","xp":130,"gold":65,"auto_assign":true},
+    {"key":"sq_abyssal_1","title":"Sobreviver ao Abismo","description":"Estado crítico. Complete pelo menos 1 ritual hoje. Qualquer um.","trigger_state":"abyssal","category":"spiritual","rank":"b","xp":200,"gold":100,"auto_assign":true},
+    {"key":"sq_abyssal_2","title":"Primeira Luz","description":"No abismo tudo parece impossível. Complete 2 missões simples.","trigger_state":"abyssal","category":"order","rank":"b","xp":180,"gold":90,"auto_assign":true},
+    {"key":"sq_abyssal_3","title":"Retorno Forçado","description":"A sombra exige confronto. Complete 3 rituais diários consecutivos.","trigger_state":"abyssal","category":"mental","rank":"a","xp":300,"gold":150,"auto_assign":true},
+    {"key":"sq_abyssal_4","title":"O Custo do Abismo","description":"Recuperação começa aqui. Não falhe nenhuma missão por 3 dias.","trigger_state":"abyssal","category":"physical","rank":"a","xp":350,"gold":175,"auto_assign":true},
+    {"key":"sq_abyssal_5","title":"Ritual de Renascença","description":"Enfrentamento final. Complete 5 rituais em 48 horas.","trigger_state":"abyssal","category":"spiritual","rank":"s","xp":500,"gold":250,"auto_assign":true},
+    {"key":"sq_ascending_1","title":"Ascensão Mantida","description":"Estado ascendente detectado. Mantenha-o por mais 2 dias.","trigger_state":"ascending","category":"spiritual","rank":"b","xp":200,"gold":100,"auto_assign":true},
+    {"key":"sq_ascending_2","title":"O Pico","description":"Você está ascendendo. Complete uma missão de rank S.","trigger_state":"ascending","category":"physical","rank":"s","xp":400,"gold":200,"auto_assign":true},
+    {"key":"sq_ascending_3","title":"Forma Luminosa","description":"Ascensão confirmada. Complete todos os rituais por 3 dias.","trigger_state":"ascending","category":"order","rank":"a","xp":350,"gold":175,"auto_assign":true},
+    {"key":"sq_ascending_4","title":"Herança da Ascensão","description":"Use esse estado para crescer. Complete 2 missões de classe.","trigger_state":"ascending","category":"mental","rank":"a","xp":300,"gold":150,"auto_assign":true},
+    {"key":"sq_ascending_5","title":"O Dom do Equilíbrio","description":"Ascensão rara. Compartilhe esse estado completando 1 missão social.","trigger_state":"ascending","category":"spiritual","rank":"b","xp":250,"gold":125,"auto_assign":true}
+  ]
+}

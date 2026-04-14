@@ -4269,6 +4269,25 @@ class $AchievementsTableTable extends AchievementsTable
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("is_secret" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _rarityMeta = const VerificationMeta('rarity');
+  @override
+  late final GeneratedColumn<String> rarity = GeneratedColumn<String>(
+      'rarity', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('common'));
+  static const VerificationMeta _titleRewardMeta =
+      const VerificationMeta('titleReward');
+  @override
+  late final GeneratedColumn<String> titleReward = GeneratedColumn<String>(
+      'title_reward', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _category2Meta =
+      const VerificationMeta('category2');
+  @override
+  late final GeneratedColumn<String> category2 = GeneratedColumn<String>(
+      'category2', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -4280,7 +4299,10 @@ class $AchievementsTableTable extends AchievementsTable
         xpReward,
         goldReward,
         gemReward,
-        isSecret
+        isSecret,
+        rarity,
+        titleReward,
+        category2
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4344,6 +4366,20 @@ class $AchievementsTableTable extends AchievementsTable
       context.handle(_isSecretMeta,
           isSecret.isAcceptableOrUnknown(data['is_secret']!, _isSecretMeta));
     }
+    if (data.containsKey('rarity')) {
+      context.handle(_rarityMeta,
+          rarity.isAcceptableOrUnknown(data['rarity']!, _rarityMeta));
+    }
+    if (data.containsKey('title_reward')) {
+      context.handle(
+          _titleRewardMeta,
+          titleReward.isAcceptableOrUnknown(
+              data['title_reward']!, _titleRewardMeta));
+    }
+    if (data.containsKey('category2')) {
+      context.handle(_category2Meta,
+          category2.isAcceptableOrUnknown(data['category2']!, _category2Meta));
+    }
     return context;
   }
 
@@ -4373,6 +4409,12 @@ class $AchievementsTableTable extends AchievementsTable
           .read(DriftSqlType.int, data['${effectivePrefix}gem_reward'])!,
       isSecret: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_secret'])!,
+      rarity: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}rarity'])!,
+      titleReward: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title_reward']),
+      category2: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}category2']),
     );
   }
 
@@ -4394,6 +4436,9 @@ class AchievementsTableData extends DataClass
   final int goldReward;
   final int gemReward;
   final bool isSecret;
+  final String rarity;
+  final String? titleReward;
+  final String? category2;
   const AchievementsTableData(
       {required this.id,
       required this.key,
@@ -4404,7 +4449,10 @@ class AchievementsTableData extends DataClass
       required this.xpReward,
       required this.goldReward,
       required this.gemReward,
-      required this.isSecret});
+      required this.isSecret,
+      required this.rarity,
+      this.titleReward,
+      this.category2});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4418,6 +4466,13 @@ class AchievementsTableData extends DataClass
     map['gold_reward'] = Variable<int>(goldReward);
     map['gem_reward'] = Variable<int>(gemReward);
     map['is_secret'] = Variable<bool>(isSecret);
+    map['rarity'] = Variable<String>(rarity);
+    if (!nullToAbsent || titleReward != null) {
+      map['title_reward'] = Variable<String>(titleReward);
+    }
+    if (!nullToAbsent || category2 != null) {
+      map['category2'] = Variable<String>(category2);
+    }
     return map;
   }
 
@@ -4433,6 +4488,13 @@ class AchievementsTableData extends DataClass
       goldReward: Value(goldReward),
       gemReward: Value(gemReward),
       isSecret: Value(isSecret),
+      rarity: Value(rarity),
+      titleReward: titleReward == null && nullToAbsent
+          ? const Value.absent()
+          : Value(titleReward),
+      category2: category2 == null && nullToAbsent
+          ? const Value.absent()
+          : Value(category2),
     );
   }
 
@@ -4450,6 +4512,9 @@ class AchievementsTableData extends DataClass
       goldReward: serializer.fromJson<int>(json['goldReward']),
       gemReward: serializer.fromJson<int>(json['gemReward']),
       isSecret: serializer.fromJson<bool>(json['isSecret']),
+      rarity: serializer.fromJson<String>(json['rarity']),
+      titleReward: serializer.fromJson<String?>(json['titleReward']),
+      category2: serializer.fromJson<String?>(json['category2']),
     );
   }
   @override
@@ -4466,6 +4531,9 @@ class AchievementsTableData extends DataClass
       'goldReward': serializer.toJson<int>(goldReward),
       'gemReward': serializer.toJson<int>(gemReward),
       'isSecret': serializer.toJson<bool>(isSecret),
+      'rarity': serializer.toJson<String>(rarity),
+      'titleReward': serializer.toJson<String?>(titleReward),
+      'category2': serializer.toJson<String?>(category2),
     };
   }
 
@@ -4479,7 +4547,10 @@ class AchievementsTableData extends DataClass
           int? xpReward,
           int? goldReward,
           int? gemReward,
-          bool? isSecret}) =>
+          bool? isSecret,
+          String? rarity,
+          Value<String?> titleReward = const Value.absent(),
+          Value<String?> category2 = const Value.absent()}) =>
       AchievementsTableData(
         id: id ?? this.id,
         key: key ?? this.key,
@@ -4491,6 +4562,9 @@ class AchievementsTableData extends DataClass
         goldReward: goldReward ?? this.goldReward,
         gemReward: gemReward ?? this.gemReward,
         isSecret: isSecret ?? this.isSecret,
+        rarity: rarity ?? this.rarity,
+        titleReward: titleReward.present ? titleReward.value : this.titleReward,
+        category2: category2.present ? category2.value : this.category2,
       );
   AchievementsTableData copyWithCompanion(AchievementsTableCompanion data) {
     return AchievementsTableData(
@@ -4506,6 +4580,10 @@ class AchievementsTableData extends DataClass
           data.goldReward.present ? data.goldReward.value : this.goldReward,
       gemReward: data.gemReward.present ? data.gemReward.value : this.gemReward,
       isSecret: data.isSecret.present ? data.isSecret.value : this.isSecret,
+      rarity: data.rarity.present ? data.rarity.value : this.rarity,
+      titleReward:
+          data.titleReward.present ? data.titleReward.value : this.titleReward,
+      category2: data.category2.present ? data.category2.value : this.category2,
     );
   }
 
@@ -4521,14 +4599,29 @@ class AchievementsTableData extends DataClass
           ..write('xpReward: $xpReward, ')
           ..write('goldReward: $goldReward, ')
           ..write('gemReward: $gemReward, ')
-          ..write('isSecret: $isSecret')
+          ..write('isSecret: $isSecret, ')
+          ..write('rarity: $rarity, ')
+          ..write('titleReward: $titleReward, ')
+          ..write('category2: $category2')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, key, title, description, category,
-      iconName, xpReward, goldReward, gemReward, isSecret);
+  int get hashCode => Object.hash(
+      id,
+      key,
+      title,
+      description,
+      category,
+      iconName,
+      xpReward,
+      goldReward,
+      gemReward,
+      isSecret,
+      rarity,
+      titleReward,
+      category2);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4542,7 +4635,10 @@ class AchievementsTableData extends DataClass
           other.xpReward == this.xpReward &&
           other.goldReward == this.goldReward &&
           other.gemReward == this.gemReward &&
-          other.isSecret == this.isSecret);
+          other.isSecret == this.isSecret &&
+          other.rarity == this.rarity &&
+          other.titleReward == this.titleReward &&
+          other.category2 == this.category2);
 }
 
 class AchievementsTableCompanion
@@ -4557,6 +4653,9 @@ class AchievementsTableCompanion
   final Value<int> goldReward;
   final Value<int> gemReward;
   final Value<bool> isSecret;
+  final Value<String> rarity;
+  final Value<String?> titleReward;
+  final Value<String?> category2;
   const AchievementsTableCompanion({
     this.id = const Value.absent(),
     this.key = const Value.absent(),
@@ -4568,6 +4667,9 @@ class AchievementsTableCompanion
     this.goldReward = const Value.absent(),
     this.gemReward = const Value.absent(),
     this.isSecret = const Value.absent(),
+    this.rarity = const Value.absent(),
+    this.titleReward = const Value.absent(),
+    this.category2 = const Value.absent(),
   });
   AchievementsTableCompanion.insert({
     this.id = const Value.absent(),
@@ -4580,6 +4682,9 @@ class AchievementsTableCompanion
     this.goldReward = const Value.absent(),
     this.gemReward = const Value.absent(),
     this.isSecret = const Value.absent(),
+    this.rarity = const Value.absent(),
+    this.titleReward = const Value.absent(),
+    this.category2 = const Value.absent(),
   })  : key = Value(key),
         title = Value(title),
         description = Value(description),
@@ -4595,6 +4700,9 @@ class AchievementsTableCompanion
     Expression<int>? goldReward,
     Expression<int>? gemReward,
     Expression<bool>? isSecret,
+    Expression<String>? rarity,
+    Expression<String>? titleReward,
+    Expression<String>? category2,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -4607,6 +4715,9 @@ class AchievementsTableCompanion
       if (goldReward != null) 'gold_reward': goldReward,
       if (gemReward != null) 'gem_reward': gemReward,
       if (isSecret != null) 'is_secret': isSecret,
+      if (rarity != null) 'rarity': rarity,
+      if (titleReward != null) 'title_reward': titleReward,
+      if (category2 != null) 'category2': category2,
     });
   }
 
@@ -4620,7 +4731,10 @@ class AchievementsTableCompanion
       Value<int>? xpReward,
       Value<int>? goldReward,
       Value<int>? gemReward,
-      Value<bool>? isSecret}) {
+      Value<bool>? isSecret,
+      Value<String>? rarity,
+      Value<String?>? titleReward,
+      Value<String?>? category2}) {
     return AchievementsTableCompanion(
       id: id ?? this.id,
       key: key ?? this.key,
@@ -4632,6 +4746,9 @@ class AchievementsTableCompanion
       goldReward: goldReward ?? this.goldReward,
       gemReward: gemReward ?? this.gemReward,
       isSecret: isSecret ?? this.isSecret,
+      rarity: rarity ?? this.rarity,
+      titleReward: titleReward ?? this.titleReward,
+      category2: category2 ?? this.category2,
     );
   }
 
@@ -4668,6 +4785,15 @@ class AchievementsTableCompanion
     if (isSecret.present) {
       map['is_secret'] = Variable<bool>(isSecret.value);
     }
+    if (rarity.present) {
+      map['rarity'] = Variable<String>(rarity.value);
+    }
+    if (titleReward.present) {
+      map['title_reward'] = Variable<String>(titleReward.value);
+    }
+    if (category2.present) {
+      map['category2'] = Variable<String>(category2.value);
+    }
     return map;
   }
 
@@ -4683,7 +4809,10 @@ class AchievementsTableCompanion
           ..write('xpReward: $xpReward, ')
           ..write('goldReward: $goldReward, ')
           ..write('gemReward: $gemReward, ')
-          ..write('isSecret: $isSecret')
+          ..write('isSecret: $isSecret, ')
+          ..write('rarity: $rarity, ')
+          ..write('titleReward: $titleReward, ')
+          ..write('category2: $category2')
           ..write(')'))
         .toString();
   }
@@ -5790,6 +5919,343 @@ class NpcReputationTableCompanion
   }
 }
 
+class $DiaryEntriesTableTable extends DiaryEntriesTable
+    with TableInfo<$DiaryEntriesTableTable, DiaryEntriesTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DiaryEntriesTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _contentMeta =
+      const VerificationMeta('content');
+  @override
+  late final GeneratedColumn<String> content = GeneratedColumn<String>(
+      'content', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _wordCountMeta =
+      const VerificationMeta('wordCount');
+  @override
+  late final GeneratedColumn<int> wordCount = GeneratedColumn<int>(
+      'word_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _entryDateMeta =
+      const VerificationMeta('entryDate');
+  @override
+  late final GeneratedColumn<DateTime> entryDate = GeneratedColumn<DateTime>(
+      'entry_date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, playerId, content, wordCount, entryDate, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'diary_entries';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<DiaryEntriesTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('content')) {
+      context.handle(_contentMeta,
+          content.isAcceptableOrUnknown(data['content']!, _contentMeta));
+    }
+    if (data.containsKey('word_count')) {
+      context.handle(_wordCountMeta,
+          wordCount.isAcceptableOrUnknown(data['word_count']!, _wordCountMeta));
+    }
+    if (data.containsKey('entry_date')) {
+      context.handle(_entryDateMeta,
+          entryDate.isAcceptableOrUnknown(data['entry_date']!, _entryDateMeta));
+    } else if (isInserting) {
+      context.missing(_entryDateMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DiaryEntriesTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DiaryEntriesTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      content: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}content'])!,
+      wordCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}word_count'])!,
+      entryDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}entry_date'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $DiaryEntriesTableTable createAlias(String alias) {
+    return $DiaryEntriesTableTable(attachedDatabase, alias);
+  }
+}
+
+class DiaryEntriesTableData extends DataClass
+    implements Insertable<DiaryEntriesTableData> {
+  final int id;
+  final int playerId;
+  final String content;
+  final int wordCount;
+  final DateTime entryDate;
+  final DateTime updatedAt;
+  const DiaryEntriesTableData(
+      {required this.id,
+      required this.playerId,
+      required this.content,
+      required this.wordCount,
+      required this.entryDate,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['content'] = Variable<String>(content);
+    map['word_count'] = Variable<int>(wordCount);
+    map['entry_date'] = Variable<DateTime>(entryDate);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  DiaryEntriesTableCompanion toCompanion(bool nullToAbsent) {
+    return DiaryEntriesTableCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      content: Value(content),
+      wordCount: Value(wordCount),
+      entryDate: Value(entryDate),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory DiaryEntriesTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DiaryEntriesTableData(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      content: serializer.fromJson<String>(json['content']),
+      wordCount: serializer.fromJson<int>(json['wordCount']),
+      entryDate: serializer.fromJson<DateTime>(json['entryDate']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'content': serializer.toJson<String>(content),
+      'wordCount': serializer.toJson<int>(wordCount),
+      'entryDate': serializer.toJson<DateTime>(entryDate),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  DiaryEntriesTableData copyWith(
+          {int? id,
+          int? playerId,
+          String? content,
+          int? wordCount,
+          DateTime? entryDate,
+          DateTime? updatedAt}) =>
+      DiaryEntriesTableData(
+        id: id ?? this.id,
+        playerId: playerId ?? this.playerId,
+        content: content ?? this.content,
+        wordCount: wordCount ?? this.wordCount,
+        entryDate: entryDate ?? this.entryDate,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  DiaryEntriesTableData copyWithCompanion(DiaryEntriesTableCompanion data) {
+    return DiaryEntriesTableData(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      content: data.content.present ? data.content.value : this.content,
+      wordCount: data.wordCount.present ? data.wordCount.value : this.wordCount,
+      entryDate: data.entryDate.present ? data.entryDate.value : this.entryDate,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DiaryEntriesTableData(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('content: $content, ')
+          ..write('wordCount: $wordCount, ')
+          ..write('entryDate: $entryDate, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, playerId, content, wordCount, entryDate, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DiaryEntriesTableData &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.content == this.content &&
+          other.wordCount == this.wordCount &&
+          other.entryDate == this.entryDate &&
+          other.updatedAt == this.updatedAt);
+}
+
+class DiaryEntriesTableCompanion
+    extends UpdateCompanion<DiaryEntriesTableData> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> content;
+  final Value<int> wordCount;
+  final Value<DateTime> entryDate;
+  final Value<DateTime> updatedAt;
+  const DiaryEntriesTableCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.content = const Value.absent(),
+    this.wordCount = const Value.absent(),
+    this.entryDate = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  DiaryEntriesTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    this.content = const Value.absent(),
+    this.wordCount = const Value.absent(),
+    required DateTime entryDate,
+    this.updatedAt = const Value.absent(),
+  })  : playerId = Value(playerId),
+        entryDate = Value(entryDate);
+  static Insertable<DiaryEntriesTableData> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? content,
+    Expression<int>? wordCount,
+    Expression<DateTime>? entryDate,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (content != null) 'content': content,
+      if (wordCount != null) 'word_count': wordCount,
+      if (entryDate != null) 'entry_date': entryDate,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  DiaryEntriesTableCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? playerId,
+      Value<String>? content,
+      Value<int>? wordCount,
+      Value<DateTime>? entryDate,
+      Value<DateTime>? updatedAt}) {
+    return DiaryEntriesTableCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      content: content ?? this.content,
+      wordCount: wordCount ?? this.wordCount,
+      entryDate: entryDate ?? this.entryDate,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (content.present) {
+      map['content'] = Variable<String>(content.value);
+    }
+    if (wordCount.present) {
+      map['word_count'] = Variable<int>(wordCount.value);
+    }
+    if (entryDate.present) {
+      map['entry_date'] = Variable<DateTime>(entryDate.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DiaryEntriesTableCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('content: $content, ')
+          ..write('wordCount: $wordCount, ')
+          ..write('entryDate: $entryDate, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -5807,6 +6273,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $GuildStatusTableTable(this);
   late final $NpcReputationTableTable npcReputationTable =
       $NpcReputationTableTable(this);
+  late final $DiaryEntriesTableTable diaryEntriesTable =
+      $DiaryEntriesTableTable(this);
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
   late final HabitDao habitDao = HabitDao(this as AppDatabase);
   late final InventoryDao inventoryDao = InventoryDao(this as AppDatabase);
@@ -5827,7 +6295,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         achievementsTable,
         playerAchievementsTable,
         guildStatusTable,
-        npcReputationTable
+        npcReputationTable,
+        diaryEntriesTable
       ];
 }
 
@@ -7754,6 +8223,9 @@ typedef $$AchievementsTableTableCreateCompanionBuilder
   Value<int> goldReward,
   Value<int> gemReward,
   Value<bool> isSecret,
+  Value<String> rarity,
+  Value<String?> titleReward,
+  Value<String?> category2,
 });
 typedef $$AchievementsTableTableUpdateCompanionBuilder
     = AchievementsTableCompanion Function({
@@ -7767,6 +8239,9 @@ typedef $$AchievementsTableTableUpdateCompanionBuilder
   Value<int> goldReward,
   Value<int> gemReward,
   Value<bool> isSecret,
+  Value<String> rarity,
+  Value<String?> titleReward,
+  Value<String?> category2,
 });
 
 class $$AchievementsTableTableFilterComposer
@@ -7807,6 +8282,15 @@ class $$AchievementsTableTableFilterComposer
 
   ColumnFilters<bool> get isSecret => $composableBuilder(
       column: $table.isSecret, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get rarity => $composableBuilder(
+      column: $table.rarity, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get titleReward => $composableBuilder(
+      column: $table.titleReward, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get category2 => $composableBuilder(
+      column: $table.category2, builder: (column) => ColumnFilters(column));
 }
 
 class $$AchievementsTableTableOrderingComposer
@@ -7847,6 +8331,15 @@ class $$AchievementsTableTableOrderingComposer
 
   ColumnOrderings<bool> get isSecret => $composableBuilder(
       column: $table.isSecret, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get rarity => $composableBuilder(
+      column: $table.rarity, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get titleReward => $composableBuilder(
+      column: $table.titleReward, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get category2 => $composableBuilder(
+      column: $table.category2, builder: (column) => ColumnOrderings(column));
 }
 
 class $$AchievementsTableTableAnnotationComposer
@@ -7887,6 +8380,15 @@ class $$AchievementsTableTableAnnotationComposer
 
   GeneratedColumn<bool> get isSecret =>
       $composableBuilder(column: $table.isSecret, builder: (column) => column);
+
+  GeneratedColumn<String> get rarity =>
+      $composableBuilder(column: $table.rarity, builder: (column) => column);
+
+  GeneratedColumn<String> get titleReward => $composableBuilder(
+      column: $table.titleReward, builder: (column) => column);
+
+  GeneratedColumn<String> get category2 =>
+      $composableBuilder(column: $table.category2, builder: (column) => column);
 }
 
 class $$AchievementsTableTableTableManager extends RootTableManager<
@@ -7928,6 +8430,9 @@ class $$AchievementsTableTableTableManager extends RootTableManager<
             Value<int> goldReward = const Value.absent(),
             Value<int> gemReward = const Value.absent(),
             Value<bool> isSecret = const Value.absent(),
+            Value<String> rarity = const Value.absent(),
+            Value<String?> titleReward = const Value.absent(),
+            Value<String?> category2 = const Value.absent(),
           }) =>
               AchievementsTableCompanion(
             id: id,
@@ -7940,6 +8445,9 @@ class $$AchievementsTableTableTableManager extends RootTableManager<
             goldReward: goldReward,
             gemReward: gemReward,
             isSecret: isSecret,
+            rarity: rarity,
+            titleReward: titleReward,
+            category2: category2,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -7952,6 +8460,9 @@ class $$AchievementsTableTableTableManager extends RootTableManager<
             Value<int> goldReward = const Value.absent(),
             Value<int> gemReward = const Value.absent(),
             Value<bool> isSecret = const Value.absent(),
+            Value<String> rarity = const Value.absent(),
+            Value<String?> titleReward = const Value.absent(),
+            Value<String?> category2 = const Value.absent(),
           }) =>
               AchievementsTableCompanion.insert(
             id: id,
@@ -7964,6 +8475,9 @@ class $$AchievementsTableTableTableManager extends RootTableManager<
             goldReward: goldReward,
             gemReward: gemReward,
             isSecret: isSecret,
+            rarity: rarity,
+            titleReward: titleReward,
+            category2: category2,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -8571,6 +9085,192 @@ typedef $$NpcReputationTableTableProcessedTableManager = ProcessedTableManager<
     ),
     NpcReputationTableData,
     PrefetchHooks Function()>;
+typedef $$DiaryEntriesTableTableCreateCompanionBuilder
+    = DiaryEntriesTableCompanion Function({
+  Value<int> id,
+  required int playerId,
+  Value<String> content,
+  Value<int> wordCount,
+  required DateTime entryDate,
+  Value<DateTime> updatedAt,
+});
+typedef $$DiaryEntriesTableTableUpdateCompanionBuilder
+    = DiaryEntriesTableCompanion Function({
+  Value<int> id,
+  Value<int> playerId,
+  Value<String> content,
+  Value<int> wordCount,
+  Value<DateTime> entryDate,
+  Value<DateTime> updatedAt,
+});
+
+class $$DiaryEntriesTableTableFilterComposer
+    extends Composer<_$AppDatabase, $DiaryEntriesTableTable> {
+  $$DiaryEntriesTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get content => $composableBuilder(
+      column: $table.content, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get wordCount => $composableBuilder(
+      column: $table.wordCount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get entryDate => $composableBuilder(
+      column: $table.entryDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$DiaryEntriesTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $DiaryEntriesTableTable> {
+  $$DiaryEntriesTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get content => $composableBuilder(
+      column: $table.content, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get wordCount => $composableBuilder(
+      column: $table.wordCount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get entryDate => $composableBuilder(
+      column: $table.entryDate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$DiaryEntriesTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DiaryEntriesTableTable> {
+  $$DiaryEntriesTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => column);
+
+  GeneratedColumn<int> get wordCount =>
+      $composableBuilder(column: $table.wordCount, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get entryDate =>
+      $composableBuilder(column: $table.entryDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$DiaryEntriesTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $DiaryEntriesTableTable,
+    DiaryEntriesTableData,
+    $$DiaryEntriesTableTableFilterComposer,
+    $$DiaryEntriesTableTableOrderingComposer,
+    $$DiaryEntriesTableTableAnnotationComposer,
+    $$DiaryEntriesTableTableCreateCompanionBuilder,
+    $$DiaryEntriesTableTableUpdateCompanionBuilder,
+    (
+      DiaryEntriesTableData,
+      BaseReferences<_$AppDatabase, $DiaryEntriesTableTable,
+          DiaryEntriesTableData>
+    ),
+    DiaryEntriesTableData,
+    PrefetchHooks Function()> {
+  $$DiaryEntriesTableTableTableManager(
+      _$AppDatabase db, $DiaryEntriesTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DiaryEntriesTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DiaryEntriesTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DiaryEntriesTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> playerId = const Value.absent(),
+            Value<String> content = const Value.absent(),
+            Value<int> wordCount = const Value.absent(),
+            Value<DateTime> entryDate = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              DiaryEntriesTableCompanion(
+            id: id,
+            playerId: playerId,
+            content: content,
+            wordCount: wordCount,
+            entryDate: entryDate,
+            updatedAt: updatedAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int playerId,
+            Value<String> content = const Value.absent(),
+            Value<int> wordCount = const Value.absent(),
+            required DateTime entryDate,
+            Value<DateTime> updatedAt = const Value.absent(),
+          }) =>
+              DiaryEntriesTableCompanion.insert(
+            id: id,
+            playerId: playerId,
+            content: content,
+            wordCount: wordCount,
+            entryDate: entryDate,
+            updatedAt: updatedAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$DiaryEntriesTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $DiaryEntriesTableTable,
+    DiaryEntriesTableData,
+    $$DiaryEntriesTableTableFilterComposer,
+    $$DiaryEntriesTableTableOrderingComposer,
+    $$DiaryEntriesTableTableAnnotationComposer,
+    $$DiaryEntriesTableTableCreateCompanionBuilder,
+    $$DiaryEntriesTableTableUpdateCompanionBuilder,
+    (
+      DiaryEntriesTableData,
+      BaseReferences<_$AppDatabase, $DiaryEntriesTableTable,
+          DiaryEntriesTableData>
+    ),
+    DiaryEntriesTableData,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -8596,4 +9296,6 @@ class $AppDatabaseManager {
       $$GuildStatusTableTableTableManager(_db, _db.guildStatusTable);
   $$NpcReputationTableTableTableManager get npcReputationTable =>
       $$NpcReputationTableTableTableManager(_db, _db.npcReputationTable);
+  $$DiaryEntriesTableTableTableManager get diaryEntriesTable =>
+      $$DiaryEntriesTableTableTableManager(_db, _db.diaryEntriesTable);
 }
