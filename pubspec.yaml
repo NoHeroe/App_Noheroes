@@ -52,4 +52,5 @@ flutter:
     - assets/data/factions.json
     - assets/data/class_quests.json
     - assets/data/faction_admission_quests.json
+    - assets/data/quest_templates.json
     - assets/fonts/

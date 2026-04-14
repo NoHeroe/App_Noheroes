@@ -20,5 +20,11 @@ class HabitsTable extends Table {
   IntColumn get totalCompleted => integer().withDefault(const Constant(0))();
   // JSON: [{"label":"10 flexões","target":10,"done":0}, ...]
   TextColumn get requirements => text().nullable()();
+  // Tipo: daily|individual|class|faction|shadow|lore|auto
+  TextColumn get questType => text().withDefault(const Constant('individual'))();
+  // Unidade métrica: reps|km|min|pages|words|glasses|hours|cycles
+  TextColumn get metricUnit => text().withDefault(const Constant('reps'))();
+  // Descrição temática automática
+  TextColumn get autoDescription => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }

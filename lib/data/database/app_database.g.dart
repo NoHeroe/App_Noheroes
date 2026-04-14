@@ -1460,6 +1460,28 @@ class $HabitsTableTable extends HabitsTable
   late final GeneratedColumn<String> requirements = GeneratedColumn<String>(
       'requirements', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _questTypeMeta =
+      const VerificationMeta('questType');
+  @override
+  late final GeneratedColumn<String> questType = GeneratedColumn<String>(
+      'quest_type', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('individual'));
+  static const VerificationMeta _metricUnitMeta =
+      const VerificationMeta('metricUnit');
+  @override
+  late final GeneratedColumn<String> metricUnit = GeneratedColumn<String>(
+      'metric_unit', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('reps'));
+  static const VerificationMeta _autoDescriptionMeta =
+      const VerificationMeta('autoDescription');
+  @override
+  late final GeneratedColumn<String> autoDescription = GeneratedColumn<String>(
+      'auto_description', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -1484,6 +1506,9 @@ class $HabitsTableTable extends HabitsTable
         streakCount,
         totalCompleted,
         requirements,
+        questType,
+        metricUnit,
+        autoDescription,
         createdAt
       ];
   @override
@@ -1571,6 +1596,22 @@ class $HabitsTableTable extends HabitsTable
           requirements.isAcceptableOrUnknown(
               data['requirements']!, _requirementsMeta));
     }
+    if (data.containsKey('quest_type')) {
+      context.handle(_questTypeMeta,
+          questType.isAcceptableOrUnknown(data['quest_type']!, _questTypeMeta));
+    }
+    if (data.containsKey('metric_unit')) {
+      context.handle(
+          _metricUnitMeta,
+          metricUnit.isAcceptableOrUnknown(
+              data['metric_unit']!, _metricUnitMeta));
+    }
+    if (data.containsKey('auto_description')) {
+      context.handle(
+          _autoDescriptionMeta,
+          autoDescription.isAcceptableOrUnknown(
+              data['auto_description']!, _autoDescriptionMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -1612,6 +1653,12 @@ class $HabitsTableTable extends HabitsTable
           .read(DriftSqlType.int, data['${effectivePrefix}total_completed'])!,
       requirements: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}requirements']),
+      questType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}quest_type'])!,
+      metricUnit: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}metric_unit'])!,
+      autoDescription: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}auto_description']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
     );
@@ -1638,6 +1685,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
   final int streakCount;
   final int totalCompleted;
   final String? requirements;
+  final String questType;
+  final String metricUnit;
+  final String? autoDescription;
   final DateTime createdAt;
   const HabitsTableData(
       {required this.id,
@@ -1654,6 +1704,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       required this.streakCount,
       required this.totalCompleted,
       this.requirements,
+      required this.questType,
+      required this.metricUnit,
+      this.autoDescription,
       required this.createdAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1673,6 +1726,11 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
     map['total_completed'] = Variable<int>(totalCompleted);
     if (!nullToAbsent || requirements != null) {
       map['requirements'] = Variable<String>(requirements);
+    }
+    map['quest_type'] = Variable<String>(questType);
+    map['metric_unit'] = Variable<String>(metricUnit);
+    if (!nullToAbsent || autoDescription != null) {
+      map['auto_description'] = Variable<String>(autoDescription);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -1696,6 +1754,11 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       requirements: requirements == null && nullToAbsent
           ? const Value.absent()
           : Value(requirements),
+      questType: Value(questType),
+      metricUnit: Value(metricUnit),
+      autoDescription: autoDescription == null && nullToAbsent
+          ? const Value.absent()
+          : Value(autoDescription),
       createdAt: Value(createdAt),
     );
   }
@@ -1718,6 +1781,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       streakCount: serializer.fromJson<int>(json['streakCount']),
       totalCompleted: serializer.fromJson<int>(json['totalCompleted']),
       requirements: serializer.fromJson<String?>(json['requirements']),
+      questType: serializer.fromJson<String>(json['questType']),
+      metricUnit: serializer.fromJson<String>(json['metricUnit']),
+      autoDescription: serializer.fromJson<String?>(json['autoDescription']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -1739,6 +1805,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       'streakCount': serializer.toJson<int>(streakCount),
       'totalCompleted': serializer.toJson<int>(totalCompleted),
       'requirements': serializer.toJson<String?>(requirements),
+      'questType': serializer.toJson<String>(questType),
+      'metricUnit': serializer.toJson<String>(metricUnit),
+      'autoDescription': serializer.toJson<String?>(autoDescription),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -1758,6 +1827,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
           int? streakCount,
           int? totalCompleted,
           Value<String?> requirements = const Value.absent(),
+          String? questType,
+          String? metricUnit,
+          Value<String?> autoDescription = const Value.absent(),
           DateTime? createdAt}) =>
       HabitsTableData(
         id: id ?? this.id,
@@ -1775,6 +1847,11 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
         totalCompleted: totalCompleted ?? this.totalCompleted,
         requirements:
             requirements.present ? requirements.value : this.requirements,
+        questType: questType ?? this.questType,
+        metricUnit: metricUnit ?? this.metricUnit,
+        autoDescription: autoDescription.present
+            ? autoDescription.value
+            : this.autoDescription,
         createdAt: createdAt ?? this.createdAt,
       );
   HabitsTableData copyWithCompanion(HabitsTableCompanion data) {
@@ -1804,6 +1881,12 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       requirements: data.requirements.present
           ? data.requirements.value
           : this.requirements,
+      questType: data.questType.present ? data.questType.value : this.questType,
+      metricUnit:
+          data.metricUnit.present ? data.metricUnit.value : this.metricUnit,
+      autoDescription: data.autoDescription.present
+          ? data.autoDescription.value
+          : this.autoDescription,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -1825,6 +1908,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
           ..write('streakCount: $streakCount, ')
           ..write('totalCompleted: $totalCompleted, ')
           ..write('requirements: $requirements, ')
+          ..write('questType: $questType, ')
+          ..write('metricUnit: $metricUnit, ')
+          ..write('autoDescription: $autoDescription, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -1846,6 +1932,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
       streakCount,
       totalCompleted,
       requirements,
+      questType,
+      metricUnit,
+      autoDescription,
       createdAt);
   @override
   bool operator ==(Object other) =>
@@ -1865,6 +1954,9 @@ class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
           other.streakCount == this.streakCount &&
           other.totalCompleted == this.totalCompleted &&
           other.requirements == this.requirements &&
+          other.questType == this.questType &&
+          other.metricUnit == this.metricUnit &&
+          other.autoDescription == this.autoDescription &&
           other.createdAt == this.createdAt);
 }
 
@@ -1883,6 +1975,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
   final Value<int> streakCount;
   final Value<int> totalCompleted;
   final Value<String?> requirements;
+  final Value<String> questType;
+  final Value<String> metricUnit;
+  final Value<String?> autoDescription;
   final Value<DateTime> createdAt;
   const HabitsTableCompanion({
     this.id = const Value.absent(),
@@ -1899,6 +1994,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     this.streakCount = const Value.absent(),
     this.totalCompleted = const Value.absent(),
     this.requirements = const Value.absent(),
+    this.questType = const Value.absent(),
+    this.metricUnit = const Value.absent(),
+    this.autoDescription = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   HabitsTableCompanion.insert({
@@ -1916,6 +2014,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     this.streakCount = const Value.absent(),
     this.totalCompleted = const Value.absent(),
     this.requirements = const Value.absent(),
+    this.questType = const Value.absent(),
+    this.metricUnit = const Value.absent(),
+    this.autoDescription = const Value.absent(),
     this.createdAt = const Value.absent(),
   })  : playerId = Value(playerId),
         title = Value(title),
@@ -1935,6 +2036,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     Expression<int>? streakCount,
     Expression<int>? totalCompleted,
     Expression<String>? requirements,
+    Expression<String>? questType,
+    Expression<String>? metricUnit,
+    Expression<String>? autoDescription,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -1952,6 +2056,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
       if (streakCount != null) 'streak_count': streakCount,
       if (totalCompleted != null) 'total_completed': totalCompleted,
       if (requirements != null) 'requirements': requirements,
+      if (questType != null) 'quest_type': questType,
+      if (metricUnit != null) 'metric_unit': metricUnit,
+      if (autoDescription != null) 'auto_description': autoDescription,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -1971,6 +2078,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
       Value<int>? streakCount,
       Value<int>? totalCompleted,
       Value<String?>? requirements,
+      Value<String>? questType,
+      Value<String>? metricUnit,
+      Value<String?>? autoDescription,
       Value<DateTime>? createdAt}) {
     return HabitsTableCompanion(
       id: id ?? this.id,
@@ -1987,6 +2097,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
       streakCount: streakCount ?? this.streakCount,
       totalCompleted: totalCompleted ?? this.totalCompleted,
       requirements: requirements ?? this.requirements,
+      questType: questType ?? this.questType,
+      metricUnit: metricUnit ?? this.metricUnit,
+      autoDescription: autoDescription ?? this.autoDescription,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -2036,6 +2149,15 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
     if (requirements.present) {
       map['requirements'] = Variable<String>(requirements.value);
     }
+    if (questType.present) {
+      map['quest_type'] = Variable<String>(questType.value);
+    }
+    if (metricUnit.present) {
+      map['metric_unit'] = Variable<String>(metricUnit.value);
+    }
+    if (autoDescription.present) {
+      map['auto_description'] = Variable<String>(autoDescription.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -2059,6 +2181,9 @@ class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
           ..write('streakCount: $streakCount, ')
           ..write('totalCompleted: $totalCompleted, ')
           ..write('requirements: $requirements, ')
+          ..write('questType: $questType, ')
+          ..write('metricUnit: $metricUnit, ')
+          ..write('autoDescription: $autoDescription, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -5418,6 +5543,9 @@ typedef $$HabitsTableTableCreateCompanionBuilder = HabitsTableCompanion
   Value<int> streakCount,
   Value<int> totalCompleted,
   Value<String?> requirements,
+  Value<String> questType,
+  Value<String> metricUnit,
+  Value<String?> autoDescription,
   Value<DateTime> createdAt,
 });
 typedef $$HabitsTableTableUpdateCompanionBuilder = HabitsTableCompanion
@@ -5436,6 +5564,9 @@ typedef $$HabitsTableTableUpdateCompanionBuilder = HabitsTableCompanion
   Value<int> streakCount,
   Value<int> totalCompleted,
   Value<String?> requirements,
+  Value<String> questType,
+  Value<String> metricUnit,
+  Value<String?> autoDescription,
   Value<DateTime> createdAt,
 });
 
@@ -5490,6 +5621,16 @@ class $$HabitsTableTableFilterComposer
 
   ColumnFilters<String> get requirements => $composableBuilder(
       column: $table.requirements, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get questType => $composableBuilder(
+      column: $table.questType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get metricUnit => $composableBuilder(
+      column: $table.metricUnit, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get autoDescription => $composableBuilder(
+      column: $table.autoDescription,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -5550,6 +5691,16 @@ class $$HabitsTableTableOrderingComposer
       column: $table.requirements,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get questType => $composableBuilder(
+      column: $table.questType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get metricUnit => $composableBuilder(
+      column: $table.metricUnit, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get autoDescription => $composableBuilder(
+      column: $table.autoDescription,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 }
@@ -5605,6 +5756,15 @@ class $$HabitsTableTableAnnotationComposer
   GeneratedColumn<String> get requirements => $composableBuilder(
       column: $table.requirements, builder: (column) => column);
 
+  GeneratedColumn<String> get questType =>
+      $composableBuilder(column: $table.questType, builder: (column) => column);
+
+  GeneratedColumn<String> get metricUnit => $composableBuilder(
+      column: $table.metricUnit, builder: (column) => column);
+
+  GeneratedColumn<String> get autoDescription => $composableBuilder(
+      column: $table.autoDescription, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 }
@@ -5649,6 +5809,9 @@ class $$HabitsTableTableTableManager extends RootTableManager<
             Value<int> streakCount = const Value.absent(),
             Value<int> totalCompleted = const Value.absent(),
             Value<String?> requirements = const Value.absent(),
+            Value<String> questType = const Value.absent(),
+            Value<String> metricUnit = const Value.absent(),
+            Value<String?> autoDescription = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
           }) =>
               HabitsTableCompanion(
@@ -5666,6 +5829,9 @@ class $$HabitsTableTableTableManager extends RootTableManager<
             streakCount: streakCount,
             totalCompleted: totalCompleted,
             requirements: requirements,
+            questType: questType,
+            metricUnit: metricUnit,
+            autoDescription: autoDescription,
             createdAt: createdAt,
           ),
           createCompanionCallback: ({
@@ -5683,6 +5849,9 @@ class $$HabitsTableTableTableManager extends RootTableManager<
             Value<int> streakCount = const Value.absent(),
             Value<int> totalCompleted = const Value.absent(),
             Value<String?> requirements = const Value.absent(),
+            Value<String> questType = const Value.absent(),
+            Value<String> metricUnit = const Value.absent(),
+            Value<String?> autoDescription = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
           }) =>
               HabitsTableCompanion.insert(
@@ -5700,6 +5869,9 @@ class $$HabitsTableTableTableManager extends RootTableManager<
             streakCount: streakCount,
             totalCompleted: totalCompleted,
             requirements: requirements,
+            questType: questType,
+            metricUnit: metricUnit,
+            autoDescription: autoDescription,
             createdAt: createdAt,
           ),
           withReferenceMapper: (p0) => p0

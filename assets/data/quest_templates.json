@@ -1,0 +1,130 @@
+{
+  "categories": {
+    "physical": {
+      "label": "Físico",
+      "icon": "fitness_center",
+      "color": "0xFFE53935",
+      "descriptions": [
+        "Prepare seu corpo para os desafios de Caelum.",
+        "Forje sua forma como aço — cada repetição importa.",
+        "O corpo é sua primeira arma. Não a negligencie.",
+        "Discipline a carne antes que a sombra o faça.",
+        "Treine como se sua sobrevivência dependesse disso. Porque depende."
+      ],
+      "templates": [
+        {"label": "Flexões", "unit": "reps", "defaultTarget": 20},
+        {"label": "Abdominais", "unit": "reps", "defaultTarget": 20},
+        {"label": "Agachamentos", "unit": "reps", "defaultTarget": 15},
+        {"label": "Burpees", "unit": "reps", "defaultTarget": 10},
+        {"label": "Polichinelos", "unit": "reps", "defaultTarget": 30},
+        {"label": "Prancha", "unit": "min", "defaultTarget": 2},
+        {"label": "Corrida", "unit": "km", "defaultTarget": 3},
+        {"label": "Caminhada", "unit": "km", "defaultTarget": 5},
+        {"label": "Treino livre", "unit": "min", "defaultTarget": 30}
+      ]
+    },
+    "mental": {
+      "label": "Mental",
+      "icon": "psychology_outlined",
+      "color": "0xFF1565C0",
+      "descriptions": [
+        "A mente afiada corta mais fundo que qualquer lâmina.",
+        "Leia manuscritos e expanda seu poder arcano.",
+        "Em Caelum, ignorância mata mais rápido que inimigos.",
+        "Cada página lida é uma runa gravada na sua essência.",
+        "O conhecimento acumulado é poder que ninguém pode tomar."
+      ],
+      "templates": [
+        {"label": "Páginas lidas", "unit": "pages", "defaultTarget": 20},
+        {"label": "Minutos de leitura", "unit": "min", "defaultTarget": 30},
+        {"label": "Minutos de estudo", "unit": "min", "defaultTarget": 45},
+        {"label": "Exercícios resolvidos", "unit": "reps", "defaultTarget": 10},
+        {"label": "Páginas escritas", "unit": "pages", "defaultTarget": 3},
+        {"label": "Palavras escritas", "unit": "words", "defaultTarget": 500}
+      ]
+    },
+    "spiritual": {
+      "label": "Espiritual",
+      "icon": "self_improvement",
+      "color": "0xFF2E7D32",
+      "descriptions": [
+        "Controle sua energia interior antes que ela controle você.",
+        "O silêncio ensina o que o ruído nunca conseguirá.",
+        "Descanse — não como fraqueza, mas como ritual de recarga.",
+        "3 horas de silêncio valem mais que 10 de distração.",
+        "Cultive a paz interna. A sombra teme quem encontrou equilíbrio."
+      ],
+      "templates": [
+        {"label": "Meditação", "unit": "min", "defaultTarget": 15},
+        {"label": "Respiração consciente", "unit": "min", "defaultTarget": 10},
+        {"label": "Ciclos respiratórios", "unit": "cycles", "defaultTarget": 20},
+        {"label": "Tempo em silêncio", "unit": "min", "defaultTarget": 20},
+        {"label": "Sono", "unit": "hours", "defaultTarget": 8}
+      ]
+    },
+    "order": {
+      "label": "Ordem",
+      "icon": "checklist",
+      "color": "0xFFF57F17",
+      "descriptions": [
+        "Organize seu mundo. O caos externo alimenta a sombra.",
+        "Discipline o ambiente — ele reflete o que você é por dentro.",
+        "Tarefas concluídas são vitórias pequenas que constroem grandes.",
+        "A ordem no mundo real cria espaço para a magia em Caelum.",
+        "Cada tarefa cumprida é um tijolo na sua fortaleza interior."
+      ],
+      "templates": [
+        {"label": "Copos d'água", "unit": "glasses", "defaultTarget": 8},
+        {"label": "Tarefas concluídas", "unit": "reps", "defaultTarget": 5},
+        {"label": "Itens organizados", "unit": "reps", "defaultTarget": 10},
+        {"label": "Refeições saudáveis", "unit": "reps", "defaultTarget": 3}
+      ]
+    },
+    "vitalism": {
+      "label": "Vitalismo",
+      "icon": "bolt",
+      "color": "0xFF6A1B9A",
+      "descriptions": [
+        "Desperte a energia vital que pulsa em sua forma sombria.",
+        "O Vitalismo não é ensinado — é conquistado com disciplina real.",
+        "Cada ritual vitalista aproxima você do poder verdadeiro.",
+        "A energia vital é a mais pura força de Caelum. Honre-a.",
+        "Respire com intenção. O Vitalismo responde à consciência."
+      ],
+      "templates": [
+        {"label": "Rituais vitalistas", "unit": "reps", "defaultTarget": 3},
+        {"label": "Respiração energética", "unit": "min", "defaultTarget": 15},
+        {"label": "Práticas corporais", "unit": "min", "defaultTarget": 20}
+      ]
+    },
+    "recovery": {
+      "label": "Recuperação",
+      "icon": "bedtime_outlined",
+      "color": "0xFF00695C",
+      "descriptions": [
+        "Beba água. Sua forma em Caelum resseca sem ela.",
+        "Detox digital: cada hora longe das telas fortalece sua essência.",
+        "Durma bem. A sombra se alimenta da fadiga acumulada.",
+        "O descanso é parte do treino. Não o ignore.",
+        "Recuperar é tão importante quanto conquistar. Honre seu corpo."
+      ],
+      "templates": [
+        {"label": "Sono", "unit": "hours", "defaultTarget": 8},
+        {"label": "Detox digital", "unit": "min", "defaultTarget": 60},
+        {"label": "Banho frio", "unit": "min", "defaultTarget": 5},
+        {"label": "Hidratação", "unit": "glasses", "defaultTarget": 8},
+        {"label": "Alimentação limpa", "unit": "reps", "defaultTarget": 3}
+      ]
+    }
+  },
+  "unitLabels": {
+    "reps": "x",
+    "km": "km",
+    "min": "min",
+    "pages": "pág",
+    "words": "palavras",
+    "glasses": "copos",
+    "hours": "h",
+    "cycles": "ciclos"
+  }
+}
