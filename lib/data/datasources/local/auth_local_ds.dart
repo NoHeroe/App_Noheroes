@@ -62,14 +62,15 @@ class AuthLocalDs {
     await _dao.touchLastLogin(id);
     final player = await _dao.findById(id);
 
-    // Migration: usuários antigos com guildRank='e' que não entraram na Guilda
-    // corrige para 'none' verificando guild_status
+    // Migration: usuários antigos com guildRank='e' que NÃO entraram na Guilda
+    // Só reseta se guild_status confirma que não foi admitido
     if (player != null && player.guildRank == 'e') {
       final guildStatus = await (_db.select(_db.guildStatusTable)
             ..where((t) => t.playerId.equals(id)))
           .getSingleOrNull();
-      final notAdmitted = guildStatus == null || guildStatus.guildRank == 'none';
-      if (notAdmitted) {
+      // Se guild_status existe e tem rank != 'none', o jogador está na guilda — mantém 'e'
+      final admittedInGuildStatus = guildStatus != null && guildStatus.guildRank != 'none';
+      if (!admittedInGuildStatus) {
         await (_db.update(_db.playersTable)
               ..where((t) => t.id.equals(id)))
             .write(const PlayersTableCompanion(

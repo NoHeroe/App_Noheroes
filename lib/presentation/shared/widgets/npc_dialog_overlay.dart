@@ -76,9 +76,9 @@ class _NpcDialogOverlayState extends State<NpcDialogOverlay>
     return GestureDetector(
       onTap: _dismiss,
       behavior: HitTestBehavior.opaque,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Align(
+      child: Material(
+        color: Colors.transparent,
+        child: Align(
           alignment: Alignment.bottomCenter,
           child: FadeTransition(
             opacity: _fade,

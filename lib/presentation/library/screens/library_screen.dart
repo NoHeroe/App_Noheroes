@@ -53,7 +53,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                   Row(
                     children: [
                       GestureDetector(
-                        onTap: () => context.go('/sanctuary'),
+                        onTap: () {
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          } else {
+                            context.go('/sanctuary');
+                          }
+                        },
                         child: const Icon(Icons.arrow_back_ios,
                             color: AppColors.textSecondary, size: 20),
                       ),

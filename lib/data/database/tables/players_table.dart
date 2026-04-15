@@ -49,6 +49,7 @@ class PlayersTable extends Table {
   // Preferências
   TextColumn get narrativeMode => text().withDefault(const Constant('longa'))();
   BoolColumn get onboardingDone => boolean().withDefault(const Constant(false))();
+  TextColumn get playStyle => text().withDefault(const Constant('none'))(); // none/solo/duo/team
 
   // Timestamps
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();

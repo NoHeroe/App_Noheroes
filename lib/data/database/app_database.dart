@@ -39,7 +39,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -123,6 +123,11 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(achievementsTable, achievementsTable.rarity);
           await m.addColumn(achievementsTable, achievementsTable.titleReward);
           await m.addColumn(achievementsTable, achievementsTable.category2);
+        } catch (_) {}
+      }
+      if (from < 15) {
+        try {
+          await m.addColumn(playersTable, playersTable.playStyle);
         } catch (_) {}
       }
     },

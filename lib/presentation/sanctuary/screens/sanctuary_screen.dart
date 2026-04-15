@@ -30,6 +30,7 @@ class SanctuaryScreen extends ConsumerStatefulWidget {
 }
 
 class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
+  static bool _guildUnlockShownThisSession = false;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _showNpc = false;
   int _lastLevel = 0;
@@ -45,7 +46,7 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       final player = ref.read(currentPlayerProvider);
       _lastLevel = player?.level ?? 1;
       await _runDailyReset();
-      _checkLevelTriggers();
+      await _checkLevelTriggers();
       await _checkNpcDialog();
     });
   }
@@ -85,6 +86,7 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     if (level == 7)  unlocks.add('🏴 Facções disponíveis');
     if (level == 10) unlocks.add('🗺️ Regiões médias desbloqueadas');
     if (level == 25) unlocks.add('✨ Vitalismo avançado desbloqueado');
+    if (level == 15) unlocks.add('⚔️ Estilo de Jogo disponível');
     if (level == 50) unlocks.add('🌟 Subclasses disponíveis');
     return unlocks;
   }
@@ -142,9 +144,11 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
   }
 
   Future<void> _showGuildUnlockOnce() async {
+    if (_SanctuaryScreenState._guildUnlockShownThisSession) return;
     final prefs = await SharedPreferences.getInstance();
     final shown = prefs.getBool('guild_unlock_shown') ?? false;
     if (shown || !mounted) return;
+    _SanctuaryScreenState._guildUnlockShownThisSession = true;
     await prefs.setBool('guild_unlock_shown', true);
     if (!mounted) return;
     NpcDialogOverlay.show(
@@ -155,7 +159,7 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     );
   }
 
-  void _checkLevelTriggers() {
+  Future<void> _checkLevelTriggers() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
     if (player.level >= 5 && (player.classType == null || player.classType!.isEmpty)) {
@@ -174,7 +178,25 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       return;
     }
     if (player.level >= 6) {
-      _showGuildUnlockOnce();
+      await _showGuildUnlockOnce();
+    }
+    if (player.level >= 15 && (player.playStyle == 'none' || player.playStyle.isEmpty)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        final prefs = await SharedPreferences.getInstance();
+        if (prefs.getBool('playstyle_shown') ?? false) return;
+        await prefs.setBool('playstyle_shown', true);
+        if (!mounted) return;
+        MilestonePopup.show(
+          context,
+          title: 'Estilo de Jogo',
+          subtitle: 'Nivel 15 atingido',
+          message: 'Voce atingiu o Nivel 15. E hora de definir como voce joga em Caelum: Solo, Duo ou Team. Isso afeta missoes, bonus e acesso a conteudos.',
+          icon: Icons.sports_martial_arts,
+          color: AppColors.gold,
+          onDismiss: () => context.go('/playstyle'),
+        );
+      });
     }
     if (player.level >= 7 && (player.factionType == null || player.factionType!.isEmpty)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {

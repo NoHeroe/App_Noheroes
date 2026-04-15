@@ -228,6 +228,14 @@ class $PlayersTableTable extends PlayersTable
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("onboarding_done" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _playStyleMeta =
+      const VerificationMeta('playStyle');
+  @override
+  late final GeneratedColumn<String> playStyle = GeneratedColumn<String>(
+      'play_style', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('none'));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -281,6 +289,7 @@ class $PlayersTableTable extends PlayersTable
         guildRank,
         narrativeMode,
         onboardingDone,
+        playStyle,
         createdAt,
         lastLoginAt,
         lastStreakDate
@@ -433,6 +442,10 @@ class $PlayersTableTable extends PlayersTable
           onboardingDone.isAcceptableOrUnknown(
               data['onboarding_done']!, _onboardingDoneMeta));
     }
+    if (data.containsKey('play_style')) {
+      context.handle(_playStyleMeta,
+          playStyle.isAcceptableOrUnknown(data['play_style']!, _playStyleMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -516,6 +529,8 @@ class $PlayersTableTable extends PlayersTable
           .read(DriftSqlType.string, data['${effectivePrefix}narrative_mode'])!,
       onboardingDone: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}onboarding_done'])!,
+      playStyle: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}play_style'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       lastLoginAt: attachedDatabase.typeMapping.read(
@@ -562,6 +577,7 @@ class PlayersTableData extends DataClass
   final String guildRank;
   final String narrativeMode;
   final bool onboardingDone;
+  final String playStyle;
   final DateTime createdAt;
   final DateTime lastLoginAt;
   final DateTime? lastStreakDate;
@@ -595,6 +611,7 @@ class PlayersTableData extends DataClass
       required this.guildRank,
       required this.narrativeMode,
       required this.onboardingDone,
+      required this.playStyle,
       required this.createdAt,
       required this.lastLoginAt,
       this.lastStreakDate});
@@ -634,6 +651,7 @@ class PlayersTableData extends DataClass
     map['guild_rank'] = Variable<String>(guildRank);
     map['narrative_mode'] = Variable<String>(narrativeMode);
     map['onboarding_done'] = Variable<bool>(onboardingDone);
+    map['play_style'] = Variable<String>(playStyle);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['last_login_at'] = Variable<DateTime>(lastLoginAt);
     if (!nullToAbsent || lastStreakDate != null) {
@@ -677,6 +695,7 @@ class PlayersTableData extends DataClass
       guildRank: Value(guildRank),
       narrativeMode: Value(narrativeMode),
       onboardingDone: Value(onboardingDone),
+      playStyle: Value(playStyle),
       createdAt: Value(createdAt),
       lastLoginAt: Value(lastLoginAt),
       lastStreakDate: lastStreakDate == null && nullToAbsent
@@ -718,6 +737,7 @@ class PlayersTableData extends DataClass
       guildRank: serializer.fromJson<String>(json['guildRank']),
       narrativeMode: serializer.fromJson<String>(json['narrativeMode']),
       onboardingDone: serializer.fromJson<bool>(json['onboardingDone']),
+      playStyle: serializer.fromJson<String>(json['playStyle']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       lastLoginAt: serializer.fromJson<DateTime>(json['lastLoginAt']),
       lastStreakDate: serializer.fromJson<DateTime?>(json['lastStreakDate']),
@@ -756,6 +776,7 @@ class PlayersTableData extends DataClass
       'guildRank': serializer.toJson<String>(guildRank),
       'narrativeMode': serializer.toJson<String>(narrativeMode),
       'onboardingDone': serializer.toJson<bool>(onboardingDone),
+      'playStyle': serializer.toJson<String>(playStyle),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'lastLoginAt': serializer.toJson<DateTime>(lastLoginAt),
       'lastStreakDate': serializer.toJson<DateTime?>(lastStreakDate),
@@ -792,6 +813,7 @@ class PlayersTableData extends DataClass
           String? guildRank,
           String? narrativeMode,
           bool? onboardingDone,
+          String? playStyle,
           DateTime? createdAt,
           DateTime? lastLoginAt,
           Value<DateTime?> lastStreakDate = const Value.absent()}) =>
@@ -825,6 +847,7 @@ class PlayersTableData extends DataClass
         guildRank: guildRank ?? this.guildRank,
         narrativeMode: narrativeMode ?? this.narrativeMode,
         onboardingDone: onboardingDone ?? this.onboardingDone,
+        playStyle: playStyle ?? this.playStyle,
         createdAt: createdAt ?? this.createdAt,
         lastLoginAt: lastLoginAt ?? this.lastLoginAt,
         lastStreakDate:
@@ -879,6 +902,7 @@ class PlayersTableData extends DataClass
       onboardingDone: data.onboardingDone.present
           ? data.onboardingDone.value
           : this.onboardingDone,
+      playStyle: data.playStyle.present ? data.playStyle.value : this.playStyle,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       lastLoginAt:
           data.lastLoginAt.present ? data.lastLoginAt.value : this.lastLoginAt,
@@ -920,6 +944,7 @@ class PlayersTableData extends DataClass
           ..write('guildRank: $guildRank, ')
           ..write('narrativeMode: $narrativeMode, ')
           ..write('onboardingDone: $onboardingDone, ')
+          ..write('playStyle: $playStyle, ')
           ..write('createdAt: $createdAt, ')
           ..write('lastLoginAt: $lastLoginAt, ')
           ..write('lastStreakDate: $lastStreakDate')
@@ -958,6 +983,7 @@ class PlayersTableData extends DataClass
         guildRank,
         narrativeMode,
         onboardingDone,
+        playStyle,
         createdAt,
         lastLoginAt,
         lastStreakDate
@@ -995,6 +1021,7 @@ class PlayersTableData extends DataClass
           other.guildRank == this.guildRank &&
           other.narrativeMode == this.narrativeMode &&
           other.onboardingDone == this.onboardingDone &&
+          other.playStyle == this.playStyle &&
           other.createdAt == this.createdAt &&
           other.lastLoginAt == this.lastLoginAt &&
           other.lastStreakDate == this.lastStreakDate);
@@ -1030,6 +1057,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
   final Value<String> guildRank;
   final Value<String> narrativeMode;
   final Value<bool> onboardingDone;
+  final Value<String> playStyle;
   final Value<DateTime> createdAt;
   final Value<DateTime> lastLoginAt;
   final Value<DateTime?> lastStreakDate;
@@ -1063,6 +1091,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.guildRank = const Value.absent(),
     this.narrativeMode = const Value.absent(),
     this.onboardingDone = const Value.absent(),
+    this.playStyle = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.lastLoginAt = const Value.absent(),
     this.lastStreakDate = const Value.absent(),
@@ -1097,6 +1126,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.guildRank = const Value.absent(),
     this.narrativeMode = const Value.absent(),
     this.onboardingDone = const Value.absent(),
+    this.playStyle = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.lastLoginAt = const Value.absent(),
     this.lastStreakDate = const Value.absent(),
@@ -1132,6 +1162,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     Expression<String>? guildRank,
     Expression<String>? narrativeMode,
     Expression<bool>? onboardingDone,
+    Expression<String>? playStyle,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? lastLoginAt,
     Expression<DateTime>? lastStreakDate,
@@ -1166,6 +1197,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       if (guildRank != null) 'guild_rank': guildRank,
       if (narrativeMode != null) 'narrative_mode': narrativeMode,
       if (onboardingDone != null) 'onboarding_done': onboardingDone,
+      if (playStyle != null) 'play_style': playStyle,
       if (createdAt != null) 'created_at': createdAt,
       if (lastLoginAt != null) 'last_login_at': lastLoginAt,
       if (lastStreakDate != null) 'last_streak_date': lastStreakDate,
@@ -1202,6 +1234,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       Value<String>? guildRank,
       Value<String>? narrativeMode,
       Value<bool>? onboardingDone,
+      Value<String>? playStyle,
       Value<DateTime>? createdAt,
       Value<DateTime>? lastLoginAt,
       Value<DateTime?>? lastStreakDate}) {
@@ -1235,6 +1268,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       guildRank: guildRank ?? this.guildRank,
       narrativeMode: narrativeMode ?? this.narrativeMode,
       onboardingDone: onboardingDone ?? this.onboardingDone,
+      playStyle: playStyle ?? this.playStyle,
       createdAt: createdAt ?? this.createdAt,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       lastStreakDate: lastStreakDate ?? this.lastStreakDate,
@@ -1331,6 +1365,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     if (onboardingDone.present) {
       map['onboarding_done'] = Variable<bool>(onboardingDone.value);
     }
+    if (playStyle.present) {
+      map['play_style'] = Variable<String>(playStyle.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1375,6 +1412,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
           ..write('guildRank: $guildRank, ')
           ..write('narrativeMode: $narrativeMode, ')
           ..write('onboardingDone: $onboardingDone, ')
+          ..write('playStyle: $playStyle, ')
           ..write('createdAt: $createdAt, ')
           ..write('lastLoginAt: $lastLoginAt, ')
           ..write('lastStreakDate: $lastStreakDate')
@@ -6331,6 +6369,7 @@ typedef $$PlayersTableTableCreateCompanionBuilder = PlayersTableCompanion
   Value<String> guildRank,
   Value<String> narrativeMode,
   Value<bool> onboardingDone,
+  Value<String> playStyle,
   Value<DateTime> createdAt,
   Value<DateTime> lastLoginAt,
   Value<DateTime?> lastStreakDate,
@@ -6366,6 +6405,7 @@ typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
   Value<String> guildRank,
   Value<String> narrativeMode,
   Value<bool> onboardingDone,
+  Value<String> playStyle,
   Value<DateTime> createdAt,
   Value<DateTime> lastLoginAt,
   Value<DateTime?> lastStreakDate,
@@ -6469,6 +6509,9 @@ class $$PlayersTableTableFilterComposer
   ColumnFilters<bool> get onboardingDone => $composableBuilder(
       column: $table.onboardingDone,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get playStyle => $composableBuilder(
+      column: $table.playStyle, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -6584,6 +6627,9 @@ class $$PlayersTableTableOrderingComposer
       column: $table.onboardingDone,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get playStyle => $composableBuilder(
+      column: $table.playStyle, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -6691,6 +6737,9 @@ class $$PlayersTableTableAnnotationComposer
   GeneratedColumn<bool> get onboardingDone => $composableBuilder(
       column: $table.onboardingDone, builder: (column) => column);
 
+  GeneratedColumn<String> get playStyle =>
+      $composableBuilder(column: $table.playStyle, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -6756,6 +6805,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<String> guildRank = const Value.absent(),
             Value<String> narrativeMode = const Value.absent(),
             Value<bool> onboardingDone = const Value.absent(),
+            Value<String> playStyle = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> lastLoginAt = const Value.absent(),
             Value<DateTime?> lastStreakDate = const Value.absent(),
@@ -6790,6 +6840,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             guildRank: guildRank,
             narrativeMode: narrativeMode,
             onboardingDone: onboardingDone,
+            playStyle: playStyle,
             createdAt: createdAt,
             lastLoginAt: lastLoginAt,
             lastStreakDate: lastStreakDate,
@@ -6824,6 +6875,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<String> guildRank = const Value.absent(),
             Value<String> narrativeMode = const Value.absent(),
             Value<bool> onboardingDone = const Value.absent(),
+            Value<String> playStyle = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> lastLoginAt = const Value.absent(),
             Value<DateTime?> lastStreakDate = const Value.absent(),
@@ -6858,6 +6910,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             guildRank: guildRank,
             narrativeMode: narrativeMode,
             onboardingDone: onboardingDone,
+            playStyle: playStyle,
             createdAt: createdAt,
             lastLoginAt: lastLoginAt,
             lastStreakDate: lastStreakDate,
