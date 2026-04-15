@@ -55,6 +55,7 @@ class AuthLocalDs {
   }
 
   Future<PlayersTableData?> currentSession() async {
+    // guildRank_migration: corrige usuários com rank 'e' que não entraram na guilda
     final prefs = await SharedPreferences.getInstance();
     final id = prefs.getInt(_sessionKey);
     if (id == null) return null;

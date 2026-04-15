@@ -404,6 +404,16 @@ class GuildScreen extends ConsumerWidget {
     final db = ref.read(appDatabaseProvider);
     final dao = GuildDao(db);
     await dao.completeAdmission(player.id);
+    // Atualiza guildRank na tabela players para refletir no drawer
+    final db2 = ref.read(appDatabaseProvider);
+    await (db2.update(db2.playersTable)
+          ..where((t) => t.id.equals(player.id)))
+        .write(const PlayersTableCompanion(
+      guildRank: Value('e'),
+    ));
+    // Atualiza o provider
+    final updatedPlayer = await ref.read(authDsProvider).currentSession();
+    ref.read(currentPlayerProvider.notifier).state = updatedPlayer;
 
     // Entrega Colar da Guilda no inventário
     // (item com nome fixo, não vendável — inserido direto)

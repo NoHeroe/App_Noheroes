@@ -43,7 +43,7 @@ class RegionDetailScreen extends ConsumerWidget {
                   Row(
                     children: [
                       GestureDetector(
-                        onTap: () => context.go('/regions'),
+                        onTap: () => Navigator.of(context).pop(),
                         child: const Icon(Icons.arrow_back_ios,
                             color: AppColors.textSecondary, size: 20),
                       ),

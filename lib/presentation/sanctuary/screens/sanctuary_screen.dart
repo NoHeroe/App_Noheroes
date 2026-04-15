@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -140,6 +141,20 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     }
   }
 
+  Future<void> _showGuildUnlockOnce() async {
+    final prefs = await SharedPreferences.getInstance();
+    final shown = prefs.getBool('guild_unlock_shown') ?? false;
+    if (shown || !mounted) return;
+    await prefs.setBool('guild_unlock_shown', true);
+    if (!mounted) return;
+    NpcDialogOverlay.show(
+      context,
+      npcName: 'Noryan Gray',
+      npcTitle: 'Mestre da Guilda',
+      message: 'Aventureiro. A Guilda de Aventureiros agora esta acessivel para voce. Venha quando estiver pronto — o Colar te aguarda.',
+    );
+  }
+
   void _checkLevelTriggers() {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
@@ -158,16 +173,8 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       });
       return;
     }
-    if (player.level == 6) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        NpcDialogOverlay.show(
-          context,
-          npcName: 'Noryan Gray',
-          npcTitle: 'Mestre da Guilda',
-          message: 'Aventureiro. A Guilda de Aventureiros agora esta acessivel para voce. Venha quando estiver pronto — o Colar te aguarda.',
-        );
-      });
+    if (player.level >= 6) {
+      _showGuildUnlockOnce();
     }
     if (player.level >= 7 && (player.factionType == null || player.factionType!.isEmpty)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
