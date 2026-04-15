@@ -8,6 +8,7 @@ import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/datasources/local/class_bonus_service.dart';
 import '../../../data/datasources/local/quest_admission_service.dart';
+import '../../shared/widgets/app_snack.dart';
 
 class FactionSelectionScreen extends ConsumerStatefulWidget {
   const FactionSelectionScreen({super.key});

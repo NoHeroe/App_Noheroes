@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../shared/widgets/app_snack.dart';
 
 class AwakeningScreen extends ConsumerStatefulWidget {
   const AwakeningScreen({super.key});

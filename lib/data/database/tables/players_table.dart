@@ -44,7 +44,7 @@ class PlayersTable extends Table {
   TextColumn get factionType => text().nullable()();
 
   // Rank da Guilda de Aventureiros (e/d/c/b/a/s)
-  TextColumn get guildRank => text().withDefault(const Constant('e'))();
+  TextColumn get guildRank => text().withDefault(const Constant('none'))();
 
   // Preferências
   TextColumn get narrativeMode => text().withDefault(const Constant('longa'))();

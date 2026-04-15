@@ -8,6 +8,9 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/npc_session.dart';
 import '../../../data/datasources/local/npc_reputation_service.dart';
 import '../../../data/datasources/local/shadow_quest_service.dart';
+import '../../shared/widgets/milestone_popup.dart';
+import '../../shared/widgets/npc_dialog_overlay.dart';
+import '../../shared/widgets/app_snack.dart';
 import '../../../data/datasources/local/quest_admission_service.dart';
 import '../widgets/caelum_day_banner.dart';
 import '../widgets/shadow_status_card.dart';
@@ -28,6 +31,7 @@ class SanctuaryScreen extends ConsumerStatefulWidget {
 class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _showNpc = false;
+  int _lastLevel = 0;
 
   @override
   void initState() {
@@ -37,6 +41,8 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       statusBarIconBrightness: Brightness.light,
     ));
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final player = ref.read(currentPlayerProvider);
+      _lastLevel = player?.level ?? 1;
       await _runDailyReset();
       _checkLevelTriggers();
       await _checkNpcDialog();
@@ -50,6 +56,36 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     ref.invalidate(habitsProvider);
     await _checkFactionAdmission();
     await _checkShadowQuests();
+  }
+
+  void _checkLevelUp(int newLevel) {
+    if (newLevel > _lastLevel && _lastLevel > 0) {
+      _lastLevel = newLevel;
+      if (!mounted) return;
+      final unlocks = _levelUnlocks(newLevel);
+      MilestonePopup.show(
+        context,
+        title: 'Nível $newLevel',
+        subtitle: 'Subiu de nível',
+        message: unlocks.isNotEmpty
+            ? 'Você alcançou o Nível $newLevel!\n\n${unlocks.join('\n')}'
+            : 'Você alcançou o Nível $newLevel!\nCaelum reconhece seu crescimento.',
+        icon: Icons.arrow_circle_up,
+        color: AppColors.xp,
+      );
+    }
+  }
+
+  List<String> _levelUnlocks(int level) {
+    final unlocks = <String>[];
+    if (level == 2)  unlocks.add('📚 Biblioteca desbloqueada');
+    if (level == 5)  unlocks.add('⚔️ Seleção de Classe disponível');
+    if (level == 6)  unlocks.add('🛡️ Guilda de Aventureiros desbloqueada');
+    if (level == 7)  unlocks.add('🏴 Facções disponíveis');
+    if (level == 10) unlocks.add('🗺️ Regiões médias desbloqueadas');
+    if (level == 25) unlocks.add('✨ Vitalismo avançado desbloqueado');
+    if (level == 50) unlocks.add('🌟 Subclasses disponíveis');
+    return unlocks;
   }
 
   Future<void> _checkShadowQuests() async {
@@ -80,15 +116,10 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
           .filter((f) => f.id(player.id))
           .getSingleOrNull();
       ref.read(currentPlayerProvider.notifier).state = updated;
+      if (updated != null) _checkLevelUp(updated.level);
       ref.invalidate(habitsProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Admissão aprovada! Bem-vindo à facção.'),
-            backgroundColor: AppColors.shadowAscending,
-            duration: const Duration(seconds: 4),
-          ),
-        );
+        AppSnack.success(context, 'Admissão aprovada! Bem-vindo à facção.');
       }
     }
   }
@@ -113,11 +144,44 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
     if (player.level >= 5 && (player.classType == null || player.classType!.isEmpty)) {
-      context.go('/class-selection');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        MilestonePopup.show(
+          context,
+          title: 'Escolha sua Classe',
+          subtitle: 'Nivel 5 atingido',
+          message: 'Voce atingiu o Nivel 5. A hora de escolher seu caminho chegou. Cada classe define seus atributos, missoes e destino em Caelum.',
+          icon: Icons.auto_fix_high_outlined,
+          color: AppColors.purple,
+          onDismiss: () => context.go('/class-selection'),
+        );
+      });
       return;
     }
+    if (player.level == 6) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        NpcDialogOverlay.show(
+          context,
+          npcName: 'Noryan Gray',
+          npcTitle: 'Mestre da Guilda',
+          message: 'Aventureiro. A Guilda de Aventureiros agora esta acessivel para voce. Venha quando estiver pronto — o Colar te aguarda.',
+        );
+      });
+    }
     if (player.level >= 7 && (player.factionType == null || player.factionType!.isEmpty)) {
-      context.go('/faction-selection');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        MilestonePopup.show(
+          context,
+          title: 'Faccoes Desbloqueadas',
+          subtitle: 'Nivel 7 atingido',
+          message: 'As 8 faccoes de Caelum agora aceitam sua candidatura. Cada uma tem seu preco, suas recompensas e seus segredos. Escolha com cuidado.',
+          icon: Icons.shield_outlined,
+          color: AppColors.gold,
+          onDismiss: () => context.go('/faction-selection'),
+        );
+      });
     }
   }
 
@@ -380,7 +444,14 @@ class _SecondaryButtons extends ConsumerWidget {
           children: [
             Expanded(
               child: GestureDetector(
-                onTap: () => context.go('/library'),
+                onTap: () {
+              final p = ref.read(currentPlayerProvider);
+              if ((p?.level ?? 1) >= 2) {
+                context.go('/library');
+              } else {
+                AppSnack.warning(context, 'A Biblioteca abre no Nível 2.');
+              }
+            },
                 child: _SecBtn(
                   icon: Icons.menu_book_outlined,
                   label: 'Biblioteca',

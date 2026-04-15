@@ -7,6 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../data/database/daos/player_dao.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
 import '../widgets/stats_panel.dart';
+import '../../shared/widgets/app_snack.dart';
 
 class CharacterScreen extends ConsumerWidget {
   const CharacterScreen({super.key});

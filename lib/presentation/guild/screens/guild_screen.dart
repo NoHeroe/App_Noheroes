@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
@@ -89,7 +90,7 @@ class GuildScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.arrow_back_ios,
                 color: AppColors.textMuted, size: 18),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => context.go('/sanctuary'),
           ),
           const SizedBox(width: 4),
           // Emblema

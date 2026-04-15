@@ -7,6 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../data/database/daos/inventory_dao.dart';
 import '../../../data/database/daos/player_dao.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
+import '../../shared/widgets/app_snack.dart';
 
 class ShopScreen extends ConsumerWidget {
   const ShopScreen({super.key});
@@ -146,10 +147,7 @@ class ShopScreen extends ConsumerWidget {
     ref.invalidate(shopProvider);
 
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('${shopItem.item.name} adquirido!'),
-        backgroundColor: AppColors.shadowAscending,
-      ));
+      AppSnack.success(context, '${shopItem.item.name} adquirido!');
     }
   }
 }

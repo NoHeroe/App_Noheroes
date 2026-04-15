@@ -42,8 +42,10 @@ class SanctuaryDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final player = ref.watch(currentPlayerProvider);
 
-    final guildRank = GuildRankSystem.fromString(player?.guildRank ?? 'e');
-    final rankLabel = GuildRankSystem.label(guildRank).toUpperCase();
+    final rawRank = player?.guildRank ?? 'none';
+    final hasRank = rawRank != 'none';
+    final guildRank = hasRank ? GuildRankSystem.fromString(rawRank) : null;
+    final rankLabel = hasRank ? GuildRankSystem.label(guildRank!).toUpperCase() : 'SEM RANK';
 
     final items = [
       _Item('Inventário',    Icons.inventory_2_outlined,  '/inventory'),
@@ -93,16 +95,20 @@ class SanctuaryDrawer extends ConsumerWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppColors.gold.withValues(alpha: 0.15),
+                              color: hasRank
+                                  ? AppColors.gold.withValues(alpha: 0.15)
+                                  : AppColors.border,
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                  color: AppColors.gold.withValues(alpha: 0.5)),
+                                  color: hasRank
+                                      ? AppColors.gold.withValues(alpha: 0.5)
+                                      : AppColors.border),
                             ),
                             child: Text(
                               rankLabel,
                               style: GoogleFonts.cinzelDecorative(
                                   fontSize: 9,
-                                  color: AppColors.gold,
+                                  color: hasRank ? AppColors.gold : AppColors.textMuted,
                                   letterSpacing: 1),
                             ),
                           ),

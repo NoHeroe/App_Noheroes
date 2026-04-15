@@ -8,6 +8,7 @@ import '../../core/constants/app_colors.dart';
 import '../../data/database/daos/player_dao.dart';
 import '../../data/database/app_database.dart';
 import '../../data/database/tables/players_table.dart';
+import '../shared/widgets/app_snack.dart';
 
 class DevPanelScreen extends ConsumerStatefulWidget {
   const DevPanelScreen({super.key});

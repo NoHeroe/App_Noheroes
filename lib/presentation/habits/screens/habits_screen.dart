@@ -12,6 +12,7 @@ import '../widgets/habit_card.dart';
 import '../widgets/create_habit_sheet.dart';
 import '../widgets/completion_dialog.dart';
 import '../../shared/widgets/reward_toast.dart';
+import '../../shared/widgets/milestone_popup.dart';
 
 class HabitsScreen extends ConsumerWidget {
   const HabitsScreen({super.key});
@@ -275,6 +276,7 @@ class HabitsScreen extends ConsumerWidget {
       builder: (_) => CompletionDialog(
         habitWithStatus: h,
         onComplete: (status) async {
+          final prevLevel = ref.read(currentPlayerProvider)?.level ?? 1;
           final player = ref.read(currentPlayerProvider);
           if (player == null) return;
           final result = await ref.read(habitDsProvider).completeHabit(
@@ -283,21 +285,27 @@ class HabitsScreen extends ConsumerWidget {
                 rank:     h.habit.rank,
                 status:   status,
               );
-          final updated =
-              await ref.read(authDsProvider).currentSession();
+          final updated = await ref.read(authDsProvider).currentSession();
           ref.read(currentPlayerProvider.notifier).state = updated;
           ref.invalidate(habitsProvider);
-
-          // Verifica conquistas — AchievementService busca histórico internamente
+          if (updated != null && updated.level > prevLevel && context.mounted) {
+            final msgs = _levelUnlockMessages(updated.level);
+            MilestonePopup.show(
+              context,
+              title: 'Nivel ' + updated.level.toString(),
+              subtitle: 'Subiu de nivel',
+              message: msgs.isNotEmpty
+                  ? 'Voce alcancou o Nivel ' + updated.level.toString() + '!\n\n' + msgs.join('\n')
+                  : 'Voce alcancou o Nivel ' + updated.level.toString() + '! Caelum reconhece seu crescimento.',
+              icon: Icons.arrow_circle_up,
+              color: AppColors.xp,
+            );
+          }
           if (updated != null) {
             final db = ref.read(appDatabaseProvider);
-            final newAchievements =
-                await AchievementService(db).checkAndUnlock(updated);
+            final newAchievements = await AchievementService(db).checkAndUnlock(updated);
             if (context.mounted) {
-              // Conquista + recompensa juntos, sem delay
-              final achievement = newAchievements.isNotEmpty
-                  ? newAchievements.first
-                  : null;
+              final achievement = newAchievements.isNotEmpty ? newAchievements.first : null;
               RewardToast.show(
                 context,
                 source: h.habit.title,
@@ -311,8 +319,6 @@ class HabitsScreen extends ConsumerWidget {
       ),
     );
   }
-
-
 
   void _showDelete(
       BuildContext context, WidgetRef ref, HabitsTableData habit) {
@@ -353,4 +359,16 @@ class HabitsScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+List<String> _levelUnlockMessages(int level) {
+  final u = <String>[];
+  if (level == 2)  u.add('Biblioteca desbloqueada');
+  if (level == 5)  u.add('Selecao de Classe disponivel');
+  if (level == 6)  u.add('Guilda de Aventureiros desbloqueada');
+  if (level == 7)  u.add('Faccoes disponiveis');
+  if (level == 10) u.add('Regioes medias desbloqueadas');
+  if (level == 25) u.add('Vitalismo avancado desbloqueado');
+  if (level == 50) u.add('Subclasses disponiveis');
+  return u;
 }

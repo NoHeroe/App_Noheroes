@@ -209,7 +209,7 @@ class $PlayersTableTable extends PlayersTable
       'guild_rank', aliasedName, false,
       type: DriftSqlType.string,
       requiredDuringInsert: false,
-      defaultValue: const Constant('e'));
+      defaultValue: const Constant('none'));
   static const VerificationMeta _narrativeModeMeta =
       const VerificationMeta('narrativeMode');
   @override

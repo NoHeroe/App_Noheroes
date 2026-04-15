@@ -5,6 +5,7 @@ import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/datasources/local/diary_service.dart';
 import '../../../data/database/app_database.dart';
+import '../../shared/widgets/app_snack.dart';
 
 final _diaryTodayProvider =
     FutureProvider.autoDispose<DiaryEntriesTableData?>((ref) async {

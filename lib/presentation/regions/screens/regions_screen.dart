@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../shared/widgets/app_snack.dart';
+import '../../shared/widgets/nh_bottom_nav.dart';
 import 'region_detail_screen.dart';
 
 const _regions = [
@@ -84,19 +86,15 @@ class RegionsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.black,
-      body: SafeArea(
-        child: Column(
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
               child: Row(
                 children: [
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: const Icon(Icons.arrow_back_ios,
-                        color: AppColors.textSecondary, size: 20),
-                  ),
-                  const SizedBox(width: 12),
                   Text('REGIÕES',
                       style: GoogleFonts.cinzelDecorative(
                           fontSize: 16,
@@ -122,15 +120,7 @@ class RegionsScreen extends ConsumerWidget {
                   return GestureDetector(
                     onTap: () {
                       if (locked) {
-                        ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
-                          content: Text(
-                            'Desbloqueado no Nível $unlockLevel.',
-                            style: GoogleFonts.roboto(color: Colors.white),
-                          ),
-                          backgroundColor: AppColors.surface,
-                          behavior: SnackBarBehavior.floating,
-                          duration: const Duration(seconds: 2),
-                        ));
+                        AppSnack.warning(ctx, 'Região desbloqueada no Nível $unlockLevel.');
                         return;
                       }
                       Navigator.push(
@@ -265,6 +255,12 @@ class RegionsScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+          const Align(
+            alignment: Alignment.bottomCenter,
+            child: NhBottomNav(currentIndex: 3),
+          ),
+        ],
       ),
     );
   }

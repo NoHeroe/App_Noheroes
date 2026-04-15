@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/requirements_helper.dart';
 import '../../../data/datasources/local/habit_local_ds.dart';
+import '../../shared/widgets/app_snack.dart';
 
 class CompletionDialog extends StatefulWidget {
   final HabitWithStatus habitWithStatus;
