@@ -55,14 +55,31 @@ class AuthLocalDs {
   }
 
   Future<PlayersTableData?> currentSession() async {
-    // guildRank_migration: corrige usuários com rank 'e' que não entraram na guilda
     final prefs = await SharedPreferences.getInstance();
     final id = prefs.getInt(_sessionKey);
     if (id == null) return null;
 
-    // Também roda touchLastLogin na abertura via sessão
     await _dao.touchLastLogin(id);
-    return _dao.findById(id);
+    final player = await _dao.findById(id);
+
+    // Migration: usuários antigos com guildRank='e' que não entraram na Guilda
+    // corrige para 'none' verificando guild_status
+    if (player != null && player.guildRank == 'e') {
+      final guildStatus = await (_db.select(_db.guildStatusTable)
+            ..where((t) => t.playerId.equals(id)))
+          .getSingleOrNull();
+      final notAdmitted = guildStatus == null || guildStatus.guildRank == 'none';
+      if (notAdmitted) {
+        await (_db.update(_db.playersTable)
+              ..where((t) => t.id.equals(id)))
+            .write(const PlayersTableCompanion(
+          guildRank: Value('none'),
+        ));
+        return _dao.findById(id);
+      }
+    }
+
+    return player;
   }
 
   Future<void> _saveSession(int id) async {
