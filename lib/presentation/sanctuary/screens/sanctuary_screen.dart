@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,6 +32,7 @@ class SanctuaryScreen extends ConsumerStatefulWidget {
 
 class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
   static bool _guildUnlockShownThisSession = false;
+  Timer? _npcTimer;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _showNpc = false;
   int _lastLevel = 0;
@@ -42,6 +44,8 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
     ));
+    // Timer NPC 15min
+    _npcTimer = Timer(const Duration(minutes: 15), _triggerNpcTimer);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final player = ref.read(currentPlayerProvider);
       final currentLevel = player?.level ?? 1;
@@ -167,6 +171,26 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     }
   }
 
+  void _triggerNpcTimer() {
+    if (!mounted) return;
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final messages = [
+      'Você está há bastante tempo aqui. Caelum observa quem persiste.',
+      'O tempo que você investe aqui se transforma em algo real. Continue.',
+      'Sua sombra ficou inquieta enquanto você estava parado. Aja.',
+      'Noryan Gray perguntou por você. Parece que há missões esperando.',
+      'O Vazio reconhece presença. Você está construindo algo.',
+    ];
+    messages.shuffle();
+    NpcDialogOverlay.show(
+      context,
+      npcName: 'Noryan Gray',
+      npcTitle: 'Mestre da Guilda',
+      message: messages.first,
+    );
+  }
+
   Future<void> _showGuildUnlockOnce() async {
     if (_SanctuaryScreenState._guildUnlockShownThisSession) return;
     final prefs = await SharedPreferences.getInstance();
@@ -205,7 +229,9 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       await _showGuildUnlockOnce();
     }
     if (player.level >= 15 && (player.playStyle == 'none' || player.playStyle.isEmpty)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // Timer NPC 15min
+    _npcTimer = Timer(const Duration(minutes: 15), _triggerNpcTimer);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
         final prefs = await SharedPreferences.getInstance();
         if (prefs.getBool('playstyle_shown') ?? false) return;
