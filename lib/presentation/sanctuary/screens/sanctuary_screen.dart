@@ -265,11 +265,14 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
   Widget build(BuildContext context) {
     final player = ref.watch(currentPlayerProvider);
 
-    // Listener: detecta level up em qualquer tela e dispara tutorial ao voltar ao sanctuary
-    ref.listen(currentPlayerProvider, (prev, next) async {
-      final prevLevel = prev?.level ?? 0;
-      final nextLevel = next?.level ?? 0;
+    // Listener REATIVO: usa playerStreamProvider (stream do banco) que emite
+    // automaticamente quando o nivel muda em qualquer tela (igual v0.22.1).
+    ref.listen<AsyncValue<dynamic>>(playerStreamProvider, (prev, next) async {
+      final prevLevel = prev?.value?.level ?? 0;
+      final nextLevel = next.value?.level ?? 0;
       if (nextLevel > prevLevel && prevLevel > 0 && mounted) {
+        // Atualiza o currentPlayerProvider tambem para manter consistencia
+        ref.read(currentPlayerProvider.notifier).state = next.value;
         await _checkLevelUp(nextLevel);
         if (mounted) await _checkLevelTriggers();
       }
