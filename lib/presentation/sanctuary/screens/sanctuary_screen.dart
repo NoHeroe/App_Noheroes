@@ -13,6 +13,8 @@ import '../../../data/datasources/local/shadow_quest_service.dart';
 import '../../shared/widgets/milestone_popup.dart';
 import '../../shared/widgets/npc_dialog_overlay.dart';
 import '../../shared/widgets/app_snack.dart';
+import '../../shared/tutorial_manager.dart';
+import '../../../data/datasources/local/tutorial_service.dart';
 import '../../../data/datasources/local/quest_admission_service.dart';
 import '../widgets/caelum_day_banner.dart';
 import '../widgets/shadow_status_card.dart';
@@ -210,6 +212,21 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
   Future<void> _checkLevelTriggers() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
+    final level = player.level;
+    if (!mounted) return;
+    // Fase 1 sempre mostra no nível 1 se não foi feita
+    if (level >= 1) await TutorialManager.phase1Sanctuary(context);
+    if (level >= 2 && mounted) await TutorialManager.phase2Library(context);
+    if (level >= 3 && mounted) await TutorialManager.phase3Shop(context);
+    if (level >= 4 && mounted) await TutorialManager.phase4Regions(context);
+    if (level >= 5 && mounted) await TutorialManager.phase5Class(context);
+    if (level >= 6 && mounted) await TutorialManager.phase6Guild(context);
+    if (level >= 7 && mounted) await TutorialManager.phase7Factions(context);
+    if (level >= 10 && mounted) await TutorialManager.phase8Shadow(context);
+    if (level >= 15 && mounted) await TutorialManager.phase9Playstyle(context);
+    if (level >= 25 && mounted) await TutorialManager.phase10Vitalism(context);
+    if (level >= 99 && mounted) await TutorialManager.phase11Skull(context);
+
     if (player.level >= 5 && (player.classType == null || player.classType!.isEmpty)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
