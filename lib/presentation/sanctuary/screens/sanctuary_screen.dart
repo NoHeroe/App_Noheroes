@@ -149,7 +149,10 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
           .filter((f) => f.id(player.id))
           .getSingleOrNull();
       ref.read(currentPlayerProvider.notifier).state = updated;
-      if (updated != null) await _checkLevelUp(updated.level);
+      if (updated != null) {
+        await _checkLevelUp(updated.level);
+        if (mounted) await _checkLevelTriggers();
+      }
       ref.invalidate(habitsProvider);
       if (mounted) {
         AppSnack.success(context, 'Admissão aprovada! Bem-vindo à facção.');
