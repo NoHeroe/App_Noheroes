@@ -249,6 +249,16 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
   Widget build(BuildContext context) {
     final player = ref.watch(currentPlayerProvider);
 
+    // Level up detector reativo
+    ref.listen<AsyncValue<dynamic>>(playerStreamProvider, (prev, next) {
+      final prevLevel = prev?.value?.level ?? 0;
+      final nextLevel = next.value?.level ?? 0;
+      if (nextLevel > prevLevel && prevLevel > 0 && mounted) {
+        _lastLevel = nextLevel;
+        _checkLevelUp(nextLevel);
+      }
+    });
+
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) async {

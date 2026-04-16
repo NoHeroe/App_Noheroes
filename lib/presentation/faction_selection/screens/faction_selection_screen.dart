@@ -9,6 +9,8 @@ import '../../../core/constants/app_colors.dart';
 import '../../../data/datasources/local/class_bonus_service.dart';
 import '../../../data/datasources/local/quest_admission_service.dart';
 import '../../shared/widgets/app_snack.dart';
+import '../../../data/datasources/local/npc_reputation_service.dart';
+import '../../../core/utils/asset_loader.dart';
 
 class FactionSelectionScreen extends ConsumerStatefulWidget {
   const FactionSelectionScreen({super.key});
@@ -90,10 +92,16 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
 
     setState(() => _loading = true);
     final db = ref.read(appDatabaseProvider);
+    final factionId = faction['id'] as String;
     await QuestAdmissionService(db).startFactionAdmission(
       player.id,
-      faction['id'] as String,
+      factionId,
     );
+    // +5 reputação com NPC da facção ao iniciar admissão
+    try {
+      final npcId = AssetLoader.npcIdForFaction(factionId);
+      await NpcReputationService(db).addReputation(player.id, npcId, 5);
+    } catch (_) {}
 
     final updated = await db.managers.playersTable
         .filter((f) => f.id(player.id))
@@ -128,6 +136,7 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
                     children: [
                       _buildHeader(),
                       Expanded(child: _buildList()),
+                      _buildLoneWolfOption(),
                       _buildConfirmBtn(),
                     ],
                   ),
@@ -210,6 +219,69 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
           ),
         ),
       );
+
+  Widget _buildLoneWolfOption() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      child: GestureDetector(
+        onTap: _confirmLoneWolf,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.border),
+            color: AppColors.surface,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.person_outline, color: AppColors.textMuted, size: 24),
+              const SizedBox(height: 6),
+              Text('Caminho do Lobo Solitario',
+                  style: GoogleFonts.cinzelDecorative(
+                      fontSize: 12, color: AppColors.textSecondary, letterSpacing: 1)),
+              const SizedBox(height: 4),
+              Text('Seguir sem faccao. Pode mudar depois.',
+                  style: GoogleFonts.roboto(fontSize: 11, color: AppColors.textMuted)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmLoneWolf() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.border),
+        ),
+        title: Text('Caminho do Lobo Solitario',
+            style: GoogleFonts.cinzelDecorative(
+                color: AppColors.textPrimary, fontSize: 15)),
+        content: Text('Voce pode explorar Caelum sem faccao. Pode mudar essa escolha depois.',
+            style: GoogleFonts.roboto(
+                color: AppColors.textSecondary, fontSize: 13, height: 1.5)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Voltar', style: GoogleFonts.roboto(color: AppColors.textMuted)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Confirmar', style: GoogleFonts.roboto(color: AppColors.textSecondary)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    context.go('/sanctuary');
+  }
+
 }
 
 class _FactionCard extends StatefulWidget {
