@@ -429,18 +429,21 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
             ],
           ),
           const SizedBox(width: 8),
-          Stack(children: [
-            _btn(Icons.notifications_none),
-            Positioned(
-              top: 8, right: 8,
-              child: Container(
-                width: 8, height: 8,
-                decoration: const BoxDecoration(
-                    color: AppColors.purple,
-                    shape: BoxShape.circle),
+          GestureDetector(
+            onTap: () => context.go('/notifications'),
+            child: Stack(children: [
+              _btn(Icons.notifications_none),
+              Positioned(
+                top: 8, right: 8,
+                child: Container(
+                  width: 8, height: 8,
+                  decoration: const BoxDecoration(
+                      color: AppColors.purple,
+                      shape: BoxShape.circle),
+                ),
               ),
-            ),
-          ]),
+            ]),
+          ),
         ],
       ),
     );
