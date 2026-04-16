@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -192,6 +193,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               ),
               child: Row(
                 children: [
+                  GestureDetector(
+                    onTap: () => context.go('/sanctuary'),
+                    child: const Icon(Icons.arrow_back_ios,
+                        color: AppColors.textSecondary, size: 20),
+                  ),
+                  const SizedBox(width: 12),
                   Text('NOTIFICAÇÕES',
                       style: GoogleFonts.cinzelDecorative(
                           fontSize: 15, color: AppColors.gold, letterSpacing: 2)),
