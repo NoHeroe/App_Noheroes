@@ -1,0 +1,774 @@
+{
+  "ascension": [
+    {
+      "rank_from": "e",
+      "rank_to": "d",
+      "missions": [
+        {
+          "step": 1,
+          "unlock_level": 10,
+          "title": "Primeiro Contrato",
+          "description": "Todo aventureiro começa provando que é capaz. Complete seu primeiro contrato.",
+          "options": [
+            {
+              "key": "ed1a",
+              "title": "Resistência Inicial",
+              "description": "Complete 10 missões físicas.",
+              "check_type": "complete_category_total",
+              "check_params": {
+                "category": "physical",
+                "count": 10
+              }
+            },
+            {
+              "key": "ed1b",
+              "title": "Mente Desperta",
+              "description": "Complete 10 missões mentais.",
+              "check_type": "complete_category_total",
+              "check_params": {
+                "category": "mental",
+                "count": 10
+              }
+            },
+            {
+              "key": "ed1c",
+              "title": "Espírito Ativo",
+              "description": "Complete 10 missões espirituais.",
+              "check_type": "complete_category_total",
+              "check_params": {
+                "category": "spiritual",
+                "count": 10
+              }
+            },
+            {
+              "key": "ed1d",
+              "title": "Disciplina Básica",
+              "description": "Mantenha streak de 7 dias.",
+              "check_type": "streak_days",
+              "check_params": {
+                "days": 7
+              }
+            }
+          ],
+          "xp": 500,
+          "gold": 250
+        },
+        {
+          "step": 2,
+          "unlock_level": 12,
+          "title": "Prova de Consistência",
+          "description": "A Guilda observa quem persiste. Mostre que você não desaparece.",
+          "options": [
+            {
+              "key": "ed2a",
+              "title": "Sem Falhas",
+              "description": "Sem niet por 5 dias consecutivos.",
+              "check_type": "no_niet_days",
+              "check_params": {
+                "days": 5
+              }
+            },
+            {
+              "key": "ed2b",
+              "title": "Arsenal Básico",
+              "description": "Gaste 300 de ouro na loja.",
+              "check_type": "spend_gold",
+              "check_params": {
+                "amount": 300
+              }
+            },
+            {
+              "key": "ed2c",
+              "title": "Colecionador Iniciante",
+              "description": "Desbloqueie 5 conquistas.",
+              "check_type": "achievements_count",
+              "check_params": {
+                "count": 5
+              }
+            },
+            {
+              "key": "ed2d",
+              "title": "Escritor do Caelum",
+              "description": "Escreva 500 palavras no diário no total.",
+              "check_type": "diary_total_words",
+              "check_params": {
+                "words": 500
+              }
+            }
+          ],
+          "xp": 600,
+          "gold": 300
+        },
+        {
+          "step": 3,
+          "unlock_level": 15,
+          "title": "Contrato de Rank D",
+          "description": "Você está pronto para ser reconhecido pela Guilda. Complete este contrato final.",
+          "options": [
+            {
+              "key": "ed3a",
+              "title": "Guerreiro em Formação",
+              "description": "Complete 25 missões de qualquer categoria.",
+              "check_type": "complete_any_total",
+              "check_params": {
+                "count": 25
+              }
+            },
+            {
+              "key": "ed3b",
+              "title": "Investidor",
+              "description": "Gaste 500 de ouro na loja total.",
+              "check_type": "spend_gold_total",
+              "check_params": {
+                "amount": 500
+              }
+            },
+            {
+              "key": "ed3c",
+              "title": "Conquistador",
+              "description": "Desbloqueie 10 conquistas.",
+              "check_type": "achievements_count",
+              "check_params": {
+                "count": 10
+              }
+            },
+            {
+              "key": "ed3d",
+              "title": "Dez Dias",
+              "description": "Streak de 10 dias.",
+              "check_type": "streak_days",
+              "check_params": {
+                "days": 10
+              }
+            }
+          ],
+          "xp": 800,
+          "gold": 400
+        }
+      ]
+    },
+    {
+      "rank_from": "d",
+      "rank_to": "c",
+      "missions": [
+        {
+          "step": 1,
+          "unlock_level": 18,
+          "title": "Operador em Treinamento",
+          "description": "Rank C exige compromisso real. Prove que você entendeu o que é Caelum.",
+          "options": [
+            {
+              "key": "dc1a",
+              "title": "Cinquenta Missões",
+              "description": "Complete 50 missões no total.",
+              "check_type": "complete_any_total",
+              "check_params": {
+                "count": 50
+              }
+            },
+            {
+              "key": "dc1b",
+              "title": "Disciplina de Operador",
+              "description": "Sem niet por 10 dias consecutivos.",
+              "check_type": "no_niet_days",
+              "check_params": {
+                "days": 10
+              }
+            },
+            {
+              "key": "dc1c",
+              "title": "Acumulador",
+              "description": "Gaste 1000 de ouro na loja.",
+              "check_type": "spend_gold_total",
+              "check_params": {
+                "amount": 1000
+              }
+            },
+            {
+              "key": "dc1d",
+              "title": "Cronista",
+              "description": "Escreva 1000 palavras no diário.",
+              "check_type": "diary_total_words",
+              "check_params": {
+                "words": 1000
+              }
+            }
+          ],
+          "xp": 1000,
+          "gold": 500
+        },
+        {
+          "step": 2,
+          "unlock_level": 20,
+          "title": "Marca do Operador",
+          "description": "Conquistas são a moeda da Guilda. Prove seu valor.",
+          "options": [
+            {
+              "key": "dc2a",
+              "title": "Colecionador",
+              "description": "Desbloqueie 20 conquistas.",
+              "check_type": "achievements_count",
+              "check_params": {
+                "count": 20
+              }
+            },
+            {
+              "key": "dc2b",
+              "title": "Streak Lendário",
+              "description": "Streak de 14 dias.",
+              "check_type": "streak_days",
+              "check_params": {
+                "days": 14
+              }
+            },
+            {
+              "key": "dc2c",
+              "title": "Comprador de Elite",
+              "description": "Compre 10 itens na loja.",
+              "check_type": "buy_items_total",
+              "check_params": {
+                "count": 10
+              }
+            },
+            {
+              "key": "dc2d",
+              "title": "Equilibrado",
+              "description": "Complete missões de todas as 4 categorias em uma semana.",
+              "check_type": "complete_all_categories_week",
+              "check_params": {
+                "count": 4
+              }
+            }
+          ],
+          "xp": 1200,
+          "gold": 600
+        },
+        {
+          "step": 3,
+          "unlock_level": 25,
+          "title": "Contrato de Rank C",
+          "description": "O Colar da Guilda brilha diferente para quem chegou aqui.",
+          "options": [
+            {
+              "key": "dc3a",
+              "title": "Cem Missões",
+              "description": "Complete 100 missões no total.",
+              "check_type": "complete_any_total",
+              "check_params": {
+                "count": 100
+              }
+            },
+            {
+              "key": "dc3b",
+              "title": "Arsenal Avançado",
+              "description": "Gaste 2000 de ouro na loja.",
+              "check_type": "spend_gold_total",
+              "check_params": {
+                "amount": 2000
+              }
+            },
+            {
+              "key": "dc3c",
+              "title": "Veterano",
+              "description": "Desbloqueie 30 conquistas.",
+              "check_type": "achievements_count",
+              "check_params": {
+                "count": 30
+              }
+            },
+            {
+              "key": "dc3d",
+              "title": "Implacável",
+              "description": "Sem niet por 14 dias consecutivos.",
+              "check_type": "no_niet_days",
+              "check_params": {
+                "days": 14
+              }
+            }
+          ],
+          "xp": 1500,
+          "gold": 750
+        }
+      ]
+    },
+    {
+      "rank_from": "c",
+      "rank_to": "b",
+      "missions": [
+        {
+          "step": 1,
+          "unlock_level": 30,
+          "title": "Veterano de Caelum",
+          "description": "Rank B é para quem sobreviveu à mediocridade. Comprove.",
+          "options": [
+            {
+              "key": "cb1a",
+              "title": "Duzentas Missões",
+              "description": "Complete 200 missões no total.",
+              "check_type": "complete_any_total",
+              "check_params": {
+                "count": 200
+              }
+            },
+            {
+              "key": "cb1b",
+              "title": "Streak de Ferro",
+              "description": "Streak de 21 dias.",
+              "check_type": "streak_days",
+              "check_params": {
+                "days": 21
+              }
+            },
+            {
+              "key": "cb1c",
+              "title": "Mestre do Diário",
+              "description": "Escreva 3000 palavras no diário.",
+              "check_type": "diary_total_words",
+              "check_params": {
+                "words": 3000
+              }
+            },
+            {
+              "key": "cb1d",
+              "title": "Cinquenta Conquistas",
+              "description": "Desbloqueie 50 conquistas.",
+              "check_type": "achievements_count",
+              "check_params": {
+                "count": 50
+              }
+            }
+          ],
+          "xp": 2000,
+          "gold": 1000
+        },
+        {
+          "step": 2,
+          "unlock_level": 35,
+          "title": "Prova do Veterano",
+          "description": "A Guilda não aceita pela metade. Entregue tudo.",
+          "options": [
+            {
+              "key": "cb2a",
+              "title": "Investimento Total",
+              "description": "Gaste 5000 de ouro na loja.",
+              "check_type": "spend_gold_total",
+              "check_params": {
+                "amount": 5000
+              }
+            },
+            {
+              "key": "cb2b",
+              "title": "Sem Sombra",
+              "description": "Sem niet por 21 dias consecutivos.",
+              "check_type": "no_niet_days",
+              "check_params": {
+                "days": 21
+              }
+            },
+            {
+              "key": "cb2c",
+              "title": "Coleção Avançada",
+              "description": "Desbloqueie 60 conquistas.",
+              "check_type": "achievements_count",
+              "check_params": {
+                "count": 60
+              }
+            },
+            {
+              "key": "cb2d",
+              "title": "Trezentas Missões",
+              "description": "Complete 300 missões.",
+              "check_type": "complete_any_total",
+              "check_params": {
+                "count": 300
+              }
+            }
+          ],
+          "xp": 2500,
+          "gold": 1250
+        },
+        {
+          "step": 3,
+          "unlock_level": 40,
+          "title": "Contrato de Rank B",
+          "description": "Poucos chegam aqui. Você está prestes a entrar para o grupo dos veteranos reais.",
+          "options": [
+            {
+              "key": "cb3a",
+              "title": "Arsenal Completo",
+              "description": "Compre 25 itens na loja.",
+              "check_type": "buy_items_total",
+              "check_params": {
+                "count": 25
+              }
+            },
+            {
+              "key": "cb3b",
+              "title": "Streak Máximo",
+              "description": "Streak de 30 dias.",
+              "check_type": "streak_days",
+              "check_params": {
+                "days": 30
+              }
+            },
+            {
+              "key": "cb3c",
+              "title": "Setenta Conquistas",
+              "description": "Desbloqueie 70 conquistas.",
+              "check_type": "achievements_count",
+              "check_params": {
+                "count": 70
+              }
+            },
+            {
+              "key": "cb3d",
+              "title": "Quatrocentas Missões",
+              "description": "Complete 400 missões.",
+              "check_type": "complete_any_total",
+              "check_params": {
+                "count": 400
+              }
+            }
+          ],
+          "xp": 3000,
+          "gold": 1500
+        }
+      ]
+    },
+    {
+      "rank_from": "b",
+      "rank_to": "a",
+      "missions": [
+        {
+          "step": 1,
+          "unlock_level": 45,
+          "title": "Elite de Caelum",
+          "description": "Rank A não é para quase todos. É para quem nunca desistiu.",
+          "options": [
+            {
+              "key": "ba1a",
+              "title": "Quinhentas Missões",
+              "description": "Complete 500 missões no total.",
+              "check_type": "complete_any_total",
+              "check_params": {
+                "count": 500
+              }
+            },
+            {
+              "key": "ba1b",
+              "title": "Streak de Elite",
+              "description": "Streak de 45 dias.",
+              "check_type": "streak_days",
+              "check_params": {
+                "days": 45
+              }
+            },
+            {
+              "key": "ba1c",
+              "title": "Oitenta Conquistas",
+              "description": "Desbloqueie 80 conquistas.",
+              "check_type": "achievements_count",
+              "check_params": {
+                "count": 80
+              }
+            },
+            {
+              "key": "ba1d",
+              "title": "Grande Investidor",
+              "description": "Gaste 10000 de ouro na loja.",
+              "check_type": "spend_gold_total",
+              "check_params": {
+                "amount": 10000
+              }
+            }
+          ],
+          "xp": 4000,
+          "gold": 2000
+        },
+        {
+          "step": 2,
+          "unlock_level": 50,
+          "title": "Marca da Elite",
+          "description": "O Colar evolui. Você também precisa evoluir.",
+          "options": [
+            {
+              "key": "ba2a",
+              "title": "Setecentas Missões",
+              "description": "Complete 700 missões.",
+              "check_type": "complete_any_total",
+              "check_params": {
+                "count": 700
+              }
+            },
+            {
+              "key": "ba2b",
+              "title": "Implacável Total",
+              "description": "Sem niet por 30 dias consecutivos.",
+              "check_type": "no_niet_days",
+              "check_params": {
+                "days": 30
+              }
+            },
+            {
+              "key": "ba2c",
+              "title": "Noventa Conquistas",
+              "description": "Desbloqueie 90 conquistas.",
+              "check_type": "achievements_count",
+              "check_params": {
+                "count": 90
+              }
+            },
+            {
+              "key": "ba2d",
+              "title": "Crônica Completa",
+              "description": "Escreva 10000 palavras no diário.",
+              "check_type": "diary_total_words",
+              "check_params": {
+                "words": 10000
+              }
+            }
+          ],
+          "xp": 5000,
+          "gold": 2500
+        },
+        {
+          "step": 3,
+          "unlock_level": 55,
+          "title": "Contrato de Rank A",
+          "description": "Quase lá. Este é o penúltimo degrau. O mais difícil ainda está por vir.",
+          "options": [
+            {
+              "key": "ba3a",
+              "title": "Mil Missões",
+              "description": "Complete 1000 missões.",
+              "check_type": "complete_any_total",
+              "check_params": {
+                "count": 1000
+              }
+            },
+            {
+              "key": "ba3b",
+              "title": "Streak Lendário",
+              "description": "Streak de 60 dias.",
+              "check_type": "streak_days",
+              "check_params": {
+                "days": 60
+              }
+            },
+            {
+              "key": "ba3c",
+              "title": "Cem Conquistas",
+              "description": "Desbloqueie 100 conquistas.",
+              "check_type": "achievements_count",
+              "check_params": {
+                "count": 100
+              }
+            },
+            {
+              "key": "ba3d",
+              "title": "Patrimônio",
+              "description": "Gaste 25000 de ouro na loja.",
+              "check_type": "spend_gold_total",
+              "check_params": {
+                "amount": 25000
+              }
+            }
+          ],
+          "xp": 6000,
+          "gold": 3000
+        }
+      ]
+    },
+    {
+      "rank_from": "a",
+      "rank_to": "s",
+      "missions": [
+        {
+          "step": 1,
+          "unlock_level": 60,
+          "title": "O Caminho Lendário I",
+          "description": "Rank S é a lenda de Caelum. Menos de 1% chega aqui. Começa agora.",
+          "options": [
+            {
+              "key": "as1a",
+              "title": "Dois Mil Missões",
+              "description": "Complete 2000 missões no total.",
+              "check_type": "complete_any_total",
+              "check_params": {
+                "count": 2000
+              }
+            },
+            {
+              "key": "as1b",
+              "title": "Streak de Lenda",
+              "description": "Streak de 90 dias.",
+              "check_type": "streak_days",
+              "check_params": {
+                "days": 90
+              }
+            },
+            {
+              "key": "as1c",
+              "title": "Biblioteca Viva",
+              "description": "Escreva 25000 palavras no diário.",
+              "check_type": "diary_total_words",
+              "check_params": {
+                "words": 25000
+              }
+            },
+            {
+              "key": "as1d",
+              "title": "Arsenal Lendário",
+              "description": "Gaste 50000 de ouro na loja.",
+              "check_type": "spend_gold_total",
+              "check_params": {
+                "amount": 50000
+              }
+            }
+          ],
+          "xp": 8000,
+          "gold": 4000
+        },
+        {
+          "step": 2,
+          "unlock_level": 70,
+          "title": "O Caminho Lendário II",
+          "description": "A Guilda testa quem realmente quer chegar ao topo.",
+          "options": [
+            {
+              "key": "as2a",
+              "title": "Implacável Absoluto",
+              "description": "Sem niet por 60 dias consecutivos.",
+              "check_type": "no_niet_days",
+              "check_params": {
+                "days": 60
+              }
+            },
+            {
+              "key": "as2b",
+              "title": "Três Mil Missões",
+              "description": "Complete 3000 missões.",
+              "check_type": "complete_any_total",
+              "check_params": {
+                "count": 3000
+              }
+            },
+            {
+              "key": "as2c",
+              "title": "Coleção Máxima",
+              "description": "Desbloqueie todas as conquistas disponíveis (100).",
+              "check_type": "achievements_count",
+              "check_params": {
+                "count": 100
+              }
+            },
+            {
+              "key": "as2d",
+              "title": "Patrimônio Máximo",
+              "description": "Gaste 100000 de ouro na loja.",
+              "check_type": "spend_gold_total",
+              "check_params": {
+                "amount": 100000
+              }
+            }
+          ],
+          "xp": 10000,
+          "gold": 5000
+        },
+        {
+          "step": 3,
+          "unlock_level": 80,
+          "title": "O Caminho Lendário III",
+          "description": "Você está mais perto do que qualquer um antes de você. Não pare.",
+          "options": [
+            {
+              "key": "as3a",
+              "title": "Streak Absoluto",
+              "description": "Streak de 120 dias. Um quarto de ano sem falhar.",
+              "check_type": "streak_days",
+              "check_params": {
+                "days": 120
+              }
+            },
+            {
+              "key": "as3b",
+              "title": "Quatro Mil Missões",
+              "description": "Complete 4000 missões.",
+              "check_type": "complete_any_total",
+              "check_params": {
+                "count": 4000
+              }
+            },
+            {
+              "key": "as3c",
+              "title": "Crônica Absoluta",
+              "description": "Escreva 50000 palavras no diário.",
+              "check_type": "diary_total_words",
+              "check_params": {
+                "words": 50000
+              }
+            },
+            {
+              "key": "as3d",
+              "title": "Implacável Extremo",
+              "description": "Sem niet por 90 dias consecutivos.",
+              "check_type": "no_niet_days",
+              "check_params": {
+                "days": 90
+              }
+            }
+          ],
+          "xp": 12000,
+          "gold": 6000
+        },
+        {
+          "step": 4,
+          "unlock_level": 90,
+          "title": "O Contrato Final",
+          "description": "Ninguém chegou aqui antes. Este é o último contrato. Após isso, você é lenda.",
+          "options": [
+            {
+              "key": "as4a",
+              "title": "Cinco Mil Missões",
+              "description": "Complete 5000 missões no total. Uma vida de disciplina.",
+              "check_type": "complete_any_total",
+              "check_params": {
+                "count": 5000
+              }
+            },
+            {
+              "key": "as4b",
+              "title": "Streak Final",
+              "description": "Streak de 180 dias. Seis meses sem falhar um único dia.",
+              "check_type": "streak_days",
+              "check_params": {
+                "days": 180
+              }
+            },
+            {
+              "key": "as4c",
+              "title": "Coleção Absoluta",
+              "description": "Desbloqueie todas as conquistas e escreva 100000 palavras.",
+              "check_type": "achievements_and_diary",
+              "check_params": {
+                "achievements": 100,
+                "words": 100000
+              }
+            },
+            {
+              "key": "as4d",
+              "title": "Patrimônio Absoluto",
+              "description": "Gaste 500000 de ouro na loja. O custo da lenda.",
+              "check_type": "spend_gold_total",
+              "check_params": {
+                "amount": 500000
+              }
+            }
+          ],
+          "xp": 20000,
+          "gold": 10000
+        }
+      ]
+    }
+  ]
+}

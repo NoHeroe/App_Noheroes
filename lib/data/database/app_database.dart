@@ -21,6 +21,7 @@ import 'daos/inventory_dao.dart';
 import 'daos/achievement_dao.dart';
 import 'daos/guild_dao.dart';
 import 'tables/guild_status_table.dart';
+import 'tables/guild_ascension_table.dart';
 import 'tables/npc_reputation_table.dart';
 import 'tables/diary_entries_table.dart';
 
@@ -36,6 +37,7 @@ part 'app_database.g.dart';
     DiaryEntriesTable,
     ClassQuestsTable,
     FactionQuestsTable,
+    GuildAscensionTable,
   ],
   daos: [PlayerDao, HabitDao, InventoryDao, AchievementDao, GuildDao],
 )
@@ -43,7 +45,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -138,6 +140,11 @@ class AppDatabase extends _$AppDatabase {
         try {
           await m.createTable(classQuestsTable);
           await m.createTable(factionQuestsTable);
+        } catch (_) {}
+      }
+      if (from < 17) {
+        try {
+          await m.createTable(guildAscensionTable);
         } catch (_) {}
       }
     },

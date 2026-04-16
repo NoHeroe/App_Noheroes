@@ -7727,6 +7727,761 @@ class FactionQuestsTableCompanion
   }
 }
 
+class $GuildAscensionTableTable extends GuildAscensionTable
+    with TableInfo<$GuildAscensionTableTable, GuildAscensionTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GuildAscensionTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _rankFromMeta =
+      const VerificationMeta('rankFrom');
+  @override
+  late final GeneratedColumn<String> rankFrom = GeneratedColumn<String>(
+      'rank_from', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _rankToMeta = const VerificationMeta('rankTo');
+  @override
+  late final GeneratedColumn<String> rankTo = GeneratedColumn<String>(
+      'rank_to', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _stepMeta = const VerificationMeta('step');
+  @override
+  late final GeneratedColumn<int> step = GeneratedColumn<int>(
+      'step', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _questKeyMeta =
+      const VerificationMeta('questKey');
+  @override
+  late final GeneratedColumn<String> questKey = GeneratedColumn<String>(
+      'quest_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+      'title', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _checkTypeMeta =
+      const VerificationMeta('checkType');
+  @override
+  late final GeneratedColumn<String> checkType = GeneratedColumn<String>(
+      'check_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _checkParamsJsonMeta =
+      const VerificationMeta('checkParamsJson');
+  @override
+  late final GeneratedColumn<String> checkParamsJson = GeneratedColumn<String>(
+      'check_params_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _unlockLevelMeta =
+      const VerificationMeta('unlockLevel');
+  @override
+  late final GeneratedColumn<int> unlockLevel = GeneratedColumn<int>(
+      'unlock_level', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _xpRewardMeta =
+      const VerificationMeta('xpReward');
+  @override
+  late final GeneratedColumn<int> xpReward = GeneratedColumn<int>(
+      'xp_reward', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _goldRewardMeta =
+      const VerificationMeta('goldReward');
+  @override
+  late final GeneratedColumn<int> goldReward = GeneratedColumn<int>(
+      'gold_reward', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _completedMeta =
+      const VerificationMeta('completed');
+  @override
+  late final GeneratedColumn<bool> completed = GeneratedColumn<bool>(
+      'completed', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("completed" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _progressMeta =
+      const VerificationMeta('progress');
+  @override
+  late final GeneratedColumn<int> progress = GeneratedColumn<int>(
+      'progress', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _progressTargetMeta =
+      const VerificationMeta('progressTarget');
+  @override
+  late final GeneratedColumn<int> progressTarget = GeneratedColumn<int>(
+      'progress_target', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        playerId,
+        rankFrom,
+        rankTo,
+        step,
+        questKey,
+        title,
+        description,
+        checkType,
+        checkParamsJson,
+        unlockLevel,
+        xpReward,
+        goldReward,
+        completed,
+        progress,
+        progressTarget
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'guild_ascension_progress';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<GuildAscensionTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('rank_from')) {
+      context.handle(_rankFromMeta,
+          rankFrom.isAcceptableOrUnknown(data['rank_from']!, _rankFromMeta));
+    } else if (isInserting) {
+      context.missing(_rankFromMeta);
+    }
+    if (data.containsKey('rank_to')) {
+      context.handle(_rankToMeta,
+          rankTo.isAcceptableOrUnknown(data['rank_to']!, _rankToMeta));
+    } else if (isInserting) {
+      context.missing(_rankToMeta);
+    }
+    if (data.containsKey('step')) {
+      context.handle(
+          _stepMeta, step.isAcceptableOrUnknown(data['step']!, _stepMeta));
+    } else if (isInserting) {
+      context.missing(_stepMeta);
+    }
+    if (data.containsKey('quest_key')) {
+      context.handle(_questKeyMeta,
+          questKey.isAcceptableOrUnknown(data['quest_key']!, _questKeyMeta));
+    } else if (isInserting) {
+      context.missing(_questKeyMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('check_type')) {
+      context.handle(_checkTypeMeta,
+          checkType.isAcceptableOrUnknown(data['check_type']!, _checkTypeMeta));
+    } else if (isInserting) {
+      context.missing(_checkTypeMeta);
+    }
+    if (data.containsKey('check_params_json')) {
+      context.handle(
+          _checkParamsJsonMeta,
+          checkParamsJson.isAcceptableOrUnknown(
+              data['check_params_json']!, _checkParamsJsonMeta));
+    } else if (isInserting) {
+      context.missing(_checkParamsJsonMeta);
+    }
+    if (data.containsKey('unlock_level')) {
+      context.handle(
+          _unlockLevelMeta,
+          unlockLevel.isAcceptableOrUnknown(
+              data['unlock_level']!, _unlockLevelMeta));
+    } else if (isInserting) {
+      context.missing(_unlockLevelMeta);
+    }
+    if (data.containsKey('xp_reward')) {
+      context.handle(_xpRewardMeta,
+          xpReward.isAcceptableOrUnknown(data['xp_reward']!, _xpRewardMeta));
+    } else if (isInserting) {
+      context.missing(_xpRewardMeta);
+    }
+    if (data.containsKey('gold_reward')) {
+      context.handle(
+          _goldRewardMeta,
+          goldReward.isAcceptableOrUnknown(
+              data['gold_reward']!, _goldRewardMeta));
+    } else if (isInserting) {
+      context.missing(_goldRewardMeta);
+    }
+    if (data.containsKey('completed')) {
+      context.handle(_completedMeta,
+          completed.isAcceptableOrUnknown(data['completed']!, _completedMeta));
+    }
+    if (data.containsKey('progress')) {
+      context.handle(_progressMeta,
+          progress.isAcceptableOrUnknown(data['progress']!, _progressMeta));
+    }
+    if (data.containsKey('progress_target')) {
+      context.handle(
+          _progressTargetMeta,
+          progressTarget.isAcceptableOrUnknown(
+              data['progress_target']!, _progressTargetMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GuildAscensionTableData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GuildAscensionTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      rankFrom: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}rank_from'])!,
+      rankTo: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}rank_to'])!,
+      step: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}step'])!,
+      questKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}quest_key'])!,
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      checkType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}check_type'])!,
+      checkParamsJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}check_params_json'])!,
+      unlockLevel: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}unlock_level'])!,
+      xpReward: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}xp_reward'])!,
+      goldReward: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}gold_reward'])!,
+      completed: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}completed'])!,
+      progress: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}progress'])!,
+      progressTarget: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}progress_target'])!,
+    );
+  }
+
+  @override
+  $GuildAscensionTableTable createAlias(String alias) {
+    return $GuildAscensionTableTable(attachedDatabase, alias);
+  }
+}
+
+class GuildAscensionTableData extends DataClass
+    implements Insertable<GuildAscensionTableData> {
+  final int id;
+  final int playerId;
+  final String rankFrom;
+  final String rankTo;
+  final int step;
+  final String questKey;
+  final String title;
+  final String description;
+  final String checkType;
+  final String checkParamsJson;
+  final int unlockLevel;
+  final int xpReward;
+  final int goldReward;
+  final bool completed;
+  final int progress;
+  final int progressTarget;
+  const GuildAscensionTableData(
+      {required this.id,
+      required this.playerId,
+      required this.rankFrom,
+      required this.rankTo,
+      required this.step,
+      required this.questKey,
+      required this.title,
+      required this.description,
+      required this.checkType,
+      required this.checkParamsJson,
+      required this.unlockLevel,
+      required this.xpReward,
+      required this.goldReward,
+      required this.completed,
+      required this.progress,
+      required this.progressTarget});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['rank_from'] = Variable<String>(rankFrom);
+    map['rank_to'] = Variable<String>(rankTo);
+    map['step'] = Variable<int>(step);
+    map['quest_key'] = Variable<String>(questKey);
+    map['title'] = Variable<String>(title);
+    map['description'] = Variable<String>(description);
+    map['check_type'] = Variable<String>(checkType);
+    map['check_params_json'] = Variable<String>(checkParamsJson);
+    map['unlock_level'] = Variable<int>(unlockLevel);
+    map['xp_reward'] = Variable<int>(xpReward);
+    map['gold_reward'] = Variable<int>(goldReward);
+    map['completed'] = Variable<bool>(completed);
+    map['progress'] = Variable<int>(progress);
+    map['progress_target'] = Variable<int>(progressTarget);
+    return map;
+  }
+
+  GuildAscensionTableCompanion toCompanion(bool nullToAbsent) {
+    return GuildAscensionTableCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      rankFrom: Value(rankFrom),
+      rankTo: Value(rankTo),
+      step: Value(step),
+      questKey: Value(questKey),
+      title: Value(title),
+      description: Value(description),
+      checkType: Value(checkType),
+      checkParamsJson: Value(checkParamsJson),
+      unlockLevel: Value(unlockLevel),
+      xpReward: Value(xpReward),
+      goldReward: Value(goldReward),
+      completed: Value(completed),
+      progress: Value(progress),
+      progressTarget: Value(progressTarget),
+    );
+  }
+
+  factory GuildAscensionTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GuildAscensionTableData(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      rankFrom: serializer.fromJson<String>(json['rankFrom']),
+      rankTo: serializer.fromJson<String>(json['rankTo']),
+      step: serializer.fromJson<int>(json['step']),
+      questKey: serializer.fromJson<String>(json['questKey']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String>(json['description']),
+      checkType: serializer.fromJson<String>(json['checkType']),
+      checkParamsJson: serializer.fromJson<String>(json['checkParamsJson']),
+      unlockLevel: serializer.fromJson<int>(json['unlockLevel']),
+      xpReward: serializer.fromJson<int>(json['xpReward']),
+      goldReward: serializer.fromJson<int>(json['goldReward']),
+      completed: serializer.fromJson<bool>(json['completed']),
+      progress: serializer.fromJson<int>(json['progress']),
+      progressTarget: serializer.fromJson<int>(json['progressTarget']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'rankFrom': serializer.toJson<String>(rankFrom),
+      'rankTo': serializer.toJson<String>(rankTo),
+      'step': serializer.toJson<int>(step),
+      'questKey': serializer.toJson<String>(questKey),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String>(description),
+      'checkType': serializer.toJson<String>(checkType),
+      'checkParamsJson': serializer.toJson<String>(checkParamsJson),
+      'unlockLevel': serializer.toJson<int>(unlockLevel),
+      'xpReward': serializer.toJson<int>(xpReward),
+      'goldReward': serializer.toJson<int>(goldReward),
+      'completed': serializer.toJson<bool>(completed),
+      'progress': serializer.toJson<int>(progress),
+      'progressTarget': serializer.toJson<int>(progressTarget),
+    };
+  }
+
+  GuildAscensionTableData copyWith(
+          {int? id,
+          int? playerId,
+          String? rankFrom,
+          String? rankTo,
+          int? step,
+          String? questKey,
+          String? title,
+          String? description,
+          String? checkType,
+          String? checkParamsJson,
+          int? unlockLevel,
+          int? xpReward,
+          int? goldReward,
+          bool? completed,
+          int? progress,
+          int? progressTarget}) =>
+      GuildAscensionTableData(
+        id: id ?? this.id,
+        playerId: playerId ?? this.playerId,
+        rankFrom: rankFrom ?? this.rankFrom,
+        rankTo: rankTo ?? this.rankTo,
+        step: step ?? this.step,
+        questKey: questKey ?? this.questKey,
+        title: title ?? this.title,
+        description: description ?? this.description,
+        checkType: checkType ?? this.checkType,
+        checkParamsJson: checkParamsJson ?? this.checkParamsJson,
+        unlockLevel: unlockLevel ?? this.unlockLevel,
+        xpReward: xpReward ?? this.xpReward,
+        goldReward: goldReward ?? this.goldReward,
+        completed: completed ?? this.completed,
+        progress: progress ?? this.progress,
+        progressTarget: progressTarget ?? this.progressTarget,
+      );
+  GuildAscensionTableData copyWithCompanion(GuildAscensionTableCompanion data) {
+    return GuildAscensionTableData(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      rankFrom: data.rankFrom.present ? data.rankFrom.value : this.rankFrom,
+      rankTo: data.rankTo.present ? data.rankTo.value : this.rankTo,
+      step: data.step.present ? data.step.value : this.step,
+      questKey: data.questKey.present ? data.questKey.value : this.questKey,
+      title: data.title.present ? data.title.value : this.title,
+      description:
+          data.description.present ? data.description.value : this.description,
+      checkType: data.checkType.present ? data.checkType.value : this.checkType,
+      checkParamsJson: data.checkParamsJson.present
+          ? data.checkParamsJson.value
+          : this.checkParamsJson,
+      unlockLevel:
+          data.unlockLevel.present ? data.unlockLevel.value : this.unlockLevel,
+      xpReward: data.xpReward.present ? data.xpReward.value : this.xpReward,
+      goldReward:
+          data.goldReward.present ? data.goldReward.value : this.goldReward,
+      completed: data.completed.present ? data.completed.value : this.completed,
+      progress: data.progress.present ? data.progress.value : this.progress,
+      progressTarget: data.progressTarget.present
+          ? data.progressTarget.value
+          : this.progressTarget,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GuildAscensionTableData(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('rankFrom: $rankFrom, ')
+          ..write('rankTo: $rankTo, ')
+          ..write('step: $step, ')
+          ..write('questKey: $questKey, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('checkType: $checkType, ')
+          ..write('checkParamsJson: $checkParamsJson, ')
+          ..write('unlockLevel: $unlockLevel, ')
+          ..write('xpReward: $xpReward, ')
+          ..write('goldReward: $goldReward, ')
+          ..write('completed: $completed, ')
+          ..write('progress: $progress, ')
+          ..write('progressTarget: $progressTarget')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      playerId,
+      rankFrom,
+      rankTo,
+      step,
+      questKey,
+      title,
+      description,
+      checkType,
+      checkParamsJson,
+      unlockLevel,
+      xpReward,
+      goldReward,
+      completed,
+      progress,
+      progressTarget);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GuildAscensionTableData &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.rankFrom == this.rankFrom &&
+          other.rankTo == this.rankTo &&
+          other.step == this.step &&
+          other.questKey == this.questKey &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.checkType == this.checkType &&
+          other.checkParamsJson == this.checkParamsJson &&
+          other.unlockLevel == this.unlockLevel &&
+          other.xpReward == this.xpReward &&
+          other.goldReward == this.goldReward &&
+          other.completed == this.completed &&
+          other.progress == this.progress &&
+          other.progressTarget == this.progressTarget);
+}
+
+class GuildAscensionTableCompanion
+    extends UpdateCompanion<GuildAscensionTableData> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> rankFrom;
+  final Value<String> rankTo;
+  final Value<int> step;
+  final Value<String> questKey;
+  final Value<String> title;
+  final Value<String> description;
+  final Value<String> checkType;
+  final Value<String> checkParamsJson;
+  final Value<int> unlockLevel;
+  final Value<int> xpReward;
+  final Value<int> goldReward;
+  final Value<bool> completed;
+  final Value<int> progress;
+  final Value<int> progressTarget;
+  const GuildAscensionTableCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.rankFrom = const Value.absent(),
+    this.rankTo = const Value.absent(),
+    this.step = const Value.absent(),
+    this.questKey = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.checkType = const Value.absent(),
+    this.checkParamsJson = const Value.absent(),
+    this.unlockLevel = const Value.absent(),
+    this.xpReward = const Value.absent(),
+    this.goldReward = const Value.absent(),
+    this.completed = const Value.absent(),
+    this.progress = const Value.absent(),
+    this.progressTarget = const Value.absent(),
+  });
+  GuildAscensionTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String rankFrom,
+    required String rankTo,
+    required int step,
+    required String questKey,
+    required String title,
+    required String description,
+    required String checkType,
+    required String checkParamsJson,
+    required int unlockLevel,
+    required int xpReward,
+    required int goldReward,
+    this.completed = const Value.absent(),
+    this.progress = const Value.absent(),
+    this.progressTarget = const Value.absent(),
+  })  : playerId = Value(playerId),
+        rankFrom = Value(rankFrom),
+        rankTo = Value(rankTo),
+        step = Value(step),
+        questKey = Value(questKey),
+        title = Value(title),
+        description = Value(description),
+        checkType = Value(checkType),
+        checkParamsJson = Value(checkParamsJson),
+        unlockLevel = Value(unlockLevel),
+        xpReward = Value(xpReward),
+        goldReward = Value(goldReward);
+  static Insertable<GuildAscensionTableData> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? rankFrom,
+    Expression<String>? rankTo,
+    Expression<int>? step,
+    Expression<String>? questKey,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<String>? checkType,
+    Expression<String>? checkParamsJson,
+    Expression<int>? unlockLevel,
+    Expression<int>? xpReward,
+    Expression<int>? goldReward,
+    Expression<bool>? completed,
+    Expression<int>? progress,
+    Expression<int>? progressTarget,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (rankFrom != null) 'rank_from': rankFrom,
+      if (rankTo != null) 'rank_to': rankTo,
+      if (step != null) 'step': step,
+      if (questKey != null) 'quest_key': questKey,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (checkType != null) 'check_type': checkType,
+      if (checkParamsJson != null) 'check_params_json': checkParamsJson,
+      if (unlockLevel != null) 'unlock_level': unlockLevel,
+      if (xpReward != null) 'xp_reward': xpReward,
+      if (goldReward != null) 'gold_reward': goldReward,
+      if (completed != null) 'completed': completed,
+      if (progress != null) 'progress': progress,
+      if (progressTarget != null) 'progress_target': progressTarget,
+    });
+  }
+
+  GuildAscensionTableCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? playerId,
+      Value<String>? rankFrom,
+      Value<String>? rankTo,
+      Value<int>? step,
+      Value<String>? questKey,
+      Value<String>? title,
+      Value<String>? description,
+      Value<String>? checkType,
+      Value<String>? checkParamsJson,
+      Value<int>? unlockLevel,
+      Value<int>? xpReward,
+      Value<int>? goldReward,
+      Value<bool>? completed,
+      Value<int>? progress,
+      Value<int>? progressTarget}) {
+    return GuildAscensionTableCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      rankFrom: rankFrom ?? this.rankFrom,
+      rankTo: rankTo ?? this.rankTo,
+      step: step ?? this.step,
+      questKey: questKey ?? this.questKey,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      checkType: checkType ?? this.checkType,
+      checkParamsJson: checkParamsJson ?? this.checkParamsJson,
+      unlockLevel: unlockLevel ?? this.unlockLevel,
+      xpReward: xpReward ?? this.xpReward,
+      goldReward: goldReward ?? this.goldReward,
+      completed: completed ?? this.completed,
+      progress: progress ?? this.progress,
+      progressTarget: progressTarget ?? this.progressTarget,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (rankFrom.present) {
+      map['rank_from'] = Variable<String>(rankFrom.value);
+    }
+    if (rankTo.present) {
+      map['rank_to'] = Variable<String>(rankTo.value);
+    }
+    if (step.present) {
+      map['step'] = Variable<int>(step.value);
+    }
+    if (questKey.present) {
+      map['quest_key'] = Variable<String>(questKey.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (checkType.present) {
+      map['check_type'] = Variable<String>(checkType.value);
+    }
+    if (checkParamsJson.present) {
+      map['check_params_json'] = Variable<String>(checkParamsJson.value);
+    }
+    if (unlockLevel.present) {
+      map['unlock_level'] = Variable<int>(unlockLevel.value);
+    }
+    if (xpReward.present) {
+      map['xp_reward'] = Variable<int>(xpReward.value);
+    }
+    if (goldReward.present) {
+      map['gold_reward'] = Variable<int>(goldReward.value);
+    }
+    if (completed.present) {
+      map['completed'] = Variable<bool>(completed.value);
+    }
+    if (progress.present) {
+      map['progress'] = Variable<int>(progress.value);
+    }
+    if (progressTarget.present) {
+      map['progress_target'] = Variable<int>(progressTarget.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GuildAscensionTableCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('rankFrom: $rankFrom, ')
+          ..write('rankTo: $rankTo, ')
+          ..write('step: $step, ')
+          ..write('questKey: $questKey, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('checkType: $checkType, ')
+          ..write('checkParamsJson: $checkParamsJson, ')
+          ..write('unlockLevel: $unlockLevel, ')
+          ..write('xpReward: $xpReward, ')
+          ..write('goldReward: $goldReward, ')
+          ..write('completed: $completed, ')
+          ..write('progress: $progress, ')
+          ..write('progressTarget: $progressTarget')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -7750,6 +8505,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ClassQuestsTableTable(this);
   late final $FactionQuestsTableTable factionQuestsTable =
       $FactionQuestsTableTable(this);
+  late final $GuildAscensionTableTable guildAscensionTable =
+      $GuildAscensionTableTable(this);
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
   late final HabitDao habitDao = HabitDao(this as AppDatabase);
   late final InventoryDao inventoryDao = InventoryDao(this as AppDatabase);
@@ -7773,7 +8530,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         npcReputationTable,
         diaryEntriesTable,
         classQuestsTable,
-        factionQuestsTable
+        factionQuestsTable,
+        guildAscensionTable
       ];
 }
 
@@ -11416,6 +12174,347 @@ typedef $$FactionQuestsTableTableProcessedTableManager = ProcessedTableManager<
     ),
     FactionQuestsTableData,
     PrefetchHooks Function()>;
+typedef $$GuildAscensionTableTableCreateCompanionBuilder
+    = GuildAscensionTableCompanion Function({
+  Value<int> id,
+  required int playerId,
+  required String rankFrom,
+  required String rankTo,
+  required int step,
+  required String questKey,
+  required String title,
+  required String description,
+  required String checkType,
+  required String checkParamsJson,
+  required int unlockLevel,
+  required int xpReward,
+  required int goldReward,
+  Value<bool> completed,
+  Value<int> progress,
+  Value<int> progressTarget,
+});
+typedef $$GuildAscensionTableTableUpdateCompanionBuilder
+    = GuildAscensionTableCompanion Function({
+  Value<int> id,
+  Value<int> playerId,
+  Value<String> rankFrom,
+  Value<String> rankTo,
+  Value<int> step,
+  Value<String> questKey,
+  Value<String> title,
+  Value<String> description,
+  Value<String> checkType,
+  Value<String> checkParamsJson,
+  Value<int> unlockLevel,
+  Value<int> xpReward,
+  Value<int> goldReward,
+  Value<bool> completed,
+  Value<int> progress,
+  Value<int> progressTarget,
+});
+
+class $$GuildAscensionTableTableFilterComposer
+    extends Composer<_$AppDatabase, $GuildAscensionTableTable> {
+  $$GuildAscensionTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get rankFrom => $composableBuilder(
+      column: $table.rankFrom, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get rankTo => $composableBuilder(
+      column: $table.rankTo, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get step => $composableBuilder(
+      column: $table.step, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get questKey => $composableBuilder(
+      column: $table.questKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get checkType => $composableBuilder(
+      column: $table.checkType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get checkParamsJson => $composableBuilder(
+      column: $table.checkParamsJson,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get unlockLevel => $composableBuilder(
+      column: $table.unlockLevel, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get xpReward => $composableBuilder(
+      column: $table.xpReward, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get goldReward => $composableBuilder(
+      column: $table.goldReward, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get completed => $composableBuilder(
+      column: $table.completed, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get progress => $composableBuilder(
+      column: $table.progress, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get progressTarget => $composableBuilder(
+      column: $table.progressTarget,
+      builder: (column) => ColumnFilters(column));
+}
+
+class $$GuildAscensionTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $GuildAscensionTableTable> {
+  $$GuildAscensionTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get rankFrom => $composableBuilder(
+      column: $table.rankFrom, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get rankTo => $composableBuilder(
+      column: $table.rankTo, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get step => $composableBuilder(
+      column: $table.step, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get questKey => $composableBuilder(
+      column: $table.questKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get checkType => $composableBuilder(
+      column: $table.checkType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get checkParamsJson => $composableBuilder(
+      column: $table.checkParamsJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get unlockLevel => $composableBuilder(
+      column: $table.unlockLevel, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get xpReward => $composableBuilder(
+      column: $table.xpReward, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get goldReward => $composableBuilder(
+      column: $table.goldReward, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get completed => $composableBuilder(
+      column: $table.completed, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get progress => $composableBuilder(
+      column: $table.progress, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get progressTarget => $composableBuilder(
+      column: $table.progressTarget,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$GuildAscensionTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GuildAscensionTableTable> {
+  $$GuildAscensionTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get rankFrom =>
+      $composableBuilder(column: $table.rankFrom, builder: (column) => column);
+
+  GeneratedColumn<String> get rankTo =>
+      $composableBuilder(column: $table.rankTo, builder: (column) => column);
+
+  GeneratedColumn<int> get step =>
+      $composableBuilder(column: $table.step, builder: (column) => column);
+
+  GeneratedColumn<String> get questKey =>
+      $composableBuilder(column: $table.questKey, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<String> get checkType =>
+      $composableBuilder(column: $table.checkType, builder: (column) => column);
+
+  GeneratedColumn<String> get checkParamsJson => $composableBuilder(
+      column: $table.checkParamsJson, builder: (column) => column);
+
+  GeneratedColumn<int> get unlockLevel => $composableBuilder(
+      column: $table.unlockLevel, builder: (column) => column);
+
+  GeneratedColumn<int> get xpReward =>
+      $composableBuilder(column: $table.xpReward, builder: (column) => column);
+
+  GeneratedColumn<int> get goldReward => $composableBuilder(
+      column: $table.goldReward, builder: (column) => column);
+
+  GeneratedColumn<bool> get completed =>
+      $composableBuilder(column: $table.completed, builder: (column) => column);
+
+  GeneratedColumn<int> get progress =>
+      $composableBuilder(column: $table.progress, builder: (column) => column);
+
+  GeneratedColumn<int> get progressTarget => $composableBuilder(
+      column: $table.progressTarget, builder: (column) => column);
+}
+
+class $$GuildAscensionTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $GuildAscensionTableTable,
+    GuildAscensionTableData,
+    $$GuildAscensionTableTableFilterComposer,
+    $$GuildAscensionTableTableOrderingComposer,
+    $$GuildAscensionTableTableAnnotationComposer,
+    $$GuildAscensionTableTableCreateCompanionBuilder,
+    $$GuildAscensionTableTableUpdateCompanionBuilder,
+    (
+      GuildAscensionTableData,
+      BaseReferences<_$AppDatabase, $GuildAscensionTableTable,
+          GuildAscensionTableData>
+    ),
+    GuildAscensionTableData,
+    PrefetchHooks Function()> {
+  $$GuildAscensionTableTableTableManager(
+      _$AppDatabase db, $GuildAscensionTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GuildAscensionTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GuildAscensionTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GuildAscensionTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> playerId = const Value.absent(),
+            Value<String> rankFrom = const Value.absent(),
+            Value<String> rankTo = const Value.absent(),
+            Value<int> step = const Value.absent(),
+            Value<String> questKey = const Value.absent(),
+            Value<String> title = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<String> checkType = const Value.absent(),
+            Value<String> checkParamsJson = const Value.absent(),
+            Value<int> unlockLevel = const Value.absent(),
+            Value<int> xpReward = const Value.absent(),
+            Value<int> goldReward = const Value.absent(),
+            Value<bool> completed = const Value.absent(),
+            Value<int> progress = const Value.absent(),
+            Value<int> progressTarget = const Value.absent(),
+          }) =>
+              GuildAscensionTableCompanion(
+            id: id,
+            playerId: playerId,
+            rankFrom: rankFrom,
+            rankTo: rankTo,
+            step: step,
+            questKey: questKey,
+            title: title,
+            description: description,
+            checkType: checkType,
+            checkParamsJson: checkParamsJson,
+            unlockLevel: unlockLevel,
+            xpReward: xpReward,
+            goldReward: goldReward,
+            completed: completed,
+            progress: progress,
+            progressTarget: progressTarget,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int playerId,
+            required String rankFrom,
+            required String rankTo,
+            required int step,
+            required String questKey,
+            required String title,
+            required String description,
+            required String checkType,
+            required String checkParamsJson,
+            required int unlockLevel,
+            required int xpReward,
+            required int goldReward,
+            Value<bool> completed = const Value.absent(),
+            Value<int> progress = const Value.absent(),
+            Value<int> progressTarget = const Value.absent(),
+          }) =>
+              GuildAscensionTableCompanion.insert(
+            id: id,
+            playerId: playerId,
+            rankFrom: rankFrom,
+            rankTo: rankTo,
+            step: step,
+            questKey: questKey,
+            title: title,
+            description: description,
+            checkType: checkType,
+            checkParamsJson: checkParamsJson,
+            unlockLevel: unlockLevel,
+            xpReward: xpReward,
+            goldReward: goldReward,
+            completed: completed,
+            progress: progress,
+            progressTarget: progressTarget,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$GuildAscensionTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $GuildAscensionTableTable,
+    GuildAscensionTableData,
+    $$GuildAscensionTableTableFilterComposer,
+    $$GuildAscensionTableTableOrderingComposer,
+    $$GuildAscensionTableTableAnnotationComposer,
+    $$GuildAscensionTableTableCreateCompanionBuilder,
+    $$GuildAscensionTableTableUpdateCompanionBuilder,
+    (
+      GuildAscensionTableData,
+      BaseReferences<_$AppDatabase, $GuildAscensionTableTable,
+          GuildAscensionTableData>
+    ),
+    GuildAscensionTableData,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -11447,4 +12546,6 @@ class $AppDatabaseManager {
       $$ClassQuestsTableTableTableManager(_db, _db.classQuestsTable);
   $$FactionQuestsTableTableTableManager get factionQuestsTable =>
       $$FactionQuestsTableTableTableManager(_db, _db.factionQuestsTable);
+  $$GuildAscensionTableTableTableManager get guildAscensionTable =>
+      $$GuildAscensionTableTableTableManager(_db, _db.guildAscensionTable);
 }
