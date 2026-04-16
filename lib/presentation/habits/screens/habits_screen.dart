@@ -12,6 +12,9 @@ import '../widgets/habit_card.dart';
 import '../widgets/create_habit_sheet.dart';
 import '../widgets/completion_dialog.dart';
 import '../../shared/widgets/reward_toast.dart';
+import '../widgets/class_quest_card.dart';
+import '../widgets/faction_quest_card.dart';
+import '../../../data/datasources/local/faction_quest_service.dart';
 import '../../shared/widgets/milestone_popup.dart';
 
 class HabitsScreen extends ConsumerWidget {
@@ -166,10 +169,62 @@ class HabitsScreen extends ConsumerWidget {
           const SizedBox(height: 20),
         ],
 
-        // ── MISSÕES DE CLASSE ──
+        // ── MISSÕES DE CLASSE (auto-conclusão) ──
+        Builder(builder: (ctx) {
+          final classQuestsAsync = ref.watch(todayClassQuestsProvider);
+          return classQuestsAsync.when(
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (cqs) {
+              if (cqs.isEmpty) return const SizedBox.shrink();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _sectionHeader('MISSÕES DE CLASSE',
+                      Icons.auto_fix_high_outlined, color: AppColors.purple),
+                  const SizedBox(height: 4),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text('Concluídas automaticamente ao agir.',
+                        style: GoogleFonts.roboto(
+                            fontSize: 10, color: AppColors.textMuted)),
+                  ),
+                  ...cqs.map((q) => ClassQuestCard(quest: q)),
+                  const SizedBox(height: 16),
+                ],
+              );
+            },
+          );
+        }),
+
+        // ── MISSÃO DE FACÇÃO SEMANAL ──
+        Builder(builder: (ctx) {
+          final fqAsync = ref.watch(activeFactionQuestProvider);
+          return fqAsync.when(
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (fq) {
+              if (fq == null) return const SizedBox.shrink();
+              final player = ref.read(currentPlayerProvider);
+              final faction = player?.factionType ?? '';
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _sectionHeader('MISSÃO DA FACÇÃO',
+                      Icons.shield_outlined, color: AppColors.gold),
+                  const SizedBox(height: 10),
+                  FactionQuestCard(quest: fq, factionId: faction),
+                  const SizedBox(height: 8),
+                ],
+              );
+            },
+          );
+        }),
+
+        // ── MISSÕES DE CLASSE (hábitos antigos via título) ──
         if (classQuests.isNotEmpty) ...[
           _sectionHeader(
-            'MISSÕES DE CLASSE',
+            'MISSÕES DE ADMISSÃO',
             Icons.auto_fix_high_outlined,
             color: AppColors.purple,
           ),
@@ -288,6 +343,46 @@ class HabitsScreen extends ConsumerWidget {
           final updated = await ref.read(authDsProvider).currentSession();
           ref.read(currentPlayerProvider.notifier).state = updated;
           ref.invalidate(habitsProvider);
+          // Auto-check class quests
+          if (updated != null && (updated.classType?.isNotEmpty ?? false)) {
+            final ctx = {
+              'streak': updated.streakDays,
+              'niet_free_days': updated.streakDays,
+            };
+            final completedCQ = await ref.read(classQuestServiceProvider)
+                .checkAndComplete(updated.id, ctx);
+            ref.invalidate(todayClassQuestsProvider);
+            if (completedCQ.isNotEmpty && context.mounted) {
+              for (final cq in completedCQ) {
+                RewardToast.show(context,
+                    source: cq.title,
+                    xp: cq.xpReward,
+                    gold: cq.goldReward);
+              }
+            }
+            // Auto-check faction quest
+            final faction = updated.factionType ?? '';
+            if (faction.isNotEmpty && faction != 'none' && !faction.startsWith('pending:')) {
+              final fctx = {'streak': updated.streakDays, 'niet_free_days': updated.streakDays};
+              final fDone = await ref.read(factionQuestServiceProvider)
+                  .checkAndComplete(updated.id, faction, fctx);
+              ref.invalidate(activeFactionQuestProvider);
+              if (fDone && context.mounted) {
+                final fq = await ref.read(factionQuestServiceProvider)
+                    .getActiveQuest(updated.id, faction);
+                if (fq != null) {
+                  final loot = FactionQuestService.calcLoot(updated.guildRank, fq.factionItemChance);
+                  RewardToast.show(context,
+                      source: fq.title,
+                      xp: fq.xpReward,
+                      gold: fq.goldReward,
+                      achievementTitle: loot['has_faction_item'] == true
+                          ? 'Item da facção dropado!'
+                          : null);
+                }
+              }
+            }
+          }
           if (updated != null && updated.level > prevLevel && context.mounted) {
             final msgs = _levelUnlockMessages(updated.level);
             MilestonePopup.show(

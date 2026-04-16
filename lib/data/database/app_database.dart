@@ -6,6 +6,8 @@ import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'tables/players_table.dart';
+import 'tables/class_quests_table.dart';
+import 'tables/faction_quests_table.dart';
 import 'tables/habits_table.dart';
 import 'tables/habit_logs_table.dart';
 import 'tables/items_table.dart';
@@ -32,6 +34,8 @@ part 'app_database.g.dart';
     GuildStatusTable,
     NpcReputationTable,
     DiaryEntriesTable,
+    ClassQuestsTable,
+    FactionQuestsTable,
   ],
   daos: [PlayerDao, HabitDao, InventoryDao, AchievementDao, GuildDao],
 )
@@ -39,7 +43,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -128,6 +132,12 @@ class AppDatabase extends _$AppDatabase {
       if (from < 15) {
         try {
           await m.addColumn(playersTable, playersTable.playStyle);
+        } catch (_) {}
+      }
+      if (from < 16) {
+        try {
+          await m.createTable(classQuestsTable);
+          await m.createTable(factionQuestsTable);
         } catch (_) {}
       }
     },

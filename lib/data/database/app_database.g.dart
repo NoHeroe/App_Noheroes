@@ -6294,6 +6294,1439 @@ class DiaryEntriesTableCompanion
   }
 }
 
+class $ClassQuestsTableTable extends ClassQuestsTable
+    with TableInfo<$ClassQuestsTableTable, ClassQuestsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ClassQuestsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _classTypeMeta =
+      const VerificationMeta('classType');
+  @override
+  late final GeneratedColumn<String> classType = GeneratedColumn<String>(
+      'class_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _questKeyMeta =
+      const VerificationMeta('questKey');
+  @override
+  late final GeneratedColumn<String> questKey = GeneratedColumn<String>(
+      'quest_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+      'title', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _checkTypeMeta =
+      const VerificationMeta('checkType');
+  @override
+  late final GeneratedColumn<String> checkType = GeneratedColumn<String>(
+      'check_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _checkParamsJsonMeta =
+      const VerificationMeta('checkParamsJson');
+  @override
+  late final GeneratedColumn<String> checkParamsJson = GeneratedColumn<String>(
+      'check_params_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _xpRewardMeta =
+      const VerificationMeta('xpReward');
+  @override
+  late final GeneratedColumn<int> xpReward = GeneratedColumn<int>(
+      'xp_reward', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _goldRewardMeta =
+      const VerificationMeta('goldReward');
+  @override
+  late final GeneratedColumn<int> goldReward = GeneratedColumn<int>(
+      'gold_reward', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _assignedDateMeta =
+      const VerificationMeta('assignedDate');
+  @override
+  late final GeneratedColumn<String> assignedDate = GeneratedColumn<String>(
+      'assigned_date', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _completedMeta =
+      const VerificationMeta('completed');
+  @override
+  late final GeneratedColumn<bool> completed = GeneratedColumn<bool>(
+      'completed', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("completed" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _progressMeta =
+      const VerificationMeta('progress');
+  @override
+  late final GeneratedColumn<int> progress = GeneratedColumn<int>(
+      'progress', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _progressTargetMeta =
+      const VerificationMeta('progressTarget');
+  @override
+  late final GeneratedColumn<int> progressTarget = GeneratedColumn<int>(
+      'progress_target', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        playerId,
+        classType,
+        questKey,
+        title,
+        description,
+        checkType,
+        checkParamsJson,
+        xpReward,
+        goldReward,
+        assignedDate,
+        completed,
+        progress,
+        progressTarget
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'active_class_quests';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<ClassQuestsTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('class_type')) {
+      context.handle(_classTypeMeta,
+          classType.isAcceptableOrUnknown(data['class_type']!, _classTypeMeta));
+    } else if (isInserting) {
+      context.missing(_classTypeMeta);
+    }
+    if (data.containsKey('quest_key')) {
+      context.handle(_questKeyMeta,
+          questKey.isAcceptableOrUnknown(data['quest_key']!, _questKeyMeta));
+    } else if (isInserting) {
+      context.missing(_questKeyMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('check_type')) {
+      context.handle(_checkTypeMeta,
+          checkType.isAcceptableOrUnknown(data['check_type']!, _checkTypeMeta));
+    } else if (isInserting) {
+      context.missing(_checkTypeMeta);
+    }
+    if (data.containsKey('check_params_json')) {
+      context.handle(
+          _checkParamsJsonMeta,
+          checkParamsJson.isAcceptableOrUnknown(
+              data['check_params_json']!, _checkParamsJsonMeta));
+    } else if (isInserting) {
+      context.missing(_checkParamsJsonMeta);
+    }
+    if (data.containsKey('xp_reward')) {
+      context.handle(_xpRewardMeta,
+          xpReward.isAcceptableOrUnknown(data['xp_reward']!, _xpRewardMeta));
+    }
+    if (data.containsKey('gold_reward')) {
+      context.handle(
+          _goldRewardMeta,
+          goldReward.isAcceptableOrUnknown(
+              data['gold_reward']!, _goldRewardMeta));
+    }
+    if (data.containsKey('assigned_date')) {
+      context.handle(
+          _assignedDateMeta,
+          assignedDate.isAcceptableOrUnknown(
+              data['assigned_date']!, _assignedDateMeta));
+    } else if (isInserting) {
+      context.missing(_assignedDateMeta);
+    }
+    if (data.containsKey('completed')) {
+      context.handle(_completedMeta,
+          completed.isAcceptableOrUnknown(data['completed']!, _completedMeta));
+    }
+    if (data.containsKey('progress')) {
+      context.handle(_progressMeta,
+          progress.isAcceptableOrUnknown(data['progress']!, _progressMeta));
+    }
+    if (data.containsKey('progress_target')) {
+      context.handle(
+          _progressTargetMeta,
+          progressTarget.isAcceptableOrUnknown(
+              data['progress_target']!, _progressTargetMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ClassQuestsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ClassQuestsTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      classType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}class_type'])!,
+      questKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}quest_key'])!,
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      checkType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}check_type'])!,
+      checkParamsJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}check_params_json'])!,
+      xpReward: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}xp_reward'])!,
+      goldReward: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}gold_reward'])!,
+      assignedDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}assigned_date'])!,
+      completed: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}completed'])!,
+      progress: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}progress'])!,
+      progressTarget: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}progress_target'])!,
+    );
+  }
+
+  @override
+  $ClassQuestsTableTable createAlias(String alias) {
+    return $ClassQuestsTableTable(attachedDatabase, alias);
+  }
+}
+
+class ClassQuestsTableData extends DataClass
+    implements Insertable<ClassQuestsTableData> {
+  final int id;
+  final int playerId;
+  final String classType;
+  final String questKey;
+  final String title;
+  final String description;
+  final String checkType;
+  final String checkParamsJson;
+  final int xpReward;
+  final int goldReward;
+  final String assignedDate;
+  final bool completed;
+  final int progress;
+  final int progressTarget;
+  const ClassQuestsTableData(
+      {required this.id,
+      required this.playerId,
+      required this.classType,
+      required this.questKey,
+      required this.title,
+      required this.description,
+      required this.checkType,
+      required this.checkParamsJson,
+      required this.xpReward,
+      required this.goldReward,
+      required this.assignedDate,
+      required this.completed,
+      required this.progress,
+      required this.progressTarget});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['class_type'] = Variable<String>(classType);
+    map['quest_key'] = Variable<String>(questKey);
+    map['title'] = Variable<String>(title);
+    map['description'] = Variable<String>(description);
+    map['check_type'] = Variable<String>(checkType);
+    map['check_params_json'] = Variable<String>(checkParamsJson);
+    map['xp_reward'] = Variable<int>(xpReward);
+    map['gold_reward'] = Variable<int>(goldReward);
+    map['assigned_date'] = Variable<String>(assignedDate);
+    map['completed'] = Variable<bool>(completed);
+    map['progress'] = Variable<int>(progress);
+    map['progress_target'] = Variable<int>(progressTarget);
+    return map;
+  }
+
+  ClassQuestsTableCompanion toCompanion(bool nullToAbsent) {
+    return ClassQuestsTableCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      classType: Value(classType),
+      questKey: Value(questKey),
+      title: Value(title),
+      description: Value(description),
+      checkType: Value(checkType),
+      checkParamsJson: Value(checkParamsJson),
+      xpReward: Value(xpReward),
+      goldReward: Value(goldReward),
+      assignedDate: Value(assignedDate),
+      completed: Value(completed),
+      progress: Value(progress),
+      progressTarget: Value(progressTarget),
+    );
+  }
+
+  factory ClassQuestsTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ClassQuestsTableData(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      classType: serializer.fromJson<String>(json['classType']),
+      questKey: serializer.fromJson<String>(json['questKey']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String>(json['description']),
+      checkType: serializer.fromJson<String>(json['checkType']),
+      checkParamsJson: serializer.fromJson<String>(json['checkParamsJson']),
+      xpReward: serializer.fromJson<int>(json['xpReward']),
+      goldReward: serializer.fromJson<int>(json['goldReward']),
+      assignedDate: serializer.fromJson<String>(json['assignedDate']),
+      completed: serializer.fromJson<bool>(json['completed']),
+      progress: serializer.fromJson<int>(json['progress']),
+      progressTarget: serializer.fromJson<int>(json['progressTarget']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'classType': serializer.toJson<String>(classType),
+      'questKey': serializer.toJson<String>(questKey),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String>(description),
+      'checkType': serializer.toJson<String>(checkType),
+      'checkParamsJson': serializer.toJson<String>(checkParamsJson),
+      'xpReward': serializer.toJson<int>(xpReward),
+      'goldReward': serializer.toJson<int>(goldReward),
+      'assignedDate': serializer.toJson<String>(assignedDate),
+      'completed': serializer.toJson<bool>(completed),
+      'progress': serializer.toJson<int>(progress),
+      'progressTarget': serializer.toJson<int>(progressTarget),
+    };
+  }
+
+  ClassQuestsTableData copyWith(
+          {int? id,
+          int? playerId,
+          String? classType,
+          String? questKey,
+          String? title,
+          String? description,
+          String? checkType,
+          String? checkParamsJson,
+          int? xpReward,
+          int? goldReward,
+          String? assignedDate,
+          bool? completed,
+          int? progress,
+          int? progressTarget}) =>
+      ClassQuestsTableData(
+        id: id ?? this.id,
+        playerId: playerId ?? this.playerId,
+        classType: classType ?? this.classType,
+        questKey: questKey ?? this.questKey,
+        title: title ?? this.title,
+        description: description ?? this.description,
+        checkType: checkType ?? this.checkType,
+        checkParamsJson: checkParamsJson ?? this.checkParamsJson,
+        xpReward: xpReward ?? this.xpReward,
+        goldReward: goldReward ?? this.goldReward,
+        assignedDate: assignedDate ?? this.assignedDate,
+        completed: completed ?? this.completed,
+        progress: progress ?? this.progress,
+        progressTarget: progressTarget ?? this.progressTarget,
+      );
+  ClassQuestsTableData copyWithCompanion(ClassQuestsTableCompanion data) {
+    return ClassQuestsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      classType: data.classType.present ? data.classType.value : this.classType,
+      questKey: data.questKey.present ? data.questKey.value : this.questKey,
+      title: data.title.present ? data.title.value : this.title,
+      description:
+          data.description.present ? data.description.value : this.description,
+      checkType: data.checkType.present ? data.checkType.value : this.checkType,
+      checkParamsJson: data.checkParamsJson.present
+          ? data.checkParamsJson.value
+          : this.checkParamsJson,
+      xpReward: data.xpReward.present ? data.xpReward.value : this.xpReward,
+      goldReward:
+          data.goldReward.present ? data.goldReward.value : this.goldReward,
+      assignedDate: data.assignedDate.present
+          ? data.assignedDate.value
+          : this.assignedDate,
+      completed: data.completed.present ? data.completed.value : this.completed,
+      progress: data.progress.present ? data.progress.value : this.progress,
+      progressTarget: data.progressTarget.present
+          ? data.progressTarget.value
+          : this.progressTarget,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ClassQuestsTableData(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('classType: $classType, ')
+          ..write('questKey: $questKey, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('checkType: $checkType, ')
+          ..write('checkParamsJson: $checkParamsJson, ')
+          ..write('xpReward: $xpReward, ')
+          ..write('goldReward: $goldReward, ')
+          ..write('assignedDate: $assignedDate, ')
+          ..write('completed: $completed, ')
+          ..write('progress: $progress, ')
+          ..write('progressTarget: $progressTarget')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      playerId,
+      classType,
+      questKey,
+      title,
+      description,
+      checkType,
+      checkParamsJson,
+      xpReward,
+      goldReward,
+      assignedDate,
+      completed,
+      progress,
+      progressTarget);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ClassQuestsTableData &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.classType == this.classType &&
+          other.questKey == this.questKey &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.checkType == this.checkType &&
+          other.checkParamsJson == this.checkParamsJson &&
+          other.xpReward == this.xpReward &&
+          other.goldReward == this.goldReward &&
+          other.assignedDate == this.assignedDate &&
+          other.completed == this.completed &&
+          other.progress == this.progress &&
+          other.progressTarget == this.progressTarget);
+}
+
+class ClassQuestsTableCompanion extends UpdateCompanion<ClassQuestsTableData> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> classType;
+  final Value<String> questKey;
+  final Value<String> title;
+  final Value<String> description;
+  final Value<String> checkType;
+  final Value<String> checkParamsJson;
+  final Value<int> xpReward;
+  final Value<int> goldReward;
+  final Value<String> assignedDate;
+  final Value<bool> completed;
+  final Value<int> progress;
+  final Value<int> progressTarget;
+  const ClassQuestsTableCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.classType = const Value.absent(),
+    this.questKey = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.checkType = const Value.absent(),
+    this.checkParamsJson = const Value.absent(),
+    this.xpReward = const Value.absent(),
+    this.goldReward = const Value.absent(),
+    this.assignedDate = const Value.absent(),
+    this.completed = const Value.absent(),
+    this.progress = const Value.absent(),
+    this.progressTarget = const Value.absent(),
+  });
+  ClassQuestsTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String classType,
+    required String questKey,
+    required String title,
+    required String description,
+    required String checkType,
+    required String checkParamsJson,
+    this.xpReward = const Value.absent(),
+    this.goldReward = const Value.absent(),
+    required String assignedDate,
+    this.completed = const Value.absent(),
+    this.progress = const Value.absent(),
+    this.progressTarget = const Value.absent(),
+  })  : playerId = Value(playerId),
+        classType = Value(classType),
+        questKey = Value(questKey),
+        title = Value(title),
+        description = Value(description),
+        checkType = Value(checkType),
+        checkParamsJson = Value(checkParamsJson),
+        assignedDate = Value(assignedDate);
+  static Insertable<ClassQuestsTableData> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? classType,
+    Expression<String>? questKey,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<String>? checkType,
+    Expression<String>? checkParamsJson,
+    Expression<int>? xpReward,
+    Expression<int>? goldReward,
+    Expression<String>? assignedDate,
+    Expression<bool>? completed,
+    Expression<int>? progress,
+    Expression<int>? progressTarget,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (classType != null) 'class_type': classType,
+      if (questKey != null) 'quest_key': questKey,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (checkType != null) 'check_type': checkType,
+      if (checkParamsJson != null) 'check_params_json': checkParamsJson,
+      if (xpReward != null) 'xp_reward': xpReward,
+      if (goldReward != null) 'gold_reward': goldReward,
+      if (assignedDate != null) 'assigned_date': assignedDate,
+      if (completed != null) 'completed': completed,
+      if (progress != null) 'progress': progress,
+      if (progressTarget != null) 'progress_target': progressTarget,
+    });
+  }
+
+  ClassQuestsTableCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? playerId,
+      Value<String>? classType,
+      Value<String>? questKey,
+      Value<String>? title,
+      Value<String>? description,
+      Value<String>? checkType,
+      Value<String>? checkParamsJson,
+      Value<int>? xpReward,
+      Value<int>? goldReward,
+      Value<String>? assignedDate,
+      Value<bool>? completed,
+      Value<int>? progress,
+      Value<int>? progressTarget}) {
+    return ClassQuestsTableCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      classType: classType ?? this.classType,
+      questKey: questKey ?? this.questKey,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      checkType: checkType ?? this.checkType,
+      checkParamsJson: checkParamsJson ?? this.checkParamsJson,
+      xpReward: xpReward ?? this.xpReward,
+      goldReward: goldReward ?? this.goldReward,
+      assignedDate: assignedDate ?? this.assignedDate,
+      completed: completed ?? this.completed,
+      progress: progress ?? this.progress,
+      progressTarget: progressTarget ?? this.progressTarget,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (classType.present) {
+      map['class_type'] = Variable<String>(classType.value);
+    }
+    if (questKey.present) {
+      map['quest_key'] = Variable<String>(questKey.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (checkType.present) {
+      map['check_type'] = Variable<String>(checkType.value);
+    }
+    if (checkParamsJson.present) {
+      map['check_params_json'] = Variable<String>(checkParamsJson.value);
+    }
+    if (xpReward.present) {
+      map['xp_reward'] = Variable<int>(xpReward.value);
+    }
+    if (goldReward.present) {
+      map['gold_reward'] = Variable<int>(goldReward.value);
+    }
+    if (assignedDate.present) {
+      map['assigned_date'] = Variable<String>(assignedDate.value);
+    }
+    if (completed.present) {
+      map['completed'] = Variable<bool>(completed.value);
+    }
+    if (progress.present) {
+      map['progress'] = Variable<int>(progress.value);
+    }
+    if (progressTarget.present) {
+      map['progress_target'] = Variable<int>(progressTarget.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ClassQuestsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('classType: $classType, ')
+          ..write('questKey: $questKey, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('checkType: $checkType, ')
+          ..write('checkParamsJson: $checkParamsJson, ')
+          ..write('xpReward: $xpReward, ')
+          ..write('goldReward: $goldReward, ')
+          ..write('assignedDate: $assignedDate, ')
+          ..write('completed: $completed, ')
+          ..write('progress: $progress, ')
+          ..write('progressTarget: $progressTarget')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FactionQuestsTableTable extends FactionQuestsTable
+    with TableInfo<$FactionQuestsTableTable, FactionQuestsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FactionQuestsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _factionIdMeta =
+      const VerificationMeta('factionId');
+  @override
+  late final GeneratedColumn<String> factionId = GeneratedColumn<String>(
+      'faction_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _questKeyMeta =
+      const VerificationMeta('questKey');
+  @override
+  late final GeneratedColumn<String> questKey = GeneratedColumn<String>(
+      'quest_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+      'title', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _checkTypeMeta =
+      const VerificationMeta('checkType');
+  @override
+  late final GeneratedColumn<String> checkType = GeneratedColumn<String>(
+      'check_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _checkParamsJsonMeta =
+      const VerificationMeta('checkParamsJson');
+  @override
+  late final GeneratedColumn<String> checkParamsJson = GeneratedColumn<String>(
+      'check_params_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _xpRewardMeta =
+      const VerificationMeta('xpReward');
+  @override
+  late final GeneratedColumn<int> xpReward = GeneratedColumn<int>(
+      'xp_reward', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _goldRewardMeta =
+      const VerificationMeta('goldReward');
+  @override
+  late final GeneratedColumn<int> goldReward = GeneratedColumn<int>(
+      'gold_reward', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _factionItemChanceMeta =
+      const VerificationMeta('factionItemChance');
+  @override
+  late final GeneratedColumn<double> factionItemChance =
+      GeneratedColumn<double>('faction_item_chance', aliasedName, false,
+          type: DriftSqlType.double,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0.05));
+  static const VerificationMeta _weekStartMeta =
+      const VerificationMeta('weekStart');
+  @override
+  late final GeneratedColumn<String> weekStart = GeneratedColumn<String>(
+      'week_start', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _completedMeta =
+      const VerificationMeta('completed');
+  @override
+  late final GeneratedColumn<bool> completed = GeneratedColumn<bool>(
+      'completed', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("completed" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _progressMeta =
+      const VerificationMeta('progress');
+  @override
+  late final GeneratedColumn<int> progress = GeneratedColumn<int>(
+      'progress', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _progressTargetMeta =
+      const VerificationMeta('progressTarget');
+  @override
+  late final GeneratedColumn<int> progressTarget = GeneratedColumn<int>(
+      'progress_target', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _lastQuestKeyMeta =
+      const VerificationMeta('lastQuestKey');
+  @override
+  late final GeneratedColumn<String> lastQuestKey = GeneratedColumn<String>(
+      'last_quest_key', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        playerId,
+        factionId,
+        questKey,
+        title,
+        description,
+        checkType,
+        checkParamsJson,
+        xpReward,
+        goldReward,
+        factionItemChance,
+        weekStart,
+        completed,
+        progress,
+        progressTarget,
+        lastQuestKey
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'active_faction_quests';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<FactionQuestsTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('faction_id')) {
+      context.handle(_factionIdMeta,
+          factionId.isAcceptableOrUnknown(data['faction_id']!, _factionIdMeta));
+    } else if (isInserting) {
+      context.missing(_factionIdMeta);
+    }
+    if (data.containsKey('quest_key')) {
+      context.handle(_questKeyMeta,
+          questKey.isAcceptableOrUnknown(data['quest_key']!, _questKeyMeta));
+    } else if (isInserting) {
+      context.missing(_questKeyMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('check_type')) {
+      context.handle(_checkTypeMeta,
+          checkType.isAcceptableOrUnknown(data['check_type']!, _checkTypeMeta));
+    } else if (isInserting) {
+      context.missing(_checkTypeMeta);
+    }
+    if (data.containsKey('check_params_json')) {
+      context.handle(
+          _checkParamsJsonMeta,
+          checkParamsJson.isAcceptableOrUnknown(
+              data['check_params_json']!, _checkParamsJsonMeta));
+    } else if (isInserting) {
+      context.missing(_checkParamsJsonMeta);
+    }
+    if (data.containsKey('xp_reward')) {
+      context.handle(_xpRewardMeta,
+          xpReward.isAcceptableOrUnknown(data['xp_reward']!, _xpRewardMeta));
+    }
+    if (data.containsKey('gold_reward')) {
+      context.handle(
+          _goldRewardMeta,
+          goldReward.isAcceptableOrUnknown(
+              data['gold_reward']!, _goldRewardMeta));
+    }
+    if (data.containsKey('faction_item_chance')) {
+      context.handle(
+          _factionItemChanceMeta,
+          factionItemChance.isAcceptableOrUnknown(
+              data['faction_item_chance']!, _factionItemChanceMeta));
+    }
+    if (data.containsKey('week_start')) {
+      context.handle(_weekStartMeta,
+          weekStart.isAcceptableOrUnknown(data['week_start']!, _weekStartMeta));
+    } else if (isInserting) {
+      context.missing(_weekStartMeta);
+    }
+    if (data.containsKey('completed')) {
+      context.handle(_completedMeta,
+          completed.isAcceptableOrUnknown(data['completed']!, _completedMeta));
+    }
+    if (data.containsKey('progress')) {
+      context.handle(_progressMeta,
+          progress.isAcceptableOrUnknown(data['progress']!, _progressMeta));
+    }
+    if (data.containsKey('progress_target')) {
+      context.handle(
+          _progressTargetMeta,
+          progressTarget.isAcceptableOrUnknown(
+              data['progress_target']!, _progressTargetMeta));
+    }
+    if (data.containsKey('last_quest_key')) {
+      context.handle(
+          _lastQuestKeyMeta,
+          lastQuestKey.isAcceptableOrUnknown(
+              data['last_quest_key']!, _lastQuestKeyMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FactionQuestsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FactionQuestsTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      factionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}faction_id'])!,
+      questKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}quest_key'])!,
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      checkType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}check_type'])!,
+      checkParamsJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}check_params_json'])!,
+      xpReward: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}xp_reward'])!,
+      goldReward: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}gold_reward'])!,
+      factionItemChance: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}faction_item_chance'])!,
+      weekStart: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}week_start'])!,
+      completed: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}completed'])!,
+      progress: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}progress'])!,
+      progressTarget: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}progress_target'])!,
+      lastQuestKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}last_quest_key'])!,
+    );
+  }
+
+  @override
+  $FactionQuestsTableTable createAlias(String alias) {
+    return $FactionQuestsTableTable(attachedDatabase, alias);
+  }
+}
+
+class FactionQuestsTableData extends DataClass
+    implements Insertable<FactionQuestsTableData> {
+  final int id;
+  final int playerId;
+  final String factionId;
+  final String questKey;
+  final String title;
+  final String description;
+  final String checkType;
+  final String checkParamsJson;
+  final int xpReward;
+  final int goldReward;
+  final double factionItemChance;
+  final String weekStart;
+  final bool completed;
+  final int progress;
+  final int progressTarget;
+  final String lastQuestKey;
+  const FactionQuestsTableData(
+      {required this.id,
+      required this.playerId,
+      required this.factionId,
+      required this.questKey,
+      required this.title,
+      required this.description,
+      required this.checkType,
+      required this.checkParamsJson,
+      required this.xpReward,
+      required this.goldReward,
+      required this.factionItemChance,
+      required this.weekStart,
+      required this.completed,
+      required this.progress,
+      required this.progressTarget,
+      required this.lastQuestKey});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['faction_id'] = Variable<String>(factionId);
+    map['quest_key'] = Variable<String>(questKey);
+    map['title'] = Variable<String>(title);
+    map['description'] = Variable<String>(description);
+    map['check_type'] = Variable<String>(checkType);
+    map['check_params_json'] = Variable<String>(checkParamsJson);
+    map['xp_reward'] = Variable<int>(xpReward);
+    map['gold_reward'] = Variable<int>(goldReward);
+    map['faction_item_chance'] = Variable<double>(factionItemChance);
+    map['week_start'] = Variable<String>(weekStart);
+    map['completed'] = Variable<bool>(completed);
+    map['progress'] = Variable<int>(progress);
+    map['progress_target'] = Variable<int>(progressTarget);
+    map['last_quest_key'] = Variable<String>(lastQuestKey);
+    return map;
+  }
+
+  FactionQuestsTableCompanion toCompanion(bool nullToAbsent) {
+    return FactionQuestsTableCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      factionId: Value(factionId),
+      questKey: Value(questKey),
+      title: Value(title),
+      description: Value(description),
+      checkType: Value(checkType),
+      checkParamsJson: Value(checkParamsJson),
+      xpReward: Value(xpReward),
+      goldReward: Value(goldReward),
+      factionItemChance: Value(factionItemChance),
+      weekStart: Value(weekStart),
+      completed: Value(completed),
+      progress: Value(progress),
+      progressTarget: Value(progressTarget),
+      lastQuestKey: Value(lastQuestKey),
+    );
+  }
+
+  factory FactionQuestsTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FactionQuestsTableData(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      factionId: serializer.fromJson<String>(json['factionId']),
+      questKey: serializer.fromJson<String>(json['questKey']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String>(json['description']),
+      checkType: serializer.fromJson<String>(json['checkType']),
+      checkParamsJson: serializer.fromJson<String>(json['checkParamsJson']),
+      xpReward: serializer.fromJson<int>(json['xpReward']),
+      goldReward: serializer.fromJson<int>(json['goldReward']),
+      factionItemChance: serializer.fromJson<double>(json['factionItemChance']),
+      weekStart: serializer.fromJson<String>(json['weekStart']),
+      completed: serializer.fromJson<bool>(json['completed']),
+      progress: serializer.fromJson<int>(json['progress']),
+      progressTarget: serializer.fromJson<int>(json['progressTarget']),
+      lastQuestKey: serializer.fromJson<String>(json['lastQuestKey']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'factionId': serializer.toJson<String>(factionId),
+      'questKey': serializer.toJson<String>(questKey),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String>(description),
+      'checkType': serializer.toJson<String>(checkType),
+      'checkParamsJson': serializer.toJson<String>(checkParamsJson),
+      'xpReward': serializer.toJson<int>(xpReward),
+      'goldReward': serializer.toJson<int>(goldReward),
+      'factionItemChance': serializer.toJson<double>(factionItemChance),
+      'weekStart': serializer.toJson<String>(weekStart),
+      'completed': serializer.toJson<bool>(completed),
+      'progress': serializer.toJson<int>(progress),
+      'progressTarget': serializer.toJson<int>(progressTarget),
+      'lastQuestKey': serializer.toJson<String>(lastQuestKey),
+    };
+  }
+
+  FactionQuestsTableData copyWith(
+          {int? id,
+          int? playerId,
+          String? factionId,
+          String? questKey,
+          String? title,
+          String? description,
+          String? checkType,
+          String? checkParamsJson,
+          int? xpReward,
+          int? goldReward,
+          double? factionItemChance,
+          String? weekStart,
+          bool? completed,
+          int? progress,
+          int? progressTarget,
+          String? lastQuestKey}) =>
+      FactionQuestsTableData(
+        id: id ?? this.id,
+        playerId: playerId ?? this.playerId,
+        factionId: factionId ?? this.factionId,
+        questKey: questKey ?? this.questKey,
+        title: title ?? this.title,
+        description: description ?? this.description,
+        checkType: checkType ?? this.checkType,
+        checkParamsJson: checkParamsJson ?? this.checkParamsJson,
+        xpReward: xpReward ?? this.xpReward,
+        goldReward: goldReward ?? this.goldReward,
+        factionItemChance: factionItemChance ?? this.factionItemChance,
+        weekStart: weekStart ?? this.weekStart,
+        completed: completed ?? this.completed,
+        progress: progress ?? this.progress,
+        progressTarget: progressTarget ?? this.progressTarget,
+        lastQuestKey: lastQuestKey ?? this.lastQuestKey,
+      );
+  FactionQuestsTableData copyWithCompanion(FactionQuestsTableCompanion data) {
+    return FactionQuestsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      factionId: data.factionId.present ? data.factionId.value : this.factionId,
+      questKey: data.questKey.present ? data.questKey.value : this.questKey,
+      title: data.title.present ? data.title.value : this.title,
+      description:
+          data.description.present ? data.description.value : this.description,
+      checkType: data.checkType.present ? data.checkType.value : this.checkType,
+      checkParamsJson: data.checkParamsJson.present
+          ? data.checkParamsJson.value
+          : this.checkParamsJson,
+      xpReward: data.xpReward.present ? data.xpReward.value : this.xpReward,
+      goldReward:
+          data.goldReward.present ? data.goldReward.value : this.goldReward,
+      factionItemChance: data.factionItemChance.present
+          ? data.factionItemChance.value
+          : this.factionItemChance,
+      weekStart: data.weekStart.present ? data.weekStart.value : this.weekStart,
+      completed: data.completed.present ? data.completed.value : this.completed,
+      progress: data.progress.present ? data.progress.value : this.progress,
+      progressTarget: data.progressTarget.present
+          ? data.progressTarget.value
+          : this.progressTarget,
+      lastQuestKey: data.lastQuestKey.present
+          ? data.lastQuestKey.value
+          : this.lastQuestKey,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FactionQuestsTableData(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('factionId: $factionId, ')
+          ..write('questKey: $questKey, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('checkType: $checkType, ')
+          ..write('checkParamsJson: $checkParamsJson, ')
+          ..write('xpReward: $xpReward, ')
+          ..write('goldReward: $goldReward, ')
+          ..write('factionItemChance: $factionItemChance, ')
+          ..write('weekStart: $weekStart, ')
+          ..write('completed: $completed, ')
+          ..write('progress: $progress, ')
+          ..write('progressTarget: $progressTarget, ')
+          ..write('lastQuestKey: $lastQuestKey')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      playerId,
+      factionId,
+      questKey,
+      title,
+      description,
+      checkType,
+      checkParamsJson,
+      xpReward,
+      goldReward,
+      factionItemChance,
+      weekStart,
+      completed,
+      progress,
+      progressTarget,
+      lastQuestKey);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FactionQuestsTableData &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.factionId == this.factionId &&
+          other.questKey == this.questKey &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.checkType == this.checkType &&
+          other.checkParamsJson == this.checkParamsJson &&
+          other.xpReward == this.xpReward &&
+          other.goldReward == this.goldReward &&
+          other.factionItemChance == this.factionItemChance &&
+          other.weekStart == this.weekStart &&
+          other.completed == this.completed &&
+          other.progress == this.progress &&
+          other.progressTarget == this.progressTarget &&
+          other.lastQuestKey == this.lastQuestKey);
+}
+
+class FactionQuestsTableCompanion
+    extends UpdateCompanion<FactionQuestsTableData> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> factionId;
+  final Value<String> questKey;
+  final Value<String> title;
+  final Value<String> description;
+  final Value<String> checkType;
+  final Value<String> checkParamsJson;
+  final Value<int> xpReward;
+  final Value<int> goldReward;
+  final Value<double> factionItemChance;
+  final Value<String> weekStart;
+  final Value<bool> completed;
+  final Value<int> progress;
+  final Value<int> progressTarget;
+  final Value<String> lastQuestKey;
+  const FactionQuestsTableCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.factionId = const Value.absent(),
+    this.questKey = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.checkType = const Value.absent(),
+    this.checkParamsJson = const Value.absent(),
+    this.xpReward = const Value.absent(),
+    this.goldReward = const Value.absent(),
+    this.factionItemChance = const Value.absent(),
+    this.weekStart = const Value.absent(),
+    this.completed = const Value.absent(),
+    this.progress = const Value.absent(),
+    this.progressTarget = const Value.absent(),
+    this.lastQuestKey = const Value.absent(),
+  });
+  FactionQuestsTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String factionId,
+    required String questKey,
+    required String title,
+    required String description,
+    required String checkType,
+    required String checkParamsJson,
+    this.xpReward = const Value.absent(),
+    this.goldReward = const Value.absent(),
+    this.factionItemChance = const Value.absent(),
+    required String weekStart,
+    this.completed = const Value.absent(),
+    this.progress = const Value.absent(),
+    this.progressTarget = const Value.absent(),
+    this.lastQuestKey = const Value.absent(),
+  })  : playerId = Value(playerId),
+        factionId = Value(factionId),
+        questKey = Value(questKey),
+        title = Value(title),
+        description = Value(description),
+        checkType = Value(checkType),
+        checkParamsJson = Value(checkParamsJson),
+        weekStart = Value(weekStart);
+  static Insertable<FactionQuestsTableData> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? factionId,
+    Expression<String>? questKey,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<String>? checkType,
+    Expression<String>? checkParamsJson,
+    Expression<int>? xpReward,
+    Expression<int>? goldReward,
+    Expression<double>? factionItemChance,
+    Expression<String>? weekStart,
+    Expression<bool>? completed,
+    Expression<int>? progress,
+    Expression<int>? progressTarget,
+    Expression<String>? lastQuestKey,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (factionId != null) 'faction_id': factionId,
+      if (questKey != null) 'quest_key': questKey,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (checkType != null) 'check_type': checkType,
+      if (checkParamsJson != null) 'check_params_json': checkParamsJson,
+      if (xpReward != null) 'xp_reward': xpReward,
+      if (goldReward != null) 'gold_reward': goldReward,
+      if (factionItemChance != null) 'faction_item_chance': factionItemChance,
+      if (weekStart != null) 'week_start': weekStart,
+      if (completed != null) 'completed': completed,
+      if (progress != null) 'progress': progress,
+      if (progressTarget != null) 'progress_target': progressTarget,
+      if (lastQuestKey != null) 'last_quest_key': lastQuestKey,
+    });
+  }
+
+  FactionQuestsTableCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? playerId,
+      Value<String>? factionId,
+      Value<String>? questKey,
+      Value<String>? title,
+      Value<String>? description,
+      Value<String>? checkType,
+      Value<String>? checkParamsJson,
+      Value<int>? xpReward,
+      Value<int>? goldReward,
+      Value<double>? factionItemChance,
+      Value<String>? weekStart,
+      Value<bool>? completed,
+      Value<int>? progress,
+      Value<int>? progressTarget,
+      Value<String>? lastQuestKey}) {
+    return FactionQuestsTableCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      factionId: factionId ?? this.factionId,
+      questKey: questKey ?? this.questKey,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      checkType: checkType ?? this.checkType,
+      checkParamsJson: checkParamsJson ?? this.checkParamsJson,
+      xpReward: xpReward ?? this.xpReward,
+      goldReward: goldReward ?? this.goldReward,
+      factionItemChance: factionItemChance ?? this.factionItemChance,
+      weekStart: weekStart ?? this.weekStart,
+      completed: completed ?? this.completed,
+      progress: progress ?? this.progress,
+      progressTarget: progressTarget ?? this.progressTarget,
+      lastQuestKey: lastQuestKey ?? this.lastQuestKey,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (factionId.present) {
+      map['faction_id'] = Variable<String>(factionId.value);
+    }
+    if (questKey.present) {
+      map['quest_key'] = Variable<String>(questKey.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (checkType.present) {
+      map['check_type'] = Variable<String>(checkType.value);
+    }
+    if (checkParamsJson.present) {
+      map['check_params_json'] = Variable<String>(checkParamsJson.value);
+    }
+    if (xpReward.present) {
+      map['xp_reward'] = Variable<int>(xpReward.value);
+    }
+    if (goldReward.present) {
+      map['gold_reward'] = Variable<int>(goldReward.value);
+    }
+    if (factionItemChance.present) {
+      map['faction_item_chance'] = Variable<double>(factionItemChance.value);
+    }
+    if (weekStart.present) {
+      map['week_start'] = Variable<String>(weekStart.value);
+    }
+    if (completed.present) {
+      map['completed'] = Variable<bool>(completed.value);
+    }
+    if (progress.present) {
+      map['progress'] = Variable<int>(progress.value);
+    }
+    if (progressTarget.present) {
+      map['progress_target'] = Variable<int>(progressTarget.value);
+    }
+    if (lastQuestKey.present) {
+      map['last_quest_key'] = Variable<String>(lastQuestKey.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FactionQuestsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('factionId: $factionId, ')
+          ..write('questKey: $questKey, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('checkType: $checkType, ')
+          ..write('checkParamsJson: $checkParamsJson, ')
+          ..write('xpReward: $xpReward, ')
+          ..write('goldReward: $goldReward, ')
+          ..write('factionItemChance: $factionItemChance, ')
+          ..write('weekStart: $weekStart, ')
+          ..write('completed: $completed, ')
+          ..write('progress: $progress, ')
+          ..write('progressTarget: $progressTarget, ')
+          ..write('lastQuestKey: $lastQuestKey')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -6313,6 +7746,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $NpcReputationTableTable(this);
   late final $DiaryEntriesTableTable diaryEntriesTable =
       $DiaryEntriesTableTable(this);
+  late final $ClassQuestsTableTable classQuestsTable =
+      $ClassQuestsTableTable(this);
+  late final $FactionQuestsTableTable factionQuestsTable =
+      $FactionQuestsTableTable(this);
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
   late final HabitDao habitDao = HabitDao(this as AppDatabase);
   late final InventoryDao inventoryDao = InventoryDao(this as AppDatabase);
@@ -6334,7 +7771,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         playerAchievementsTable,
         guildStatusTable,
         npcReputationTable,
-        diaryEntriesTable
+        diaryEntriesTable,
+        classQuestsTable,
+        factionQuestsTable
       ];
 }
 
@@ -9324,6 +10763,659 @@ typedef $$DiaryEntriesTableTableProcessedTableManager = ProcessedTableManager<
     ),
     DiaryEntriesTableData,
     PrefetchHooks Function()>;
+typedef $$ClassQuestsTableTableCreateCompanionBuilder
+    = ClassQuestsTableCompanion Function({
+  Value<int> id,
+  required int playerId,
+  required String classType,
+  required String questKey,
+  required String title,
+  required String description,
+  required String checkType,
+  required String checkParamsJson,
+  Value<int> xpReward,
+  Value<int> goldReward,
+  required String assignedDate,
+  Value<bool> completed,
+  Value<int> progress,
+  Value<int> progressTarget,
+});
+typedef $$ClassQuestsTableTableUpdateCompanionBuilder
+    = ClassQuestsTableCompanion Function({
+  Value<int> id,
+  Value<int> playerId,
+  Value<String> classType,
+  Value<String> questKey,
+  Value<String> title,
+  Value<String> description,
+  Value<String> checkType,
+  Value<String> checkParamsJson,
+  Value<int> xpReward,
+  Value<int> goldReward,
+  Value<String> assignedDate,
+  Value<bool> completed,
+  Value<int> progress,
+  Value<int> progressTarget,
+});
+
+class $$ClassQuestsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ClassQuestsTableTable> {
+  $$ClassQuestsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get classType => $composableBuilder(
+      column: $table.classType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get questKey => $composableBuilder(
+      column: $table.questKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get checkType => $composableBuilder(
+      column: $table.checkType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get checkParamsJson => $composableBuilder(
+      column: $table.checkParamsJson,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get xpReward => $composableBuilder(
+      column: $table.xpReward, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get goldReward => $composableBuilder(
+      column: $table.goldReward, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get assignedDate => $composableBuilder(
+      column: $table.assignedDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get completed => $composableBuilder(
+      column: $table.completed, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get progress => $composableBuilder(
+      column: $table.progress, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get progressTarget => $composableBuilder(
+      column: $table.progressTarget,
+      builder: (column) => ColumnFilters(column));
+}
+
+class $$ClassQuestsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ClassQuestsTableTable> {
+  $$ClassQuestsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get classType => $composableBuilder(
+      column: $table.classType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get questKey => $composableBuilder(
+      column: $table.questKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get checkType => $composableBuilder(
+      column: $table.checkType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get checkParamsJson => $composableBuilder(
+      column: $table.checkParamsJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get xpReward => $composableBuilder(
+      column: $table.xpReward, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get goldReward => $composableBuilder(
+      column: $table.goldReward, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get assignedDate => $composableBuilder(
+      column: $table.assignedDate,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get completed => $composableBuilder(
+      column: $table.completed, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get progress => $composableBuilder(
+      column: $table.progress, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get progressTarget => $composableBuilder(
+      column: $table.progressTarget,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$ClassQuestsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ClassQuestsTableTable> {
+  $$ClassQuestsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get classType =>
+      $composableBuilder(column: $table.classType, builder: (column) => column);
+
+  GeneratedColumn<String> get questKey =>
+      $composableBuilder(column: $table.questKey, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<String> get checkType =>
+      $composableBuilder(column: $table.checkType, builder: (column) => column);
+
+  GeneratedColumn<String> get checkParamsJson => $composableBuilder(
+      column: $table.checkParamsJson, builder: (column) => column);
+
+  GeneratedColumn<int> get xpReward =>
+      $composableBuilder(column: $table.xpReward, builder: (column) => column);
+
+  GeneratedColumn<int> get goldReward => $composableBuilder(
+      column: $table.goldReward, builder: (column) => column);
+
+  GeneratedColumn<String> get assignedDate => $composableBuilder(
+      column: $table.assignedDate, builder: (column) => column);
+
+  GeneratedColumn<bool> get completed =>
+      $composableBuilder(column: $table.completed, builder: (column) => column);
+
+  GeneratedColumn<int> get progress =>
+      $composableBuilder(column: $table.progress, builder: (column) => column);
+
+  GeneratedColumn<int> get progressTarget => $composableBuilder(
+      column: $table.progressTarget, builder: (column) => column);
+}
+
+class $$ClassQuestsTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ClassQuestsTableTable,
+    ClassQuestsTableData,
+    $$ClassQuestsTableTableFilterComposer,
+    $$ClassQuestsTableTableOrderingComposer,
+    $$ClassQuestsTableTableAnnotationComposer,
+    $$ClassQuestsTableTableCreateCompanionBuilder,
+    $$ClassQuestsTableTableUpdateCompanionBuilder,
+    (
+      ClassQuestsTableData,
+      BaseReferences<_$AppDatabase, $ClassQuestsTableTable,
+          ClassQuestsTableData>
+    ),
+    ClassQuestsTableData,
+    PrefetchHooks Function()> {
+  $$ClassQuestsTableTableTableManager(
+      _$AppDatabase db, $ClassQuestsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ClassQuestsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ClassQuestsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ClassQuestsTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> playerId = const Value.absent(),
+            Value<String> classType = const Value.absent(),
+            Value<String> questKey = const Value.absent(),
+            Value<String> title = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<String> checkType = const Value.absent(),
+            Value<String> checkParamsJson = const Value.absent(),
+            Value<int> xpReward = const Value.absent(),
+            Value<int> goldReward = const Value.absent(),
+            Value<String> assignedDate = const Value.absent(),
+            Value<bool> completed = const Value.absent(),
+            Value<int> progress = const Value.absent(),
+            Value<int> progressTarget = const Value.absent(),
+          }) =>
+              ClassQuestsTableCompanion(
+            id: id,
+            playerId: playerId,
+            classType: classType,
+            questKey: questKey,
+            title: title,
+            description: description,
+            checkType: checkType,
+            checkParamsJson: checkParamsJson,
+            xpReward: xpReward,
+            goldReward: goldReward,
+            assignedDate: assignedDate,
+            completed: completed,
+            progress: progress,
+            progressTarget: progressTarget,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int playerId,
+            required String classType,
+            required String questKey,
+            required String title,
+            required String description,
+            required String checkType,
+            required String checkParamsJson,
+            Value<int> xpReward = const Value.absent(),
+            Value<int> goldReward = const Value.absent(),
+            required String assignedDate,
+            Value<bool> completed = const Value.absent(),
+            Value<int> progress = const Value.absent(),
+            Value<int> progressTarget = const Value.absent(),
+          }) =>
+              ClassQuestsTableCompanion.insert(
+            id: id,
+            playerId: playerId,
+            classType: classType,
+            questKey: questKey,
+            title: title,
+            description: description,
+            checkType: checkType,
+            checkParamsJson: checkParamsJson,
+            xpReward: xpReward,
+            goldReward: goldReward,
+            assignedDate: assignedDate,
+            completed: completed,
+            progress: progress,
+            progressTarget: progressTarget,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$ClassQuestsTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ClassQuestsTableTable,
+    ClassQuestsTableData,
+    $$ClassQuestsTableTableFilterComposer,
+    $$ClassQuestsTableTableOrderingComposer,
+    $$ClassQuestsTableTableAnnotationComposer,
+    $$ClassQuestsTableTableCreateCompanionBuilder,
+    $$ClassQuestsTableTableUpdateCompanionBuilder,
+    (
+      ClassQuestsTableData,
+      BaseReferences<_$AppDatabase, $ClassQuestsTableTable,
+          ClassQuestsTableData>
+    ),
+    ClassQuestsTableData,
+    PrefetchHooks Function()>;
+typedef $$FactionQuestsTableTableCreateCompanionBuilder
+    = FactionQuestsTableCompanion Function({
+  Value<int> id,
+  required int playerId,
+  required String factionId,
+  required String questKey,
+  required String title,
+  required String description,
+  required String checkType,
+  required String checkParamsJson,
+  Value<int> xpReward,
+  Value<int> goldReward,
+  Value<double> factionItemChance,
+  required String weekStart,
+  Value<bool> completed,
+  Value<int> progress,
+  Value<int> progressTarget,
+  Value<String> lastQuestKey,
+});
+typedef $$FactionQuestsTableTableUpdateCompanionBuilder
+    = FactionQuestsTableCompanion Function({
+  Value<int> id,
+  Value<int> playerId,
+  Value<String> factionId,
+  Value<String> questKey,
+  Value<String> title,
+  Value<String> description,
+  Value<String> checkType,
+  Value<String> checkParamsJson,
+  Value<int> xpReward,
+  Value<int> goldReward,
+  Value<double> factionItemChance,
+  Value<String> weekStart,
+  Value<bool> completed,
+  Value<int> progress,
+  Value<int> progressTarget,
+  Value<String> lastQuestKey,
+});
+
+class $$FactionQuestsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $FactionQuestsTableTable> {
+  $$FactionQuestsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get factionId => $composableBuilder(
+      column: $table.factionId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get questKey => $composableBuilder(
+      column: $table.questKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get checkType => $composableBuilder(
+      column: $table.checkType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get checkParamsJson => $composableBuilder(
+      column: $table.checkParamsJson,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get xpReward => $composableBuilder(
+      column: $table.xpReward, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get goldReward => $composableBuilder(
+      column: $table.goldReward, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get factionItemChance => $composableBuilder(
+      column: $table.factionItemChance,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get weekStart => $composableBuilder(
+      column: $table.weekStart, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get completed => $composableBuilder(
+      column: $table.completed, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get progress => $composableBuilder(
+      column: $table.progress, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get progressTarget => $composableBuilder(
+      column: $table.progressTarget,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get lastQuestKey => $composableBuilder(
+      column: $table.lastQuestKey, builder: (column) => ColumnFilters(column));
+}
+
+class $$FactionQuestsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $FactionQuestsTableTable> {
+  $$FactionQuestsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get factionId => $composableBuilder(
+      column: $table.factionId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get questKey => $composableBuilder(
+      column: $table.questKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get checkType => $composableBuilder(
+      column: $table.checkType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get checkParamsJson => $composableBuilder(
+      column: $table.checkParamsJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get xpReward => $composableBuilder(
+      column: $table.xpReward, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get goldReward => $composableBuilder(
+      column: $table.goldReward, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get factionItemChance => $composableBuilder(
+      column: $table.factionItemChance,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get weekStart => $composableBuilder(
+      column: $table.weekStart, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get completed => $composableBuilder(
+      column: $table.completed, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get progress => $composableBuilder(
+      column: $table.progress, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get progressTarget => $composableBuilder(
+      column: $table.progressTarget,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get lastQuestKey => $composableBuilder(
+      column: $table.lastQuestKey,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$FactionQuestsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FactionQuestsTableTable> {
+  $$FactionQuestsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get factionId =>
+      $composableBuilder(column: $table.factionId, builder: (column) => column);
+
+  GeneratedColumn<String> get questKey =>
+      $composableBuilder(column: $table.questKey, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<String> get checkType =>
+      $composableBuilder(column: $table.checkType, builder: (column) => column);
+
+  GeneratedColumn<String> get checkParamsJson => $composableBuilder(
+      column: $table.checkParamsJson, builder: (column) => column);
+
+  GeneratedColumn<int> get xpReward =>
+      $composableBuilder(column: $table.xpReward, builder: (column) => column);
+
+  GeneratedColumn<int> get goldReward => $composableBuilder(
+      column: $table.goldReward, builder: (column) => column);
+
+  GeneratedColumn<double> get factionItemChance => $composableBuilder(
+      column: $table.factionItemChance, builder: (column) => column);
+
+  GeneratedColumn<String> get weekStart =>
+      $composableBuilder(column: $table.weekStart, builder: (column) => column);
+
+  GeneratedColumn<bool> get completed =>
+      $composableBuilder(column: $table.completed, builder: (column) => column);
+
+  GeneratedColumn<int> get progress =>
+      $composableBuilder(column: $table.progress, builder: (column) => column);
+
+  GeneratedColumn<int> get progressTarget => $composableBuilder(
+      column: $table.progressTarget, builder: (column) => column);
+
+  GeneratedColumn<String> get lastQuestKey => $composableBuilder(
+      column: $table.lastQuestKey, builder: (column) => column);
+}
+
+class $$FactionQuestsTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $FactionQuestsTableTable,
+    FactionQuestsTableData,
+    $$FactionQuestsTableTableFilterComposer,
+    $$FactionQuestsTableTableOrderingComposer,
+    $$FactionQuestsTableTableAnnotationComposer,
+    $$FactionQuestsTableTableCreateCompanionBuilder,
+    $$FactionQuestsTableTableUpdateCompanionBuilder,
+    (
+      FactionQuestsTableData,
+      BaseReferences<_$AppDatabase, $FactionQuestsTableTable,
+          FactionQuestsTableData>
+    ),
+    FactionQuestsTableData,
+    PrefetchHooks Function()> {
+  $$FactionQuestsTableTableTableManager(
+      _$AppDatabase db, $FactionQuestsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FactionQuestsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FactionQuestsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FactionQuestsTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> playerId = const Value.absent(),
+            Value<String> factionId = const Value.absent(),
+            Value<String> questKey = const Value.absent(),
+            Value<String> title = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<String> checkType = const Value.absent(),
+            Value<String> checkParamsJson = const Value.absent(),
+            Value<int> xpReward = const Value.absent(),
+            Value<int> goldReward = const Value.absent(),
+            Value<double> factionItemChance = const Value.absent(),
+            Value<String> weekStart = const Value.absent(),
+            Value<bool> completed = const Value.absent(),
+            Value<int> progress = const Value.absent(),
+            Value<int> progressTarget = const Value.absent(),
+            Value<String> lastQuestKey = const Value.absent(),
+          }) =>
+              FactionQuestsTableCompanion(
+            id: id,
+            playerId: playerId,
+            factionId: factionId,
+            questKey: questKey,
+            title: title,
+            description: description,
+            checkType: checkType,
+            checkParamsJson: checkParamsJson,
+            xpReward: xpReward,
+            goldReward: goldReward,
+            factionItemChance: factionItemChance,
+            weekStart: weekStart,
+            completed: completed,
+            progress: progress,
+            progressTarget: progressTarget,
+            lastQuestKey: lastQuestKey,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int playerId,
+            required String factionId,
+            required String questKey,
+            required String title,
+            required String description,
+            required String checkType,
+            required String checkParamsJson,
+            Value<int> xpReward = const Value.absent(),
+            Value<int> goldReward = const Value.absent(),
+            Value<double> factionItemChance = const Value.absent(),
+            required String weekStart,
+            Value<bool> completed = const Value.absent(),
+            Value<int> progress = const Value.absent(),
+            Value<int> progressTarget = const Value.absent(),
+            Value<String> lastQuestKey = const Value.absent(),
+          }) =>
+              FactionQuestsTableCompanion.insert(
+            id: id,
+            playerId: playerId,
+            factionId: factionId,
+            questKey: questKey,
+            title: title,
+            description: description,
+            checkType: checkType,
+            checkParamsJson: checkParamsJson,
+            xpReward: xpReward,
+            goldReward: goldReward,
+            factionItemChance: factionItemChance,
+            weekStart: weekStart,
+            completed: completed,
+            progress: progress,
+            progressTarget: progressTarget,
+            lastQuestKey: lastQuestKey,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$FactionQuestsTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $FactionQuestsTableTable,
+    FactionQuestsTableData,
+    $$FactionQuestsTableTableFilterComposer,
+    $$FactionQuestsTableTableOrderingComposer,
+    $$FactionQuestsTableTableAnnotationComposer,
+    $$FactionQuestsTableTableCreateCompanionBuilder,
+    $$FactionQuestsTableTableUpdateCompanionBuilder,
+    (
+      FactionQuestsTableData,
+      BaseReferences<_$AppDatabase, $FactionQuestsTableTable,
+          FactionQuestsTableData>
+    ),
+    FactionQuestsTableData,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -9351,4 +11443,8 @@ class $AppDatabaseManager {
       $$NpcReputationTableTableTableManager(_db, _db.npcReputationTable);
   $$DiaryEntriesTableTableTableManager get diaryEntriesTable =>
       $$DiaryEntriesTableTableTableManager(_db, _db.diaryEntriesTable);
+  $$ClassQuestsTableTableTableManager get classQuestsTable =>
+      $$ClassQuestsTableTableTableManager(_db, _db.classQuestsTable);
+  $$FactionQuestsTableTableTableManager get factionQuestsTable =>
+      $$FactionQuestsTableTableTableManager(_db, _db.factionQuestsTable);
 }

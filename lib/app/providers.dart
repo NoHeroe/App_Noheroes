@@ -7,6 +7,8 @@ import '../data/database/app_database.dart';
 import '../data/database/tables/players_table.dart';
 import '../data/datasources/local/auth_local_ds.dart';
 import '../data/datasources/local/habit_local_ds.dart';
+import '../data/datasources/local/class_quest_service.dart';
+import '../data/datasources/local/faction_quest_service.dart';
 
 // Banco singleton
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
@@ -78,4 +80,31 @@ final unlockedAchievementsProvider =
   final player = ref.watch(currentPlayerProvider);
   if (player == null) return [];
   return AchievementDao(ref.watch(appDatabaseProvider)).getUnlocked(player.id);
+});
+
+// ── Class Quest Providers ──
+final classQuestServiceProvider = Provider<ClassQuestService>((ref) {
+  return ClassQuestService(ref.read(appDatabaseProvider));
+});
+
+final todayClassQuestsProvider = FutureProvider.autoDispose<List<ClassQuestsTableData>>((ref) async {
+  final player = ref.watch(currentPlayerProvider);
+  if (player == null || (player.classType?.isEmpty ?? true)) return [];
+  final service = ref.read(classQuestServiceProvider);
+  await service.assignDailyQuests(player.id, player.classType!);
+  return service.getTodayQuests(player.id);
+});
+
+// ── Faction Quest Providers ──
+final factionQuestServiceProvider = Provider<FactionQuestService>((ref) {
+  return FactionQuestService(ref.read(appDatabaseProvider));
+});
+
+final activeFactionQuestProvider = FutureProvider.autoDispose<FactionQuestsTableData?>((ref) async {
+  final player = ref.watch(currentPlayerProvider);
+  if (player == null) return null;
+  final faction = player.factionType ?? '';
+  if (faction.isEmpty || faction == 'none' || faction.startsWith('pending:')) return null;
+  final service = ref.read(factionQuestServiceProvider);
+  return service.assignWeeklyQuest(player.id, faction);
 });

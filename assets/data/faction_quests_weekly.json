@@ -1,0 +1,993 @@
+{
+  "faction_quests": {
+    "moon_clan": [
+      {
+        "key": "mc01",
+        "title": "Ritual da Lua Nova",
+        "description": "Complete 5 missoes espirituais esta semana. O Cla da Lua honra o ciclo.",
+        "check_type": "complete_category_week",
+        "check_params": {
+          "category": "spiritual",
+          "count": 5
+        },
+        "xp": 300,
+        "gold": 150,
+        "faction_item_chance": 0.3
+      },
+      {
+        "key": "mc02",
+        "title": "Silencio da Meia-Noite",
+        "description": "Sem niet por 5 dias consecutivos. A lua nao faz barulho.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 280,
+        "gold": 140,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "mc03",
+        "title": "Meditacao Lunar",
+        "description": "Escreva 200 palavras no diario esta semana.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 200
+        },
+        "xp": 260,
+        "gold": 130,
+        "faction_item_chance": 0.2
+      },
+      {
+        "key": "mc04",
+        "title": "Devocao Noturna",
+        "description": "Complete 3 missoes espirituais e 2 mentais esta semana.",
+        "check_type": "complete_category_week",
+        "check_params": {
+          "category": "spiritual",
+          "count": 3
+        },
+        "xp": 320,
+        "gold": 160,
+        "faction_item_chance": 0.35
+      },
+      {
+        "key": "mc05",
+        "title": "Ciclo Completo",
+        "description": "Mantenha streak de 7 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 400,
+        "gold": 200,
+        "faction_item_chance": 0.4
+      },
+      {
+        "key": "mc06",
+        "title": "Luz Interna",
+        "description": "Complete 8 missoes de qualquer categoria esta semana.",
+        "check_type": "complete_any_week",
+        "check_params": {
+          "count": 8
+        },
+        "xp": 290,
+        "gold": 145,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "mc07",
+        "title": "Guardiao da Noite",
+        "description": "Gaste 100 de ouro na loja esta semana.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 100
+        },
+        "xp": 250,
+        "gold": 0,
+        "faction_item_chance": 0.2
+      },
+      {
+        "key": "mc08",
+        "title": "Sussurro da Lua",
+        "description": "Sem niet por 7 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 450,
+        "gold": 225,
+        "faction_item_chance": 0.45
+      },
+      {
+        "key": "mc09",
+        "title": "Fase Final",
+        "description": "Complete 10 missoes esta semana.",
+        "check_type": "complete_any_week",
+        "check_params": {
+          "count": 10
+        },
+        "xp": 380,
+        "gold": 190,
+        "faction_item_chance": 0.35
+      },
+      {
+        "key": "mc10",
+        "title": "A Lua Cheia",
+        "description": "Complete 7 espirituais e escreva 300 palavras no diario.",
+        "check_type": "complete_category_week",
+        "check_params": {
+          "category": "spiritual",
+          "count": 7
+        },
+        "xp": 500,
+        "gold": 250,
+        "faction_item_chance": 0.5
+      }
+    ],
+    "sun_clan": [
+      {
+        "key": "sc01",
+        "title": "Despertar Solar",
+        "description": "Complete 5 missoes fisicas esta semana. O Cla do Sol age com vigor.",
+        "check_type": "complete_category_week",
+        "check_params": {
+          "category": "physical",
+          "count": 5
+        },
+        "xp": 300,
+        "gold": 150,
+        "faction_item_chance": 0.3
+      },
+      {
+        "key": "sc02",
+        "title": "Forca do Amanhecer",
+        "description": "Sem niet por 5 dias. O sol nao se esconde.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 280,
+        "gold": 140,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "sc03",
+        "title": "Calor da Batalha",
+        "description": "Gaste 150 de ouro na loja esta semana.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 150
+        },
+        "xp": 260,
+        "gold": 0,
+        "faction_item_chance": 0.2
+      },
+      {
+        "key": "sc04",
+        "title": "Chamas do Progresso",
+        "description": "Complete 8 missoes esta semana.",
+        "check_type": "complete_any_week",
+        "check_params": {
+          "count": 8
+        },
+        "xp": 320,
+        "gold": 160,
+        "faction_item_chance": 0.3
+      },
+      {
+        "key": "sc05",
+        "title": "Luz Maxima",
+        "description": "Streak de 7 dias. O sol nunca falha.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 400,
+        "gold": 200,
+        "faction_item_chance": 0.4
+      },
+      {
+        "key": "sc06",
+        "title": "Ardor Solar",
+        "description": "Complete 7 fisicas esta semana.",
+        "check_type": "complete_category_week",
+        "check_params": {
+          "category": "physical",
+          "count": 7
+        },
+        "xp": 350,
+        "gold": 175,
+        "faction_item_chance": 0.35
+      },
+      {
+        "key": "sc07",
+        "title": "Forca e Ordem",
+        "description": "Complete fisicas e de ordem no mesmo dia por 3 dias.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 290,
+        "gold": 145,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "sc08",
+        "title": "Sem Sombra",
+        "description": "Sem niet por 7 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 450,
+        "gold": 225,
+        "faction_item_chance": 0.45
+      },
+      {
+        "key": "sc09",
+        "title": "Exercito do Sol",
+        "description": "Complete 10 missoes esta semana.",
+        "check_type": "complete_any_week",
+        "check_params": {
+          "count": 10
+        },
+        "xp": 380,
+        "gold": 190,
+        "faction_item_chance": 0.35
+      },
+      {
+        "key": "sc10",
+        "title": "O Sol Pleno",
+        "description": "Complete 10 fisicas e gaste 200 de ouro esta semana.",
+        "check_type": "complete_category_week",
+        "check_params": {
+          "category": "physical",
+          "count": 10
+        },
+        "xp": 500,
+        "gold": 250,
+        "faction_item_chance": 0.5
+      }
+    ],
+    "black_legion": [
+      {
+        "key": "bl01",
+        "title": "Ordem de Batalha",
+        "description": "Complete 5 missoes de ordem esta semana.",
+        "check_type": "complete_category_week",
+        "check_params": {
+          "category": "order",
+          "count": 5
+        },
+        "xp": 300,
+        "gold": 150,
+        "faction_item_chance": 0.3
+      },
+      {
+        "key": "bl02",
+        "title": "Disciplina da Legiao",
+        "description": "Sem niet por 5 dias. A Legiao nao aceita fraqueza.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 280,
+        "gold": 140,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "bl03",
+        "title": "Arsenal da Legiao",
+        "description": "Gaste 200 de ouro na loja esta semana.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 200
+        },
+        "xp": 260,
+        "gold": 0,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "bl04",
+        "title": "Formacao de Combate",
+        "description": "Complete fisicas e de ordem no mesmo dia por 3 dias.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 320,
+        "gold": 160,
+        "faction_item_chance": 0.3
+      },
+      {
+        "key": "bl05",
+        "title": "Marcha Incessante",
+        "description": "Streak de 7 dias. A Legiao marcha sem parar.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 400,
+        "gold": 200,
+        "faction_item_chance": 0.4
+      },
+      {
+        "key": "bl06",
+        "title": "Sete Ordens",
+        "description": "Complete 7 missoes de ordem esta semana.",
+        "check_type": "complete_category_week",
+        "check_params": {
+          "category": "order",
+          "count": 7
+        },
+        "xp": 350,
+        "gold": 175,
+        "faction_item_chance": 0.35
+      },
+      {
+        "key": "bl07",
+        "title": "Compra Tatica",
+        "description": "Compre 3 itens na loja esta semana.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 3
+        },
+        "xp": 290,
+        "gold": 0,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "bl08",
+        "title": "Ferro e Fogo",
+        "description": "Sem niet por 7 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 450,
+        "gold": 225,
+        "faction_item_chance": 0.45
+      },
+      {
+        "key": "bl09",
+        "title": "Ataque Total",
+        "description": "Complete 10 missoes esta semana.",
+        "check_type": "complete_any_week",
+        "check_params": {
+          "count": 10
+        },
+        "xp": 380,
+        "gold": 190,
+        "faction_item_chance": 0.35
+      },
+      {
+        "key": "bl10",
+        "title": "A Legiao",
+        "description": "Complete 10 missoes de ordem e gaste 300 de ouro.",
+        "check_type": "complete_category_week",
+        "check_params": {
+          "category": "order",
+          "count": 10
+        },
+        "xp": 500,
+        "gold": 250,
+        "faction_item_chance": 0.5
+      }
+    ],
+    "new_order": [
+      {
+        "key": "no01",
+        "title": "Protocolo Semanal",
+        "description": "Complete 5 missoes de ordem esta semana.",
+        "check_type": "complete_category_week",
+        "check_params": {
+          "category": "order",
+          "count": 5
+        },
+        "xp": 300,
+        "gold": 150,
+        "faction_item_chance": 0.3
+      },
+      {
+        "key": "no02",
+        "title": "Registro da Nova Ordem",
+        "description": "Escreva 200 palavras no diario esta semana.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 200
+        },
+        "xp": 280,
+        "gold": 140,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "no03",
+        "title": "Investimento Estrategico",
+        "description": "Gaste 150 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 150
+        },
+        "xp": 260,
+        "gold": 0,
+        "faction_item_chance": 0.2
+      },
+      {
+        "key": "no04",
+        "title": "Equilibrio do Sistema",
+        "description": "Complete missoes de 3 categorias diferentes esta semana.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 3
+        },
+        "xp": 320,
+        "gold": 160,
+        "faction_item_chance": 0.3
+      },
+      {
+        "key": "no05",
+        "title": "Operacao Continua",
+        "description": "Streak de 7 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 400,
+        "gold": 200,
+        "faction_item_chance": 0.4
+      },
+      {
+        "key": "no06",
+        "title": "Controle Total",
+        "description": "Sem niet por 5 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 280,
+        "gold": 140,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "no07",
+        "title": "Aquisicao de Recursos",
+        "description": "Compre 2 itens na loja.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 260,
+        "gold": 0,
+        "faction_item_chance": 0.2
+      },
+      {
+        "key": "no08",
+        "title": "Nova Era",
+        "description": "Sem niet por 7 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 450,
+        "gold": 225,
+        "faction_item_chance": 0.45
+      },
+      {
+        "key": "no09",
+        "title": "Sistema Perfeito",
+        "description": "Complete 10 missoes esta semana.",
+        "check_type": "complete_any_week",
+        "check_params": {
+          "count": 10
+        },
+        "xp": 380,
+        "gold": 190,
+        "faction_item_chance": 0.35
+      },
+      {
+        "key": "no10",
+        "title": "A Nova Ordem",
+        "description": "Complete 8 de ordem e escreva 300 palavras no diario.",
+        "check_type": "complete_category_week",
+        "check_params": {
+          "category": "order",
+          "count": 8
+        },
+        "xp": 500,
+        "gold": 250,
+        "faction_item_chance": 0.5
+      }
+    ],
+    "trinity": [
+      {
+        "key": "tr01",
+        "title": "Os Tres Aspectos",
+        "description": "Complete missoes de 3 categorias diferentes esta semana.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 3
+        },
+        "xp": 320,
+        "gold": 160,
+        "faction_item_chance": 0.3
+      },
+      {
+        "key": "tr02",
+        "title": "Equilibrio da Trindade",
+        "description": "Complete 3 fisicas, 3 mentais e 3 espirituais esta semana.",
+        "check_type": "complete_category_week",
+        "check_params": {
+          "category": "spiritual",
+          "count": 3
+        },
+        "xp": 350,
+        "gold": 175,
+        "faction_item_chance": 0.35
+      },
+      {
+        "key": "tr03",
+        "title": "Cronica Sagrada",
+        "description": "Escreva 200 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 200
+        },
+        "xp": 270,
+        "gold": 135,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "tr04",
+        "title": "Tres Sem Falha",
+        "description": "Complete missoes de 3 categorias no mesmo dia por 2 dias.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 3
+        },
+        "xp": 300,
+        "gold": 150,
+        "faction_item_chance": 0.3
+      },
+      {
+        "key": "tr05",
+        "title": "Ciclo Sagrado",
+        "description": "Streak de 7 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 400,
+        "gold": 200,
+        "faction_item_chance": 0.4
+      },
+      {
+        "key": "tr06",
+        "title": "Sem Desequilibrio",
+        "description": "Sem niet por 5 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 280,
+        "gold": 140,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "tr07",
+        "title": "Oferta da Trindade",
+        "description": "Gaste 120 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 120
+        },
+        "xp": 260,
+        "gold": 0,
+        "faction_item_chance": 0.2
+      },
+      {
+        "key": "tr08",
+        "title": "Harmonia Absoluta",
+        "description": "Sem niet por 7 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 450,
+        "gold": 225,
+        "faction_item_chance": 0.45
+      },
+      {
+        "key": "tr09",
+        "title": "Dez da Trindade",
+        "description": "Complete 10 missoes esta semana.",
+        "check_type": "complete_any_week",
+        "check_params": {
+          "count": 10
+        },
+        "xp": 380,
+        "gold": 190,
+        "faction_item_chance": 0.35
+      },
+      {
+        "key": "tr10",
+        "title": "Os Tres Completos",
+        "description": "Complete 4 de cada categoria esta semana.",
+        "check_type": "complete_category_week",
+        "check_params": {
+          "category": "spiritual",
+          "count": 4
+        },
+        "xp": 500,
+        "gold": 250,
+        "faction_item_chance": 0.5
+      }
+    ],
+    "renegades": [
+      {
+        "key": "re01",
+        "title": "Sobrevivencia",
+        "description": "Complete 5 missoes de qualquer tipo esta semana.",
+        "check_type": "complete_any_week",
+        "check_params": {
+          "count": 5
+        },
+        "xp": 280,
+        "gold": 140,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "re02",
+        "title": "Sem Regras",
+        "description": "Complete missoes de 4 categorias no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 4
+        },
+        "xp": 300,
+        "gold": 150,
+        "faction_item_chance": 0.3
+      },
+      {
+        "key": "re03",
+        "title": "Diario Renegado",
+        "description": "Escreva 150 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 150
+        },
+        "xp": 250,
+        "gold": 125,
+        "faction_item_chance": 0.2
+      },
+      {
+        "key": "re04",
+        "title": "Comercio das Sombras",
+        "description": "Gaste 100 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 100
+        },
+        "xp": 260,
+        "gold": 0,
+        "faction_item_chance": 0.2
+      },
+      {
+        "key": "re05",
+        "title": "Sete Dias Livre",
+        "description": "Streak de 7 dias. Ate renegados tem ritmo.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 400,
+        "gold": 200,
+        "faction_item_chance": 0.4
+      },
+      {
+        "key": "re06",
+        "title": "Sem Correntes",
+        "description": "Sem niet por 5 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 280,
+        "gold": 140,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "re07",
+        "title": "Arsenal do Outsider",
+        "description": "Compre 2 itens na loja.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 260,
+        "gold": 0,
+        "faction_item_chance": 0.2
+      },
+      {
+        "key": "re08",
+        "title": "Liberdade Total",
+        "description": "Sem niet por 7 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 420,
+        "gold": 210,
+        "faction_item_chance": 0.4
+      },
+      {
+        "key": "re09",
+        "title": "Dez do Caos",
+        "description": "Complete 10 missoes esta semana.",
+        "check_type": "complete_any_week",
+        "check_params": {
+          "count": 10
+        },
+        "xp": 380,
+        "gold": 190,
+        "faction_item_chance": 0.35
+      },
+      {
+        "key": "re10",
+        "title": "O Renegado",
+        "description": "Complete 12 missoes de categorias variadas esta semana.",
+        "check_type": "complete_any_week",
+        "check_params": {
+          "count": 12
+        },
+        "xp": 480,
+        "gold": 240,
+        "faction_item_chance": 0.5
+      }
+    ],
+    "error": [
+      {
+        "key": "er01",
+        "title": "Protocolo Desconhecido",
+        "description": "Complete missoes de 3 categorias diferentes esta semana.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 3
+        },
+        "xp": 320,
+        "gold": 160,
+        "faction_item_chance": 0.35
+      },
+      {
+        "key": "er02",
+        "title": "Log do Sistema",
+        "description": "Escreva 200 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 200
+        },
+        "xp": 280,
+        "gold": 140,
+        "faction_item_chance": 0.3
+      },
+      {
+        "key": "er03",
+        "title": "Aquisicao Anomala",
+        "description": "Gaste 150 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 150
+        },
+        "xp": 270,
+        "gold": 0,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "er04",
+        "title": "Sem Falha no Codigo",
+        "description": "Sem niet por 5 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 300,
+        "gold": 150,
+        "faction_item_chance": 0.3
+      },
+      {
+        "key": "er05",
+        "title": "Loop Infinito",
+        "description": "Streak de 7 dias. ERROR nao tem fim.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 420,
+        "gold": 210,
+        "faction_item_chance": 0.4
+      },
+      {
+        "key": "er06",
+        "title": "Corrupcao Controlada",
+        "description": "Complete 8 missoes esta semana.",
+        "check_type": "complete_any_week",
+        "check_params": {
+          "count": 8
+        },
+        "xp": 340,
+        "gold": 170,
+        "faction_item_chance": 0.35
+      },
+      {
+        "key": "er07",
+        "title": "Dados Compilados",
+        "description": "Compre 3 itens na loja.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 3
+        },
+        "xp": 280,
+        "gold": 0,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "er08",
+        "title": "Sistema sem Limite",
+        "description": "Sem niet por 7 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 460,
+        "gold": 230,
+        "faction_item_chance": 0.45
+      },
+      {
+        "key": "er09",
+        "title": "Execucao Perfeita",
+        "description": "Complete 10 missoes esta semana.",
+        "check_type": "complete_any_week",
+        "check_params": {
+          "count": 10
+        },
+        "xp": 400,
+        "gold": 200,
+        "faction_item_chance": 0.4
+      },
+      {
+        "key": "er10",
+        "title": "ERROR FINAL",
+        "description": "Complete 4 categorias no mesmo dia por 3 dias esta semana.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 4
+        },
+        "xp": 550,
+        "gold": 275,
+        "faction_item_chance": 0.55
+      }
+    ],
+    "guild": [
+      {
+        "key": "gu01",
+        "title": "Missao da Guilda",
+        "description": "Complete 5 missoes de qualquer tipo esta semana.",
+        "check_type": "complete_any_week",
+        "check_params": {
+          "count": 5
+        },
+        "xp": 280,
+        "gold": 140,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "gu02",
+        "title": "Registro do Aventureiro",
+        "description": "Escreva 150 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 150
+        },
+        "xp": 260,
+        "gold": 130,
+        "faction_item_chance": 0.2
+      },
+      {
+        "key": "gu03",
+        "title": "Investimento na Guilda",
+        "description": "Gaste 100 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 100
+        },
+        "xp": 250,
+        "gold": 0,
+        "faction_item_chance": 0.2
+      },
+      {
+        "key": "gu04",
+        "title": "Disciplina do Colar",
+        "description": "Sem niet por 4 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 4
+        },
+        "xp": 270,
+        "gold": 135,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "gu05",
+        "title": "Sete Dias de Rank",
+        "description": "Streak de 7 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 380,
+        "gold": 190,
+        "faction_item_chance": 0.35
+      },
+      {
+        "key": "gu06",
+        "title": "Tres Categorias",
+        "description": "Complete missoes de 3 categorias diferentes no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 3
+        },
+        "xp": 290,
+        "gold": 145,
+        "faction_item_chance": 0.25
+      },
+      {
+        "key": "gu07",
+        "title": "Equipamento do Aventureiro",
+        "description": "Compre 2 itens na loja.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 260,
+        "gold": 0,
+        "faction_item_chance": 0.2
+      },
+      {
+        "key": "gu08",
+        "title": "Sem Mancha no Colar",
+        "description": "Sem niet por 7 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 430,
+        "gold": 215,
+        "faction_item_chance": 0.4
+      },
+      {
+        "key": "gu09",
+        "title": "Operacao Completa",
+        "description": "Complete 10 missoes esta semana.",
+        "check_type": "complete_any_week",
+        "check_params": {
+          "count": 10
+        },
+        "xp": 360,
+        "gold": 180,
+        "faction_item_chance": 0.3
+      },
+      {
+        "key": "gu10",
+        "title": "Lenda da Guilda",
+        "description": "Complete 12 missoes e gaste 200 de ouro esta semana.",
+        "check_type": "complete_any_week",
+        "check_params": {
+          "count": 12
+        },
+        "xp": 480,
+        "gold": 240,
+        "faction_item_chance": 0.5
+      }
+    ]
+  }
+}

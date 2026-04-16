@@ -69,6 +69,19 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     ref.invalidate(habitsProvider);
     await _checkFactionAdmission();
     await _checkShadowQuests();
+    // Assign missões de classe do dia
+    if (player.classType != null && player.classType!.isNotEmpty) {
+      await ref.read(classQuestServiceProvider).assignDailyQuests(
+          player.id, player.classType!);
+      ref.invalidate(todayClassQuestsProvider);
+    }
+    // Assign missão de facção da semana
+    final faction = player.factionType ?? '';
+    if (faction.isNotEmpty && faction != 'none' && !faction.startsWith('pending:')) {
+      await ref.read(factionQuestServiceProvider).assignWeeklyQuest(
+          player.id, faction);
+      ref.invalidate(activeFactionQuestProvider);
+    }
   }
 
   void _checkLevelUp(int newLevel) {

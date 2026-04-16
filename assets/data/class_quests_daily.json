@@ -1,0 +1,2274 @@
+{
+  "class_quests": {
+    "warrior": [
+      {
+        "key": "w01",
+        "title": "Tria de Forca",
+        "description": "Complete 3 missoes fisicas hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "physical",
+          "count": 3
+        },
+        "xp": 45,
+        "gold": 22
+      },
+      {
+        "key": "w02",
+        "title": "Compra de Equipamento",
+        "description": "Gaste 50 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 50
+        },
+        "xp": 40,
+        "gold": 0
+      },
+      {
+        "key": "w03",
+        "title": "Conversa com o Mestre",
+        "description": "Fale com o NPC mentor da sua classe.",
+        "check_type": "talk_npc",
+        "check_params": {
+          "npc_id": "warrior_mentor"
+        },
+        "xp": 35,
+        "gold": 20
+      },
+      {
+        "key": "w04",
+        "title": "Ponto de Forca",
+        "description": "Aumente Forca em 1 ponto.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "strength",
+          "amount": 1
+        },
+        "xp": 50,
+        "gold": 25
+      },
+      {
+        "key": "w05",
+        "title": "Disciplina Diaria",
+        "description": "Complete todas as missoes hoje sem falha.",
+        "check_type": "complete_any_today",
+        "check_params": {
+          "count": 3,
+          "no_fail": true
+        },
+        "xp": 55,
+        "gold": 28
+      },
+      {
+        "key": "w06",
+        "title": "Dupla Fisica",
+        "description": "Complete 2 missoes fisicas hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "physical",
+          "count": 2
+        },
+        "xp": 38,
+        "gold": 19
+      },
+      {
+        "key": "w07",
+        "title": "Arsenal do Guerreiro",
+        "description": "Compre 1 item na loja.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 1
+        },
+        "xp": 42,
+        "gold": 0
+      },
+      {
+        "key": "w08",
+        "title": "Tres Dias de Ferro",
+        "description": "Streak de 3 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 3
+        },
+        "xp": 80,
+        "gold": 40
+      },
+      {
+        "key": "w09",
+        "title": "Ordem e Disciplina",
+        "description": "Complete 1 missao de ordem hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "order",
+          "count": 1
+        },
+        "xp": 35,
+        "gold": 18
+      },
+      {
+        "key": "w10",
+        "title": "Investimento Marcial",
+        "description": "Gaste 100 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 100
+        },
+        "xp": 60,
+        "gold": 0
+      },
+      {
+        "key": "w11",
+        "title": "Fortaleza Semanal",
+        "description": "Streak de 7 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 150,
+        "gold": 75
+      },
+      {
+        "key": "w12",
+        "title": "Tres Pilares",
+        "description": "Complete missoes de 3 categorias diferentes hoje.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 3
+        },
+        "xp": 65,
+        "gold": 32
+      },
+      {
+        "key": "w13",
+        "title": "Sem Fraqueza",
+        "description": "Sem niet por 3 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 3
+        },
+        "xp": 90,
+        "gold": 45
+      },
+      {
+        "key": "w14",
+        "title": "Diario de Batalha",
+        "description": "Escreva 50 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 50
+        },
+        "xp": 40,
+        "gold": 20
+      },
+      {
+        "key": "w15",
+        "title": "Evolucao de Combate",
+        "description": "Aumente Forca em 2 pontos.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "strength",
+          "amount": 2
+        },
+        "xp": 100,
+        "gold": 50
+      },
+      {
+        "key": "w16",
+        "title": "Semana Impecavel",
+        "description": "Sem niet por 5 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 130,
+        "gold": 65
+      },
+      {
+        "key": "w17",
+        "title": "Arsenal Completo",
+        "description": "Compre 2 itens na loja.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 70,
+        "gold": 0
+      },
+      {
+        "key": "w18",
+        "title": "Quatro Fisicas",
+        "description": "Complete 4 missoes fisicas hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "physical",
+          "count": 4
+        },
+        "xp": 85,
+        "gold": 42
+      },
+      {
+        "key": "w19",
+        "title": "Dez Dias de Aco",
+        "description": "Streak de 10 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 10
+        },
+        "xp": 200,
+        "gold": 100
+      },
+      {
+        "key": "w20",
+        "title": "Corpo e Mente",
+        "description": "Complete fisicas e mentais no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 60,
+        "gold": 30
+      },
+      {
+        "key": "w21",
+        "title": "Codigo Marcial",
+        "description": "Complete 5 missoes hoje.",
+        "check_type": "complete_any_today",
+        "check_params": {
+          "count": 5
+        },
+        "xp": 95,
+        "gold": 47
+      },
+      {
+        "key": "w22",
+        "title": "Gasto Estrategico",
+        "description": "Gaste 200 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 200
+        },
+        "xp": 80,
+        "gold": 0
+      },
+      {
+        "key": "w23",
+        "title": "Catorze Dias",
+        "description": "Streak de 14 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 14
+        },
+        "xp": 300,
+        "gold": 150
+      },
+      {
+        "key": "w24",
+        "title": "Sem Concessoes",
+        "description": "Sem niet por 7 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 180,
+        "gold": 90
+      },
+      {
+        "key": "w25",
+        "title": "O Guerreiro Completo",
+        "description": "Complete 4 categorias no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 4
+        },
+        "xp": 120,
+        "gold": 60
+      }
+    ],
+    "colossus": [
+      {
+        "key": "co01",
+        "title": "Tres Fisicas",
+        "description": "Complete 3 missoes fisicas hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "physical",
+          "count": 3
+        },
+        "xp": 48,
+        "gold": 24
+      },
+      {
+        "key": "co02",
+        "title": "Armadura Nova",
+        "description": "Gaste 50 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 50
+        },
+        "xp": 40,
+        "gold": 0
+      },
+      {
+        "key": "co03",
+        "title": "Conversa do Gigante",
+        "description": "Fale com o NPC mentor da classe.",
+        "check_type": "talk_npc",
+        "check_params": {
+          "npc_id": "colossus_mentor"
+        },
+        "xp": 35,
+        "gold": 20
+      },
+      {
+        "key": "co04",
+        "title": "Constituicao de Ferro",
+        "description": "Aumente Constituicao em 1 ponto.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "constitution",
+          "amount": 1
+        },
+        "xp": 55,
+        "gold": 28
+      },
+      {
+        "key": "co05",
+        "title": "Sem Recuar",
+        "description": "Sem niet por 3 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 3
+        },
+        "xp": 90,
+        "gold": 45
+      },
+      {
+        "key": "co06",
+        "title": "Quatro Fisicas",
+        "description": "Complete 4 missoes fisicas hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "physical",
+          "count": 4
+        },
+        "xp": 80,
+        "gold": 40
+      },
+      {
+        "key": "co07",
+        "title": "Investimento em Poder",
+        "description": "Compre 1 item na loja.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 1
+        },
+        "xp": 42,
+        "gold": 0
+      },
+      {
+        "key": "co08",
+        "title": "Cinco Dias de Pedra",
+        "description": "Streak de 5 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 120,
+        "gold": 60
+      },
+      {
+        "key": "co09",
+        "title": "Ordem do Colosso",
+        "description": "Complete 2 missoes de ordem hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "order",
+          "count": 2
+        },
+        "xp": 45,
+        "gold": 22
+      },
+      {
+        "key": "co10",
+        "title": "Gasto Pesado",
+        "description": "Gaste 100 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 100
+        },
+        "xp": 60,
+        "gold": 0
+      },
+      {
+        "key": "co11",
+        "title": "Dez Dias Inquebravel",
+        "description": "Streak de 10 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 10
+        },
+        "xp": 200,
+        "gold": 100
+      },
+      {
+        "key": "co12",
+        "title": "Tres Categorias",
+        "description": "Complete missoes de 3 categorias diferentes hoje.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 3
+        },
+        "xp": 65,
+        "gold": 32
+      },
+      {
+        "key": "co13",
+        "title": "Impenetravel",
+        "description": "Sem niet por 5 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 130,
+        "gold": 65
+      },
+      {
+        "key": "co14",
+        "title": "Cronica do Colosso",
+        "description": "Escreva 50 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 50
+        },
+        "xp": 40,
+        "gold": 20
+      },
+      {
+        "key": "co15",
+        "title": "Forca Maxima",
+        "description": "Aumente Forca em 2 pontos.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "strength",
+          "amount": 2
+        },
+        "xp": 110,
+        "gold": 55
+      },
+      {
+        "key": "co16",
+        "title": "Sete Dias de Granito",
+        "description": "Streak de 7 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 150,
+        "gold": 75
+      },
+      {
+        "key": "co17",
+        "title": "Arsenal do Colosso",
+        "description": "Compre 2 itens na loja.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 70,
+        "gold": 0
+      },
+      {
+        "key": "co18",
+        "title": "Cinco Fisicas",
+        "description": "Complete 5 missoes fisicas hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "physical",
+          "count": 5
+        },
+        "xp": 100,
+        "gold": 50
+      },
+      {
+        "key": "co19",
+        "title": "Quatorze Dias Solidos",
+        "description": "Streak de 14 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 14
+        },
+        "xp": 300,
+        "gold": 150
+      },
+      {
+        "key": "co20",
+        "title": "Corpo Completo",
+        "description": "Complete fisicas e espirituais no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 60,
+        "gold": 30
+      },
+      {
+        "key": "co21",
+        "title": "Seis Missoes",
+        "description": "Complete 6 missoes hoje.",
+        "check_type": "complete_any_today",
+        "check_params": {
+          "count": 6
+        },
+        "xp": 110,
+        "gold": 55
+      },
+      {
+        "key": "co22",
+        "title": "Investimento Maximo",
+        "description": "Gaste 200 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 200
+        },
+        "xp": 80,
+        "gold": 0
+      },
+      {
+        "key": "co23",
+        "title": "Sem Fraqueza",
+        "description": "Sem niet por 7 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 180,
+        "gold": 90
+      },
+      {
+        "key": "co24",
+        "title": "Constituicao Absoluta",
+        "description": "Aumente Constituicao em 3 pontos.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "constitution",
+          "amount": 3
+        },
+        "xp": 150,
+        "gold": 75
+      },
+      {
+        "key": "co25",
+        "title": "O Colosso",
+        "description": "Complete 3 categorias no mesmo dia sem falha.",
+        "check_type": "complete_any_today",
+        "check_params": {
+          "count": 3,
+          "no_fail": true
+        },
+        "xp": 130,
+        "gold": 65
+      }
+    ],
+    "monk": [
+      {
+        "key": "mo01",
+        "title": "Meditacao do Dia",
+        "description": "Complete 2 missoes espirituais hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "spiritual",
+          "count": 2
+        },
+        "xp": 40,
+        "gold": 20
+      },
+      {
+        "key": "mo02",
+        "title": "Diario do Monge",
+        "description": "Escreva 100 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 100
+        },
+        "xp": 45,
+        "gold": 22
+      },
+      {
+        "key": "mo03",
+        "title": "Conversa Espiritual",
+        "description": "Fale com o NPC mentor da classe.",
+        "check_type": "talk_npc",
+        "check_params": {
+          "npc_id": "monk_mentor"
+        },
+        "xp": 35,
+        "gold": 18
+      },
+      {
+        "key": "mo04",
+        "title": "Espirito da Terra",
+        "description": "Aumente Espirito em 1 ponto.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "spirit",
+          "amount": 1
+        },
+        "xp": 50,
+        "gold": 25
+      },
+      {
+        "key": "mo05",
+        "title": "Tres Pilares",
+        "description": "Complete fisicas, mentais e espirituais no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 3
+        },
+        "xp": 70,
+        "gold": 35
+      },
+      {
+        "key": "mo06",
+        "title": "Sem Caos",
+        "description": "Sem niet por 3 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 3
+        },
+        "xp": 85,
+        "gold": 42
+      },
+      {
+        "key": "mo07",
+        "title": "Investimento Interior",
+        "description": "Gaste 30 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 30
+        },
+        "xp": 35,
+        "gold": 0
+      },
+      {
+        "key": "mo08",
+        "title": "Cinco Dias de Paz",
+        "description": "Streak de 5 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 120,
+        "gold": 60
+      },
+      {
+        "key": "mo09",
+        "title": "Corpo e Espirito",
+        "description": "Complete 1 fisica e 2 espirituais hoje.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 60,
+        "gold": 30
+      },
+      {
+        "key": "mo10",
+        "title": "Reflexao Profunda",
+        "description": "Escreva 150 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 150
+        },
+        "xp": 55,
+        "gold": 28
+      },
+      {
+        "key": "mo11",
+        "title": "Sete Dias de Silencio",
+        "description": "Streak de 7 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 150,
+        "gold": 75
+      },
+      {
+        "key": "mo12",
+        "title": "Mente Afiada",
+        "description": "Complete 2 missoes mentais hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "mental",
+          "count": 2
+        },
+        "xp": 45,
+        "gold": 22
+      },
+      {
+        "key": "mo13",
+        "title": "Equanimidade Longa",
+        "description": "Sem niet por 5 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 130,
+        "gold": 65
+      },
+      {
+        "key": "mo14",
+        "title": "Tres Espirituais",
+        "description": "Complete 3 missoes espirituais num dia.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "spiritual",
+          "count": 3
+        },
+        "xp": 75,
+        "gold": 38
+      },
+      {
+        "key": "mo15",
+        "title": "Espirito Elevado",
+        "description": "Aumente Espirito em 2 pontos.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "spirit",
+          "amount": 2
+        },
+        "xp": 110,
+        "gold": 55
+      },
+      {
+        "key": "mo16",
+        "title": "Dez Dias de Templo",
+        "description": "Streak de 10 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 10
+        },
+        "xp": 200,
+        "gold": 100
+      },
+      {
+        "key": "mo17",
+        "title": "Compra do Discipulo",
+        "description": "Compre 1 item na loja.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 1
+        },
+        "xp": 35,
+        "gold": 0
+      },
+      {
+        "key": "mo18",
+        "title": "Cronica Espiritual",
+        "description": "Escreva 200 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 200
+        },
+        "xp": 70,
+        "gold": 35
+      },
+      {
+        "key": "mo19",
+        "title": "Quatro Categorias",
+        "description": "Complete 4 categorias no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 4
+        },
+        "xp": 90,
+        "gold": 45
+      },
+      {
+        "key": "mo20",
+        "title": "Sem Sombra",
+        "description": "Sem niet por 7 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 180,
+        "gold": 90
+      },
+      {
+        "key": "mo21",
+        "title": "Catorze Dias de Paz",
+        "description": "Streak de 14 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 14
+        },
+        "xp": 300,
+        "gold": 150
+      },
+      {
+        "key": "mo22",
+        "title": "Espirito Maximo",
+        "description": "Aumente Espirito em 3 pontos.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "spirit",
+          "amount": 3
+        },
+        "xp": 150,
+        "gold": 75
+      },
+      {
+        "key": "mo23",
+        "title": "Reflexao Total",
+        "description": "Escreva 300 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 300
+        },
+        "xp": 90,
+        "gold": 45
+      },
+      {
+        "key": "mo24",
+        "title": "Harmonia Plena",
+        "description": "Complete todas as missoes sem niet.",
+        "check_type": "complete_any_today",
+        "check_params": {
+          "count": 3,
+          "no_fail": true
+        },
+        "xp": 120,
+        "gold": 60
+      },
+      {
+        "key": "mo25",
+        "title": "O Monge",
+        "description": "Complete 4 categorias no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 4
+        },
+        "xp": 140,
+        "gold": 70
+      }
+    ],
+    "rogue": [
+      {
+        "key": "ro01",
+        "title": "Operacao Mental",
+        "description": "Complete 2 missoes mentais hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "mental",
+          "count": 2
+        },
+        "xp": 42,
+        "gold": 21
+      },
+      {
+        "key": "ro02",
+        "title": "Gasto Calculado",
+        "description": "Gaste 40 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 40
+        },
+        "xp": 38,
+        "gold": 0
+      },
+      {
+        "key": "ro03",
+        "title": "Contato com o Mestre",
+        "description": "Fale com o NPC mentor da classe.",
+        "check_type": "talk_npc",
+        "check_params": {
+          "npc_id": "rogue_mentor"
+        },
+        "xp": 35,
+        "gold": 18
+      },
+      {
+        "key": "ro04",
+        "title": "Destreza Aguçada",
+        "description": "Aumente Destreza em 1 ponto.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "dexterity",
+          "amount": 1
+        },
+        "xp": 50,
+        "gold": 25
+      },
+      {
+        "key": "ro05",
+        "title": "Sem Rastro",
+        "description": "Sem niet por 3 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 3
+        },
+        "xp": 85,
+        "gold": 42
+      },
+      {
+        "key": "ro06",
+        "title": "Mente e Ordem",
+        "description": "Complete 1 mental e 1 ordem hoje.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 55,
+        "gold": 28
+      },
+      {
+        "key": "ro07",
+        "title": "Equipamento do Ladino",
+        "description": "Compre 1 item na loja.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 1
+        },
+        "xp": 40,
+        "gold": 0
+      },
+      {
+        "key": "ro08",
+        "title": "Cinco Dias Fantasma",
+        "description": "Streak de 5 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 120,
+        "gold": 60
+      },
+      {
+        "key": "ro09",
+        "title": "Tres Mentais",
+        "description": "Complete 3 missoes mentais hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "mental",
+          "count": 3
+        },
+        "xp": 75,
+        "gold": 38
+      },
+      {
+        "key": "ro10",
+        "title": "Registro do Ladino",
+        "description": "Escreva 80 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 80
+        },
+        "xp": 40,
+        "gold": 20
+      },
+      {
+        "key": "ro11",
+        "title": "Sete Dias Invisivel",
+        "description": "Streak de 7 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 150,
+        "gold": 75
+      },
+      {
+        "key": "ro12",
+        "title": "Precisao Total",
+        "description": "Complete todas as missoes sem falha.",
+        "check_type": "complete_any_today",
+        "check_params": {
+          "count": 3,
+          "no_fail": true
+        },
+        "xp": 80,
+        "gold": 40
+      },
+      {
+        "key": "ro13",
+        "title": "Cinco Dias Limpo",
+        "description": "Sem niet por 5 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 130,
+        "gold": 65
+      },
+      {
+        "key": "ro14",
+        "title": "Investimento Tatico",
+        "description": "Gaste 100 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 100
+        },
+        "xp": 60,
+        "gold": 0
+      },
+      {
+        "key": "ro15",
+        "title": "Destreza Avancada",
+        "description": "Aumente Destreza em 2 pontos.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "dexterity",
+          "amount": 2
+        },
+        "xp": 110,
+        "gold": 55
+      },
+      {
+        "key": "ro16",
+        "title": "Dez Dias Sombrio",
+        "description": "Streak de 10 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 10
+        },
+        "xp": 200,
+        "gold": 100
+      },
+      {
+        "key": "ro17",
+        "title": "Arsenal do Ladino",
+        "description": "Compre 2 itens na loja.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 70,
+        "gold": 0
+      },
+      {
+        "key": "ro18",
+        "title": "Quatro Mentais",
+        "description": "Complete 4 missoes mentais hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "mental",
+          "count": 4
+        },
+        "xp": 90,
+        "gold": 45
+      },
+      {
+        "key": "ro19",
+        "title": "Sem Erros",
+        "description": "Sem niet por 7 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 180,
+        "gold": 90
+      },
+      {
+        "key": "ro20",
+        "title": "Operacao Completa",
+        "description": "Complete mentais, fisicas e ordem no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 3
+        },
+        "xp": 75,
+        "gold": 38
+      },
+      {
+        "key": "ro21",
+        "title": "Diario Tatico",
+        "description": "Escreva 150 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 150
+        },
+        "xp": 55,
+        "gold": 28
+      },
+      {
+        "key": "ro22",
+        "title": "Catorze Dias Fantasma",
+        "description": "Streak de 14 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 14
+        },
+        "xp": 300,
+        "gold": 150
+      },
+      {
+        "key": "ro23",
+        "title": "Destreza Maxima",
+        "description": "Aumente Destreza em 3 pontos.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "dexterity",
+          "amount": 3
+        },
+        "xp": 150,
+        "gold": 75
+      },
+      {
+        "key": "ro24",
+        "title": "Gasto de Mestre",
+        "description": "Gaste 200 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 200
+        },
+        "xp": 80,
+        "gold": 0
+      },
+      {
+        "key": "ro25",
+        "title": "O Ladino",
+        "description": "Complete 4 categorias no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 4
+        },
+        "xp": 130,
+        "gold": 65
+      }
+    ],
+    "hunter": [
+      {
+        "key": "hu01",
+        "title": "Rastreio do Dia",
+        "description": "Complete 2 missoes mentais hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "mental",
+          "count": 2
+        },
+        "xp": 40,
+        "gold": 20
+      },
+      {
+        "key": "hu02",
+        "title": "Equipamento de Campo",
+        "description": "Gaste 50 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 50
+        },
+        "xp": 40,
+        "gold": 0
+      },
+      {
+        "key": "hu03",
+        "title": "Voz do Mestre",
+        "description": "Fale com o NPC mentor da classe.",
+        "check_type": "talk_npc",
+        "check_params": {
+          "npc_id": "hunter_mentor"
+        },
+        "xp": 35,
+        "gold": 18
+      },
+      {
+        "key": "hu04",
+        "title": "Foco Aguçado",
+        "description": "Aumente Destreza em 1 ponto.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "dexterity",
+          "amount": 1
+        },
+        "xp": 50,
+        "gold": 25
+      },
+      {
+        "key": "hu05",
+        "title": "Sem Erro",
+        "description": "Sem niet por 3 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 3
+        },
+        "xp": 85,
+        "gold": 42
+      },
+      {
+        "key": "hu06",
+        "title": "Mental e Fisico",
+        "description": "Complete 1 mental e 1 fisica hoje.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 55,
+        "gold": 28
+      },
+      {
+        "key": "hu07",
+        "title": "Kit do Cacador",
+        "description": "Compre 1 item na loja.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 1
+        },
+        "xp": 40,
+        "gold": 0
+      },
+      {
+        "key": "hu08",
+        "title": "Cinco Dias de Presa",
+        "description": "Streak de 5 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 120,
+        "gold": 60
+      },
+      {
+        "key": "hu09",
+        "title": "Tres Mentais",
+        "description": "Complete 3 missoes mentais hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "mental",
+          "count": 3
+        },
+        "xp": 72,
+        "gold": 36
+      },
+      {
+        "key": "hu10",
+        "title": "Diario de Campo",
+        "description": "Escreva 80 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 80
+        },
+        "xp": 40,
+        "gold": 20
+      },
+      {
+        "key": "hu11",
+        "title": "Sete Dias de Presa",
+        "description": "Streak de 7 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 150,
+        "gold": 75
+      },
+      {
+        "key": "hu12",
+        "title": "Emboscada Perfeita",
+        "description": "Complete todas as missoes hoje sem falha.",
+        "check_type": "complete_any_today",
+        "check_params": {
+          "count": 3,
+          "no_fail": true
+        },
+        "xp": 80,
+        "gold": 40
+      },
+      {
+        "key": "hu13",
+        "title": "Paciencia do Cacador",
+        "description": "Sem niet por 5 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 130,
+        "gold": 65
+      },
+      {
+        "key": "hu14",
+        "title": "Arsenal de Sobrevivencia",
+        "description": "Gaste 100 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 100
+        },
+        "xp": 60,
+        "gold": 0
+      },
+      {
+        "key": "hu15",
+        "title": "Foco Total",
+        "description": "Aumente Destreza em 2 pontos.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "dexterity",
+          "amount": 2
+        },
+        "xp": 110,
+        "gold": 55
+      },
+      {
+        "key": "hu16",
+        "title": "Dez Dias de Caca",
+        "description": "Streak de 10 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 10
+        },
+        "xp": 200,
+        "gold": 100
+      },
+      {
+        "key": "hu17",
+        "title": "Ferramentas do Mestre",
+        "description": "Compre 2 itens na loja.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 70,
+        "gold": 0
+      },
+      {
+        "key": "hu18",
+        "title": "Quatro Mentais",
+        "description": "Complete 4 missoes mentais hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "mental",
+          "count": 4
+        },
+        "xp": 90,
+        "gold": 45
+      },
+      {
+        "key": "hu19",
+        "title": "Sem Falhas",
+        "description": "Sem niet por 7 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 180,
+        "gold": 90
+      },
+      {
+        "key": "hu20",
+        "title": "Terreno Dominado",
+        "description": "Complete mentais, fisicas e ordem no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 3
+        },
+        "xp": 75,
+        "gold": 38
+      },
+      {
+        "key": "hu21",
+        "title": "Cronica do Cacador",
+        "description": "Escreva 150 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 150
+        },
+        "xp": 55,
+        "gold": 28
+      },
+      {
+        "key": "hu22",
+        "title": "Catorze Dias de Presa",
+        "description": "Streak de 14 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 14
+        },
+        "xp": 300,
+        "gold": 150
+      },
+      {
+        "key": "hu23",
+        "title": "Foco Maximo",
+        "description": "Aumente Destreza em 3 pontos.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "dexterity",
+          "amount": 3
+        },
+        "xp": 150,
+        "gold": 75
+      },
+      {
+        "key": "hu24",
+        "title": "Kit Completo",
+        "description": "Gaste 200 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 200
+        },
+        "xp": 80,
+        "gold": 0
+      },
+      {
+        "key": "hu25",
+        "title": "O Cacador",
+        "description": "Complete 4 categorias no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 4
+        },
+        "xp": 130,
+        "gold": 65
+      }
+    ],
+    "druid": [
+      {
+        "key": "dr01",
+        "title": "Conexao Espiritual",
+        "description": "Complete 2 missoes espirituais hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "spiritual",
+          "count": 2
+        },
+        "xp": 40,
+        "gold": 20
+      },
+      {
+        "key": "dr02",
+        "title": "Diario da Floresta",
+        "description": "Escreva 100 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 100
+        },
+        "xp": 45,
+        "gold": 22
+      },
+      {
+        "key": "dr03",
+        "title": "Sabedoria Antiga",
+        "description": "Fale com o NPC mentor da classe.",
+        "check_type": "talk_npc",
+        "check_params": {
+          "npc_id": "druid_mentor"
+        },
+        "xp": 35,
+        "gold": 18
+      },
+      {
+        "key": "dr04",
+        "title": "Espirito da Terra",
+        "description": "Aumente Espirito em 1 ponto.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "spirit",
+          "amount": 1
+        },
+        "xp": 50,
+        "gold": 25
+      },
+      {
+        "key": "dr05",
+        "title": "Fluxo Natural",
+        "description": "Sem niet por 3 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 3
+        },
+        "xp": 85,
+        "gold": 42
+      },
+      {
+        "key": "dr06",
+        "title": "Equilibrio dos Elementos",
+        "description": "Complete espirituais e fisicas no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 58,
+        "gold": 29
+      },
+      {
+        "key": "dr07",
+        "title": "Ervas e Remedios",
+        "description": "Gaste 40 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 40
+        },
+        "xp": 38,
+        "gold": 0
+      },
+      {
+        "key": "dr08",
+        "title": "Cinco Dias de Raiz",
+        "description": "Streak de 5 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 120,
+        "gold": 60
+      },
+      {
+        "key": "dr09",
+        "title": "Tres Espirituais",
+        "description": "Complete 3 espirituais hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "spiritual",
+          "count": 3
+        },
+        "xp": 72,
+        "gold": 36
+      },
+      {
+        "key": "dr10",
+        "title": "Reflexao Profunda",
+        "description": "Escreva 150 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 150
+        },
+        "xp": 55,
+        "gold": 28
+      },
+      {
+        "key": "dr11",
+        "title": "Sete Dias de Floresta",
+        "description": "Streak de 7 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 150,
+        "gold": 75
+      },
+      {
+        "key": "dr12",
+        "title": "Mente Verde",
+        "description": "Complete 2 missoes mentais hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "mental",
+          "count": 2
+        },
+        "xp": 45,
+        "gold": 22
+      },
+      {
+        "key": "dr13",
+        "title": "Cinco Dias de Paz",
+        "description": "Sem niet por 5 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 130,
+        "gold": 65
+      },
+      {
+        "key": "dr14",
+        "title": "Quatro Espirituais",
+        "description": "Complete 4 espirituais hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "spiritual",
+          "count": 4
+        },
+        "xp": 85,
+        "gold": 42
+      },
+      {
+        "key": "dr15",
+        "title": "Espirito Expandido",
+        "description": "Aumente Espirito em 2 pontos.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "spirit",
+          "amount": 2
+        },
+        "xp": 110,
+        "gold": 55
+      },
+      {
+        "key": "dr16",
+        "title": "Dez Dias de Ciclo",
+        "description": "Streak de 10 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 10
+        },
+        "xp": 200,
+        "gold": 100
+      },
+      {
+        "key": "dr17",
+        "title": "Coleta do Druida",
+        "description": "Compre 2 itens na loja.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 65,
+        "gold": 0
+      },
+      {
+        "key": "dr18",
+        "title": "Cronica Viva",
+        "description": "Escreva 200 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 200
+        },
+        "xp": 70,
+        "gold": 35
+      },
+      {
+        "key": "dr19",
+        "title": "Sem Disturbio",
+        "description": "Sem niet por 7 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 180,
+        "gold": 90
+      },
+      {
+        "key": "dr20",
+        "title": "Equilibrio Total",
+        "description": "Complete espirituais, mentais e fisicas no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 3
+        },
+        "xp": 78,
+        "gold": 39
+      },
+      {
+        "key": "dr21",
+        "title": "Investimento Natural",
+        "description": "Gaste 100 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 100
+        },
+        "xp": 60,
+        "gold": 0
+      },
+      {
+        "key": "dr22",
+        "title": "Catorze Dias de Raiz",
+        "description": "Streak de 14 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 14
+        },
+        "xp": 300,
+        "gold": 150
+      },
+      {
+        "key": "dr23",
+        "title": "Espirito Maximo",
+        "description": "Aumente Espirito em 3 pontos.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "spirit",
+          "amount": 3
+        },
+        "xp": 150,
+        "gold": 75
+      },
+      {
+        "key": "dr24",
+        "title": "Diario Completo",
+        "description": "Escreva 300 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 300
+        },
+        "xp": 90,
+        "gold": 45
+      },
+      {
+        "key": "dr25",
+        "title": "O Druida",
+        "description": "Complete 4 categorias no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 4
+        },
+        "xp": 140,
+        "gold": 70
+      }
+    ],
+    "mage": [
+      {
+        "key": "ma01",
+        "title": "Sessao de Estudo",
+        "description": "Complete 2 missoes mentais hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "mental",
+          "count": 2
+        },
+        "xp": 42,
+        "gold": 21
+      },
+      {
+        "key": "ma02",
+        "title": "Grimorio do Dia",
+        "description": "Escreva 100 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 100
+        },
+        "xp": 45,
+        "gold": 22
+      },
+      {
+        "key": "ma03",
+        "title": "Consulta ao Arcano",
+        "description": "Fale com o NPC mentor da classe.",
+        "check_type": "talk_npc",
+        "check_params": {
+          "npc_id": "mage_mentor"
+        },
+        "xp": 35,
+        "gold": 18
+      },
+      {
+        "key": "ma04",
+        "title": "Intelecto Aguçado",
+        "description": "Aumente Inteligencia em 1 ponto.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "intelligence",
+          "amount": 1
+        },
+        "xp": 52,
+        "gold": 26
+      },
+      {
+        "key": "ma05",
+        "title": "Sem Imprecisao",
+        "description": "Sem niet por 3 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 3
+        },
+        "xp": 85,
+        "gold": 42
+      },
+      {
+        "key": "ma06",
+        "title": "Runa do Dia",
+        "description": "Gaste 50 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 50
+        },
+        "xp": 40,
+        "gold": 0
+      },
+      {
+        "key": "ma07",
+        "title": "Tres Mentais",
+        "description": "Complete 3 mentais hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "mental",
+          "count": 3
+        },
+        "xp": 72,
+        "gold": 36
+      },
+      {
+        "key": "ma08",
+        "title": "Cinco Dias de Mana",
+        "description": "Streak de 5 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 120,
+        "gold": 60
+      },
+      {
+        "key": "ma09",
+        "title": "Mente e Espirito",
+        "description": "Complete mentais e espirituais no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 60,
+        "gold": 30
+      },
+      {
+        "key": "ma10",
+        "title": "Anotacoes do Mago",
+        "description": "Escreva 150 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 150
+        },
+        "xp": 55,
+        "gold": 28
+      },
+      {
+        "key": "ma11",
+        "title": "Sete Dias de Arcano",
+        "description": "Streak de 7 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 150,
+        "gold": 75
+      },
+      {
+        "key": "ma12",
+        "title": "Grimorio Completo",
+        "description": "Complete todas as missoes hoje sem falha.",
+        "check_type": "complete_any_today",
+        "check_params": {
+          "count": 3,
+          "no_fail": true
+        },
+        "xp": 80,
+        "gold": 40
+      },
+      {
+        "key": "ma13",
+        "title": "Precisao Arcana",
+        "description": "Sem niet por 5 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 130,
+        "gold": 65
+      },
+      {
+        "key": "ma14",
+        "title": "Compra de Poder",
+        "description": "Compre 1 item na loja.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 1
+        },
+        "xp": 40,
+        "gold": 0
+      },
+      {
+        "key": "ma15",
+        "title": "Intelecto Expandido",
+        "description": "Aumente Inteligencia em 2 pontos.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "intelligence",
+          "amount": 2
+        },
+        "xp": 115,
+        "gold": 57
+      },
+      {
+        "key": "ma16",
+        "title": "Dez Dias de Estudo",
+        "description": "Streak de 10 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 10
+        },
+        "xp": 200,
+        "gold": 100
+      },
+      {
+        "key": "ma17",
+        "title": "Quatro Mentais",
+        "description": "Complete 4 mentais hoje.",
+        "check_type": "complete_category_today",
+        "check_params": {
+          "category": "mental",
+          "count": 4
+        },
+        "xp": 90,
+        "gold": 45
+      },
+      {
+        "key": "ma18",
+        "title": "Investimento em Runas",
+        "description": "Gaste 150 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 150
+        },
+        "xp": 75,
+        "gold": 0
+      },
+      {
+        "key": "ma19",
+        "title": "Sem Erros de Calculo",
+        "description": "Sem niet por 7 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 180,
+        "gold": 90
+      },
+      {
+        "key": "ma20",
+        "title": "Triangulo do Mago",
+        "description": "Complete mentais, espirituais e ordem no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 3
+        },
+        "xp": 78,
+        "gold": 39
+      },
+      {
+        "key": "ma21",
+        "title": "Biblioteca Viva",
+        "description": "Escreva 200 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 200
+        },
+        "xp": 70,
+        "gold": 35
+      },
+      {
+        "key": "ma22",
+        "title": "Catorze Dias de Mana",
+        "description": "Streak de 14 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 14
+        },
+        "xp": 300,
+        "gold": 150
+      },
+      {
+        "key": "ma23",
+        "title": "Intelecto Maximo",
+        "description": "Aumente Inteligencia em 3 pontos.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "intelligence",
+          "amount": 3
+        },
+        "xp": 155,
+        "gold": 77
+      },
+      {
+        "key": "ma24",
+        "title": "Arsenal Arcano",
+        "description": "Compre 3 itens na loja.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 3
+        },
+        "xp": 90,
+        "gold": 0
+      },
+      {
+        "key": "ma25",
+        "title": "O Mago",
+        "description": "Complete 4 categorias no mesmo dia sem falha.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 4
+        },
+        "xp": 140,
+        "gold": 70
+      }
+    ],
+    "shadowWeaver": [
+      {
+        "key": "sw01",
+        "title": "Equilibrio das Sombras",
+        "description": "Complete 3 categorias diferentes hoje.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 3
+        },
+        "xp": 55,
+        "gold": 28
+      },
+      {
+        "key": "sw02",
+        "title": "Diario do Vazio",
+        "description": "Escreva 100 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 100
+        },
+        "xp": 45,
+        "gold": 22
+      },
+      {
+        "key": "sw03",
+        "title": "O Tecelao Ouve",
+        "description": "Fale com o NPC mentor da classe.",
+        "check_type": "talk_npc",
+        "check_params": {
+          "npc_id": "shadow_mentor"
+        },
+        "xp": 35,
+        "gold": 18
+      },
+      {
+        "key": "sw04",
+        "title": "Atributo do Vazio",
+        "description": "Aumente qualquer atributo em 1 ponto.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "spirit",
+          "amount": 1
+        },
+        "xp": 50,
+        "gold": 25
+      },
+      {
+        "key": "sw05",
+        "title": "Sem Fratura",
+        "description": "Sem niet por 3 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 3
+        },
+        "xp": 85,
+        "gold": 42
+      },
+      {
+        "key": "sw06",
+        "title": "Teia de Quatro Fios",
+        "description": "Complete 4 categorias hoje.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 4
+        },
+        "xp": 90,
+        "gold": 45
+      },
+      {
+        "key": "sw07",
+        "title": "Investimento Sombrio",
+        "description": "Gaste 50 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 50
+        },
+        "xp": 40,
+        "gold": 0
+      },
+      {
+        "key": "sw08",
+        "title": "Cinco Dias de Teia",
+        "description": "Streak de 5 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 120,
+        "gold": 60
+      },
+      {
+        "key": "sw09",
+        "title": "Dois de Cada",
+        "description": "Complete 2 mentais e 2 espirituais hoje.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 75,
+        "gold": 38
+      },
+      {
+        "key": "sw10",
+        "title": "Registro do Tecelao",
+        "description": "Escreva 150 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 150
+        },
+        "xp": 55,
+        "gold": 28
+      },
+      {
+        "key": "sw11",
+        "title": "Sete Dias de Vazio",
+        "description": "Streak de 7 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 150,
+        "gold": 75
+      },
+      {
+        "key": "sw12",
+        "title": "Teia Perfeita",
+        "description": "Complete todas as missoes hoje sem falha.",
+        "check_type": "complete_any_today",
+        "check_params": {
+          "count": 3,
+          "no_fail": true
+        },
+        "xp": 80,
+        "gold": 40
+      },
+      {
+        "key": "sw13",
+        "title": "Cinco Dias Sem Fio Solto",
+        "description": "Sem niet por 5 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 5
+        },
+        "xp": 130,
+        "gold": 65
+      },
+      {
+        "key": "sw14",
+        "title": "Arsenal da Sombra",
+        "description": "Compre 2 itens na loja.",
+        "check_type": "buy_item",
+        "check_params": {
+          "count": 2
+        },
+        "xp": 65,
+        "gold": 0
+      },
+      {
+        "key": "sw15",
+        "title": "Dois Atributos",
+        "description": "Aumente Espirito em 2 pontos.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "spirit",
+          "amount": 2
+        },
+        "xp": 120,
+        "gold": 60
+      },
+      {
+        "key": "sw16",
+        "title": "Dez Dias da Teia",
+        "description": "Streak de 10 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 10
+        },
+        "xp": 200,
+        "gold": 100
+      },
+      {
+        "key": "sw17",
+        "title": "Cinco de Qualquer",
+        "description": "Complete 5 missoes hoje.",
+        "check_type": "complete_any_today",
+        "check_params": {
+          "count": 5
+        },
+        "xp": 100,
+        "gold": 50
+      },
+      {
+        "key": "sw18",
+        "title": "Grimorio da Sombra",
+        "description": "Escreva 200 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 200
+        },
+        "xp": 70,
+        "gold": 35
+      },
+      {
+        "key": "sw19",
+        "title": "Teia Sem Buracos",
+        "description": "Sem niet por 7 dias.",
+        "check_type": "no_niet_days",
+        "check_params": {
+          "days": 7
+        },
+        "xp": 180,
+        "gold": 90
+      },
+      {
+        "key": "sw20",
+        "title": "Todos os Fios",
+        "description": "Complete fisicas, mentais, espirituais e ordem no mesmo dia.",
+        "check_type": "complete_categories_today",
+        "check_params": {
+          "count": 4
+        },
+        "xp": 110,
+        "gold": 55
+      },
+      {
+        "key": "sw21",
+        "title": "Investimento Total",
+        "description": "Gaste 150 de ouro na loja.",
+        "check_type": "spend_gold",
+        "check_params": {
+          "amount": 150
+        },
+        "xp": 75,
+        "gold": 0
+      },
+      {
+        "key": "sw22",
+        "title": "Catorze Dias de Sombra",
+        "description": "Streak de 14 dias.",
+        "check_type": "streak_days",
+        "check_params": {
+          "days": 14
+        },
+        "xp": 300,
+        "gold": 150
+      },
+      {
+        "key": "sw23",
+        "title": "Atributos da Teia",
+        "description": "Aumente Espirito em 3 pontos.",
+        "check_type": "increase_attribute",
+        "check_params": {
+          "attribute": "spirit",
+          "amount": 3
+        },
+        "xp": 160,
+        "gold": 80
+      },
+      {
+        "key": "sw24",
+        "title": "Cronica do Vazio",
+        "description": "Escreva 300 palavras no diario.",
+        "check_type": "write_diary",
+        "check_params": {
+          "min_words": 300
+        },
+        "xp": 90,
+        "gold": 45
+      },
+      {
+        "key": "sw25",
+        "title": "O Tecelao",
+        "description": "Complete 6 missoes de categorias variadas no mesmo dia.",
+        "check_type": "complete_any_today",
+        "check_params": {
+          "count": 6
+        },
+        "xp": 160,
+        "gold": 80
+      }
+    ]
+  }
+}
