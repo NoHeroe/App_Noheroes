@@ -57,7 +57,7 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       if (currentLevel > savedLevel && savedLevel > 0) {
         await prefs.setInt('last_known_level', currentLevel);
         _lastLevel = savedLevel;
-        if (mounted) _checkLevelUp(currentLevel);
+        if (mounted) await _checkLevelUp(currentLevel);
       } else {
         await prefs.setInt('last_known_level', currentLevel);
         _lastLevel = currentLevel;
@@ -90,12 +90,12 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     }
   }
 
-  void _checkLevelUp(int newLevel) {
+  Future<void> _checkLevelUp(int newLevel) async {
     if (newLevel > _lastLevel && _lastLevel > 0) {
       _lastLevel = newLevel;
       if (!mounted) return;
       final unlocks = _levelUnlocks(newLevel);
-      MilestonePopup.show(
+      await MilestonePopup.show(
         context,
         title: 'Nível $newLevel',
         subtitle: 'Subiu de nível',
@@ -149,7 +149,7 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
           .filter((f) => f.id(player.id))
           .getSingleOrNull();
       ref.read(currentPlayerProvider.notifier).state = updated;
-      if (updated != null) _checkLevelUp(updated.level);
+      if (updated != null) await _checkLevelUp(updated.level);
       ref.invalidate(habitsProvider);
       if (mounted) {
         AppSnack.success(context, 'Admissão aprovada! Bem-vindo à facção.');
