@@ -62,8 +62,13 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
         await prefs.setInt('last_known_level', currentLevel);
         _lastLevel = currentLevel;
       }
-      await _runDailyReset();
+      // Daily reset em background (nao bloqueia tutoriais)
+      unawaited(_runDailyReset());
+      // Aguarda Navigator estabilizar apos rebuilds/invalidacoes
+      await Future.delayed(const Duration(milliseconds: 600));
+      if (!mounted) return;
       await _checkLevelTriggers();
+      if (!mounted) return;
       await _checkNpcDialog();
     });
   }
