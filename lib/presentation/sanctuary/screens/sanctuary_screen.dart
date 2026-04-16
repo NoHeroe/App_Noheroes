@@ -44,7 +44,18 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     ));
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final player = ref.read(currentPlayerProvider);
-      _lastLevel = player?.level ?? 1;
+      final currentLevel = player?.level ?? 1;
+      // Detecta level up comparando com nível salvo
+      final prefs = await SharedPreferences.getInstance();
+      final savedLevel = prefs.getInt('last_known_level') ?? currentLevel;
+      if (currentLevel > savedLevel && savedLevel > 0) {
+        await prefs.setInt('last_known_level', currentLevel);
+        _lastLevel = savedLevel;
+        if (mounted) _checkLevelUp(currentLevel);
+      } else {
+        await prefs.setInt('last_known_level', currentLevel);
+        _lastLevel = currentLevel;
+      }
       await _runDailyReset();
       await _checkLevelTriggers();
       await _checkNpcDialog();
@@ -248,16 +259,6 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
   @override
   Widget build(BuildContext context) {
     final player = ref.watch(currentPlayerProvider);
-
-    // Level up detector reativo
-    ref.listen<AsyncValue<dynamic>>(playerStreamProvider, (prev, next) {
-      final prevLevel = prev?.value?.level ?? 0;
-      final nextLevel = next.value?.level ?? 0;
-      if (nextLevel > prevLevel && prevLevel > 0 && mounted) {
-        _lastLevel = nextLevel;
-        _checkLevelUp(nextLevel);
-      }
-    });
 
     return PopScope(
       canPop: false,

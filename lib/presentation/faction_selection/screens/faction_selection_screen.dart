@@ -11,6 +11,7 @@ import '../../../data/datasources/local/quest_admission_service.dart';
 import '../../shared/widgets/app_snack.dart';
 import '../../../data/datasources/local/npc_reputation_service.dart';
 import '../../../core/utils/asset_loader.dart';
+import 'package:drift/drift.dart' show Variable, DriftDatabase;
 
 class FactionSelectionScreen extends ConsumerStatefulWidget {
   const FactionSelectionScreen({super.key});
@@ -279,6 +280,21 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
       ),
     );
     if (confirmed != true || !mounted) return;
+    final player = ref.read(currentPlayerProvider);
+    if (player != null) {
+      final db = ref.read(appDatabaseProvider);
+      await db.customUpdate(
+        'UPDATE players SET faction_type = ? WHERE id = ?',
+        variables: [
+          Variable.withString('none'),
+          Variable.withInt(player.id),
+        ],
+        updates: {db.playersTable},
+      );
+      final updated = await ref.read(authDsProvider).currentSession();
+      ref.read(currentPlayerProvider.notifier).state = updated;
+    }
+    if (!mounted) return;
     context.go('/sanctuary');
   }
 
