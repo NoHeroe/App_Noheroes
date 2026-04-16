@@ -1,0 +1,10 @@
+[33mcec252e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix: remove early return nivel 5 (bloqueava NPC/faccao/playstyle), botao notificacoes com onTap, navbar regioes com cadeado nivel 4, slots equipamento sincronizados com items.json, missoes classe assignadas ao aceitar classe, habitos nao-repetiveis pausam apos conclusao, providers class/faction quest checam nivel minimo
+[33m4a48d25[m feat: tutorial progressivo 11 fases (onboarding redesign NPC embaixo, fases 1-11 por nivel), TutorialService, TutorialManager, redesign awakening_screen sem barrinhas de slide
+[33mdc866ab[m feat: notificacoes funcionais (NotificationService v21), tela de notificacoes, timer NPC 15min, gatilho NPC espontaneo, rota /notifications no drawer
+[33m9a30d59[m feat: teste de ascensao da guilda (E->S, missoes encadeadas por nivel, auto-conclusao, aba Ascensao na guilda), guild_ascension_service, migration 17
+[33mca8c661[m feat: aba personagem com itens equipados, bonus atributos, desequipar, class/faction quest cards na tela de missoes
+[33m205e549[m feat: missoes de classe diarias (25/classe, auto-conclusao) + missoes de faccao semanais (10/faccao, timer, loot bau+item), ClassQuestService, FactionQuestService, tabelas migration 16
+[33ma5c9ff4[m fix: level up popup via SharedPreferences, lobo solitario salva factionType none
+[33mb9722cc[m fix: level up popup reativo, caminho do lobo solitario, reputacao +5 ao escolher faccao, playstyle nivel 15
+[33mf4fb8ee[m fix: noryan one-shot, drawer rank pos guilda, library/regions back, faction lobo solitario, level up popup reativo, playstyle nivel 15, npc_dialog_overlay fix
+[33m1127ff4[m fix: rank sem guilda, noryan one-shot, voltar biblioteca/regioes, biblioteca nivel 2, faccao opcional, level up popup, AppSnack unificado, reputacao faccoes

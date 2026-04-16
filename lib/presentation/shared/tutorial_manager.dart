@@ -5,8 +5,9 @@ import '../../data/datasources/local/tutorial_service.dart';
 import 'widgets/npc_dialog_overlay.dart';
 import 'widgets/milestone_popup.dart';
 
-/// Dispara diálogos de tutorial em sequência.
-/// Cada fase é mostrada uma única vez (flag no SharedPreferences).
+/// Sistema unificado de tutorial.
+/// Cada fase: NPC(s) + popup de ação (se aplicável) + markDone.
+/// Popup de ação pode navegar para /class-selection, /faction-selection, /playstyle.
 class TutorialManager {
 
   // ── FASE 1 — Santuário (nível 1) ──────────────────────────────────────────
@@ -22,7 +23,7 @@ class TutorialManager {
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'Vá até MISSÕES e complete seu primeiro hábito diário. Cada missão completada fortalece sua forma aqui.',
+      message: 'Vá até MISSÕES e complete seu primeiro hábito diário. Cada missão fortalece sua forma aqui.',
     );
     await TutorialService.markDone(TutorialPhase.phase1_sanctuary);
   }
@@ -34,13 +35,13 @@ class TutorialManager {
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'A Biblioteca de Caelum está desbloqueada. Ali você pode registrar seu Diário — cada palavra escrita alimenta sua forma.',
+      message: 'A Biblioteca está desbloqueada. Registre seu Diário — cada palavra alimenta sua forma.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'Você subiu de nível. Acesse o Personagem — há pontos de atributo disponíveis. Cada ponto melhora suas estatísticas permanentemente.',
+      message: 'Você subiu de nível. No Personagem há pontos de atributo disponíveis — cada ponto melhora suas estatísticas permanentemente.',
     );
     await TutorialService.markDone(TutorialPhase.phase2_library);
   }
@@ -52,13 +53,13 @@ class TutorialManager {
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'A Loja está disponível. Com ouro acumulado em missões você pode comprar equipamentos, consumíveis e materiais.',
+      message: 'A Loja está disponível. Com ouro de missões você compra equipamentos, consumíveis e materiais.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'Itens equipados aparecem nos slots do seu Personagem. Eles adicionam bônus reais aos seus atributos e estatísticas.',
+      message: 'Itens equipados aparecem no Personagem. Eles adicionam bônus reais aos seus atributos.',
     );
     await TutorialService.markDone(TutorialPhase.phase3_shop);
   }
@@ -70,19 +71,19 @@ class TutorialManager {
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'As Regiões de Caelum estão abertas. São áreas de exploração onde você descobre NPCs, tesouros e missões extras.',
+      message: 'As Regiões de Caelum abriram. Áreas de exploração onde você descobre NPCs, tesouros e missões extras.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'Explorar regiões também aumenta reputação com NPCs e facções — e desbloqueia partes da história de Caelum.',
+      message: 'Explorar regiões aumenta reputação com NPCs e facções — e desbloqueia partes da história.',
     );
     await TutorialService.markDone(TutorialPhase.phase4_regions);
   }
 
-  // ── FASE 5 — Classe + Missões de Classe (nível 5) ─────────────────────────
-  static Future<void> phase5Class(BuildContext ctx) async {
+  // ── FASE 5 — Classe (nível 5) ─────────────────────────────────────────────
+  static Future<void> phase5Class(BuildContext ctx, {required bool hasClass}) async {
     if (!await TutorialService.shouldShow(TutorialPhase.phase5_class)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
@@ -94,15 +95,26 @@ class TutorialManager {
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'Classes que usam Mana dominam magia arcana. Classes com Vitalismo vão além — causam dano vitalista além do mágico. A escolha muda seu estilo para sempre.',
+      message: 'Classes de Mana dominam magia arcana. Classes de Vitalismo vão além — causam dano vitalista. A escolha muda seu estilo para sempre.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'Após escolher sua classe, 3 Missões de Classe aparecerão todos os dias automaticamente. Elas se completam sozinhas conforme você age.',
+      message: 'Após escolher sua classe, 3 Missões de Classe aparecerão todos os dias — completadas automaticamente conforme você age.',
     );
     await TutorialService.markDone(TutorialPhase.phase5_class);
+
+    // Popup de ação: só se ainda não tem classe
+    if (hasClass || !ctx.mounted) return;
+    await MilestonePopup.show(ctx,
+      title: 'Escolha sua Classe',
+      subtitle: 'Nível 5 atingido',
+      message: 'A hora chegou. Cada classe define seus atributos, missões e destino em Caelum.',
+      icon: Icons.auto_fix_high_outlined,
+      color: AppColors.purple,
+      onDismiss: () => ctx.go('/class-selection'),
+    );
   }
 
   // ── FASE 6 — Guilda (nível 6) ─────────────────────────────────────────────
@@ -112,33 +124,50 @@ class TutorialManager {
     await NpcDialogOverlay.show(ctx,
       npcName: 'Noryan Gray',
       npcTitle: 'Mestre da Guilda',
-      message: 'A Guilda de Aventureiros está aberta para você. Aqui você sobe de Rank completando o Teste de Ascensão — missões encadeadas de alta dificuldade.',
+      message: 'Aventureiro. A Guilda de Aventureiros agora está acessível. O Colar te aguarda.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'Noryan Gray',
       npcTitle: 'Mestre da Guilda',
-      message: 'As Missões da Guilda ainda estão bloqueadas — chegam em uma atualização futura com o sistema de batalha. Por enquanto, foque no Teste de Ascensão.',
+      message: 'Aqui você sobe de Rank completando o Teste de Ascensão — missões encadeadas de alta dificuldade.',
+    );
+    if (!ctx.mounted) return;
+    await NpcDialogOverlay.show(ctx,
+      npcName: 'Noryan Gray',
+      npcTitle: 'Mestre da Guilda',
+      message: 'As Missões de Guilda ainda estão bloqueadas — chegam com o sistema de batalha. Por enquanto, foque no Teste de Ascensão.',
     );
     await TutorialService.markDone(TutorialPhase.phase6_guild);
   }
 
   // ── FASE 7 — Facções (nível 7) ────────────────────────────────────────────
-  static Future<void> phase7Factions(BuildContext ctx) async {
+  static Future<void> phase7Factions(BuildContext ctx, {required bool hasFaction}) async {
     if (!await TutorialService.shouldShow(TutorialPhase.phase7_faction)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'As 8 Facções de Caelum abriram suas portas. Cada uma tem sua filosofia, bônus, missões exclusivas e NPCs próprios.',
+      message: 'As 8 Facções de Caelum abriram suas portas. Cada uma tem filosofia, bônus, missões exclusivas e NPCs próprios.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'Não é obrigatório escolher uma facção. O Caminho do Lobo Solitário existe para quem prefere caminhar sem alianças — por ora.',
+      message: 'Não é obrigatório escolher. O Caminho do Lobo Solitário existe para quem prefere caminhar sem alianças — por ora.',
     );
     await TutorialService.markDone(TutorialPhase.phase7_faction);
+
+    // Popup de ação: só se ainda não tem facção
+    if (hasFaction || !ctx.mounted) return;
+    await MilestonePopup.show(ctx,
+      title: 'Facções Desbloqueadas',
+      subtitle: 'Nível 7 atingido',
+      message: 'As 8 facções aceitam sua candidatura. Cada uma tem seu preço, recompensas e segredos. Escolha com cuidado.',
+      icon: Icons.shield_outlined,
+      color: AppColors.gold,
+      onDismiss: () => ctx.go('/faction-selection'),
+    );
   }
 
   // ── FASE 8 — Shadow Boss (nível 10) ───────────────────────────────────────
@@ -148,39 +177,49 @@ class TutorialManager {
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'Algo surgiu das suas próprias falhas e excessos. Isso é um Shadow Boss — a forma mais verdadeira do seu erro em Caelum.',
+      message: 'Algo surgiu das suas falhas e excessos. É um Shadow Boss — a forma mais verdadeira do seu erro em Caelum.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'Você não pode vencer agora. A Câmara das Sombras é onde sua Sombra é contida. Acesse-a para entender seu estado de estabilidade.',
+      message: 'A Câmara das Sombras contém sua Sombra. Acesse para entender seu estado de estabilidade.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'A Estabilidade da Sombra vai de 0 a 100. Missões completadas aumentam. Falhas diminuem. Se chegar a 0, o Colapso acontece e você perde XP.',
+      message: 'Estabilidade vai de 0 a 100. Missões aumentam, falhas diminuem. Em 0 acontece o Colapso e você perde XP.',
     );
     await TutorialService.markDone(TutorialPhase.phase8_shadow);
   }
 
   // ── FASE 9 — Estilo de Jogo (nível 15) ────────────────────────────────────
-  static Future<void> phase9Playstyle(BuildContext ctx) async {
+  static Future<void> phase9Playstyle(BuildContext ctx, {required bool hasPlaystyle}) async {
     if (!await TutorialService.shouldShow(TutorialPhase.phase9_playstyle)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'Você amadureceu o suficiente para definir como joga. Solo — mais XP individual. Duo — bônus em dupla. Team — party com bônus progressivo.',
+      message: 'Você amadureceu. Hora de definir como joga: Solo — mais XP individual. Duo — bônus em dupla. Team — party com bônus progressivo.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'O estilo de jogo desbloqueia missões e conteúdos específicos. Pode ser mudado depois, mas com custo.',
+      message: 'O estilo de jogo desbloqueia missões e conteúdos específicos. Pode mudar depois, mas tem custo.',
     );
     await TutorialService.markDone(TutorialPhase.phase9_playstyle);
+
+    if (hasPlaystyle || !ctx.mounted) return;
+    await MilestonePopup.show(ctx,
+      title: 'Estilo de Jogo',
+      subtitle: 'Nível 15 atingido',
+      message: 'Defina como você joga em Caelum: Solo, Duo ou Team. Afeta missões, bônus e acesso a conteúdos.',
+      icon: Icons.sports_martial_arts,
+      color: AppColors.gold,
+      onDismiss: () => ctx.go('/playstyle'),
+    );
   }
 
   // ── FASE 10 — Vitalismo (nível 25) ────────────────────────────────────────
@@ -190,13 +229,13 @@ class TutorialManager {
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'O Vitalismo acordou em você. É uma energia mais pura que a Mana — rara, poderosa e exclusiva para certos caminhos.',
+      message: 'O Vitalismo despertou em você. Energia mais pura que a Mana — rara, poderosa e exclusiva para certos caminhos.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'Figura Desconhecida',
       npcTitle: 'Seu guia em Caelum',
-      message: 'Classes vitalistas causam dano vitalista além do mágico. A barra de Vitalismo é separada da Mana e reage de forma diferente ao seu estado.',
+      message: 'Classes vitalistas causam dano vitalista além do mágico. A barra de Vitalismo é separada da Mana.',
     );
     await TutorialService.markDone(TutorialPhase.phase10_vitalism);
   }
@@ -208,10 +247,32 @@ class TutorialManager {
     await MilestonePopup.show(ctx,
       title: 'Nível 99 — Pináculo',
       subtitle: 'O topo de Caelum',
-      message: 'Você está a um passo do impossível. O Nível Caveira não é um destino — é um estado. A cada 1000 XP acumulados você recebe recompensas de prestígio.',
+      message: 'Você está a um passo do impossível. O Nível Caveira é um estado. A cada 1000 XP acumulados você recebe recompensas de prestígio.',
       icon: Icons.whatshot,
       color: const Color(0xFFFF2D55),
     );
     await TutorialService.markDone(TutorialPhase.phase11_skull);
+  }
+
+  /// Roda todas as fases aplicáveis ao nível do player, em ordem.
+  /// Recebe o player para decidir hasClass/hasFaction/hasPlaystyle.
+  static Future<void> runAll(
+    BuildContext ctx, {
+    required int level,
+    required bool hasClass,
+    required bool hasFaction,
+    required bool hasPlaystyle,
+  }) async {
+    if (level >= 1 && ctx.mounted) await phase1Sanctuary(ctx);
+    if (level >= 2 && ctx.mounted) await phase2Library(ctx);
+    if (level >= 3 && ctx.mounted) await phase3Shop(ctx);
+    if (level >= 4 && ctx.mounted) await phase4Regions(ctx);
+    if (level >= 5 && ctx.mounted) await phase5Class(ctx, hasClass: hasClass);
+    if (level >= 6 && ctx.mounted) await phase6Guild(ctx);
+    if (level >= 7 && ctx.mounted) await phase7Factions(ctx, hasFaction: hasFaction);
+    if (level >= 10 && ctx.mounted) await phase8Shadow(ctx);
+    if (level >= 15 && ctx.mounted) await phase9Playstyle(ctx, hasPlaystyle: hasPlaystyle);
+    if (level >= 25 && ctx.mounted) await phase10Vitalism(ctx);
+    if (level >= 99 && ctx.mounted) await phase11Skull(ctx);
   }
 }

@@ -214,73 +214,20 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
 
   Future<void> _checkLevelTriggers() async {
     final player = ref.read(currentPlayerProvider);
-    if (player == null) return;
-    final level = player.level;
-    if (!mounted) return;
-    // Fase 1 sempre mostra no nível 1 se não foi feita
-    if (level >= 1) await TutorialManager.phase1Sanctuary(context);
-    if (level >= 2 && mounted) await TutorialManager.phase2Library(context);
-    if (level >= 3 && mounted) await TutorialManager.phase3Shop(context);
-    if (level >= 4 && mounted) await TutorialManager.phase4Regions(context);
-    if (level >= 5 && mounted) await TutorialManager.phase5Class(context);
-    if (level >= 6 && mounted) await TutorialManager.phase6Guild(context);
-    if (level >= 7 && mounted) await TutorialManager.phase7Factions(context);
-    if (level >= 10 && mounted) await TutorialManager.phase8Shadow(context);
-    if (level >= 15 && mounted) await TutorialManager.phase9Playstyle(context);
-    if (level >= 25 && mounted) await TutorialManager.phase10Vitalism(context);
-    if (level >= 99 && mounted) await TutorialManager.phase11Skull(context);
+    if (player == null || !mounted) return;
+    final hasClass = (player.classType?.isNotEmpty ?? false);
+    final hasFaction = (player.factionType?.isNotEmpty ?? false)
+        && player.factionType != 'none'
+        && !(player.factionType?.startsWith('pending:') ?? false);
+    final hasPlaystyle = player.playStyle.isNotEmpty && player.playStyle != 'none';
 
-    if (player.level >= 5 && (player.classType == null || player.classType!.isEmpty)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        MilestonePopup.show(
-          context,
-          title: 'Escolha sua Classe',
-          subtitle: 'Nivel 5 atingido',
-          message: 'Voce atingiu o Nivel 5. A hora de escolher seu caminho chegou. Cada classe define seus atributos, missoes e destino em Caelum.',
-          icon: Icons.auto_fix_high_outlined,
-          color: AppColors.purple,
-          onDismiss: () => context.go('/class-selection'),
-        );
-      });
-    }
-    if (player.level >= 6) {
-      await _showGuildUnlockOnce();
-    }
-    if (player.level >= 15 && (player.playStyle == 'none' || player.playStyle.isEmpty)) {
-      // Timer NPC 15min
-    _npcTimer = Timer(const Duration(minutes: 15), _triggerNpcTimer);
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-        if (!mounted) return;
-        final prefs = await SharedPreferences.getInstance();
-        if (prefs.getBool('playstyle_shown') ?? false) return;
-        await prefs.setBool('playstyle_shown', true);
-        if (!mounted) return;
-        MilestonePopup.show(
-          context,
-          title: 'Estilo de Jogo',
-          subtitle: 'Nivel 15 atingido',
-          message: 'Voce atingiu o Nivel 15. E hora de definir como voce joga em Caelum: Solo, Duo ou Team. Isso afeta missoes, bonus e acesso a conteudos.',
-          icon: Icons.sports_martial_arts,
-          color: AppColors.gold,
-          onDismiss: () => context.go('/playstyle'),
-        );
-      });
-    }
-    if (player.level >= 7 && (player.factionType == null || player.factionType!.isEmpty)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        MilestonePopup.show(
-          context,
-          title: 'Faccoes Desbloqueadas',
-          subtitle: 'Nivel 7 atingido',
-          message: 'As 8 faccoes de Caelum agora aceitam sua candidatura. Cada uma tem seu preco, suas recompensas e seus segredos. Escolha com cuidado.',
-          icon: Icons.shield_outlined,
-          color: AppColors.gold,
-          onDismiss: () => context.go('/faction-selection'),
-        );
-      });
-    }
+    await TutorialManager.runAll(
+      context,
+      level: player.level,
+      hasClass: hasClass,
+      hasFaction: hasFaction,
+      hasPlaystyle: hasPlaystyle,
+    );
   }
 
   Future<bool> _onWillPop() async {
@@ -317,6 +264,16 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
   @override
   Widget build(BuildContext context) {
     final player = ref.watch(currentPlayerProvider);
+
+    // Listener: detecta level up em qualquer tela e dispara tutorial ao voltar ao sanctuary
+    ref.listen(currentPlayerProvider, (prev, next) async {
+      final prevLevel = prev?.level ?? 0;
+      final nextLevel = next?.level ?? 0;
+      if (nextLevel > prevLevel && prevLevel > 0 && mounted) {
+        await _checkLevelUp(nextLevel);
+        if (mounted) await _checkLevelTriggers();
+      }
+    });
 
     return PopScope(
       canPop: false,
