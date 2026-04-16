@@ -240,7 +240,6 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
           onDismiss: () => context.go('/class-selection'),
         );
       });
-      return;
     }
     if (player.level >= 6) {
       await _showGuildUnlockOnce();
