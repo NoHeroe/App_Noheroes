@@ -46,7 +46,7 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
     ));
-    // Timer NPC 15min
+    // Timer NPC 15min com app aberto
     _npcTimer = Timer(const Duration(minutes: 15), _triggerNpcTimer);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final player = ref.read(currentPlayerProvider);
@@ -240,15 +240,13 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
           onDismiss: () => context.go('/class-selection'),
         );
       });
-      return;
+      // SEM return — continua para checar nivel 6, 7, 15...
     }
     if (player.level >= 6) {
       await _showGuildUnlockOnce();
     }
     if (player.level >= 15 && (player.playStyle == 'none' || player.playStyle.isEmpty)) {
-      // Timer NPC 15min
-    _npcTimer = Timer(const Duration(minutes: 15), _triggerNpcTimer);
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
         final prefs = await SharedPreferences.getInstance();
         if (prefs.getBool('playstyle_shown') ?? false) return;
@@ -430,8 +428,10 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
             ],
           ),
           const SizedBox(width: 8),
-          Stack(children: [
-            _btn(Icons.notifications_none),
+          GestureDetector(
+            onTap: () => context.go('/notifications'),
+            child: Stack(children: [
+              _btn(Icons.notifications_none),
             Positioned(
               top: 8, right: 8,
               child: Container(
@@ -441,7 +441,7 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
                     shape: BoxShape.circle),
               ),
             ),
-          ]),
+          ])),
         ],
       ),
     );

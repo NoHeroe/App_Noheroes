@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../app/providers.dart';
 
-class NhBottomNav extends StatelessWidget {
+class NhBottomNav extends ConsumerWidget {
   final int currentIndex;
   const NhBottomNav({super.key, required this.currentIndex});
 
   @override
-  Widget build(BuildContext context) {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final player = ref.watch(currentPlayerProvider);
+    final level = player?.level ?? 1;
     final items = [
       _NavItem('Santuário', Icons.home_outlined,    Icons.home,        '/sanctuary'),
       _NavItem('Missões',   Icons.assignment_outlined, Icons.assignment, '/habits'),
@@ -40,7 +45,28 @@ class NhBottomNav extends StatelessWidget {
               final item = e.value;
               final active = i == currentIndex;
               return GestureDetector(
-                onTap: () { if (!active) context.go(item.route); },
+                onTap: () {
+                  if (!active) {
+                    // Regiões bloqueadas até nível 4
+                    if (item.route == '/regions' && level < 4) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Regiões desbloqueiam no Nível 4.',
+                              style: const TextStyle(color: Colors.white)),
+                          backgroundColor: const Color(0xFF0E0E1A),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: const BorderSide(color: Color(0xFF2A2A3A)),
+                          ),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                      return;
+                    }
+                    context.go(item.route);
+                  }
+                },
                 child: Container(
                   color: Colors.transparent,
                   padding: const EdgeInsets.symmetric(
@@ -49,8 +75,12 @@ class NhBottomNav extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        active ? item.activeIcon : item.icon,
-                        color: active ? AppColors.purple : AppColors.textMuted,
+                        item.route == '/regions' && level < 4
+                            ? Icons.lock_outline
+                            : active ? item.activeIcon : item.icon,
+                        color: item.route == '/regions' && level < 4
+                            ? AppColors.border
+                            : active ? AppColors.purple : AppColors.textMuted,
                         size: 22,
                       ),
                       const SizedBox(height: 4),

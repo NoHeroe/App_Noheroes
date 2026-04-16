@@ -87,12 +87,18 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
     await ClassBonusService(db).applyClassBonus(player.id, cls['id'] as String);
     await QuestAdmissionService(db).startClassQuests(player.id, cls['id'] as String);
 
+    // Assigna as missões de classe diárias imediatamente
+    final classId = cls['id'] as String;
+    await ref.read(classQuestServiceProvider)
+        .assignDailyQuests(player.id, classId);
+
     final updated = await db.managers.playersTable
         .filter((f) => f.id(player.id))
         .getSingleOrNull();
     if (mounted) {
       ref.read(currentPlayerProvider.notifier).state = updated;
       ref.invalidate(habitsProvider);
+      ref.invalidate(todayClassQuestsProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

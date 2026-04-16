@@ -136,12 +136,17 @@ class HabitsScreen extends ConsumerWidget {
         .where((h) => h.habit.isSystemHabit && !h.habit.title.startsWith('['))
         .toList();
 
-    // Missões de Classe: títulos que começam com '[Guerreiro]', '[Mago]' etc.
-    final classQuests = habits
-        .where((h) =>
-            h.habit.title.startsWith('[') &&
-            !h.habit.title.toLowerCase().contains('admiss'))
-        .toList();
+    // Missões de Admissão (antigas, quando classe ainda não foi aceita)
+    // Após aceitar classe, elas não aparecem mais aqui
+    final player = ref.read(currentPlayerProvider);
+    final hasClass = (player?.classType?.isNotEmpty ?? false);
+    final classQuests = hasClass
+        ? <HabitWithStatus>[]
+        : habits
+            .where((h) =>
+                h.habit.title.startsWith('[') &&
+                !h.habit.title.toLowerCase().contains('admiss'))
+            .toList();
 
     // Admissão de Facção: títulos que contêm '[Admissão'
     final admissionQuests = habits
@@ -221,10 +226,10 @@ class HabitsScreen extends ConsumerWidget {
           );
         }),
 
-        // ── MISSÕES DE CLASSE (hábitos antigos via título) ──
+        // ── MISSÕES DE ADMISSÃO DE CLASSE (fase de teste, pré-aceitação) ──
         if (classQuests.isNotEmpty) ...[
           _sectionHeader(
-            'MISSÕES DE ADMISSÃO',
+            'PROVAS DE CLASSE',
             Icons.auto_fix_high_outlined,
             color: AppColors.purple,
           ),
