@@ -138,19 +138,19 @@ class CharacterScreen extends ConsumerWidget {
     }
 
     final leftSlots = [
-      ('Capacete', Icons.security, 'helmet'),
+      ('Capacete', Icons.security, 'head'),
       ('Peitoral', Icons.shield, 'chest'),
-      ('Calças', Icons.accessibility, 'legs'),
+      ('Cinto', Icons.fitness_center_outlined, 'waist'),
     ];
     final rightSlots = [
-      ('Botas', Icons.hiking, 'boots'),
-      ('Luvas', Icons.back_hand_outlined, 'gloves'),
-      ('Ombreiras', Icons.accessibility_new, 'shoulders'),
+      ('Botas', Icons.hiking, 'feet'),
+      ('Luvas', Icons.back_hand_outlined, 'hands'),
+      ('Escudo', Icons.shield_outlined, 'offhand'),
     ];
     final bottomSlots = [
       ('Arma', Icons.gavel, 'weapon'),
-      ('Relíquia', Icons.auto_awesome, 'relic'),
-      ('Acessório', Icons.circle_outlined, 'accessory'),
+      ('Anel', Icons.circle_outlined, 'ring'),
+      ('Acessório', Icons.auto_awesome, 'accessory'),
     ];
 
     return Container(

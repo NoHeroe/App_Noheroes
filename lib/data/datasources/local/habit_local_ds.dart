@@ -138,6 +138,7 @@ class HabitLocalDs {
     required String category,
     required String rank,
     required bool isFreeUser,
+    bool isRepeatable = false,
     String? requirements,
     String? autoDescription,
   }) async {
@@ -156,7 +157,7 @@ class HabitLocalDs {
       category:      Value(category),
       rank:          Value(rank),
       isSystemHabit: const Value(false),
-      isRepeatable:  const Value(false),
+      isRepeatable:  Value(isRepeatable),
       xpReward:      Value(xp),
       goldReward:    Value(gold),
       requirements:    Value(requirements),

@@ -221,10 +221,10 @@ class HabitsScreen extends ConsumerWidget {
           );
         }),
 
-        // ── MISSÕES DE CLASSE (hábitos antigos via título) ──
+        // ── MISSÕES DE CLASSE (hábitos via título [Classe]) ──
         if (classQuests.isNotEmpty) ...[
           _sectionHeader(
-            'MISSÕES DE ADMISSÃO',
+            'MISSÕES DE CLASSE',
             Icons.auto_fix_high_outlined,
             color: AppColors.purple,
           ),

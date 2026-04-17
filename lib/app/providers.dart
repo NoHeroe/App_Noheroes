@@ -89,7 +89,9 @@ final classQuestServiceProvider = Provider<ClassQuestService>((ref) {
 
 final todayClassQuestsProvider = FutureProvider.autoDispose<List<ClassQuestsTableData>>((ref) async {
   final player = ref.watch(currentPlayerProvider);
-  if (player == null || (player.classType?.isEmpty ?? true)) return [];
+  if (player == null) return [];
+  if (player.level < 5) return [];
+  if (player.classType == null || player.classType!.isEmpty) return [];
   final service = ref.read(classQuestServiceProvider);
   await service.assignDailyQuests(player.id, player.classType!);
   return service.getTodayQuests(player.id);
@@ -103,6 +105,7 @@ final factionQuestServiceProvider = Provider<FactionQuestService>((ref) {
 final activeFactionQuestProvider = FutureProvider.autoDispose<FactionQuestsTableData?>((ref) async {
   final player = ref.watch(currentPlayerProvider);
   if (player == null) return null;
+  if (player.level < 7) return null;
   final faction = player.factionType ?? '';
   if (faction.isEmpty || faction == 'none' || faction.startsWith('pending:')) return null;
   final service = ref.read(factionQuestServiceProvider);

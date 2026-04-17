@@ -103,17 +103,19 @@ class HabitDao extends DatabaseAccessor<AppDatabase> with _$HabitDaoMixin {
       shadowImpact: Value(shadowImpact),
     ));
 
-    // Atualiza streak e total se completado
-    if (status == 'completed' || status == 'partial') {
+    // Atualiza streak e total. Habitos nao-repetitivos pausam apos status final.
+    if (status == 'completed' || status == 'partial' || status == 'failed') {
       final habit = await (select(habitsTable)
             ..where((t) => t.id.equals(habitId)))
           .getSingleOrNull();
       if (habit != null) {
+        final shouldPause = !habit.isRepeatable;
         await (update(habitsTable)..where((t) => t.id.equals(habitId)))
             .write(HabitsTableCompanion(
           totalCompleted: Value(habit.totalCompleted + 1),
           streakCount: Value(
               status == 'completed' ? habit.streakCount + 1 : habit.streakCount),
+          isPaused: Value(shouldPause),
         ));
       }
     }

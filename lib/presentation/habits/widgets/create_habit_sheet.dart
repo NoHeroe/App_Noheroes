@@ -26,6 +26,7 @@ class _CreateHabitSheetState extends ConsumerState<CreateHabitSheet> {
   Map<String, dynamic> _templates = {};
   List<RequirementItem> _requirements = [];
   String? _autoDescription;
+  bool _isRepeatable = false;
 
   final _categories = [
     ('physical',  'Físico',       Icons.fitness_center,     AppColors.hp),
@@ -112,6 +113,7 @@ class _CreateHabitSheetState extends ConsumerState<CreateHabitSheet> {
       isFreeUser:      true,
       requirements:    reqJson,
       autoDescription: _autoDescription,
+      isRepeatable:    _isRepeatable,
     );
 
     setState(() => _loading = false);
@@ -359,6 +361,44 @@ class _CreateHabitSheetState extends ConsumerState<CreateHabitSheet> {
               ],
               const SizedBox(height: 12),
             ],
+
+            // Toggle repetir diariamente
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.repeat, color: AppColors.textMuted, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Repetir diariamente',
+                            style: GoogleFonts.roboto(
+                                fontSize: 13, color: AppColors.textPrimary)),
+                        Text(
+                            _isRepeatable
+                                ? 'Reaparece todo dia, acumula streak.'
+                                : 'Some apos concluir (missao unica).',
+                            style: GoogleFonts.roboto(
+                                fontSize: 10, color: AppColors.textMuted)),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: _isRepeatable,
+                    onChanged: (v) => setState(() => _isRepeatable = v),
+                    activeColor: AppColors.gold,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
 
             if (_error != null) ...[
               Text(_error!,
