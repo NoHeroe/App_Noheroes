@@ -109,7 +109,10 @@ class HabitDao extends DatabaseAccessor<AppDatabase> with _$HabitDaoMixin {
             ..where((t) => t.id.equals(habitId)))
           .getSingleOrNull();
       if (habit != null) {
-        final shouldPause = !habit.isRepeatable;
+        // Pausa habitos nao-repetiveis ao concluir, EXCETO missoes de admissao
+        // de faccao (precisam ficar visiveis ate a faccao ser confirmada).
+        final isAdmission = habit.title.startsWith('[Admissão]') && habit.isSystemHabit;
+        final shouldPause = !habit.isRepeatable && !isAdmission;
         await (update(habitsTable)..where((t) => t.id.equals(habitId)))
             .write(HabitsTableCompanion(
           totalCompleted: Value(habit.totalCompleted + 1),

@@ -71,8 +71,18 @@ class _CompletionDialogState extends State<CompletionDialog> {
     }
     setState(() => _loading = true);
     final status = _hasReqs ? _status : 'completed';
-    await widget.onComplete(status);
-    if (mounted) Navigator.pop(context);
+    try {
+      await widget.onComplete(status);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Erro ao completar: ${e.toString()}'),
+          backgroundColor: AppColors.hp,
+        ));
+      }
+    } finally {
+      if (mounted) Navigator.pop(context);
+    }
   }
 
   @override

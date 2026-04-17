@@ -15,6 +15,8 @@ import '../../shared/widgets/reward_toast.dart';
 import '../widgets/class_quest_card.dart';
 import '../widgets/faction_quest_card.dart';
 import '../../../data/datasources/local/faction_quest_service.dart';
+import '../../../data/datasources/local/quest_admission_service.dart';
+import '../../shared/widgets/app_snack.dart';
 import '../../shared/widgets/milestone_popup.dart';
 
 class HabitsScreen extends ConsumerWidget {
@@ -343,6 +345,28 @@ class HabitsScreen extends ConsumerWidget {
           final updated = await ref.read(authDsProvider).currentSession();
           ref.read(currentPlayerProvider.notifier).state = updated;
           ref.invalidate(habitsProvider);
+
+          // Auto-confirma faccao se as 3 missoes de admissao ja foram concluidas
+          if (updated != null) {
+            final rawFaction = updated.factionType ?? '';
+            if (rawFaction.startsWith('pending:')) {
+              final factionId = rawFaction.replaceFirst('pending:', '');
+              final db = ref.read(appDatabaseProvider);
+              final admSvc = QuestAdmissionService(db);
+              final passed = await admSvc.checkFactionAdmission(updated.id, factionId);
+              if (passed) {
+                await admSvc.confirmFaction(updated.id, factionId);
+                final confirmed = await ref.read(authDsProvider).currentSession();
+                ref.read(currentPlayerProvider.notifier).state = confirmed;
+                ref.invalidate(habitsProvider);
+                ref.invalidate(activeFactionQuestProvider);
+                if (context.mounted) {
+                  AppSnack.success(context, 'Admissao aprovada! Bem-vindo a faccao.');
+                }
+              }
+            }
+          }
+
           // Auto-check class quests
           if (updated != null && (updated.classType?.isNotEmpty ?? false)) {
             final ctx = {
