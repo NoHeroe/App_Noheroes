@@ -92,35 +92,40 @@ class _NpcDialogOverlayState extends State<NpcDialogOverlay>
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     // Avatar NPC
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 64, height: 64,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.shadowVoid,
-                            border: Border.all(
-                                color: AppColors.gold.withValues(alpha: 0.6),
-                                width: 2),
-                            boxShadow: [BoxShadow(
-                                color: AppColors.gold.withValues(alpha: 0.2),
-                                blurRadius: 12, spreadRadius: 2)],
+                    Builder(builder: (_) {
+                      final isVoid = widget.npcName == 'O Vazio';
+                      final npcColor = isVoid ? AppColors.purple : AppColors.gold;
+                      final npcIcon = isVoid ? Icons.blur_on : Icons.person_outline;
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 64, height: 64,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.shadowVoid,
+                              border: Border.all(
+                                  color: npcColor.withValues(alpha: 0.7),
+                                  width: 2),
+                              boxShadow: [BoxShadow(
+                                  color: npcColor.withValues(alpha: 0.3),
+                                  blurRadius: 14, spreadRadius: 2)],
+                            ),
+                            child: Icon(npcIcon,
+                                color: npcColor, size: 32),
                           ),
-                          child: const Icon(Icons.person_outline,
-                              color: AppColors.gold, size: 32),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          widget.npcName.length > 10
-                              ? '${widget.npcName.substring(0, 8)}...'
-                              : widget.npcName,
-                          style: GoogleFonts.cinzelDecorative(
-                              fontSize: 8, color: AppColors.gold,
-                              letterSpacing: 1),
-                        ),
-                      ],
-                    ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.npcName.length > 10
+                                ? '${widget.npcName.substring(0, 8)}...'
+                                : widget.npcName,
+                            style: GoogleFonts.cinzelDecorative(
+                                fontSize: 8, color: npcColor,
+                                letterSpacing: 1),
+                          ),
+                        ],
+                      );
+                    }),
                     const SizedBox(width: 10),
                     // Balão de fala
                     Expanded(

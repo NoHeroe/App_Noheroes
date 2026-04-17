@@ -1,7 +1,7 @@
 {
   "unknown_figure": {
-    "name": "Figura Desconhecida",
-    "title": "O que te encontrou nas ruínas",
+    "name": "O Vazio",
+    "title": "Presenca silenciosa",
     "daily_by_shadow_state": {
       "stable": [
         "Você mantém o passo. Caelum percebe isso.",
@@ -43,7 +43,6 @@
       "100": "Cem dias em Caelum. Muito poucos chegam aqui. Você é diferente."
     }
   },
-
   "noryan_gray": {
     "name": "Noryan Gray",
     "title": "Mestre da Guilda",
@@ -88,7 +87,6 @@
       "devout": "Raros aventureiros chegam a esse nível de comprometimento. Respeito."
     }
   },
-
   "azuos": {
     "name": "Azuos",
     "title": "Líder do Clã da Lua",
@@ -134,7 +132,6 @@
       "devout": "Você é um dos nossos mais dedicados. A lua sorri para você."
     }
   },
-
   "koda": {
     "name": "Koda",
     "title": "Líder do Clã do Sol",
@@ -180,7 +177,6 @@
       "devout": "Você é a chama que nunca se apaga. Isso é mérito de seu esforço!"
     }
   },
-
   "yuna_lannatary": {
     "name": "Yuna Lannatary",
     "title": "Comandante da Legião Negra",
@@ -226,7 +222,6 @@
       "devout": "Você é um dos melhores da Legião. Isso é dito raramente."
     }
   },
-
   "new_order_agent": {
     "name": "Agente da Nova Ordem",
     "title": "Representante da Nova Ordem",
@@ -272,7 +267,6 @@
       "devout": "Você é um pilar da Nova Ordem. Raros chegam aqui."
     }
   },
-
   "trinity_priest": {
     "name": "Sacerdote da Trindade",
     "title": "Guardião dos Três Aspectos",
@@ -318,7 +312,6 @@
       "devout": "Você é um dos mais devotos que os Aspectos já viram."
     }
   },
-
   "renegade_leader": {
     "name": "Líder dos Renegados",
     "title": "Voz dos Sem Facção",
@@ -364,7 +357,6 @@
       "devout": "Você é um dos Renegados mais verdadeiros que já vi."
     }
   },
-
   "chrysalis_agent": {
     "name": "Agente Chrysalis",
     "title": "Operador da Facção ERROR",

@@ -176,7 +176,7 @@ class FactionQuestService {
         final cats = await _db.customSelect(
           'SELECT COUNT(DISTINCT h.category) as c FROM habit_logs hl '
           'JOIN habits h ON hl.habit_id = h.id '
-          'WHERE hl.player_id = ? AND date(hl.log_date) = date("now","localtime")',
+          'WHERE hl.player_id = ? AND date(hl.log_date) = date(\"now\",\"localtime\")',
           variables: [Variable.withInt(playerId)],
         ).get();
         final found = (cats.first.data['c'] as int?) ?? 0;

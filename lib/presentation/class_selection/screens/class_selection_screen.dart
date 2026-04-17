@@ -86,7 +86,6 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
     try {
       final db = ref.read(appDatabaseProvider);
       await ClassBonusService(db).applyClassBonus(player.id, cls['id'] as String);
-      await QuestAdmissionService(db).startClassQuests(player.id, cls['id'] as String);
 
       // Assigna as 3 missoes de classe diarias imediatamente
       await ref.read(classQuestServiceProvider)
@@ -103,7 +102,7 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Classe confirmada! 3 missões da sua classe foram criadas.'),
+          content: Text('Classe confirmada! Suas missões de classe diárias estão ativas.'),
           backgroundColor: AppColors.shadowAscending,
           duration: const Duration(seconds: 3),
         ),

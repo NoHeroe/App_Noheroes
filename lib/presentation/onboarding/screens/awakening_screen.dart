@@ -170,13 +170,11 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
               ),
             // Hint toque — indicador visual pulsante (so em cenas sem input)
             if (!scene.isNameInput && !scene.isHabitChoice)
-              Positioned(
-                bottom: 28, left: 0, right: 0,
-                child: Center(
-                  child: FadeTransition(
-                    opacity: _dialogFade,
-                    child: _PulsingTapHint(),
-                  ),
+              Align(
+                alignment: const Alignment(0, -0.3),
+                child: FadeTransition(
+                  opacity: _dialogFade,
+                  child: _PulsingTapHint(),
                 ),
               ),
           ],
