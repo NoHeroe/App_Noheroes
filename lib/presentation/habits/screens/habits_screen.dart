@@ -348,6 +348,7 @@ class HabitsScreen extends ConsumerWidget {
           ref.invalidate(habitsProvider);
 
           // Auto-confirma faccao se as 3 missoes de admissao ja foram concluidas
+          try {
           if (updated != null) {
             final rawFaction = updated.factionType ?? '';
             if (rawFaction.startsWith('pending:')) {
@@ -383,8 +384,12 @@ class HabitsScreen extends ConsumerWidget {
             }
           }
 
-          // Auto-check class quests
-          if (updated != null && (updated.classType?.isNotEmpty ?? false)) {
+          } catch (_) { /* admissao silenciosa */ }
+
+          // Auto-check class/faction quests — pula quando a missao completada for [Admissao]
+          final isAdmissionHabit = h.habit.title.startsWith('[Admissão]');
+          try {
+          if (!isAdmissionHabit && updated != null && (updated.classType?.isNotEmpty ?? false)) {
             final ctx = {
               'streak': updated.streakDays,
               'niet_free_days': updated.streakDays,
@@ -423,6 +428,8 @@ class HabitsScreen extends ConsumerWidget {
               }
             }
           }
+          } catch (_) { /* class/faction quest silencioso */ }
+
           if (updated != null && updated.level > prevLevel && context.mounted) {
             final msgs = _levelUnlockMessages(updated.level);
             MilestonePopup.show(
@@ -437,6 +444,7 @@ class HabitsScreen extends ConsumerWidget {
             );
           }
           if (updated != null) {
+            try {
             final db = ref.read(appDatabaseProvider);
             final newAchievements = await AchievementService(db).checkAndUnlock(updated);
             if (context.mounted) {
@@ -449,6 +457,7 @@ class HabitsScreen extends ConsumerWidget {
                 achievementTitle: achievement,
               );
             }
+            } catch (_) { /* achievement silencioso */ }
           }
         },
       ),
