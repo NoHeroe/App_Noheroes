@@ -111,3 +111,16 @@ final activeFactionQuestProvider = FutureProvider.autoDispose<FactionQuestsTable
   final service = ref.read(factionQuestServiceProvider);
   return service.assignWeeklyQuest(player.id, faction);
 });
+
+// Conta de habitos completados hoje (inclui pausados/nao-repetiveis ja concluidos)
+final todayCompletedCountProvider = FutureProvider.autoDispose<int>((ref) async {
+  final player = ref.watch(currentPlayerProvider);
+  if (player == null) return 0;
+  final db = ref.read(appDatabaseProvider);
+  final logs = await db.habitDao.getTodayLogs(player.id);
+  // Conta unicos por habitId, apenas completados ou parciais
+  final completed = logs.where(
+      (l) => l.status == 'completed' || l.status == 'partial');
+  return completed.map((l) => l.habitId).toSet().length;
+});
+

@@ -236,9 +236,15 @@ class ShadowChamberScreen extends ConsumerWidget {
   }
 
   Widget _buildDisciplineCard(WidgetRef ref, player) {
+    // Conta do dia via habitsProvider + habitos pausados hoje (que foram concluidos)
     final habitsAsync = ref.watch(habitsProvider);
-    final total = habitsAsync.value?.length ?? 0;
-    final done = habitsAsync.value?.where((h) => h.isDone).length ?? 0;
+    final activeList = habitsAsync.value ?? [];
+    final doneActive = activeList.where((h) => h.isDone).length;
+    // Conta tambem completados hoje de habitos ja pausados (missoes nao-repetiveis concluidas)
+    final todayDoneAsync = ref.watch(todayCompletedCountProvider);
+    final totalDoneToday = todayDoneAsync.value ?? doneActive;
+    final total = activeList.length + (totalDoneToday - doneActive).clamp(0, 1000);
+    final done = totalDoneToday;
 
     return Container(
       padding: const EdgeInsets.all(16),

@@ -83,31 +83,41 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
     if (confirm != true || !mounted) return;
 
     setState(() => _loading = true);
-    final db = ref.read(appDatabaseProvider);
-    await ClassBonusService(db).applyClassBonus(player.id, cls['id'] as String);
-    await QuestAdmissionService(db).startClassQuests(player.id, cls['id'] as String);
+    try {
+      final db = ref.read(appDatabaseProvider);
+      await ClassBonusService(db).applyClassBonus(player.id, cls['id'] as String);
+      await QuestAdmissionService(db).startClassQuests(player.id, cls['id'] as String);
 
-    // Assigna as 3 missoes de classe diarias imediatamente
-    await ref.read(classQuestServiceProvider)
-        .assignDailyQuests(player.id, cls['id'] as String);
+      // Assigna as 3 missoes de classe diarias imediatamente
+      await ref.read(classQuestServiceProvider)
+          .assignDailyQuests(player.id, cls['id'] as String);
 
-    final updated = await db.managers.playersTable
-        .filter((f) => f.id(player.id))
-        .getSingleOrNull();
-    if (mounted) {
+      final updated = await db.managers.playersTable
+          .filter((f) => f.id(player.id))
+          .getSingleOrNull();
+      if (!mounted) return;
       ref.read(currentPlayerProvider.notifier).state = updated;
       ref.invalidate(habitsProvider);
       ref.invalidate(todayClassQuestsProvider);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Classe confirmada! 3 missões da sua classe foram criadas.'),
-            backgroundColor: AppColors.shadowAscending,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-        context.go('/sanctuary');
-      }
+      setState(() => _loading = false);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Classe confirmada! 3 missões da sua classe foram criadas.'),
+          backgroundColor: AppColors.shadowAscending,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      context.go('/sanctuary');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao confirmar classe: ${e}'),
+          backgroundColor: AppColors.hp,
+        ),
+      );
     }
   }
 
