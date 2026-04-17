@@ -119,7 +119,7 @@ class ClassQuestService {
           'SELECT COUNT(*) as c FROM habit_logs hl '
           'JOIN habits h ON hl.habit_id = h.id '
           'WHERE hl.player_id = ? AND h.category = ? '
-          'AND date(hl.completed_at) = date("now","localtime")',
+          'AND date(hl.log_date) = date("now","localtime")',
           variables: [Variable.withInt(playerId), Variable.withString(cat)],
         ).get();
         return (logs.first.data['c'] as int?) ?? 0;
@@ -127,7 +127,7 @@ class ClassQuestService {
       case 'complete_any_today':
         final logs = await _db.customSelect(
           'SELECT COUNT(*) as c FROM habit_logs '
-          'WHERE player_id = ? AND date(completed_at) = date("now","localtime")',
+          'WHERE player_id = ? AND date(log_date) = date("now","localtime")',
           variables: [Variable.withInt(playerId)],
         ).get();
         return (logs.first.data['c'] as int?) ?? 0;
@@ -137,7 +137,7 @@ class ClassQuestService {
         final cats = await _db.customSelect(
           'SELECT COUNT(DISTINCT h.category) as c FROM habit_logs hl '
           'JOIN habits h ON hl.habit_id = h.id '
-          'WHERE hl.player_id = ? AND date(hl.completed_at) = date("now","localtime")',
+          'WHERE hl.player_id = ? AND date(hl.log_date) = date("now","localtime")',
           variables: [Variable.withInt(playerId)],
         ).get();
         final found = (cats.first.data['c'] as int?) ?? 0;

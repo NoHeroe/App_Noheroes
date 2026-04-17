@@ -15,14 +15,14 @@ class TutorialManager {
     if (!await TutorialService.shouldShow(TutorialPhase.phase1_sanctuary)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'Este é o Santuário. Aqui você acompanha sua jornada, completa missões e acessa tudo que Caelum oferece.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'Vá até MISSÕES e complete seu primeiro hábito diário. Cada missão fortalece sua forma aqui.',
     );
     await TutorialService.markDone(TutorialPhase.phase1_sanctuary);
@@ -33,14 +33,14 @@ class TutorialManager {
     if (!await TutorialService.shouldShow(TutorialPhase.phase2_library)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'A Biblioteca está desbloqueada. Registre seu Diário — cada palavra alimenta sua forma.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'Você subiu de nível. No Personagem há pontos de atributo disponíveis — cada ponto melhora suas estatísticas permanentemente.',
     );
     await TutorialService.markDone(TutorialPhase.phase2_library);
@@ -51,14 +51,14 @@ class TutorialManager {
     if (!await TutorialService.shouldShow(TutorialPhase.phase3_shop)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'A Loja está disponível. Com ouro de missões você compra equipamentos, consumíveis e materiais.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'Itens equipados aparecem no Personagem. Eles adicionam bônus reais aos seus atributos.',
     );
     await TutorialService.markDone(TutorialPhase.phase3_shop);
@@ -69,14 +69,14 @@ class TutorialManager {
     if (!await TutorialService.shouldShow(TutorialPhase.phase4_regions)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'As Regiões de Caelum abriram. Áreas de exploração onde você descobre NPCs, tesouros e missões extras.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'Explorar regiões aumenta reputação com NPCs e facções — e desbloqueia partes da história.',
     );
     await TutorialService.markDone(TutorialPhase.phase4_regions);
@@ -87,20 +87,20 @@ class TutorialManager {
     if (!await TutorialService.shouldShow(TutorialPhase.phase5_class)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'Sua forma está pronta para assumir um caminho. A classe define seus atributos, missões diárias e como Caelum te enxerga.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'Classes de Mana dominam magia arcana. Classes de Vitalismo vão além — causam dano vitalista. A escolha muda seu estilo para sempre.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'Após escolher sua classe, 3 Missões de Classe aparecerão todos os dias — completadas automaticamente conforme você age.',
     );
     await TutorialService.markDone(TutorialPhase.phase5_class);
@@ -146,14 +146,14 @@ class TutorialManager {
     if (!await TutorialService.shouldShow(TutorialPhase.phase7_faction)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'As 8 Facções de Caelum abriram suas portas. Cada uma tem filosofia, bônus, missões exclusivas e NPCs próprios.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'Não é obrigatório escolher. O Caminho do Lobo Solitário existe para quem prefere caminhar sem alianças — por ora.',
     );
     await TutorialService.markDone(TutorialPhase.phase7_faction);
@@ -175,20 +175,20 @@ class TutorialManager {
     if (!await TutorialService.shouldShow(TutorialPhase.phase8_shadow)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'Algo surgiu das suas falhas e excessos. É um Shadow Boss — a forma mais verdadeira do seu erro em Caelum.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'A Câmara das Sombras contém sua Sombra. Acesse para entender seu estado de estabilidade.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'Estabilidade vai de 0 a 100. Missões aumentam, falhas diminuem. Em 0 acontece o Colapso e você perde XP.',
     );
     await TutorialService.markDone(TutorialPhase.phase8_shadow);
@@ -199,14 +199,14 @@ class TutorialManager {
     if (!await TutorialService.shouldShow(TutorialPhase.phase9_playstyle)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'Você amadureceu. Hora de definir como joga: Solo — mais XP individual. Duo — bônus em dupla. Team — party com bônus progressivo.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'O estilo de jogo desbloqueia missões e conteúdos específicos. Pode mudar depois, mas tem custo.',
     );
     await TutorialService.markDone(TutorialPhase.phase9_playstyle);
@@ -227,14 +227,14 @@ class TutorialManager {
     if (!await TutorialService.shouldShow(TutorialPhase.phase10_vitalism)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'O Vitalismo despertou em você. Energia mais pura que a Mana — rara, poderosa e exclusiva para certos caminhos.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
-      npcName: 'Figura Desconhecida',
-      npcTitle: 'Seu guia em Caelum',
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
       message: 'Classes vitalistas causam dano vitalista além do mágico. A barra de Vitalismo é separada da Mana.',
     );
     await TutorialService.markDone(TutorialPhase.phase10_vitalism);

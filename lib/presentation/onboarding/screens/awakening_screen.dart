@@ -37,12 +37,9 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
 
   List<_Scene> get _scenes => [
     _Scene(npc: null, text: 'Você desperta entre ruínas antigas…\n\nA luz do céu parece quebrada.\n\nHá algo errado com seu corpo.', mood: _Mood.ruins),
-    _Scene(npc: 'Figura Desconhecida', text: '"Venha.\n\nSe ficar aí, o Vazio coleta você."', mood: _Mood.npc),
-    _Scene(npc: 'Figura Desconhecida', text: '"Você não é de Caelum."\n\n"Sua forma aqui é uma Sombra."\n\n"Ainda está instável."\n\n"Se quiser sobreviver, vai precisar aprender rápido."', mood: _Mood.npc),
-    _Scene(npc: 'O Vazio', text: '"Caelum só reage à disciplina.\n\nE sua forma sombria é moldada pelo que você faz no seu mundo."', mood: _Mood.identity, isVoid: true),
+    _Scene(npc: 'O Vazio', text: '"Você não é de Caelum.\n\nSua forma aqui é uma Sombra — ainda instável.\n\nSe quiser sobreviver, vai precisar aprender rápido."', mood: _Mood.npc, isVoid: true),
     _Scene(npc: 'O Vazio', text: 'Como devemos lhe chamar?', mood: _Mood.identity, isNameInput: true, isVoid: true),
-    _Scene(npc: null, text: 'Como prefere receber as mensagens de Caelum?', mood: _Mood.identity, isNarrativeChoice: true),
-    _Scene(npc: 'Figura Desconhecida', text: '"Todo ser em Caelum tem um ritual.\n\nNão é uma tarefa — é um pacto.\n\nEscolha o que você se compromete a honrar."', mood: _Mood.ritual, isHabitChoice: true),
+    _Scene(npc: 'O Vazio', text: '"Todo ser em Caelum tem um ritual.\n\nNão é uma tarefa — é um pacto.\n\nEscolha o que você se compromete a honrar."', mood: _Mood.ritual, isHabitChoice: true, isVoid: true),
   ];
 
   @override
@@ -112,7 +109,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
   Widget build(BuildContext context) {
     final scene = _scenes[_step];
     return GestureDetector(
-      onTap: (!scene.isNameInput && !scene.isNarrativeChoice && !scene.isHabitChoice)
+      onTap: (!scene.isNameInput && !scene.isHabitChoice)
           ? _advance
           : null,
       behavior: HitTestBehavior.opaque,
@@ -140,7 +137,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
               ),
             ),
             // Conteúdo central (para cenas sem NPC)
-            if (scene.npc == null && !scene.isNarrativeChoice)
+            if (scene.npc == null)
               Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -160,7 +157,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
                 ),
               ),
             // NPC Dialog — embaixo
-            if (scene.npc != null || scene.isNarrativeChoice || scene.isHabitChoice || scene.isNameInput)
+            if (scene.npc != null || scene.isHabitChoice || scene.isNameInput)
               Positioned(
                 left: 0, right: 0, bottom: 0,
                 child: SlideTransition(
@@ -171,15 +168,15 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
                   ),
                 ),
               ),
-            // Hint toque (só em cenas sem input)
-            if (!scene.isNameInput && !scene.isNarrativeChoice && !scene.isHabitChoice)
+            // Hint toque — indicador visual pulsante (so em cenas sem input)
+            if (!scene.isNameInput && !scene.isHabitChoice)
               Positioned(
-                bottom: 24, right: 24,
-                child: FadeTransition(
-                  opacity: _dialogFade,
-                  child: Text('Toque para continuar',
-                      style: GoogleFonts.roboto(
-                          fontSize: 10, color: AppColors.textMuted)),
+                bottom: 28, left: 0, right: 0,
+                child: Center(
+                  child: FadeTransition(
+                    opacity: _dialogFade,
+                    child: _PulsingTapHint(),
+                  ),
                 ),
               ),
           ],
@@ -485,3 +482,54 @@ class _BgPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _BgPainter o) => o.t != t || o.mood != mood;
 }
+
+// Indicador visual pulsante que sinaliza "toque para continuar"
+class _PulsingTapHint extends StatefulWidget {
+  @override
+  State<_PulsingTapHint> createState() => _PulsingTapHintState();
+}
+
+class _PulsingTapHintState extends State<_PulsingTapHint>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+    _pulse = Tween<double>(begin: 0.3, end: 1.0)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _pulse,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 28, height: 28,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.textMuted, width: 1),
+            ),
+            child: const Icon(Icons.touch_app_outlined,
+                color: AppColors.textMuted, size: 16),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

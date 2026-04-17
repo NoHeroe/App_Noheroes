@@ -17,6 +17,7 @@ import '../widgets/faction_quest_card.dart';
 import '../../../data/datasources/local/faction_quest_service.dart';
 import '../../../data/datasources/local/quest_admission_service.dart';
 import '../../shared/widgets/app_snack.dart';
+import '../../shared/widgets/npc_dialog_overlay.dart';
 import '../../shared/widgets/milestone_popup.dart';
 
 class HabitsScreen extends ConsumerWidget {
@@ -361,7 +362,22 @@ class HabitsScreen extends ConsumerWidget {
                 ref.invalidate(habitsProvider);
                 ref.invalidate(activeFactionQuestProvider);
                 if (context.mounted) {
-                  AppSnack.success(context, 'Admissao aprovada! Bem-vindo a faccao.');
+                  await MilestonePopup.show(
+                    context,
+                    title: 'Admissao Aprovada',
+                    subtitle: 'Bem-vindo a faccao',
+                    message: 'Voce provou seu valor. A faccao o reconhece como membro.\n\nA partir de agora missoes semanais da faccao estarao disponiveis — e sua reputacao pode crescer.',
+                    icon: Icons.shield_outlined,
+                    color: AppColors.gold,
+                  );
+                }
+                if (context.mounted) {
+                  await NpcDialogOverlay.show(
+                    context,
+                    npcName: 'O Vazio',
+                    npcTitle: 'Presenca silenciosa',
+                    message: 'Va ate a aba de Faccoes na Guilda e fale com o lider. Ele tera palavras para voce.',
+                  );
                 }
               }
             }
