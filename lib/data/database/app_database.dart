@@ -45,7 +45,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -145,6 +145,17 @@ class AppDatabase extends _$AppDatabase {
       if (from < 17) {
         try {
           await m.createTable(guildAscensionTable);
+        } catch (_) {}
+      }
+      if (from < 18) {
+        try {
+          await m.addColumn(playersTable, playersTable.vitalismLevel);
+        } catch (_) {}
+        try {
+          await m.addColumn(playersTable, playersTable.vitalismXp);
+        } catch (_) {}
+        try {
+          await m.addColumn(playersTable, playersTable.currentVitalism);
         } catch (_) {}
       }
     },

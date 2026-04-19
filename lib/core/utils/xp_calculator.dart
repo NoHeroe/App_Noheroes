@@ -1,3 +1,5 @@
+import '../../domain/enums/class_type.dart';
+
 class XpCalculator {
   static int xpToNextLevel(int level) {
     // Soulslike: progressão mais lenta e pesada
@@ -112,7 +114,7 @@ class XpCalculator {
   }
 
   static bool _hasVitalism(String? classType) {
-    return ['warrior', 'colossus', 'rogue', 'hunter', 'shadowWeaver']
-        .contains(classType);
+    if (classType == null || classType.isEmpty) return false;
+    return ClassType.values.asNameMap()[classType]?.hasVitalism ?? false;
   }
 }

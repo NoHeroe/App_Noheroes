@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/vitalism_calculator.dart';
+import '../../../data/database/tables/players_table_ext.dart';
 
 class StatBarsRow extends ConsumerWidget {
   const StatBarsRow({super.key});
@@ -19,11 +21,16 @@ class StatBarsRow extends ConsumerWidget {
     final maxMp   = player?.maxMp ?? 100;
     final xp      = player?.xp ?? 0;
     final xpToNext= player?.xpToNext ?? 100;
-    final hasVitalism = ['warrior','colossus','rogue','hunter','shadowWeaver']
-        .contains(player?.classType);
-    // Vitalismo = 190% do HP base
-    final vitMax = hasVitalism ? (maxHp * 1.9).round() : 0;
-    final vitVal = hasVitalism ? (hp * 1.9).round().clamp(0, vitMax) : 0;
+    final hasVitalism = player?.isVitalist ?? false;
+    final classType = player?.classTypeEnum;
+    final vitMax = (hasVitalism && classType != null)
+        ? VitalismCalculator.calculateMaxVitalism(
+            hp: maxHp,
+            classType: classType,
+            level: player?.level ?? 1,
+          )
+        : 0;
+    final vitVal = (player?.currentVitalism ?? 0).clamp(0, vitMax);
 
     final classChosen = player?.classType != null &&
         player!.classType!.isNotEmpty;

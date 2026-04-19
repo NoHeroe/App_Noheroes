@@ -528,11 +528,12 @@ class _SecondaryButtons extends ConsumerWidget {
             const SizedBox(width: 10),
             Expanded(
               child: GestureDetector(
-                onTap: () {}, // TODO: rota vitalismo
+                onTap: () => AppSnack.warning(
+                    context, 'Desbloqueado no nível 25.'),
                 child: _SecBtn(
-                  icon: Icons.bolt_outlined,
-                  label: 'Vitalismo',
-                  color: const Color(0xFF8B3DFF),
+                  icon: Icons.lock_outline,
+                  label: '???',
+                  color: AppColors.textMuted,
                 ),
               ),
             ),

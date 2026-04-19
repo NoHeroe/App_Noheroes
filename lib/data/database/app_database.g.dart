@@ -69,6 +69,22 @@ class $PlayersTableTable extends PlayersTable
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
+  static const VerificationMeta _vitalismLevelMeta =
+      const VerificationMeta('vitalismLevel');
+  @override
+  late final GeneratedColumn<int> vitalismLevel = GeneratedColumn<int>(
+      'vitalism_level', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _vitalismXpMeta =
+      const VerificationMeta('vitalismXp');
+  @override
+  late final GeneratedColumn<int> vitalismXp = GeneratedColumn<int>(
+      'vitalism_xp', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   static const VerificationMeta _strengthMeta =
       const VerificationMeta('strength');
   @override
@@ -144,6 +160,14 @@ class $PlayersTableTable extends PlayersTable
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(90));
+  static const VerificationMeta _currentVitalismMeta =
+      const VerificationMeta('currentVitalism');
+  @override
+  late final GeneratedColumn<int> currentVitalism = GeneratedColumn<int>(
+      'current_vitalism', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   static const VerificationMeta _goldMeta = const VerificationMeta('gold');
   @override
   late final GeneratedColumn<int> gold = GeneratedColumn<int>(
@@ -268,6 +292,8 @@ class $PlayersTableTable extends PlayersTable
         xp,
         xpToNext,
         attributePoints,
+        vitalismLevel,
+        vitalismXp,
         strength,
         dexterity,
         intelligence,
@@ -278,6 +304,7 @@ class $PlayersTableTable extends PlayersTable
         maxHp,
         mp,
         maxMp,
+        currentVitalism,
         gold,
         gems,
         streakDays,
@@ -344,6 +371,18 @@ class $PlayersTableTable extends PlayersTable
           attributePoints.isAcceptableOrUnknown(
               data['attribute_points']!, _attributePointsMeta));
     }
+    if (data.containsKey('vitalism_level')) {
+      context.handle(
+          _vitalismLevelMeta,
+          vitalismLevel.isAcceptableOrUnknown(
+              data['vitalism_level']!, _vitalismLevelMeta));
+    }
+    if (data.containsKey('vitalism_xp')) {
+      context.handle(
+          _vitalismXpMeta,
+          vitalismXp.isAcceptableOrUnknown(
+              data['vitalism_xp']!, _vitalismXpMeta));
+    }
     if (data.containsKey('strength')) {
       context.handle(_strengthMeta,
           strength.isAcceptableOrUnknown(data['strength']!, _strengthMeta));
@@ -385,6 +424,12 @@ class $PlayersTableTable extends PlayersTable
     if (data.containsKey('max_mp')) {
       context.handle(
           _maxMpMeta, maxMp.isAcceptableOrUnknown(data['max_mp']!, _maxMpMeta));
+    }
+    if (data.containsKey('current_vitalism')) {
+      context.handle(
+          _currentVitalismMeta,
+          currentVitalism.isAcceptableOrUnknown(
+              data['current_vitalism']!, _currentVitalismMeta));
     }
     if (data.containsKey('gold')) {
       context.handle(
@@ -487,6 +532,10 @@ class $PlayersTableTable extends PlayersTable
           .read(DriftSqlType.int, data['${effectivePrefix}xp_to_next'])!,
       attributePoints: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}attribute_points'])!,
+      vitalismLevel: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}vitalism_level'])!,
+      vitalismXp: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}vitalism_xp'])!,
       strength: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}strength'])!,
       dexterity: attachedDatabase.typeMapping
@@ -507,6 +556,8 @@ class $PlayersTableTable extends PlayersTable
           .read(DriftSqlType.int, data['${effectivePrefix}mp'])!,
       maxMp: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}max_mp'])!,
+      currentVitalism: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}current_vitalism'])!,
       gold: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}gold'])!,
       gems: attachedDatabase.typeMapping
@@ -556,6 +607,8 @@ class PlayersTableData extends DataClass
   final int xp;
   final int xpToNext;
   final int attributePoints;
+  final int vitalismLevel;
+  final int vitalismXp;
   final int strength;
   final int dexterity;
   final int intelligence;
@@ -566,6 +619,7 @@ class PlayersTableData extends DataClass
   final int maxHp;
   final int mp;
   final int maxMp;
+  final int currentVitalism;
   final int gold;
   final int gems;
   final int streakDays;
@@ -590,6 +644,8 @@ class PlayersTableData extends DataClass
       required this.xp,
       required this.xpToNext,
       required this.attributePoints,
+      required this.vitalismLevel,
+      required this.vitalismXp,
       required this.strength,
       required this.dexterity,
       required this.intelligence,
@@ -600,6 +656,7 @@ class PlayersTableData extends DataClass
       required this.maxHp,
       required this.mp,
       required this.maxMp,
+      required this.currentVitalism,
       required this.gold,
       required this.gems,
       required this.streakDays,
@@ -626,6 +683,8 @@ class PlayersTableData extends DataClass
     map['xp'] = Variable<int>(xp);
     map['xp_to_next'] = Variable<int>(xpToNext);
     map['attribute_points'] = Variable<int>(attributePoints);
+    map['vitalism_level'] = Variable<int>(vitalismLevel);
+    map['vitalism_xp'] = Variable<int>(vitalismXp);
     map['strength'] = Variable<int>(strength);
     map['dexterity'] = Variable<int>(dexterity);
     map['intelligence'] = Variable<int>(intelligence);
@@ -636,6 +695,7 @@ class PlayersTableData extends DataClass
     map['max_hp'] = Variable<int>(maxHp);
     map['mp'] = Variable<int>(mp);
     map['max_mp'] = Variable<int>(maxMp);
+    map['current_vitalism'] = Variable<int>(currentVitalism);
     map['gold'] = Variable<int>(gold);
     map['gems'] = Variable<int>(gems);
     map['streak_days'] = Variable<int>(streakDays);
@@ -670,6 +730,8 @@ class PlayersTableData extends DataClass
       xp: Value(xp),
       xpToNext: Value(xpToNext),
       attributePoints: Value(attributePoints),
+      vitalismLevel: Value(vitalismLevel),
+      vitalismXp: Value(vitalismXp),
       strength: Value(strength),
       dexterity: Value(dexterity),
       intelligence: Value(intelligence),
@@ -680,6 +742,7 @@ class PlayersTableData extends DataClass
       maxHp: Value(maxHp),
       mp: Value(mp),
       maxMp: Value(maxMp),
+      currentVitalism: Value(currentVitalism),
       gold: Value(gold),
       gems: Value(gems),
       streakDays: Value(streakDays),
@@ -716,6 +779,8 @@ class PlayersTableData extends DataClass
       xp: serializer.fromJson<int>(json['xp']),
       xpToNext: serializer.fromJson<int>(json['xpToNext']),
       attributePoints: serializer.fromJson<int>(json['attributePoints']),
+      vitalismLevel: serializer.fromJson<int>(json['vitalismLevel']),
+      vitalismXp: serializer.fromJson<int>(json['vitalismXp']),
       strength: serializer.fromJson<int>(json['strength']),
       dexterity: serializer.fromJson<int>(json['dexterity']),
       intelligence: serializer.fromJson<int>(json['intelligence']),
@@ -726,6 +791,7 @@ class PlayersTableData extends DataClass
       maxHp: serializer.fromJson<int>(json['maxHp']),
       mp: serializer.fromJson<int>(json['mp']),
       maxMp: serializer.fromJson<int>(json['maxMp']),
+      currentVitalism: serializer.fromJson<int>(json['currentVitalism']),
       gold: serializer.fromJson<int>(json['gold']),
       gems: serializer.fromJson<int>(json['gems']),
       streakDays: serializer.fromJson<int>(json['streakDays']),
@@ -755,6 +821,8 @@ class PlayersTableData extends DataClass
       'xp': serializer.toJson<int>(xp),
       'xpToNext': serializer.toJson<int>(xpToNext),
       'attributePoints': serializer.toJson<int>(attributePoints),
+      'vitalismLevel': serializer.toJson<int>(vitalismLevel),
+      'vitalismXp': serializer.toJson<int>(vitalismXp),
       'strength': serializer.toJson<int>(strength),
       'dexterity': serializer.toJson<int>(dexterity),
       'intelligence': serializer.toJson<int>(intelligence),
@@ -765,6 +833,7 @@ class PlayersTableData extends DataClass
       'maxHp': serializer.toJson<int>(maxHp),
       'mp': serializer.toJson<int>(mp),
       'maxMp': serializer.toJson<int>(maxMp),
+      'currentVitalism': serializer.toJson<int>(currentVitalism),
       'gold': serializer.toJson<int>(gold),
       'gems': serializer.toJson<int>(gems),
       'streakDays': serializer.toJson<int>(streakDays),
@@ -792,6 +861,8 @@ class PlayersTableData extends DataClass
           int? xp,
           int? xpToNext,
           int? attributePoints,
+          int? vitalismLevel,
+          int? vitalismXp,
           int? strength,
           int? dexterity,
           int? intelligence,
@@ -802,6 +873,7 @@ class PlayersTableData extends DataClass
           int? maxHp,
           int? mp,
           int? maxMp,
+          int? currentVitalism,
           int? gold,
           int? gems,
           int? streakDays,
@@ -826,6 +898,8 @@ class PlayersTableData extends DataClass
         xp: xp ?? this.xp,
         xpToNext: xpToNext ?? this.xpToNext,
         attributePoints: attributePoints ?? this.attributePoints,
+        vitalismLevel: vitalismLevel ?? this.vitalismLevel,
+        vitalismXp: vitalismXp ?? this.vitalismXp,
         strength: strength ?? this.strength,
         dexterity: dexterity ?? this.dexterity,
         intelligence: intelligence ?? this.intelligence,
@@ -836,6 +910,7 @@ class PlayersTableData extends DataClass
         maxHp: maxHp ?? this.maxHp,
         mp: mp ?? this.mp,
         maxMp: maxMp ?? this.maxMp,
+        currentVitalism: currentVitalism ?? this.currentVitalism,
         gold: gold ?? this.gold,
         gems: gems ?? this.gems,
         streakDays: streakDays ?? this.streakDays,
@@ -868,6 +943,11 @@ class PlayersTableData extends DataClass
       attributePoints: data.attributePoints.present
           ? data.attributePoints.value
           : this.attributePoints,
+      vitalismLevel: data.vitalismLevel.present
+          ? data.vitalismLevel.value
+          : this.vitalismLevel,
+      vitalismXp:
+          data.vitalismXp.present ? data.vitalismXp.value : this.vitalismXp,
       strength: data.strength.present ? data.strength.value : this.strength,
       dexterity: data.dexterity.present ? data.dexterity.value : this.dexterity,
       intelligence: data.intelligence.present
@@ -882,6 +962,9 @@ class PlayersTableData extends DataClass
       maxHp: data.maxHp.present ? data.maxHp.value : this.maxHp,
       mp: data.mp.present ? data.mp.value : this.mp,
       maxMp: data.maxMp.present ? data.maxMp.value : this.maxMp,
+      currentVitalism: data.currentVitalism.present
+          ? data.currentVitalism.value
+          : this.currentVitalism,
       gold: data.gold.present ? data.gold.value : this.gold,
       gems: data.gems.present ? data.gems.value : this.gems,
       streakDays:
@@ -923,6 +1006,8 @@ class PlayersTableData extends DataClass
           ..write('xp: $xp, ')
           ..write('xpToNext: $xpToNext, ')
           ..write('attributePoints: $attributePoints, ')
+          ..write('vitalismLevel: $vitalismLevel, ')
+          ..write('vitalismXp: $vitalismXp, ')
           ..write('strength: $strength, ')
           ..write('dexterity: $dexterity, ')
           ..write('intelligence: $intelligence, ')
@@ -933,6 +1018,7 @@ class PlayersTableData extends DataClass
           ..write('maxHp: $maxHp, ')
           ..write('mp: $mp, ')
           ..write('maxMp: $maxMp, ')
+          ..write('currentVitalism: $currentVitalism, ')
           ..write('gold: $gold, ')
           ..write('gems: $gems, ')
           ..write('streakDays: $streakDays, ')
@@ -962,6 +1048,8 @@ class PlayersTableData extends DataClass
         xp,
         xpToNext,
         attributePoints,
+        vitalismLevel,
+        vitalismXp,
         strength,
         dexterity,
         intelligence,
@@ -972,6 +1060,7 @@ class PlayersTableData extends DataClass
         maxHp,
         mp,
         maxMp,
+        currentVitalism,
         gold,
         gems,
         streakDays,
@@ -1000,6 +1089,8 @@ class PlayersTableData extends DataClass
           other.xp == this.xp &&
           other.xpToNext == this.xpToNext &&
           other.attributePoints == this.attributePoints &&
+          other.vitalismLevel == this.vitalismLevel &&
+          other.vitalismXp == this.vitalismXp &&
           other.strength == this.strength &&
           other.dexterity == this.dexterity &&
           other.intelligence == this.intelligence &&
@@ -1010,6 +1101,7 @@ class PlayersTableData extends DataClass
           other.maxHp == this.maxHp &&
           other.mp == this.mp &&
           other.maxMp == this.maxMp &&
+          other.currentVitalism == this.currentVitalism &&
           other.gold == this.gold &&
           other.gems == this.gems &&
           other.streakDays == this.streakDays &&
@@ -1036,6 +1128,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
   final Value<int> xp;
   final Value<int> xpToNext;
   final Value<int> attributePoints;
+  final Value<int> vitalismLevel;
+  final Value<int> vitalismXp;
   final Value<int> strength;
   final Value<int> dexterity;
   final Value<int> intelligence;
@@ -1046,6 +1140,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
   final Value<int> maxHp;
   final Value<int> mp;
   final Value<int> maxMp;
+  final Value<int> currentVitalism;
   final Value<int> gold;
   final Value<int> gems;
   final Value<int> streakDays;
@@ -1070,6 +1165,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.xp = const Value.absent(),
     this.xpToNext = const Value.absent(),
     this.attributePoints = const Value.absent(),
+    this.vitalismLevel = const Value.absent(),
+    this.vitalismXp = const Value.absent(),
     this.strength = const Value.absent(),
     this.dexterity = const Value.absent(),
     this.intelligence = const Value.absent(),
@@ -1080,6 +1177,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.maxHp = const Value.absent(),
     this.mp = const Value.absent(),
     this.maxMp = const Value.absent(),
+    this.currentVitalism = const Value.absent(),
     this.gold = const Value.absent(),
     this.gems = const Value.absent(),
     this.streakDays = const Value.absent(),
@@ -1105,6 +1203,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.xp = const Value.absent(),
     this.xpToNext = const Value.absent(),
     this.attributePoints = const Value.absent(),
+    this.vitalismLevel = const Value.absent(),
+    this.vitalismXp = const Value.absent(),
     this.strength = const Value.absent(),
     this.dexterity = const Value.absent(),
     this.intelligence = const Value.absent(),
@@ -1115,6 +1215,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.maxHp = const Value.absent(),
     this.mp = const Value.absent(),
     this.maxMp = const Value.absent(),
+    this.currentVitalism = const Value.absent(),
     this.gold = const Value.absent(),
     this.gems = const Value.absent(),
     this.streakDays = const Value.absent(),
@@ -1141,6 +1242,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     Expression<int>? xp,
     Expression<int>? xpToNext,
     Expression<int>? attributePoints,
+    Expression<int>? vitalismLevel,
+    Expression<int>? vitalismXp,
     Expression<int>? strength,
     Expression<int>? dexterity,
     Expression<int>? intelligence,
@@ -1151,6 +1254,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     Expression<int>? maxHp,
     Expression<int>? mp,
     Expression<int>? maxMp,
+    Expression<int>? currentVitalism,
     Expression<int>? gold,
     Expression<int>? gems,
     Expression<int>? streakDays,
@@ -1176,6 +1280,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       if (xp != null) 'xp': xp,
       if (xpToNext != null) 'xp_to_next': xpToNext,
       if (attributePoints != null) 'attribute_points': attributePoints,
+      if (vitalismLevel != null) 'vitalism_level': vitalismLevel,
+      if (vitalismXp != null) 'vitalism_xp': vitalismXp,
       if (strength != null) 'strength': strength,
       if (dexterity != null) 'dexterity': dexterity,
       if (intelligence != null) 'intelligence': intelligence,
@@ -1186,6 +1292,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       if (maxHp != null) 'max_hp': maxHp,
       if (mp != null) 'mp': mp,
       if (maxMp != null) 'max_mp': maxMp,
+      if (currentVitalism != null) 'current_vitalism': currentVitalism,
       if (gold != null) 'gold': gold,
       if (gems != null) 'gems': gems,
       if (streakDays != null) 'streak_days': streakDays,
@@ -1213,6 +1320,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       Value<int>? xp,
       Value<int>? xpToNext,
       Value<int>? attributePoints,
+      Value<int>? vitalismLevel,
+      Value<int>? vitalismXp,
       Value<int>? strength,
       Value<int>? dexterity,
       Value<int>? intelligence,
@@ -1223,6 +1332,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       Value<int>? maxHp,
       Value<int>? mp,
       Value<int>? maxMp,
+      Value<int>? currentVitalism,
       Value<int>? gold,
       Value<int>? gems,
       Value<int>? streakDays,
@@ -1247,6 +1357,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       xp: xp ?? this.xp,
       xpToNext: xpToNext ?? this.xpToNext,
       attributePoints: attributePoints ?? this.attributePoints,
+      vitalismLevel: vitalismLevel ?? this.vitalismLevel,
+      vitalismXp: vitalismXp ?? this.vitalismXp,
       strength: strength ?? this.strength,
       dexterity: dexterity ?? this.dexterity,
       intelligence: intelligence ?? this.intelligence,
@@ -1257,6 +1369,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       maxHp: maxHp ?? this.maxHp,
       mp: mp ?? this.mp,
       maxMp: maxMp ?? this.maxMp,
+      currentVitalism: currentVitalism ?? this.currentVitalism,
       gold: gold ?? this.gold,
       gems: gems ?? this.gems,
       streakDays: streakDays ?? this.streakDays,
@@ -1302,6 +1415,12 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     if (attributePoints.present) {
       map['attribute_points'] = Variable<int>(attributePoints.value);
     }
+    if (vitalismLevel.present) {
+      map['vitalism_level'] = Variable<int>(vitalismLevel.value);
+    }
+    if (vitalismXp.present) {
+      map['vitalism_xp'] = Variable<int>(vitalismXp.value);
+    }
     if (strength.present) {
       map['strength'] = Variable<int>(strength.value);
     }
@@ -1331,6 +1450,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     }
     if (maxMp.present) {
       map['max_mp'] = Variable<int>(maxMp.value);
+    }
+    if (currentVitalism.present) {
+      map['current_vitalism'] = Variable<int>(currentVitalism.value);
     }
     if (gold.present) {
       map['gold'] = Variable<int>(gold.value);
@@ -1391,6 +1513,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
           ..write('xp: $xp, ')
           ..write('xpToNext: $xpToNext, ')
           ..write('attributePoints: $attributePoints, ')
+          ..write('vitalismLevel: $vitalismLevel, ')
+          ..write('vitalismXp: $vitalismXp, ')
           ..write('strength: $strength, ')
           ..write('dexterity: $dexterity, ')
           ..write('intelligence: $intelligence, ')
@@ -1401,6 +1525,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
           ..write('maxHp: $maxHp, ')
           ..write('mp: $mp, ')
           ..write('maxMp: $maxMp, ')
+          ..write('currentVitalism: $currentVitalism, ')
           ..write('gold: $gold, ')
           ..write('gems: $gems, ')
           ..write('streakDays: $streakDays, ')
@@ -8545,6 +8670,8 @@ typedef $$PlayersTableTableCreateCompanionBuilder = PlayersTableCompanion
   Value<int> xp,
   Value<int> xpToNext,
   Value<int> attributePoints,
+  Value<int> vitalismLevel,
+  Value<int> vitalismXp,
   Value<int> strength,
   Value<int> dexterity,
   Value<int> intelligence,
@@ -8555,6 +8682,7 @@ typedef $$PlayersTableTableCreateCompanionBuilder = PlayersTableCompanion
   Value<int> maxHp,
   Value<int> mp,
   Value<int> maxMp,
+  Value<int> currentVitalism,
   Value<int> gold,
   Value<int> gems,
   Value<int> streakDays,
@@ -8581,6 +8709,8 @@ typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
   Value<int> xp,
   Value<int> xpToNext,
   Value<int> attributePoints,
+  Value<int> vitalismLevel,
+  Value<int> vitalismXp,
   Value<int> strength,
   Value<int> dexterity,
   Value<int> intelligence,
@@ -8591,6 +8721,7 @@ typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
   Value<int> maxHp,
   Value<int> mp,
   Value<int> maxMp,
+  Value<int> currentVitalism,
   Value<int> gold,
   Value<int> gems,
   Value<int> streakDays,
@@ -8642,6 +8773,12 @@ class $$PlayersTableTableFilterComposer
       column: $table.attributePoints,
       builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<int> get vitalismLevel => $composableBuilder(
+      column: $table.vitalismLevel, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get vitalismXp => $composableBuilder(
+      column: $table.vitalismXp, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<int> get strength => $composableBuilder(
       column: $table.strength, builder: (column) => ColumnFilters(column));
 
@@ -8671,6 +8808,10 @@ class $$PlayersTableTableFilterComposer
 
   ColumnFilters<int> get maxMp => $composableBuilder(
       column: $table.maxMp, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get currentVitalism => $composableBuilder(
+      column: $table.currentVitalism,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get gold => $composableBuilder(
       column: $table.gold, builder: (column) => ColumnFilters(column));
@@ -8756,6 +8897,13 @@ class $$PlayersTableTableOrderingComposer
       column: $table.attributePoints,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get vitalismLevel => $composableBuilder(
+      column: $table.vitalismLevel,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get vitalismXp => $composableBuilder(
+      column: $table.vitalismXp, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get strength => $composableBuilder(
       column: $table.strength, builder: (column) => ColumnOrderings(column));
 
@@ -8787,6 +8935,10 @@ class $$PlayersTableTableOrderingComposer
 
   ColumnOrderings<int> get maxMp => $composableBuilder(
       column: $table.maxMp, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get currentVitalism => $composableBuilder(
+      column: $table.currentVitalism,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get gold => $composableBuilder(
       column: $table.gold, builder: (column) => ColumnOrderings(column));
@@ -8871,6 +9023,12 @@ class $$PlayersTableTableAnnotationComposer
   GeneratedColumn<int> get attributePoints => $composableBuilder(
       column: $table.attributePoints, builder: (column) => column);
 
+  GeneratedColumn<int> get vitalismLevel => $composableBuilder(
+      column: $table.vitalismLevel, builder: (column) => column);
+
+  GeneratedColumn<int> get vitalismXp => $composableBuilder(
+      column: $table.vitalismXp, builder: (column) => column);
+
   GeneratedColumn<int> get strength =>
       $composableBuilder(column: $table.strength, builder: (column) => column);
 
@@ -8900,6 +9058,9 @@ class $$PlayersTableTableAnnotationComposer
 
   GeneratedColumn<int> get maxMp =>
       $composableBuilder(column: $table.maxMp, builder: (column) => column);
+
+  GeneratedColumn<int> get currentVitalism => $composableBuilder(
+      column: $table.currentVitalism, builder: (column) => column);
 
   GeneratedColumn<int> get gold =>
       $composableBuilder(column: $table.gold, builder: (column) => column);
@@ -8981,6 +9142,8 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> xp = const Value.absent(),
             Value<int> xpToNext = const Value.absent(),
             Value<int> attributePoints = const Value.absent(),
+            Value<int> vitalismLevel = const Value.absent(),
+            Value<int> vitalismXp = const Value.absent(),
             Value<int> strength = const Value.absent(),
             Value<int> dexterity = const Value.absent(),
             Value<int> intelligence = const Value.absent(),
@@ -8991,6 +9154,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> maxHp = const Value.absent(),
             Value<int> mp = const Value.absent(),
             Value<int> maxMp = const Value.absent(),
+            Value<int> currentVitalism = const Value.absent(),
             Value<int> gold = const Value.absent(),
             Value<int> gems = const Value.absent(),
             Value<int> streakDays = const Value.absent(),
@@ -9016,6 +9180,8 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             xp: xp,
             xpToNext: xpToNext,
             attributePoints: attributePoints,
+            vitalismLevel: vitalismLevel,
+            vitalismXp: vitalismXp,
             strength: strength,
             dexterity: dexterity,
             intelligence: intelligence,
@@ -9026,6 +9192,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             maxHp: maxHp,
             mp: mp,
             maxMp: maxMp,
+            currentVitalism: currentVitalism,
             gold: gold,
             gems: gems,
             streakDays: streakDays,
@@ -9051,6 +9218,8 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> xp = const Value.absent(),
             Value<int> xpToNext = const Value.absent(),
             Value<int> attributePoints = const Value.absent(),
+            Value<int> vitalismLevel = const Value.absent(),
+            Value<int> vitalismXp = const Value.absent(),
             Value<int> strength = const Value.absent(),
             Value<int> dexterity = const Value.absent(),
             Value<int> intelligence = const Value.absent(),
@@ -9061,6 +9230,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> maxHp = const Value.absent(),
             Value<int> mp = const Value.absent(),
             Value<int> maxMp = const Value.absent(),
+            Value<int> currentVitalism = const Value.absent(),
             Value<int> gold = const Value.absent(),
             Value<int> gems = const Value.absent(),
             Value<int> streakDays = const Value.absent(),
@@ -9086,6 +9256,8 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             xp: xp,
             xpToNext: xpToNext,
             attributePoints: attributePoints,
+            vitalismLevel: vitalismLevel,
+            vitalismXp: vitalismXp,
             strength: strength,
             dexterity: dexterity,
             intelligence: intelligence,
@@ -9096,6 +9268,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             maxHp: maxHp,
             mp: mp,
             maxMp: maxMp,
+            currentVitalism: currentVitalism,
             gold: gold,
             gems: gems,
             streakDays: streakDays,

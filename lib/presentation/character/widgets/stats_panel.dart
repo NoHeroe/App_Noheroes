@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/xp_calculator.dart';
 import '../../../data/database/app_database.dart';
+import '../../../data/database/tables/players_table_ext.dart';
 
 class StatsPanel extends StatelessWidget {
   final PlayersTableData player;
@@ -22,8 +23,7 @@ class StatsPanel extends StatelessWidget {
       factionType:   player.factionType,
     );
 
-    final hasVitalism = ['warrior','colossus','rogue','hunter','shadowWeaver']
-        .contains(player.classType);
+    final hasVitalism = player.isVitalist;
 
     return Container(
       padding: const EdgeInsets.all(16),

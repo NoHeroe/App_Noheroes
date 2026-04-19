@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart';
 import '../../database/app_database.dart';
 import '../../database/daos/player_dao.dart';
+import '../../../core/utils/vitalism_calculator.dart';
+import '../../../domain/enums/class_type.dart';
 
 class ClassBonusService {
   final AppDatabase _db;
@@ -29,20 +31,30 @@ class ClassBonusService {
     final maxHp = 100 + (bonus['constitution']! * 10) + (player.level * 5);
     final maxMp = (maxHp * 0.9).round();
 
+    final parsedClass = ClassType.values.asNameMap()[classId];
+    final maxVitalism = parsedClass != null
+        ? VitalismCalculator.calculateMaxVitalism(
+            hp: maxHp,
+            classType: parsedClass,
+            level: player.level,
+          )
+        : 0;
+
     await (_db.update(_db.playersTable)
           ..where((t) => t.id.equals(playerId)))
         .write(PlayersTableCompanion(
-      classType:    Value(classId),
-      strength:     Value(bonus['strength']!),
-      constitution: Value(bonus['constitution']!),
-      dexterity:    Value(bonus['dexterity']!),
-      intelligence: Value(bonus['intelligence']!),
-      spirit:       Value(bonus['spirit']!),
-      charisma:     Value(bonus['charisma']!),
-      maxHp:        Value(maxHp),
-      hp:           Value(maxHp),
-      maxMp:        Value(maxMp),
-      mp:           Value(maxMp),
+      classType:        Value(classId),
+      strength:         Value(bonus['strength']!),
+      constitution:     Value(bonus['constitution']!),
+      dexterity:        Value(bonus['dexterity']!),
+      intelligence:     Value(bonus['intelligence']!),
+      spirit:           Value(bonus['spirit']!),
+      charisma:         Value(bonus['charisma']!),
+      maxHp:            Value(maxHp),
+      hp:               Value(maxHp),
+      maxMp:            Value(maxMp),
+      mp:               Value(maxMp),
+      currentVitalism:  Value(maxVitalism),
     ));
   }
 

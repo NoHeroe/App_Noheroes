@@ -15,6 +15,10 @@ class PlayersTable extends Table {
   IntColumn get xpToNext => integer().withDefault(const Constant(100))();
   IntColumn get attributePoints => integer().withDefault(const Constant(0))();
 
+  // Vitalismo (progressão — só usado por classes vitalistas)
+  IntColumn get vitalismLevel => integer().withDefault(const Constant(0))();
+  IntColumn get vitalismXp => integer().withDefault(const Constant(0))();
+
   // Atributos base
   IntColumn get strength => integer().withDefault(const Constant(1))();
   IntColumn get dexterity => integer().withDefault(const Constant(1))();
@@ -28,6 +32,7 @@ class PlayersTable extends Table {
   IntColumn get maxHp => integer().withDefault(const Constant(100))();
   IntColumn get mp => integer().withDefault(const Constant(90))();
   IntColumn get maxMp => integer().withDefault(const Constant(90))();
+  IntColumn get currentVitalism => integer().withDefault(const Constant(0))();
 
   // Economia
   IntColumn get gold => integer().withDefault(const Constant(0))();
