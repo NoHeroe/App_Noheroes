@@ -125,7 +125,7 @@ class ItemSpec {
       isUnique:    json['is_unique'] as bool? ?? false,
       isDarkItem:  json['is_dark_item'] as bool? ?? false,
       isEvolving:  json['is_evolving'] as bool? ?? false,
-      requiredLevel: json['required_level'] as int? ?? 1,
+      requiredLevel: _intOrNull(json['required_level']) ?? 1,
       allowedClasses:
           ((json['allowed_classes'] as List?) ?? const []).cast<String>(),
       allowedFactions:
@@ -133,10 +133,10 @@ class ItemSpec {
       stats:   stats,
       effects: Map<String, dynamic>.from((json['effects'] as Map?) ?? const {}),
       sources: sources,
-      shopPriceCoins:     json['shop_price_coins'] as int?,
-      shopPriceGems:      json['shop_price_gems'] as int?,
-      stackMax:           json['stack_max'] as int? ?? 1,
-      durabilityMax:      json['durability_max'] as int?,
+      shopPriceCoins:     _intOrNull(json['shop_price_coins']),
+      shopPriceGems:      _intOrNull(json['shop_price_gems']),
+      stackMax:           _intOrNull(json['stack_max']) ?? 1,
+      durabilityMax:      _intOrNull(json['durability_max']),
       durabilityBreaksTo: json['durability_breaks_to'] as String?,
       isStackable:   json['is_stackable'] as bool? ?? false,
       isConsumable:  json['is_consumable'] as bool? ?? false,
@@ -243,6 +243,16 @@ class EvolutionStage {
       },
     );
   }
+}
+
+// Tolerante a int/double — JSON writers podem emitir 15.0 onde queremos 15.
+// Sem isso, `as int?` explode em todo o catálogo pela 1ª string "double".
+int? _intOrNull(dynamic v) {
+  if (v == null) return null;
+  if (v is int) return v;
+  if (v is num) return v.toInt();
+  if (v is String) return int.tryParse(v);
+  return null;
 }
 
 GuildRank? _parseRank(String? raw) {

@@ -27,7 +27,8 @@ class _ShopsListScreenState extends ConsumerState<ShopsListScreen> {
   void _reload() {
     final player = ref.read(currentPlayerProvider);
     if (player == null) {
-      setState(() => _future = Future.value(const []));
+      final empty = Future<List<ShopSpec>>.value(const []);
+      setState(() { _future = empty; });
       return;
     }
     final snapshot = PlayerSnapshot(
@@ -36,9 +37,9 @@ class _ShopsListScreenState extends ConsumerState<ShopsListScreen> {
       classKey:   player.classType,
       factionKey: player.factionType,
     );
-    setState(() => _future = ref
-        .read(shopsServiceProvider)
-        .listShopsAvailableTo(snapshot));
+    final future =
+        ref.read(shopsServiceProvider).listShopsAvailableTo(snapshot);
+    setState(() { _future = future; });
   }
 
   @override
@@ -57,6 +58,19 @@ class _ShopsListScreenState extends ConsumerState<ShopsListScreen> {
                     return const Center(
                       child: CircularProgressIndicator(
                           strokeWidth: 2, color: AppColors.gold),
+                    );
+                  }
+                  if (snap.hasError) {
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: SelectableText(
+                        'Erro ao carregar lojas:\n\n${snap.error}\n\n'
+                        '${snap.stackTrace ?? ""}',
+                        style: const TextStyle(
+                            color: AppColors.hp,
+                            fontSize: 11,
+                            fontFamily: 'monospace'),
+                      ),
                     );
                   }
                   final shops = snap.data ?? const <ShopSpec>[];

@@ -27,6 +27,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   ShopSpec? _shop;
   List<ShopItemView> _items = const [];
   bool _loading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -46,30 +47,39 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   }
 
   Future<void> _reload() async {
-    final player = ref.read(currentPlayerProvider);
-    final snap   = _snapshot();
-    if (player == null || snap == null) {
-      if (mounted) context.go('/login');
-      return;
+    try {
+      final player = ref.read(currentPlayerProvider);
+      final snap   = _snapshot();
+      if (player == null || snap == null) {
+        if (mounted) context.go('/login');
+        return;
+      }
+      final svc  = ref.read(shopsServiceProvider);
+      final shop = await svc.findByKey(widget.shopKey);
+      if (shop == null) {
+        if (mounted) context.go('/shops');
+        return;
+      }
+      final items = await svc.itemsOf(
+        shopKey:     widget.shopKey,
+        player:      snap,
+        playerCoins: player.gold,
+        playerGems:  player.gems,
+      );
+      if (!mounted) return;
+      setState(() {
+        _shop = shop;
+        _items = items;
+        _loading = false;
+        _error = null;
+      });
+    } catch (e, st) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = '$e\n\n$st';
+      });
     }
-    final svc  = ref.read(shopsServiceProvider);
-    final shop = await svc.findByKey(widget.shopKey);
-    if (shop == null) {
-      if (mounted) context.go('/shops');
-      return;
-    }
-    final items = await svc.itemsOf(
-      shopKey:     widget.shopKey,
-      player:      snap,
-      playerCoins: player.gold,
-      playerGems:  player.gems,
-    );
-    if (!mounted) return;
-    setState(() {
-      _shop = shop;
-      _items = items;
-      _loading = false;
-    });
   }
 
   Future<void> _buy(ShopItemView view) async {
@@ -148,7 +158,18 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                 child: CircularProgressIndicator(
                     strokeWidth: 2, color: AppColors.gold),
               )
-            : Column(
+            : _error != null
+                ? SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: SelectableText(
+                      'Erro ao carregar loja:\n\n$_error',
+                      style: const TextStyle(
+                          color: AppColors.hp,
+                          fontSize: 11,
+                          fontFamily: 'monospace'),
+                    ),
+                  )
+                : Column(
                 children: [
                   _buildHeader(),
                   Expanded(

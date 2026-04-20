@@ -42,11 +42,13 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
   void _reload() {
     final player = ref.read(currentPlayerProvider);
     if (player == null) {
-      setState(() => _future = Future.value(const []));
+      final empty = Future<List<InventoryEntryWithSpec>>.value(const []);
+      setState(() { _future = empty; });
       return;
     }
     final svc = ref.read(playerInventoryServiceProvider);
-    setState(() => _future = svc.listOf(player.id));
+    final future = svc.listOf(player.id);
+    setState(() { _future = future; });
   }
 
   PlayerSnapshot? _snapshotFromCurrent() {
@@ -148,6 +150,12 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
             child: CircularProgressIndicator(
                 strokeWidth: 2, color: AppColors.purple),
           );
+        }
+        if (snap.hasError) {
+          return _ErrorView(
+              message: 'Erro ao carregar inventário:\n\n'
+                  '${snap.error}\n\n'
+                  '${snap.stackTrace ?? ""}');
         }
         final items = snap.data ?? const <InventoryEntryWithSpec>[];
         return TabBarView(
@@ -297,6 +305,42 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
 }
 
 // ── Widgets ────────────────────────────────────────────────────────────────
+
+class _ErrorView extends StatelessWidget {
+  final String message;
+  const _ErrorView({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Icon(Icons.error_outline, color: AppColors.hp, size: 24),
+              SizedBox(width: 8),
+              Text('DEBUG',
+                  style: TextStyle(
+                      color: AppColors.hp,
+                      fontSize: 12,
+                      letterSpacing: 2)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SelectableText(
+            message,
+            style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 11,
+                fontFamily: 'monospace'),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _EmptyListView extends StatelessWidget {
   @override

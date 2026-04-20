@@ -56,8 +56,17 @@ class ShopItemEntry {
   factory ShopItemEntry.fromJson(Map<String, dynamic> json) {
     return ShopItemEntry(
       itemKey:    json['key'] as String,
-      priceCoins: json['price_coins'] as int?,
-      priceGems:  json['price_gems'] as int?,
+      priceCoins: _intOrNull(json['price_coins']),
+      priceGems:  _intOrNull(json['price_gems']),
     );
   }
+}
+
+// Tolerante a int/double — ver nota em item_spec.dart.
+int? _intOrNull(dynamic v) {
+  if (v == null) return null;
+  if (v is int) return v;
+  if (v is num) return v.toInt();
+  if (v is String) return int.tryParse(v);
+  return null;
 }
