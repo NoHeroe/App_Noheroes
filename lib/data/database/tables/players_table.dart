@@ -51,6 +51,12 @@ class PlayersTable extends Table {
   // Rank da Guilda de Aventureiros (e/d/c/b/a/s)
   TextColumn get guildRank => text().withDefault(const Constant('none'))();
 
+  // Contador de missões concluídas (ADR candidata 0012 — Sprint 2.2).
+  // Incrementado em class_quest / faction_quest / guild_ascension ao marcar
+  // completed=true. Usado como gate de admissão da Guilda (>=25 missões).
+  IntColumn get totalQuestsCompleted =>
+      integer().withDefault(const Constant(0))();
+
   // Preferências
   TextColumn get narrativeMode => text().withDefault(const Constant('longa'))();
   BoolColumn get onboardingDone => boolean().withDefault(const Constant(false))();

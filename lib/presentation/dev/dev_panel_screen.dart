@@ -180,10 +180,86 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
             const SizedBox(height: 10),
             _actionBtn(
                 'Resetar inventário completo', AppColors.hp, _resetInventory),
+            const SizedBox(height: 24),
+
+            // Quests (Sprint 2.2 Bloco 6 — gate de admissão exige 25 quests)
+            _section('QUESTS'),
+            _infoRow('Missões completas',
+                '${player?.totalQuestsCompleted ?? 0}'),
+            const SizedBox(height: 10),
+            _actionBtn('Setar quests completas',
+                AppColors.purple, _pickAndSetQuestsCompleted),
+            const SizedBox(height: 10),
+            _actionBtn('Resetar quests completas',
+                AppColors.hp, _resetQuestsCompleted),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _pickAndSetQuestsCompleted() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final value = await showDialog<int?>(
+      context: context,
+      builder: (_) => _SetQuestsCompletedDialog(
+        current: player.totalQuestsCompleted,
+      ),
+    );
+    if (value == null || !mounted) return;
+
+    final db = ref.read(appDatabaseProvider);
+    await (db.update(db.playersTable)
+          ..where((t) => t.id.equals(player.id)))
+        .write(PlayersTableCompanion(totalQuestsCompleted: Value(value)));
+    final updated = await PlayerDao(db).findById(player.id);
+    if (!mounted) return;
+    ref.read(currentPlayerProvider.notifier).state = updated;
+    ref.invalidate(playerStreamProvider);
+    AppSnack.success(context, 'Contador setado pra $value.');
+  }
+
+  Future<void> _resetQuestsCompleted() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Resetar contador de quests?',
+            style: GoogleFonts.cinzelDecorative(
+                color: AppColors.hp, fontSize: 14)),
+        content: Text(
+          'Zera total_quests_completed pra 0. Afeta o gate de admissão '
+          'da Guilda (25 missões).',
+          style: GoogleFonts.roboto(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.hp),
+            child: const Text('Resetar'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+
+    final db = ref.read(appDatabaseProvider);
+    await (db.update(db.playersTable)
+          ..where((t) => t.id.equals(player.id)))
+        .write(const PlayersTableCompanion(
+            totalQuestsCompleted: Value(0)));
+    final updated = await PlayerDao(db).findById(player.id);
+    if (!mounted) return;
+    ref.read(currentPlayerProvider.notifier).state = updated;
+    ref.invalidate(playerStreamProvider);
+    AppSnack.success(context, 'Contador resetado pra 0.');
   }
 
   Future<void> _pickAndSetRank() async {
@@ -365,6 +441,72 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
 class _RankChoice {
   final GuildRank? rank;
   const _RankChoice(this.rank);
+}
+
+class _SetQuestsCompletedDialog extends StatefulWidget {
+  final int current;
+  const _SetQuestsCompletedDialog({required this.current});
+
+  @override
+  State<_SetQuestsCompletedDialog> createState() =>
+      _SetQuestsCompletedDialogState();
+}
+
+class _SetQuestsCompletedDialogState
+    extends State<_SetQuestsCompletedDialog> {
+  late final TextEditingController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: '${widget.current}');
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppColors.surface,
+      title: Text('Setar quests completas',
+          style: GoogleFonts.cinzelDecorative(
+              color: AppColors.purple, fontSize: 14)),
+      content: TextField(
+        controller: _ctrl,
+        autofocus: true,
+        keyboardType: TextInputType.number,
+        style: GoogleFonts.roboto(color: AppColors.textPrimary),
+        decoration: InputDecoration(
+          labelText: 'Valor (0-999)',
+          labelStyle: GoogleFonts.roboto(color: AppColors.textMuted),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: AppColors.border),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, null),
+          child: const Text('Cancelar'),
+        ),
+        TextButton(
+          onPressed: () {
+            final n = int.tryParse(_ctrl.text.trim());
+            if (n == null) return;
+            final clamped = n.clamp(0, 999);
+            Navigator.pop(context, clamped);
+          },
+          style: TextButton.styleFrom(foregroundColor: AppColors.purple),
+          child: const Text('Aplicar'),
+        ),
+      ],
+    );
+  }
 }
 
 class _RankPickerDialog extends StatelessWidget {

@@ -73,8 +73,12 @@ class ShopsService {
     return all.where((s) => _canPlayerEnterShop(s, player)).toList();
   }
 
-  // Itens visíveis pro jogador nessa loja. Aplica: canAppearInShop defensivo,
-  // gates item-level, e marca canAfford.
+  // Itens visíveis pro jogador nessa loja. Sprint 2.2 pós-teste mudou
+  // filosofia: todos os itens aparecem. Gates soft: rank/level/class/faction
+  // viram `canInteract=false` + `rejectReasonLabel`. Só `canAppearInShop=false`
+  // continua hard-reject (secret/unique/evolving nunca devem aparecer em loja).
+  //
+  // Exceção: classe 'shadowWeaver' ignora allowedClasses (é híbrido universal).
   Future<List<ShopItemView>> itemsOf({
     required String shopKey,
     required PlayerSnapshot player,
@@ -90,23 +94,29 @@ class ShopsService {
       final spec = await _catalog.findByKey(entry.itemKey);
       if (spec == null) continue;
 
-      // Defense-in-depth — ADR 0010.
+      // Defense-in-depth — ADR 0010. Itens secretos/únicos/evolutivos NUNCA
+      // aparecem em loja, mesmo que o JSON coloque. Hard-skip preservado.
       if (!ItemSourcePolicy.canAppearInShop(spec)) continue;
 
-      // Gates item-level.
-      if (spec.requiredLevel > player.level) continue;
-      if (!ItemEquipPolicy.isRankSufficient(player.rank, spec.requiredRank)) {
-        continue;
-      }
-      if (spec.allowedClasses.isNotEmpty &&
+      // Gates SOFT — coletam razão, adicionam item com canInteract=false.
+      String? rejectReason;
+      if (spec.requiredLevel > player.level) {
+        rejectReason = 'Requer nível ${spec.requiredLevel}.';
+      } else if (!ItemEquipPolicy.isRankSufficient(
+          player.rank, spec.requiredRank)) {
+        final r = spec.requiredRank?.name.toUpperCase() ?? '?';
+        rejectReason = 'Requer rank $r ou superior.';
+      } else if (spec.allowedClasses.isNotEmpty &&
+          player.classKey != 'shadowWeaver' &&
           (player.classKey == null ||
               !spec.allowedClasses.contains(player.classKey))) {
-        continue;
-      }
-      if (spec.allowedFactions.isNotEmpty &&
+        final pt = _formatClassList(spec.allowedClasses);
+        rejectReason = 'Apenas para $pt.';
+      } else if (spec.allowedFactions.isNotEmpty &&
           (player.factionKey == null ||
               !spec.allowedFactions.contains(player.factionKey))) {
-        continue;
+        final pt = spec.allowedFactions.join(', ');
+        rejectReason = 'Apenas para facção $pt.';
       }
 
       final price = entry.priceCoins;
@@ -115,13 +125,46 @@ class ShopsService {
           (gems == null || playerGems >= gems);
 
       result.add(ShopItemView(
-        spec:       spec,
-        priceCoins: price,
-        priceGems:  gems,
-        canAfford:  canAfford,
+        spec:              spec,
+        priceCoins:        price,
+        priceGems:         gems,
+        canAfford:         canAfford,
+        canInteract:       rejectReason == null,
+        rejectReasonLabel: rejectReason,
       ));
     }
     return result;
+  }
+
+  // Mapa class_id → PT-BR usado na mensagem de reject. Fallback pra key raw
+  // quando não reconhecido.
+  //
+  // NOTA (dívida narrativa Sprint 2.1): items_unified.json usa 4 sub-classes
+  // de mago (mage_raw, mage_arcane, mage_runic, mage_dark) em allowedClasses,
+  // mas classes.json só tem 'mage' como classe canônica. Conseqüência: mage
+  // atual nunca bate com mage_* → esses itens ficam inalcançáveis. Soft-gate
+  // Sprint 2.2 expõe visualmente; conserto real (unificar listas) fica
+  // pra Sprint 3.x narrativa.
+  static const Map<String, String> _classLabelsPt = {
+    'warrior':      'Guerreiro',
+    'colossus':     'Colosso',
+    'monk':         'Monge',
+    'rogue':        'Ladino',
+    'hunter':       'Caçador',
+    'druid':        'Druida',
+    'mage':         'Mago',
+    'mage_raw':     'Mago Primordial',
+    'mage_arcane':  'Mago Arcano',
+    'mage_runic':   'Mago Rúnico',
+    'mage_dark':    'Mago Sombrio',
+    'shadowWeaver': 'Tecelão Sombrio',
+  };
+
+  static String _formatClassList(List<String> keys) {
+    final pt = keys.map((k) => _classLabelsPt[k] ?? k).toList();
+    if (pt.length == 1) return pt.first;
+    if (pt.length == 2) return '${pt[0]} e ${pt[1]}';
+    return '${pt.sublist(0, pt.length - 1).join(", ")} e ${pt.last}';
   }
 
   Future<BuyResult> buyItem({
@@ -166,7 +209,10 @@ class ShopsService {
     if (!ItemEquipPolicy.isRankSufficient(player.rank, spec.requiredRank)) {
       return BuyResult.rejected(BuyRejectReason.rankTooLow);
     }
+    // Sprint 2.2 pós-teste: Tecelão Sombrio é híbrido universal — ignora
+    // allowedClasses em todos os gates de compra/equip.
     if (spec.allowedClasses.isNotEmpty &&
+        player.classKey != 'shadowWeaver' &&
         (player.classKey == null ||
             !spec.allowedClasses.contains(player.classKey))) {
       return BuyResult.rejected(BuyRejectReason.classRestricted);

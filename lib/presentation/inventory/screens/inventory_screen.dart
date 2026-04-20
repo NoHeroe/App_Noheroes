@@ -29,7 +29,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
   @override
   void initState() {
     super.initState();
-    _tab = TabController(length: 5, vsync: this);
+    _tab = TabController(length: 6, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _reload());
   }
 
@@ -137,6 +137,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
         Tab(text: 'CONSUMÍVEIS'),
         Tab(text: 'MATERIAIS'),
         Tab(text: 'ESPECIAIS'),
+        Tab(text: 'FORJA'),
       ],
     );
   }
@@ -166,6 +167,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
             _buildList(_filterBy(items, _Filter.consumable)),
             _buildList(_filterBy(items, _Filter.material)),
             _buildList(_filterBy(items, _Filter.special)),
+            const _ForgeShortcut(),
           ],
         );
       },
@@ -337,6 +339,78 @@ class _ErrorView extends StatelessWidget {
                 fontFamily: 'monospace'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// Sprint 2.2 Bloco 7 — aba "Forja" no inventário. Não lista itens — é atalho
+// de navegação pra /forge.
+class _ForgeShortcut extends StatelessWidget {
+  const _ForgeShortcut();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(36, 24, 36, 100),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 96, height: 96,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.gold.withValues(alpha: 0.1),
+                border: Border.all(
+                    color: AppColors.gold.withValues(alpha: 0.4), width: 1.5),
+              ),
+              child: const Icon(Icons.hardware,
+                  color: AppColors.gold, size: 44),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Acesso rápido à Forja',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.cinzelDecorative(
+                  fontSize: 14,
+                  color: AppColors.gold,
+                  letterSpacing: 2),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Criar armas, armaduras e processar materiais.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.roboto(
+                  fontSize: 12,
+                  color: AppColors.textMuted,
+                  height: 1.5),
+            ),
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: () => context.go('/forge'),
+              child: Container(
+                width: double.infinity,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.12),
+                  border: Border.all(
+                      color: AppColors.gold.withValues(alpha: 0.55),
+                      width: 1.4),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  'IR PRA FORJA',
+                  style: GoogleFonts.cinzelDecorative(
+                      fontSize: 12,
+                      color: AppColors.gold,
+                      letterSpacing: 3),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

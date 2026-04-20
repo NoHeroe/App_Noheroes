@@ -1,0 +1,1166 @@
+{
+  "recipes": [
+    {
+      "key": "RECIPE_WEAPON_SWORD_RUSTY_E",
+      "name": "Forjar Espada Enferrujada",
+      "description": "Espada simples, marca do aventureiro iniciante.",
+      "type": "forge",
+      "required_rank": "E",
+      "required_level": 1,
+      "required_station": "forge",
+      "result_item_key": "WEAPON_SWORD_RUSTY_E",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_IRON_INGOT",
+          "quantity": 2
+        },
+        {
+          "item_key": "MATERIAL_WOOD_STICK",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 15,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_WEAPON_DAGGER_OLD_E",
+      "name": "Forjar Adaga Antiga",
+      "description": "Adaga rápida e funcional.",
+      "type": "forge",
+      "required_rank": "E",
+      "required_level": 1,
+      "required_station": "forge",
+      "result_item_key": "WEAPON_DAGGER_OLD_E",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_IRON_INGOT",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_WOOD_STICK",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 10,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_WEAPON_DAGGER_BRONZE_E",
+      "name": "Forjar Adaga de Bronze",
+      "description": "Adaga mais durável que a de ferro puro.",
+      "type": "forge",
+      "required_rank": "E",
+      "required_level": 1,
+      "required_station": "forge",
+      "result_item_key": "WEAPON_DAGGER_BRONZE_E",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_BRONZE_INGOT",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_WOOD_STICK",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 18,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_WEAPON_CLAYMORE_BRONZE_E",
+      "name": "Forjar Claymore de Bronze",
+      "description": "Lâmina pesada de duas mãos, estilo ancestral.",
+      "type": "forge",
+      "required_rank": "E",
+      "required_level": 2,
+      "required_station": "forge",
+      "result_item_key": "WEAPON_CLAYMORE_BRONZE_E",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_BRONZE_INGOT",
+          "quantity": 2
+        },
+        {
+          "item_key": "MATERIAL_WOOD_STICK",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 25,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_WEAPON_BOW_IMPROVISED_E",
+      "name": "Montar Arco Improvisado",
+      "description": "Arco rápido de confeccionar com materiais do mato.",
+      "type": "craft",
+      "required_rank": "E",
+      "required_level": 1,
+      "required_station": "workshop",
+      "result_item_key": "WEAPON_BOW_IMPROVISED_E",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_WOOD_STICK",
+          "quantity": 2
+        },
+        {
+          "item_key": "MATERIAL_CLOTH_LINEN",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 12,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_WEAPON_STAFF_WOOD_TRAIN_E",
+      "name": "Talhar Cajado de Treino",
+      "description": "Cajado leve pra treinar canalização.",
+      "type": "craft",
+      "required_rank": "E",
+      "required_level": 1,
+      "required_station": "workshop",
+      "result_item_key": "WEAPON_STAFF_WOOD_TRAIN_E",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_WOOD_PLANK_OAK",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_WOOD_STICK",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 12,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_WEAPON_SWORD_WOOD_TRAIN_E",
+      "name": "Talhar Espada de Treino",
+      "description": "Espada de madeira pra desengasgar golpes básicos.",
+      "type": "craft",
+      "required_rank": "E",
+      "required_level": 1,
+      "required_station": "workshop",
+      "result_item_key": "WEAPON_SWORD_WOOD_TRAIN_E",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_WOOD_PLANK_OAK",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_WOOD_STICK",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 10,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_SHIELD_WOOD_TRAIN_E",
+      "name": "Talhar Escudo de Treino",
+      "description": "Escudo básico de madeira reforçada.",
+      "type": "craft",
+      "required_rank": "E",
+      "required_level": 1,
+      "required_station": "workshop",
+      "result_item_key": "SHIELD_WOOD_TRAIN_E",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_WOOD_PLANK_OAK",
+          "quantity": 2
+        },
+        {
+          "item_key": "MATERIAL_IRON_INGOT",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 18,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_BOOTS_LEATHER_TRAIN_E",
+      "name": "Costurar Botas de Treino",
+      "description": "Botas leves pra caminhadas longas.",
+      "type": "craft",
+      "required_rank": "E",
+      "required_level": 1,
+      "required_station": "workshop",
+      "result_item_key": "BOOTS_LEATHER_TRAIN_E",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_LEATHER_TANNED",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_CLOTH_LINEN",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 10,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_CHEST_LEATHER_TRAIN_E",
+      "name": "Costurar Peitoral de Treino",
+      "description": "Peitoral de couro curtido, proteção básica.",
+      "type": "craft",
+      "required_rank": "E",
+      "required_level": 2,
+      "required_station": "workshop",
+      "result_item_key": "CHEST_LEATHER_TRAIN_E",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_LEATHER_TANNED",
+          "quantity": 2
+        },
+        {
+          "item_key": "MATERIAL_CLOTH_LINEN",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 20,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_HELM_LEATHER_TRAIN_E",
+      "name": "Costurar Capacete de Treino",
+      "description": "Capacete simples de couro.",
+      "type": "craft",
+      "required_rank": "E",
+      "required_level": 1,
+      "required_station": "workshop",
+      "result_item_key": "HELM_LEATHER_TRAIN_E",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_LEATHER_TANNED",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 12,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_PANTS_CLOTH_OLD_E",
+      "name": "Costurar Calças de Linho",
+      "description": "Calças confortáveis pro dia-a-dia.",
+      "type": "craft",
+      "required_rank": "E",
+      "required_level": 1,
+      "required_station": "workshop",
+      "result_item_key": "PANTS_CLOTH_OLD_E",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_CLOTH_LINEN",
+          "quantity": 2
+        }
+      ],
+      "cost_coins": 10,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_ROBE_CLOTH_OLD_E",
+      "name": "Costurar Túnica de Linho",
+      "description": "Túnica leve, preferida por aprendizes.",
+      "type": "craft",
+      "required_rank": "E",
+      "required_level": 1,
+      "required_station": "workshop",
+      "result_item_key": "ROBE_CLOTH_OLD_E",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_CLOTH_LINEN",
+          "quantity": 3
+        }
+      ],
+      "cost_coins": 15,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_HAT_CLOTH_OLD_E",
+      "name": "Costurar Chapéu Velho",
+      "description": "Chapéu simples, protege do sol e da poeira.",
+      "type": "craft",
+      "required_rank": "E",
+      "required_level": 1,
+      "required_station": "workshop",
+      "result_item_key": "HAT_CLOTH_OLD_E",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_CLOTH_LINEN",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 8,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_GLOVES_GRIP",
+      "name": "Costurar Luvas de Empunhadura",
+      "description": "Luvas que melhoram firmeza na arma.",
+      "type": "craft",
+      "required_rank": "E",
+      "required_level": 2,
+      "required_station": "workshop",
+      "result_item_key": "GLOVES_GRIP",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_LEATHER_TANNED",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_CLOTH_LINEN",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 10,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_WEAPON_DAGGER_STEEL_D",
+      "name": "Forjar Adaga de Aço",
+      "description": "Adaga de lâmina resistente, precisa de mão firme.",
+      "type": "forge",
+      "required_rank": "D",
+      "required_level": 6,
+      "required_station": "forge",
+      "result_item_key": "WEAPON_DAGGER_STEEL_D",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_STEEL_INGOT",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_WOOD_STICK",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 80,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "quest"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_WEAPON_BOW_LONG_D",
+      "name": "Montar Arco Longo",
+      "description": "Arco de alcance, exige braço treinado.",
+      "type": "craft",
+      "required_rank": "D",
+      "required_level": 6,
+      "required_station": "workshop",
+      "result_item_key": "WEAPON_BOW_LONG_D",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_WOOD_PLANK_OAK",
+          "quantity": 2
+        },
+        {
+          "item_key": "MATERIAL_LEATHER_TANNED",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_FRAGMENT_METAL",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 60,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "quest"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_WEAPON_SWORD_ADVENTURER_D",
+      "name": "Forjar Espada do Aventureiro",
+      "description": "Espada equilibrada, marca de quem sobreviveu aos primeiros anos.",
+      "type": "forge",
+      "required_rank": "D",
+      "required_level": 7,
+      "required_station": "forge",
+      "result_item_key": "WEAPON_SWORD_ADVENTURER_D",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_STEEL_INGOT",
+          "quantity": 2
+        },
+        {
+          "item_key": "MATERIAL_WOOD_PLANK_OAK",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 90,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "quest"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_BOOTS_MAIL_WAR_D",
+      "name": "Forjar Botas de Malha",
+      "description": "Botas reforçadas com malha de aço.",
+      "type": "forge",
+      "required_rank": "D",
+      "required_level": 6,
+      "required_station": "forge",
+      "result_item_key": "BOOTS_MAIL_WAR_D",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_STEEL_INGOT",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_LEATHER_TANNED",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_FRAGMENT_METAL",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 70,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "shop"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_CHEST_MAIL_WAR_D",
+      "name": "Forjar Peitoral de Malha",
+      "description": "Peitoral pesado, testado em batalha.",
+      "type": "forge",
+      "required_rank": "D",
+      "required_level": 7,
+      "required_station": "forge",
+      "result_item_key": "CHEST_MAIL_WAR_D",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_STEEL_INGOT",
+          "quantity": 2
+        },
+        {
+          "item_key": "MATERIAL_LEATHER_TANNED",
+          "quantity": 2
+        },
+        {
+          "item_key": "MATERIAL_FRAGMENT_METAL",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 100,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "shop"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_HELM_CHAIN_WAR_D",
+      "name": "Forjar Elmo de Malha",
+      "description": "Elmo encorpado com proteção cervical.",
+      "type": "forge",
+      "required_rank": "D",
+      "required_level": 6,
+      "required_station": "forge",
+      "result_item_key": "HELM_CHAIN_WAR_D",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_STEEL_INGOT",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_FRAGMENT_METAL",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 60,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "shop"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_PANTS_MAIL_WAR_D",
+      "name": "Forjar Calças de Malha",
+      "description": "Calças de malha, flexíveis e protetoras.",
+      "type": "forge",
+      "required_rank": "D",
+      "required_level": 6,
+      "required_station": "forge",
+      "result_item_key": "PANTS_MAIL_WAR_D",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_STEEL_INGOT",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_LEATHER_TANNED",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_FRAGMENT_METAL",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 75,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "shop"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_SHOULDER_MAIL_WAR_D",
+      "name": "Forjar Ombreiras de Malha",
+      "description": "Ombreiras desviadoras de golpes.",
+      "type": "forge",
+      "required_rank": "D",
+      "required_level": 6,
+      "required_station": "forge",
+      "result_item_key": "SHOULDER_MAIL_WAR_D",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_STEEL_INGOT",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_FRAGMENT_METAL",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 55,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "shop"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_PANTS_CLOTH_HUMBLE_D",
+      "name": "Costurar Calças Humildes",
+      "description": "Calças discretas, visual de eremita.",
+      "type": "craft",
+      "required_rank": "D",
+      "required_level": 6,
+      "required_station": "workshop",
+      "result_item_key": "PANTS_CLOTH_HUMBLE_D",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_CLOTH_WOOL",
+          "quantity": 2
+        },
+        {
+          "item_key": "MATERIAL_CLOTH_LINEN",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 40,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "quest"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_HOOD_HUMBLE_D",
+      "name": "Costurar Capuz Humilde",
+      "description": "Capuz que esconde o rosto sem chamar atenção.",
+      "type": "craft",
+      "required_rank": "D",
+      "required_level": 6,
+      "required_station": "workshop",
+      "result_item_key": "HOOD_HUMBLE_D",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_CLOTH_WOOL",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_CLOTH_LINEN",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 35,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "quest"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_ROBE_HUMBLE_D",
+      "name": "Costurar Manto Humilde",
+      "description": "Manto pesado, impregnado de ecos mágicos.",
+      "type": "craft",
+      "required_rank": "D",
+      "required_level": 7,
+      "required_station": "workshop",
+      "result_item_key": "ROBE_HUMBLE_D",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_CLOTH_WOOL",
+          "quantity": 3
+        },
+        {
+          "item_key": "MATERIAL_FRAGMENT_MAGIC",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 70,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "achievement"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_CLOAK_ROGUE",
+      "name": "Costurar Manto do Ladino",
+      "description": "Manto escuro de couro e lã, absorve sombras.",
+      "type": "craft",
+      "required_rank": "D",
+      "required_level": 7,
+      "required_station": "workshop",
+      "result_item_key": "CLOAK_ROGUE",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_CLOTH_WOOL",
+          "quantity": 2
+        },
+        {
+          "item_key": "MATERIAL_LEATHER_TANNED",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_FRAGMENT_MAGIC",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 85,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "drop"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_ARMOR_COLOSSUS",
+      "name": "Forjar Armadura do Colosso",
+      "description": "Armadura pesada feita pra encarar gigantes.",
+      "type": "forge",
+      "required_rank": "C",
+      "required_level": 12,
+      "required_station": "forge",
+      "result_item_key": "ARMOR_COLOSSUS",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_STEEL_INGOT",
+          "quantity": 4
+        },
+        {
+          "item_key": "MATERIAL_FRAGMENT_METAL",
+          "quantity": 2
+        },
+        {
+          "item_key": "MATERIAL_FRAGMENT_MAGIC",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 250,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "achievement"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_POTION_NIGHT_VISION_C",
+      "name": "Destilar Poção da Visão Noturna",
+      "description": "Poção que permite enxergar no escuro absoluto.",
+      "type": "craft",
+      "required_rank": "C",
+      "required_level": 11,
+      "required_station": "workshop",
+      "result_item_key": "POTION_NIGHT_VISION_C",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "ESSENCE_SHADOW",
+          "quantity": 1
+        },
+        {
+          "item_key": "RUNE_MIND",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_FRAGMENT_MAGIC",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 120,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "drop"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_POTION_FULL",
+      "name": "Destilar Poção Completa",
+      "description": "Restaura HP e mana ao mesmo tempo.",
+      "type": "craft",
+      "required_rank": "C",
+      "required_level": 11,
+      "required_station": "workshop",
+      "result_item_key": "POTION_FULL",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "ESSENCE_FIRE",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_FRAGMENT_MAGIC",
+          "quantity": 2
+        }
+      ],
+      "cost_coins": 180,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "achievement"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_RING_GOLD_OLD_C",
+      "name": "Forjar Anel de Ouro Antigo",
+      "description": "Anel de ouro com entalhe arcaico.",
+      "type": "forge",
+      "required_rank": "C",
+      "required_level": 12,
+      "required_station": "forge",
+      "result_item_key": "RING_GOLD_OLD_C",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_FRAGMENT_MAGIC",
+          "quantity": 2
+        },
+        {
+          "item_key": "MATERIAL_STEEL_INGOT",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 200,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "achievement"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_ARMOR_SHADOW",
+      "name": "Forjar Armadura Sombria",
+      "description": "Armadura que absorve parte da essência das sombras.",
+      "type": "forge",
+      "required_rank": "C",
+      "required_level": 13,
+      "required_station": "forge",
+      "result_item_key": "ARMOR_SHADOW",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "ESSENCE_SHADOW",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_STEEL_INGOT",
+          "quantity": 3
+        },
+        {
+          "item_key": "MATERIAL_FRAGMENT_MAGIC",
+          "quantity": 2
+        }
+      ],
+      "cost_coins": 300,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "drop"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_IRON_INGOT_BASIC",
+      "name": "Fundir Lingote de Ferro",
+      "description": "Funde minério bruto em lingote pronto pra forja.",
+      "type": "craft",
+      "required_rank": "E",
+      "required_level": 1,
+      "required_station": "workshop",
+      "result_item_key": "MATERIAL_IRON_INGOT",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_IRON_ORE",
+          "quantity": 2
+        }
+      ],
+      "cost_coins": 5,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_IRON_INGOT_ADVANCED",
+      "name": "Fundir Lingote de Ferro Reforçado",
+      "description": "Fundição dupla com fragmentos — rende 2 lingotes.",
+      "type": "forge",
+      "required_rank": "E",
+      "required_level": 2,
+      "required_station": "forge",
+      "result_item_key": "MATERIAL_IRON_INGOT",
+      "result_quantity": 2,
+      "materials": [
+        {
+          "item_key": "MATERIAL_IRON_ORE",
+          "quantity": 4
+        },
+        {
+          "item_key": "MATERIAL_FRAGMENT_METAL",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 12,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_BRONZE_INGOT_BASIC",
+      "name": "Fundir Lingote de Bronze",
+      "description": "Liga de minério com fragmento metálico.",
+      "type": "forge",
+      "required_rank": "E",
+      "required_level": 2,
+      "required_station": "forge",
+      "result_item_key": "MATERIAL_BRONZE_INGOT",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_IRON_ORE",
+          "quantity": 1
+        },
+        {
+          "item_key": "MATERIAL_FRAGMENT_METAL",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 8,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_STEEL_INGOT",
+      "name": "Fundir Lingote de Aço",
+      "description": "Refinamento de ferro com fragmento metálico.",
+      "type": "forge",
+      "required_rank": "D",
+      "required_level": 5,
+      "required_station": "forge",
+      "result_item_key": "MATERIAL_STEEL_INGOT",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_IRON_INGOT",
+          "quantity": 2
+        },
+        {
+          "item_key": "MATERIAL_FRAGMENT_METAL",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 20,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "quest"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_WOOD_PLANK_OAK_BASIC",
+      "name": "Talhar Tábua de Carvalho",
+      "description": "Processa galhos em tábua usável.",
+      "type": "craft",
+      "required_rank": "E",
+      "required_level": 1,
+      "required_station": "workshop",
+      "result_item_key": "MATERIAL_WOOD_PLANK_OAK",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_WOOD_STICK",
+          "quantity": 3
+        }
+      ],
+      "cost_coins": 5,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_LEATHER_TANNED_BASIC",
+      "name": "Curtir Couro",
+      "description": "Transforma couro cru em couro curtido.",
+      "type": "craft",
+      "required_rank": "E",
+      "required_level": 1,
+      "required_station": "workshop",
+      "result_item_key": "MATERIAL_LEATHER_TANNED",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "MATERIAL_LEATHER_RAW",
+          "quantity": 2
+        }
+      ],
+      "cost_coins": 6,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_FRAGMENT_METAL_FROM_SCRAP",
+      "name": "Recuperar Fragmento Metálico",
+      "description": "Extrai fragmentos reaproveitáveis de minério.",
+      "type": "craft",
+      "required_rank": "E",
+      "required_level": 1,
+      "required_station": "workshop",
+      "result_item_key": "MATERIAL_FRAGMENT_METAL",
+      "result_quantity": 2,
+      "materials": [
+        {
+          "item_key": "MATERIAL_IRON_ORE",
+          "quantity": 3
+        }
+      ],
+      "cost_coins": 3,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "starter"
+        }
+      ],
+      "icon": null
+    },
+    {
+      "key": "RECIPE_FRAGMENT_MAGIC_FROM_RUNE",
+      "name": "Extrair Fragmento Arcano",
+      "description": "Consome uma runa básica pra destilar um fragmento arcano.",
+      "type": "craft",
+      "required_rank": "E",
+      "required_level": 4,
+      "required_station": "workshop",
+      "result_item_key": "MATERIAL_FRAGMENT_MAGIC",
+      "result_quantity": 1,
+      "materials": [
+        {
+          "item_key": "RUNE_BEGINNER",
+          "quantity": 1
+        },
+        {
+          "item_key": "FRAGMENT_AUREUM",
+          "quantity": 1
+        }
+      ],
+      "cost_coins": 30,
+      "duration_sec": 0,
+      "unlock_sources": [
+        {
+          "type": "quest"
+        }
+      ],
+      "icon": null
+    }
+  ],
+  "version": "v0.28.1-sprint2.2-bloco2",
+  "count": 40
+}

@@ -70,7 +70,7 @@ class GuildScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 _buildMissionsPlaceholder(),
                 const SizedBox(height: 16),
-                _buildShopPlaceholder(),
+                _buildGuildShopCard(context),
               ],
             ],
           ),
@@ -187,10 +187,15 @@ class GuildScreen extends ConsumerWidget {
 
   Widget _buildAdmissionCard(BuildContext context, WidgetRef ref,
       dynamic player, GuildStatusTableData? status) {
-    final spent = status?.totalGoldSpent ?? 0;
-    final needed = 50;
-    final progress = (spent / needed).clamp(0.0, 1.0);
-    final canAdmit = spent >= needed;
+    // Sprint 2.2 Bloco 6 — gate mudou de "50 ouro gasto" pra "25 quests
+    // concluídas". Contador vive em players.totalQuestsCompleted (migration
+    // 20→21, incrementado nos 3 services de quest). Jogadores v0.28.0
+    // começam em 0 após upgrade — intencional, não retroage.
+    final completed = (player?.totalQuestsCompleted as int?) ?? 0;
+    const needed = 25;
+    final progress = (completed / needed).clamp(0.0, 1.0);
+    final canAdmit = completed >= needed;
+    final missing = (needed - completed).clamp(0, needed);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -217,7 +222,7 @@ class GuildScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Para carregar o Colar da Guilda, você precisa demonstrar comprometimento com Caelum.',
+            'Para carregar o Colar da Guilda, você precisa completar 25 missões e demonstrar comprometimento com Caelum.',
             style: GoogleFonts.roboto(
                 fontSize: 12,
                 color: AppColors.textSecondary,
@@ -225,7 +230,7 @@ class GuildScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
-          // Requisito: gastar 50 ouro
+          // Requisito: concluir 25 missões
           Row(
             children: [
               Icon(
@@ -234,14 +239,17 @@ class GuildScreen extends ConsumerWidget {
                 size: 16,
               ),
               const SizedBox(width: 8),
-              Text('Gaste 50 de ouro na loja',
+              Text(
+                  canAdmit
+                      ? 'Missões completas'
+                      : 'Complete ${needed} missões',
                   style: GoogleFonts.roboto(
                       fontSize: 12,
                       color: canAdmit
                           ? AppColors.shadowAscending
                           : AppColors.textSecondary)),
               const Spacer(),
-              Text('$spent/50',
+              Text('$completed/$needed',
                   style: GoogleFonts.roboto(
                       fontSize: 11, color: AppColors.textMuted)),
             ],
@@ -259,6 +267,16 @@ class GuildScreen extends ConsumerWidget {
               minHeight: 4,
             ),
           ),
+          if (!canAdmit) ...[
+            const SizedBox(height: 8),
+            Text(
+              missing == 1
+                  ? 'Falta 1 missão.'
+                  : 'Faltam $missing missões.',
+              style: GoogleFonts.roboto(
+                  fontSize: 11, color: AppColors.textMuted),
+            ),
+          ],
           const SizedBox(height: 16),
 
           SizedBox(
@@ -371,31 +389,53 @@ class GuildScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildShopPlaceholder() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.store_outlined,
-              color: AppColors.textMuted, size: 20),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Loja da Guilda',
-                  style: GoogleFonts.roboto(
-                      fontSize: 13, color: AppColors.textPrimary)),
-              Text('Em breve — Sprint 3',
-                  style: GoogleFonts.roboto(
-                      fontSize: 11, color: AppColors.textMuted)),
-            ],
-          ),
-        ],
+  // Sprint 2.2 Bloco 7 — substitui placeholder "Em breve" por atalho funcional.
+  // Visível só quando admitted=true (verificado no call-site via admitted flag).
+  Widget _buildGuildShopCard(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.go('/shop/guild_shop'),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.gold.withValues(alpha: 0.1),
+                border: Border.all(
+                    color: AppColors.gold.withValues(alpha: 0.4)),
+              ),
+              child: const Icon(Icons.storefront,
+                  color: AppColors.gold, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('LOJA DA GUILDA',
+                      style: GoogleFonts.cinzelDecorative(
+                          fontSize: 12,
+                          color: AppColors.gold,
+                          letterSpacing: 1.5)),
+                  const SizedBox(height: 2),
+                  Text('Mercadoria exclusiva pros aventureiros oficiais.',
+                      style: GoogleFonts.roboto(
+                          fontSize: 11, color: AppColors.textMuted)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right,
+                color: AppColors.gold, size: 20),
+          ],
+        ),
       ),
     );
   }

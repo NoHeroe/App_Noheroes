@@ -62,4 +62,6 @@ flutter:
     - assets/data/vitalismos_unicos.json
     - assets/data/items_unified.json
     - assets/data/shops.json
+    - assets/data/recipes.json
+    - assets/data/guild_ascension.json
     - assets/fonts/

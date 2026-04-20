@@ -234,6 +234,14 @@ class $PlayersTableTable extends PlayersTable
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('none'));
+  static const VerificationMeta _totalQuestsCompletedMeta =
+      const VerificationMeta('totalQuestsCompleted');
+  @override
+  late final GeneratedColumn<int> totalQuestsCompleted = GeneratedColumn<int>(
+      'total_quests_completed', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   static const VerificationMeta _narrativeModeMeta =
       const VerificationMeta('narrativeMode');
   @override
@@ -314,6 +322,7 @@ class $PlayersTableTable extends PlayersTable
         classType,
         factionType,
         guildRank,
+        totalQuestsCompleted,
         narrativeMode,
         onboardingDone,
         playStyle,
@@ -475,6 +484,12 @@ class $PlayersTableTable extends PlayersTable
       context.handle(_guildRankMeta,
           guildRank.isAcceptableOrUnknown(data['guild_rank']!, _guildRankMeta));
     }
+    if (data.containsKey('total_quests_completed')) {
+      context.handle(
+          _totalQuestsCompletedMeta,
+          totalQuestsCompleted.isAcceptableOrUnknown(
+              data['total_quests_completed']!, _totalQuestsCompletedMeta));
+    }
     if (data.containsKey('narrative_mode')) {
       context.handle(
           _narrativeModeMeta,
@@ -576,6 +591,8 @@ class $PlayersTableTable extends PlayersTable
           .read(DriftSqlType.string, data['${effectivePrefix}faction_type']),
       guildRank: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}guild_rank'])!,
+      totalQuestsCompleted: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}total_quests_completed'])!,
       narrativeMode: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}narrative_mode'])!,
       onboardingDone: attachedDatabase.typeMapping
@@ -629,6 +646,7 @@ class PlayersTableData extends DataClass
   final String? classType;
   final String? factionType;
   final String guildRank;
+  final int totalQuestsCompleted;
   final String narrativeMode;
   final bool onboardingDone;
   final String playStyle;
@@ -666,6 +684,7 @@ class PlayersTableData extends DataClass
       this.classType,
       this.factionType,
       required this.guildRank,
+      required this.totalQuestsCompleted,
       required this.narrativeMode,
       required this.onboardingDone,
       required this.playStyle,
@@ -709,6 +728,7 @@ class PlayersTableData extends DataClass
       map['faction_type'] = Variable<String>(factionType);
     }
     map['guild_rank'] = Variable<String>(guildRank);
+    map['total_quests_completed'] = Variable<int>(totalQuestsCompleted);
     map['narrative_mode'] = Variable<String>(narrativeMode);
     map['onboarding_done'] = Variable<bool>(onboardingDone);
     map['play_style'] = Variable<String>(playStyle);
@@ -756,6 +776,7 @@ class PlayersTableData extends DataClass
           ? const Value.absent()
           : Value(factionType),
       guildRank: Value(guildRank),
+      totalQuestsCompleted: Value(totalQuestsCompleted),
       narrativeMode: Value(narrativeMode),
       onboardingDone: Value(onboardingDone),
       playStyle: Value(playStyle),
@@ -801,6 +822,8 @@ class PlayersTableData extends DataClass
       classType: serializer.fromJson<String?>(json['classType']),
       factionType: serializer.fromJson<String?>(json['factionType']),
       guildRank: serializer.fromJson<String>(json['guildRank']),
+      totalQuestsCompleted:
+          serializer.fromJson<int>(json['totalQuestsCompleted']),
       narrativeMode: serializer.fromJson<String>(json['narrativeMode']),
       onboardingDone: serializer.fromJson<bool>(json['onboardingDone']),
       playStyle: serializer.fromJson<String>(json['playStyle']),
@@ -843,6 +866,7 @@ class PlayersTableData extends DataClass
       'classType': serializer.toJson<String?>(classType),
       'factionType': serializer.toJson<String?>(factionType),
       'guildRank': serializer.toJson<String>(guildRank),
+      'totalQuestsCompleted': serializer.toJson<int>(totalQuestsCompleted),
       'narrativeMode': serializer.toJson<String>(narrativeMode),
       'onboardingDone': serializer.toJson<bool>(onboardingDone),
       'playStyle': serializer.toJson<String>(playStyle),
@@ -883,6 +907,7 @@ class PlayersTableData extends DataClass
           Value<String?> classType = const Value.absent(),
           Value<String?> factionType = const Value.absent(),
           String? guildRank,
+          int? totalQuestsCompleted,
           String? narrativeMode,
           bool? onboardingDone,
           String? playStyle,
@@ -920,6 +945,7 @@ class PlayersTableData extends DataClass
         classType: classType.present ? classType.value : this.classType,
         factionType: factionType.present ? factionType.value : this.factionType,
         guildRank: guildRank ?? this.guildRank,
+        totalQuestsCompleted: totalQuestsCompleted ?? this.totalQuestsCompleted,
         narrativeMode: narrativeMode ?? this.narrativeMode,
         onboardingDone: onboardingDone ?? this.onboardingDone,
         playStyle: playStyle ?? this.playStyle,
@@ -979,6 +1005,9 @@ class PlayersTableData extends DataClass
       factionType:
           data.factionType.present ? data.factionType.value : this.factionType,
       guildRank: data.guildRank.present ? data.guildRank.value : this.guildRank,
+      totalQuestsCompleted: data.totalQuestsCompleted.present
+          ? data.totalQuestsCompleted.value
+          : this.totalQuestsCompleted,
       narrativeMode: data.narrativeMode.present
           ? data.narrativeMode.value
           : this.narrativeMode,
@@ -1028,6 +1057,7 @@ class PlayersTableData extends DataClass
           ..write('classType: $classType, ')
           ..write('factionType: $factionType, ')
           ..write('guildRank: $guildRank, ')
+          ..write('totalQuestsCompleted: $totalQuestsCompleted, ')
           ..write('narrativeMode: $narrativeMode, ')
           ..write('onboardingDone: $onboardingDone, ')
           ..write('playStyle: $playStyle, ')
@@ -1070,6 +1100,7 @@ class PlayersTableData extends DataClass
         classType,
         factionType,
         guildRank,
+        totalQuestsCompleted,
         narrativeMode,
         onboardingDone,
         playStyle,
@@ -1111,6 +1142,7 @@ class PlayersTableData extends DataClass
           other.classType == this.classType &&
           other.factionType == this.factionType &&
           other.guildRank == this.guildRank &&
+          other.totalQuestsCompleted == this.totalQuestsCompleted &&
           other.narrativeMode == this.narrativeMode &&
           other.onboardingDone == this.onboardingDone &&
           other.playStyle == this.playStyle &&
@@ -1150,6 +1182,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
   final Value<String?> classType;
   final Value<String?> factionType;
   final Value<String> guildRank;
+  final Value<int> totalQuestsCompleted;
   final Value<String> narrativeMode;
   final Value<bool> onboardingDone;
   final Value<String> playStyle;
@@ -1187,6 +1220,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.classType = const Value.absent(),
     this.factionType = const Value.absent(),
     this.guildRank = const Value.absent(),
+    this.totalQuestsCompleted = const Value.absent(),
     this.narrativeMode = const Value.absent(),
     this.onboardingDone = const Value.absent(),
     this.playStyle = const Value.absent(),
@@ -1225,6 +1259,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.classType = const Value.absent(),
     this.factionType = const Value.absent(),
     this.guildRank = const Value.absent(),
+    this.totalQuestsCompleted = const Value.absent(),
     this.narrativeMode = const Value.absent(),
     this.onboardingDone = const Value.absent(),
     this.playStyle = const Value.absent(),
@@ -1264,6 +1299,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     Expression<String>? classType,
     Expression<String>? factionType,
     Expression<String>? guildRank,
+    Expression<int>? totalQuestsCompleted,
     Expression<String>? narrativeMode,
     Expression<bool>? onboardingDone,
     Expression<String>? playStyle,
@@ -1302,6 +1338,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       if (classType != null) 'class_type': classType,
       if (factionType != null) 'faction_type': factionType,
       if (guildRank != null) 'guild_rank': guildRank,
+      if (totalQuestsCompleted != null)
+        'total_quests_completed': totalQuestsCompleted,
       if (narrativeMode != null) 'narrative_mode': narrativeMode,
       if (onboardingDone != null) 'onboarding_done': onboardingDone,
       if (playStyle != null) 'play_style': playStyle,
@@ -1342,6 +1380,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       Value<String?>? classType,
       Value<String?>? factionType,
       Value<String>? guildRank,
+      Value<int>? totalQuestsCompleted,
       Value<String>? narrativeMode,
       Value<bool>? onboardingDone,
       Value<String>? playStyle,
@@ -1379,6 +1418,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       classType: classType ?? this.classType,
       factionType: factionType ?? this.factionType,
       guildRank: guildRank ?? this.guildRank,
+      totalQuestsCompleted: totalQuestsCompleted ?? this.totalQuestsCompleted,
       narrativeMode: narrativeMode ?? this.narrativeMode,
       onboardingDone: onboardingDone ?? this.onboardingDone,
       playStyle: playStyle ?? this.playStyle,
@@ -1481,6 +1521,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     if (guildRank.present) {
       map['guild_rank'] = Variable<String>(guildRank.value);
     }
+    if (totalQuestsCompleted.present) {
+      map['total_quests_completed'] = Variable<int>(totalQuestsCompleted.value);
+    }
     if (narrativeMode.present) {
       map['narrative_mode'] = Variable<String>(narrativeMode.value);
     }
@@ -1535,6 +1578,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
           ..write('classType: $classType, ')
           ..write('factionType: $factionType, ')
           ..write('guildRank: $guildRank, ')
+          ..write('totalQuestsCompleted: $totalQuestsCompleted, ')
           ..write('narrativeMode: $narrativeMode, ')
           ..write('onboardingDone: $onboardingDone, ')
           ..write('playStyle: $playStyle, ')
@@ -12164,6 +12208,990 @@ class PlayerEquipmentTableCompanion
   }
 }
 
+class $RecipesCatalogTableTable extends RecipesCatalogTable
+    with TableInfo<$RecipesCatalogTableTable, RecipesCatalogTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RecipesCatalogTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+      'key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _requiredRankMeta =
+      const VerificationMeta('requiredRank');
+  @override
+  late final GeneratedColumn<String> requiredRank = GeneratedColumn<String>(
+      'required_rank', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _requiredLevelMeta =
+      const VerificationMeta('requiredLevel');
+  @override
+  late final GeneratedColumn<int> requiredLevel = GeneratedColumn<int>(
+      'required_level', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _requiredStationMeta =
+      const VerificationMeta('requiredStation');
+  @override
+  late final GeneratedColumn<String> requiredStation = GeneratedColumn<String>(
+      'required_station', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('workshop'));
+  static const VerificationMeta _resultItemKeyMeta =
+      const VerificationMeta('resultItemKey');
+  @override
+  late final GeneratedColumn<String> resultItemKey = GeneratedColumn<String>(
+      'result_item_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _resultQuantityMeta =
+      const VerificationMeta('resultQuantity');
+  @override
+  late final GeneratedColumn<int> resultQuantity = GeneratedColumn<int>(
+      'result_quantity', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _materialsMeta =
+      const VerificationMeta('materials');
+  @override
+  late final GeneratedColumn<String> materials = GeneratedColumn<String>(
+      'materials', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _costCoinsMeta =
+      const VerificationMeta('costCoins');
+  @override
+  late final GeneratedColumn<int> costCoins = GeneratedColumn<int>(
+      'cost_coins', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _durationSecMeta =
+      const VerificationMeta('durationSec');
+  @override
+  late final GeneratedColumn<int> durationSec = GeneratedColumn<int>(
+      'duration_sec', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _unlockSourcesMeta =
+      const VerificationMeta('unlockSources');
+  @override
+  late final GeneratedColumn<String> unlockSources = GeneratedColumn<String>(
+      'unlock_sources', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+      'icon', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        key,
+        name,
+        description,
+        type,
+        requiredRank,
+        requiredLevel,
+        requiredStation,
+        resultItemKey,
+        resultQuantity,
+        materials,
+        costCoins,
+        durationSec,
+        unlockSources,
+        icon
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'recipes_catalog';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<RecipesCatalogTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('key')) {
+      context.handle(
+          _keyMeta, key.isAcceptableOrUnknown(data['key']!, _keyMeta));
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('required_rank')) {
+      context.handle(
+          _requiredRankMeta,
+          requiredRank.isAcceptableOrUnknown(
+              data['required_rank']!, _requiredRankMeta));
+    }
+    if (data.containsKey('required_level')) {
+      context.handle(
+          _requiredLevelMeta,
+          requiredLevel.isAcceptableOrUnknown(
+              data['required_level']!, _requiredLevelMeta));
+    }
+    if (data.containsKey('required_station')) {
+      context.handle(
+          _requiredStationMeta,
+          requiredStation.isAcceptableOrUnknown(
+              data['required_station']!, _requiredStationMeta));
+    }
+    if (data.containsKey('result_item_key')) {
+      context.handle(
+          _resultItemKeyMeta,
+          resultItemKey.isAcceptableOrUnknown(
+              data['result_item_key']!, _resultItemKeyMeta));
+    } else if (isInserting) {
+      context.missing(_resultItemKeyMeta);
+    }
+    if (data.containsKey('result_quantity')) {
+      context.handle(
+          _resultQuantityMeta,
+          resultQuantity.isAcceptableOrUnknown(
+              data['result_quantity']!, _resultQuantityMeta));
+    }
+    if (data.containsKey('materials')) {
+      context.handle(_materialsMeta,
+          materials.isAcceptableOrUnknown(data['materials']!, _materialsMeta));
+    } else if (isInserting) {
+      context.missing(_materialsMeta);
+    }
+    if (data.containsKey('cost_coins')) {
+      context.handle(_costCoinsMeta,
+          costCoins.isAcceptableOrUnknown(data['cost_coins']!, _costCoinsMeta));
+    }
+    if (data.containsKey('duration_sec')) {
+      context.handle(
+          _durationSecMeta,
+          durationSec.isAcceptableOrUnknown(
+              data['duration_sec']!, _durationSecMeta));
+    }
+    if (data.containsKey('unlock_sources')) {
+      context.handle(
+          _unlockSourcesMeta,
+          unlockSources.isAcceptableOrUnknown(
+              data['unlock_sources']!, _unlockSourcesMeta));
+    } else if (isInserting) {
+      context.missing(_unlockSourcesMeta);
+    }
+    if (data.containsKey('icon')) {
+      context.handle(
+          _iconMeta, icon.isAcceptableOrUnknown(data['icon']!, _iconMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {key};
+  @override
+  RecipesCatalogTableData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RecipesCatalogTableData(
+      key: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}key'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      requiredRank: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}required_rank']),
+      requiredLevel: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}required_level'])!,
+      requiredStation: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}required_station'])!,
+      resultItemKey: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}result_item_key'])!,
+      resultQuantity: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}result_quantity'])!,
+      materials: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}materials'])!,
+      costCoins: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}cost_coins'])!,
+      durationSec: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}duration_sec'])!,
+      unlockSources: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}unlock_sources'])!,
+      icon: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}icon']),
+    );
+  }
+
+  @override
+  $RecipesCatalogTableTable createAlias(String alias) {
+    return $RecipesCatalogTableTable(attachedDatabase, alias);
+  }
+}
+
+class RecipesCatalogTableData extends DataClass
+    implements Insertable<RecipesCatalogTableData> {
+  final String key;
+  final String name;
+  final String description;
+  final String type;
+  final String? requiredRank;
+  final int requiredLevel;
+  final String requiredStation;
+  final String resultItemKey;
+  final int resultQuantity;
+  final String materials;
+  final int costCoins;
+  final int durationSec;
+  final String unlockSources;
+  final String? icon;
+  const RecipesCatalogTableData(
+      {required this.key,
+      required this.name,
+      required this.description,
+      required this.type,
+      this.requiredRank,
+      required this.requiredLevel,
+      required this.requiredStation,
+      required this.resultItemKey,
+      required this.resultQuantity,
+      required this.materials,
+      required this.costCoins,
+      required this.durationSec,
+      required this.unlockSources,
+      this.icon});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['key'] = Variable<String>(key);
+    map['name'] = Variable<String>(name);
+    map['description'] = Variable<String>(description);
+    map['type'] = Variable<String>(type);
+    if (!nullToAbsent || requiredRank != null) {
+      map['required_rank'] = Variable<String>(requiredRank);
+    }
+    map['required_level'] = Variable<int>(requiredLevel);
+    map['required_station'] = Variable<String>(requiredStation);
+    map['result_item_key'] = Variable<String>(resultItemKey);
+    map['result_quantity'] = Variable<int>(resultQuantity);
+    map['materials'] = Variable<String>(materials);
+    map['cost_coins'] = Variable<int>(costCoins);
+    map['duration_sec'] = Variable<int>(durationSec);
+    map['unlock_sources'] = Variable<String>(unlockSources);
+    if (!nullToAbsent || icon != null) {
+      map['icon'] = Variable<String>(icon);
+    }
+    return map;
+  }
+
+  RecipesCatalogTableCompanion toCompanion(bool nullToAbsent) {
+    return RecipesCatalogTableCompanion(
+      key: Value(key),
+      name: Value(name),
+      description: Value(description),
+      type: Value(type),
+      requiredRank: requiredRank == null && nullToAbsent
+          ? const Value.absent()
+          : Value(requiredRank),
+      requiredLevel: Value(requiredLevel),
+      requiredStation: Value(requiredStation),
+      resultItemKey: Value(resultItemKey),
+      resultQuantity: Value(resultQuantity),
+      materials: Value(materials),
+      costCoins: Value(costCoins),
+      durationSec: Value(durationSec),
+      unlockSources: Value(unlockSources),
+      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
+    );
+  }
+
+  factory RecipesCatalogTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RecipesCatalogTableData(
+      key: serializer.fromJson<String>(json['key']),
+      name: serializer.fromJson<String>(json['name']),
+      description: serializer.fromJson<String>(json['description']),
+      type: serializer.fromJson<String>(json['type']),
+      requiredRank: serializer.fromJson<String?>(json['requiredRank']),
+      requiredLevel: serializer.fromJson<int>(json['requiredLevel']),
+      requiredStation: serializer.fromJson<String>(json['requiredStation']),
+      resultItemKey: serializer.fromJson<String>(json['resultItemKey']),
+      resultQuantity: serializer.fromJson<int>(json['resultQuantity']),
+      materials: serializer.fromJson<String>(json['materials']),
+      costCoins: serializer.fromJson<int>(json['costCoins']),
+      durationSec: serializer.fromJson<int>(json['durationSec']),
+      unlockSources: serializer.fromJson<String>(json['unlockSources']),
+      icon: serializer.fromJson<String?>(json['icon']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'key': serializer.toJson<String>(key),
+      'name': serializer.toJson<String>(name),
+      'description': serializer.toJson<String>(description),
+      'type': serializer.toJson<String>(type),
+      'requiredRank': serializer.toJson<String?>(requiredRank),
+      'requiredLevel': serializer.toJson<int>(requiredLevel),
+      'requiredStation': serializer.toJson<String>(requiredStation),
+      'resultItemKey': serializer.toJson<String>(resultItemKey),
+      'resultQuantity': serializer.toJson<int>(resultQuantity),
+      'materials': serializer.toJson<String>(materials),
+      'costCoins': serializer.toJson<int>(costCoins),
+      'durationSec': serializer.toJson<int>(durationSec),
+      'unlockSources': serializer.toJson<String>(unlockSources),
+      'icon': serializer.toJson<String?>(icon),
+    };
+  }
+
+  RecipesCatalogTableData copyWith(
+          {String? key,
+          String? name,
+          String? description,
+          String? type,
+          Value<String?> requiredRank = const Value.absent(),
+          int? requiredLevel,
+          String? requiredStation,
+          String? resultItemKey,
+          int? resultQuantity,
+          String? materials,
+          int? costCoins,
+          int? durationSec,
+          String? unlockSources,
+          Value<String?> icon = const Value.absent()}) =>
+      RecipesCatalogTableData(
+        key: key ?? this.key,
+        name: name ?? this.name,
+        description: description ?? this.description,
+        type: type ?? this.type,
+        requiredRank:
+            requiredRank.present ? requiredRank.value : this.requiredRank,
+        requiredLevel: requiredLevel ?? this.requiredLevel,
+        requiredStation: requiredStation ?? this.requiredStation,
+        resultItemKey: resultItemKey ?? this.resultItemKey,
+        resultQuantity: resultQuantity ?? this.resultQuantity,
+        materials: materials ?? this.materials,
+        costCoins: costCoins ?? this.costCoins,
+        durationSec: durationSec ?? this.durationSec,
+        unlockSources: unlockSources ?? this.unlockSources,
+        icon: icon.present ? icon.value : this.icon,
+      );
+  RecipesCatalogTableData copyWithCompanion(RecipesCatalogTableCompanion data) {
+    return RecipesCatalogTableData(
+      key: data.key.present ? data.key.value : this.key,
+      name: data.name.present ? data.name.value : this.name,
+      description:
+          data.description.present ? data.description.value : this.description,
+      type: data.type.present ? data.type.value : this.type,
+      requiredRank: data.requiredRank.present
+          ? data.requiredRank.value
+          : this.requiredRank,
+      requiredLevel: data.requiredLevel.present
+          ? data.requiredLevel.value
+          : this.requiredLevel,
+      requiredStation: data.requiredStation.present
+          ? data.requiredStation.value
+          : this.requiredStation,
+      resultItemKey: data.resultItemKey.present
+          ? data.resultItemKey.value
+          : this.resultItemKey,
+      resultQuantity: data.resultQuantity.present
+          ? data.resultQuantity.value
+          : this.resultQuantity,
+      materials: data.materials.present ? data.materials.value : this.materials,
+      costCoins: data.costCoins.present ? data.costCoins.value : this.costCoins,
+      durationSec:
+          data.durationSec.present ? data.durationSec.value : this.durationSec,
+      unlockSources: data.unlockSources.present
+          ? data.unlockSources.value
+          : this.unlockSources,
+      icon: data.icon.present ? data.icon.value : this.icon,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecipesCatalogTableData(')
+          ..write('key: $key, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('type: $type, ')
+          ..write('requiredRank: $requiredRank, ')
+          ..write('requiredLevel: $requiredLevel, ')
+          ..write('requiredStation: $requiredStation, ')
+          ..write('resultItemKey: $resultItemKey, ')
+          ..write('resultQuantity: $resultQuantity, ')
+          ..write('materials: $materials, ')
+          ..write('costCoins: $costCoins, ')
+          ..write('durationSec: $durationSec, ')
+          ..write('unlockSources: $unlockSources, ')
+          ..write('icon: $icon')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      key,
+      name,
+      description,
+      type,
+      requiredRank,
+      requiredLevel,
+      requiredStation,
+      resultItemKey,
+      resultQuantity,
+      materials,
+      costCoins,
+      durationSec,
+      unlockSources,
+      icon);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RecipesCatalogTableData &&
+          other.key == this.key &&
+          other.name == this.name &&
+          other.description == this.description &&
+          other.type == this.type &&
+          other.requiredRank == this.requiredRank &&
+          other.requiredLevel == this.requiredLevel &&
+          other.requiredStation == this.requiredStation &&
+          other.resultItemKey == this.resultItemKey &&
+          other.resultQuantity == this.resultQuantity &&
+          other.materials == this.materials &&
+          other.costCoins == this.costCoins &&
+          other.durationSec == this.durationSec &&
+          other.unlockSources == this.unlockSources &&
+          other.icon == this.icon);
+}
+
+class RecipesCatalogTableCompanion
+    extends UpdateCompanion<RecipesCatalogTableData> {
+  final Value<String> key;
+  final Value<String> name;
+  final Value<String> description;
+  final Value<String> type;
+  final Value<String?> requiredRank;
+  final Value<int> requiredLevel;
+  final Value<String> requiredStation;
+  final Value<String> resultItemKey;
+  final Value<int> resultQuantity;
+  final Value<String> materials;
+  final Value<int> costCoins;
+  final Value<int> durationSec;
+  final Value<String> unlockSources;
+  final Value<String?> icon;
+  final Value<int> rowid;
+  const RecipesCatalogTableCompanion({
+    this.key = const Value.absent(),
+    this.name = const Value.absent(),
+    this.description = const Value.absent(),
+    this.type = const Value.absent(),
+    this.requiredRank = const Value.absent(),
+    this.requiredLevel = const Value.absent(),
+    this.requiredStation = const Value.absent(),
+    this.resultItemKey = const Value.absent(),
+    this.resultQuantity = const Value.absent(),
+    this.materials = const Value.absent(),
+    this.costCoins = const Value.absent(),
+    this.durationSec = const Value.absent(),
+    this.unlockSources = const Value.absent(),
+    this.icon = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RecipesCatalogTableCompanion.insert({
+    required String key,
+    required String name,
+    this.description = const Value.absent(),
+    required String type,
+    this.requiredRank = const Value.absent(),
+    this.requiredLevel = const Value.absent(),
+    this.requiredStation = const Value.absent(),
+    required String resultItemKey,
+    this.resultQuantity = const Value.absent(),
+    required String materials,
+    this.costCoins = const Value.absent(),
+    this.durationSec = const Value.absent(),
+    required String unlockSources,
+    this.icon = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : key = Value(key),
+        name = Value(name),
+        type = Value(type),
+        resultItemKey = Value(resultItemKey),
+        materials = Value(materials),
+        unlockSources = Value(unlockSources);
+  static Insertable<RecipesCatalogTableData> custom({
+    Expression<String>? key,
+    Expression<String>? name,
+    Expression<String>? description,
+    Expression<String>? type,
+    Expression<String>? requiredRank,
+    Expression<int>? requiredLevel,
+    Expression<String>? requiredStation,
+    Expression<String>? resultItemKey,
+    Expression<int>? resultQuantity,
+    Expression<String>? materials,
+    Expression<int>? costCoins,
+    Expression<int>? durationSec,
+    Expression<String>? unlockSources,
+    Expression<String>? icon,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (key != null) 'key': key,
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (type != null) 'type': type,
+      if (requiredRank != null) 'required_rank': requiredRank,
+      if (requiredLevel != null) 'required_level': requiredLevel,
+      if (requiredStation != null) 'required_station': requiredStation,
+      if (resultItemKey != null) 'result_item_key': resultItemKey,
+      if (resultQuantity != null) 'result_quantity': resultQuantity,
+      if (materials != null) 'materials': materials,
+      if (costCoins != null) 'cost_coins': costCoins,
+      if (durationSec != null) 'duration_sec': durationSec,
+      if (unlockSources != null) 'unlock_sources': unlockSources,
+      if (icon != null) 'icon': icon,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RecipesCatalogTableCompanion copyWith(
+      {Value<String>? key,
+      Value<String>? name,
+      Value<String>? description,
+      Value<String>? type,
+      Value<String?>? requiredRank,
+      Value<int>? requiredLevel,
+      Value<String>? requiredStation,
+      Value<String>? resultItemKey,
+      Value<int>? resultQuantity,
+      Value<String>? materials,
+      Value<int>? costCoins,
+      Value<int>? durationSec,
+      Value<String>? unlockSources,
+      Value<String?>? icon,
+      Value<int>? rowid}) {
+    return RecipesCatalogTableCompanion(
+      key: key ?? this.key,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      type: type ?? this.type,
+      requiredRank: requiredRank ?? this.requiredRank,
+      requiredLevel: requiredLevel ?? this.requiredLevel,
+      requiredStation: requiredStation ?? this.requiredStation,
+      resultItemKey: resultItemKey ?? this.resultItemKey,
+      resultQuantity: resultQuantity ?? this.resultQuantity,
+      materials: materials ?? this.materials,
+      costCoins: costCoins ?? this.costCoins,
+      durationSec: durationSec ?? this.durationSec,
+      unlockSources: unlockSources ?? this.unlockSources,
+      icon: icon ?? this.icon,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (requiredRank.present) {
+      map['required_rank'] = Variable<String>(requiredRank.value);
+    }
+    if (requiredLevel.present) {
+      map['required_level'] = Variable<int>(requiredLevel.value);
+    }
+    if (requiredStation.present) {
+      map['required_station'] = Variable<String>(requiredStation.value);
+    }
+    if (resultItemKey.present) {
+      map['result_item_key'] = Variable<String>(resultItemKey.value);
+    }
+    if (resultQuantity.present) {
+      map['result_quantity'] = Variable<int>(resultQuantity.value);
+    }
+    if (materials.present) {
+      map['materials'] = Variable<String>(materials.value);
+    }
+    if (costCoins.present) {
+      map['cost_coins'] = Variable<int>(costCoins.value);
+    }
+    if (durationSec.present) {
+      map['duration_sec'] = Variable<int>(durationSec.value);
+    }
+    if (unlockSources.present) {
+      map['unlock_sources'] = Variable<String>(unlockSources.value);
+    }
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecipesCatalogTableCompanion(')
+          ..write('key: $key, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('type: $type, ')
+          ..write('requiredRank: $requiredRank, ')
+          ..write('requiredLevel: $requiredLevel, ')
+          ..write('requiredStation: $requiredStation, ')
+          ..write('resultItemKey: $resultItemKey, ')
+          ..write('resultQuantity: $resultQuantity, ')
+          ..write('materials: $materials, ')
+          ..write('costCoins: $costCoins, ')
+          ..write('durationSec: $durationSec, ')
+          ..write('unlockSources: $unlockSources, ')
+          ..write('icon: $icon, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PlayerRecipesUnlockedTableTable extends PlayerRecipesUnlockedTable
+    with
+        TableInfo<$PlayerRecipesUnlockedTableTable,
+            PlayerRecipesUnlockedTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlayerRecipesUnlockedTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _recipeKeyMeta =
+      const VerificationMeta('recipeKey');
+  @override
+  late final GeneratedColumn<String> recipeKey = GeneratedColumn<String>(
+      'recipe_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _unlockedAtMeta =
+      const VerificationMeta('unlockedAt');
+  @override
+  late final GeneratedColumn<int> unlockedAt = GeneratedColumn<int>(
+      'unlocked_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _unlockedViaMeta =
+      const VerificationMeta('unlockedVia');
+  @override
+  late final GeneratedColumn<String> unlockedVia = GeneratedColumn<String>(
+      'unlocked_via', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [playerId, recipeKey, unlockedAt, unlockedVia];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'player_recipes_unlocked';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<PlayerRecipesUnlockedTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('recipe_key')) {
+      context.handle(_recipeKeyMeta,
+          recipeKey.isAcceptableOrUnknown(data['recipe_key']!, _recipeKeyMeta));
+    } else if (isInserting) {
+      context.missing(_recipeKeyMeta);
+    }
+    if (data.containsKey('unlocked_at')) {
+      context.handle(
+          _unlockedAtMeta,
+          unlockedAt.isAcceptableOrUnknown(
+              data['unlocked_at']!, _unlockedAtMeta));
+    } else if (isInserting) {
+      context.missing(_unlockedAtMeta);
+    }
+    if (data.containsKey('unlocked_via')) {
+      context.handle(
+          _unlockedViaMeta,
+          unlockedVia.isAcceptableOrUnknown(
+              data['unlocked_via']!, _unlockedViaMeta));
+    } else if (isInserting) {
+      context.missing(_unlockedViaMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {playerId, recipeKey};
+  @override
+  PlayerRecipesUnlockedTableData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlayerRecipesUnlockedTableData(
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      recipeKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}recipe_key'])!,
+      unlockedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}unlocked_at'])!,
+      unlockedVia: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}unlocked_via'])!,
+    );
+  }
+
+  @override
+  $PlayerRecipesUnlockedTableTable createAlias(String alias) {
+    return $PlayerRecipesUnlockedTableTable(attachedDatabase, alias);
+  }
+}
+
+class PlayerRecipesUnlockedTableData extends DataClass
+    implements Insertable<PlayerRecipesUnlockedTableData> {
+  final int playerId;
+  final String recipeKey;
+  final int unlockedAt;
+  final String unlockedVia;
+  const PlayerRecipesUnlockedTableData(
+      {required this.playerId,
+      required this.recipeKey,
+      required this.unlockedAt,
+      required this.unlockedVia});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['player_id'] = Variable<int>(playerId);
+    map['recipe_key'] = Variable<String>(recipeKey);
+    map['unlocked_at'] = Variable<int>(unlockedAt);
+    map['unlocked_via'] = Variable<String>(unlockedVia);
+    return map;
+  }
+
+  PlayerRecipesUnlockedTableCompanion toCompanion(bool nullToAbsent) {
+    return PlayerRecipesUnlockedTableCompanion(
+      playerId: Value(playerId),
+      recipeKey: Value(recipeKey),
+      unlockedAt: Value(unlockedAt),
+      unlockedVia: Value(unlockedVia),
+    );
+  }
+
+  factory PlayerRecipesUnlockedTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlayerRecipesUnlockedTableData(
+      playerId: serializer.fromJson<int>(json['playerId']),
+      recipeKey: serializer.fromJson<String>(json['recipeKey']),
+      unlockedAt: serializer.fromJson<int>(json['unlockedAt']),
+      unlockedVia: serializer.fromJson<String>(json['unlockedVia']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'playerId': serializer.toJson<int>(playerId),
+      'recipeKey': serializer.toJson<String>(recipeKey),
+      'unlockedAt': serializer.toJson<int>(unlockedAt),
+      'unlockedVia': serializer.toJson<String>(unlockedVia),
+    };
+  }
+
+  PlayerRecipesUnlockedTableData copyWith(
+          {int? playerId,
+          String? recipeKey,
+          int? unlockedAt,
+          String? unlockedVia}) =>
+      PlayerRecipesUnlockedTableData(
+        playerId: playerId ?? this.playerId,
+        recipeKey: recipeKey ?? this.recipeKey,
+        unlockedAt: unlockedAt ?? this.unlockedAt,
+        unlockedVia: unlockedVia ?? this.unlockedVia,
+      );
+  PlayerRecipesUnlockedTableData copyWithCompanion(
+      PlayerRecipesUnlockedTableCompanion data) {
+    return PlayerRecipesUnlockedTableData(
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      recipeKey: data.recipeKey.present ? data.recipeKey.value : this.recipeKey,
+      unlockedAt:
+          data.unlockedAt.present ? data.unlockedAt.value : this.unlockedAt,
+      unlockedVia:
+          data.unlockedVia.present ? data.unlockedVia.value : this.unlockedVia,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerRecipesUnlockedTableData(')
+          ..write('playerId: $playerId, ')
+          ..write('recipeKey: $recipeKey, ')
+          ..write('unlockedAt: $unlockedAt, ')
+          ..write('unlockedVia: $unlockedVia')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(playerId, recipeKey, unlockedAt, unlockedVia);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlayerRecipesUnlockedTableData &&
+          other.playerId == this.playerId &&
+          other.recipeKey == this.recipeKey &&
+          other.unlockedAt == this.unlockedAt &&
+          other.unlockedVia == this.unlockedVia);
+}
+
+class PlayerRecipesUnlockedTableCompanion
+    extends UpdateCompanion<PlayerRecipesUnlockedTableData> {
+  final Value<int> playerId;
+  final Value<String> recipeKey;
+  final Value<int> unlockedAt;
+  final Value<String> unlockedVia;
+  final Value<int> rowid;
+  const PlayerRecipesUnlockedTableCompanion({
+    this.playerId = const Value.absent(),
+    this.recipeKey = const Value.absent(),
+    this.unlockedAt = const Value.absent(),
+    this.unlockedVia = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlayerRecipesUnlockedTableCompanion.insert({
+    required int playerId,
+    required String recipeKey,
+    required int unlockedAt,
+    required String unlockedVia,
+    this.rowid = const Value.absent(),
+  })  : playerId = Value(playerId),
+        recipeKey = Value(recipeKey),
+        unlockedAt = Value(unlockedAt),
+        unlockedVia = Value(unlockedVia);
+  static Insertable<PlayerRecipesUnlockedTableData> custom({
+    Expression<int>? playerId,
+    Expression<String>? recipeKey,
+    Expression<int>? unlockedAt,
+    Expression<String>? unlockedVia,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (playerId != null) 'player_id': playerId,
+      if (recipeKey != null) 'recipe_key': recipeKey,
+      if (unlockedAt != null) 'unlocked_at': unlockedAt,
+      if (unlockedVia != null) 'unlocked_via': unlockedVia,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlayerRecipesUnlockedTableCompanion copyWith(
+      {Value<int>? playerId,
+      Value<String>? recipeKey,
+      Value<int>? unlockedAt,
+      Value<String>? unlockedVia,
+      Value<int>? rowid}) {
+    return PlayerRecipesUnlockedTableCompanion(
+      playerId: playerId ?? this.playerId,
+      recipeKey: recipeKey ?? this.recipeKey,
+      unlockedAt: unlockedAt ?? this.unlockedAt,
+      unlockedVia: unlockedVia ?? this.unlockedVia,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (recipeKey.present) {
+      map['recipe_key'] = Variable<String>(recipeKey.value);
+    }
+    if (unlockedAt.present) {
+      map['unlocked_at'] = Variable<int>(unlockedAt.value);
+    }
+    if (unlockedVia.present) {
+      map['unlocked_via'] = Variable<String>(unlockedVia.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerRecipesUnlockedTableCompanion(')
+          ..write('playerId: $playerId, ')
+          ..write('recipeKey: $recipeKey, ')
+          ..write('unlockedAt: $unlockedAt, ')
+          ..write('unlockedVia: $unlockedVia, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -12203,6 +13231,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $PlayerInventoryTableTable(this);
   late final $PlayerEquipmentTableTable playerEquipmentTable =
       $PlayerEquipmentTableTable(this);
+  late final $RecipesCatalogTableTable recipesCatalogTable =
+      $RecipesCatalogTableTable(this);
+  late final $PlayerRecipesUnlockedTableTable playerRecipesUnlockedTable =
+      $PlayerRecipesUnlockedTableTable(this);
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
   late final HabitDao habitDao = HabitDao(this as AppDatabase);
   late final AchievementDao achievementDao =
@@ -12233,7 +13265,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         lifeVitalismPointsTable,
         itemsCatalogTable,
         playerInventoryTable,
-        playerEquipmentTable
+        playerEquipmentTable,
+        recipesCatalogTable,
+        playerRecipesUnlockedTable
       ];
 }
 
@@ -12269,6 +13303,7 @@ typedef $$PlayersTableTableCreateCompanionBuilder = PlayersTableCompanion
   Value<String?> classType,
   Value<String?> factionType,
   Value<String> guildRank,
+  Value<int> totalQuestsCompleted,
   Value<String> narrativeMode,
   Value<bool> onboardingDone,
   Value<String> playStyle,
@@ -12308,6 +13343,7 @@ typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
   Value<String?> classType,
   Value<String?> factionType,
   Value<String> guildRank,
+  Value<int> totalQuestsCompleted,
   Value<String> narrativeMode,
   Value<bool> onboardingDone,
   Value<String> playStyle,
@@ -12417,6 +13453,10 @@ class $$PlayersTableTableFilterComposer
 
   ColumnFilters<String> get guildRank => $composableBuilder(
       column: $table.guildRank, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalQuestsCompleted => $composableBuilder(
+      column: $table.totalQuestsCompleted,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get narrativeMode => $composableBuilder(
       column: $table.narrativeMode, builder: (column) => ColumnFilters(column));
@@ -12545,6 +13585,10 @@ class $$PlayersTableTableOrderingComposer
   ColumnOrderings<String> get guildRank => $composableBuilder(
       column: $table.guildRank, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get totalQuestsCompleted => $composableBuilder(
+      column: $table.totalQuestsCompleted,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get narrativeMode => $composableBuilder(
       column: $table.narrativeMode,
       builder: (column) => ColumnOrderings(column));
@@ -12666,6 +13710,9 @@ class $$PlayersTableTableAnnotationComposer
   GeneratedColumn<String> get guildRank =>
       $composableBuilder(column: $table.guildRank, builder: (column) => column);
 
+  GeneratedColumn<int> get totalQuestsCompleted => $composableBuilder(
+      column: $table.totalQuestsCompleted, builder: (column) => column);
+
   GeneratedColumn<String> get narrativeMode => $composableBuilder(
       column: $table.narrativeMode, builder: (column) => column);
 
@@ -12741,6 +13788,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<String?> classType = const Value.absent(),
             Value<String?> factionType = const Value.absent(),
             Value<String> guildRank = const Value.absent(),
+            Value<int> totalQuestsCompleted = const Value.absent(),
             Value<String> narrativeMode = const Value.absent(),
             Value<bool> onboardingDone = const Value.absent(),
             Value<String> playStyle = const Value.absent(),
@@ -12779,6 +13827,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             classType: classType,
             factionType: factionType,
             guildRank: guildRank,
+            totalQuestsCompleted: totalQuestsCompleted,
             narrativeMode: narrativeMode,
             onboardingDone: onboardingDone,
             playStyle: playStyle,
@@ -12817,6 +13866,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<String?> classType = const Value.absent(),
             Value<String?> factionType = const Value.absent(),
             Value<String> guildRank = const Value.absent(),
+            Value<int> totalQuestsCompleted = const Value.absent(),
             Value<String> narrativeMode = const Value.absent(),
             Value<bool> onboardingDone = const Value.absent(),
             Value<String> playStyle = const Value.absent(),
@@ -12855,6 +13905,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             classType: classType,
             factionType: factionType,
             guildRank: guildRank,
+            totalQuestsCompleted: totalQuestsCompleted,
             narrativeMode: narrativeMode,
             onboardingDone: onboardingDone,
             playStyle: playStyle,
@@ -18002,6 +19053,492 @@ typedef $$PlayerEquipmentTableTableProcessedTableManager
         ),
         PlayerEquipmentTableData,
         PrefetchHooks Function()>;
+typedef $$RecipesCatalogTableTableCreateCompanionBuilder
+    = RecipesCatalogTableCompanion Function({
+  required String key,
+  required String name,
+  Value<String> description,
+  required String type,
+  Value<String?> requiredRank,
+  Value<int> requiredLevel,
+  Value<String> requiredStation,
+  required String resultItemKey,
+  Value<int> resultQuantity,
+  required String materials,
+  Value<int> costCoins,
+  Value<int> durationSec,
+  required String unlockSources,
+  Value<String?> icon,
+  Value<int> rowid,
+});
+typedef $$RecipesCatalogTableTableUpdateCompanionBuilder
+    = RecipesCatalogTableCompanion Function({
+  Value<String> key,
+  Value<String> name,
+  Value<String> description,
+  Value<String> type,
+  Value<String?> requiredRank,
+  Value<int> requiredLevel,
+  Value<String> requiredStation,
+  Value<String> resultItemKey,
+  Value<int> resultQuantity,
+  Value<String> materials,
+  Value<int> costCoins,
+  Value<int> durationSec,
+  Value<String> unlockSources,
+  Value<String?> icon,
+  Value<int> rowid,
+});
+
+class $$RecipesCatalogTableTableFilterComposer
+    extends Composer<_$AppDatabase, $RecipesCatalogTableTable> {
+  $$RecipesCatalogTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get key => $composableBuilder(
+      column: $table.key, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get requiredRank => $composableBuilder(
+      column: $table.requiredRank, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get requiredLevel => $composableBuilder(
+      column: $table.requiredLevel, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get requiredStation => $composableBuilder(
+      column: $table.requiredStation,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get resultItemKey => $composableBuilder(
+      column: $table.resultItemKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get resultQuantity => $composableBuilder(
+      column: $table.resultQuantity,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get materials => $composableBuilder(
+      column: $table.materials, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get costCoins => $composableBuilder(
+      column: $table.costCoins, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get durationSec => $composableBuilder(
+      column: $table.durationSec, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get unlockSources => $composableBuilder(
+      column: $table.unlockSources, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get icon => $composableBuilder(
+      column: $table.icon, builder: (column) => ColumnFilters(column));
+}
+
+class $$RecipesCatalogTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $RecipesCatalogTableTable> {
+  $$RecipesCatalogTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get key => $composableBuilder(
+      column: $table.key, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get requiredRank => $composableBuilder(
+      column: $table.requiredRank,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get requiredLevel => $composableBuilder(
+      column: $table.requiredLevel,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get requiredStation => $composableBuilder(
+      column: $table.requiredStation,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get resultItemKey => $composableBuilder(
+      column: $table.resultItemKey,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get resultQuantity => $composableBuilder(
+      column: $table.resultQuantity,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get materials => $composableBuilder(
+      column: $table.materials, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get costCoins => $composableBuilder(
+      column: $table.costCoins, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get durationSec => $composableBuilder(
+      column: $table.durationSec, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get unlockSources => $composableBuilder(
+      column: $table.unlockSources,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get icon => $composableBuilder(
+      column: $table.icon, builder: (column) => ColumnOrderings(column));
+}
+
+class $$RecipesCatalogTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RecipesCatalogTableTable> {
+  $$RecipesCatalogTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get requiredRank => $composableBuilder(
+      column: $table.requiredRank, builder: (column) => column);
+
+  GeneratedColumn<int> get requiredLevel => $composableBuilder(
+      column: $table.requiredLevel, builder: (column) => column);
+
+  GeneratedColumn<String> get requiredStation => $composableBuilder(
+      column: $table.requiredStation, builder: (column) => column);
+
+  GeneratedColumn<String> get resultItemKey => $composableBuilder(
+      column: $table.resultItemKey, builder: (column) => column);
+
+  GeneratedColumn<int> get resultQuantity => $composableBuilder(
+      column: $table.resultQuantity, builder: (column) => column);
+
+  GeneratedColumn<String> get materials =>
+      $composableBuilder(column: $table.materials, builder: (column) => column);
+
+  GeneratedColumn<int> get costCoins =>
+      $composableBuilder(column: $table.costCoins, builder: (column) => column);
+
+  GeneratedColumn<int> get durationSec => $composableBuilder(
+      column: $table.durationSec, builder: (column) => column);
+
+  GeneratedColumn<String> get unlockSources => $composableBuilder(
+      column: $table.unlockSources, builder: (column) => column);
+
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
+}
+
+class $$RecipesCatalogTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $RecipesCatalogTableTable,
+    RecipesCatalogTableData,
+    $$RecipesCatalogTableTableFilterComposer,
+    $$RecipesCatalogTableTableOrderingComposer,
+    $$RecipesCatalogTableTableAnnotationComposer,
+    $$RecipesCatalogTableTableCreateCompanionBuilder,
+    $$RecipesCatalogTableTableUpdateCompanionBuilder,
+    (
+      RecipesCatalogTableData,
+      BaseReferences<_$AppDatabase, $RecipesCatalogTableTable,
+          RecipesCatalogTableData>
+    ),
+    RecipesCatalogTableData,
+    PrefetchHooks Function()> {
+  $$RecipesCatalogTableTableTableManager(
+      _$AppDatabase db, $RecipesCatalogTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RecipesCatalogTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RecipesCatalogTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RecipesCatalogTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> key = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<String?> requiredRank = const Value.absent(),
+            Value<int> requiredLevel = const Value.absent(),
+            Value<String> requiredStation = const Value.absent(),
+            Value<String> resultItemKey = const Value.absent(),
+            Value<int> resultQuantity = const Value.absent(),
+            Value<String> materials = const Value.absent(),
+            Value<int> costCoins = const Value.absent(),
+            Value<int> durationSec = const Value.absent(),
+            Value<String> unlockSources = const Value.absent(),
+            Value<String?> icon = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              RecipesCatalogTableCompanion(
+            key: key,
+            name: name,
+            description: description,
+            type: type,
+            requiredRank: requiredRank,
+            requiredLevel: requiredLevel,
+            requiredStation: requiredStation,
+            resultItemKey: resultItemKey,
+            resultQuantity: resultQuantity,
+            materials: materials,
+            costCoins: costCoins,
+            durationSec: durationSec,
+            unlockSources: unlockSources,
+            icon: icon,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String key,
+            required String name,
+            Value<String> description = const Value.absent(),
+            required String type,
+            Value<String?> requiredRank = const Value.absent(),
+            Value<int> requiredLevel = const Value.absent(),
+            Value<String> requiredStation = const Value.absent(),
+            required String resultItemKey,
+            Value<int> resultQuantity = const Value.absent(),
+            required String materials,
+            Value<int> costCoins = const Value.absent(),
+            Value<int> durationSec = const Value.absent(),
+            required String unlockSources,
+            Value<String?> icon = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              RecipesCatalogTableCompanion.insert(
+            key: key,
+            name: name,
+            description: description,
+            type: type,
+            requiredRank: requiredRank,
+            requiredLevel: requiredLevel,
+            requiredStation: requiredStation,
+            resultItemKey: resultItemKey,
+            resultQuantity: resultQuantity,
+            materials: materials,
+            costCoins: costCoins,
+            durationSec: durationSec,
+            unlockSources: unlockSources,
+            icon: icon,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$RecipesCatalogTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $RecipesCatalogTableTable,
+    RecipesCatalogTableData,
+    $$RecipesCatalogTableTableFilterComposer,
+    $$RecipesCatalogTableTableOrderingComposer,
+    $$RecipesCatalogTableTableAnnotationComposer,
+    $$RecipesCatalogTableTableCreateCompanionBuilder,
+    $$RecipesCatalogTableTableUpdateCompanionBuilder,
+    (
+      RecipesCatalogTableData,
+      BaseReferences<_$AppDatabase, $RecipesCatalogTableTable,
+          RecipesCatalogTableData>
+    ),
+    RecipesCatalogTableData,
+    PrefetchHooks Function()>;
+typedef $$PlayerRecipesUnlockedTableTableCreateCompanionBuilder
+    = PlayerRecipesUnlockedTableCompanion Function({
+  required int playerId,
+  required String recipeKey,
+  required int unlockedAt,
+  required String unlockedVia,
+  Value<int> rowid,
+});
+typedef $$PlayerRecipesUnlockedTableTableUpdateCompanionBuilder
+    = PlayerRecipesUnlockedTableCompanion Function({
+  Value<int> playerId,
+  Value<String> recipeKey,
+  Value<int> unlockedAt,
+  Value<String> unlockedVia,
+  Value<int> rowid,
+});
+
+class $$PlayerRecipesUnlockedTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PlayerRecipesUnlockedTableTable> {
+  $$PlayerRecipesUnlockedTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get recipeKey => $composableBuilder(
+      column: $table.recipeKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get unlockedAt => $composableBuilder(
+      column: $table.unlockedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get unlockedVia => $composableBuilder(
+      column: $table.unlockedVia, builder: (column) => ColumnFilters(column));
+}
+
+class $$PlayerRecipesUnlockedTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlayerRecipesUnlockedTableTable> {
+  $$PlayerRecipesUnlockedTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get recipeKey => $composableBuilder(
+      column: $table.recipeKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get unlockedAt => $composableBuilder(
+      column: $table.unlockedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get unlockedVia => $composableBuilder(
+      column: $table.unlockedVia, builder: (column) => ColumnOrderings(column));
+}
+
+class $$PlayerRecipesUnlockedTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlayerRecipesUnlockedTableTable> {
+  $$PlayerRecipesUnlockedTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get recipeKey =>
+      $composableBuilder(column: $table.recipeKey, builder: (column) => column);
+
+  GeneratedColumn<int> get unlockedAt => $composableBuilder(
+      column: $table.unlockedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get unlockedVia => $composableBuilder(
+      column: $table.unlockedVia, builder: (column) => column);
+}
+
+class $$PlayerRecipesUnlockedTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlayerRecipesUnlockedTableTable,
+    PlayerRecipesUnlockedTableData,
+    $$PlayerRecipesUnlockedTableTableFilterComposer,
+    $$PlayerRecipesUnlockedTableTableOrderingComposer,
+    $$PlayerRecipesUnlockedTableTableAnnotationComposer,
+    $$PlayerRecipesUnlockedTableTableCreateCompanionBuilder,
+    $$PlayerRecipesUnlockedTableTableUpdateCompanionBuilder,
+    (
+      PlayerRecipesUnlockedTableData,
+      BaseReferences<_$AppDatabase, $PlayerRecipesUnlockedTableTable,
+          PlayerRecipesUnlockedTableData>
+    ),
+    PlayerRecipesUnlockedTableData,
+    PrefetchHooks Function()> {
+  $$PlayerRecipesUnlockedTableTableTableManager(
+      _$AppDatabase db, $PlayerRecipesUnlockedTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlayerRecipesUnlockedTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlayerRecipesUnlockedTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlayerRecipesUnlockedTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            Value<String> recipeKey = const Value.absent(),
+            Value<int> unlockedAt = const Value.absent(),
+            Value<String> unlockedVia = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlayerRecipesUnlockedTableCompanion(
+            playerId: playerId,
+            recipeKey: recipeKey,
+            unlockedAt: unlockedAt,
+            unlockedVia: unlockedVia,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required int playerId,
+            required String recipeKey,
+            required int unlockedAt,
+            required String unlockedVia,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlayerRecipesUnlockedTableCompanion.insert(
+            playerId: playerId,
+            recipeKey: recipeKey,
+            unlockedAt: unlockedAt,
+            unlockedVia: unlockedVia,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PlayerRecipesUnlockedTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $PlayerRecipesUnlockedTableTable,
+        PlayerRecipesUnlockedTableData,
+        $$PlayerRecipesUnlockedTableTableFilterComposer,
+        $$PlayerRecipesUnlockedTableTableOrderingComposer,
+        $$PlayerRecipesUnlockedTableTableAnnotationComposer,
+        $$PlayerRecipesUnlockedTableTableCreateCompanionBuilder,
+        $$PlayerRecipesUnlockedTableTableUpdateCompanionBuilder,
+        (
+          PlayerRecipesUnlockedTableData,
+          BaseReferences<_$AppDatabase, $PlayerRecipesUnlockedTableTable,
+              PlayerRecipesUnlockedTableData>
+        ),
+        PlayerRecipesUnlockedTableData,
+        PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -18055,4 +19592,10 @@ class $AppDatabaseManager {
       $$PlayerInventoryTableTableTableManager(_db, _db.playerInventoryTable);
   $$PlayerEquipmentTableTableTableManager get playerEquipmentTable =>
       $$PlayerEquipmentTableTableTableManager(_db, _db.playerEquipmentTable);
+  $$RecipesCatalogTableTableTableManager get recipesCatalogTable =>
+      $$RecipesCatalogTableTableTableManager(_db, _db.recipesCatalogTable);
+  $$PlayerRecipesUnlockedTableTableTableManager
+      get playerRecipesUnlockedTable =>
+          $$PlayerRecipesUnlockedTableTableTableManager(
+              _db, _db.playerRecipesUnlockedTable);
 }

@@ -14,6 +14,10 @@ import '../data/datasources/local/player_inventory_service.dart';
 import '../data/datasources/local/player_equipment_service.dart';
 import '../data/datasources/local/player_rank_service.dart';
 import '../data/datasources/local/shops_service.dart';
+import '../data/datasources/local/recipes_catalog_service.dart';
+import '../data/datasources/local/player_recipes_service.dart';
+import '../data/datasources/local/crafting_service.dart';
+import '../data/database/daos/player_dao.dart';
 
 // Banco singleton
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
@@ -56,6 +60,30 @@ final shopsServiceProvider = Provider<ShopsService>((ref) {
     ref.watch(appDatabaseProvider),
     ref.watch(itemsCatalogServiceProvider),
     ref.watch(playerInventoryServiceProvider),
+  );
+});
+
+// Sprint 2.2 — receitas e forja.
+final recipesCatalogServiceProvider = Provider<RecipesCatalogService>((ref) {
+  return RecipesCatalogService(ref.watch(appDatabaseProvider));
+});
+
+final playerRecipesServiceProvider = Provider<PlayerRecipesService>((ref) {
+  return PlayerRecipesService(
+    ref.watch(appDatabaseProvider),
+    ref.watch(recipesCatalogServiceProvider),
+  );
+});
+
+final craftingServiceProvider = Provider<CraftingService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return CraftingService(
+    db,
+    ref.watch(recipesCatalogServiceProvider),
+    ref.watch(playerRecipesServiceProvider),
+    ref.watch(itemsCatalogServiceProvider),
+    ref.watch(playerInventoryServiceProvider),
+    PlayerDao(db),
   );
 });
 

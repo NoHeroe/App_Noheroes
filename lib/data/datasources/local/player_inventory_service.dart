@@ -153,25 +153,8 @@ class PlayerInventoryService {
         .go();
   }
 
-  // ── Stubs de crafting (Sprint 2.2) e enchant (Sprint 2.3) ────────────────
-
-  Future<int?> craftItem({
-    required int playerId,
-    required String recipeId,
-  }) async {
-    // ignore: avoid_print
-    print('[player_inventory_service] craftItem($recipeId) — TODO Sprint 2.2');
-    return null;
-  }
-
-  Future<int?> forgeItem({
-    required int playerId,
-    required String recipeId,
-  }) async {
-    // ignore: avoid_print
-    print('[player_inventory_service] forgeItem($recipeId) — TODO Sprint 2.2/2.3');
-    return null;
-  }
+  // Stubs craftItem/forgeItem removidos na Sprint 2.2 — agora via
+  // CraftingService.craft. enchantItem fica pra Sprint 2.3.
 
   Future<bool> enchantItem({
     required int inventoryId,

@@ -12,13 +12,13 @@ void main() {
       items = (data['items'] as List).cast<Map<String, dynamic>>();
     });
 
-    test('tem exatamente 181 entries', () {
-      expect(items.length, 181);
+    test('tem exatamente 193 entries', () {
+      expect(items.length, 193);
     });
 
     test('todas as keys são únicas', () {
       final keys = items.map((e) => e['key'] as String).toSet();
-      expect(keys.length, 181, reason: 'keys duplicadas no catálogo');
+      expect(keys.length, 193, reason: 'keys duplicadas no catálogo');
     });
 
     test('campos obrigatórios (key, name, type, rarity) presentes e não-vazios', () {
@@ -44,9 +44,9 @@ void main() {
         'armor':      57,
         'weapon':     34,
         'consumable': 24,
+        'material':   22, // 10 legados + 12 novos do Sprint 2.2
         'accessory':  18,
         'relic':      18,
-        'material':   10,
         'cosmetic':    6,
         'chest':       3,
         'key':         2,
@@ -66,8 +66,8 @@ void main() {
         byRank[r] = (byRank[r] ?? 0) + 1;
       }
       expect(byRank, {
-        'E':        80,
-        'D':        57,
+        'E':        90, // 80 legados + 10 novos materiais rank E
+        'D':        59, // 57 legados + 2 novos materiais rank D
         'C':         7,
         'B':         4,
         'A':         7,

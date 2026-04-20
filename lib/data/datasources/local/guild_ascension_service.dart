@@ -88,6 +88,12 @@ class GuildAscensionService {
         completed: const Value(true),
         progress: Value(current.progressTarget),
       ));
+      await _db.customUpdate(
+        'UPDATE players SET total_quests_completed = '
+        'total_quests_completed + 1 WHERE id = ?',
+        variables: [Variable.withInt(playerId)],
+        updates: {_db.playersTable},
+      );
       return true;
     }
 

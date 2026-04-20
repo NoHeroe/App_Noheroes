@@ -64,7 +64,10 @@ class ItemEquipPolicy {
     if (!isRankSufficient(player.rank, item.requiredRank)) {
       return const EquipResult.rejected(RejectReason.tooLowRank);
     }
+    // Sprint 2.2 pós-teste: Tecelão Sombrio é híbrido universal — ignora
+    // allowedClasses em todos os itens.
     if (item.allowedClasses.isNotEmpty &&
+        player.classKey != 'shadowWeaver' &&
         (player.classKey == null ||
             !item.allowedClasses.contains(player.classKey))) {
       return const EquipResult.rejected(RejectReason.classRestricted);

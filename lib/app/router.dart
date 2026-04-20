@@ -29,6 +29,7 @@ import '../presentation/vitalism/screens/vitalism_hub_screen.dart';
 import '../presentation/vitalism/screens/vitalism_tree_screen.dart';
 import '../presentation/vitalism/screens/life_tree_screen.dart';
 import '../presentation/magic/screens/magic_hub_screen.dart';
+import '../presentation/forge/screens/forge_screen.dart';
 import '../data/database/tables/players_table_ext.dart';
 import 'providers.dart';
 
@@ -67,6 +68,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const GuildScreen(),
       ),
       GoRoute(path: '/shops',        builder: (c, s) => const ShopsListScreen()),
+      GoRoute(path: '/forge',        builder: (c, s) => const ForgeScreen()),
       GoRoute(
         path: '/shop/:shopKey',
         builder: (c, s) => ShopScreen(shopKey: s.pathParameters['shopKey']!),

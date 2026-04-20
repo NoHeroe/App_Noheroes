@@ -21,6 +21,7 @@ import 'daos/achievement_dao.dart';
 import 'daos/guild_dao.dart';
 import '../datasources/local/vitalism_catalog_seeder.dart';
 import '../datasources/local/items_catalog_seeder.dart';
+import '../datasources/local/recipes_catalog_seeder.dart';
 import 'tables/guild_status_table.dart';
 import 'tables/guild_ascension_table.dart';
 import 'tables/npc_reputation_table.dart';
@@ -32,6 +33,8 @@ import 'tables/life_vitalism_points_table.dart';
 import 'tables/items_catalog_table.dart';
 import 'tables/player_inventory_table.dart';
 import 'tables/player_equipment_table.dart';
+import 'tables/recipes_catalog_table.dart';
+import 'tables/player_recipes_unlocked_table.dart';
 
 part 'app_database.g.dart';
 
@@ -53,6 +56,8 @@ part 'app_database.g.dart';
     ItemsCatalogTable,
     PlayerInventoryTable,
     PlayerEquipmentTable,
+    RecipesCatalogTable,
+    PlayerRecipesUnlockedTable,
   ],
   daos: [PlayerDao, HabitDao, AchievementDao, GuildDao],
 )
@@ -60,7 +65,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -69,6 +74,7 @@ class AppDatabase extends _$AppDatabase {
       await _seedAchievements();
       await VitalismCatalogSeeder(this).seed();
       await ItemsCatalogSeeder(this).seed();
+      await RecipesCatalogSeeder(this).seed();
     },
     onUpgrade: (m, from, to) async {
       if (from < 2) {
@@ -213,8 +219,90 @@ class AppDatabase extends _$AppDatabase {
         }
         await ItemsCatalogSeeder(this).seed();
       }
+      if (from < 21) {
+        try {
+          await m.createTable(recipesCatalogTable);
+        } catch (_) {}
+        try {
+          await m.createTable(playerRecipesUnlockedTable);
+        } catch (_) {}
+        try {
+          await m.addColumn(
+              playersTable, playersTable.totalQuestsCompleted);
+        } catch (_) {}
+        // Popula recipes_catalog (Sprint 2.2 Bloco 2).
+        final seeder = RecipesCatalogSeeder(this);
+        await seeder.seed();
+        // Desbloqueia starter recipes pra jogadores existentes no upgrade.
+        try {
+          final existing = await select(playersTable).get();
+          for (final p in existing) {
+            await seeder.unlockStarterRecipesFor(p.id);
+          }
+        } catch (e) {
+          // ignore: avoid_print
+          print('[migration 20→21] starter unlock for existing '
+              'players failed: $e');
+        }
+      }
+    },
+    beforeOpen: (details) async {
+      await _selfHealCatalogs();
     },
   );
+
+  // Rede de proteção contra seeds que falharam silenciosamente por asset
+  // missing. Roda 1x por abertura do DB (uma query de contagem). Se detecta
+  // catálogo vazio, re-seeda + libera starter recipes pra todos players
+  // existentes. Idempotente via insertOrIgnore.
+  //
+  // Origem: bug reportado na validação manual da Sprint 2.2 — recipes.json
+  // não estava declarado em pubspec.yaml, seeder falhava silencioso,
+  // recipes_catalog ficava vazia e /forge aparecia sem nada.
+  Future<void> _selfHealCatalogs() async {
+    try {
+      // ─── Recipes ────────────────────────────────────────────────────────
+      final recipesCount =
+          (await select(recipesCatalogTable).get()).length;
+      if (recipesCount == 0) {
+        // ignore: avoid_print
+        print('[self-heal] recipes_catalog vazia, re-seeding...');
+        final seeder = RecipesCatalogSeeder(this);
+        await seeder.seed();
+        final players = await select(playersTable).get();
+        for (final p in players) {
+          await seeder.unlockStarterRecipesFor(p.id);
+        }
+        // ignore: avoid_print
+        print('[self-heal] recipes_catalog re-seeded, '
+            '${players.length} players updated.');
+      }
+
+      // ─── Items ──────────────────────────────────────────────────────────
+      // Compara count atual no DB contra count no JSON. Se DB < JSON, algum
+      // item novo foi adicionado ao asset sem bumpar schemaVersion (acontece
+      // quando catálogo cresce entre sprints). Re-seed é idempotente via
+      // insertOrIgnore no ItemsCatalogSeeder.
+      final itemsInDb = (await select(itemsCatalogTable).get()).length;
+      final rawItems =
+          await rootBundle.loadString('assets/data/items_unified.json');
+      final dataItems = json.decode(rawItems) as Map<String, dynamic>;
+      final itemsInJson = (dataItems['items'] as List).length;
+      if (itemsInDb < itemsInJson) {
+        // ignore: avoid_print
+        print('[self-heal] items_catalog tem $itemsInDb no DB vs '
+            '$itemsInJson no JSON — re-seeding...');
+        await ItemsCatalogSeeder(this).seed();
+        final itemsAfter = (await select(itemsCatalogTable).get()).length;
+        // ignore: avoid_print
+        print('[self-heal] items_catalog agora com $itemsAfter itens.');
+      }
+    } catch (e, st) {
+      // ignore: avoid_print
+      print('[self-heal] failed: $e\n$st');
+      // Não propaga — app continua abrindo mesmo se heal falhar.
+    }
+  }
 
   Future<void> _seedAchievements() async {
     try {

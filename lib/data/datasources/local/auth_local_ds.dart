@@ -5,6 +5,7 @@ import '../../database/app_database.dart';
 import '../../database/daos/player_dao.dart';
 import '../../database/tables/players_table.dart';
 import 'habit_local_ds.dart';
+import 'recipes_catalog_seeder.dart';
 import 'package:drift/drift.dart';
 
 class AuthLocalDs {
@@ -33,6 +34,9 @@ class AuthLocalDs {
         passwordHash: Value(_hashPassword(password)),
       ),
     );
+
+    // Sprint 2.2 — libera receitas starter pro novo jogador.
+    await RecipesCatalogSeeder(_db).unlockStarterRecipesFor(id);
 
     await _saveSession(id);
     return _dao.findById(id);
