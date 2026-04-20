@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+// DEPRECATED Sprint 2.1 — usar player_inventory. Remover em Fase 5.
 class InventoryTable extends Table {
   @override
   String get tableName => 'inventory';

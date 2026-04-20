@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+// DEPRECATED Sprint 2.1 — usar shops.json + items_catalog.shop_price_*. Remover em Fase 5.
 class ShopItemsTable extends Table {
   @override
   String get tableName => 'shop_items';

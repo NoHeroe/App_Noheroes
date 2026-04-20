@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+// DEPRECATED Sprint 2.1 — usar items_catalog. Remover em Fase 5.
 class ItemsTable extends Table {
   @override
   String get tableName => 'items';

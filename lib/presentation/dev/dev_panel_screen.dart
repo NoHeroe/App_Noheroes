@@ -5,9 +5,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:drift/drift.dart' show Value;
 import '../../app/providers.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/utils/guild_rank.dart';
 import '../../data/database/daos/player_dao.dart';
 import '../../data/database/app_database.dart';
 import '../../data/database/tables/players_table.dart';
+import '../../domain/enums/source_type.dart';
+import '../../domain/models/player_snapshot.dart';
 import '../shared/widgets/app_snack.dart';
 
 class DevPanelScreen extends ConsumerStatefulWidget {
@@ -164,10 +167,133 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
             const SizedBox(height: 10),
             _actionBtn('Ir para seleção de facção', AppColors.shadowStable,
                 () => context.go('/faction-selection')),
+            const SizedBox(height: 24),
+
+            // Rank + Inventário (Sprint 2.1 Bloco 6)
+            _section('RANK + INVENTÁRIO'),
+            _infoRow('Rank atual', player?.guildRank ?? 'none'),
+            const SizedBox(height: 10),
+            _actionBtn('Setar Rank', AppColors.purple, _pickAndSetRank),
+            const SizedBox(height: 10),
+            _actionBtn('Equipar Colar da Guilda (debug)', AppColors.gold,
+                _giveCollar),
+            const SizedBox(height: 10),
+            _actionBtn(
+                'Resetar inventário completo', AppColors.hp, _resetInventory),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _pickAndSetRank() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final chosen = await showDialog<_RankChoice?>(
+      context: context,
+      builder: (_) => const _RankPickerDialog(),
+    );
+    if (chosen == null || !mounted) return;
+
+    await ref
+        .read(playerRankServiceProvider)
+        .setRank(player.id, chosen.rank);
+
+    final updated = await PlayerDao(ref.read(appDatabaseProvider))
+        .findById(player.id);
+    if (!mounted) return;
+    ref.read(currentPlayerProvider.notifier).state = updated;
+    ref.invalidate(playerStreamProvider);
+    if (mounted) {
+      AppSnack.success(
+        context,
+        chosen.rank == null
+            ? 'Rank setado pra SEM RANK'
+            : 'Rank setado pra ${chosen.rank!.name.toUpperCase()}',
+      );
+    }
+  }
+
+  Future<void> _giveCollar() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final invService = ref.read(playerInventoryServiceProvider);
+    final eqService  = ref.read(playerEquipmentServiceProvider);
+    final rankService = ref.read(playerRankServiceProvider);
+
+    // Idempotência — não dá Colar duas vezes.
+    final current = await invService.listOf(player.id);
+    if (current.any((e) => e.spec.key == 'COLLAR_GUILD')) {
+      if (mounted) AppSnack.info(context, 'Jogador já tem o Colar.');
+      return;
+    }
+
+    await rankService.setRank(player.id, GuildRank.e);
+    final invId = await invService.addItem(
+      playerId:       player.id,
+      itemKey:        'COLLAR_GUILD',
+      quantity:       1,
+      acquiredVia:    SourceType.questReward,
+      evolutionStage: 'stage_E',
+    );
+    if (invId > 0) {
+      await eqService.equip(
+        playerId:    player.id,
+        inventoryId: invId,
+        player: PlayerSnapshot(
+          level:      player.level,
+          rank:       GuildRank.e,
+          classKey:   player.classType,
+          factionKey: player.factionType,
+        ),
+      );
+    }
+    final updated = await PlayerDao(ref.read(appDatabaseProvider))
+        .findById(player.id);
+    if (!mounted) return;
+    ref.read(currentPlayerProvider.notifier).state = updated;
+    AppSnack.success(context, 'Colar da Guilda entregue e equipado.');
+  }
+
+  Future<void> _resetInventory() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Resetar inventário?',
+            style: GoogleFonts.cinzelDecorative(
+                color: AppColors.hp, fontSize: 14)),
+        content: Text(
+          'Apaga TODOS os itens do jogador, incluindo Colar e equipamentos.',
+          style: GoogleFonts.roboto(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.hp),
+            child: const Text('Resetar'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+
+    await ref
+        .read(playerInventoryServiceProvider)
+        .resetInventoryFor(player.id);
+    await ref.read(playerRankServiceProvider).setRank(player.id, null);
+
+    final updated = await PlayerDao(ref.read(appDatabaseProvider))
+        .findById(player.id);
+    if (!mounted) return;
+    ref.read(currentPlayerProvider.notifier).state = updated;
+    AppSnack.success(context, 'Inventário resetado.');
   }
 
   Widget _section(String label) => Padding(
@@ -234,4 +360,43 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
               style: GoogleFonts.roboto(fontSize: 13, color: color)),
         ),
       );
+}
+
+class _RankChoice {
+  final GuildRank? rank;
+  const _RankChoice(this.rank);
+}
+
+class _RankPickerDialog extends StatelessWidget {
+  const _RankPickerDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    const options = <_RankChoice>[
+      _RankChoice(null),
+      _RankChoice(GuildRank.e),
+      _RankChoice(GuildRank.d),
+      _RankChoice(GuildRank.c),
+      _RankChoice(GuildRank.b),
+      _RankChoice(GuildRank.a),
+      _RankChoice(GuildRank.s),
+    ];
+    return SimpleDialog(
+      backgroundColor: AppColors.surface,
+      title: Text('Setar rank',
+          style: GoogleFonts.cinzelDecorative(
+              color: AppColors.purple, fontSize: 14)),
+      children: [
+        for (final o in options)
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(context, o),
+            child: Text(
+              o.rank == null ? 'SEM RANK (none)' : o.rank!.name.toUpperCase(),
+              style: GoogleFonts.roboto(
+                  color: AppColors.textPrimary, fontSize: 13),
+            ),
+          ),
+      ],
+    );
+  }
 }

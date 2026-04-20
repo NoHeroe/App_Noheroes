@@ -4,10 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/guild_rank.dart';
 import '../../../data/database/daos/guild_dao.dart';
 import '../../../data/database/app_database.dart';
-import '../../../data/database/tables/items_table.dart';
-import '../../../data/database/tables/inventory_table.dart';
+import '../../../domain/enums/source_type.dart';
+import '../../../domain/models/player_snapshot.dart';
 import 'package:drift/drift.dart' hide Column;
 import '../../shared/widgets/npc_dialog_overlay.dart';
 import '../../shared/widgets/reward_toast.dart';
@@ -403,42 +404,58 @@ class GuildScreen extends ConsumerWidget {
       BuildContext context, WidgetRef ref, dynamic player) async {
     final db = ref.read(appDatabaseProvider);
     final dao = GuildDao(db);
+    final invService = ref.read(playerInventoryServiceProvider);
+    final eqService = ref.read(playerEquipmentServiceProvider);
+    final rankService = ref.read(playerRankServiceProvider);
+
+    // Idempotência defensiva — ninguém recebe Colar duas vezes.
+    final current = await invService.listOf(player.id);
+    final alreadyHasCollar =
+        current.any((e) => e.spec.key == 'COLLAR_GUILD');
+    if (alreadyHasCollar) {
+      if (context.mounted) {
+        NpcDialogOverlay.show(
+          context,
+          npcName: 'Noryan Gray',
+          npcTitle: 'Mestre da Guilda',
+          message: 'Você já é membro. O Colar continua em você.',
+        );
+      }
+      return;
+    }
+
+    // Guild DAO antigo (tabela guild_status) ainda é a fonte de reputation/
+    // cooldowns. Mantemos a escrita lá até Sprint 3.4 unificar.
     await dao.completeAdmission(player.id);
-    // Atualiza guildRank na tabela players para refletir no drawer
-    final db2 = ref.read(appDatabaseProvider);
-    await (db2.update(db2.playersTable)
-          ..where((t) => t.id.equals(player.id)))
-        .write(const PlayersTableCompanion(
-      guildRank: Value('e'),
-    ));
-    // Atualiza o provider
+
+    // Rank canônico em players.guildRank (normalizado 'E') via service novo.
+    await rankService.setRank(player.id, GuildRank.e);
+
+    // Entrega o Colar via sistema novo (ADR 0008 + 0009).
+    final inventoryId = await invService.addItem(
+      playerId:     player.id,
+      itemKey:      'COLLAR_GUILD',
+      quantity:     1,
+      acquiredVia:  SourceType.questReward,
+      evolutionStage: 'stage_E',
+    );
+    if (inventoryId > 0) {
+      final snapshot = PlayerSnapshot(
+        level:      player.level,
+        rank:       GuildRank.e,
+        classKey:   player.classType,
+        factionKey: player.factionType,
+      );
+      await eqService.equip(
+        playerId:    player.id,
+        inventoryId: inventoryId,
+        player:      snapshot,
+      );
+    }
+
+    // Atualiza providers.
     final updatedPlayer = await ref.read(authDsProvider).currentSession();
     ref.read(currentPlayerProvider.notifier).state = updatedPlayer;
-
-    // Entrega Colar da Guilda no inventário
-    // (item com nome fixo, não vendável — inserido direto)
-    try {
-      final itemId = await db.into(db.itemsTable).insert(
-        ItemsTableCompanion(
-          name: const Value('Colar da Guilda'),
-          description: const Value(
-              'O símbolo universal do aventureiro. Não pode ser vendido. Evolui com seu Rank.'),
-          type: const Value('accessory'),
-          rarity: const Value('unique'),
-          slot: const Value('accessory'),
-          goldValue: const Value(0),
-          iconName: const Value('collar'),
-        ),
-      );
-      await db.into(db.inventoryTable).insert(
-        InventoryTableCompanion(
-          playerId: Value(player.id),
-          itemId: Value(itemId),
-          quantity: const Value(1),
-        ),
-      );
-    } catch (_) {}
-
     ref.invalidate(guildStatusProvider);
 
     if (context.mounted) {

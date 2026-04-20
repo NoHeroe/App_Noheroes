@@ -9773,6 +9773,2397 @@ class LifeVitalismPointsTableCompanion
   }
 }
 
+class $ItemsCatalogTableTable extends ItemsCatalogTable
+    with TableInfo<$ItemsCatalogTableTable, ItemsCatalogTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ItemsCatalogTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+      'key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _subtypeMeta =
+      const VerificationMeta('subtype');
+  @override
+  late final GeneratedColumn<String> subtype = GeneratedColumn<String>(
+      'subtype', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _slotMeta = const VerificationMeta('slot');
+  @override
+  late final GeneratedColumn<String> slot = GeneratedColumn<String>(
+      'slot', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _rankMeta = const VerificationMeta('rank');
+  @override
+  late final GeneratedColumn<String> rank = GeneratedColumn<String>(
+      'rank', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _requiredRankMeta =
+      const VerificationMeta('requiredRank');
+  @override
+  late final GeneratedColumn<String> requiredRank = GeneratedColumn<String>(
+      'required_rank', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _rarityMeta = const VerificationMeta('rarity');
+  @override
+  late final GeneratedColumn<String> rarity = GeneratedColumn<String>(
+      'rarity', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('common'));
+  static const VerificationMeta _isSecretMeta =
+      const VerificationMeta('isSecret');
+  @override
+  late final GeneratedColumn<bool> isSecret = GeneratedColumn<bool>(
+      'is_secret', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_secret" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isUniqueMeta =
+      const VerificationMeta('isUnique');
+  @override
+  late final GeneratedColumn<bool> isUnique = GeneratedColumn<bool>(
+      'is_unique', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_unique" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isDarkItemMeta =
+      const VerificationMeta('isDarkItem');
+  @override
+  late final GeneratedColumn<bool> isDarkItem = GeneratedColumn<bool>(
+      'is_dark_item', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_dark_item" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isEvolvingMeta =
+      const VerificationMeta('isEvolving');
+  @override
+  late final GeneratedColumn<bool> isEvolving = GeneratedColumn<bool>(
+      'is_evolving', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_evolving" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _requiredLevelMeta =
+      const VerificationMeta('requiredLevel');
+  @override
+  late final GeneratedColumn<int> requiredLevel = GeneratedColumn<int>(
+      'required_level', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _allowedClassesMeta =
+      const VerificationMeta('allowedClasses');
+  @override
+  late final GeneratedColumn<String> allowedClasses = GeneratedColumn<String>(
+      'allowed_classes', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('[]'));
+  static const VerificationMeta _allowedFactionsMeta =
+      const VerificationMeta('allowedFactions');
+  @override
+  late final GeneratedColumn<String> allowedFactions = GeneratedColumn<String>(
+      'allowed_factions', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('[]'));
+  static const VerificationMeta _statsMeta = const VerificationMeta('stats');
+  @override
+  late final GeneratedColumn<String> stats = GeneratedColumn<String>(
+      'stats', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('{}'));
+  static const VerificationMeta _effectsMeta =
+      const VerificationMeta('effects');
+  @override
+  late final GeneratedColumn<String> effects = GeneratedColumn<String>(
+      'effects', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('{}'));
+  static const VerificationMeta _sourcesMeta =
+      const VerificationMeta('sources');
+  @override
+  late final GeneratedColumn<String> sources = GeneratedColumn<String>(
+      'sources', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('[]'));
+  static const VerificationMeta _shopPriceCoinsMeta =
+      const VerificationMeta('shopPriceCoins');
+  @override
+  late final GeneratedColumn<int> shopPriceCoins = GeneratedColumn<int>(
+      'shop_price_coins', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _shopPriceGemsMeta =
+      const VerificationMeta('shopPriceGems');
+  @override
+  late final GeneratedColumn<int> shopPriceGems = GeneratedColumn<int>(
+      'shop_price_gems', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _stackMaxMeta =
+      const VerificationMeta('stackMax');
+  @override
+  late final GeneratedColumn<int> stackMax = GeneratedColumn<int>(
+      'stack_max', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _durabilityMaxMeta =
+      const VerificationMeta('durabilityMax');
+  @override
+  late final GeneratedColumn<int> durabilityMax = GeneratedColumn<int>(
+      'durability_max', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _durabilityBreaksToMeta =
+      const VerificationMeta('durabilityBreaksTo');
+  @override
+  late final GeneratedColumn<String> durabilityBreaksTo =
+      GeneratedColumn<String>('durability_breaks_to', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _isStackableMeta =
+      const VerificationMeta('isStackable');
+  @override
+  late final GeneratedColumn<bool> isStackable = GeneratedColumn<bool>(
+      'is_stackable', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_stackable" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isConsumableMeta =
+      const VerificationMeta('isConsumable');
+  @override
+  late final GeneratedColumn<bool> isConsumable = GeneratedColumn<bool>(
+      'is_consumable', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_consumable" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isEquippableMeta =
+      const VerificationMeta('isEquippable');
+  @override
+  late final GeneratedColumn<bool> isEquippable = GeneratedColumn<bool>(
+      'is_equippable', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_equippable" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isTradableMeta =
+      const VerificationMeta('isTradable');
+  @override
+  late final GeneratedColumn<bool> isTradable = GeneratedColumn<bool>(
+      'is_tradable', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_tradable" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _isSellableMeta =
+      const VerificationMeta('isSellable');
+  @override
+  late final GeneratedColumn<bool> isSellable = GeneratedColumn<bool>(
+      'is_sellable', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_sellable" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _bindOnPickupMeta =
+      const VerificationMeta('bindOnPickup');
+  @override
+  late final GeneratedColumn<bool> bindOnPickup = GeneratedColumn<bool>(
+      'bind_on_pickup', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("bind_on_pickup" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _craftRecipeIdMeta =
+      const VerificationMeta('craftRecipeId');
+  @override
+  late final GeneratedColumn<String> craftRecipeId = GeneratedColumn<String>(
+      'craft_recipe_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _forgeRecipeIdMeta =
+      const VerificationMeta('forgeRecipeId');
+  @override
+  late final GeneratedColumn<String> forgeRecipeId = GeneratedColumn<String>(
+      'forge_recipe_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _enchantAllowedMeta =
+      const VerificationMeta('enchantAllowed');
+  @override
+  late final GeneratedColumn<bool> enchantAllowed = GeneratedColumn<bool>(
+      'enchant_allowed', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("enchant_allowed" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _sombrioContentIdMeta =
+      const VerificationMeta('sombrioContentId');
+  @override
+  late final GeneratedColumn<String> sombrioContentId = GeneratedColumn<String>(
+      'sombrio_content_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _evolutionStagesMeta =
+      const VerificationMeta('evolutionStages');
+  @override
+  late final GeneratedColumn<String> evolutionStages = GeneratedColumn<String>(
+      'evolution_stages', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _imageMeta = const VerificationMeta('image');
+  @override
+  late final GeneratedColumn<String> image = GeneratedColumn<String>(
+      'image', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+      'icon', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        key,
+        name,
+        description,
+        type,
+        subtype,
+        slot,
+        rank,
+        requiredRank,
+        rarity,
+        isSecret,
+        isUnique,
+        isDarkItem,
+        isEvolving,
+        requiredLevel,
+        allowedClasses,
+        allowedFactions,
+        stats,
+        effects,
+        sources,
+        shopPriceCoins,
+        shopPriceGems,
+        stackMax,
+        durabilityMax,
+        durabilityBreaksTo,
+        isStackable,
+        isConsumable,
+        isEquippable,
+        isTradable,
+        isSellable,
+        bindOnPickup,
+        craftRecipeId,
+        forgeRecipeId,
+        enchantAllowed,
+        sombrioContentId,
+        evolutionStages,
+        image,
+        icon
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'items_catalog';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<ItemsCatalogTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('key')) {
+      context.handle(
+          _keyMeta, key.isAcceptableOrUnknown(data['key']!, _keyMeta));
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('subtype')) {
+      context.handle(_subtypeMeta,
+          subtype.isAcceptableOrUnknown(data['subtype']!, _subtypeMeta));
+    }
+    if (data.containsKey('slot')) {
+      context.handle(
+          _slotMeta, slot.isAcceptableOrUnknown(data['slot']!, _slotMeta));
+    }
+    if (data.containsKey('rank')) {
+      context.handle(
+          _rankMeta, rank.isAcceptableOrUnknown(data['rank']!, _rankMeta));
+    }
+    if (data.containsKey('required_rank')) {
+      context.handle(
+          _requiredRankMeta,
+          requiredRank.isAcceptableOrUnknown(
+              data['required_rank']!, _requiredRankMeta));
+    }
+    if (data.containsKey('rarity')) {
+      context.handle(_rarityMeta,
+          rarity.isAcceptableOrUnknown(data['rarity']!, _rarityMeta));
+    }
+    if (data.containsKey('is_secret')) {
+      context.handle(_isSecretMeta,
+          isSecret.isAcceptableOrUnknown(data['is_secret']!, _isSecretMeta));
+    }
+    if (data.containsKey('is_unique')) {
+      context.handle(_isUniqueMeta,
+          isUnique.isAcceptableOrUnknown(data['is_unique']!, _isUniqueMeta));
+    }
+    if (data.containsKey('is_dark_item')) {
+      context.handle(
+          _isDarkItemMeta,
+          isDarkItem.isAcceptableOrUnknown(
+              data['is_dark_item']!, _isDarkItemMeta));
+    }
+    if (data.containsKey('is_evolving')) {
+      context.handle(
+          _isEvolvingMeta,
+          isEvolving.isAcceptableOrUnknown(
+              data['is_evolving']!, _isEvolvingMeta));
+    }
+    if (data.containsKey('required_level')) {
+      context.handle(
+          _requiredLevelMeta,
+          requiredLevel.isAcceptableOrUnknown(
+              data['required_level']!, _requiredLevelMeta));
+    }
+    if (data.containsKey('allowed_classes')) {
+      context.handle(
+          _allowedClassesMeta,
+          allowedClasses.isAcceptableOrUnknown(
+              data['allowed_classes']!, _allowedClassesMeta));
+    }
+    if (data.containsKey('allowed_factions')) {
+      context.handle(
+          _allowedFactionsMeta,
+          allowedFactions.isAcceptableOrUnknown(
+              data['allowed_factions']!, _allowedFactionsMeta));
+    }
+    if (data.containsKey('stats')) {
+      context.handle(
+          _statsMeta, stats.isAcceptableOrUnknown(data['stats']!, _statsMeta));
+    }
+    if (data.containsKey('effects')) {
+      context.handle(_effectsMeta,
+          effects.isAcceptableOrUnknown(data['effects']!, _effectsMeta));
+    }
+    if (data.containsKey('sources')) {
+      context.handle(_sourcesMeta,
+          sources.isAcceptableOrUnknown(data['sources']!, _sourcesMeta));
+    }
+    if (data.containsKey('shop_price_coins')) {
+      context.handle(
+          _shopPriceCoinsMeta,
+          shopPriceCoins.isAcceptableOrUnknown(
+              data['shop_price_coins']!, _shopPriceCoinsMeta));
+    }
+    if (data.containsKey('shop_price_gems')) {
+      context.handle(
+          _shopPriceGemsMeta,
+          shopPriceGems.isAcceptableOrUnknown(
+              data['shop_price_gems']!, _shopPriceGemsMeta));
+    }
+    if (data.containsKey('stack_max')) {
+      context.handle(_stackMaxMeta,
+          stackMax.isAcceptableOrUnknown(data['stack_max']!, _stackMaxMeta));
+    }
+    if (data.containsKey('durability_max')) {
+      context.handle(
+          _durabilityMaxMeta,
+          durabilityMax.isAcceptableOrUnknown(
+              data['durability_max']!, _durabilityMaxMeta));
+    }
+    if (data.containsKey('durability_breaks_to')) {
+      context.handle(
+          _durabilityBreaksToMeta,
+          durabilityBreaksTo.isAcceptableOrUnknown(
+              data['durability_breaks_to']!, _durabilityBreaksToMeta));
+    }
+    if (data.containsKey('is_stackable')) {
+      context.handle(
+          _isStackableMeta,
+          isStackable.isAcceptableOrUnknown(
+              data['is_stackable']!, _isStackableMeta));
+    }
+    if (data.containsKey('is_consumable')) {
+      context.handle(
+          _isConsumableMeta,
+          isConsumable.isAcceptableOrUnknown(
+              data['is_consumable']!, _isConsumableMeta));
+    }
+    if (data.containsKey('is_equippable')) {
+      context.handle(
+          _isEquippableMeta,
+          isEquippable.isAcceptableOrUnknown(
+              data['is_equippable']!, _isEquippableMeta));
+    }
+    if (data.containsKey('is_tradable')) {
+      context.handle(
+          _isTradableMeta,
+          isTradable.isAcceptableOrUnknown(
+              data['is_tradable']!, _isTradableMeta));
+    }
+    if (data.containsKey('is_sellable')) {
+      context.handle(
+          _isSellableMeta,
+          isSellable.isAcceptableOrUnknown(
+              data['is_sellable']!, _isSellableMeta));
+    }
+    if (data.containsKey('bind_on_pickup')) {
+      context.handle(
+          _bindOnPickupMeta,
+          bindOnPickup.isAcceptableOrUnknown(
+              data['bind_on_pickup']!, _bindOnPickupMeta));
+    }
+    if (data.containsKey('craft_recipe_id')) {
+      context.handle(
+          _craftRecipeIdMeta,
+          craftRecipeId.isAcceptableOrUnknown(
+              data['craft_recipe_id']!, _craftRecipeIdMeta));
+    }
+    if (data.containsKey('forge_recipe_id')) {
+      context.handle(
+          _forgeRecipeIdMeta,
+          forgeRecipeId.isAcceptableOrUnknown(
+              data['forge_recipe_id']!, _forgeRecipeIdMeta));
+    }
+    if (data.containsKey('enchant_allowed')) {
+      context.handle(
+          _enchantAllowedMeta,
+          enchantAllowed.isAcceptableOrUnknown(
+              data['enchant_allowed']!, _enchantAllowedMeta));
+    }
+    if (data.containsKey('sombrio_content_id')) {
+      context.handle(
+          _sombrioContentIdMeta,
+          sombrioContentId.isAcceptableOrUnknown(
+              data['sombrio_content_id']!, _sombrioContentIdMeta));
+    }
+    if (data.containsKey('evolution_stages')) {
+      context.handle(
+          _evolutionStagesMeta,
+          evolutionStages.isAcceptableOrUnknown(
+              data['evolution_stages']!, _evolutionStagesMeta));
+    }
+    if (data.containsKey('image')) {
+      context.handle(
+          _imageMeta, image.isAcceptableOrUnknown(data['image']!, _imageMeta));
+    }
+    if (data.containsKey('icon')) {
+      context.handle(
+          _iconMeta, icon.isAcceptableOrUnknown(data['icon']!, _iconMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {key};
+  @override
+  ItemsCatalogTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ItemsCatalogTableData(
+      key: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}key'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      subtype: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}subtype']),
+      slot: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}slot']),
+      rank: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}rank']),
+      requiredRank: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}required_rank']),
+      rarity: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}rarity'])!,
+      isSecret: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_secret'])!,
+      isUnique: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_unique'])!,
+      isDarkItem: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_dark_item'])!,
+      isEvolving: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_evolving'])!,
+      requiredLevel: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}required_level'])!,
+      allowedClasses: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}allowed_classes'])!,
+      allowedFactions: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}allowed_factions'])!,
+      stats: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}stats'])!,
+      effects: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}effects'])!,
+      sources: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sources'])!,
+      shopPriceCoins: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}shop_price_coins']),
+      shopPriceGems: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}shop_price_gems']),
+      stackMax: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}stack_max'])!,
+      durabilityMax: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}durability_max']),
+      durabilityBreaksTo: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}durability_breaks_to']),
+      isStackable: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_stackable'])!,
+      isConsumable: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_consumable'])!,
+      isEquippable: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_equippable'])!,
+      isTradable: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_tradable'])!,
+      isSellable: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_sellable'])!,
+      bindOnPickup: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}bind_on_pickup'])!,
+      craftRecipeId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}craft_recipe_id']),
+      forgeRecipeId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}forge_recipe_id']),
+      enchantAllowed: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}enchant_allowed'])!,
+      sombrioContentId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}sombrio_content_id']),
+      evolutionStages: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}evolution_stages']),
+      image: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}image'])!,
+      icon: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}icon']),
+    );
+  }
+
+  @override
+  $ItemsCatalogTableTable createAlias(String alias) {
+    return $ItemsCatalogTableTable(attachedDatabase, alias);
+  }
+}
+
+class ItemsCatalogTableData extends DataClass
+    implements Insertable<ItemsCatalogTableData> {
+  final String key;
+  final String name;
+  final String description;
+  final String type;
+  final String? subtype;
+  final String? slot;
+  final String? rank;
+  final String? requiredRank;
+  final String rarity;
+  final bool isSecret;
+  final bool isUnique;
+  final bool isDarkItem;
+  final bool isEvolving;
+  final int requiredLevel;
+  final String allowedClasses;
+  final String allowedFactions;
+  final String stats;
+  final String effects;
+  final String sources;
+  final int? shopPriceCoins;
+  final int? shopPriceGems;
+  final int stackMax;
+  final int? durabilityMax;
+  final String? durabilityBreaksTo;
+  final bool isStackable;
+  final bool isConsumable;
+  final bool isEquippable;
+  final bool isTradable;
+  final bool isSellable;
+  final bool bindOnPickup;
+  final String? craftRecipeId;
+  final String? forgeRecipeId;
+  final bool enchantAllowed;
+  final String? sombrioContentId;
+  final String? evolutionStages;
+  final String image;
+  final String? icon;
+  const ItemsCatalogTableData(
+      {required this.key,
+      required this.name,
+      required this.description,
+      required this.type,
+      this.subtype,
+      this.slot,
+      this.rank,
+      this.requiredRank,
+      required this.rarity,
+      required this.isSecret,
+      required this.isUnique,
+      required this.isDarkItem,
+      required this.isEvolving,
+      required this.requiredLevel,
+      required this.allowedClasses,
+      required this.allowedFactions,
+      required this.stats,
+      required this.effects,
+      required this.sources,
+      this.shopPriceCoins,
+      this.shopPriceGems,
+      required this.stackMax,
+      this.durabilityMax,
+      this.durabilityBreaksTo,
+      required this.isStackable,
+      required this.isConsumable,
+      required this.isEquippable,
+      required this.isTradable,
+      required this.isSellable,
+      required this.bindOnPickup,
+      this.craftRecipeId,
+      this.forgeRecipeId,
+      required this.enchantAllowed,
+      this.sombrioContentId,
+      this.evolutionStages,
+      required this.image,
+      this.icon});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['key'] = Variable<String>(key);
+    map['name'] = Variable<String>(name);
+    map['description'] = Variable<String>(description);
+    map['type'] = Variable<String>(type);
+    if (!nullToAbsent || subtype != null) {
+      map['subtype'] = Variable<String>(subtype);
+    }
+    if (!nullToAbsent || slot != null) {
+      map['slot'] = Variable<String>(slot);
+    }
+    if (!nullToAbsent || rank != null) {
+      map['rank'] = Variable<String>(rank);
+    }
+    if (!nullToAbsent || requiredRank != null) {
+      map['required_rank'] = Variable<String>(requiredRank);
+    }
+    map['rarity'] = Variable<String>(rarity);
+    map['is_secret'] = Variable<bool>(isSecret);
+    map['is_unique'] = Variable<bool>(isUnique);
+    map['is_dark_item'] = Variable<bool>(isDarkItem);
+    map['is_evolving'] = Variable<bool>(isEvolving);
+    map['required_level'] = Variable<int>(requiredLevel);
+    map['allowed_classes'] = Variable<String>(allowedClasses);
+    map['allowed_factions'] = Variable<String>(allowedFactions);
+    map['stats'] = Variable<String>(stats);
+    map['effects'] = Variable<String>(effects);
+    map['sources'] = Variable<String>(sources);
+    if (!nullToAbsent || shopPriceCoins != null) {
+      map['shop_price_coins'] = Variable<int>(shopPriceCoins);
+    }
+    if (!nullToAbsent || shopPriceGems != null) {
+      map['shop_price_gems'] = Variable<int>(shopPriceGems);
+    }
+    map['stack_max'] = Variable<int>(stackMax);
+    if (!nullToAbsent || durabilityMax != null) {
+      map['durability_max'] = Variable<int>(durabilityMax);
+    }
+    if (!nullToAbsent || durabilityBreaksTo != null) {
+      map['durability_breaks_to'] = Variable<String>(durabilityBreaksTo);
+    }
+    map['is_stackable'] = Variable<bool>(isStackable);
+    map['is_consumable'] = Variable<bool>(isConsumable);
+    map['is_equippable'] = Variable<bool>(isEquippable);
+    map['is_tradable'] = Variable<bool>(isTradable);
+    map['is_sellable'] = Variable<bool>(isSellable);
+    map['bind_on_pickup'] = Variable<bool>(bindOnPickup);
+    if (!nullToAbsent || craftRecipeId != null) {
+      map['craft_recipe_id'] = Variable<String>(craftRecipeId);
+    }
+    if (!nullToAbsent || forgeRecipeId != null) {
+      map['forge_recipe_id'] = Variable<String>(forgeRecipeId);
+    }
+    map['enchant_allowed'] = Variable<bool>(enchantAllowed);
+    if (!nullToAbsent || sombrioContentId != null) {
+      map['sombrio_content_id'] = Variable<String>(sombrioContentId);
+    }
+    if (!nullToAbsent || evolutionStages != null) {
+      map['evolution_stages'] = Variable<String>(evolutionStages);
+    }
+    map['image'] = Variable<String>(image);
+    if (!nullToAbsent || icon != null) {
+      map['icon'] = Variable<String>(icon);
+    }
+    return map;
+  }
+
+  ItemsCatalogTableCompanion toCompanion(bool nullToAbsent) {
+    return ItemsCatalogTableCompanion(
+      key: Value(key),
+      name: Value(name),
+      description: Value(description),
+      type: Value(type),
+      subtype: subtype == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subtype),
+      slot: slot == null && nullToAbsent ? const Value.absent() : Value(slot),
+      rank: rank == null && nullToAbsent ? const Value.absent() : Value(rank),
+      requiredRank: requiredRank == null && nullToAbsent
+          ? const Value.absent()
+          : Value(requiredRank),
+      rarity: Value(rarity),
+      isSecret: Value(isSecret),
+      isUnique: Value(isUnique),
+      isDarkItem: Value(isDarkItem),
+      isEvolving: Value(isEvolving),
+      requiredLevel: Value(requiredLevel),
+      allowedClasses: Value(allowedClasses),
+      allowedFactions: Value(allowedFactions),
+      stats: Value(stats),
+      effects: Value(effects),
+      sources: Value(sources),
+      shopPriceCoins: shopPriceCoins == null && nullToAbsent
+          ? const Value.absent()
+          : Value(shopPriceCoins),
+      shopPriceGems: shopPriceGems == null && nullToAbsent
+          ? const Value.absent()
+          : Value(shopPriceGems),
+      stackMax: Value(stackMax),
+      durabilityMax: durabilityMax == null && nullToAbsent
+          ? const Value.absent()
+          : Value(durabilityMax),
+      durabilityBreaksTo: durabilityBreaksTo == null && nullToAbsent
+          ? const Value.absent()
+          : Value(durabilityBreaksTo),
+      isStackable: Value(isStackable),
+      isConsumable: Value(isConsumable),
+      isEquippable: Value(isEquippable),
+      isTradable: Value(isTradable),
+      isSellable: Value(isSellable),
+      bindOnPickup: Value(bindOnPickup),
+      craftRecipeId: craftRecipeId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(craftRecipeId),
+      forgeRecipeId: forgeRecipeId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(forgeRecipeId),
+      enchantAllowed: Value(enchantAllowed),
+      sombrioContentId: sombrioContentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sombrioContentId),
+      evolutionStages: evolutionStages == null && nullToAbsent
+          ? const Value.absent()
+          : Value(evolutionStages),
+      image: Value(image),
+      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
+    );
+  }
+
+  factory ItemsCatalogTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ItemsCatalogTableData(
+      key: serializer.fromJson<String>(json['key']),
+      name: serializer.fromJson<String>(json['name']),
+      description: serializer.fromJson<String>(json['description']),
+      type: serializer.fromJson<String>(json['type']),
+      subtype: serializer.fromJson<String?>(json['subtype']),
+      slot: serializer.fromJson<String?>(json['slot']),
+      rank: serializer.fromJson<String?>(json['rank']),
+      requiredRank: serializer.fromJson<String?>(json['requiredRank']),
+      rarity: serializer.fromJson<String>(json['rarity']),
+      isSecret: serializer.fromJson<bool>(json['isSecret']),
+      isUnique: serializer.fromJson<bool>(json['isUnique']),
+      isDarkItem: serializer.fromJson<bool>(json['isDarkItem']),
+      isEvolving: serializer.fromJson<bool>(json['isEvolving']),
+      requiredLevel: serializer.fromJson<int>(json['requiredLevel']),
+      allowedClasses: serializer.fromJson<String>(json['allowedClasses']),
+      allowedFactions: serializer.fromJson<String>(json['allowedFactions']),
+      stats: serializer.fromJson<String>(json['stats']),
+      effects: serializer.fromJson<String>(json['effects']),
+      sources: serializer.fromJson<String>(json['sources']),
+      shopPriceCoins: serializer.fromJson<int?>(json['shopPriceCoins']),
+      shopPriceGems: serializer.fromJson<int?>(json['shopPriceGems']),
+      stackMax: serializer.fromJson<int>(json['stackMax']),
+      durabilityMax: serializer.fromJson<int?>(json['durabilityMax']),
+      durabilityBreaksTo:
+          serializer.fromJson<String?>(json['durabilityBreaksTo']),
+      isStackable: serializer.fromJson<bool>(json['isStackable']),
+      isConsumable: serializer.fromJson<bool>(json['isConsumable']),
+      isEquippable: serializer.fromJson<bool>(json['isEquippable']),
+      isTradable: serializer.fromJson<bool>(json['isTradable']),
+      isSellable: serializer.fromJson<bool>(json['isSellable']),
+      bindOnPickup: serializer.fromJson<bool>(json['bindOnPickup']),
+      craftRecipeId: serializer.fromJson<String?>(json['craftRecipeId']),
+      forgeRecipeId: serializer.fromJson<String?>(json['forgeRecipeId']),
+      enchantAllowed: serializer.fromJson<bool>(json['enchantAllowed']),
+      sombrioContentId: serializer.fromJson<String?>(json['sombrioContentId']),
+      evolutionStages: serializer.fromJson<String?>(json['evolutionStages']),
+      image: serializer.fromJson<String>(json['image']),
+      icon: serializer.fromJson<String?>(json['icon']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'key': serializer.toJson<String>(key),
+      'name': serializer.toJson<String>(name),
+      'description': serializer.toJson<String>(description),
+      'type': serializer.toJson<String>(type),
+      'subtype': serializer.toJson<String?>(subtype),
+      'slot': serializer.toJson<String?>(slot),
+      'rank': serializer.toJson<String?>(rank),
+      'requiredRank': serializer.toJson<String?>(requiredRank),
+      'rarity': serializer.toJson<String>(rarity),
+      'isSecret': serializer.toJson<bool>(isSecret),
+      'isUnique': serializer.toJson<bool>(isUnique),
+      'isDarkItem': serializer.toJson<bool>(isDarkItem),
+      'isEvolving': serializer.toJson<bool>(isEvolving),
+      'requiredLevel': serializer.toJson<int>(requiredLevel),
+      'allowedClasses': serializer.toJson<String>(allowedClasses),
+      'allowedFactions': serializer.toJson<String>(allowedFactions),
+      'stats': serializer.toJson<String>(stats),
+      'effects': serializer.toJson<String>(effects),
+      'sources': serializer.toJson<String>(sources),
+      'shopPriceCoins': serializer.toJson<int?>(shopPriceCoins),
+      'shopPriceGems': serializer.toJson<int?>(shopPriceGems),
+      'stackMax': serializer.toJson<int>(stackMax),
+      'durabilityMax': serializer.toJson<int?>(durabilityMax),
+      'durabilityBreaksTo': serializer.toJson<String?>(durabilityBreaksTo),
+      'isStackable': serializer.toJson<bool>(isStackable),
+      'isConsumable': serializer.toJson<bool>(isConsumable),
+      'isEquippable': serializer.toJson<bool>(isEquippable),
+      'isTradable': serializer.toJson<bool>(isTradable),
+      'isSellable': serializer.toJson<bool>(isSellable),
+      'bindOnPickup': serializer.toJson<bool>(bindOnPickup),
+      'craftRecipeId': serializer.toJson<String?>(craftRecipeId),
+      'forgeRecipeId': serializer.toJson<String?>(forgeRecipeId),
+      'enchantAllowed': serializer.toJson<bool>(enchantAllowed),
+      'sombrioContentId': serializer.toJson<String?>(sombrioContentId),
+      'evolutionStages': serializer.toJson<String?>(evolutionStages),
+      'image': serializer.toJson<String>(image),
+      'icon': serializer.toJson<String?>(icon),
+    };
+  }
+
+  ItemsCatalogTableData copyWith(
+          {String? key,
+          String? name,
+          String? description,
+          String? type,
+          Value<String?> subtype = const Value.absent(),
+          Value<String?> slot = const Value.absent(),
+          Value<String?> rank = const Value.absent(),
+          Value<String?> requiredRank = const Value.absent(),
+          String? rarity,
+          bool? isSecret,
+          bool? isUnique,
+          bool? isDarkItem,
+          bool? isEvolving,
+          int? requiredLevel,
+          String? allowedClasses,
+          String? allowedFactions,
+          String? stats,
+          String? effects,
+          String? sources,
+          Value<int?> shopPriceCoins = const Value.absent(),
+          Value<int?> shopPriceGems = const Value.absent(),
+          int? stackMax,
+          Value<int?> durabilityMax = const Value.absent(),
+          Value<String?> durabilityBreaksTo = const Value.absent(),
+          bool? isStackable,
+          bool? isConsumable,
+          bool? isEquippable,
+          bool? isTradable,
+          bool? isSellable,
+          bool? bindOnPickup,
+          Value<String?> craftRecipeId = const Value.absent(),
+          Value<String?> forgeRecipeId = const Value.absent(),
+          bool? enchantAllowed,
+          Value<String?> sombrioContentId = const Value.absent(),
+          Value<String?> evolutionStages = const Value.absent(),
+          String? image,
+          Value<String?> icon = const Value.absent()}) =>
+      ItemsCatalogTableData(
+        key: key ?? this.key,
+        name: name ?? this.name,
+        description: description ?? this.description,
+        type: type ?? this.type,
+        subtype: subtype.present ? subtype.value : this.subtype,
+        slot: slot.present ? slot.value : this.slot,
+        rank: rank.present ? rank.value : this.rank,
+        requiredRank:
+            requiredRank.present ? requiredRank.value : this.requiredRank,
+        rarity: rarity ?? this.rarity,
+        isSecret: isSecret ?? this.isSecret,
+        isUnique: isUnique ?? this.isUnique,
+        isDarkItem: isDarkItem ?? this.isDarkItem,
+        isEvolving: isEvolving ?? this.isEvolving,
+        requiredLevel: requiredLevel ?? this.requiredLevel,
+        allowedClasses: allowedClasses ?? this.allowedClasses,
+        allowedFactions: allowedFactions ?? this.allowedFactions,
+        stats: stats ?? this.stats,
+        effects: effects ?? this.effects,
+        sources: sources ?? this.sources,
+        shopPriceCoins:
+            shopPriceCoins.present ? shopPriceCoins.value : this.shopPriceCoins,
+        shopPriceGems:
+            shopPriceGems.present ? shopPriceGems.value : this.shopPriceGems,
+        stackMax: stackMax ?? this.stackMax,
+        durabilityMax:
+            durabilityMax.present ? durabilityMax.value : this.durabilityMax,
+        durabilityBreaksTo: durabilityBreaksTo.present
+            ? durabilityBreaksTo.value
+            : this.durabilityBreaksTo,
+        isStackable: isStackable ?? this.isStackable,
+        isConsumable: isConsumable ?? this.isConsumable,
+        isEquippable: isEquippable ?? this.isEquippable,
+        isTradable: isTradable ?? this.isTradable,
+        isSellable: isSellable ?? this.isSellable,
+        bindOnPickup: bindOnPickup ?? this.bindOnPickup,
+        craftRecipeId:
+            craftRecipeId.present ? craftRecipeId.value : this.craftRecipeId,
+        forgeRecipeId:
+            forgeRecipeId.present ? forgeRecipeId.value : this.forgeRecipeId,
+        enchantAllowed: enchantAllowed ?? this.enchantAllowed,
+        sombrioContentId: sombrioContentId.present
+            ? sombrioContentId.value
+            : this.sombrioContentId,
+        evolutionStages: evolutionStages.present
+            ? evolutionStages.value
+            : this.evolutionStages,
+        image: image ?? this.image,
+        icon: icon.present ? icon.value : this.icon,
+      );
+  ItemsCatalogTableData copyWithCompanion(ItemsCatalogTableCompanion data) {
+    return ItemsCatalogTableData(
+      key: data.key.present ? data.key.value : this.key,
+      name: data.name.present ? data.name.value : this.name,
+      description:
+          data.description.present ? data.description.value : this.description,
+      type: data.type.present ? data.type.value : this.type,
+      subtype: data.subtype.present ? data.subtype.value : this.subtype,
+      slot: data.slot.present ? data.slot.value : this.slot,
+      rank: data.rank.present ? data.rank.value : this.rank,
+      requiredRank: data.requiredRank.present
+          ? data.requiredRank.value
+          : this.requiredRank,
+      rarity: data.rarity.present ? data.rarity.value : this.rarity,
+      isSecret: data.isSecret.present ? data.isSecret.value : this.isSecret,
+      isUnique: data.isUnique.present ? data.isUnique.value : this.isUnique,
+      isDarkItem:
+          data.isDarkItem.present ? data.isDarkItem.value : this.isDarkItem,
+      isEvolving:
+          data.isEvolving.present ? data.isEvolving.value : this.isEvolving,
+      requiredLevel: data.requiredLevel.present
+          ? data.requiredLevel.value
+          : this.requiredLevel,
+      allowedClasses: data.allowedClasses.present
+          ? data.allowedClasses.value
+          : this.allowedClasses,
+      allowedFactions: data.allowedFactions.present
+          ? data.allowedFactions.value
+          : this.allowedFactions,
+      stats: data.stats.present ? data.stats.value : this.stats,
+      effects: data.effects.present ? data.effects.value : this.effects,
+      sources: data.sources.present ? data.sources.value : this.sources,
+      shopPriceCoins: data.shopPriceCoins.present
+          ? data.shopPriceCoins.value
+          : this.shopPriceCoins,
+      shopPriceGems: data.shopPriceGems.present
+          ? data.shopPriceGems.value
+          : this.shopPriceGems,
+      stackMax: data.stackMax.present ? data.stackMax.value : this.stackMax,
+      durabilityMax: data.durabilityMax.present
+          ? data.durabilityMax.value
+          : this.durabilityMax,
+      durabilityBreaksTo: data.durabilityBreaksTo.present
+          ? data.durabilityBreaksTo.value
+          : this.durabilityBreaksTo,
+      isStackable:
+          data.isStackable.present ? data.isStackable.value : this.isStackable,
+      isConsumable: data.isConsumable.present
+          ? data.isConsumable.value
+          : this.isConsumable,
+      isEquippable: data.isEquippable.present
+          ? data.isEquippable.value
+          : this.isEquippable,
+      isTradable:
+          data.isTradable.present ? data.isTradable.value : this.isTradable,
+      isSellable:
+          data.isSellable.present ? data.isSellable.value : this.isSellable,
+      bindOnPickup: data.bindOnPickup.present
+          ? data.bindOnPickup.value
+          : this.bindOnPickup,
+      craftRecipeId: data.craftRecipeId.present
+          ? data.craftRecipeId.value
+          : this.craftRecipeId,
+      forgeRecipeId: data.forgeRecipeId.present
+          ? data.forgeRecipeId.value
+          : this.forgeRecipeId,
+      enchantAllowed: data.enchantAllowed.present
+          ? data.enchantAllowed.value
+          : this.enchantAllowed,
+      sombrioContentId: data.sombrioContentId.present
+          ? data.sombrioContentId.value
+          : this.sombrioContentId,
+      evolutionStages: data.evolutionStages.present
+          ? data.evolutionStages.value
+          : this.evolutionStages,
+      image: data.image.present ? data.image.value : this.image,
+      icon: data.icon.present ? data.icon.value : this.icon,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemsCatalogTableData(')
+          ..write('key: $key, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('type: $type, ')
+          ..write('subtype: $subtype, ')
+          ..write('slot: $slot, ')
+          ..write('rank: $rank, ')
+          ..write('requiredRank: $requiredRank, ')
+          ..write('rarity: $rarity, ')
+          ..write('isSecret: $isSecret, ')
+          ..write('isUnique: $isUnique, ')
+          ..write('isDarkItem: $isDarkItem, ')
+          ..write('isEvolving: $isEvolving, ')
+          ..write('requiredLevel: $requiredLevel, ')
+          ..write('allowedClasses: $allowedClasses, ')
+          ..write('allowedFactions: $allowedFactions, ')
+          ..write('stats: $stats, ')
+          ..write('effects: $effects, ')
+          ..write('sources: $sources, ')
+          ..write('shopPriceCoins: $shopPriceCoins, ')
+          ..write('shopPriceGems: $shopPriceGems, ')
+          ..write('stackMax: $stackMax, ')
+          ..write('durabilityMax: $durabilityMax, ')
+          ..write('durabilityBreaksTo: $durabilityBreaksTo, ')
+          ..write('isStackable: $isStackable, ')
+          ..write('isConsumable: $isConsumable, ')
+          ..write('isEquippable: $isEquippable, ')
+          ..write('isTradable: $isTradable, ')
+          ..write('isSellable: $isSellable, ')
+          ..write('bindOnPickup: $bindOnPickup, ')
+          ..write('craftRecipeId: $craftRecipeId, ')
+          ..write('forgeRecipeId: $forgeRecipeId, ')
+          ..write('enchantAllowed: $enchantAllowed, ')
+          ..write('sombrioContentId: $sombrioContentId, ')
+          ..write('evolutionStages: $evolutionStages, ')
+          ..write('image: $image, ')
+          ..write('icon: $icon')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+        key,
+        name,
+        description,
+        type,
+        subtype,
+        slot,
+        rank,
+        requiredRank,
+        rarity,
+        isSecret,
+        isUnique,
+        isDarkItem,
+        isEvolving,
+        requiredLevel,
+        allowedClasses,
+        allowedFactions,
+        stats,
+        effects,
+        sources,
+        shopPriceCoins,
+        shopPriceGems,
+        stackMax,
+        durabilityMax,
+        durabilityBreaksTo,
+        isStackable,
+        isConsumable,
+        isEquippable,
+        isTradable,
+        isSellable,
+        bindOnPickup,
+        craftRecipeId,
+        forgeRecipeId,
+        enchantAllowed,
+        sombrioContentId,
+        evolutionStages,
+        image,
+        icon
+      ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ItemsCatalogTableData &&
+          other.key == this.key &&
+          other.name == this.name &&
+          other.description == this.description &&
+          other.type == this.type &&
+          other.subtype == this.subtype &&
+          other.slot == this.slot &&
+          other.rank == this.rank &&
+          other.requiredRank == this.requiredRank &&
+          other.rarity == this.rarity &&
+          other.isSecret == this.isSecret &&
+          other.isUnique == this.isUnique &&
+          other.isDarkItem == this.isDarkItem &&
+          other.isEvolving == this.isEvolving &&
+          other.requiredLevel == this.requiredLevel &&
+          other.allowedClasses == this.allowedClasses &&
+          other.allowedFactions == this.allowedFactions &&
+          other.stats == this.stats &&
+          other.effects == this.effects &&
+          other.sources == this.sources &&
+          other.shopPriceCoins == this.shopPriceCoins &&
+          other.shopPriceGems == this.shopPriceGems &&
+          other.stackMax == this.stackMax &&
+          other.durabilityMax == this.durabilityMax &&
+          other.durabilityBreaksTo == this.durabilityBreaksTo &&
+          other.isStackable == this.isStackable &&
+          other.isConsumable == this.isConsumable &&
+          other.isEquippable == this.isEquippable &&
+          other.isTradable == this.isTradable &&
+          other.isSellable == this.isSellable &&
+          other.bindOnPickup == this.bindOnPickup &&
+          other.craftRecipeId == this.craftRecipeId &&
+          other.forgeRecipeId == this.forgeRecipeId &&
+          other.enchantAllowed == this.enchantAllowed &&
+          other.sombrioContentId == this.sombrioContentId &&
+          other.evolutionStages == this.evolutionStages &&
+          other.image == this.image &&
+          other.icon == this.icon);
+}
+
+class ItemsCatalogTableCompanion
+    extends UpdateCompanion<ItemsCatalogTableData> {
+  final Value<String> key;
+  final Value<String> name;
+  final Value<String> description;
+  final Value<String> type;
+  final Value<String?> subtype;
+  final Value<String?> slot;
+  final Value<String?> rank;
+  final Value<String?> requiredRank;
+  final Value<String> rarity;
+  final Value<bool> isSecret;
+  final Value<bool> isUnique;
+  final Value<bool> isDarkItem;
+  final Value<bool> isEvolving;
+  final Value<int> requiredLevel;
+  final Value<String> allowedClasses;
+  final Value<String> allowedFactions;
+  final Value<String> stats;
+  final Value<String> effects;
+  final Value<String> sources;
+  final Value<int?> shopPriceCoins;
+  final Value<int?> shopPriceGems;
+  final Value<int> stackMax;
+  final Value<int?> durabilityMax;
+  final Value<String?> durabilityBreaksTo;
+  final Value<bool> isStackable;
+  final Value<bool> isConsumable;
+  final Value<bool> isEquippable;
+  final Value<bool> isTradable;
+  final Value<bool> isSellable;
+  final Value<bool> bindOnPickup;
+  final Value<String?> craftRecipeId;
+  final Value<String?> forgeRecipeId;
+  final Value<bool> enchantAllowed;
+  final Value<String?> sombrioContentId;
+  final Value<String?> evolutionStages;
+  final Value<String> image;
+  final Value<String?> icon;
+  final Value<int> rowid;
+  const ItemsCatalogTableCompanion({
+    this.key = const Value.absent(),
+    this.name = const Value.absent(),
+    this.description = const Value.absent(),
+    this.type = const Value.absent(),
+    this.subtype = const Value.absent(),
+    this.slot = const Value.absent(),
+    this.rank = const Value.absent(),
+    this.requiredRank = const Value.absent(),
+    this.rarity = const Value.absent(),
+    this.isSecret = const Value.absent(),
+    this.isUnique = const Value.absent(),
+    this.isDarkItem = const Value.absent(),
+    this.isEvolving = const Value.absent(),
+    this.requiredLevel = const Value.absent(),
+    this.allowedClasses = const Value.absent(),
+    this.allowedFactions = const Value.absent(),
+    this.stats = const Value.absent(),
+    this.effects = const Value.absent(),
+    this.sources = const Value.absent(),
+    this.shopPriceCoins = const Value.absent(),
+    this.shopPriceGems = const Value.absent(),
+    this.stackMax = const Value.absent(),
+    this.durabilityMax = const Value.absent(),
+    this.durabilityBreaksTo = const Value.absent(),
+    this.isStackable = const Value.absent(),
+    this.isConsumable = const Value.absent(),
+    this.isEquippable = const Value.absent(),
+    this.isTradable = const Value.absent(),
+    this.isSellable = const Value.absent(),
+    this.bindOnPickup = const Value.absent(),
+    this.craftRecipeId = const Value.absent(),
+    this.forgeRecipeId = const Value.absent(),
+    this.enchantAllowed = const Value.absent(),
+    this.sombrioContentId = const Value.absent(),
+    this.evolutionStages = const Value.absent(),
+    this.image = const Value.absent(),
+    this.icon = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ItemsCatalogTableCompanion.insert({
+    required String key,
+    required String name,
+    this.description = const Value.absent(),
+    required String type,
+    this.subtype = const Value.absent(),
+    this.slot = const Value.absent(),
+    this.rank = const Value.absent(),
+    this.requiredRank = const Value.absent(),
+    this.rarity = const Value.absent(),
+    this.isSecret = const Value.absent(),
+    this.isUnique = const Value.absent(),
+    this.isDarkItem = const Value.absent(),
+    this.isEvolving = const Value.absent(),
+    this.requiredLevel = const Value.absent(),
+    this.allowedClasses = const Value.absent(),
+    this.allowedFactions = const Value.absent(),
+    this.stats = const Value.absent(),
+    this.effects = const Value.absent(),
+    this.sources = const Value.absent(),
+    this.shopPriceCoins = const Value.absent(),
+    this.shopPriceGems = const Value.absent(),
+    this.stackMax = const Value.absent(),
+    this.durabilityMax = const Value.absent(),
+    this.durabilityBreaksTo = const Value.absent(),
+    this.isStackable = const Value.absent(),
+    this.isConsumable = const Value.absent(),
+    this.isEquippable = const Value.absent(),
+    this.isTradable = const Value.absent(),
+    this.isSellable = const Value.absent(),
+    this.bindOnPickup = const Value.absent(),
+    this.craftRecipeId = const Value.absent(),
+    this.forgeRecipeId = const Value.absent(),
+    this.enchantAllowed = const Value.absent(),
+    this.sombrioContentId = const Value.absent(),
+    this.evolutionStages = const Value.absent(),
+    this.image = const Value.absent(),
+    this.icon = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : key = Value(key),
+        name = Value(name),
+        type = Value(type);
+  static Insertable<ItemsCatalogTableData> custom({
+    Expression<String>? key,
+    Expression<String>? name,
+    Expression<String>? description,
+    Expression<String>? type,
+    Expression<String>? subtype,
+    Expression<String>? slot,
+    Expression<String>? rank,
+    Expression<String>? requiredRank,
+    Expression<String>? rarity,
+    Expression<bool>? isSecret,
+    Expression<bool>? isUnique,
+    Expression<bool>? isDarkItem,
+    Expression<bool>? isEvolving,
+    Expression<int>? requiredLevel,
+    Expression<String>? allowedClasses,
+    Expression<String>? allowedFactions,
+    Expression<String>? stats,
+    Expression<String>? effects,
+    Expression<String>? sources,
+    Expression<int>? shopPriceCoins,
+    Expression<int>? shopPriceGems,
+    Expression<int>? stackMax,
+    Expression<int>? durabilityMax,
+    Expression<String>? durabilityBreaksTo,
+    Expression<bool>? isStackable,
+    Expression<bool>? isConsumable,
+    Expression<bool>? isEquippable,
+    Expression<bool>? isTradable,
+    Expression<bool>? isSellable,
+    Expression<bool>? bindOnPickup,
+    Expression<String>? craftRecipeId,
+    Expression<String>? forgeRecipeId,
+    Expression<bool>? enchantAllowed,
+    Expression<String>? sombrioContentId,
+    Expression<String>? evolutionStages,
+    Expression<String>? image,
+    Expression<String>? icon,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (key != null) 'key': key,
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (type != null) 'type': type,
+      if (subtype != null) 'subtype': subtype,
+      if (slot != null) 'slot': slot,
+      if (rank != null) 'rank': rank,
+      if (requiredRank != null) 'required_rank': requiredRank,
+      if (rarity != null) 'rarity': rarity,
+      if (isSecret != null) 'is_secret': isSecret,
+      if (isUnique != null) 'is_unique': isUnique,
+      if (isDarkItem != null) 'is_dark_item': isDarkItem,
+      if (isEvolving != null) 'is_evolving': isEvolving,
+      if (requiredLevel != null) 'required_level': requiredLevel,
+      if (allowedClasses != null) 'allowed_classes': allowedClasses,
+      if (allowedFactions != null) 'allowed_factions': allowedFactions,
+      if (stats != null) 'stats': stats,
+      if (effects != null) 'effects': effects,
+      if (sources != null) 'sources': sources,
+      if (shopPriceCoins != null) 'shop_price_coins': shopPriceCoins,
+      if (shopPriceGems != null) 'shop_price_gems': shopPriceGems,
+      if (stackMax != null) 'stack_max': stackMax,
+      if (durabilityMax != null) 'durability_max': durabilityMax,
+      if (durabilityBreaksTo != null)
+        'durability_breaks_to': durabilityBreaksTo,
+      if (isStackable != null) 'is_stackable': isStackable,
+      if (isConsumable != null) 'is_consumable': isConsumable,
+      if (isEquippable != null) 'is_equippable': isEquippable,
+      if (isTradable != null) 'is_tradable': isTradable,
+      if (isSellable != null) 'is_sellable': isSellable,
+      if (bindOnPickup != null) 'bind_on_pickup': bindOnPickup,
+      if (craftRecipeId != null) 'craft_recipe_id': craftRecipeId,
+      if (forgeRecipeId != null) 'forge_recipe_id': forgeRecipeId,
+      if (enchantAllowed != null) 'enchant_allowed': enchantAllowed,
+      if (sombrioContentId != null) 'sombrio_content_id': sombrioContentId,
+      if (evolutionStages != null) 'evolution_stages': evolutionStages,
+      if (image != null) 'image': image,
+      if (icon != null) 'icon': icon,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ItemsCatalogTableCompanion copyWith(
+      {Value<String>? key,
+      Value<String>? name,
+      Value<String>? description,
+      Value<String>? type,
+      Value<String?>? subtype,
+      Value<String?>? slot,
+      Value<String?>? rank,
+      Value<String?>? requiredRank,
+      Value<String>? rarity,
+      Value<bool>? isSecret,
+      Value<bool>? isUnique,
+      Value<bool>? isDarkItem,
+      Value<bool>? isEvolving,
+      Value<int>? requiredLevel,
+      Value<String>? allowedClasses,
+      Value<String>? allowedFactions,
+      Value<String>? stats,
+      Value<String>? effects,
+      Value<String>? sources,
+      Value<int?>? shopPriceCoins,
+      Value<int?>? shopPriceGems,
+      Value<int>? stackMax,
+      Value<int?>? durabilityMax,
+      Value<String?>? durabilityBreaksTo,
+      Value<bool>? isStackable,
+      Value<bool>? isConsumable,
+      Value<bool>? isEquippable,
+      Value<bool>? isTradable,
+      Value<bool>? isSellable,
+      Value<bool>? bindOnPickup,
+      Value<String?>? craftRecipeId,
+      Value<String?>? forgeRecipeId,
+      Value<bool>? enchantAllowed,
+      Value<String?>? sombrioContentId,
+      Value<String?>? evolutionStages,
+      Value<String>? image,
+      Value<String?>? icon,
+      Value<int>? rowid}) {
+    return ItemsCatalogTableCompanion(
+      key: key ?? this.key,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      type: type ?? this.type,
+      subtype: subtype ?? this.subtype,
+      slot: slot ?? this.slot,
+      rank: rank ?? this.rank,
+      requiredRank: requiredRank ?? this.requiredRank,
+      rarity: rarity ?? this.rarity,
+      isSecret: isSecret ?? this.isSecret,
+      isUnique: isUnique ?? this.isUnique,
+      isDarkItem: isDarkItem ?? this.isDarkItem,
+      isEvolving: isEvolving ?? this.isEvolving,
+      requiredLevel: requiredLevel ?? this.requiredLevel,
+      allowedClasses: allowedClasses ?? this.allowedClasses,
+      allowedFactions: allowedFactions ?? this.allowedFactions,
+      stats: stats ?? this.stats,
+      effects: effects ?? this.effects,
+      sources: sources ?? this.sources,
+      shopPriceCoins: shopPriceCoins ?? this.shopPriceCoins,
+      shopPriceGems: shopPriceGems ?? this.shopPriceGems,
+      stackMax: stackMax ?? this.stackMax,
+      durabilityMax: durabilityMax ?? this.durabilityMax,
+      durabilityBreaksTo: durabilityBreaksTo ?? this.durabilityBreaksTo,
+      isStackable: isStackable ?? this.isStackable,
+      isConsumable: isConsumable ?? this.isConsumable,
+      isEquippable: isEquippable ?? this.isEquippable,
+      isTradable: isTradable ?? this.isTradable,
+      isSellable: isSellable ?? this.isSellable,
+      bindOnPickup: bindOnPickup ?? this.bindOnPickup,
+      craftRecipeId: craftRecipeId ?? this.craftRecipeId,
+      forgeRecipeId: forgeRecipeId ?? this.forgeRecipeId,
+      enchantAllowed: enchantAllowed ?? this.enchantAllowed,
+      sombrioContentId: sombrioContentId ?? this.sombrioContentId,
+      evolutionStages: evolutionStages ?? this.evolutionStages,
+      image: image ?? this.image,
+      icon: icon ?? this.icon,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (subtype.present) {
+      map['subtype'] = Variable<String>(subtype.value);
+    }
+    if (slot.present) {
+      map['slot'] = Variable<String>(slot.value);
+    }
+    if (rank.present) {
+      map['rank'] = Variable<String>(rank.value);
+    }
+    if (requiredRank.present) {
+      map['required_rank'] = Variable<String>(requiredRank.value);
+    }
+    if (rarity.present) {
+      map['rarity'] = Variable<String>(rarity.value);
+    }
+    if (isSecret.present) {
+      map['is_secret'] = Variable<bool>(isSecret.value);
+    }
+    if (isUnique.present) {
+      map['is_unique'] = Variable<bool>(isUnique.value);
+    }
+    if (isDarkItem.present) {
+      map['is_dark_item'] = Variable<bool>(isDarkItem.value);
+    }
+    if (isEvolving.present) {
+      map['is_evolving'] = Variable<bool>(isEvolving.value);
+    }
+    if (requiredLevel.present) {
+      map['required_level'] = Variable<int>(requiredLevel.value);
+    }
+    if (allowedClasses.present) {
+      map['allowed_classes'] = Variable<String>(allowedClasses.value);
+    }
+    if (allowedFactions.present) {
+      map['allowed_factions'] = Variable<String>(allowedFactions.value);
+    }
+    if (stats.present) {
+      map['stats'] = Variable<String>(stats.value);
+    }
+    if (effects.present) {
+      map['effects'] = Variable<String>(effects.value);
+    }
+    if (sources.present) {
+      map['sources'] = Variable<String>(sources.value);
+    }
+    if (shopPriceCoins.present) {
+      map['shop_price_coins'] = Variable<int>(shopPriceCoins.value);
+    }
+    if (shopPriceGems.present) {
+      map['shop_price_gems'] = Variable<int>(shopPriceGems.value);
+    }
+    if (stackMax.present) {
+      map['stack_max'] = Variable<int>(stackMax.value);
+    }
+    if (durabilityMax.present) {
+      map['durability_max'] = Variable<int>(durabilityMax.value);
+    }
+    if (durabilityBreaksTo.present) {
+      map['durability_breaks_to'] = Variable<String>(durabilityBreaksTo.value);
+    }
+    if (isStackable.present) {
+      map['is_stackable'] = Variable<bool>(isStackable.value);
+    }
+    if (isConsumable.present) {
+      map['is_consumable'] = Variable<bool>(isConsumable.value);
+    }
+    if (isEquippable.present) {
+      map['is_equippable'] = Variable<bool>(isEquippable.value);
+    }
+    if (isTradable.present) {
+      map['is_tradable'] = Variable<bool>(isTradable.value);
+    }
+    if (isSellable.present) {
+      map['is_sellable'] = Variable<bool>(isSellable.value);
+    }
+    if (bindOnPickup.present) {
+      map['bind_on_pickup'] = Variable<bool>(bindOnPickup.value);
+    }
+    if (craftRecipeId.present) {
+      map['craft_recipe_id'] = Variable<String>(craftRecipeId.value);
+    }
+    if (forgeRecipeId.present) {
+      map['forge_recipe_id'] = Variable<String>(forgeRecipeId.value);
+    }
+    if (enchantAllowed.present) {
+      map['enchant_allowed'] = Variable<bool>(enchantAllowed.value);
+    }
+    if (sombrioContentId.present) {
+      map['sombrio_content_id'] = Variable<String>(sombrioContentId.value);
+    }
+    if (evolutionStages.present) {
+      map['evolution_stages'] = Variable<String>(evolutionStages.value);
+    }
+    if (image.present) {
+      map['image'] = Variable<String>(image.value);
+    }
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemsCatalogTableCompanion(')
+          ..write('key: $key, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('type: $type, ')
+          ..write('subtype: $subtype, ')
+          ..write('slot: $slot, ')
+          ..write('rank: $rank, ')
+          ..write('requiredRank: $requiredRank, ')
+          ..write('rarity: $rarity, ')
+          ..write('isSecret: $isSecret, ')
+          ..write('isUnique: $isUnique, ')
+          ..write('isDarkItem: $isDarkItem, ')
+          ..write('isEvolving: $isEvolving, ')
+          ..write('requiredLevel: $requiredLevel, ')
+          ..write('allowedClasses: $allowedClasses, ')
+          ..write('allowedFactions: $allowedFactions, ')
+          ..write('stats: $stats, ')
+          ..write('effects: $effects, ')
+          ..write('sources: $sources, ')
+          ..write('shopPriceCoins: $shopPriceCoins, ')
+          ..write('shopPriceGems: $shopPriceGems, ')
+          ..write('stackMax: $stackMax, ')
+          ..write('durabilityMax: $durabilityMax, ')
+          ..write('durabilityBreaksTo: $durabilityBreaksTo, ')
+          ..write('isStackable: $isStackable, ')
+          ..write('isConsumable: $isConsumable, ')
+          ..write('isEquippable: $isEquippable, ')
+          ..write('isTradable: $isTradable, ')
+          ..write('isSellable: $isSellable, ')
+          ..write('bindOnPickup: $bindOnPickup, ')
+          ..write('craftRecipeId: $craftRecipeId, ')
+          ..write('forgeRecipeId: $forgeRecipeId, ')
+          ..write('enchantAllowed: $enchantAllowed, ')
+          ..write('sombrioContentId: $sombrioContentId, ')
+          ..write('evolutionStages: $evolutionStages, ')
+          ..write('image: $image, ')
+          ..write('icon: $icon, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PlayerInventoryTableTable extends PlayerInventoryTable
+    with TableInfo<$PlayerInventoryTableTable, PlayerInventoryTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlayerInventoryTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _itemKeyMeta =
+      const VerificationMeta('itemKey');
+  @override
+  late final GeneratedColumn<String> itemKey = GeneratedColumn<String>(
+      'item_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _quantityMeta =
+      const VerificationMeta('quantity');
+  @override
+  late final GeneratedColumn<int> quantity = GeneratedColumn<int>(
+      'quantity', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _durabilityCurrentMeta =
+      const VerificationMeta('durabilityCurrent');
+  @override
+  late final GeneratedColumn<int> durabilityCurrent = GeneratedColumn<int>(
+      'durability_current', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _acquiredAtMeta =
+      const VerificationMeta('acquiredAt');
+  @override
+  late final GeneratedColumn<int> acquiredAt = GeneratedColumn<int>(
+      'acquired_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _acquiredViaMeta =
+      const VerificationMeta('acquiredVia');
+  @override
+  late final GeneratedColumn<String> acquiredVia = GeneratedColumn<String>(
+      'acquired_via', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _evolutionStageMeta =
+      const VerificationMeta('evolutionStage');
+  @override
+  late final GeneratedColumn<String> evolutionStage = GeneratedColumn<String>(
+      'evolution_stage', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _isEquippedMeta =
+      const VerificationMeta('isEquipped');
+  @override
+  late final GeneratedColumn<bool> isEquipped = GeneratedColumn<bool>(
+      'is_equipped', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_equipped" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        playerId,
+        itemKey,
+        quantity,
+        durabilityCurrent,
+        acquiredAt,
+        acquiredVia,
+        evolutionStage,
+        isEquipped
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'player_inventory';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<PlayerInventoryTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('item_key')) {
+      context.handle(_itemKeyMeta,
+          itemKey.isAcceptableOrUnknown(data['item_key']!, _itemKeyMeta));
+    } else if (isInserting) {
+      context.missing(_itemKeyMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(_quantityMeta,
+          quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta));
+    }
+    if (data.containsKey('durability_current')) {
+      context.handle(
+          _durabilityCurrentMeta,
+          durabilityCurrent.isAcceptableOrUnknown(
+              data['durability_current']!, _durabilityCurrentMeta));
+    }
+    if (data.containsKey('acquired_at')) {
+      context.handle(
+          _acquiredAtMeta,
+          acquiredAt.isAcceptableOrUnknown(
+              data['acquired_at']!, _acquiredAtMeta));
+    } else if (isInserting) {
+      context.missing(_acquiredAtMeta);
+    }
+    if (data.containsKey('acquired_via')) {
+      context.handle(
+          _acquiredViaMeta,
+          acquiredVia.isAcceptableOrUnknown(
+              data['acquired_via']!, _acquiredViaMeta));
+    } else if (isInserting) {
+      context.missing(_acquiredViaMeta);
+    }
+    if (data.containsKey('evolution_stage')) {
+      context.handle(
+          _evolutionStageMeta,
+          evolutionStage.isAcceptableOrUnknown(
+              data['evolution_stage']!, _evolutionStageMeta));
+    }
+    if (data.containsKey('is_equipped')) {
+      context.handle(
+          _isEquippedMeta,
+          isEquipped.isAcceptableOrUnknown(
+              data['is_equipped']!, _isEquippedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PlayerInventoryTableData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlayerInventoryTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      itemKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}item_key'])!,
+      quantity: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}quantity'])!,
+      durabilityCurrent: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}durability_current']),
+      acquiredAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}acquired_at'])!,
+      acquiredVia: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}acquired_via'])!,
+      evolutionStage: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}evolution_stage']),
+      isEquipped: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_equipped'])!,
+    );
+  }
+
+  @override
+  $PlayerInventoryTableTable createAlias(String alias) {
+    return $PlayerInventoryTableTable(attachedDatabase, alias);
+  }
+}
+
+class PlayerInventoryTableData extends DataClass
+    implements Insertable<PlayerInventoryTableData> {
+  final int id;
+  final int playerId;
+  final String itemKey;
+  final int quantity;
+  final int? durabilityCurrent;
+  final int acquiredAt;
+  final String acquiredVia;
+  final String? evolutionStage;
+  final bool isEquipped;
+  const PlayerInventoryTableData(
+      {required this.id,
+      required this.playerId,
+      required this.itemKey,
+      required this.quantity,
+      this.durabilityCurrent,
+      required this.acquiredAt,
+      required this.acquiredVia,
+      this.evolutionStage,
+      required this.isEquipped});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['item_key'] = Variable<String>(itemKey);
+    map['quantity'] = Variable<int>(quantity);
+    if (!nullToAbsent || durabilityCurrent != null) {
+      map['durability_current'] = Variable<int>(durabilityCurrent);
+    }
+    map['acquired_at'] = Variable<int>(acquiredAt);
+    map['acquired_via'] = Variable<String>(acquiredVia);
+    if (!nullToAbsent || evolutionStage != null) {
+      map['evolution_stage'] = Variable<String>(evolutionStage);
+    }
+    map['is_equipped'] = Variable<bool>(isEquipped);
+    return map;
+  }
+
+  PlayerInventoryTableCompanion toCompanion(bool nullToAbsent) {
+    return PlayerInventoryTableCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      itemKey: Value(itemKey),
+      quantity: Value(quantity),
+      durabilityCurrent: durabilityCurrent == null && nullToAbsent
+          ? const Value.absent()
+          : Value(durabilityCurrent),
+      acquiredAt: Value(acquiredAt),
+      acquiredVia: Value(acquiredVia),
+      evolutionStage: evolutionStage == null && nullToAbsent
+          ? const Value.absent()
+          : Value(evolutionStage),
+      isEquipped: Value(isEquipped),
+    );
+  }
+
+  factory PlayerInventoryTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlayerInventoryTableData(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      itemKey: serializer.fromJson<String>(json['itemKey']),
+      quantity: serializer.fromJson<int>(json['quantity']),
+      durabilityCurrent: serializer.fromJson<int?>(json['durabilityCurrent']),
+      acquiredAt: serializer.fromJson<int>(json['acquiredAt']),
+      acquiredVia: serializer.fromJson<String>(json['acquiredVia']),
+      evolutionStage: serializer.fromJson<String?>(json['evolutionStage']),
+      isEquipped: serializer.fromJson<bool>(json['isEquipped']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'itemKey': serializer.toJson<String>(itemKey),
+      'quantity': serializer.toJson<int>(quantity),
+      'durabilityCurrent': serializer.toJson<int?>(durabilityCurrent),
+      'acquiredAt': serializer.toJson<int>(acquiredAt),
+      'acquiredVia': serializer.toJson<String>(acquiredVia),
+      'evolutionStage': serializer.toJson<String?>(evolutionStage),
+      'isEquipped': serializer.toJson<bool>(isEquipped),
+    };
+  }
+
+  PlayerInventoryTableData copyWith(
+          {int? id,
+          int? playerId,
+          String? itemKey,
+          int? quantity,
+          Value<int?> durabilityCurrent = const Value.absent(),
+          int? acquiredAt,
+          String? acquiredVia,
+          Value<String?> evolutionStage = const Value.absent(),
+          bool? isEquipped}) =>
+      PlayerInventoryTableData(
+        id: id ?? this.id,
+        playerId: playerId ?? this.playerId,
+        itemKey: itemKey ?? this.itemKey,
+        quantity: quantity ?? this.quantity,
+        durabilityCurrent: durabilityCurrent.present
+            ? durabilityCurrent.value
+            : this.durabilityCurrent,
+        acquiredAt: acquiredAt ?? this.acquiredAt,
+        acquiredVia: acquiredVia ?? this.acquiredVia,
+        evolutionStage:
+            evolutionStage.present ? evolutionStage.value : this.evolutionStage,
+        isEquipped: isEquipped ?? this.isEquipped,
+      );
+  PlayerInventoryTableData copyWithCompanion(
+      PlayerInventoryTableCompanion data) {
+    return PlayerInventoryTableData(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      itemKey: data.itemKey.present ? data.itemKey.value : this.itemKey,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      durabilityCurrent: data.durabilityCurrent.present
+          ? data.durabilityCurrent.value
+          : this.durabilityCurrent,
+      acquiredAt:
+          data.acquiredAt.present ? data.acquiredAt.value : this.acquiredAt,
+      acquiredVia:
+          data.acquiredVia.present ? data.acquiredVia.value : this.acquiredVia,
+      evolutionStage: data.evolutionStage.present
+          ? data.evolutionStage.value
+          : this.evolutionStage,
+      isEquipped:
+          data.isEquipped.present ? data.isEquipped.value : this.isEquipped,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerInventoryTableData(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('itemKey: $itemKey, ')
+          ..write('quantity: $quantity, ')
+          ..write('durabilityCurrent: $durabilityCurrent, ')
+          ..write('acquiredAt: $acquiredAt, ')
+          ..write('acquiredVia: $acquiredVia, ')
+          ..write('evolutionStage: $evolutionStage, ')
+          ..write('isEquipped: $isEquipped')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, playerId, itemKey, quantity,
+      durabilityCurrent, acquiredAt, acquiredVia, evolutionStage, isEquipped);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlayerInventoryTableData &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.itemKey == this.itemKey &&
+          other.quantity == this.quantity &&
+          other.durabilityCurrent == this.durabilityCurrent &&
+          other.acquiredAt == this.acquiredAt &&
+          other.acquiredVia == this.acquiredVia &&
+          other.evolutionStage == this.evolutionStage &&
+          other.isEquipped == this.isEquipped);
+}
+
+class PlayerInventoryTableCompanion
+    extends UpdateCompanion<PlayerInventoryTableData> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> itemKey;
+  final Value<int> quantity;
+  final Value<int?> durabilityCurrent;
+  final Value<int> acquiredAt;
+  final Value<String> acquiredVia;
+  final Value<String?> evolutionStage;
+  final Value<bool> isEquipped;
+  const PlayerInventoryTableCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.itemKey = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.durabilityCurrent = const Value.absent(),
+    this.acquiredAt = const Value.absent(),
+    this.acquiredVia = const Value.absent(),
+    this.evolutionStage = const Value.absent(),
+    this.isEquipped = const Value.absent(),
+  });
+  PlayerInventoryTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String itemKey,
+    this.quantity = const Value.absent(),
+    this.durabilityCurrent = const Value.absent(),
+    required int acquiredAt,
+    required String acquiredVia,
+    this.evolutionStage = const Value.absent(),
+    this.isEquipped = const Value.absent(),
+  })  : playerId = Value(playerId),
+        itemKey = Value(itemKey),
+        acquiredAt = Value(acquiredAt),
+        acquiredVia = Value(acquiredVia);
+  static Insertable<PlayerInventoryTableData> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? itemKey,
+    Expression<int>? quantity,
+    Expression<int>? durabilityCurrent,
+    Expression<int>? acquiredAt,
+    Expression<String>? acquiredVia,
+    Expression<String>? evolutionStage,
+    Expression<bool>? isEquipped,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (itemKey != null) 'item_key': itemKey,
+      if (quantity != null) 'quantity': quantity,
+      if (durabilityCurrent != null) 'durability_current': durabilityCurrent,
+      if (acquiredAt != null) 'acquired_at': acquiredAt,
+      if (acquiredVia != null) 'acquired_via': acquiredVia,
+      if (evolutionStage != null) 'evolution_stage': evolutionStage,
+      if (isEquipped != null) 'is_equipped': isEquipped,
+    });
+  }
+
+  PlayerInventoryTableCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? playerId,
+      Value<String>? itemKey,
+      Value<int>? quantity,
+      Value<int?>? durabilityCurrent,
+      Value<int>? acquiredAt,
+      Value<String>? acquiredVia,
+      Value<String?>? evolutionStage,
+      Value<bool>? isEquipped}) {
+    return PlayerInventoryTableCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      itemKey: itemKey ?? this.itemKey,
+      quantity: quantity ?? this.quantity,
+      durabilityCurrent: durabilityCurrent ?? this.durabilityCurrent,
+      acquiredAt: acquiredAt ?? this.acquiredAt,
+      acquiredVia: acquiredVia ?? this.acquiredVia,
+      evolutionStage: evolutionStage ?? this.evolutionStage,
+      isEquipped: isEquipped ?? this.isEquipped,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (itemKey.present) {
+      map['item_key'] = Variable<String>(itemKey.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<int>(quantity.value);
+    }
+    if (durabilityCurrent.present) {
+      map['durability_current'] = Variable<int>(durabilityCurrent.value);
+    }
+    if (acquiredAt.present) {
+      map['acquired_at'] = Variable<int>(acquiredAt.value);
+    }
+    if (acquiredVia.present) {
+      map['acquired_via'] = Variable<String>(acquiredVia.value);
+    }
+    if (evolutionStage.present) {
+      map['evolution_stage'] = Variable<String>(evolutionStage.value);
+    }
+    if (isEquipped.present) {
+      map['is_equipped'] = Variable<bool>(isEquipped.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerInventoryTableCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('itemKey: $itemKey, ')
+          ..write('quantity: $quantity, ')
+          ..write('durabilityCurrent: $durabilityCurrent, ')
+          ..write('acquiredAt: $acquiredAt, ')
+          ..write('acquiredVia: $acquiredVia, ')
+          ..write('evolutionStage: $evolutionStage, ')
+          ..write('isEquipped: $isEquipped')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PlayerEquipmentTableTable extends PlayerEquipmentTable
+    with TableInfo<$PlayerEquipmentTableTable, PlayerEquipmentTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlayerEquipmentTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _slotMeta = const VerificationMeta('slot');
+  @override
+  late final GeneratedColumn<String> slot = GeneratedColumn<String>(
+      'slot', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _inventoryIdMeta =
+      const VerificationMeta('inventoryId');
+  @override
+  late final GeneratedColumn<int> inventoryId = GeneratedColumn<int>(
+      'inventory_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [playerId, slot, inventoryId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'player_equipment';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<PlayerEquipmentTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('slot')) {
+      context.handle(
+          _slotMeta, slot.isAcceptableOrUnknown(data['slot']!, _slotMeta));
+    } else if (isInserting) {
+      context.missing(_slotMeta);
+    }
+    if (data.containsKey('inventory_id')) {
+      context.handle(
+          _inventoryIdMeta,
+          inventoryId.isAcceptableOrUnknown(
+              data['inventory_id']!, _inventoryIdMeta));
+    } else if (isInserting) {
+      context.missing(_inventoryIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {playerId, slot};
+  @override
+  PlayerEquipmentTableData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlayerEquipmentTableData(
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      slot: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}slot'])!,
+      inventoryId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}inventory_id'])!,
+    );
+  }
+
+  @override
+  $PlayerEquipmentTableTable createAlias(String alias) {
+    return $PlayerEquipmentTableTable(attachedDatabase, alias);
+  }
+}
+
+class PlayerEquipmentTableData extends DataClass
+    implements Insertable<PlayerEquipmentTableData> {
+  final int playerId;
+  final String slot;
+  final int inventoryId;
+  const PlayerEquipmentTableData(
+      {required this.playerId, required this.slot, required this.inventoryId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['player_id'] = Variable<int>(playerId);
+    map['slot'] = Variable<String>(slot);
+    map['inventory_id'] = Variable<int>(inventoryId);
+    return map;
+  }
+
+  PlayerEquipmentTableCompanion toCompanion(bool nullToAbsent) {
+    return PlayerEquipmentTableCompanion(
+      playerId: Value(playerId),
+      slot: Value(slot),
+      inventoryId: Value(inventoryId),
+    );
+  }
+
+  factory PlayerEquipmentTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlayerEquipmentTableData(
+      playerId: serializer.fromJson<int>(json['playerId']),
+      slot: serializer.fromJson<String>(json['slot']),
+      inventoryId: serializer.fromJson<int>(json['inventoryId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'playerId': serializer.toJson<int>(playerId),
+      'slot': serializer.toJson<String>(slot),
+      'inventoryId': serializer.toJson<int>(inventoryId),
+    };
+  }
+
+  PlayerEquipmentTableData copyWith(
+          {int? playerId, String? slot, int? inventoryId}) =>
+      PlayerEquipmentTableData(
+        playerId: playerId ?? this.playerId,
+        slot: slot ?? this.slot,
+        inventoryId: inventoryId ?? this.inventoryId,
+      );
+  PlayerEquipmentTableData copyWithCompanion(
+      PlayerEquipmentTableCompanion data) {
+    return PlayerEquipmentTableData(
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      slot: data.slot.present ? data.slot.value : this.slot,
+      inventoryId:
+          data.inventoryId.present ? data.inventoryId.value : this.inventoryId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerEquipmentTableData(')
+          ..write('playerId: $playerId, ')
+          ..write('slot: $slot, ')
+          ..write('inventoryId: $inventoryId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(playerId, slot, inventoryId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlayerEquipmentTableData &&
+          other.playerId == this.playerId &&
+          other.slot == this.slot &&
+          other.inventoryId == this.inventoryId);
+}
+
+class PlayerEquipmentTableCompanion
+    extends UpdateCompanion<PlayerEquipmentTableData> {
+  final Value<int> playerId;
+  final Value<String> slot;
+  final Value<int> inventoryId;
+  final Value<int> rowid;
+  const PlayerEquipmentTableCompanion({
+    this.playerId = const Value.absent(),
+    this.slot = const Value.absent(),
+    this.inventoryId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlayerEquipmentTableCompanion.insert({
+    required int playerId,
+    required String slot,
+    required int inventoryId,
+    this.rowid = const Value.absent(),
+  })  : playerId = Value(playerId),
+        slot = Value(slot),
+        inventoryId = Value(inventoryId);
+  static Insertable<PlayerEquipmentTableData> custom({
+    Expression<int>? playerId,
+    Expression<String>? slot,
+    Expression<int>? inventoryId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (playerId != null) 'player_id': playerId,
+      if (slot != null) 'slot': slot,
+      if (inventoryId != null) 'inventory_id': inventoryId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlayerEquipmentTableCompanion copyWith(
+      {Value<int>? playerId,
+      Value<String>? slot,
+      Value<int>? inventoryId,
+      Value<int>? rowid}) {
+    return PlayerEquipmentTableCompanion(
+      playerId: playerId ?? this.playerId,
+      slot: slot ?? this.slot,
+      inventoryId: inventoryId ?? this.inventoryId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (slot.present) {
+      map['slot'] = Variable<String>(slot.value);
+    }
+    if (inventoryId.present) {
+      map['inventory_id'] = Variable<int>(inventoryId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerEquipmentTableCompanion(')
+          ..write('playerId: $playerId, ')
+          ..write('slot: $slot, ')
+          ..write('inventoryId: $inventoryId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -9806,9 +12197,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $PlayerVitalismTreesTableTable(this);
   late final $LifeVitalismPointsTableTable lifeVitalismPointsTable =
       $LifeVitalismPointsTableTable(this);
+  late final $ItemsCatalogTableTable itemsCatalogTable =
+      $ItemsCatalogTableTable(this);
+  late final $PlayerInventoryTableTable playerInventoryTable =
+      $PlayerInventoryTableTable(this);
+  late final $PlayerEquipmentTableTable playerEquipmentTable =
+      $PlayerEquipmentTableTable(this);
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
   late final HabitDao habitDao = HabitDao(this as AppDatabase);
-  late final InventoryDao inventoryDao = InventoryDao(this as AppDatabase);
   late final AchievementDao achievementDao =
       AchievementDao(this as AppDatabase);
   late final GuildDao guildDao = GuildDao(this as AppDatabase);
@@ -9834,7 +12230,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         vitalismUniqueCatalogTable,
         playerVitalismAffinitiesTable,
         playerVitalismTreesTable,
-        lifeVitalismPointsTable
+        lifeVitalismPointsTable,
+        itemsCatalogTable,
+        playerInventoryTable,
+        playerEquipmentTable
       ];
 }
 
@@ -14537,6 +16936,1072 @@ typedef $$LifeVitalismPointsTableTableProcessedTableManager
         ),
         LifeVitalismPointsTableData,
         PrefetchHooks Function()>;
+typedef $$ItemsCatalogTableTableCreateCompanionBuilder
+    = ItemsCatalogTableCompanion Function({
+  required String key,
+  required String name,
+  Value<String> description,
+  required String type,
+  Value<String?> subtype,
+  Value<String?> slot,
+  Value<String?> rank,
+  Value<String?> requiredRank,
+  Value<String> rarity,
+  Value<bool> isSecret,
+  Value<bool> isUnique,
+  Value<bool> isDarkItem,
+  Value<bool> isEvolving,
+  Value<int> requiredLevel,
+  Value<String> allowedClasses,
+  Value<String> allowedFactions,
+  Value<String> stats,
+  Value<String> effects,
+  Value<String> sources,
+  Value<int?> shopPriceCoins,
+  Value<int?> shopPriceGems,
+  Value<int> stackMax,
+  Value<int?> durabilityMax,
+  Value<String?> durabilityBreaksTo,
+  Value<bool> isStackable,
+  Value<bool> isConsumable,
+  Value<bool> isEquippable,
+  Value<bool> isTradable,
+  Value<bool> isSellable,
+  Value<bool> bindOnPickup,
+  Value<String?> craftRecipeId,
+  Value<String?> forgeRecipeId,
+  Value<bool> enchantAllowed,
+  Value<String?> sombrioContentId,
+  Value<String?> evolutionStages,
+  Value<String> image,
+  Value<String?> icon,
+  Value<int> rowid,
+});
+typedef $$ItemsCatalogTableTableUpdateCompanionBuilder
+    = ItemsCatalogTableCompanion Function({
+  Value<String> key,
+  Value<String> name,
+  Value<String> description,
+  Value<String> type,
+  Value<String?> subtype,
+  Value<String?> slot,
+  Value<String?> rank,
+  Value<String?> requiredRank,
+  Value<String> rarity,
+  Value<bool> isSecret,
+  Value<bool> isUnique,
+  Value<bool> isDarkItem,
+  Value<bool> isEvolving,
+  Value<int> requiredLevel,
+  Value<String> allowedClasses,
+  Value<String> allowedFactions,
+  Value<String> stats,
+  Value<String> effects,
+  Value<String> sources,
+  Value<int?> shopPriceCoins,
+  Value<int?> shopPriceGems,
+  Value<int> stackMax,
+  Value<int?> durabilityMax,
+  Value<String?> durabilityBreaksTo,
+  Value<bool> isStackable,
+  Value<bool> isConsumable,
+  Value<bool> isEquippable,
+  Value<bool> isTradable,
+  Value<bool> isSellable,
+  Value<bool> bindOnPickup,
+  Value<String?> craftRecipeId,
+  Value<String?> forgeRecipeId,
+  Value<bool> enchantAllowed,
+  Value<String?> sombrioContentId,
+  Value<String?> evolutionStages,
+  Value<String> image,
+  Value<String?> icon,
+  Value<int> rowid,
+});
+
+class $$ItemsCatalogTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ItemsCatalogTableTable> {
+  $$ItemsCatalogTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get key => $composableBuilder(
+      column: $table.key, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get subtype => $composableBuilder(
+      column: $table.subtype, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get slot => $composableBuilder(
+      column: $table.slot, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get rank => $composableBuilder(
+      column: $table.rank, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get requiredRank => $composableBuilder(
+      column: $table.requiredRank, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get rarity => $composableBuilder(
+      column: $table.rarity, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isSecret => $composableBuilder(
+      column: $table.isSecret, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isUnique => $composableBuilder(
+      column: $table.isUnique, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDarkItem => $composableBuilder(
+      column: $table.isDarkItem, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isEvolving => $composableBuilder(
+      column: $table.isEvolving, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get requiredLevel => $composableBuilder(
+      column: $table.requiredLevel, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get allowedClasses => $composableBuilder(
+      column: $table.allowedClasses,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get allowedFactions => $composableBuilder(
+      column: $table.allowedFactions,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get stats => $composableBuilder(
+      column: $table.stats, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get effects => $composableBuilder(
+      column: $table.effects, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get sources => $composableBuilder(
+      column: $table.sources, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get shopPriceCoins => $composableBuilder(
+      column: $table.shopPriceCoins,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get shopPriceGems => $composableBuilder(
+      column: $table.shopPriceGems, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get stackMax => $composableBuilder(
+      column: $table.stackMax, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get durabilityMax => $composableBuilder(
+      column: $table.durabilityMax, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get durabilityBreaksTo => $composableBuilder(
+      column: $table.durabilityBreaksTo,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isStackable => $composableBuilder(
+      column: $table.isStackable, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isConsumable => $composableBuilder(
+      column: $table.isConsumable, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isEquippable => $composableBuilder(
+      column: $table.isEquippable, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isTradable => $composableBuilder(
+      column: $table.isTradable, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isSellable => $composableBuilder(
+      column: $table.isSellable, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get bindOnPickup => $composableBuilder(
+      column: $table.bindOnPickup, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get craftRecipeId => $composableBuilder(
+      column: $table.craftRecipeId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get forgeRecipeId => $composableBuilder(
+      column: $table.forgeRecipeId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get enchantAllowed => $composableBuilder(
+      column: $table.enchantAllowed,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get sombrioContentId => $composableBuilder(
+      column: $table.sombrioContentId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get evolutionStages => $composableBuilder(
+      column: $table.evolutionStages,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get image => $composableBuilder(
+      column: $table.image, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get icon => $composableBuilder(
+      column: $table.icon, builder: (column) => ColumnFilters(column));
+}
+
+class $$ItemsCatalogTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ItemsCatalogTableTable> {
+  $$ItemsCatalogTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get key => $composableBuilder(
+      column: $table.key, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get subtype => $composableBuilder(
+      column: $table.subtype, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get slot => $composableBuilder(
+      column: $table.slot, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get rank => $composableBuilder(
+      column: $table.rank, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get requiredRank => $composableBuilder(
+      column: $table.requiredRank,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get rarity => $composableBuilder(
+      column: $table.rarity, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isSecret => $composableBuilder(
+      column: $table.isSecret, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isUnique => $composableBuilder(
+      column: $table.isUnique, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDarkItem => $composableBuilder(
+      column: $table.isDarkItem, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isEvolving => $composableBuilder(
+      column: $table.isEvolving, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get requiredLevel => $composableBuilder(
+      column: $table.requiredLevel,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get allowedClasses => $composableBuilder(
+      column: $table.allowedClasses,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get allowedFactions => $composableBuilder(
+      column: $table.allowedFactions,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get stats => $composableBuilder(
+      column: $table.stats, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get effects => $composableBuilder(
+      column: $table.effects, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get sources => $composableBuilder(
+      column: $table.sources, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get shopPriceCoins => $composableBuilder(
+      column: $table.shopPriceCoins,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get shopPriceGems => $composableBuilder(
+      column: $table.shopPriceGems,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get stackMax => $composableBuilder(
+      column: $table.stackMax, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get durabilityMax => $composableBuilder(
+      column: $table.durabilityMax,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get durabilityBreaksTo => $composableBuilder(
+      column: $table.durabilityBreaksTo,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isStackable => $composableBuilder(
+      column: $table.isStackable, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isConsumable => $composableBuilder(
+      column: $table.isConsumable,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isEquippable => $composableBuilder(
+      column: $table.isEquippable,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isTradable => $composableBuilder(
+      column: $table.isTradable, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isSellable => $composableBuilder(
+      column: $table.isSellable, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get bindOnPickup => $composableBuilder(
+      column: $table.bindOnPickup,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get craftRecipeId => $composableBuilder(
+      column: $table.craftRecipeId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get forgeRecipeId => $composableBuilder(
+      column: $table.forgeRecipeId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get enchantAllowed => $composableBuilder(
+      column: $table.enchantAllowed,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get sombrioContentId => $composableBuilder(
+      column: $table.sombrioContentId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get evolutionStages => $composableBuilder(
+      column: $table.evolutionStages,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get image => $composableBuilder(
+      column: $table.image, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get icon => $composableBuilder(
+      column: $table.icon, builder: (column) => ColumnOrderings(column));
+}
+
+class $$ItemsCatalogTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ItemsCatalogTableTable> {
+  $$ItemsCatalogTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get subtype =>
+      $composableBuilder(column: $table.subtype, builder: (column) => column);
+
+  GeneratedColumn<String> get slot =>
+      $composableBuilder(column: $table.slot, builder: (column) => column);
+
+  GeneratedColumn<String> get rank =>
+      $composableBuilder(column: $table.rank, builder: (column) => column);
+
+  GeneratedColumn<String> get requiredRank => $composableBuilder(
+      column: $table.requiredRank, builder: (column) => column);
+
+  GeneratedColumn<String> get rarity =>
+      $composableBuilder(column: $table.rarity, builder: (column) => column);
+
+  GeneratedColumn<bool> get isSecret =>
+      $composableBuilder(column: $table.isSecret, builder: (column) => column);
+
+  GeneratedColumn<bool> get isUnique =>
+      $composableBuilder(column: $table.isUnique, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDarkItem => $composableBuilder(
+      column: $table.isDarkItem, builder: (column) => column);
+
+  GeneratedColumn<bool> get isEvolving => $composableBuilder(
+      column: $table.isEvolving, builder: (column) => column);
+
+  GeneratedColumn<int> get requiredLevel => $composableBuilder(
+      column: $table.requiredLevel, builder: (column) => column);
+
+  GeneratedColumn<String> get allowedClasses => $composableBuilder(
+      column: $table.allowedClasses, builder: (column) => column);
+
+  GeneratedColumn<String> get allowedFactions => $composableBuilder(
+      column: $table.allowedFactions, builder: (column) => column);
+
+  GeneratedColumn<String> get stats =>
+      $composableBuilder(column: $table.stats, builder: (column) => column);
+
+  GeneratedColumn<String> get effects =>
+      $composableBuilder(column: $table.effects, builder: (column) => column);
+
+  GeneratedColumn<String> get sources =>
+      $composableBuilder(column: $table.sources, builder: (column) => column);
+
+  GeneratedColumn<int> get shopPriceCoins => $composableBuilder(
+      column: $table.shopPriceCoins, builder: (column) => column);
+
+  GeneratedColumn<int> get shopPriceGems => $composableBuilder(
+      column: $table.shopPriceGems, builder: (column) => column);
+
+  GeneratedColumn<int> get stackMax =>
+      $composableBuilder(column: $table.stackMax, builder: (column) => column);
+
+  GeneratedColumn<int> get durabilityMax => $composableBuilder(
+      column: $table.durabilityMax, builder: (column) => column);
+
+  GeneratedColumn<String> get durabilityBreaksTo => $composableBuilder(
+      column: $table.durabilityBreaksTo, builder: (column) => column);
+
+  GeneratedColumn<bool> get isStackable => $composableBuilder(
+      column: $table.isStackable, builder: (column) => column);
+
+  GeneratedColumn<bool> get isConsumable => $composableBuilder(
+      column: $table.isConsumable, builder: (column) => column);
+
+  GeneratedColumn<bool> get isEquippable => $composableBuilder(
+      column: $table.isEquippable, builder: (column) => column);
+
+  GeneratedColumn<bool> get isTradable => $composableBuilder(
+      column: $table.isTradable, builder: (column) => column);
+
+  GeneratedColumn<bool> get isSellable => $composableBuilder(
+      column: $table.isSellable, builder: (column) => column);
+
+  GeneratedColumn<bool> get bindOnPickup => $composableBuilder(
+      column: $table.bindOnPickup, builder: (column) => column);
+
+  GeneratedColumn<String> get craftRecipeId => $composableBuilder(
+      column: $table.craftRecipeId, builder: (column) => column);
+
+  GeneratedColumn<String> get forgeRecipeId => $composableBuilder(
+      column: $table.forgeRecipeId, builder: (column) => column);
+
+  GeneratedColumn<bool> get enchantAllowed => $composableBuilder(
+      column: $table.enchantAllowed, builder: (column) => column);
+
+  GeneratedColumn<String> get sombrioContentId => $composableBuilder(
+      column: $table.sombrioContentId, builder: (column) => column);
+
+  GeneratedColumn<String> get evolutionStages => $composableBuilder(
+      column: $table.evolutionStages, builder: (column) => column);
+
+  GeneratedColumn<String> get image =>
+      $composableBuilder(column: $table.image, builder: (column) => column);
+
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
+}
+
+class $$ItemsCatalogTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ItemsCatalogTableTable,
+    ItemsCatalogTableData,
+    $$ItemsCatalogTableTableFilterComposer,
+    $$ItemsCatalogTableTableOrderingComposer,
+    $$ItemsCatalogTableTableAnnotationComposer,
+    $$ItemsCatalogTableTableCreateCompanionBuilder,
+    $$ItemsCatalogTableTableUpdateCompanionBuilder,
+    (
+      ItemsCatalogTableData,
+      BaseReferences<_$AppDatabase, $ItemsCatalogTableTable,
+          ItemsCatalogTableData>
+    ),
+    ItemsCatalogTableData,
+    PrefetchHooks Function()> {
+  $$ItemsCatalogTableTableTableManager(
+      _$AppDatabase db, $ItemsCatalogTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ItemsCatalogTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ItemsCatalogTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ItemsCatalogTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> key = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<String?> subtype = const Value.absent(),
+            Value<String?> slot = const Value.absent(),
+            Value<String?> rank = const Value.absent(),
+            Value<String?> requiredRank = const Value.absent(),
+            Value<String> rarity = const Value.absent(),
+            Value<bool> isSecret = const Value.absent(),
+            Value<bool> isUnique = const Value.absent(),
+            Value<bool> isDarkItem = const Value.absent(),
+            Value<bool> isEvolving = const Value.absent(),
+            Value<int> requiredLevel = const Value.absent(),
+            Value<String> allowedClasses = const Value.absent(),
+            Value<String> allowedFactions = const Value.absent(),
+            Value<String> stats = const Value.absent(),
+            Value<String> effects = const Value.absent(),
+            Value<String> sources = const Value.absent(),
+            Value<int?> shopPriceCoins = const Value.absent(),
+            Value<int?> shopPriceGems = const Value.absent(),
+            Value<int> stackMax = const Value.absent(),
+            Value<int?> durabilityMax = const Value.absent(),
+            Value<String?> durabilityBreaksTo = const Value.absent(),
+            Value<bool> isStackable = const Value.absent(),
+            Value<bool> isConsumable = const Value.absent(),
+            Value<bool> isEquippable = const Value.absent(),
+            Value<bool> isTradable = const Value.absent(),
+            Value<bool> isSellable = const Value.absent(),
+            Value<bool> bindOnPickup = const Value.absent(),
+            Value<String?> craftRecipeId = const Value.absent(),
+            Value<String?> forgeRecipeId = const Value.absent(),
+            Value<bool> enchantAllowed = const Value.absent(),
+            Value<String?> sombrioContentId = const Value.absent(),
+            Value<String?> evolutionStages = const Value.absent(),
+            Value<String> image = const Value.absent(),
+            Value<String?> icon = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ItemsCatalogTableCompanion(
+            key: key,
+            name: name,
+            description: description,
+            type: type,
+            subtype: subtype,
+            slot: slot,
+            rank: rank,
+            requiredRank: requiredRank,
+            rarity: rarity,
+            isSecret: isSecret,
+            isUnique: isUnique,
+            isDarkItem: isDarkItem,
+            isEvolving: isEvolving,
+            requiredLevel: requiredLevel,
+            allowedClasses: allowedClasses,
+            allowedFactions: allowedFactions,
+            stats: stats,
+            effects: effects,
+            sources: sources,
+            shopPriceCoins: shopPriceCoins,
+            shopPriceGems: shopPriceGems,
+            stackMax: stackMax,
+            durabilityMax: durabilityMax,
+            durabilityBreaksTo: durabilityBreaksTo,
+            isStackable: isStackable,
+            isConsumable: isConsumable,
+            isEquippable: isEquippable,
+            isTradable: isTradable,
+            isSellable: isSellable,
+            bindOnPickup: bindOnPickup,
+            craftRecipeId: craftRecipeId,
+            forgeRecipeId: forgeRecipeId,
+            enchantAllowed: enchantAllowed,
+            sombrioContentId: sombrioContentId,
+            evolutionStages: evolutionStages,
+            image: image,
+            icon: icon,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String key,
+            required String name,
+            Value<String> description = const Value.absent(),
+            required String type,
+            Value<String?> subtype = const Value.absent(),
+            Value<String?> slot = const Value.absent(),
+            Value<String?> rank = const Value.absent(),
+            Value<String?> requiredRank = const Value.absent(),
+            Value<String> rarity = const Value.absent(),
+            Value<bool> isSecret = const Value.absent(),
+            Value<bool> isUnique = const Value.absent(),
+            Value<bool> isDarkItem = const Value.absent(),
+            Value<bool> isEvolving = const Value.absent(),
+            Value<int> requiredLevel = const Value.absent(),
+            Value<String> allowedClasses = const Value.absent(),
+            Value<String> allowedFactions = const Value.absent(),
+            Value<String> stats = const Value.absent(),
+            Value<String> effects = const Value.absent(),
+            Value<String> sources = const Value.absent(),
+            Value<int?> shopPriceCoins = const Value.absent(),
+            Value<int?> shopPriceGems = const Value.absent(),
+            Value<int> stackMax = const Value.absent(),
+            Value<int?> durabilityMax = const Value.absent(),
+            Value<String?> durabilityBreaksTo = const Value.absent(),
+            Value<bool> isStackable = const Value.absent(),
+            Value<bool> isConsumable = const Value.absent(),
+            Value<bool> isEquippable = const Value.absent(),
+            Value<bool> isTradable = const Value.absent(),
+            Value<bool> isSellable = const Value.absent(),
+            Value<bool> bindOnPickup = const Value.absent(),
+            Value<String?> craftRecipeId = const Value.absent(),
+            Value<String?> forgeRecipeId = const Value.absent(),
+            Value<bool> enchantAllowed = const Value.absent(),
+            Value<String?> sombrioContentId = const Value.absent(),
+            Value<String?> evolutionStages = const Value.absent(),
+            Value<String> image = const Value.absent(),
+            Value<String?> icon = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ItemsCatalogTableCompanion.insert(
+            key: key,
+            name: name,
+            description: description,
+            type: type,
+            subtype: subtype,
+            slot: slot,
+            rank: rank,
+            requiredRank: requiredRank,
+            rarity: rarity,
+            isSecret: isSecret,
+            isUnique: isUnique,
+            isDarkItem: isDarkItem,
+            isEvolving: isEvolving,
+            requiredLevel: requiredLevel,
+            allowedClasses: allowedClasses,
+            allowedFactions: allowedFactions,
+            stats: stats,
+            effects: effects,
+            sources: sources,
+            shopPriceCoins: shopPriceCoins,
+            shopPriceGems: shopPriceGems,
+            stackMax: stackMax,
+            durabilityMax: durabilityMax,
+            durabilityBreaksTo: durabilityBreaksTo,
+            isStackable: isStackable,
+            isConsumable: isConsumable,
+            isEquippable: isEquippable,
+            isTradable: isTradable,
+            isSellable: isSellable,
+            bindOnPickup: bindOnPickup,
+            craftRecipeId: craftRecipeId,
+            forgeRecipeId: forgeRecipeId,
+            enchantAllowed: enchantAllowed,
+            sombrioContentId: sombrioContentId,
+            evolutionStages: evolutionStages,
+            image: image,
+            icon: icon,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$ItemsCatalogTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ItemsCatalogTableTable,
+    ItemsCatalogTableData,
+    $$ItemsCatalogTableTableFilterComposer,
+    $$ItemsCatalogTableTableOrderingComposer,
+    $$ItemsCatalogTableTableAnnotationComposer,
+    $$ItemsCatalogTableTableCreateCompanionBuilder,
+    $$ItemsCatalogTableTableUpdateCompanionBuilder,
+    (
+      ItemsCatalogTableData,
+      BaseReferences<_$AppDatabase, $ItemsCatalogTableTable,
+          ItemsCatalogTableData>
+    ),
+    ItemsCatalogTableData,
+    PrefetchHooks Function()>;
+typedef $$PlayerInventoryTableTableCreateCompanionBuilder
+    = PlayerInventoryTableCompanion Function({
+  Value<int> id,
+  required int playerId,
+  required String itemKey,
+  Value<int> quantity,
+  Value<int?> durabilityCurrent,
+  required int acquiredAt,
+  required String acquiredVia,
+  Value<String?> evolutionStage,
+  Value<bool> isEquipped,
+});
+typedef $$PlayerInventoryTableTableUpdateCompanionBuilder
+    = PlayerInventoryTableCompanion Function({
+  Value<int> id,
+  Value<int> playerId,
+  Value<String> itemKey,
+  Value<int> quantity,
+  Value<int?> durabilityCurrent,
+  Value<int> acquiredAt,
+  Value<String> acquiredVia,
+  Value<String?> evolutionStage,
+  Value<bool> isEquipped,
+});
+
+class $$PlayerInventoryTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PlayerInventoryTableTable> {
+  $$PlayerInventoryTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get itemKey => $composableBuilder(
+      column: $table.itemKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get quantity => $composableBuilder(
+      column: $table.quantity, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get durabilityCurrent => $composableBuilder(
+      column: $table.durabilityCurrent,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get acquiredAt => $composableBuilder(
+      column: $table.acquiredAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get acquiredVia => $composableBuilder(
+      column: $table.acquiredVia, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get evolutionStage => $composableBuilder(
+      column: $table.evolutionStage,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isEquipped => $composableBuilder(
+      column: $table.isEquipped, builder: (column) => ColumnFilters(column));
+}
+
+class $$PlayerInventoryTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlayerInventoryTableTable> {
+  $$PlayerInventoryTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get itemKey => $composableBuilder(
+      column: $table.itemKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get quantity => $composableBuilder(
+      column: $table.quantity, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get durabilityCurrent => $composableBuilder(
+      column: $table.durabilityCurrent,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get acquiredAt => $composableBuilder(
+      column: $table.acquiredAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get acquiredVia => $composableBuilder(
+      column: $table.acquiredVia, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get evolutionStage => $composableBuilder(
+      column: $table.evolutionStage,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isEquipped => $composableBuilder(
+      column: $table.isEquipped, builder: (column) => ColumnOrderings(column));
+}
+
+class $$PlayerInventoryTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlayerInventoryTableTable> {
+  $$PlayerInventoryTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get itemKey =>
+      $composableBuilder(column: $table.itemKey, builder: (column) => column);
+
+  GeneratedColumn<int> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<int> get durabilityCurrent => $composableBuilder(
+      column: $table.durabilityCurrent, builder: (column) => column);
+
+  GeneratedColumn<int> get acquiredAt => $composableBuilder(
+      column: $table.acquiredAt, builder: (column) => column);
+
+  GeneratedColumn<String> get acquiredVia => $composableBuilder(
+      column: $table.acquiredVia, builder: (column) => column);
+
+  GeneratedColumn<String> get evolutionStage => $composableBuilder(
+      column: $table.evolutionStage, builder: (column) => column);
+
+  GeneratedColumn<bool> get isEquipped => $composableBuilder(
+      column: $table.isEquipped, builder: (column) => column);
+}
+
+class $$PlayerInventoryTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlayerInventoryTableTable,
+    PlayerInventoryTableData,
+    $$PlayerInventoryTableTableFilterComposer,
+    $$PlayerInventoryTableTableOrderingComposer,
+    $$PlayerInventoryTableTableAnnotationComposer,
+    $$PlayerInventoryTableTableCreateCompanionBuilder,
+    $$PlayerInventoryTableTableUpdateCompanionBuilder,
+    (
+      PlayerInventoryTableData,
+      BaseReferences<_$AppDatabase, $PlayerInventoryTableTable,
+          PlayerInventoryTableData>
+    ),
+    PlayerInventoryTableData,
+    PrefetchHooks Function()> {
+  $$PlayerInventoryTableTableTableManager(
+      _$AppDatabase db, $PlayerInventoryTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlayerInventoryTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlayerInventoryTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlayerInventoryTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> playerId = const Value.absent(),
+            Value<String> itemKey = const Value.absent(),
+            Value<int> quantity = const Value.absent(),
+            Value<int?> durabilityCurrent = const Value.absent(),
+            Value<int> acquiredAt = const Value.absent(),
+            Value<String> acquiredVia = const Value.absent(),
+            Value<String?> evolutionStage = const Value.absent(),
+            Value<bool> isEquipped = const Value.absent(),
+          }) =>
+              PlayerInventoryTableCompanion(
+            id: id,
+            playerId: playerId,
+            itemKey: itemKey,
+            quantity: quantity,
+            durabilityCurrent: durabilityCurrent,
+            acquiredAt: acquiredAt,
+            acquiredVia: acquiredVia,
+            evolutionStage: evolutionStage,
+            isEquipped: isEquipped,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int playerId,
+            required String itemKey,
+            Value<int> quantity = const Value.absent(),
+            Value<int?> durabilityCurrent = const Value.absent(),
+            required int acquiredAt,
+            required String acquiredVia,
+            Value<String?> evolutionStage = const Value.absent(),
+            Value<bool> isEquipped = const Value.absent(),
+          }) =>
+              PlayerInventoryTableCompanion.insert(
+            id: id,
+            playerId: playerId,
+            itemKey: itemKey,
+            quantity: quantity,
+            durabilityCurrent: durabilityCurrent,
+            acquiredAt: acquiredAt,
+            acquiredVia: acquiredVia,
+            evolutionStage: evolutionStage,
+            isEquipped: isEquipped,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PlayerInventoryTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $PlayerInventoryTableTable,
+        PlayerInventoryTableData,
+        $$PlayerInventoryTableTableFilterComposer,
+        $$PlayerInventoryTableTableOrderingComposer,
+        $$PlayerInventoryTableTableAnnotationComposer,
+        $$PlayerInventoryTableTableCreateCompanionBuilder,
+        $$PlayerInventoryTableTableUpdateCompanionBuilder,
+        (
+          PlayerInventoryTableData,
+          BaseReferences<_$AppDatabase, $PlayerInventoryTableTable,
+              PlayerInventoryTableData>
+        ),
+        PlayerInventoryTableData,
+        PrefetchHooks Function()>;
+typedef $$PlayerEquipmentTableTableCreateCompanionBuilder
+    = PlayerEquipmentTableCompanion Function({
+  required int playerId,
+  required String slot,
+  required int inventoryId,
+  Value<int> rowid,
+});
+typedef $$PlayerEquipmentTableTableUpdateCompanionBuilder
+    = PlayerEquipmentTableCompanion Function({
+  Value<int> playerId,
+  Value<String> slot,
+  Value<int> inventoryId,
+  Value<int> rowid,
+});
+
+class $$PlayerEquipmentTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PlayerEquipmentTableTable> {
+  $$PlayerEquipmentTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get slot => $composableBuilder(
+      column: $table.slot, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get inventoryId => $composableBuilder(
+      column: $table.inventoryId, builder: (column) => ColumnFilters(column));
+}
+
+class $$PlayerEquipmentTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlayerEquipmentTableTable> {
+  $$PlayerEquipmentTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get slot => $composableBuilder(
+      column: $table.slot, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get inventoryId => $composableBuilder(
+      column: $table.inventoryId, builder: (column) => ColumnOrderings(column));
+}
+
+class $$PlayerEquipmentTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlayerEquipmentTableTable> {
+  $$PlayerEquipmentTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get slot =>
+      $composableBuilder(column: $table.slot, builder: (column) => column);
+
+  GeneratedColumn<int> get inventoryId => $composableBuilder(
+      column: $table.inventoryId, builder: (column) => column);
+}
+
+class $$PlayerEquipmentTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlayerEquipmentTableTable,
+    PlayerEquipmentTableData,
+    $$PlayerEquipmentTableTableFilterComposer,
+    $$PlayerEquipmentTableTableOrderingComposer,
+    $$PlayerEquipmentTableTableAnnotationComposer,
+    $$PlayerEquipmentTableTableCreateCompanionBuilder,
+    $$PlayerEquipmentTableTableUpdateCompanionBuilder,
+    (
+      PlayerEquipmentTableData,
+      BaseReferences<_$AppDatabase, $PlayerEquipmentTableTable,
+          PlayerEquipmentTableData>
+    ),
+    PlayerEquipmentTableData,
+    PrefetchHooks Function()> {
+  $$PlayerEquipmentTableTableTableManager(
+      _$AppDatabase db, $PlayerEquipmentTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlayerEquipmentTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlayerEquipmentTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlayerEquipmentTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            Value<String> slot = const Value.absent(),
+            Value<int> inventoryId = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlayerEquipmentTableCompanion(
+            playerId: playerId,
+            slot: slot,
+            inventoryId: inventoryId,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required int playerId,
+            required String slot,
+            required int inventoryId,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlayerEquipmentTableCompanion.insert(
+            playerId: playerId,
+            slot: slot,
+            inventoryId: inventoryId,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PlayerEquipmentTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $PlayerEquipmentTableTable,
+        PlayerEquipmentTableData,
+        $$PlayerEquipmentTableTableFilterComposer,
+        $$PlayerEquipmentTableTableOrderingComposer,
+        $$PlayerEquipmentTableTableAnnotationComposer,
+        $$PlayerEquipmentTableTableCreateCompanionBuilder,
+        $$PlayerEquipmentTableTableUpdateCompanionBuilder,
+        (
+          PlayerEquipmentTableData,
+          BaseReferences<_$AppDatabase, $PlayerEquipmentTableTable,
+              PlayerEquipmentTableData>
+        ),
+        PlayerEquipmentTableData,
+        PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -14584,4 +18049,10 @@ class $AppDatabaseManager {
   $$LifeVitalismPointsTableTableTableManager get lifeVitalismPointsTable =>
       $$LifeVitalismPointsTableTableTableManager(
           _db, _db.lifeVitalismPointsTable);
+  $$ItemsCatalogTableTableTableManager get itemsCatalogTable =>
+      $$ItemsCatalogTableTableTableManager(_db, _db.itemsCatalogTable);
+  $$PlayerInventoryTableTableTableManager get playerInventoryTable =>
+      $$PlayerInventoryTableTableTableManager(_db, _db.playerInventoryTable);
+  $$PlayerEquipmentTableTableTableManager get playerEquipmentTable =>
+      $$PlayerEquipmentTableTableTableManager(_db, _db.playerEquipmentTable);
 }

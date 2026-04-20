@@ -1,7 +1,6 @@
 import '../data/database/daos/achievement_dao.dart';
 import '../data/database/tables/player_achievements_table.dart';
 import '../data/database/tables/achievements_table.dart';
-import '../data/database/daos/inventory_dao.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/database/app_database.dart';
 import '../data/database/tables/players_table.dart';
@@ -10,6 +9,11 @@ import '../data/datasources/local/habit_local_ds.dart';
 import '../data/datasources/local/class_quest_service.dart';
 import '../data/datasources/local/faction_quest_service.dart';
 import '../data/datasources/local/vitalism_unique_service.dart';
+import '../data/datasources/local/items_catalog_service.dart';
+import '../data/datasources/local/player_inventory_service.dart';
+import '../data/datasources/local/player_equipment_service.dart';
+import '../data/datasources/local/player_rank_service.dart';
+import '../data/datasources/local/shops_service.dart';
 
 // Banco singleton
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
@@ -21,6 +25,38 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
 // Vitalismos Únicos — orquestra pool, despertar, ritual e stubs de PvP.
 final vitalismUniqueServiceProvider = Provider<VitalismUniqueService>((ref) {
   return VitalismUniqueService(ref.watch(appDatabaseProvider));
+});
+
+// Sprint 2.1 — catálogo, inventário, equipamento e rank do jogador.
+final itemsCatalogServiceProvider = Provider<ItemsCatalogService>((ref) {
+  return ItemsCatalogService(ref.watch(appDatabaseProvider));
+});
+
+final playerInventoryServiceProvider = Provider<PlayerInventoryService>((ref) {
+  return PlayerInventoryService(
+    ref.watch(appDatabaseProvider),
+    ref.watch(itemsCatalogServiceProvider),
+  );
+});
+
+final playerEquipmentServiceProvider = Provider<PlayerEquipmentService>((ref) {
+  return PlayerEquipmentService(
+    ref.watch(appDatabaseProvider),
+    ref.watch(itemsCatalogServiceProvider),
+  );
+});
+
+final playerRankServiceProvider = Provider<PlayerRankService>((ref) {
+  return PlayerRankService(ref.watch(appDatabaseProvider));
+});
+
+// Sprint 2.1 Bloco 7 — lojas (shops.json + validações ADR 0010).
+final shopsServiceProvider = Provider<ShopsService>((ref) {
+  return ShopsService(
+    ref.watch(appDatabaseProvider),
+    ref.watch(itemsCatalogServiceProvider),
+    ref.watch(playerInventoryServiceProvider),
+  );
 });
 
 // Auth datasource
@@ -55,25 +91,6 @@ final habitsProvider = FutureProvider<List<HabitWithStatus>>((ref) async {
   final player = ref.watch(currentPlayerProvider);
   if (player == null) return [];
   return ref.watch(habitDsProvider).getHabitsWithStatus(player.id);
-});
-
-// Inventory DAO provider
-final inventoryDaoProvider = Provider((ref) {
-  return InventoryDao(ref.watch(appDatabaseProvider));
-});
-
-// Inventário do jogador
-final inventoryProvider = FutureProvider<List<InventoryWithItem>>((ref) async {
-  final player = ref.watch(currentPlayerProvider);
-  if (player == null) return [];
-  return ref.watch(inventoryDaoProvider).getInventory(player.id);
-});
-
-// Loja
-final shopProvider = FutureProvider<List<ShopWithItem>>((ref) async {
-  final player = ref.watch(currentPlayerProvider);
-  if (player == null) return [];
-  return ref.watch(inventoryDaoProvider).getShopItems(player.level);
 });
 
 // Achievement providers

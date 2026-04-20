@@ -16,6 +16,7 @@ import '../presentation/regions/screens/regions_screen.dart';
 import '../presentation/shadow_chamber/screens/shadow_chamber_screen.dart';
 import '../presentation/inventory/screens/inventory_screen.dart';
 import '../presentation/shop/screens/shop_screen.dart';
+import '../presentation/shop/screens/shops_list_screen.dart';
 import '../presentation/achievements/screens/achievements_screen.dart';
 import '../presentation/class_selection/screens/class_selection_screen.dart';
 import '../presentation/faction_selection/screens/faction_selection_screen.dart';
@@ -65,7 +66,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/guild',
         builder: (context, state) => const GuildScreen(),
       ),
-      GoRoute(path: '/shop',         builder: (c, s) => const ShopScreen()),
+      GoRoute(path: '/shops',        builder: (c, s) => const ShopsListScreen()),
+      GoRoute(
+        path: '/shop/:shopKey',
+        builder: (c, s) => ShopScreen(shopKey: s.pathParameters['shopKey']!),
+      ),
+      // /shop (sem key) redireciona pra listagem — não quebrar navegação legada.
+      GoRoute(path: '/shop', redirect: (_, __) => '/shops'),
       GoRoute(path: '/achievements',       builder: (c, s) => const AchievementsScreen()),
       GoRoute(path: '/class-selection',    builder: (c, s) => const ClassSelectionScreen()),
       GoRoute(path: '/faction-selection',  builder: (c, s) => const FactionSelectionScreen()),

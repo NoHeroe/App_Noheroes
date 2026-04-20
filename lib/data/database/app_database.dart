@@ -17,10 +17,10 @@ import 'tables/achievements_table.dart';
 import 'tables/player_achievements_table.dart';
 import 'daos/player_dao.dart';
 import 'daos/habit_dao.dart';
-import 'daos/inventory_dao.dart';
 import 'daos/achievement_dao.dart';
 import 'daos/guild_dao.dart';
 import '../datasources/local/vitalism_catalog_seeder.dart';
+import '../datasources/local/items_catalog_seeder.dart';
 import 'tables/guild_status_table.dart';
 import 'tables/guild_ascension_table.dart';
 import 'tables/npc_reputation_table.dart';
@@ -29,6 +29,9 @@ import 'tables/vitalism_unique_catalog_table.dart';
 import 'tables/player_vitalism_affinities_table.dart';
 import 'tables/player_vitalism_trees_table.dart';
 import 'tables/life_vitalism_points_table.dart';
+import 'tables/items_catalog_table.dart';
+import 'tables/player_inventory_table.dart';
+import 'tables/player_equipment_table.dart';
 
 part 'app_database.g.dart';
 
@@ -47,22 +50,25 @@ part 'app_database.g.dart';
     PlayerVitalismAffinitiesTable,
     PlayerVitalismTreesTable,
     LifeVitalismPointsTable,
+    ItemsCatalogTable,
+    PlayerInventoryTable,
+    PlayerEquipmentTable,
   ],
-  daos: [PlayerDao, HabitDao, InventoryDao, AchievementDao, GuildDao],
+  daos: [PlayerDao, HabitDao, AchievementDao, GuildDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) async {
       await m.createAll();
-      await _seedShopItems();
       await _seedAchievements();
       await VitalismCatalogSeeder(this).seed();
+      await ItemsCatalogSeeder(this).seed();
     },
     onUpgrade: (m, from, to) async {
       if (from < 2) {
@@ -84,7 +90,9 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(itemsTable);
         await m.createTable(inventoryTable);
         await m.createTable(shopItemsTable);
-        await _seedShopItems();
+        // _seedShopItems() removido no Sprint 2.1 Bloco 5.8. Tabelas antigas
+        // ficam vazias — sistema novo (items_catalog) cuida de tudo a partir
+        // da migration 20.
       }
       if (from < 5) {
         await m.createTable(achievementsTable);
@@ -183,53 +191,30 @@ class AppDatabase extends _$AppDatabase {
         } catch (_) {}
         await VitalismCatalogSeeder(this).seed();
       }
+      if (from < 20) {
+        try {
+          await m.createTable(itemsCatalogTable);
+        } catch (_) {}
+        try {
+          await m.createTable(playerInventoryTable);
+        } catch (_) {}
+        try {
+          await m.createTable(playerEquipmentTable);
+        } catch (_) {}
+        // Normaliza guild_rank: 'e'..'s' → 'E'..'S'. 'none' mantém como sentinela.
+        try {
+          await customStatement(
+            "UPDATE players SET guild_rank = UPPER(guild_rank) "
+            "WHERE guild_rank IN ('e','d','c','b','a','s')",
+          );
+        } catch (e) {
+          // ignore: avoid_print
+          print('[migration 19→20] guild_rank normalize failed: $e');
+        }
+        await ItemsCatalogSeeder(this).seed();
+      }
     },
   );
-
-  Future<void> _seedShopItems() async {
-    try {
-      final raw = await rootBundle.loadString('assets/data/items.json');
-      final data = json.decode(raw) as Map<String, dynamic>;
-      final list = (data['items'] as List).cast<Map<String, dynamic>>();
-      for (final item in list) {
-        // Verifica se já existe pelo nome
-        final existing = await (select(itemsTable)
-              ..where((t) => t.name.equals(item['name'] as String)))
-            .getSingleOrNull();
-        if (existing != null) continue;
-
-        final id = await into(itemsTable).insert(ItemsTableCompanion(
-          name:        Value(item['name'] as String),
-          description: Value(item['description'] as String),
-          type:        Value(item['type'] as String),
-          rarity:      Value(item['rarity'] as String? ?? 'common'),
-          slot:        Value(item['slot'] as String?),
-          goldValue:   Value(item['gold_value'] as int? ?? 0),
-          hpBonus:     Value(item['hp_bonus'] as int? ?? 0),
-          mpBonus:     Value(item['mp_bonus'] as int? ?? 0),
-          strBonus:    Value(item['str_bonus'] as int? ?? 0),
-          dexBonus:    Value(item['dex_bonus'] as int? ?? 0),
-          intBonus:    Value(item['int_bonus'] as int? ?? 0),
-          conBonus:    Value(item['con_bonus'] as int? ?? 0),
-          spiBonus:    Value(item['spi_bonus'] as int? ?? 0),
-          isConsumable: Value(item['is_consumable'] as bool? ?? false),
-          isStackable:  Value(item['is_stackable'] as bool? ?? false),
-          iconName:    Value(item['icon'] as String? ?? 'item'),
-        ));
-
-        // Adiciona à loja se shop == true
-        if (item['shop'] == true) {
-          await into(shopItemsTable).insert(ShopItemsTableCompanion(
-            itemId:        Value(id),
-            price:         Value(item['gold_value'] as int? ?? 0),
-            requiredLevel: Value(item['required_level'] as int? ?? 1),
-          ));
-        }
-      }
-    } catch (e) {
-      // Fallback silencioso
-    }
-  }
 
   Future<void> _seedAchievements() async {
     try {

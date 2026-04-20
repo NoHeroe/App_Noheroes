@@ -1,34 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:drift/drift.dart' show Variable;
 import '../../../app/providers.dart';
-import 'package:drift/drift.dart' show Variable, Value;
 import '../../../core/constants/app_colors.dart';
-import '../../../data/database/app_database.dart';
-import '../../../data/database/daos/player_dao.dart';
+import '../../../core/utils/guild_rank.dart';
+import '../../../core/utils/item_equip_policy.dart';
+import '../../../domain/enums/equipment_slot.dart';
+import '../../../domain/enums/item_rarity.dart';
+import '../../../domain/models/inventory_entry_with_spec.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
 import '../../shared/widgets/app_snack.dart';
 import '../widgets/stats_panel.dart';
 
-// Provider para itens equipados com dados do item
-final equippedItemsProvider = FutureProvider.autoDispose<
-    List<({InventoryTableData inv, ItemsTableData item})>>((ref) async {
+// Equipamento do jogador via playerEquipmentService. Substitui a leitura
+// direta de inventoryTable/itemsTable antigos (Sprint 2.1 Bloco 5.5).
+final equippedItemsProvider =
+    FutureProvider.autoDispose<List<InventoryEntryWithSpec>>((ref) async {
   final player = ref.watch(currentPlayerProvider);
-  if (player == null) return [];
-  final db = ref.read(appDatabaseProvider);
-  final invRows = await (db.select(db.inventoryTable)
-        ..where((t) => t.playerId.equals(player.id))
-        ..where((t) => t.equippedSlot.isNotNull()))
-      .get();
-  final result = <({InventoryTableData inv, ItemsTableData item})>[];
-  for (final inv in invRows) {
-    final item = await (db.select(db.itemsTable)
-          ..where((t) => t.id.equals(inv.itemId)))
-        .getSingleOrNull();
-    if (item != null) result.add((inv: inv, item: item));
-  }
-  return result;
+  if (player == null) return const [];
+  return ref.read(playerEquipmentServiceProvider).equippedItemsOf(player.id);
 });
 
 class CharacterScreen extends ConsumerWidget {
@@ -38,21 +29,11 @@ class CharacterScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final player = ref.watch(currentPlayerProvider);
     final equippedAsync = ref.watch(equippedItemsProvider);
+    final equipped = equippedAsync.value ?? const <InventoryEntryWithSpec>[];
 
-    final equipped = equippedAsync.value ?? [];
-
-    // Calcula bônus totais dos equipamentos
-    int bonusStr = 0, bonusDex = 0, bonusInt = 0,
-        bonusCon = 0, bonusSpi = 0, bonusHp = 0, bonusMp = 0;
-    for (final e in equipped) {
-      bonusStr += e.item.strBonus;
-      bonusDex += e.item.dexBonus;
-      bonusInt += e.item.intBonus;
-      bonusCon += e.item.conBonus;
-      bonusSpi += e.item.spiBonus;
-      bonusHp  += e.item.hpBonus;
-      bonusMp  += e.item.mpBonus;
-    }
+    // Stats agregados dos itens equipados — respeita evolution_stage pra
+    // items is_evolving (Colar da Guilda).
+    final stats = ItemEquipPolicy.aggregateStatsFromEquippedEntries(equipped);
 
     return Scaffold(
       backgroundColor: AppColors.black,
@@ -61,36 +42,7 @@ class CharacterScreen extends ConsumerWidget {
           SafeArea(
             child: Column(
               children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                  child: Row(
-                    children: [
-                      Text('PERSONAGEM',
-                          style: GoogleFonts.cinzelDecorative(
-                              fontSize: 16,
-                              color: AppColors.gold,
-                              letterSpacing: 2)),
-                      const Spacer(),
-                      if ((player?.attributePoints ?? 0) > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.gold.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                                color: AppColors.gold.withValues(alpha: 0.5)),
-                          ),
-                          child: Text(
-                            '+${player!.attributePoints} pts disponíveis',
-                            style: GoogleFonts.cinzelDecorative(
-                                fontSize: 10, color: AppColors.gold),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
+                _buildHeader(player),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
@@ -100,16 +52,14 @@ class CharacterScreen extends ConsumerWidget {
                         const SizedBox(height: 12),
                         _buildClassFaction(player),
                         const SizedBox(height: 12),
-                        _buildAttributes(context, ref, player,
-                            bonusStr, bonusDex, bonusInt,
-                            bonusCon, bonusSpi, bonusHp, bonusMp),
+                        _buildGuildRankCard(player),
+                        const SizedBox(height: 12),
+                        _buildAttributes(context, ref, player),
                         const SizedBox(height: 12),
                         if (player != null) StatsPanel(player: player),
-                        if (bonusHp > 0 || bonusMp > 0) ...[
+                        if (stats.isNotEmpty) ...[
                           const SizedBox(height: 12),
-                          _buildEquipmentBonusSummary(
-                              bonusHp, bonusMp, bonusStr,
-                              bonusDex, bonusInt, bonusCon, bonusSpi),
+                          _buildEquipmentStatsSummary(stats),
                         ],
                       ],
                     ),
@@ -127,14 +77,45 @@ class CharacterScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildHeader(player) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+      child: Row(
+        children: [
+          Text(
+            'PERSONAGEM',
+            style: GoogleFonts.cinzelDecorative(
+                fontSize: 16, color: AppColors.gold, letterSpacing: 2),
+          ),
+          const Spacer(),
+          if ((player?.attributePoints ?? 0) > 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.gold.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(20),
+                border:
+                    Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
+              ),
+              child: Text(
+                '+${player!.attributePoints} pts disponíveis',
+                style: GoogleFonts.cinzelDecorative(
+                    fontSize: 10, color: AppColors.gold),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAvatarFull(BuildContext context, WidgetRef ref,
-      List<({InventoryTableData inv, ItemsTableData item})> equipped) {
+      List<InventoryEntryWithSpec> equipped) {
     final screenH = MediaQuery.of(context).size.height;
 
-    Map<String, ({InventoryTableData inv, ItemsTableData item})?> slotMap = {};
+    // Mapeia slot (dbValue do enum) → item equipado.
+    final slotMap = <String, InventoryEntryWithSpec>{};
     for (final e in equipped) {
-      final slot = e.inv.equippedSlot;
-      if (slot != null) slotMap[slot.toLowerCase()] = e;
+      if (e.spec.slot != null) slotMap[e.spec.slot!.dbValue] = e;
     }
 
     final leftSlots = [
@@ -145,12 +126,12 @@ class CharacterScreen extends ConsumerWidget {
     final rightSlots = [
       ('Botas', Icons.hiking, 'feet'),
       ('Luvas', Icons.back_hand_outlined, 'hands'),
-      ('Escudo', Icons.shield_outlined, 'offhand'),
+      ('Escudo', Icons.shield_outlined, 'off_hand'),
     ];
     final bottomSlots = [
-      ('Arma', Icons.gavel, 'weapon'),
+      ('Arma', Icons.gavel, 'main_hand'),
       ('Anel', Icons.circle_outlined, 'ring'),
-      ('Acessório', Icons.auto_awesome, 'accessory'),
+      ('Colar', Icons.auto_awesome, 'necklace'),
     ];
 
     return Container(
@@ -174,8 +155,8 @@ class CharacterScreen extends ConsumerWidget {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: leftSlots
-                      .map((s) => _slot(context, ref, s.$1, s.$2,
-                          slotMap[s.$3]))
+                      .map((s) =>
+                          _slot(context, ref, s.$1, s.$2, slotMap[s.$3]))
                       .toList(),
                 ),
                 Expanded(
@@ -186,7 +167,8 @@ class CharacterScreen extends ConsumerWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                            color: AppColors.purple.withValues(alpha: 0.4)),
+                            color:
+                                AppColors.purple.withValues(alpha: 0.4)),
                         gradient: RadialGradient(colors: [
                           AppColors.purple.withValues(alpha: 0.2),
                           AppColors.shadowVoid,
@@ -196,12 +178,14 @@ class CharacterScreen extends ConsumerWidget {
                         alignment: Alignment.center,
                         children: [
                           Container(
-                            width: 100, height: 100,
+                            width: 100,
+                            height: 100,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.purple.withValues(alpha: 0.4),
+                                  color:
+                                      AppColors.purple.withValues(alpha: 0.4),
                                   blurRadius: 40,
                                   spreadRadius: 15,
                                 ),
@@ -227,8 +211,8 @@ class CharacterScreen extends ConsumerWidget {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: rightSlots
-                      .map((s) => _slot(context, ref, s.$1, s.$2,
-                          slotMap[s.$3]))
+                      .map((s) =>
+                          _slot(context, ref, s.$1, s.$2, slotMap[s.$3]))
                       .toList(),
                 ),
               ],
@@ -238,8 +222,8 @@ class CharacterScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: bottomSlots
-                .map((s) => _slot(context, ref, s.$1, s.$2,
-                    slotMap[s.$3], wide: true))
+                .map((s) =>
+                    _slot(context, ref, s.$1, s.$2, slotMap[s.$3], wide: true))
                 .toList(),
           ),
         ],
@@ -252,17 +236,14 @@ class CharacterScreen extends ConsumerWidget {
     WidgetRef ref,
     String label,
     IconData icon,
-    ({InventoryTableData inv, ItemsTableData item})? equipped, {
+    InventoryEntryWithSpec? equipped, {
     bool wide = false,
   }) {
     final hasItem = equipped != null;
-    final rarity = equipped?.item.rarity ?? 'common';
-    final rarityColor = _rarityColor(rarity);
+    final rarityColor = equipped?.spec.rarity.color ?? AppColors.textMuted;
 
     return GestureDetector(
-      onTap: hasItem
-          ? () => _showItemDetail(context, ref, equipped!)
-          : null,
+      onTap: hasItem ? () => _showItemDetail(context, ref, equipped) : null,
       child: Container(
         width: wide ? 90 : 68,
         height: 68,
@@ -288,11 +269,9 @@ class CharacterScreen extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 3),
                     child: Text(
-                      equipped!.item.name,
+                      equipped.spec.name,
                       style: GoogleFonts.roboto(
-                          fontSize: 7,
-                          color: rarityColor,
-                          height: 1.2),
+                          fontSize: 7, color: rarityColor, height: 1.2),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -317,11 +296,10 @@ class CharacterScreen extends ConsumerWidget {
   void _showItemDetail(
     BuildContext context,
     WidgetRef ref,
-    ({InventoryTableData inv, ItemsTableData item}) equipped,
+    InventoryEntryWithSpec equipped,
   ) {
-    final item = equipped.item;
-    final rarity = item.rarity;
-    final color = _rarityColor(rarity);
+    final spec = equipped.spec;
+    final color = spec.rarity.color;
 
     showModalBottomSheet(
       context: context,
@@ -344,61 +322,64 @@ class CharacterScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: color.withValues(alpha: 0.4)),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                    border:
+                        Border.all(color: color.withValues(alpha: 0.4)),
+                  ),
+                  child: Text(spec.rarity.label.toUpperCase(),
+                      style: GoogleFonts.roboto(
+                          fontSize: 9, color: color, letterSpacing: 1.5)),
                 ),
-                child: Text(rarity.toUpperCase(),
-                    style: GoogleFonts.roboto(
-                        fontSize: 9, color: color, letterSpacing: 1.5)),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(item.name,
-                    style: GoogleFonts.cinzelDecorative(
-                        fontSize: 14, color: AppColors.textPrimary)),
-              ),
-            ]),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(spec.name,
+                      style: GoogleFonts.cinzelDecorative(
+                          fontSize: 14, color: AppColors.textPrimary)),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
-            Text(item.description,
+            Text(spec.description,
                 style: GoogleFonts.roboto(
                     fontSize: 12,
                     color: AppColors.textSecondary,
                     height: 1.5)),
-            const SizedBox(height: 12),
-            // Bônus
-            if (_hasBonuses(item)) ...[
+            if (spec.stats.isNotEmpty) ...[
+              const SizedBox(height: 12),
               Text('BÔNUS',
                   style: GoogleFonts.cinzelDecorative(
-                      fontSize: 10, color: AppColors.gold, letterSpacing: 1)),
+                      fontSize: 10,
+                      color: AppColors.gold,
+                      letterSpacing: 1)),
               const SizedBox(height: 8),
               Wrap(
-                spacing: 8, runSpacing: 6,
+                spacing: 8,
+                runSpacing: 6,
                 children: [
-                  if (item.strBonus != 0) _bonusChip('FOR +${item.strBonus}', AppColors.hp),
-                  if (item.dexBonus != 0) _bonusChip('DES +${item.dexBonus}', AppColors.shadowStable),
-                  if (item.intBonus != 0) _bonusChip('INT +${item.intBonus}', AppColors.mp),
-                  if (item.conBonus != 0) _bonusChip('CON +${item.conBonus}', AppColors.xp),
-                  if (item.spiBonus != 0) _bonusChip('ESP +${item.spiBonus}', AppColors.gold),
-                  if (item.hpBonus != 0)  _bonusChip('HP +${item.hpBonus}', AppColors.hp),
-                  if (item.mpBonus != 0)  _bonusChip('MP +${item.mpBonus}', AppColors.mp),
+                  for (final entry in spec.stats.entries)
+                    _bonusChip(
+                      '${entry.key.toUpperCase()} +${entry.value}',
+                      AppColors.gold,
+                    ),
                 ],
               ),
               const SizedBox(height: 12),
             ],
-            // Botão desequipar
             GestureDetector(
               onTap: () async {
-                final db = ref.read(appDatabaseProvider);
-                await (db.update(db.inventoryTable)
-                      ..where((t) => t.id.equals(equipped.inv.id)))
-                    .write(const InventoryTableCompanion(
-                        equippedSlot: Value(null)));
+                final slot = spec.slot;
+                if (slot == null) return;
+                await ref.read(playerEquipmentServiceProvider).unequip(
+                      playerId: equipped.entry.playerId,
+                      slot: slot,
+                    );
                 ref.invalidate(equippedItemsProvider);
                 if (context.mounted) Navigator.pop(context);
               },
@@ -433,20 +414,6 @@ class CharacterScreen extends ConsumerWidget {
         child: Text(label,
             style: GoogleFonts.roboto(fontSize: 11, color: color)),
       );
-
-  bool _hasBonuses(ItemsTableData item) =>
-      item.strBonus != 0 || item.dexBonus != 0 || item.intBonus != 0 ||
-      item.conBonus != 0 || item.spiBonus != 0 ||
-      item.hpBonus != 0 || item.mpBonus != 0;
-
-  Color _rarityColor(String rarity) => switch (rarity) {
-        'legendary' => const Color(0xFFFF8C00),
-        'epic'      => AppColors.purple,
-        'rare'      => const Color(0xFF3070B3),
-        'uncommon'  => const Color(0xFF4FA06B),
-        'mythic'    => const Color(0xFFFF2D55),
-        _           => AppColors.textMuted,
-      };
 
   Widget _buildClassFaction(player) {
     if (player == null) return const SizedBox.shrink();
@@ -503,19 +470,106 @@ class CharacterScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildAttributes(
-    BuildContext context,
-    WidgetRef ref,
-    player,
-    int bonusStr, int bonusDex, int bonusInt,
-    int bonusCon, int bonusSpi, int bonusHp, int bonusMp,
-  ) {
+  Widget _buildGuildRankCard(player) {
+    if (player == null) return const SizedBox.shrink();
+    final rank = ItemEquipPolicy.parseRank(player.guildRank);
+    final color = _rankColor(rank);
+    final letter = rank == null ? '—' : rank.name.toUpperCase();
+    final title = rank == null ? 'SEM RANK' : 'RANK $letter';
+    final next = rank == null ? GuildRank.e : GuildRankSystem.next(rank);
+    final nextLabel = next == null
+        ? 'Você atingiu o rank máximo.'
+        : 'Próximo rank: ${next.name.toUpperCase()} — '
+            'requer Teste de Ascensão (Sprint 3.4).';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color.withValues(alpha: 0.12),
+              border: Border.all(color: color, width: 2),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.35),
+                  blurRadius: 16,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              letter,
+              style: GoogleFonts.cinzelDecorative(
+                fontSize: 26,
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('GUILDA',
+                    style: GoogleFonts.roboto(
+                        fontSize: 9,
+                        color: AppColors.textMuted,
+                        letterSpacing: 1.5)),
+                const SizedBox(height: 4),
+                Text(title,
+                    style: GoogleFonts.cinzelDecorative(
+                        fontSize: 14,
+                        color: color,
+                        letterSpacing: 2)),
+                const SizedBox(height: 6),
+                Text(
+                  nextLabel,
+                  style: GoogleFonts.roboto(
+                      fontSize: 10,
+                      color: AppColors.textMuted,
+                      height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _rankColor(GuildRank? rank) => switch (rank) {
+        null           => Colors.grey,
+        GuildRank.e    => Colors.brown,
+        GuildRank.d    => const Color(0xFFC0C0C0), // prata
+        GuildRank.c    => const Color(0xFFFFD54F), // ouro fosco
+        GuildRank.b    => AppColors.gold,
+        GuildRank.a    => AppColors.purple,
+        GuildRank.s    => Colors.deepOrange,
+      };
+
+  Widget _buildAttributes(BuildContext context, WidgetRef ref, player) {
     final attrs = [
-      ('Força',        'strength',     (player?.strength     ?? 1), bonusStr, Icons.fitness_center,        AppColors.hp,          'Poder físico, dano e carga'),
-      ('Destreza',     'dexterity',    (player?.dexterity    ?? 1), bonusDex, Icons.speed,                  AppColors.shadowStable,'Precisão, crítico e esquiva'),
-      ('Inteligência', 'intelligence', (player?.intelligence ?? 1), bonusInt, Icons.psychology_outlined,    AppColors.mp,          'Dano mágico e resistência'),
-      ('Constituição', 'constitution', (player?.constitution ?? 1), bonusCon, Icons.shield_outlined,        AppColors.xp,          'HP máximo e resistência física'),
-      ('Espírito',     'spirit',       (player?.spirit       ?? 1), bonusSpi, Icons.self_improvement,       AppColors.gold,        'MP, vitalismo e estabilidade'),
+      ('Força',        'strength',     (player?.strength     ?? 1),
+          Icons.fitness_center,         AppColors.hp,           'Poder físico, dano e carga'),
+      ('Destreza',     'dexterity',    (player?.dexterity    ?? 1),
+          Icons.speed,                  AppColors.shadowStable, 'Precisão, crítico e esquiva'),
+      ('Inteligência', 'intelligence', (player?.intelligence ?? 1),
+          Icons.psychology_outlined,    AppColors.mp,           'Dano mágico e resistência'),
+      ('Constituição', 'constitution', (player?.constitution ?? 1),
+          Icons.shield_outlined,        AppColors.xp,           'HP máximo e resistência física'),
+      ('Espírito',     'spirit',       (player?.spirit       ?? 1),
+          Icons.self_improvement,       AppColors.gold,         'MP, vitalismo e estabilidade'),
     ];
 
     final hasPoints = (player?.attributePoints ?? 0) > 0;
@@ -535,7 +589,9 @@ class CharacterScreen extends ConsumerWidget {
             children: [
               Text('ATRIBUTOS',
                   style: GoogleFonts.cinzelDecorative(
-                      fontSize: 11, color: AppColors.gold, letterSpacing: 2)),
+                      fontSize: 11,
+                      color: AppColors.gold,
+                      letterSpacing: 2)),
               if (hasPoints)
                 Text('${player!.attributePoints} pts',
                     style: GoogleFonts.roboto(
@@ -545,46 +601,38 @@ class CharacterScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           ...attrs.map((a) {
             final base = a.$3 as int;
-            final bonus = a.$4 as int;
-            final total = base + bonus;
-            final color = a.$6 as Color;
+            final color = a.$5 as Color;
             return Padding(
               padding: const EdgeInsets.only(bottom: 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(children: [
-                    Icon(a.$5 as IconData, color: color, size: 15),
+                    Icon(a.$4 as IconData, color: color, size: 15),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(a.$1 as String,
                           style: GoogleFonts.roboto(
-                              fontSize: 13,
-                              color: AppColors.textPrimary)),
+                              fontSize: 13, color: AppColors.textPrimary)),
                     ),
-                    // Valor total
-                    Text('$total',
+                    Text('$base',
                         style: GoogleFonts.cinzelDecorative(
                             fontSize: 14,
                             color: color,
                             fontWeight: FontWeight.bold)),
-                    // Bônus de equipamento
-                    if (bonus > 0) ...[
-                      const SizedBox(width: 4),
-                      Text('+$bonus',
-                          style: GoogleFonts.roboto(
-                              fontSize: 10, color: color.withValues(alpha: 0.7))),
-                    ],
                     if (hasPoints) ...[
                       const SizedBox(width: 10),
                       GestureDetector(
-                        onTap: () => _addPoint(context, ref, player!.id, a.$2 as String),
+                        onTap: () => _addPoint(
+                            context, ref, player!.id, a.$2 as String),
                         child: Container(
-                          width: 28, height: 28,
+                          width: 28,
+                          height: 28,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: color.withValues(alpha: 0.15),
-                            border: Border.all(color: color.withValues(alpha: 0.6)),
+                            border: Border.all(
+                                color: color.withValues(alpha: 0.6)),
                           ),
                           child: Icon(Icons.add, color: color, size: 16),
                         ),
@@ -595,14 +643,14 @@ class CharacterScreen extends ConsumerWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
-                      value: (total / 100).clamp(0.0, 1.0),
+                      value: (base / 100).clamp(0.0, 1.0),
                       backgroundColor: AppColors.border,
                       valueColor: AlwaysStoppedAnimation(color),
                       minHeight: 5,
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Text(a.$7 as String,
+                  Text(a.$6 as String,
                       style: GoogleFonts.roboto(
                           fontSize: 10, color: AppColors.textMuted)),
                 ],
@@ -614,8 +662,9 @@ class CharacterScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEquipmentBonusSummary(int hp, int mp, int str,
-      int dex, int intel, int con, int spi) {
+  // Novo: mostra stats agregados dos itens equipados (chaves livres —
+  // atk/def/agi/crit/...). Substitui o antigo bloco de bônus fixos.
+  Widget _buildEquipmentStatsSummary(Map<String, num> stats) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -628,18 +677,19 @@ class CharacterScreen extends ConsumerWidget {
         children: [
           Text('BÔNUS DE EQUIPAMENTOS',
               style: GoogleFonts.cinzelDecorative(
-                  fontSize: 10, color: AppColors.gold, letterSpacing: 1.5)),
+                  fontSize: 10,
+                  color: AppColors.gold,
+                  letterSpacing: 1.5)),
           const SizedBox(height: 10),
           Wrap(
-            spacing: 8, runSpacing: 6,
+            spacing: 8,
+            runSpacing: 6,
             children: [
-              if (hp > 0)   _bonusChip('HP +$hp',   AppColors.hp),
-              if (mp > 0)   _bonusChip('MP +$mp',   AppColors.mp),
-              if (str > 0)  _bonusChip('FOR +$str', AppColors.hp),
-              if (dex > 0)  _bonusChip('DES +$dex', AppColors.shadowStable),
-              if (intel > 0) _bonusChip('INT +$intel', AppColors.mp),
-              if (con > 0)  _bonusChip('CON +$con', AppColors.xp),
-              if (spi > 0)  _bonusChip('ESP +$spi', AppColors.gold),
+              for (final entry in stats.entries)
+                _bonusChip(
+                  '${entry.key.toUpperCase()} +${entry.value}',
+                  AppColors.gold,
+                ),
             ],
           ),
         ],
@@ -682,7 +732,7 @@ class CharacterScreen extends ConsumerWidget {
         'druid'        => 'Druida',
         'mage'         => 'Mago',
         'shadowWeaver' => 'Tecelão Sombrio',
-        _ => '',
+        _              => '',
       };
 
   String _factionName(String f) => switch (f) {
@@ -694,6 +744,6 @@ class CharacterScreen extends ConsumerWidget {
         'renegades'    => 'Renegados',
         'error'        => 'ERROR',
         'guild'        => 'Guilda',
-        _ => '',
+        _              => '',
       };
 }
