@@ -8607,6 +8607,1172 @@ class GuildAscensionTableCompanion
   }
 }
 
+class $VitalismUniqueCatalogTableTable extends VitalismUniqueCatalogTable
+    with
+        TableInfo<$VitalismUniqueCatalogTableTable,
+            VitalismUniqueCatalogTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $VitalismUniqueCatalogTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _carrierNameMeta =
+      const VerificationMeta('carrierName');
+  @override
+  late final GeneratedColumn<String> carrierName = GeneratedColumn<String>(
+      'carrier_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _tierMeta = const VerificationMeta('tier');
+  @override
+  late final GeneratedColumn<String> tier = GeneratedColumn<String>(
+      'tier', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _themeDescriptionMeta =
+      const VerificationMeta('themeDescription');
+  @override
+  late final GeneratedColumn<String> themeDescription = GeneratedColumn<String>(
+      'theme_description', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, name, carrierName, tier, themeDescription];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'vitalism_unique_catalog';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<VitalismUniqueCatalogTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('carrier_name')) {
+      context.handle(
+          _carrierNameMeta,
+          carrierName.isAcceptableOrUnknown(
+              data['carrier_name']!, _carrierNameMeta));
+    } else if (isInserting) {
+      context.missing(_carrierNameMeta);
+    }
+    if (data.containsKey('tier')) {
+      context.handle(
+          _tierMeta, tier.isAcceptableOrUnknown(data['tier']!, _tierMeta));
+    } else if (isInserting) {
+      context.missing(_tierMeta);
+    }
+    if (data.containsKey('theme_description')) {
+      context.handle(
+          _themeDescriptionMeta,
+          themeDescription.isAcceptableOrUnknown(
+              data['theme_description']!, _themeDescriptionMeta));
+    } else if (isInserting) {
+      context.missing(_themeDescriptionMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  VitalismUniqueCatalogTableData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return VitalismUniqueCatalogTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      carrierName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}carrier_name'])!,
+      tier: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}tier'])!,
+      themeDescription: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}theme_description'])!,
+    );
+  }
+
+  @override
+  $VitalismUniqueCatalogTableTable createAlias(String alias) {
+    return $VitalismUniqueCatalogTableTable(attachedDatabase, alias);
+  }
+}
+
+class VitalismUniqueCatalogTableData extends DataClass
+    implements Insertable<VitalismUniqueCatalogTableData> {
+  final String id;
+  final String name;
+  final String carrierName;
+  final String tier;
+  final String themeDescription;
+  const VitalismUniqueCatalogTableData(
+      {required this.id,
+      required this.name,
+      required this.carrierName,
+      required this.tier,
+      required this.themeDescription});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['carrier_name'] = Variable<String>(carrierName);
+    map['tier'] = Variable<String>(tier);
+    map['theme_description'] = Variable<String>(themeDescription);
+    return map;
+  }
+
+  VitalismUniqueCatalogTableCompanion toCompanion(bool nullToAbsent) {
+    return VitalismUniqueCatalogTableCompanion(
+      id: Value(id),
+      name: Value(name),
+      carrierName: Value(carrierName),
+      tier: Value(tier),
+      themeDescription: Value(themeDescription),
+    );
+  }
+
+  factory VitalismUniqueCatalogTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return VitalismUniqueCatalogTableData(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      carrierName: serializer.fromJson<String>(json['carrierName']),
+      tier: serializer.fromJson<String>(json['tier']),
+      themeDescription: serializer.fromJson<String>(json['themeDescription']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'carrierName': serializer.toJson<String>(carrierName),
+      'tier': serializer.toJson<String>(tier),
+      'themeDescription': serializer.toJson<String>(themeDescription),
+    };
+  }
+
+  VitalismUniqueCatalogTableData copyWith(
+          {String? id,
+          String? name,
+          String? carrierName,
+          String? tier,
+          String? themeDescription}) =>
+      VitalismUniqueCatalogTableData(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        carrierName: carrierName ?? this.carrierName,
+        tier: tier ?? this.tier,
+        themeDescription: themeDescription ?? this.themeDescription,
+      );
+  VitalismUniqueCatalogTableData copyWithCompanion(
+      VitalismUniqueCatalogTableCompanion data) {
+    return VitalismUniqueCatalogTableData(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      carrierName:
+          data.carrierName.present ? data.carrierName.value : this.carrierName,
+      tier: data.tier.present ? data.tier.value : this.tier,
+      themeDescription: data.themeDescription.present
+          ? data.themeDescription.value
+          : this.themeDescription,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VitalismUniqueCatalogTableData(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('carrierName: $carrierName, ')
+          ..write('tier: $tier, ')
+          ..write('themeDescription: $themeDescription')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, name, carrierName, tier, themeDescription);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is VitalismUniqueCatalogTableData &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.carrierName == this.carrierName &&
+          other.tier == this.tier &&
+          other.themeDescription == this.themeDescription);
+}
+
+class VitalismUniqueCatalogTableCompanion
+    extends UpdateCompanion<VitalismUniqueCatalogTableData> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String> carrierName;
+  final Value<String> tier;
+  final Value<String> themeDescription;
+  final Value<int> rowid;
+  const VitalismUniqueCatalogTableCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.carrierName = const Value.absent(),
+    this.tier = const Value.absent(),
+    this.themeDescription = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  VitalismUniqueCatalogTableCompanion.insert({
+    required String id,
+    required String name,
+    required String carrierName,
+    required String tier,
+    required String themeDescription,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        name = Value(name),
+        carrierName = Value(carrierName),
+        tier = Value(tier),
+        themeDescription = Value(themeDescription);
+  static Insertable<VitalismUniqueCatalogTableData> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? carrierName,
+    Expression<String>? tier,
+    Expression<String>? themeDescription,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (carrierName != null) 'carrier_name': carrierName,
+      if (tier != null) 'tier': tier,
+      if (themeDescription != null) 'theme_description': themeDescription,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  VitalismUniqueCatalogTableCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? name,
+      Value<String>? carrierName,
+      Value<String>? tier,
+      Value<String>? themeDescription,
+      Value<int>? rowid}) {
+    return VitalismUniqueCatalogTableCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      carrierName: carrierName ?? this.carrierName,
+      tier: tier ?? this.tier,
+      themeDescription: themeDescription ?? this.themeDescription,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (carrierName.present) {
+      map['carrier_name'] = Variable<String>(carrierName.value);
+    }
+    if (tier.present) {
+      map['tier'] = Variable<String>(tier.value);
+    }
+    if (themeDescription.present) {
+      map['theme_description'] = Variable<String>(themeDescription.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('VitalismUniqueCatalogTableCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('carrierName: $carrierName, ')
+          ..write('tier: $tier, ')
+          ..write('themeDescription: $themeDescription, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PlayerVitalismAffinitiesTableTable extends PlayerVitalismAffinitiesTable
+    with
+        TableInfo<$PlayerVitalismAffinitiesTableTable,
+            PlayerVitalismAffinitiesTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlayerVitalismAffinitiesTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _vitalismIdMeta =
+      const VerificationMeta('vitalismId');
+  @override
+  late final GeneratedColumn<String> vitalismId = GeneratedColumn<String>(
+      'vitalism_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _acquiredAtMeta =
+      const VerificationMeta('acquiredAt');
+  @override
+  late final GeneratedColumn<int> acquiredAt = GeneratedColumn<int>(
+      'acquired_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _acquiredViaMeta =
+      const VerificationMeta('acquiredVia');
+  @override
+  late final GeneratedColumn<String> acquiredVia = GeneratedColumn<String>(
+      'acquired_via', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [playerId, vitalismId, acquiredAt, acquiredVia];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'player_vitalism_affinities';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<PlayerVitalismAffinitiesTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('vitalism_id')) {
+      context.handle(
+          _vitalismIdMeta,
+          vitalismId.isAcceptableOrUnknown(
+              data['vitalism_id']!, _vitalismIdMeta));
+    } else if (isInserting) {
+      context.missing(_vitalismIdMeta);
+    }
+    if (data.containsKey('acquired_at')) {
+      context.handle(
+          _acquiredAtMeta,
+          acquiredAt.isAcceptableOrUnknown(
+              data['acquired_at']!, _acquiredAtMeta));
+    } else if (isInserting) {
+      context.missing(_acquiredAtMeta);
+    }
+    if (data.containsKey('acquired_via')) {
+      context.handle(
+          _acquiredViaMeta,
+          acquiredVia.isAcceptableOrUnknown(
+              data['acquired_via']!, _acquiredViaMeta));
+    } else if (isInserting) {
+      context.missing(_acquiredViaMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {playerId, vitalismId};
+  @override
+  PlayerVitalismAffinitiesTableData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlayerVitalismAffinitiesTableData(
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      vitalismId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}vitalism_id'])!,
+      acquiredAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}acquired_at'])!,
+      acquiredVia: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}acquired_via'])!,
+    );
+  }
+
+  @override
+  $PlayerVitalismAffinitiesTableTable createAlias(String alias) {
+    return $PlayerVitalismAffinitiesTableTable(attachedDatabase, alias);
+  }
+}
+
+class PlayerVitalismAffinitiesTableData extends DataClass
+    implements Insertable<PlayerVitalismAffinitiesTableData> {
+  final int playerId;
+  final String vitalismId;
+  final int acquiredAt;
+  final String acquiredVia;
+  const PlayerVitalismAffinitiesTableData(
+      {required this.playerId,
+      required this.vitalismId,
+      required this.acquiredAt,
+      required this.acquiredVia});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['player_id'] = Variable<int>(playerId);
+    map['vitalism_id'] = Variable<String>(vitalismId);
+    map['acquired_at'] = Variable<int>(acquiredAt);
+    map['acquired_via'] = Variable<String>(acquiredVia);
+    return map;
+  }
+
+  PlayerVitalismAffinitiesTableCompanion toCompanion(bool nullToAbsent) {
+    return PlayerVitalismAffinitiesTableCompanion(
+      playerId: Value(playerId),
+      vitalismId: Value(vitalismId),
+      acquiredAt: Value(acquiredAt),
+      acquiredVia: Value(acquiredVia),
+    );
+  }
+
+  factory PlayerVitalismAffinitiesTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlayerVitalismAffinitiesTableData(
+      playerId: serializer.fromJson<int>(json['playerId']),
+      vitalismId: serializer.fromJson<String>(json['vitalismId']),
+      acquiredAt: serializer.fromJson<int>(json['acquiredAt']),
+      acquiredVia: serializer.fromJson<String>(json['acquiredVia']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'playerId': serializer.toJson<int>(playerId),
+      'vitalismId': serializer.toJson<String>(vitalismId),
+      'acquiredAt': serializer.toJson<int>(acquiredAt),
+      'acquiredVia': serializer.toJson<String>(acquiredVia),
+    };
+  }
+
+  PlayerVitalismAffinitiesTableData copyWith(
+          {int? playerId,
+          String? vitalismId,
+          int? acquiredAt,
+          String? acquiredVia}) =>
+      PlayerVitalismAffinitiesTableData(
+        playerId: playerId ?? this.playerId,
+        vitalismId: vitalismId ?? this.vitalismId,
+        acquiredAt: acquiredAt ?? this.acquiredAt,
+        acquiredVia: acquiredVia ?? this.acquiredVia,
+      );
+  PlayerVitalismAffinitiesTableData copyWithCompanion(
+      PlayerVitalismAffinitiesTableCompanion data) {
+    return PlayerVitalismAffinitiesTableData(
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      vitalismId:
+          data.vitalismId.present ? data.vitalismId.value : this.vitalismId,
+      acquiredAt:
+          data.acquiredAt.present ? data.acquiredAt.value : this.acquiredAt,
+      acquiredVia:
+          data.acquiredVia.present ? data.acquiredVia.value : this.acquiredVia,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerVitalismAffinitiesTableData(')
+          ..write('playerId: $playerId, ')
+          ..write('vitalismId: $vitalismId, ')
+          ..write('acquiredAt: $acquiredAt, ')
+          ..write('acquiredVia: $acquiredVia')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(playerId, vitalismId, acquiredAt, acquiredVia);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlayerVitalismAffinitiesTableData &&
+          other.playerId == this.playerId &&
+          other.vitalismId == this.vitalismId &&
+          other.acquiredAt == this.acquiredAt &&
+          other.acquiredVia == this.acquiredVia);
+}
+
+class PlayerVitalismAffinitiesTableCompanion
+    extends UpdateCompanion<PlayerVitalismAffinitiesTableData> {
+  final Value<int> playerId;
+  final Value<String> vitalismId;
+  final Value<int> acquiredAt;
+  final Value<String> acquiredVia;
+  final Value<int> rowid;
+  const PlayerVitalismAffinitiesTableCompanion({
+    this.playerId = const Value.absent(),
+    this.vitalismId = const Value.absent(),
+    this.acquiredAt = const Value.absent(),
+    this.acquiredVia = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlayerVitalismAffinitiesTableCompanion.insert({
+    required int playerId,
+    required String vitalismId,
+    required int acquiredAt,
+    required String acquiredVia,
+    this.rowid = const Value.absent(),
+  })  : playerId = Value(playerId),
+        vitalismId = Value(vitalismId),
+        acquiredAt = Value(acquiredAt),
+        acquiredVia = Value(acquiredVia);
+  static Insertable<PlayerVitalismAffinitiesTableData> custom({
+    Expression<int>? playerId,
+    Expression<String>? vitalismId,
+    Expression<int>? acquiredAt,
+    Expression<String>? acquiredVia,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (playerId != null) 'player_id': playerId,
+      if (vitalismId != null) 'vitalism_id': vitalismId,
+      if (acquiredAt != null) 'acquired_at': acquiredAt,
+      if (acquiredVia != null) 'acquired_via': acquiredVia,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlayerVitalismAffinitiesTableCompanion copyWith(
+      {Value<int>? playerId,
+      Value<String>? vitalismId,
+      Value<int>? acquiredAt,
+      Value<String>? acquiredVia,
+      Value<int>? rowid}) {
+    return PlayerVitalismAffinitiesTableCompanion(
+      playerId: playerId ?? this.playerId,
+      vitalismId: vitalismId ?? this.vitalismId,
+      acquiredAt: acquiredAt ?? this.acquiredAt,
+      acquiredVia: acquiredVia ?? this.acquiredVia,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (vitalismId.present) {
+      map['vitalism_id'] = Variable<String>(vitalismId.value);
+    }
+    if (acquiredAt.present) {
+      map['acquired_at'] = Variable<int>(acquiredAt.value);
+    }
+    if (acquiredVia.present) {
+      map['acquired_via'] = Variable<String>(acquiredVia.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerVitalismAffinitiesTableCompanion(')
+          ..write('playerId: $playerId, ')
+          ..write('vitalismId: $vitalismId, ')
+          ..write('acquiredAt: $acquiredAt, ')
+          ..write('acquiredVia: $acquiredVia, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PlayerVitalismTreesTableTable extends PlayerVitalismTreesTable
+    with
+        TableInfo<$PlayerVitalismTreesTableTable,
+            PlayerVitalismTreesTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlayerVitalismTreesTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _vitalismIdMeta =
+      const VerificationMeta('vitalismId');
+  @override
+  late final GeneratedColumn<String> vitalismId = GeneratedColumn<String>(
+      'vitalism_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nodeIdMeta = const VerificationMeta('nodeId');
+  @override
+  late final GeneratedColumn<String> nodeId = GeneratedColumn<String>(
+      'node_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _unlockedMeta =
+      const VerificationMeta('unlocked');
+  @override
+  late final GeneratedColumn<bool> unlocked = GeneratedColumn<bool>(
+      'unlocked', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("unlocked" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _unlockedAtMeta =
+      const VerificationMeta('unlockedAt');
+  @override
+  late final GeneratedColumn<int> unlockedAt = GeneratedColumn<int>(
+      'unlocked_at', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [playerId, vitalismId, nodeId, unlocked, unlockedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'player_vitalism_trees';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<PlayerVitalismTreesTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('vitalism_id')) {
+      context.handle(
+          _vitalismIdMeta,
+          vitalismId.isAcceptableOrUnknown(
+              data['vitalism_id']!, _vitalismIdMeta));
+    } else if (isInserting) {
+      context.missing(_vitalismIdMeta);
+    }
+    if (data.containsKey('node_id')) {
+      context.handle(_nodeIdMeta,
+          nodeId.isAcceptableOrUnknown(data['node_id']!, _nodeIdMeta));
+    } else if (isInserting) {
+      context.missing(_nodeIdMeta);
+    }
+    if (data.containsKey('unlocked')) {
+      context.handle(_unlockedMeta,
+          unlocked.isAcceptableOrUnknown(data['unlocked']!, _unlockedMeta));
+    }
+    if (data.containsKey('unlocked_at')) {
+      context.handle(
+          _unlockedAtMeta,
+          unlockedAt.isAcceptableOrUnknown(
+              data['unlocked_at']!, _unlockedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {playerId, vitalismId, nodeId};
+  @override
+  PlayerVitalismTreesTableData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlayerVitalismTreesTableData(
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      vitalismId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}vitalism_id'])!,
+      nodeId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}node_id'])!,
+      unlocked: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}unlocked'])!,
+      unlockedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}unlocked_at']),
+    );
+  }
+
+  @override
+  $PlayerVitalismTreesTableTable createAlias(String alias) {
+    return $PlayerVitalismTreesTableTable(attachedDatabase, alias);
+  }
+}
+
+class PlayerVitalismTreesTableData extends DataClass
+    implements Insertable<PlayerVitalismTreesTableData> {
+  final int playerId;
+  final String vitalismId;
+  final String nodeId;
+  final bool unlocked;
+  final int? unlockedAt;
+  const PlayerVitalismTreesTableData(
+      {required this.playerId,
+      required this.vitalismId,
+      required this.nodeId,
+      required this.unlocked,
+      this.unlockedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['player_id'] = Variable<int>(playerId);
+    map['vitalism_id'] = Variable<String>(vitalismId);
+    map['node_id'] = Variable<String>(nodeId);
+    map['unlocked'] = Variable<bool>(unlocked);
+    if (!nullToAbsent || unlockedAt != null) {
+      map['unlocked_at'] = Variable<int>(unlockedAt);
+    }
+    return map;
+  }
+
+  PlayerVitalismTreesTableCompanion toCompanion(bool nullToAbsent) {
+    return PlayerVitalismTreesTableCompanion(
+      playerId: Value(playerId),
+      vitalismId: Value(vitalismId),
+      nodeId: Value(nodeId),
+      unlocked: Value(unlocked),
+      unlockedAt: unlockedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(unlockedAt),
+    );
+  }
+
+  factory PlayerVitalismTreesTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlayerVitalismTreesTableData(
+      playerId: serializer.fromJson<int>(json['playerId']),
+      vitalismId: serializer.fromJson<String>(json['vitalismId']),
+      nodeId: serializer.fromJson<String>(json['nodeId']),
+      unlocked: serializer.fromJson<bool>(json['unlocked']),
+      unlockedAt: serializer.fromJson<int?>(json['unlockedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'playerId': serializer.toJson<int>(playerId),
+      'vitalismId': serializer.toJson<String>(vitalismId),
+      'nodeId': serializer.toJson<String>(nodeId),
+      'unlocked': serializer.toJson<bool>(unlocked),
+      'unlockedAt': serializer.toJson<int?>(unlockedAt),
+    };
+  }
+
+  PlayerVitalismTreesTableData copyWith(
+          {int? playerId,
+          String? vitalismId,
+          String? nodeId,
+          bool? unlocked,
+          Value<int?> unlockedAt = const Value.absent()}) =>
+      PlayerVitalismTreesTableData(
+        playerId: playerId ?? this.playerId,
+        vitalismId: vitalismId ?? this.vitalismId,
+        nodeId: nodeId ?? this.nodeId,
+        unlocked: unlocked ?? this.unlocked,
+        unlockedAt: unlockedAt.present ? unlockedAt.value : this.unlockedAt,
+      );
+  PlayerVitalismTreesTableData copyWithCompanion(
+      PlayerVitalismTreesTableCompanion data) {
+    return PlayerVitalismTreesTableData(
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      vitalismId:
+          data.vitalismId.present ? data.vitalismId.value : this.vitalismId,
+      nodeId: data.nodeId.present ? data.nodeId.value : this.nodeId,
+      unlocked: data.unlocked.present ? data.unlocked.value : this.unlocked,
+      unlockedAt:
+          data.unlockedAt.present ? data.unlockedAt.value : this.unlockedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerVitalismTreesTableData(')
+          ..write('playerId: $playerId, ')
+          ..write('vitalismId: $vitalismId, ')
+          ..write('nodeId: $nodeId, ')
+          ..write('unlocked: $unlocked, ')
+          ..write('unlockedAt: $unlockedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(playerId, vitalismId, nodeId, unlocked, unlockedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlayerVitalismTreesTableData &&
+          other.playerId == this.playerId &&
+          other.vitalismId == this.vitalismId &&
+          other.nodeId == this.nodeId &&
+          other.unlocked == this.unlocked &&
+          other.unlockedAt == this.unlockedAt);
+}
+
+class PlayerVitalismTreesTableCompanion
+    extends UpdateCompanion<PlayerVitalismTreesTableData> {
+  final Value<int> playerId;
+  final Value<String> vitalismId;
+  final Value<String> nodeId;
+  final Value<bool> unlocked;
+  final Value<int?> unlockedAt;
+  final Value<int> rowid;
+  const PlayerVitalismTreesTableCompanion({
+    this.playerId = const Value.absent(),
+    this.vitalismId = const Value.absent(),
+    this.nodeId = const Value.absent(),
+    this.unlocked = const Value.absent(),
+    this.unlockedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlayerVitalismTreesTableCompanion.insert({
+    required int playerId,
+    required String vitalismId,
+    required String nodeId,
+    this.unlocked = const Value.absent(),
+    this.unlockedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : playerId = Value(playerId),
+        vitalismId = Value(vitalismId),
+        nodeId = Value(nodeId);
+  static Insertable<PlayerVitalismTreesTableData> custom({
+    Expression<int>? playerId,
+    Expression<String>? vitalismId,
+    Expression<String>? nodeId,
+    Expression<bool>? unlocked,
+    Expression<int>? unlockedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (playerId != null) 'player_id': playerId,
+      if (vitalismId != null) 'vitalism_id': vitalismId,
+      if (nodeId != null) 'node_id': nodeId,
+      if (unlocked != null) 'unlocked': unlocked,
+      if (unlockedAt != null) 'unlocked_at': unlockedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlayerVitalismTreesTableCompanion copyWith(
+      {Value<int>? playerId,
+      Value<String>? vitalismId,
+      Value<String>? nodeId,
+      Value<bool>? unlocked,
+      Value<int?>? unlockedAt,
+      Value<int>? rowid}) {
+    return PlayerVitalismTreesTableCompanion(
+      playerId: playerId ?? this.playerId,
+      vitalismId: vitalismId ?? this.vitalismId,
+      nodeId: nodeId ?? this.nodeId,
+      unlocked: unlocked ?? this.unlocked,
+      unlockedAt: unlockedAt ?? this.unlockedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (vitalismId.present) {
+      map['vitalism_id'] = Variable<String>(vitalismId.value);
+    }
+    if (nodeId.present) {
+      map['node_id'] = Variable<String>(nodeId.value);
+    }
+    if (unlocked.present) {
+      map['unlocked'] = Variable<bool>(unlocked.value);
+    }
+    if (unlockedAt.present) {
+      map['unlocked_at'] = Variable<int>(unlockedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerVitalismTreesTableCompanion(')
+          ..write('playerId: $playerId, ')
+          ..write('vitalismId: $vitalismId, ')
+          ..write('nodeId: $nodeId, ')
+          ..write('unlocked: $unlocked, ')
+          ..write('unlockedAt: $unlockedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $LifeVitalismPointsTableTable extends LifeVitalismPointsTable
+    with TableInfo<$LifeVitalismPointsTableTable, LifeVitalismPointsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LifeVitalismPointsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _totalPointsMeta =
+      const VerificationMeta('totalPoints');
+  @override
+  late final GeneratedColumn<int> totalPoints = GeneratedColumn<int>(
+      'total_points', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _sourceLogMeta =
+      const VerificationMeta('sourceLog');
+  @override
+  late final GeneratedColumn<String> sourceLog = GeneratedColumn<String>(
+      'source_log', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('[]'));
+  @override
+  List<GeneratedColumn> get $columns => [playerId, totalPoints, sourceLog];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'life_vitalism_points';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<LifeVitalismPointsTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    }
+    if (data.containsKey('total_points')) {
+      context.handle(
+          _totalPointsMeta,
+          totalPoints.isAcceptableOrUnknown(
+              data['total_points']!, _totalPointsMeta));
+    }
+    if (data.containsKey('source_log')) {
+      context.handle(_sourceLogMeta,
+          sourceLog.isAcceptableOrUnknown(data['source_log']!, _sourceLogMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {playerId};
+  @override
+  LifeVitalismPointsTableData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LifeVitalismPointsTableData(
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      totalPoints: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}total_points'])!,
+      sourceLog: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}source_log'])!,
+    );
+  }
+
+  @override
+  $LifeVitalismPointsTableTable createAlias(String alias) {
+    return $LifeVitalismPointsTableTable(attachedDatabase, alias);
+  }
+}
+
+class LifeVitalismPointsTableData extends DataClass
+    implements Insertable<LifeVitalismPointsTableData> {
+  final int playerId;
+  final int totalPoints;
+  final String sourceLog;
+  const LifeVitalismPointsTableData(
+      {required this.playerId,
+      required this.totalPoints,
+      required this.sourceLog});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['player_id'] = Variable<int>(playerId);
+    map['total_points'] = Variable<int>(totalPoints);
+    map['source_log'] = Variable<String>(sourceLog);
+    return map;
+  }
+
+  LifeVitalismPointsTableCompanion toCompanion(bool nullToAbsent) {
+    return LifeVitalismPointsTableCompanion(
+      playerId: Value(playerId),
+      totalPoints: Value(totalPoints),
+      sourceLog: Value(sourceLog),
+    );
+  }
+
+  factory LifeVitalismPointsTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LifeVitalismPointsTableData(
+      playerId: serializer.fromJson<int>(json['playerId']),
+      totalPoints: serializer.fromJson<int>(json['totalPoints']),
+      sourceLog: serializer.fromJson<String>(json['sourceLog']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'playerId': serializer.toJson<int>(playerId),
+      'totalPoints': serializer.toJson<int>(totalPoints),
+      'sourceLog': serializer.toJson<String>(sourceLog),
+    };
+  }
+
+  LifeVitalismPointsTableData copyWith(
+          {int? playerId, int? totalPoints, String? sourceLog}) =>
+      LifeVitalismPointsTableData(
+        playerId: playerId ?? this.playerId,
+        totalPoints: totalPoints ?? this.totalPoints,
+        sourceLog: sourceLog ?? this.sourceLog,
+      );
+  LifeVitalismPointsTableData copyWithCompanion(
+      LifeVitalismPointsTableCompanion data) {
+    return LifeVitalismPointsTableData(
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      totalPoints:
+          data.totalPoints.present ? data.totalPoints.value : this.totalPoints,
+      sourceLog: data.sourceLog.present ? data.sourceLog.value : this.sourceLog,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LifeVitalismPointsTableData(')
+          ..write('playerId: $playerId, ')
+          ..write('totalPoints: $totalPoints, ')
+          ..write('sourceLog: $sourceLog')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(playerId, totalPoints, sourceLog);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LifeVitalismPointsTableData &&
+          other.playerId == this.playerId &&
+          other.totalPoints == this.totalPoints &&
+          other.sourceLog == this.sourceLog);
+}
+
+class LifeVitalismPointsTableCompanion
+    extends UpdateCompanion<LifeVitalismPointsTableData> {
+  final Value<int> playerId;
+  final Value<int> totalPoints;
+  final Value<String> sourceLog;
+  const LifeVitalismPointsTableCompanion({
+    this.playerId = const Value.absent(),
+    this.totalPoints = const Value.absent(),
+    this.sourceLog = const Value.absent(),
+  });
+  LifeVitalismPointsTableCompanion.insert({
+    this.playerId = const Value.absent(),
+    this.totalPoints = const Value.absent(),
+    this.sourceLog = const Value.absent(),
+  });
+  static Insertable<LifeVitalismPointsTableData> custom({
+    Expression<int>? playerId,
+    Expression<int>? totalPoints,
+    Expression<String>? sourceLog,
+  }) {
+    return RawValuesInsertable({
+      if (playerId != null) 'player_id': playerId,
+      if (totalPoints != null) 'total_points': totalPoints,
+      if (sourceLog != null) 'source_log': sourceLog,
+    });
+  }
+
+  LifeVitalismPointsTableCompanion copyWith(
+      {Value<int>? playerId,
+      Value<int>? totalPoints,
+      Value<String>? sourceLog}) {
+    return LifeVitalismPointsTableCompanion(
+      playerId: playerId ?? this.playerId,
+      totalPoints: totalPoints ?? this.totalPoints,
+      sourceLog: sourceLog ?? this.sourceLog,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (totalPoints.present) {
+      map['total_points'] = Variable<int>(totalPoints.value);
+    }
+    if (sourceLog.present) {
+      map['source_log'] = Variable<String>(sourceLog.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LifeVitalismPointsTableCompanion(')
+          ..write('playerId: $playerId, ')
+          ..write('totalPoints: $totalPoints, ')
+          ..write('sourceLog: $sourceLog')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -8632,6 +9798,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $FactionQuestsTableTable(this);
   late final $GuildAscensionTableTable guildAscensionTable =
       $GuildAscensionTableTable(this);
+  late final $VitalismUniqueCatalogTableTable vitalismUniqueCatalogTable =
+      $VitalismUniqueCatalogTableTable(this);
+  late final $PlayerVitalismAffinitiesTableTable playerVitalismAffinitiesTable =
+      $PlayerVitalismAffinitiesTableTable(this);
+  late final $PlayerVitalismTreesTableTable playerVitalismTreesTable =
+      $PlayerVitalismTreesTableTable(this);
+  late final $LifeVitalismPointsTableTable lifeVitalismPointsTable =
+      $LifeVitalismPointsTableTable(this);
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
   late final HabitDao habitDao = HabitDao(this as AppDatabase);
   late final InventoryDao inventoryDao = InventoryDao(this as AppDatabase);
@@ -8656,7 +9830,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         diaryEntriesTable,
         classQuestsTable,
         factionQuestsTable,
-        guildAscensionTable
+        guildAscensionTable,
+        vitalismUniqueCatalogTable,
+        playerVitalismAffinitiesTable,
+        playerVitalismTreesTable,
+        lifeVitalismPointsTable
       ];
 }
 
@@ -12688,6 +13866,677 @@ typedef $$GuildAscensionTableTableProcessedTableManager = ProcessedTableManager<
     ),
     GuildAscensionTableData,
     PrefetchHooks Function()>;
+typedef $$VitalismUniqueCatalogTableTableCreateCompanionBuilder
+    = VitalismUniqueCatalogTableCompanion Function({
+  required String id,
+  required String name,
+  required String carrierName,
+  required String tier,
+  required String themeDescription,
+  Value<int> rowid,
+});
+typedef $$VitalismUniqueCatalogTableTableUpdateCompanionBuilder
+    = VitalismUniqueCatalogTableCompanion Function({
+  Value<String> id,
+  Value<String> name,
+  Value<String> carrierName,
+  Value<String> tier,
+  Value<String> themeDescription,
+  Value<int> rowid,
+});
+
+class $$VitalismUniqueCatalogTableTableFilterComposer
+    extends Composer<_$AppDatabase, $VitalismUniqueCatalogTableTable> {
+  $$VitalismUniqueCatalogTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get carrierName => $composableBuilder(
+      column: $table.carrierName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get tier => $composableBuilder(
+      column: $table.tier, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get themeDescription => $composableBuilder(
+      column: $table.themeDescription,
+      builder: (column) => ColumnFilters(column));
+}
+
+class $$VitalismUniqueCatalogTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $VitalismUniqueCatalogTableTable> {
+  $$VitalismUniqueCatalogTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get carrierName => $composableBuilder(
+      column: $table.carrierName, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get tier => $composableBuilder(
+      column: $table.tier, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get themeDescription => $composableBuilder(
+      column: $table.themeDescription,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$VitalismUniqueCatalogTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $VitalismUniqueCatalogTableTable> {
+  $$VitalismUniqueCatalogTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get carrierName => $composableBuilder(
+      column: $table.carrierName, builder: (column) => column);
+
+  GeneratedColumn<String> get tier =>
+      $composableBuilder(column: $table.tier, builder: (column) => column);
+
+  GeneratedColumn<String> get themeDescription => $composableBuilder(
+      column: $table.themeDescription, builder: (column) => column);
+}
+
+class $$VitalismUniqueCatalogTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $VitalismUniqueCatalogTableTable,
+    VitalismUniqueCatalogTableData,
+    $$VitalismUniqueCatalogTableTableFilterComposer,
+    $$VitalismUniqueCatalogTableTableOrderingComposer,
+    $$VitalismUniqueCatalogTableTableAnnotationComposer,
+    $$VitalismUniqueCatalogTableTableCreateCompanionBuilder,
+    $$VitalismUniqueCatalogTableTableUpdateCompanionBuilder,
+    (
+      VitalismUniqueCatalogTableData,
+      BaseReferences<_$AppDatabase, $VitalismUniqueCatalogTableTable,
+          VitalismUniqueCatalogTableData>
+    ),
+    VitalismUniqueCatalogTableData,
+    PrefetchHooks Function()> {
+  $$VitalismUniqueCatalogTableTableTableManager(
+      _$AppDatabase db, $VitalismUniqueCatalogTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$VitalismUniqueCatalogTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$VitalismUniqueCatalogTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$VitalismUniqueCatalogTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String> carrierName = const Value.absent(),
+            Value<String> tier = const Value.absent(),
+            Value<String> themeDescription = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              VitalismUniqueCatalogTableCompanion(
+            id: id,
+            name: name,
+            carrierName: carrierName,
+            tier: tier,
+            themeDescription: themeDescription,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String name,
+            required String carrierName,
+            required String tier,
+            required String themeDescription,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              VitalismUniqueCatalogTableCompanion.insert(
+            id: id,
+            name: name,
+            carrierName: carrierName,
+            tier: tier,
+            themeDescription: themeDescription,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$VitalismUniqueCatalogTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $VitalismUniqueCatalogTableTable,
+        VitalismUniqueCatalogTableData,
+        $$VitalismUniqueCatalogTableTableFilterComposer,
+        $$VitalismUniqueCatalogTableTableOrderingComposer,
+        $$VitalismUniqueCatalogTableTableAnnotationComposer,
+        $$VitalismUniqueCatalogTableTableCreateCompanionBuilder,
+        $$VitalismUniqueCatalogTableTableUpdateCompanionBuilder,
+        (
+          VitalismUniqueCatalogTableData,
+          BaseReferences<_$AppDatabase, $VitalismUniqueCatalogTableTable,
+              VitalismUniqueCatalogTableData>
+        ),
+        VitalismUniqueCatalogTableData,
+        PrefetchHooks Function()>;
+typedef $$PlayerVitalismAffinitiesTableTableCreateCompanionBuilder
+    = PlayerVitalismAffinitiesTableCompanion Function({
+  required int playerId,
+  required String vitalismId,
+  required int acquiredAt,
+  required String acquiredVia,
+  Value<int> rowid,
+});
+typedef $$PlayerVitalismAffinitiesTableTableUpdateCompanionBuilder
+    = PlayerVitalismAffinitiesTableCompanion Function({
+  Value<int> playerId,
+  Value<String> vitalismId,
+  Value<int> acquiredAt,
+  Value<String> acquiredVia,
+  Value<int> rowid,
+});
+
+class $$PlayerVitalismAffinitiesTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PlayerVitalismAffinitiesTableTable> {
+  $$PlayerVitalismAffinitiesTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get vitalismId => $composableBuilder(
+      column: $table.vitalismId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get acquiredAt => $composableBuilder(
+      column: $table.acquiredAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get acquiredVia => $composableBuilder(
+      column: $table.acquiredVia, builder: (column) => ColumnFilters(column));
+}
+
+class $$PlayerVitalismAffinitiesTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlayerVitalismAffinitiesTableTable> {
+  $$PlayerVitalismAffinitiesTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get vitalismId => $composableBuilder(
+      column: $table.vitalismId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get acquiredAt => $composableBuilder(
+      column: $table.acquiredAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get acquiredVia => $composableBuilder(
+      column: $table.acquiredVia, builder: (column) => ColumnOrderings(column));
+}
+
+class $$PlayerVitalismAffinitiesTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlayerVitalismAffinitiesTableTable> {
+  $$PlayerVitalismAffinitiesTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get vitalismId => $composableBuilder(
+      column: $table.vitalismId, builder: (column) => column);
+
+  GeneratedColumn<int> get acquiredAt => $composableBuilder(
+      column: $table.acquiredAt, builder: (column) => column);
+
+  GeneratedColumn<String> get acquiredVia => $composableBuilder(
+      column: $table.acquiredVia, builder: (column) => column);
+}
+
+class $$PlayerVitalismAffinitiesTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlayerVitalismAffinitiesTableTable,
+    PlayerVitalismAffinitiesTableData,
+    $$PlayerVitalismAffinitiesTableTableFilterComposer,
+    $$PlayerVitalismAffinitiesTableTableOrderingComposer,
+    $$PlayerVitalismAffinitiesTableTableAnnotationComposer,
+    $$PlayerVitalismAffinitiesTableTableCreateCompanionBuilder,
+    $$PlayerVitalismAffinitiesTableTableUpdateCompanionBuilder,
+    (
+      PlayerVitalismAffinitiesTableData,
+      BaseReferences<_$AppDatabase, $PlayerVitalismAffinitiesTableTable,
+          PlayerVitalismAffinitiesTableData>
+    ),
+    PlayerVitalismAffinitiesTableData,
+    PrefetchHooks Function()> {
+  $$PlayerVitalismAffinitiesTableTableTableManager(
+      _$AppDatabase db, $PlayerVitalismAffinitiesTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlayerVitalismAffinitiesTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlayerVitalismAffinitiesTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlayerVitalismAffinitiesTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            Value<String> vitalismId = const Value.absent(),
+            Value<int> acquiredAt = const Value.absent(),
+            Value<String> acquiredVia = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlayerVitalismAffinitiesTableCompanion(
+            playerId: playerId,
+            vitalismId: vitalismId,
+            acquiredAt: acquiredAt,
+            acquiredVia: acquiredVia,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required int playerId,
+            required String vitalismId,
+            required int acquiredAt,
+            required String acquiredVia,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlayerVitalismAffinitiesTableCompanion.insert(
+            playerId: playerId,
+            vitalismId: vitalismId,
+            acquiredAt: acquiredAt,
+            acquiredVia: acquiredVia,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PlayerVitalismAffinitiesTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $PlayerVitalismAffinitiesTableTable,
+        PlayerVitalismAffinitiesTableData,
+        $$PlayerVitalismAffinitiesTableTableFilterComposer,
+        $$PlayerVitalismAffinitiesTableTableOrderingComposer,
+        $$PlayerVitalismAffinitiesTableTableAnnotationComposer,
+        $$PlayerVitalismAffinitiesTableTableCreateCompanionBuilder,
+        $$PlayerVitalismAffinitiesTableTableUpdateCompanionBuilder,
+        (
+          PlayerVitalismAffinitiesTableData,
+          BaseReferences<_$AppDatabase, $PlayerVitalismAffinitiesTableTable,
+              PlayerVitalismAffinitiesTableData>
+        ),
+        PlayerVitalismAffinitiesTableData,
+        PrefetchHooks Function()>;
+typedef $$PlayerVitalismTreesTableTableCreateCompanionBuilder
+    = PlayerVitalismTreesTableCompanion Function({
+  required int playerId,
+  required String vitalismId,
+  required String nodeId,
+  Value<bool> unlocked,
+  Value<int?> unlockedAt,
+  Value<int> rowid,
+});
+typedef $$PlayerVitalismTreesTableTableUpdateCompanionBuilder
+    = PlayerVitalismTreesTableCompanion Function({
+  Value<int> playerId,
+  Value<String> vitalismId,
+  Value<String> nodeId,
+  Value<bool> unlocked,
+  Value<int?> unlockedAt,
+  Value<int> rowid,
+});
+
+class $$PlayerVitalismTreesTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PlayerVitalismTreesTableTable> {
+  $$PlayerVitalismTreesTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get vitalismId => $composableBuilder(
+      column: $table.vitalismId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get nodeId => $composableBuilder(
+      column: $table.nodeId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get unlocked => $composableBuilder(
+      column: $table.unlocked, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get unlockedAt => $composableBuilder(
+      column: $table.unlockedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$PlayerVitalismTreesTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlayerVitalismTreesTableTable> {
+  $$PlayerVitalismTreesTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get vitalismId => $composableBuilder(
+      column: $table.vitalismId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get nodeId => $composableBuilder(
+      column: $table.nodeId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get unlocked => $composableBuilder(
+      column: $table.unlocked, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get unlockedAt => $composableBuilder(
+      column: $table.unlockedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$PlayerVitalismTreesTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlayerVitalismTreesTableTable> {
+  $$PlayerVitalismTreesTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get vitalismId => $composableBuilder(
+      column: $table.vitalismId, builder: (column) => column);
+
+  GeneratedColumn<String> get nodeId =>
+      $composableBuilder(column: $table.nodeId, builder: (column) => column);
+
+  GeneratedColumn<bool> get unlocked =>
+      $composableBuilder(column: $table.unlocked, builder: (column) => column);
+
+  GeneratedColumn<int> get unlockedAt => $composableBuilder(
+      column: $table.unlockedAt, builder: (column) => column);
+}
+
+class $$PlayerVitalismTreesTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlayerVitalismTreesTableTable,
+    PlayerVitalismTreesTableData,
+    $$PlayerVitalismTreesTableTableFilterComposer,
+    $$PlayerVitalismTreesTableTableOrderingComposer,
+    $$PlayerVitalismTreesTableTableAnnotationComposer,
+    $$PlayerVitalismTreesTableTableCreateCompanionBuilder,
+    $$PlayerVitalismTreesTableTableUpdateCompanionBuilder,
+    (
+      PlayerVitalismTreesTableData,
+      BaseReferences<_$AppDatabase, $PlayerVitalismTreesTableTable,
+          PlayerVitalismTreesTableData>
+    ),
+    PlayerVitalismTreesTableData,
+    PrefetchHooks Function()> {
+  $$PlayerVitalismTreesTableTableTableManager(
+      _$AppDatabase db, $PlayerVitalismTreesTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlayerVitalismTreesTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlayerVitalismTreesTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlayerVitalismTreesTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            Value<String> vitalismId = const Value.absent(),
+            Value<String> nodeId = const Value.absent(),
+            Value<bool> unlocked = const Value.absent(),
+            Value<int?> unlockedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlayerVitalismTreesTableCompanion(
+            playerId: playerId,
+            vitalismId: vitalismId,
+            nodeId: nodeId,
+            unlocked: unlocked,
+            unlockedAt: unlockedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required int playerId,
+            required String vitalismId,
+            required String nodeId,
+            Value<bool> unlocked = const Value.absent(),
+            Value<int?> unlockedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlayerVitalismTreesTableCompanion.insert(
+            playerId: playerId,
+            vitalismId: vitalismId,
+            nodeId: nodeId,
+            unlocked: unlocked,
+            unlockedAt: unlockedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PlayerVitalismTreesTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $PlayerVitalismTreesTableTable,
+        PlayerVitalismTreesTableData,
+        $$PlayerVitalismTreesTableTableFilterComposer,
+        $$PlayerVitalismTreesTableTableOrderingComposer,
+        $$PlayerVitalismTreesTableTableAnnotationComposer,
+        $$PlayerVitalismTreesTableTableCreateCompanionBuilder,
+        $$PlayerVitalismTreesTableTableUpdateCompanionBuilder,
+        (
+          PlayerVitalismTreesTableData,
+          BaseReferences<_$AppDatabase, $PlayerVitalismTreesTableTable,
+              PlayerVitalismTreesTableData>
+        ),
+        PlayerVitalismTreesTableData,
+        PrefetchHooks Function()>;
+typedef $$LifeVitalismPointsTableTableCreateCompanionBuilder
+    = LifeVitalismPointsTableCompanion Function({
+  Value<int> playerId,
+  Value<int> totalPoints,
+  Value<String> sourceLog,
+});
+typedef $$LifeVitalismPointsTableTableUpdateCompanionBuilder
+    = LifeVitalismPointsTableCompanion Function({
+  Value<int> playerId,
+  Value<int> totalPoints,
+  Value<String> sourceLog,
+});
+
+class $$LifeVitalismPointsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $LifeVitalismPointsTableTable> {
+  $$LifeVitalismPointsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalPoints => $composableBuilder(
+      column: $table.totalPoints, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get sourceLog => $composableBuilder(
+      column: $table.sourceLog, builder: (column) => ColumnFilters(column));
+}
+
+class $$LifeVitalismPointsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $LifeVitalismPointsTableTable> {
+  $$LifeVitalismPointsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalPoints => $composableBuilder(
+      column: $table.totalPoints, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get sourceLog => $composableBuilder(
+      column: $table.sourceLog, builder: (column) => ColumnOrderings(column));
+}
+
+class $$LifeVitalismPointsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LifeVitalismPointsTableTable> {
+  $$LifeVitalismPointsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<int> get totalPoints => $composableBuilder(
+      column: $table.totalPoints, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceLog =>
+      $composableBuilder(column: $table.sourceLog, builder: (column) => column);
+}
+
+class $$LifeVitalismPointsTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $LifeVitalismPointsTableTable,
+    LifeVitalismPointsTableData,
+    $$LifeVitalismPointsTableTableFilterComposer,
+    $$LifeVitalismPointsTableTableOrderingComposer,
+    $$LifeVitalismPointsTableTableAnnotationComposer,
+    $$LifeVitalismPointsTableTableCreateCompanionBuilder,
+    $$LifeVitalismPointsTableTableUpdateCompanionBuilder,
+    (
+      LifeVitalismPointsTableData,
+      BaseReferences<_$AppDatabase, $LifeVitalismPointsTableTable,
+          LifeVitalismPointsTableData>
+    ),
+    LifeVitalismPointsTableData,
+    PrefetchHooks Function()> {
+  $$LifeVitalismPointsTableTableTableManager(
+      _$AppDatabase db, $LifeVitalismPointsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LifeVitalismPointsTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LifeVitalismPointsTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LifeVitalismPointsTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            Value<int> totalPoints = const Value.absent(),
+            Value<String> sourceLog = const Value.absent(),
+          }) =>
+              LifeVitalismPointsTableCompanion(
+            playerId: playerId,
+            totalPoints: totalPoints,
+            sourceLog: sourceLog,
+          ),
+          createCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            Value<int> totalPoints = const Value.absent(),
+            Value<String> sourceLog = const Value.absent(),
+          }) =>
+              LifeVitalismPointsTableCompanion.insert(
+            playerId: playerId,
+            totalPoints: totalPoints,
+            sourceLog: sourceLog,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$LifeVitalismPointsTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $LifeVitalismPointsTableTable,
+        LifeVitalismPointsTableData,
+        $$LifeVitalismPointsTableTableFilterComposer,
+        $$LifeVitalismPointsTableTableOrderingComposer,
+        $$LifeVitalismPointsTableTableAnnotationComposer,
+        $$LifeVitalismPointsTableTableCreateCompanionBuilder,
+        $$LifeVitalismPointsTableTableUpdateCompanionBuilder,
+        (
+          LifeVitalismPointsTableData,
+          BaseReferences<_$AppDatabase, $LifeVitalismPointsTableTable,
+              LifeVitalismPointsTableData>
+        ),
+        LifeVitalismPointsTableData,
+        PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -12721,4 +14570,18 @@ class $AppDatabaseManager {
       $$FactionQuestsTableTableTableManager(_db, _db.factionQuestsTable);
   $$GuildAscensionTableTableTableManager get guildAscensionTable =>
       $$GuildAscensionTableTableTableManager(_db, _db.guildAscensionTable);
+  $$VitalismUniqueCatalogTableTableTableManager
+      get vitalismUniqueCatalogTable =>
+          $$VitalismUniqueCatalogTableTableTableManager(
+              _db, _db.vitalismUniqueCatalogTable);
+  $$PlayerVitalismAffinitiesTableTableTableManager
+      get playerVitalismAffinitiesTable =>
+          $$PlayerVitalismAffinitiesTableTableTableManager(
+              _db, _db.playerVitalismAffinitiesTable);
+  $$PlayerVitalismTreesTableTableTableManager get playerVitalismTreesTable =>
+      $$PlayerVitalismTreesTableTableTableManager(
+          _db, _db.playerVitalismTreesTable);
+  $$LifeVitalismPointsTableTableTableManager get lifeVitalismPointsTable =>
+      $$LifeVitalismPointsTableTableTableManager(
+          _db, _db.lifeVitalismPointsTable);
 }

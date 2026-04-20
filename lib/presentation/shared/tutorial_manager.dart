@@ -223,21 +223,36 @@ class TutorialManager {
   }
 
   // ── FASE 10 — Vitalismo (nível 25) ────────────────────────────────────────
-  static Future<void> phase10Vitalism(BuildContext ctx) async {
+  // Refatorada no Sprint 1.2: despertar deixou de ser afirmação genérica e virou
+  // evento interativo (cerimônia do Cristal). Ver vitalismos_unicos.md.
+  //
+  // - Vitalista sem afinidade: dois diálogos do Vazio + redirect pra /vitalism/crystal-ceremony.
+  // - Mana-user (ou vitalista que por algum caminho já tem afinidade): marca
+  //   feito silenciosamente — a fase não se aplica ao caminho dele.
+  static Future<void> phase10Vitalism(
+    BuildContext ctx, {
+    required bool isVitalistWithoutAffinity,
+  }) async {
     if (!await TutorialService.shouldShow(TutorialPhase.phase10_vitalism)) return;
+    if (!isVitalistWithoutAffinity) {
+      await TutorialService.markDone(TutorialPhase.phase10_vitalism);
+      return;
+    }
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'O Vazio',
       npcTitle: 'Presenca silenciosa',
-      message: 'O Vitalismo despertou em você. Energia mais pura que a Mana — rara, poderosa e exclusiva para certos caminhos.',
+      message: 'Algo despertou em você. Uma afinidade que ainda não tem nome.',
     );
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'O Vazio',
       npcTitle: 'Presenca silenciosa',
-      message: 'Classes vitalistas causam dano vitalista além do mágico. A barra de Vitalismo é separada da Mana.',
+      message: 'O Cristal de Obsidiana do Dragão a revelará. Venha.',
     );
     await TutorialService.markDone(TutorialPhase.phase10_vitalism);
+    if (!ctx.mounted) return;
+    ctx.go('/vitalism/crystal-ceremony');
   }
 
   // ── FASE 11 — Nível Caveira (nível 99) ────────────────────────────────────
@@ -262,6 +277,7 @@ class TutorialManager {
     required bool hasClass,
     required bool hasFaction,
     required bool hasPlaystyle,
+    required bool isVitalistWithoutAffinity,
   }) async {
     if (level >= 1 && ctx.mounted) await phase1Sanctuary(ctx);
     if (level >= 2 && ctx.mounted) await phase2Library(ctx);
@@ -272,7 +288,10 @@ class TutorialManager {
     if (level >= 7 && ctx.mounted) await phase7Factions(ctx, hasFaction: hasFaction);
     if (level >= 10 && ctx.mounted) await phase8Shadow(ctx);
     if (level >= 15 && ctx.mounted) await phase9Playstyle(ctx, hasPlaystyle: hasPlaystyle);
-    if (level >= 25 && ctx.mounted) await phase10Vitalism(ctx);
+    if (level >= 25 && ctx.mounted) {
+      await phase10Vitalism(ctx,
+          isVitalistWithoutAffinity: isVitalistWithoutAffinity);
+    }
     if (level >= 99 && ctx.mounted) await phase11Skull(ctx);
   }
 }

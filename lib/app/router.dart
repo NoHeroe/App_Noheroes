@@ -22,6 +22,14 @@ import '../presentation/faction_selection/screens/faction_selection_screen.dart'
 import '../presentation/dev/dev_panel_screen.dart';
 import '../presentation/battle/screens/battle_hub_screen.dart';
 import '../presentation/history/screens/history_screen.dart';
+import '../presentation/vitalism/screens/void_ritual_screen.dart';
+import '../presentation/vitalism/screens/crystal_ceremony_screen.dart';
+import '../presentation/vitalism/screens/vitalism_hub_screen.dart';
+import '../presentation/vitalism/screens/vitalism_tree_screen.dart';
+import '../presentation/vitalism/screens/life_tree_screen.dart';
+import '../presentation/magic/screens/magic_hub_screen.dart';
+import '../data/database/tables/players_table_ext.dart';
+import 'providers.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -64,6 +72,77 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/dev',                builder: (c, s) => const DevPanelScreen()),
       GoRoute(path: '/battle',             builder: (c, s) => const BattleHubScreen()),
       GoRoute(path: '/history',            builder: (c, s) => const HistoryScreen()),
+      GoRoute(
+        path: '/vitalism/void-ritual',
+        builder: (c, s) => const VoidRitualScreen(),
+        redirect: (context, state) {
+          final player = ref.read(currentPlayerProvider);
+          if (player == null) return '/login';
+          if (player.level < 25) return '/sanctuary';
+          if (!player.isVitalist) return '/sanctuary';
+          return null;
+        },
+      ),
+      GoRoute(
+        path: '/vitalism/crystal-ceremony',
+        builder: (c, s) => const CrystalCeremonyScreen(),
+        redirect: (context, state) {
+          final player = ref.read(currentPlayerProvider);
+          if (player == null) return '/login';
+          if (player.level < 25) return '/sanctuary';
+          if (!player.isVitalist) return '/sanctuary';
+          // Guard "já tem afinidade" é async e fica na tela (_boot).
+          return null;
+        },
+      ),
+      GoRoute(
+        path: '/vitalism',
+        builder: (c, s) => const VitalismHubScreen(),
+        redirect: (context, state) {
+          final player = ref.read(currentPlayerProvider);
+          if (player == null) return '/login';
+          if (player.level < 25) return '/sanctuary';
+          if (!player.isVitalist) return '/sanctuary';
+          return null;
+        },
+      ),
+      GoRoute(
+        path: '/magic',
+        builder: (c, s) => const MagicHubScreen(),
+        redirect: (context, state) {
+          final player = ref.read(currentPlayerProvider);
+          if (player == null) return '/login';
+          if (player.level < 25) return '/sanctuary';
+          if (player.isVitalist) return '/sanctuary';
+          return null;
+        },
+      ),
+      GoRoute(
+        path: '/vitalism/tree/:vitalismId',
+        builder: (c, s) => VitalismTreeScreen(
+          vitalismId: s.pathParameters['vitalismId']!,
+        ),
+        redirect: (context, state) {
+          final player = ref.read(currentPlayerProvider);
+          if (player == null) return '/login';
+          if (player.level < 25) return '/sanctuary';
+          if (!player.isVitalist) return '/sanctuary';
+          // Catálogo + posse são validados dentro da tela (async).
+          return null;
+        },
+      ),
+      GoRoute(
+        path: '/vitalism/life-tree',
+        builder: (c, s) => const LifeTreeScreen(),
+        redirect: (context, state) {
+          final player = ref.read(currentPlayerProvider);
+          if (player == null) return '/login';
+          if (player.level < 25) return '/sanctuary';
+          if (!player.isVitalist) return '/sanctuary';
+          // Checagem isVitalistaDaVida fica na tela (async).
+          return null;
+        },
+      ),
     ],
   );
 });

@@ -114,6 +114,24 @@ class AssetLoader {
     };
   }
 
+  // Identidade do NPC da facção (nome + título) — leve, sem carregar diálogos.
+  // Fallback seguro se a facção não tiver NPC definido em npc_dialogues.json.
+  static Future<Map<String, String>> getNpcIdentity(String? factionType) async {
+    final npcId = npcIdForFaction(factionType);
+    try {
+      final data = await _load('assets/data/npc_dialogues.json');
+      final npc = data[npcId] as Map<String, dynamic>?;
+      if (npc == null) return {'npcId': npcId, 'name': '???', 'title': ''};
+      return {
+        'npcId': npcId,
+        'name':  npc['name']  as String? ?? '???',
+        'title': npc['title'] as String? ?? '',
+      };
+    } catch (_) {
+      return {'npcId': npcId, 'name': '???', 'title': ''};
+    }
+  }
+
   // Lore entries disponíveis por nível + dia
   static Future<List<Map<String, dynamic>>> getAvailableLoreEntries({
     required int playerLevel,

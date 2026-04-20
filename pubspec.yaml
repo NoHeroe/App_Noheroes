@@ -60,4 +60,5 @@ flutter:
     - assets/data/achievements.json
     - assets/data/items.json
     - assets/data/shadow_quests.json
+    - assets/data/vitalismos_unicos.json
     - assets/fonts/

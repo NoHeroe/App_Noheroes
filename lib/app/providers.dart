@@ -9,12 +9,18 @@ import '../data/datasources/local/auth_local_ds.dart';
 import '../data/datasources/local/habit_local_ds.dart';
 import '../data/datasources/local/class_quest_service.dart';
 import '../data/datasources/local/faction_quest_service.dart';
+import '../data/datasources/local/vitalism_unique_service.dart';
 
 // Banco singleton
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
   ref.onDispose(() => db.close());
   return db;
+});
+
+// Vitalismos Únicos — orquestra pool, despertar, ritual e stubs de PvP.
+final vitalismUniqueServiceProvider = Provider<VitalismUniqueService>((ref) {
+  return VitalismUniqueService(ref.watch(appDatabaseProvider));
 });
 
 // Auth datasource

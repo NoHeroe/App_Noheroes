@@ -16,6 +16,7 @@ import '../../shared/widgets/app_snack.dart';
 import '../../shared/tutorial_manager.dart';
 import '../../../data/datasources/local/tutorial_service.dart';
 import '../../../data/datasources/local/quest_admission_service.dart';
+import '../../../data/database/tables/players_table_ext.dart';
 import '../widgets/caelum_day_banner.dart';
 import '../widgets/shadow_status_card.dart';
 import '../widgets/npc_dialogue_card.dart';
@@ -226,12 +227,24 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
         && !(player.factionType?.startsWith('pending:') ?? false);
     final hasPlaystyle = player.playStyle.isNotEmpty && player.playStyle != 'none';
 
+    // Fase 10 só dispara a cerimônia do Cristal pra vitalistas sem afinidade.
+    // Consulta ao banco é feita apenas se o player já atingiu o nível 25.
+    var isVitalistWithoutAffinity = false;
+    if (player.level >= 25 && player.isVitalist) {
+      final owned = await ref
+          .read(vitalismUniqueServiceProvider)
+          .ownedAffinitiesOf(player.id);
+      if (!mounted) return;
+      isVitalistWithoutAffinity = owned.isEmpty;
+    }
+
     await TutorialManager.runAll(
       context,
       level: player.level,
       hasClass: hasClass,
       hasFaction: hasFaction,
       hasPlaystyle: hasPlaystyle,
+      isVitalistWithoutAffinity: isVitalistWithoutAffinity,
     );
   }
 
@@ -502,6 +515,8 @@ class _SecondaryButtons extends ConsumerWidget {
     final player = ref.watch(currentPlayerProvider);
     final level = player?.level ?? 1;
     final guildUnlocked = level >= 6;
+    final hubUnlocked = level >= 25;
+    final isVitalist = player?.isVitalist ?? false;
 
     return Column(
       children: [
@@ -528,12 +543,25 @@ class _SecondaryButtons extends ConsumerWidget {
             const SizedBox(width: 10),
             Expanded(
               child: GestureDetector(
-                onTap: () => AppSnack.warning(
-                    context, 'Desbloqueado no nível 25.'),
+                onTap: () {
+                  if (!hubUnlocked) {
+                    AppSnack.warning(context, 'Desbloqueado no nível 25.');
+                    return;
+                  }
+                  context.go(isVitalist ? '/vitalism' : '/magic');
+                },
                 child: _SecBtn(
-                  icon: Icons.lock_outline,
-                  label: '???',
-                  color: AppColors.textMuted,
+                  icon: !hubUnlocked
+                      ? Icons.lock_outline
+                      : (isVitalist ? Icons.bolt_outlined : Icons.auto_awesome),
+                  label: !hubUnlocked
+                      ? '???'
+                      : (isVitalist ? 'Vitalismo' : 'Magia'),
+                  color: !hubUnlocked
+                      ? AppColors.textMuted
+                      : (isVitalist
+                          ? const Color(0xFF8B3DFF)
+                          : AppColors.mp),
                 ),
               ),
             ),

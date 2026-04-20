@@ -1,0 +1,221 @@
+{
+  "vitalismos": [
+    {
+      "id": "fire",
+      "name": "Vitalismo do Fogo",
+      "carrierName": "Vitalista do Fogo",
+      "tier": "common",
+      "themeDescription": "A chama obedece ao vitalista, crescendo onde ele ordena e apagando onde ele se cala."
+    },
+    {
+      "id": "water",
+      "name": "Vitalismo da Água",
+      "carrierName": "Vitalista das Águas",
+      "tier": "common",
+      "themeDescription": "Rios, marés e chuvas respondem à sua presença como se a lembrassem de casa."
+    },
+    {
+      "id": "wood",
+      "name": "Vitalismo da Madeira",
+      "carrierName": "Vitalista da Madeira",
+      "tier": "common",
+      "themeDescription": "A madeira viva se entrelaça ao gesto do vitalista — rígida onde precisa, dócil onde convém."
+    },
+    {
+      "id": "plant",
+      "name": "Vitalismo da Planta",
+      "carrierName": "Vitalista das Plantas",
+      "tier": "common",
+      "themeDescription": "Sementes brotam, raízes escutam, folhas viram armas nas mãos certas."
+    },
+    {
+      "id": "hunt",
+      "name": "Vitalismo da Caça",
+      "carrierName": "Vitalista da Caça",
+      "tier": "common",
+      "themeDescription": "Cada presa deixa um rastro invisível — o vitalista o enxerga antes mesmo dela fugir."
+    },
+    {
+      "id": "sight",
+      "name": "Vitalismo da Visão",
+      "carrierName": "Vitalista da Visão",
+      "tier": "common",
+      "themeDescription": "O que está oculto aos outros se revela aos olhos deste vitalista, por mais longe que esteja."
+    },
+    {
+      "id": "sun",
+      "name": "Vitalismo do Sol",
+      "carrierName": "Vitalista do Sol",
+      "tier": "common",
+      "themeDescription": "Luz quente, inclemente, constante — o vitalista do sol não conhece sombra própria."
+    },
+    {
+      "id": "moon",
+      "name": "Vitalismo da Lua",
+      "carrierName": "Vitalista da Lua",
+      "tier": "common",
+      "themeDescription": "Marés, sonhos e lobos obedecem à lua — e a lua obedece a ele."
+    },
+    {
+      "id": "stars",
+      "name": "Vitalismo das Estrelas",
+      "carrierName": "Vitalista das Estrelas",
+      "tier": "common",
+      "themeDescription": "Padrões distantes se mostram ao vitalista como mapas escritos no céu."
+    },
+    {
+      "id": "sword",
+      "name": "Vitalismo da Espada",
+      "carrierName": "Vitalista da Espada",
+      "tier": "common",
+      "themeDescription": "A lâmina é extensão da intenção — onde ele vê o corte, o corte existe."
+    },
+    {
+      "id": "space",
+      "name": "Vitalismo do Espaço",
+      "carrierName": "Vitalista do Espaço",
+      "tier": "common",
+      "themeDescription": "Distâncias se dobram sob seu olhar; o que estava longe já estava perto."
+    },
+    {
+      "id": "theft",
+      "name": "Vitalismo do Furto",
+      "carrierName": "Vitalista do Furto",
+      "tier": "common",
+      "themeDescription": "Nada que tenha valor está seguro — nem mãos firmes, nem paredes fechadas, nem instantes guardados."
+    },
+    {
+      "id": "copy",
+      "name": "Vitalismo da Cópia",
+      "carrierName": "Vitalista da Cópia",
+      "tier": "common",
+      "themeDescription": "Por um momento, ele é outro — e o outro não percebe."
+    },
+    {
+      "id": "mimic",
+      "name": "Vitalismo Mímico",
+      "carrierName": "Vitalista Mímico",
+      "tier": "common",
+      "themeDescription": "Forma, voz, gesto — todos imitáveis, nenhum acusável."
+    },
+    {
+      "id": "metamorph",
+      "name": "Vitalismo Metamorfo",
+      "carrierName": "Vitalista Metamorfo",
+      "tier": "common",
+      "themeDescription": "Seu próprio corpo é barro — e ele, o escultor."
+    },
+    {
+      "id": "serpent",
+      "name": "Vitalismo da Serpente",
+      "carrierName": "Vitalista da Serpente",
+      "tier": "common",
+      "themeDescription": "Silenciosa, paciente, inevitável — a serpente ensina tudo o que o vitalista precisa saber."
+    },
+    {
+      "id": "poison",
+      "name": "Vitalismo do Veneno",
+      "carrierName": "Vitalista do Veneno",
+      "tier": "common",
+      "themeDescription": "Nem toda morte é rápida; algumas levam horas, séculos, ou só um sorriso."
+    },
+    {
+      "id": "cloud",
+      "name": "Vitalismo das Nuvens",
+      "carrierName": "Vitalista das Nuvens",
+      "tier": "common",
+      "themeDescription": "Nuvens densas, tempestades decididas — o céu escreve com o dedo dele."
+    },
+    {
+      "id": "smoke",
+      "name": "Vitalismo da Fumaça",
+      "carrierName": "Vitalista da Fumaça",
+      "tier": "common",
+      "themeDescription": "Visto por todos, agarrável por nenhum — a fumaça é sua pele e seu esconderijo."
+    },
+    {
+      "id": "stone",
+      "name": "Vitalismo da Pedra",
+      "carrierName": "Vitalista da Pedra",
+      "tier": "common",
+      "themeDescription": "A pedra lembra o toque do vitalista e se quebra na forma que ele decidir."
+    },
+    {
+      "id": "wind",
+      "name": "Vitalismo do Vento",
+      "carrierName": "Vitalista do Vento",
+      "tier": "common",
+      "themeDescription": "Inaudível quando precisa, uivante quando ameaça — o vento o reconhece."
+    },
+    {
+      "id": "shadow",
+      "name": "Vitalismo da Sombra",
+      "carrierName": "Vitalista das Sombras",
+      "tier": "rare",
+      "themeDescription": "A sombra responde ao chamado do vitalista, dobrando-se à sua vontade."
+    },
+    {
+      "id": "composition",
+      "name": "Vitalismo da Composição",
+      "carrierName": "Vitalista da Composição",
+      "tier": "rare",
+      "themeDescription": "Do nada ele compõe — matéria onde havia vazio, forma onde havia intenção."
+    },
+    {
+      "id": "decomposition",
+      "name": "Vitalismo da Decomposição",
+      "carrierName": "Vitalista da Decomposição",
+      "tier": "rare",
+      "themeDescription": "Tudo o que existe carrega o fim dentro de si; o vitalista apenas o acelera."
+    },
+    {
+      "id": "void",
+      "name": "Vitalismo do Vazio",
+      "carrierName": "Vitalista do Vazio",
+      "tier": "rare",
+      "themeDescription": "Nem luz, nem matéria, nem tempo — o vazio se abre onde ele aponta."
+    },
+    {
+      "id": "gravity",
+      "name": "Vitalismo da Gravidade",
+      "carrierName": "Vitalista da Gravidade",
+      "tier": "rare",
+      "themeDescription": "O peso das coisas responde à sua decisão — sobe, cai, ou para no ar."
+    },
+    {
+      "id": "time",
+      "name": "Vitalismo do Tempo",
+      "carrierName": "Vitalista do Tempo",
+      "tier": "rare",
+      "themeDescription": "O instante se alonga, se encurta, ou se dobra — conforme a paciência do vitalista."
+    },
+    {
+      "id": "light",
+      "name": "Vitalismo da Luz",
+      "carrierName": "Vitalista da Luz",
+      "tier": "rare",
+      "themeDescription": "Luz pura, direta — revelando ou cegando, conforme a intenção."
+    },
+    {
+      "id": "frequency",
+      "name": "Vitalismo da Frequência",
+      "carrierName": "Vitalista da Frequência",
+      "tier": "rare",
+      "themeDescription": "Tudo vibra; aquele que escuta as vibrações comanda tudo o que ressoa."
+    },
+    {
+      "id": "ether",
+      "name": "Vitalismo do Éter",
+      "carrierName": "Vitalista do Éter",
+      "tier": "rare",
+      "themeDescription": "A matéria primordial de Caelum obedece ao toque de quem a reconhece."
+    },
+    {
+      "id": "life",
+      "name": "Vitalismo da Vida",
+      "carrierName": "Vitalista da Vida",
+      "tier": "special",
+      "themeDescription": "Toda cura, todo dano, toda sombra — a Vida contém tudo e devolve tudo ao seu ciclo."
+    }
+  ]
+}

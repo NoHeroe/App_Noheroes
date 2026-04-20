@@ -20,10 +20,15 @@ import 'daos/habit_dao.dart';
 import 'daos/inventory_dao.dart';
 import 'daos/achievement_dao.dart';
 import 'daos/guild_dao.dart';
+import '../datasources/local/vitalism_catalog_seeder.dart';
 import 'tables/guild_status_table.dart';
 import 'tables/guild_ascension_table.dart';
 import 'tables/npc_reputation_table.dart';
 import 'tables/diary_entries_table.dart';
+import 'tables/vitalism_unique_catalog_table.dart';
+import 'tables/player_vitalism_affinities_table.dart';
+import 'tables/player_vitalism_trees_table.dart';
+import 'tables/life_vitalism_points_table.dart';
 
 part 'app_database.g.dart';
 
@@ -38,6 +43,10 @@ part 'app_database.g.dart';
     ClassQuestsTable,
     FactionQuestsTable,
     GuildAscensionTable,
+    VitalismUniqueCatalogTable,
+    PlayerVitalismAffinitiesTable,
+    PlayerVitalismTreesTable,
+    LifeVitalismPointsTable,
   ],
   daos: [PlayerDao, HabitDao, InventoryDao, AchievementDao, GuildDao],
 )
@@ -45,7 +54,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -53,6 +62,7 @@ class AppDatabase extends _$AppDatabase {
       await m.createAll();
       await _seedShopItems();
       await _seedAchievements();
+      await VitalismCatalogSeeder(this).seed();
     },
     onUpgrade: (m, from, to) async {
       if (from < 2) {
@@ -157,6 +167,21 @@ class AppDatabase extends _$AppDatabase {
         try {
           await m.addColumn(playersTable, playersTable.currentVitalism);
         } catch (_) {}
+      }
+      if (from < 19) {
+        try {
+          await m.createTable(vitalismUniqueCatalogTable);
+        } catch (_) {}
+        try {
+          await m.createTable(playerVitalismAffinitiesTable);
+        } catch (_) {}
+        try {
+          await m.createTable(playerVitalismTreesTable);
+        } catch (_) {}
+        try {
+          await m.createTable(lifeVitalismPointsTable);
+        } catch (_) {}
+        await VitalismCatalogSeeder(this).seed();
       }
     },
   );
