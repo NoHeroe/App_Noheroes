@@ -65,7 +65,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -75,6 +75,8 @@ class AppDatabase extends _$AppDatabase {
       await VitalismCatalogSeeder(this).seed();
       await ItemsCatalogSeeder(this).seed();
       await RecipesCatalogSeeder(this).seed();
+      // Sprint 2.3 fix (D.3) — runas foram migradas pra items_catalog como
+      // ItemType.rune. EnchantsCatalogSeeder removido em schema 23.
     },
     onUpgrade: (m, from, to) async {
       if (from < 2) {
@@ -245,6 +247,72 @@ class AppDatabase extends _$AppDatabase {
               'players failed: $e');
         }
       }
+      if (from < 22) {
+        // Sprint 2.3 — colunas de encantamento em player_inventory. Tabelas
+        // enchants_catalog e player_enchants_inventory FORAM REMOVIDAS desta
+        // migration na Sprint 2.3 fix (D.3) — runas migraram pra items_catalog
+        // como ItemType.rune. Quem estiver em schema 21 pula direto pra 23
+        // sem nunca ter tabelas enchants. Quem já estava em 22 tem tabelas
+        // antigas e vai perdê-las no `if (from < 23)` logo abaixo.
+        try {
+          await m.addColumn(
+              playerInventoryTable, playerInventoryTable.appliedRuneKey);
+        } catch (e) {
+          // ignore: avoid_print
+          print('[migration 21→22] addColumn appliedRuneKey failed: $e');
+        }
+        try {
+          await m.addColumn(
+              playerInventoryTable, playerInventoryTable.appliedSapKey);
+        } catch (e) {
+          // ignore: avoid_print
+          print('[migration 21→22] addColumn appliedSapKey failed: $e');
+        }
+        try {
+          await m.addColumn(playerInventoryTable,
+              playerInventoryTable.sapChargesRemaining);
+        } catch (e) {
+          // ignore: avoid_print
+          print('[migration 21→22] addColumn sapChargesRemaining failed: $e');
+        }
+      }
+      if (from < 23) {
+        // Sprint 2.3 fix (D.3) — runas migradas pra items_catalog.
+        // Preserva inventário de runas que estava em player_enchants_inventory
+        // copiando pro player_inventory (enchant_key já é a key da runa no
+        // items_catalog — mesma nomenclatura: RUNE_FIRE_E, etc.).
+        // acquired_at na tabela antiga era DateTime (string ISO via Drift);
+        // em player_inventory é int millis — converte via strftime.
+        // acquired_via é NOT NULL em player_inventory; usa 'quest_reward'
+        // como fonte histórica representativa.
+        try {
+          await customStatement('''
+            INSERT INTO player_inventory
+              (player_id, item_key, quantity, acquired_at, acquired_via, is_equipped)
+            SELECT player_id, enchant_key, quantity,
+                   CAST(strftime('%s', acquired_at) AS INTEGER) * 1000,
+                   'quest_reward',
+                   0
+            FROM player_enchants_inventory
+          ''');
+          // ignore: avoid_print
+          print('[migration 22→23] migrated player_enchants_inventory '
+              '→ player_inventory');
+        } catch (e) {
+          // Tolerante: se a tabela não existe (upgrade 21→23 direto), OK.
+          // ignore: avoid_print
+          print('[migration 22→23] INSERT player_enchants_inventory skipped: $e');
+        }
+        try {
+          await customStatement('DROP TABLE IF EXISTS player_enchants_inventory');
+          await customStatement('DROP TABLE IF EXISTS enchants_catalog');
+          // ignore: avoid_print
+          print('[migration 22→23] dropped enchants tables');
+        } catch (e) {
+          // ignore: avoid_print
+          print('[migration 22→23] DROP failed: $e');
+        }
+      }
     },
     beforeOpen: (details) async {
       await _selfHealCatalogs();
@@ -297,6 +365,12 @@ class AppDatabase extends _$AppDatabase {
         // ignore: avoid_print
         print('[self-heal] items_catalog agora com $itemsAfter itens.');
       }
+
+      // Sprint 2.3 fix (D.3) — enchants_catalog dropado na migration 22→23.
+      // Runas agora são items no items_catalog (ItemType.rune).
+      // Self-heal de runas agora é coberto pelo self-heal de items_catalog
+      // logo acima — contagem DB vs JSON pega 50 runas + 191 outros items
+      // no total (241) e re-seeda idempotente se algo faltar.
     } catch (e, st) {
       // ignore: avoid_print
       print('[self-heal] failed: $e\n$st');

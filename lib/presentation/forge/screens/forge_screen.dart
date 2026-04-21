@@ -11,6 +11,8 @@ import '../../../domain/enums/recipe_type.dart';
 import '../../../domain/models/craft_result.dart';
 import '../../../domain/models/player_snapshot.dart';
 import '../../../domain/models/recipe_spec.dart';
+import '../../shared/widgets/feature_chip.dart';
+import '../../shared/widgets/level_locked_view.dart';
 
 // TODO Fase 5: asset próprio de bigorna medieval.
 // Usando Icons.hardware (martelo pesado) como placeholder — zero colisão
@@ -190,6 +192,16 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Sprint 2.3 Bloco 0.B — Forja requer nível 6.
+    final player = ref.watch(currentPlayerProvider);
+    final level = player?.level ?? 0;
+    if (level < 6) {
+      return LevelLockedView(
+        requiredLevel: 6,
+        currentLevel: level,
+        featureName: 'Forja',
+      );
+    }
     return Scaffold(
       backgroundColor: AppColors.black,
       body: SafeArea(
@@ -212,6 +224,9 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
   }
 
   Widget _buildHeader() {
+    // Sprint 2.3 fix — chip Encantamento (lv20) no header da Forja.
+    // Chip Forja em si não aparece aqui (estamos nela).
+    final playerLevel = ref.watch(currentPlayerProvider)?.level ?? 0;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       child: Row(
@@ -233,6 +248,14 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
             ),
           ),
           const Spacer(),
+          FeatureChip(
+            icon: Icons.auto_awesome,
+            label: 'ENCANT.',
+            route: '/enchant',
+            requiredLevel: 20,
+            playerLevel: playerLevel,
+            color: AppColors.purpleLight,
+          ),
           Text('🪙 $_currentCoins',
               style: GoogleFonts.roboto(
                   fontSize: 12, color: AppColors.gold)),
@@ -513,6 +536,7 @@ class _RecipeCard extends StatelessWidget {
         ItemType.lore       => Icons.history_edu_outlined,
         ItemType.currency   => Icons.diamond_outlined,
         ItemType.darkItem   => Icons.dark_mode_outlined,
+        ItemType.rune       => Icons.auto_awesome,
         ItemType.misc       => Icons.help_outline,
       };
 }

@@ -23,6 +23,11 @@ class FactionQuestService {
     return reset.difference(now);
   }
 
+  // Sprint 2.3 fix — race de concorrência entre invalidação de provider (habits)
+  // e _runDailyReset (sanctuary unawaited) pode inserir 2 rows duplicadas com
+  // mesma (playerId, factionId, weekStart). ..limit(1) evita que getSingleOrNull
+  // throwe nesse caso. Fix robusto (UNIQUE constraint + insert em transação
+  // atômica) fica pra Sprint de Missões (dívida registrada).
   Future<FactionQuestsTableData?> getActiveQuest(
       int playerId, String factionId) async {
     final ws = weekStart();
@@ -30,7 +35,8 @@ class FactionQuestService {
           ..where((t) =>
               t.playerId.equals(playerId) &
               t.factionId.equals(factionId) &
-              t.weekStart.equals(ws)))
+              t.weekStart.equals(ws))
+          ..limit(1))
         .getSingleOrNull();
   }
 

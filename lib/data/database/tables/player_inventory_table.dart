@@ -23,4 +23,11 @@ class PlayerInventoryTable extends Table {
   TextColumn get evolutionStage => text().nullable()();
 
   BoolColumn get isEquipped => boolean().withDefault(const Constant(false))();
+
+  // Sprint 2.3 — encantamento. Null até o jogador aplicar runa/seiva.
+  // Substituir runa faz a anterior ser perdida (decisão Sprint 2.3).
+  // sapChargesRemaining: carga inicial ao aplicar; decay pra Sprint 2.4.
+  TextColumn get appliedRuneKey => text().nullable()();
+  TextColumn get appliedSapKey => text().nullable()();
+  IntColumn get sapChargesRemaining => integer().nullable()();
 }

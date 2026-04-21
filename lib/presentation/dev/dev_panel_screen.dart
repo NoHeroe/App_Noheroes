@@ -3,13 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:drift/drift.dart' show Value;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../app/providers.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/guild_rank.dart';
 import '../../data/database/daos/player_dao.dart';
 import '../../data/database/app_database.dart';
 import '../../data/database/tables/players_table.dart';
+import '../../data/datasources/local/tutorial_service.dart';
+import '../../domain/enums/item_type.dart';
 import '../../domain/enums/source_type.dart';
+import '../../domain/models/item_spec.dart';
 import '../../domain/models/player_snapshot.dart';
 import '../shared/widgets/app_snack.dart';
 
@@ -23,6 +27,7 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
   final _levelCtrl = TextEditingController();
   final _goldCtrl  = TextEditingController();
   final _xpCtrl    = TextEditingController();
+  final _gemsCtrl  = TextEditingController();
   bool _saving = false;
 
   @override
@@ -30,6 +35,7 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
     _levelCtrl.dispose();
     _goldCtrl.dispose();
     _xpCtrl.dispose();
+    _gemsCtrl.dispose();
     super.dispose();
   }
 
@@ -44,6 +50,7 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
     final newLevel = int.tryParse(_levelCtrl.text) ?? player.level;
     final newGold  = int.tryParse(_goldCtrl.text)  ?? player.gold;
     final newXp    = int.tryParse(_xpCtrl.text)    ?? player.xp;
+    final newGems  = int.tryParse(_gemsCtrl.text)  ?? player.gems;
 
     await (db.update(db.playersTable)
           ..where((t) => t.id.equals(player.id)))
@@ -51,6 +58,7 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
           level: Value(newLevel),
           gold:  Value(newGold),
           xp:    Value(newXp),
+          gems:  Value(newGems),
         ));
 
     final updated = await dao.findById(player.id);
@@ -59,7 +67,8 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
       setState(() => _saving = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Aplicado: Lv$newLevel | ${newGold}g | ${newXp}xp'),
+          content: Text(
+              'Aplicado: Lv$newLevel | ${newGold}g | ${newXp}xp | $newGems💎'),
           backgroundColor: AppColors.shadowAscending,
         ),
       );
@@ -138,6 +147,8 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
             _field(_goldCtrl,  'Novo ouro',  '${player?.gold ?? 0}'),
             const SizedBox(height: 10),
             _field(_xpCtrl,    'Novo XP',    '${player?.xp ?? 0}'),
+            const SizedBox(height: 10),
+            _field(_gemsCtrl,  'Novas gemas', '${player?.gems ?? 0}'),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -167,6 +178,20 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
             const SizedBox(height: 10),
             _actionBtn('Ir para seleção de facção', AppColors.shadowStable,
                 () => context.go('/faction-selection')),
+            const SizedBox(height: 10),
+            // Sprint 2.3 dev shortcut — gate level 20 bloqueia acesso normal.
+            _actionBtn('Ir para Encantamento (/enchant)',
+                AppColors.purpleLight, () => context.go('/enchant')),
+            const SizedBox(height: 10),
+            // Sprint 2.3 fix round 2 (B+) — destrava testes manuais de todas
+            // as 50 runas até drops do loot_world serem implementados.
+            _actionBtn('Adicionar runa ao inventário',
+                AppColors.purpleLight, _addRuneToInventory),
+            const SizedBox(height: 10),
+            // Sprint 2.3 Bloco 6 — reseta flag da quest do Encantador +
+            // remove RUNE_FIRE_E do inventário. Abrir /enchant dispara de novo.
+            _actionBtn('Resetar quest do Encantador',
+                AppColors.hp, _resetEnchanterQuest),
             const SizedBox(height: 24),
 
             // Rank + Inventário (Sprint 2.1 Bloco 6)
@@ -370,6 +395,147 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
     if (!mounted) return;
     ref.read(currentPlayerProvider.notifier).state = updated;
     AppSnack.success(context, 'Inventário resetado.');
+  }
+
+  // Sprint 2.3 fix round 2 (B+) — bottom sheet com todas as runas do
+  // items_catalog; adiciona 1 unidade da selecionada via PlayerInventoryService.
+  // Destrava testes manuais até drops de loot_world serem implementados.
+  Future<void> _addRuneToInventory() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+
+    final catalog = ref.read(itemsCatalogServiceProvider);
+    final all = await catalog.findAll();
+    final runes = all.where((i) => i.type == ItemType.rune).toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+
+    if (!mounted) return;
+
+    final selected = await showModalBottomSheet<ItemSpec>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: SizedBox(
+          height: MediaQuery.of(ctx).size.height * 0.7,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Text('Escolher runa (${runes.length})',
+                    style: GoogleFonts.cinzelDecorative(
+                        fontSize: 14,
+                        color: AppColors.purpleLight,
+                        letterSpacing: 2)),
+              ),
+              const Divider(color: AppColors.border, height: 1),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: runes.length,
+                  itemBuilder: (_, i) {
+                    final r = runes[i];
+                    return ListTile(
+                      leading: const Icon(Icons.auto_awesome,
+                          color: AppColors.purpleLight, size: 18),
+                      title: Text(r.name,
+                          style: GoogleFonts.roboto(
+                              color: AppColors.textPrimary, fontSize: 12)),
+                      subtitle: Text(
+                          '${r.key} · rank ${r.requiredRank?.name.toUpperCase() ?? "?"}',
+                          style: GoogleFonts.roboto(
+                              color: AppColors.textMuted, fontSize: 10)),
+                      onTap: () => Navigator.pop(ctx, r),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (selected == null || !mounted) return;
+
+    try {
+      final svc = ref.read(playerInventoryServiceProvider);
+      await svc.addItem(
+        playerId:    player.id,
+        itemKey:     selected.key,
+        quantity:    1,
+        acquiredVia: SourceType.lootWorld,
+      );
+      if (!mounted) return;
+      AppSnack.success(context, '${selected.name} adicionada ao inventário.');
+    } catch (e) {
+      if (!mounted) return;
+      AppSnack.error(context, 'Falha ao adicionar: $e');
+    }
+  }
+
+  // Sprint 2.3 Bloco 6 — reseta flag da quest do Encantador.
+  // Remove a flag do SharedPreferences (tutorial_phase12_enchanter) e rebate
+  // a RUNE_FIRE_E do inventário se tiver. Tolerante a "não tinha" — se o
+  // consumeOne falhar pq o inventário já está vazio, ignora silenciosamente.
+  Future<void> _resetEnchanterQuest() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Resetar quest do Encantador?',
+            style: GoogleFonts.cinzelDecorative(
+                color: AppColors.hp, fontSize: 14)),
+        content: Text(
+          'Remove a flag tutorial_phase12_enchanter + remove 1× RUNE_FIRE_E '
+          'do inventário (se houver). Na próxima abertura do /enchant ou do '
+          'santuário, a quest dispara de novo.',
+          style: GoogleFonts.roboto(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.hp),
+            child: const Text('Resetar'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+
+    // Flag persistente — key gerada por TutorialService como
+    // 'tutorial_${phase.name}'. Usa o .name do enum pra ficar em sync com
+    // qualquer rename futuro.
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(
+        'tutorial_${TutorialPhase.phase12_enchanter.name}');
+
+    final player = ref.read(currentPlayerProvider);
+    if (player != null) {
+      try {
+        // Sprint 2.3 fix — runas no items_catalog. Consome 1 unidade de
+        // RUNE_FIRE_E (se houver) via PlayerInventoryService.
+        final svc = ref.read(playerInventoryServiceProvider);
+        final has = await svc.hasItem(player.id, 'RUNE_FIRE_E');
+        if (has) {
+          await svc.consumeOneByKey(
+              playerId: player.id, itemKey: 'RUNE_FIRE_E');
+        }
+      } catch (_) {
+        // Tolerante — se não tinha, segue.
+      }
+    }
+
+    if (!mounted) return;
+    AppSnack.success(context, 'Quest do Encantador resetada.');
   }
 
   Widget _section(String label) => Padding(

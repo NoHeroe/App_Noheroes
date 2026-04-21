@@ -13,6 +13,7 @@ enum TutorialPhase {
   phase9_playstyle,   // nível 15: estilo de jogo
   phase10_vitalism,   // nível 25: vitalismo
   phase11_skull,      // nível 99: nível caveira
+  phase12_enchanter,  // nível 20: encantamento + grant de RUNE_FIRE_E
 }
 
 class TutorialService {

@@ -17,6 +17,8 @@ import '../data/datasources/local/shops_service.dart';
 import '../data/datasources/local/recipes_catalog_service.dart';
 import '../data/datasources/local/player_recipes_service.dart';
 import '../data/datasources/local/crafting_service.dart';
+import '../data/datasources/local/enchant_service.dart';
+import '../data/datasources/local/factions_service.dart';
 import '../data/database/daos/player_dao.dart';
 
 // Banco singleton
@@ -84,6 +86,23 @@ final craftingServiceProvider = Provider<CraftingService>((ref) {
     ref.watch(itemsCatalogServiceProvider),
     ref.watch(playerInventoryServiceProvider),
     PlayerDao(db),
+  );
+});
+
+// Sprint 2.3 Bloco 0.A — facções filtradas (oculta secretas sem achievement).
+final factionsServiceProvider = Provider<FactionsService>((ref) {
+  return FactionsService(ref.watch(appDatabaseProvider));
+});
+
+// Sprint 2.3 fix (D.2) — runas migradas pra items_catalog como ItemType.rune.
+// Providers antigos (enchantsCatalogServiceProvider, playerEnchantsServiceProvider)
+// removidos. Tabelas enchants_catalog e player_enchants_inventory serão
+// dropadas pela migration 22→23 em F8.
+final enchantServiceProvider = Provider<EnchantService>((ref) {
+  return EnchantService(
+    ref.watch(appDatabaseProvider),
+    ref.watch(itemsCatalogServiceProvider),
+    ref.watch(playerInventoryServiceProvider),
   );
 });
 

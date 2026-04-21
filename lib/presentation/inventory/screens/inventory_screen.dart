@@ -8,9 +8,10 @@ import '../../../core/utils/item_equip_policy.dart';
 import '../../../domain/enums/item_rarity.dart';
 import '../../../domain/enums/item_type.dart';
 import '../../../domain/enums/source_type.dart';
+import '../../../domain/models/enchant_spec.dart';
 import '../../../domain/models/inventory_entry_with_spec.dart';
 import '../../../domain/models/player_snapshot.dart';
-import '../../shared/widgets/nh_bottom_nav.dart';
+import '../../shared/widgets/feature_chip.dart';
 
 class InventoryScreen extends ConsumerStatefulWidget {
   const InventoryScreen({super.key});
@@ -29,7 +30,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
   @override
   void initState() {
     super.initState();
-    _tab = TabController(length: 6, vsync: this);
+    _tab = TabController(length: 5, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _reload());
   }
 
@@ -64,29 +65,27 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Sprint 2.3 fix — inventário é sub-tela de /character (acesso pelo
+    // header), não precisa da nav bar do santuário. NhBottomNav removido
+    // (estava emprestando indevidamente currentIndex:1 de Missões).
     return Scaffold(
       backgroundColor: AppColors.black,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: Column(
-              children: [
-                _buildHeader(),
-                _buildTabs(),
-                Expanded(child: _buildTabContent()),
-              ],
-            ),
-          ),
-          const Align(
-            alignment: Alignment.bottomCenter,
-            child: NhBottomNav(currentIndex: 1),
-          ),
-        ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(),
+            _buildTabs(),
+            Expanded(child: _buildTabContent()),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildHeader() {
+    // Sprint 2.3 fix — chips de acesso a Forja e Encantamento substituem
+    // a antiga aba FORJA do inventário. Gates: lv6 pra forja, lv20 pra enchant.
+    final playerLevel = ref.watch(currentPlayerProvider)?.level ?? 0;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       child: Row(
@@ -106,15 +105,25 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
             ),
           ),
           const Spacer(),
-          FutureBuilder<List<InventoryEntryWithSpec>>(
-            future: _future,
-            builder: (_, snap) {
-              final n = snap.data?.length ?? 0;
-              return Text('$n itens',
-                  style: GoogleFonts.roboto(
-                      fontSize: 12, color: AppColors.textMuted));
-            },
+          FeatureChip(
+            icon: Icons.hardware,
+            label: 'FORJA',
+            route: '/forge',
+            requiredLevel: 6,
+            playerLevel: playerLevel,
           ),
+          FeatureChip(
+            icon: Icons.auto_awesome,
+            label: 'ENCANT.',
+            route: '/enchant',
+            requiredLevel: 20,
+            playerLevel: playerLevel,
+            color: AppColors.purpleLight,
+          ),
+          // Sprint 2.3 fix (B1) — contagem de itens removida (causava
+          // overflow em telas pequenas quando chips FORJA + ENCANT. estavam
+          // visíveis simultaneamente). Contagem por aba já é implícita nos
+          // cards listados.
         ],
       ),
     );
@@ -137,7 +146,6 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
         Tab(text: 'CONSUMÍVEIS'),
         Tab(text: 'MATERIAIS'),
         Tab(text: 'ESPECIAIS'),
-        Tab(text: 'FORJA'),
       ],
     );
   }
@@ -167,7 +175,6 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
             _buildList(_filterBy(items, _Filter.consumable)),
             _buildList(_filterBy(items, _Filter.material)),
             _buildList(_filterBy(items, _Filter.special)),
-            const _ForgeShortcut(),
           ],
         );
       },
@@ -183,10 +190,17 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
         return items;
       case _Filter.equippable:
         return items.where((e) => e.spec.isEquippable).toList();
+      // Sprint 2.3 fix (B2) — runas têm isConsumable=true (consumo real é
+      // via EnchantService na transação atômica), mas NÃO devem aparecer
+      // na aba CONSUMÍVEIS junto com poções/etc. Agrupadas com MATERIAIS
+      // por decisão UX (ingredientes + runas = consumíveis passivos).
       case _Filter.consumable:
-        return items.where((e) => e.spec.isConsumable).toList();
+        return items.where((e) =>
+            e.spec.isConsumable && e.spec.type != ItemType.rune).toList();
       case _Filter.material:
-        return items.where((e) => e.spec.type == ItemType.material).toList();
+        return items.where((e) =>
+            e.spec.type == ItemType.material ||
+            e.spec.type == ItemType.rune).toList();
       case _Filter.special:
         const specialTypes = {
           ItemType.lore,
@@ -217,13 +231,38 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
   }
 
   Future<void> _openDetails(InventoryEntryWithSpec item) async {
+    // Sprint 2.3 Bloco 7.1 — pré-resolve specs de runa/seiva aplicadas pra
+    // manter o sheet stateless. Catálogo é cached, custo desprezível.
+    EnchantSpec? appliedRune;
+    EnchantSpec? appliedSap;
+    final runeKey = item.entry.appliedRuneKey;
+    final sapKey = item.entry.appliedSapKey;
+    if (runeKey != null || sapKey != null) {
+      // Sprint 2.3 fix — runas agora vivem no items_catalog como ItemType.rune;
+      // convertemos via EnchantSpec.fromItemSpec. Seivas continuam TBD (2.4).
+      final catalog = ref.read(itemsCatalogServiceProvider);
+      if (runeKey != null) {
+        final item = await catalog.findByKey(runeKey);
+        if (item != null) appliedRune = EnchantSpec.fromItemSpec(item);
+      }
+      if (sapKey != null) {
+        final item = await catalog.findByKey(sapKey);
+        if (item != null) appliedSap = EnchantSpec.fromItemSpec(item);
+      }
+    }
+    if (!mounted) return;
+
     final action = await showModalBottomSheet<_DetailAction>(
       context: context,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => _ItemDetailsSheet(item: item),
+      builder: (_) => _ItemDetailsSheet(
+        item: item,
+        appliedRune: appliedRune,
+        appliedSap: appliedSap,
+      ),
     );
     if (!mounted || action == null) return;
 
@@ -344,78 +383,6 @@ class _ErrorView extends StatelessWidget {
   }
 }
 
-// Sprint 2.2 Bloco 7 — aba "Forja" no inventário. Não lista itens — é atalho
-// de navegação pra /forge.
-class _ForgeShortcut extends StatelessWidget {
-  const _ForgeShortcut();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(36, 24, 36, 100),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 96, height: 96,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.gold.withValues(alpha: 0.1),
-                border: Border.all(
-                    color: AppColors.gold.withValues(alpha: 0.4), width: 1.5),
-              ),
-              child: const Icon(Icons.hardware,
-                  color: AppColors.gold, size: 44),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Acesso rápido à Forja',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.cinzelDecorative(
-                  fontSize: 14,
-                  color: AppColors.gold,
-                  letterSpacing: 2),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Criar armas, armaduras e processar materiais.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.roboto(
-                  fontSize: 12,
-                  color: AppColors.textMuted,
-                  height: 1.5),
-            ),
-            const SizedBox(height: 24),
-            GestureDetector(
-              onTap: () => context.go('/forge'),
-              child: Container(
-                width: double.infinity,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: AppColors.gold.withValues(alpha: 0.12),
-                  border: Border.all(
-                      color: AppColors.gold.withValues(alpha: 0.55),
-                      width: 1.4),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  'IR PRA FORJA',
-                  style: GoogleFonts.cinzelDecorative(
-                      fontSize: 12,
-                      color: AppColors.gold,
-                      letterSpacing: 3),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _EmptyListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -445,6 +412,9 @@ class _InventoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final rarityColor = item.spec.rarity.color;
     final isEquipped = item.entry.isEquipped;
+    // Sprint 2.3 Bloco 7.1 — badge ✨ quando item tem runa/seiva aplicada.
+    final hasEnchant = item.entry.appliedRuneKey != null ||
+        item.entry.appliedSapKey != null;
 
     return GestureDetector(
       onTap: onTap,
@@ -457,15 +427,38 @@ class _InventoryCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 46, height: 46,
-              decoration: BoxDecoration(
-                color: rarityColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: rarityColor.withValues(alpha: 0.4)),
-              ),
-              child: Icon(_typeIcon(item.spec.type),
-                  color: rarityColor, size: 22),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 46, height: 46,
+                  decoration: BoxDecoration(
+                    color: rarityColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: rarityColor.withValues(alpha: 0.4)),
+                  ),
+                  child: Icon(_typeIcon(item.spec.type),
+                      color: rarityColor, size: 22),
+                ),
+                if (hasEnchant)
+                  Positioned(
+                    top: -4,
+                    right: -4,
+                    child: Container(
+                      width: 18,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.surface,
+                        border: Border.all(
+                            color: AppColors.purpleLight, width: 1.2),
+                      ),
+                      child: const Icon(Icons.auto_awesome,
+                          color: AppColors.purpleLight, size: 11),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -560,6 +553,7 @@ class _InventoryCard extends StatelessWidget {
         ItemType.lore       => Icons.history_edu_outlined,
         ItemType.currency   => Icons.diamond_outlined,
         ItemType.darkItem   => Icons.dark_mode_outlined,
+        ItemType.rune       => Icons.auto_awesome,
         ItemType.misc       => Icons.help_outline,
       };
 }
@@ -624,7 +618,13 @@ enum _DetailAction { equip, unequip, consume }
 
 class _ItemDetailsSheet extends StatelessWidget {
   final InventoryEntryWithSpec item;
-  const _ItemDetailsSheet({required this.item});
+  final EnchantSpec? appliedRune;
+  final EnchantSpec? appliedSap;
+  const _ItemDetailsSheet({
+    required this.item,
+    this.appliedRune,
+    this.appliedSap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -692,6 +692,23 @@ class _ItemDetailsSheet extends StatelessWidget {
                           height: 1.5)),
                 ),
             ],
+            // Sprint 2.3 Bloco 7.1 — seção Encantamento (runa e/ou seiva
+            // aplicada no item). Schema já suporta seiva; UI mostra, mesmo
+            // que Sprint 2.4 ainda não ative o sistema de cargas.
+            if (appliedRune != null || appliedSap != null) ...[
+              const SizedBox(height: 12),
+              _sectionTitle('ENCANTAMENTO'),
+              const SizedBox(height: 6),
+              if (appliedRune != null) _buildEnchantRow(appliedRune!, 'Runa'),
+              if (appliedSap != null) ...[
+                if (appliedRune != null) const SizedBox(height: 6),
+                _buildEnchantRow(
+                  appliedSap!,
+                  'Seiva',
+                  charges: item.entry.sapChargesRemaining,
+                ),
+              ],
+            ],
             if (spec.sources.isNotEmpty) ...[
               const SizedBox(height: 12),
               _sectionTitle('ORIGEM'),
@@ -722,6 +739,52 @@ class _ItemDetailsSheet extends StatelessWidget {
             fontSize: 11, color: AppColors.purpleLight, letterSpacing: 3),
       );
 
+  Widget _buildEnchantRow(EnchantSpec enchant, String kindLabel,
+      {int? charges}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.auto_awesome,
+                color: AppColors.purpleLight, size: 13),
+            const SizedBox(width: 6),
+            Text(enchant.name,
+                style: GoogleFonts.roboto(
+                    fontSize: 12,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w500)),
+            const SizedBox(width: 6),
+            Text('($kindLabel)',
+                style: GoogleFonts.roboto(
+                    fontSize: 10, color: AppColors.textMuted)),
+            if (charges != null) ...[
+              const SizedBox(width: 6),
+              Text('• $charges cargas',
+                  style: GoogleFonts.roboto(
+                      fontSize: 10, color: AppColors.gold)),
+            ],
+          ],
+        ),
+        if (enchant.effects.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 19, top: 2),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 2,
+              children: [
+                for (final e in enchant.effects)
+                  Text('+${e.value} ${e.key}',
+                      style: GoogleFonts.roboto(
+                          fontSize: 10,
+                          color: AppColors.shadowAscending)),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _buildActions(BuildContext context, spec, bool isEquipped) {
     final actions = <Widget>[];
     if (spec.isEquippable && spec.slot != null) {
@@ -739,7 +802,12 @@ class _ItemDetailsSheet extends StatelessWidget {
         ));
       }
     }
-    if (spec.isConsumable) {
+    // Sprint 2.3 fix (B4) — runas são marcadas is_consumable pra serem
+    // consumidas pela EnchantService (dentro da transação atômica de
+    // aplicação). NUNCA devem aparecer com botão "Usar" genérico — que só
+    // decrementa quantity sem aplicar effect (engine de effects é Fase 4).
+    // Aplicação real de runa acontece em /enchant.
+    if (spec.isConsumable && spec.type != ItemType.rune) {
       actions.add(_ActionButton(
         label: 'Usar',
         color: AppColors.shadowAscending,

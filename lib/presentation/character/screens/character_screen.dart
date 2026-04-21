@@ -9,6 +9,7 @@ import '../../../core/utils/item_equip_policy.dart';
 import '../../../domain/enums/equipment_slot.dart';
 import '../../../domain/enums/item_rarity.dart';
 import '../../../domain/models/inventory_entry_with_spec.dart';
+import '../../shared/widgets/feature_chip.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
 import '../../shared/widgets/app_snack.dart';
 import '../widgets/stats_panel.dart';
@@ -22,6 +23,21 @@ final equippedItemsProvider =
   return ref.read(playerEquipmentServiceProvider).equippedItemsOf(player.id);
 });
 
+// Sprint 2.3 fix (B5) — stats agregados de equipamentos + runas aplicadas.
+// Usa o método async do service (soma spec.stats + rune.effects).
+// O método síncrono ItemEquipPolicy.aggregateStatsFromEquippedEntries só
+// soma spec.stats e NÃO enxerga runas — era o bug anterior.
+final aggregatedEquipmentStatsProvider =
+    FutureProvider.autoDispose<Map<String, num>>((ref) async {
+  final player = ref.watch(currentPlayerProvider);
+  if (player == null) return const {};
+  // Mantém dependência de equippedItemsProvider pra re-agregar quando
+  // equipamento muda (invalidate cascata).
+  ref.watch(equippedItemsProvider);
+  return ref.read(playerEquipmentServiceProvider)
+      .aggregatedStatsOf(player.id);
+});
+
 class CharacterScreen extends ConsumerWidget {
   const CharacterScreen({super.key});
 
@@ -31,9 +47,11 @@ class CharacterScreen extends ConsumerWidget {
     final equippedAsync = ref.watch(equippedItemsProvider);
     final equipped = equippedAsync.value ?? const <InventoryEntryWithSpec>[];
 
-    // Stats agregados dos itens equipados — respeita evolution_stage pra
-    // items is_evolving (Colar da Guilda).
-    final stats = ItemEquipPolicy.aggregateStatsFromEquippedEntries(equipped);
+    // Sprint 2.3 fix (B5) — stats agregados via service async (inclui runas).
+    // Antes usava ItemEquipPolicy.aggregateStatsFromEquippedEntries direto
+    // (síncrono, só spec.stats) — runas nunca eram somadas.
+    final aggregatedAsync = ref.watch(aggregatedEquipmentStatsProvider);
+    final stats = aggregatedAsync.value ?? const <String, num>{};
 
     return Scaffold(
       backgroundColor: AppColors.black,
@@ -78,6 +96,8 @@ class CharacterScreen extends ConsumerWidget {
   }
 
   Widget _buildHeader(player) {
+    // Sprint 2.3 fix — chips de acesso a Forja (lv6) e Encantamento (lv20).
+    final playerLevel = player?.level ?? 0;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       child: Row(
@@ -88,6 +108,21 @@ class CharacterScreen extends ConsumerWidget {
                 fontSize: 16, color: AppColors.gold, letterSpacing: 2),
           ),
           const Spacer(),
+          FeatureChip(
+            icon: Icons.hardware,
+            label: 'FORJA',
+            route: '/forge',
+            requiredLevel: 6,
+            playerLevel: playerLevel,
+          ),
+          FeatureChip(
+            icon: Icons.auto_awesome,
+            label: 'ENCANT.',
+            route: '/enchant',
+            requiredLevel: 20,
+            playerLevel: playerLevel,
+            color: AppColors.purpleLight,
+          ),
           if ((player?.attributePoints ?? 0) > 0)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -372,6 +407,10 @@ class CharacterScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
             ],
+            // Sprint 2.3 fix (B5) — mostra runa aplicada no item equipado
+            // com seus efeitos (resolve async via FutureBuilder).
+            if (equipped.entry.appliedRuneKey != null)
+              _AppliedRuneSection(runeKey: equipped.entry.appliedRuneKey!),
             GestureDetector(
               onTap: () async {
                 final slot = spec.slot;
@@ -746,4 +785,78 @@ class CharacterScreen extends ConsumerWidget {
         'guild'        => 'Guilda',
         _              => '',
       };
+}
+
+// Sprint 2.3 fix (B5) — seção "ENCANTAMENTO" no detail sheet do item
+// equipado. Resolve a runa assíncrona via FutureBuilder + itemsCatalog cache.
+class _AppliedRuneSection extends ConsumerWidget {
+  final String runeKey;
+  const _AppliedRuneSection({required this.runeKey});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final catalog = ref.read(itemsCatalogServiceProvider);
+    return FutureBuilder<dynamic>(
+      future: catalog.findByKey(runeKey),
+      builder: (ctx, snap) {
+        if (!snap.hasData) return const SizedBox.shrink();
+        final rune = snap.data;
+        if (rune == null) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.auto_awesome,
+                      color: AppColors.purpleLight, size: 12),
+                  const SizedBox(width: 6),
+                  Text('ENCANTAMENTO',
+                      style: GoogleFonts.cinzelDecorative(
+                          fontSize: 10,
+                          color: AppColors.purpleLight,
+                          letterSpacing: 1)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(rune.name as String,
+                  style: GoogleFonts.roboto(
+                      fontSize: 12,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w500)),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  for (final e in (rune.effects as Map<String, dynamic>)
+                      .entries)
+                    if (e.value is num)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.purpleLight
+                              .withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                              color: AppColors.purpleLight
+                                  .withValues(alpha: 0.4)),
+                        ),
+                        child: Text(
+                          '+${e.value} ${e.key}',
+                          style: GoogleFonts.roboto(
+                              fontSize: 10,
+                              color: AppColors.purpleLight),
+                        ),
+                      ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }

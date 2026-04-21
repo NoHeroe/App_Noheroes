@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:convert';
-import 'package:flutter/services.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/datasources/local/class_bonus_service.dart';
@@ -31,9 +29,12 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
   }
 
   Future<void> _loadFactions() async {
-    final raw = await rootBundle.loadString('assets/data/factions.json');
-    final data = json.decode(raw) as Map<String, dynamic>;
-    setState(() => _factions = (data['factions'] as List).cast<Map<String, dynamic>>());
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final svc = ref.read(factionsServiceProvider);
+    final list = await svc.availableForSelection(player);
+    if (!mounted) return;
+    setState(() => _factions = list);
   }
 
   Color _color(Map c) => Color(int.parse(c['color'] as String));

@@ -12,6 +12,7 @@ import '../../../domain/enums/item_type.dart';
 import '../../../domain/models/player_snapshot.dart';
 import '../../../domain/models/shop_item_view.dart';
 import '../../../domain/models/shop_spec.dart';
+import '../../shared/widgets/level_locked_view.dart';
 
 // Tela /shop/:shopKey — loja individual. Lista itens filtrados, compra via
 // ShopsService.buyItem retornando BuyResult.
@@ -150,6 +151,19 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Sprint 2.3 Bloco 0.B — Ferreiro de Aureum requer nível 6.
+    if (widget.shopKey == 'blacksmith_aureum') {
+      final player = ref.watch(currentPlayerProvider);
+      final level = player?.level ?? 0;
+      if (level < 6) {
+        return LevelLockedView(
+          requiredLevel: 6,
+          currentLevel: level,
+          featureName: 'Ferreiro de Aureum',
+          onBack: () => context.go('/shops'),
+        );
+      }
+    }
     return Scaffold(
       backgroundColor: AppColors.black,
       body: SafeArea(

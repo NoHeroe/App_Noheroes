@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../app/providers.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/datasources/local/tutorial_service.dart';
+import '../../domain/enums/source_type.dart';
 import 'widgets/npc_dialog_overlay.dart';
 import 'widgets/milestone_popup.dart';
 
@@ -255,6 +258,84 @@ class TutorialManager {
     ctx.go('/vitalism/crystal-ceremony');
   }
 
+  // ── FASE 12 — Encantamento (nível 20) ─────────────────────────────────────
+  // Sprint 2.3 Bloco 6 — introduz a arte das runas e entrega 1× RUNE_FIRE_E.
+  //
+  // Fluxo:
+  //   1. Dois diálogos de "O Vazio" apresentando a arte
+  //   2. Grant atômico da runa (PlayerInventoryService.addItem é idempotente
+  //      stackável — se falhar, markDone NÃO é chamado e a fase repete no
+  //      próximo runAll)
+  //   3. MilestonePopup confirma recebimento
+  //   4. markDone grava flag; próxima sessão não repete.
+  //
+  // Requer WidgetRef + playerId porque precisa do playerInventoryServiceProvider.
+  // Outras fases não usam services por isso só phase12 recebe esses params.
+  static Future<void> phase12Enchanter(
+    BuildContext ctx, {
+    required WidgetRef ref,
+    required int playerId,
+  }) async {
+    if (!await TutorialService.shouldShow(TutorialPhase.phase12_enchanter)) {
+      return;
+    }
+
+    if (!ctx.mounted) return;
+    await NpcDialogOverlay.show(
+      ctx,
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
+      message:
+          'Tua ascensão atravessa a vigésima era. Sinto que um mestre antigo '
+          'despertou para reconhecer tua jornada. Ele oferece-te a arte das runas.',
+    );
+
+    if (!ctx.mounted) return;
+    await NpcDialogOverlay.show(
+      ctx,
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
+      message:
+          'Grava tuas convicções em metal e pedra. Que cada runa torne-se um '
+          'eco de tua presença no mundo.',
+    );
+
+    // Grant da runa. Se falhar, NÃO marca done — tenta de novo no próximo
+    // runAll. PlayerInventoryService.addItem empilha por itemKey se a
+    // entry já existe, caso contrário cria row nova (spec.isStackable=true
+    // + stackMax=99 em runas).
+    try {
+      final svc = ref.read(playerInventoryServiceProvider);
+      final id = await svc.addItem(
+        playerId:    playerId,
+        itemKey:     'RUNE_FIRE_E',
+        quantity:    1,
+        acquiredVia: SourceType.questReward,
+      );
+      if (id < 0) {
+        throw StateError('addItem retornou $id (RUNE_FIRE_E)');
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print('[phase12_enchanter] falha ao grantar RUNE_FIRE_E: $e');
+      return;
+    }
+
+    if (!ctx.mounted) return;
+    await MilestonePopup.show(
+      ctx,
+      subtitle: 'NÍVEL 20',
+      title: 'O Despertar do Encantador',
+      message:
+          'Você recebeu: 1× Runa de Fogo Menor.\n\n'
+          'Acesse /enchant para aplicá-la em um item equipável.',
+      icon: Icons.auto_awesome,
+      color: AppColors.purple,
+    );
+
+    await TutorialService.markDone(TutorialPhase.phase12_enchanter);
+  }
+
   // ── FASE 11 — Nível Caveira (nível 99) ────────────────────────────────────
   static Future<void> phase11Skull(BuildContext ctx) async {
     if (!await TutorialService.shouldShow(TutorialPhase.phase11_skull)) return;
@@ -271,8 +352,12 @@ class TutorialManager {
 
   /// Roda todas as fases aplicáveis ao nível do player, em ordem.
   /// Recebe o player para decidir hasClass/hasFaction/hasPlaystyle.
+  /// Sprint 2.3 Bloco 6: ref + playerId exigidos pela phase12_enchanter,
+  /// que precisa do PlayerEnchantsService para grantar RUNE_FIRE_E.
   static Future<void> runAll(
     BuildContext ctx, {
+    required WidgetRef ref,
+    required int playerId,
     required int level,
     required bool hasClass,
     required bool hasFaction,
@@ -288,6 +373,9 @@ class TutorialManager {
     if (level >= 7 && ctx.mounted) await phase7Factions(ctx, hasFaction: hasFaction);
     if (level >= 10 && ctx.mounted) await phase8Shadow(ctx);
     if (level >= 15 && ctx.mounted) await phase9Playstyle(ctx, hasPlaystyle: hasPlaystyle);
+    if (level >= 20 && ctx.mounted) {
+      await phase12Enchanter(ctx, ref: ref, playerId: playerId);
+    }
     if (level >= 25 && ctx.mounted) {
       await phase10Vitalism(ctx,
           isVitalistWithoutAffinity: isVitalistWithoutAffinity);

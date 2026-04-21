@@ -11554,6 +11554,24 @@ class $PlayerInventoryTableTable extends PlayerInventoryTable
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('CHECK ("is_equipped" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _appliedRuneKeyMeta =
+      const VerificationMeta('appliedRuneKey');
+  @override
+  late final GeneratedColumn<String> appliedRuneKey = GeneratedColumn<String>(
+      'applied_rune_key', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _appliedSapKeyMeta =
+      const VerificationMeta('appliedSapKey');
+  @override
+  late final GeneratedColumn<String> appliedSapKey = GeneratedColumn<String>(
+      'applied_sap_key', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _sapChargesRemainingMeta =
+      const VerificationMeta('sapChargesRemaining');
+  @override
+  late final GeneratedColumn<int> sapChargesRemaining = GeneratedColumn<int>(
+      'sap_charges_remaining', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -11564,7 +11582,10 @@ class $PlayerInventoryTableTable extends PlayerInventoryTable
         acquiredAt,
         acquiredVia,
         evolutionStage,
-        isEquipped
+        isEquipped,
+        appliedRuneKey,
+        appliedSapKey,
+        sapChargesRemaining
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -11630,6 +11651,24 @@ class $PlayerInventoryTableTable extends PlayerInventoryTable
           isEquipped.isAcceptableOrUnknown(
               data['is_equipped']!, _isEquippedMeta));
     }
+    if (data.containsKey('applied_rune_key')) {
+      context.handle(
+          _appliedRuneKeyMeta,
+          appliedRuneKey.isAcceptableOrUnknown(
+              data['applied_rune_key']!, _appliedRuneKeyMeta));
+    }
+    if (data.containsKey('applied_sap_key')) {
+      context.handle(
+          _appliedSapKeyMeta,
+          appliedSapKey.isAcceptableOrUnknown(
+              data['applied_sap_key']!, _appliedSapKeyMeta));
+    }
+    if (data.containsKey('sap_charges_remaining')) {
+      context.handle(
+          _sapChargesRemainingMeta,
+          sapChargesRemaining.isAcceptableOrUnknown(
+              data['sap_charges_remaining']!, _sapChargesRemainingMeta));
+    }
     return context;
   }
 
@@ -11658,6 +11697,12 @@ class $PlayerInventoryTableTable extends PlayerInventoryTable
           .read(DriftSqlType.string, data['${effectivePrefix}evolution_stage']),
       isEquipped: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_equipped'])!,
+      appliedRuneKey: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}applied_rune_key']),
+      appliedSapKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}applied_sap_key']),
+      sapChargesRemaining: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}sap_charges_remaining']),
     );
   }
 
@@ -11678,6 +11723,9 @@ class PlayerInventoryTableData extends DataClass
   final String acquiredVia;
   final String? evolutionStage;
   final bool isEquipped;
+  final String? appliedRuneKey;
+  final String? appliedSapKey;
+  final int? sapChargesRemaining;
   const PlayerInventoryTableData(
       {required this.id,
       required this.playerId,
@@ -11687,7 +11735,10 @@ class PlayerInventoryTableData extends DataClass
       required this.acquiredAt,
       required this.acquiredVia,
       this.evolutionStage,
-      required this.isEquipped});
+      required this.isEquipped,
+      this.appliedRuneKey,
+      this.appliedSapKey,
+      this.sapChargesRemaining});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -11704,6 +11755,15 @@ class PlayerInventoryTableData extends DataClass
       map['evolution_stage'] = Variable<String>(evolutionStage);
     }
     map['is_equipped'] = Variable<bool>(isEquipped);
+    if (!nullToAbsent || appliedRuneKey != null) {
+      map['applied_rune_key'] = Variable<String>(appliedRuneKey);
+    }
+    if (!nullToAbsent || appliedSapKey != null) {
+      map['applied_sap_key'] = Variable<String>(appliedSapKey);
+    }
+    if (!nullToAbsent || sapChargesRemaining != null) {
+      map['sap_charges_remaining'] = Variable<int>(sapChargesRemaining);
+    }
     return map;
   }
 
@@ -11722,6 +11782,15 @@ class PlayerInventoryTableData extends DataClass
           ? const Value.absent()
           : Value(evolutionStage),
       isEquipped: Value(isEquipped),
+      appliedRuneKey: appliedRuneKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(appliedRuneKey),
+      appliedSapKey: appliedSapKey == null && nullToAbsent
+          ? const Value.absent()
+          : Value(appliedSapKey),
+      sapChargesRemaining: sapChargesRemaining == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sapChargesRemaining),
     );
   }
 
@@ -11738,6 +11807,10 @@ class PlayerInventoryTableData extends DataClass
       acquiredVia: serializer.fromJson<String>(json['acquiredVia']),
       evolutionStage: serializer.fromJson<String?>(json['evolutionStage']),
       isEquipped: serializer.fromJson<bool>(json['isEquipped']),
+      appliedRuneKey: serializer.fromJson<String?>(json['appliedRuneKey']),
+      appliedSapKey: serializer.fromJson<String?>(json['appliedSapKey']),
+      sapChargesRemaining:
+          serializer.fromJson<int?>(json['sapChargesRemaining']),
     );
   }
   @override
@@ -11753,6 +11826,9 @@ class PlayerInventoryTableData extends DataClass
       'acquiredVia': serializer.toJson<String>(acquiredVia),
       'evolutionStage': serializer.toJson<String?>(evolutionStage),
       'isEquipped': serializer.toJson<bool>(isEquipped),
+      'appliedRuneKey': serializer.toJson<String?>(appliedRuneKey),
+      'appliedSapKey': serializer.toJson<String?>(appliedSapKey),
+      'sapChargesRemaining': serializer.toJson<int?>(sapChargesRemaining),
     };
   }
 
@@ -11765,7 +11841,10 @@ class PlayerInventoryTableData extends DataClass
           int? acquiredAt,
           String? acquiredVia,
           Value<String?> evolutionStage = const Value.absent(),
-          bool? isEquipped}) =>
+          bool? isEquipped,
+          Value<String?> appliedRuneKey = const Value.absent(),
+          Value<String?> appliedSapKey = const Value.absent(),
+          Value<int?> sapChargesRemaining = const Value.absent()}) =>
       PlayerInventoryTableData(
         id: id ?? this.id,
         playerId: playerId ?? this.playerId,
@@ -11779,6 +11858,13 @@ class PlayerInventoryTableData extends DataClass
         evolutionStage:
             evolutionStage.present ? evolutionStage.value : this.evolutionStage,
         isEquipped: isEquipped ?? this.isEquipped,
+        appliedRuneKey:
+            appliedRuneKey.present ? appliedRuneKey.value : this.appliedRuneKey,
+        appliedSapKey:
+            appliedSapKey.present ? appliedSapKey.value : this.appliedSapKey,
+        sapChargesRemaining: sapChargesRemaining.present
+            ? sapChargesRemaining.value
+            : this.sapChargesRemaining,
       );
   PlayerInventoryTableData copyWithCompanion(
       PlayerInventoryTableCompanion data) {
@@ -11799,6 +11885,15 @@ class PlayerInventoryTableData extends DataClass
           : this.evolutionStage,
       isEquipped:
           data.isEquipped.present ? data.isEquipped.value : this.isEquipped,
+      appliedRuneKey: data.appliedRuneKey.present
+          ? data.appliedRuneKey.value
+          : this.appliedRuneKey,
+      appliedSapKey: data.appliedSapKey.present
+          ? data.appliedSapKey.value
+          : this.appliedSapKey,
+      sapChargesRemaining: data.sapChargesRemaining.present
+          ? data.sapChargesRemaining.value
+          : this.sapChargesRemaining,
     );
   }
 
@@ -11813,14 +11908,28 @@ class PlayerInventoryTableData extends DataClass
           ..write('acquiredAt: $acquiredAt, ')
           ..write('acquiredVia: $acquiredVia, ')
           ..write('evolutionStage: $evolutionStage, ')
-          ..write('isEquipped: $isEquipped')
+          ..write('isEquipped: $isEquipped, ')
+          ..write('appliedRuneKey: $appliedRuneKey, ')
+          ..write('appliedSapKey: $appliedSapKey, ')
+          ..write('sapChargesRemaining: $sapChargesRemaining')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, playerId, itemKey, quantity,
-      durabilityCurrent, acquiredAt, acquiredVia, evolutionStage, isEquipped);
+  int get hashCode => Object.hash(
+      id,
+      playerId,
+      itemKey,
+      quantity,
+      durabilityCurrent,
+      acquiredAt,
+      acquiredVia,
+      evolutionStage,
+      isEquipped,
+      appliedRuneKey,
+      appliedSapKey,
+      sapChargesRemaining);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -11833,7 +11942,10 @@ class PlayerInventoryTableData extends DataClass
           other.acquiredAt == this.acquiredAt &&
           other.acquiredVia == this.acquiredVia &&
           other.evolutionStage == this.evolutionStage &&
-          other.isEquipped == this.isEquipped);
+          other.isEquipped == this.isEquipped &&
+          other.appliedRuneKey == this.appliedRuneKey &&
+          other.appliedSapKey == this.appliedSapKey &&
+          other.sapChargesRemaining == this.sapChargesRemaining);
 }
 
 class PlayerInventoryTableCompanion
@@ -11847,6 +11959,9 @@ class PlayerInventoryTableCompanion
   final Value<String> acquiredVia;
   final Value<String?> evolutionStage;
   final Value<bool> isEquipped;
+  final Value<String?> appliedRuneKey;
+  final Value<String?> appliedSapKey;
+  final Value<int?> sapChargesRemaining;
   const PlayerInventoryTableCompanion({
     this.id = const Value.absent(),
     this.playerId = const Value.absent(),
@@ -11857,6 +11972,9 @@ class PlayerInventoryTableCompanion
     this.acquiredVia = const Value.absent(),
     this.evolutionStage = const Value.absent(),
     this.isEquipped = const Value.absent(),
+    this.appliedRuneKey = const Value.absent(),
+    this.appliedSapKey = const Value.absent(),
+    this.sapChargesRemaining = const Value.absent(),
   });
   PlayerInventoryTableCompanion.insert({
     this.id = const Value.absent(),
@@ -11868,6 +11986,9 @@ class PlayerInventoryTableCompanion
     required String acquiredVia,
     this.evolutionStage = const Value.absent(),
     this.isEquipped = const Value.absent(),
+    this.appliedRuneKey = const Value.absent(),
+    this.appliedSapKey = const Value.absent(),
+    this.sapChargesRemaining = const Value.absent(),
   })  : playerId = Value(playerId),
         itemKey = Value(itemKey),
         acquiredAt = Value(acquiredAt),
@@ -11882,6 +12003,9 @@ class PlayerInventoryTableCompanion
     Expression<String>? acquiredVia,
     Expression<String>? evolutionStage,
     Expression<bool>? isEquipped,
+    Expression<String>? appliedRuneKey,
+    Expression<String>? appliedSapKey,
+    Expression<int>? sapChargesRemaining,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -11893,6 +12017,10 @@ class PlayerInventoryTableCompanion
       if (acquiredVia != null) 'acquired_via': acquiredVia,
       if (evolutionStage != null) 'evolution_stage': evolutionStage,
       if (isEquipped != null) 'is_equipped': isEquipped,
+      if (appliedRuneKey != null) 'applied_rune_key': appliedRuneKey,
+      if (appliedSapKey != null) 'applied_sap_key': appliedSapKey,
+      if (sapChargesRemaining != null)
+        'sap_charges_remaining': sapChargesRemaining,
     });
   }
 
@@ -11905,7 +12033,10 @@ class PlayerInventoryTableCompanion
       Value<int>? acquiredAt,
       Value<String>? acquiredVia,
       Value<String?>? evolutionStage,
-      Value<bool>? isEquipped}) {
+      Value<bool>? isEquipped,
+      Value<String?>? appliedRuneKey,
+      Value<String?>? appliedSapKey,
+      Value<int?>? sapChargesRemaining}) {
     return PlayerInventoryTableCompanion(
       id: id ?? this.id,
       playerId: playerId ?? this.playerId,
@@ -11916,6 +12047,9 @@ class PlayerInventoryTableCompanion
       acquiredVia: acquiredVia ?? this.acquiredVia,
       evolutionStage: evolutionStage ?? this.evolutionStage,
       isEquipped: isEquipped ?? this.isEquipped,
+      appliedRuneKey: appliedRuneKey ?? this.appliedRuneKey,
+      appliedSapKey: appliedSapKey ?? this.appliedSapKey,
+      sapChargesRemaining: sapChargesRemaining ?? this.sapChargesRemaining,
     );
   }
 
@@ -11949,6 +12083,15 @@ class PlayerInventoryTableCompanion
     if (isEquipped.present) {
       map['is_equipped'] = Variable<bool>(isEquipped.value);
     }
+    if (appliedRuneKey.present) {
+      map['applied_rune_key'] = Variable<String>(appliedRuneKey.value);
+    }
+    if (appliedSapKey.present) {
+      map['applied_sap_key'] = Variable<String>(appliedSapKey.value);
+    }
+    if (sapChargesRemaining.present) {
+      map['sap_charges_remaining'] = Variable<int>(sapChargesRemaining.value);
+    }
     return map;
   }
 
@@ -11963,7 +12106,10 @@ class PlayerInventoryTableCompanion
           ..write('acquiredAt: $acquiredAt, ')
           ..write('acquiredVia: $acquiredVia, ')
           ..write('evolutionStage: $evolutionStage, ')
-          ..write('isEquipped: $isEquipped')
+          ..write('isEquipped: $isEquipped, ')
+          ..write('appliedRuneKey: $appliedRuneKey, ')
+          ..write('appliedSapKey: $appliedSapKey, ')
+          ..write('sapChargesRemaining: $sapChargesRemaining')
           ..write(')'))
         .toString();
   }
@@ -18678,6 +18824,9 @@ typedef $$PlayerInventoryTableTableCreateCompanionBuilder
   required String acquiredVia,
   Value<String?> evolutionStage,
   Value<bool> isEquipped,
+  Value<String?> appliedRuneKey,
+  Value<String?> appliedSapKey,
+  Value<int?> sapChargesRemaining,
 });
 typedef $$PlayerInventoryTableTableUpdateCompanionBuilder
     = PlayerInventoryTableCompanion Function({
@@ -18690,6 +18839,9 @@ typedef $$PlayerInventoryTableTableUpdateCompanionBuilder
   Value<String> acquiredVia,
   Value<String?> evolutionStage,
   Value<bool> isEquipped,
+  Value<String?> appliedRuneKey,
+  Value<String?> appliedSapKey,
+  Value<int?> sapChargesRemaining,
 });
 
 class $$PlayerInventoryTableTableFilterComposer
@@ -18729,6 +18881,17 @@ class $$PlayerInventoryTableTableFilterComposer
 
   ColumnFilters<bool> get isEquipped => $composableBuilder(
       column: $table.isEquipped, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get appliedRuneKey => $composableBuilder(
+      column: $table.appliedRuneKey,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get appliedSapKey => $composableBuilder(
+      column: $table.appliedSapKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get sapChargesRemaining => $composableBuilder(
+      column: $table.sapChargesRemaining,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$PlayerInventoryTableTableOrderingComposer
@@ -18768,6 +18931,18 @@ class $$PlayerInventoryTableTableOrderingComposer
 
   ColumnOrderings<bool> get isEquipped => $composableBuilder(
       column: $table.isEquipped, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get appliedRuneKey => $composableBuilder(
+      column: $table.appliedRuneKey,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get appliedSapKey => $composableBuilder(
+      column: $table.appliedSapKey,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get sapChargesRemaining => $composableBuilder(
+      column: $table.sapChargesRemaining,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$PlayerInventoryTableTableAnnotationComposer
@@ -18805,6 +18980,15 @@ class $$PlayerInventoryTableTableAnnotationComposer
 
   GeneratedColumn<bool> get isEquipped => $composableBuilder(
       column: $table.isEquipped, builder: (column) => column);
+
+  GeneratedColumn<String> get appliedRuneKey => $composableBuilder(
+      column: $table.appliedRuneKey, builder: (column) => column);
+
+  GeneratedColumn<String> get appliedSapKey => $composableBuilder(
+      column: $table.appliedSapKey, builder: (column) => column);
+
+  GeneratedColumn<int> get sapChargesRemaining => $composableBuilder(
+      column: $table.sapChargesRemaining, builder: (column) => column);
 }
 
 class $$PlayerInventoryTableTableTableManager extends RootTableManager<
@@ -18846,6 +19030,9 @@ class $$PlayerInventoryTableTableTableManager extends RootTableManager<
             Value<String> acquiredVia = const Value.absent(),
             Value<String?> evolutionStage = const Value.absent(),
             Value<bool> isEquipped = const Value.absent(),
+            Value<String?> appliedRuneKey = const Value.absent(),
+            Value<String?> appliedSapKey = const Value.absent(),
+            Value<int?> sapChargesRemaining = const Value.absent(),
           }) =>
               PlayerInventoryTableCompanion(
             id: id,
@@ -18857,6 +19044,9 @@ class $$PlayerInventoryTableTableTableManager extends RootTableManager<
             acquiredVia: acquiredVia,
             evolutionStage: evolutionStage,
             isEquipped: isEquipped,
+            appliedRuneKey: appliedRuneKey,
+            appliedSapKey: appliedSapKey,
+            sapChargesRemaining: sapChargesRemaining,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -18868,6 +19058,9 @@ class $$PlayerInventoryTableTableTableManager extends RootTableManager<
             required String acquiredVia,
             Value<String?> evolutionStage = const Value.absent(),
             Value<bool> isEquipped = const Value.absent(),
+            Value<String?> appliedRuneKey = const Value.absent(),
+            Value<String?> appliedSapKey = const Value.absent(),
+            Value<int?> sapChargesRemaining = const Value.absent(),
           }) =>
               PlayerInventoryTableCompanion.insert(
             id: id,
@@ -18879,6 +19072,9 @@ class $$PlayerInventoryTableTableTableManager extends RootTableManager<
             acquiredVia: acquiredVia,
             evolutionStage: evolutionStage,
             isEquipped: isEquipped,
+            appliedRuneKey: appliedRuneKey,
+            appliedSapKey: appliedSapKey,
+            sapChargesRemaining: sapChargesRemaining,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

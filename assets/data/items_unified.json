@@ -8535,105 +8535,9 @@
       "icon": "fragment"
     },
     {
-      "key": "RUNE_MIND",
-      "name": "Runa da Mente",
-      "description": "+2 Inteligência.",
-      "type": "material",
-      "subtype": null,
-      "slot": null,
-      "rank": "E",
-      "rarity": "uncommon",
-      "is_secret": false,
-      "is_unique": false,
-      "is_dark_item": false,
-      "is_evolving": false,
-      "required_level": 1,
-      "required_rank": "E",
-      "allowed_classes": [],
-      "allowed_factions": [],
-      "stats": {
-        "int": 2
-      },
-      "effects": {},
-      "sources": [
-        {
-          "type": "loot_world"
-        },
-        {
-          "type": "craft"
-        }
-      ],
-      "shop_price_coins": 50,
-      "shop_price_gems": null,
-      "stack_max": 1,
-      "durability_max": null,
-      "durability_breaks_to": null,
-      "is_stackable": true,
-      "is_consumable": false,
-      "is_equippable": false,
-      "is_tradable": true,
-      "is_sellable": true,
-      "bind_on_pickup": false,
-      "craft_recipe_id": null,
-      "forge_recipe_id": null,
-      "enchant_allowed": true,
-      "sombrio_content_id": null,
-      "evolution_stages": null,
-      "image": "default.png",
-      "icon": "rune_mind"
-    },
-    {
-      "key": "RUNE_SPIRIT",
-      "name": "Runa do Espírito",
-      "description": "+2 Espírito.",
-      "type": "material",
-      "subtype": null,
-      "slot": null,
-      "rank": "E",
-      "rarity": "uncommon",
-      "is_secret": false,
-      "is_unique": false,
-      "is_dark_item": false,
-      "is_evolving": false,
-      "required_level": 1,
-      "required_rank": "E",
-      "allowed_classes": [],
-      "allowed_factions": [],
-      "stats": {
-        "spi": 2
-      },
-      "effects": {},
-      "sources": [
-        {
-          "type": "loot_world"
-        },
-        {
-          "type": "craft"
-        }
-      ],
-      "shop_price_coins": 50,
-      "shop_price_gems": null,
-      "stack_max": 1,
-      "durability_max": null,
-      "durability_breaks_to": null,
-      "is_stackable": true,
-      "is_consumable": false,
-      "is_equippable": false,
-      "is_tradable": true,
-      "is_sellable": true,
-      "bind_on_pickup": false,
-      "craft_recipe_id": null,
-      "forge_recipe_id": null,
-      "enchant_allowed": true,
-      "sombrio_content_id": null,
-      "evolution_stages": null,
-      "image": "default.png",
-      "icon": "rune_spirit"
-    },
-    {
-      "key": "RUNE_BEGINNER",
-      "name": "Runa do Iniciante",
-      "description": "+2 Força.",
+      "key": "RUNE_FRAGMENT_RAW",
+      "name": "Fragmento de Runa Bruto",
+      "description": "Resíduo cristalizado de energia arcana. Matéria bruta para encantamentos.",
       "type": "material",
       "subtype": null,
       "slot": null,
@@ -8826,9 +8730,9 @@
       "icon": "fragment_forest"
     },
     {
-      "key": "RUNE_ADVANCED",
-      "name": "Runa Avançada",
-      "description": "+3 em todos os atributos.",
+      "key": "RUNE_FRAGMENT_REFINED",
+      "name": "Fragmento de Runa Refinado",
+      "description": "Essência purificada através de processos alquímicos complexos.",
       "type": "material",
       "subtype": null,
       "slot": null,
@@ -10337,6 +10241,1806 @@
       "evolution_stages": null,
       "image": "default.png",
       "icon": null
+    },
+    {
+      "key": "RUNE_FIRE_E",
+      "name": "Runa de Chama",
+      "description": "Grava linhagem de chamas no item — ecoa brasas em cada golpe.",
+      "type": "rune",
+      "rarity": "common",
+      "rank": "E",
+      "required_rank": "E",
+      "required_level": 1,
+      "shop_price_coins": null,
+      "shop_price_gems": 100,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "damage_fire": 10
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_FIRE_D",
+      "name": "Runa de Chama Ardente",
+      "description": "Grava linhagem de chamas no item — ecoa brasas em cada golpe.",
+      "type": "rune",
+      "rarity": "uncommon",
+      "rank": "D",
+      "required_rank": "D",
+      "required_level": 5,
+      "shop_price_coins": null,
+      "shop_price_gems": 500,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "damage_fire": 20
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_FIRE_C",
+      "name": "Runa da Chama Devoradora",
+      "description": "Grava linhagem de chamas no item — ecoa brasas em cada golpe.",
+      "type": "rune",
+      "rarity": "rare",
+      "rank": "C",
+      "required_rank": "C",
+      "required_level": 10,
+      "shop_price_coins": null,
+      "shop_price_gems": 2000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "damage_fire": 40
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_FIRE_B",
+      "name": "Runa da Chama do Abismo",
+      "description": "Grava linhagem de chamas no item — ecoa brasas em cada golpe.",
+      "type": "rune",
+      "rarity": "epic",
+      "rank": "B",
+      "required_rank": "B",
+      "required_level": 20,
+      "shop_price_coins": null,
+      "shop_price_gems": 8000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "damage_fire": 80
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "chest_rare"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_ICE_E",
+      "name": "Runa de Geada",
+      "description": "Inscreve o frio cortante de Caelum no metal.",
+      "type": "rune",
+      "rarity": "common",
+      "rank": "E",
+      "required_rank": "E",
+      "required_level": 1,
+      "shop_price_coins": null,
+      "shop_price_gems": 100,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "damage_ice": 10
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_ICE_D",
+      "name": "Runa do Gelo Cortante",
+      "description": "Inscreve o frio cortante de Caelum no metal.",
+      "type": "rune",
+      "rarity": "uncommon",
+      "rank": "D",
+      "required_rank": "D",
+      "required_level": 5,
+      "shop_price_coins": null,
+      "shop_price_gems": 500,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "damage_ice": 20
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_ICE_C",
+      "name": "Runa da Ventania Glacial",
+      "description": "Inscreve o frio cortante de Caelum no metal.",
+      "type": "rune",
+      "rarity": "rare",
+      "rank": "C",
+      "required_rank": "C",
+      "required_level": 10,
+      "shop_price_coins": null,
+      "shop_price_gems": 2000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "damage_ice": 40
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_ICE_B",
+      "name": "Runa do Coração Congelado",
+      "description": "Inscreve o frio cortante de Caelum no metal.",
+      "type": "rune",
+      "rarity": "epic",
+      "rank": "B",
+      "required_rank": "B",
+      "required_level": 20,
+      "shop_price_coins": null,
+      "shop_price_gems": 8000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "damage_ice": 80
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "chest_rare"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_WARD_FIRE_E",
+      "name": "Runa do Manto de Brasa",
+      "description": "Revela ao portador a paciência do ferreiro — o calor não mais o fere.",
+      "type": "rune",
+      "rarity": "common",
+      "rank": "E",
+      "required_rank": "E",
+      "required_level": 1,
+      "shop_price_coins": null,
+      "shop_price_gems": 100,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "resist_fire": 10
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_WARD_FIRE_D",
+      "name": "Runa do Manto Ardente",
+      "description": "Revela ao portador a paciência do ferreiro — o calor não mais o fere.",
+      "type": "rune",
+      "rarity": "uncommon",
+      "rank": "D",
+      "required_rank": "D",
+      "required_level": 5,
+      "shop_price_coins": null,
+      "shop_price_gems": 500,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "resist_fire": 20
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_WARD_FIRE_C",
+      "name": "Runa do Escudo Ígneo",
+      "description": "Revela ao portador a paciência do ferreiro — o calor não mais o fere.",
+      "type": "rune",
+      "rarity": "rare",
+      "rank": "C",
+      "required_rank": "C",
+      "required_level": 10,
+      "shop_price_coins": null,
+      "shop_price_gems": 2000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "resist_fire": 40
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_WARD_FIRE_B",
+      "name": "Runa do Véu Incombustível",
+      "description": "Revela ao portador a paciência do ferreiro — o calor não mais o fere.",
+      "type": "rune",
+      "rarity": "epic",
+      "rank": "B",
+      "required_rank": "B",
+      "required_level": 20,
+      "shop_price_coins": null,
+      "shop_price_gems": 8000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "resist_fire": 80
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "chest_rare"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_WARD_ICE_E",
+      "name": "Runa da Pele Calejada",
+      "description": "O frio se recolhe diante de quem carrega esta marca.",
+      "type": "rune",
+      "rarity": "common",
+      "rank": "E",
+      "required_rank": "E",
+      "required_level": 1,
+      "shop_price_coins": null,
+      "shop_price_gems": 100,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "resist_ice": 10
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_WARD_ICE_D",
+      "name": "Runa do Manto Glacial",
+      "description": "O frio se recolhe diante de quem carrega esta marca.",
+      "type": "rune",
+      "rarity": "uncommon",
+      "rank": "D",
+      "required_rank": "D",
+      "required_level": 5,
+      "shop_price_coins": null,
+      "shop_price_gems": 500,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "resist_ice": 20
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_WARD_ICE_C",
+      "name": "Runa do Escudo Congelante",
+      "description": "O frio se recolhe diante de quem carrega esta marca.",
+      "type": "rune",
+      "rarity": "rare",
+      "rank": "C",
+      "required_rank": "C",
+      "required_level": 10,
+      "shop_price_coins": null,
+      "shop_price_gems": 2000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "resist_ice": 40
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_WARD_ICE_B",
+      "name": "Runa do Verão Eterno",
+      "description": "O frio se recolhe diante de quem carrega esta marca.",
+      "type": "rune",
+      "rarity": "epic",
+      "rank": "B",
+      "required_rank": "B",
+      "required_level": 20,
+      "shop_price_coins": null,
+      "shop_price_gems": 8000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "resist_ice": 80
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "chest_rare"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_CRIT_E",
+      "name": "Runa do Olho Apurado",
+      "description": "Refina a mira pro golpe certeiro — cada alvo revela sua falha.",
+      "type": "rune",
+      "rarity": "common",
+      "rank": "E",
+      "required_rank": "E",
+      "required_level": 1,
+      "shop_price_coins": null,
+      "shop_price_gems": 100,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "crit_chance_pct": 3
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_CRIT_D",
+      "name": "Runa do Ponto Fraco",
+      "description": "Refina a mira pro golpe certeiro — cada alvo revela sua falha.",
+      "type": "rune",
+      "rarity": "uncommon",
+      "rank": "D",
+      "required_rank": "D",
+      "required_level": 5,
+      "shop_price_coins": null,
+      "shop_price_gems": 500,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "crit_chance_pct": 6
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_CRIT_C",
+      "name": "Runa do Golpe Certeiro",
+      "description": "Refina a mira pro golpe certeiro — cada alvo revela sua falha.",
+      "type": "rune",
+      "rarity": "rare",
+      "rank": "C",
+      "required_rank": "C",
+      "required_level": 10,
+      "shop_price_coins": null,
+      "shop_price_gems": 2000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "crit_chance_pct": 12
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_CRIT_B",
+      "name": "Runa da Mira do Caçador",
+      "description": "Refina a mira pro golpe certeiro — cada alvo revela sua falha.",
+      "type": "rune",
+      "rarity": "epic",
+      "rank": "B",
+      "required_rank": "B",
+      "required_level": 20,
+      "shop_price_coins": null,
+      "shop_price_gems": 8000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "crit_chance_pct": 20
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "chest_rare"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_LIFESTEAL_E",
+      "name": "Runa do Sangue Antigo",
+      "description": "Absorve vida a cada golpe — eco da sede ancestral.",
+      "type": "rune",
+      "rarity": "common",
+      "rank": "E",
+      "required_rank": "E",
+      "required_level": 1,
+      "shop_price_coins": null,
+      "shop_price_gems": 100,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "lifesteal_pct": 3
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_LIFESTEAL_D",
+      "name": "Runa do Roubo Vital",
+      "description": "Absorve vida a cada golpe — eco da sede ancestral.",
+      "type": "rune",
+      "rarity": "uncommon",
+      "rank": "D",
+      "required_rank": "D",
+      "required_level": 5,
+      "shop_price_coins": null,
+      "shop_price_gems": 500,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "lifesteal_pct": 6
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_LIFESTEAL_C",
+      "name": "Runa do Devorador",
+      "description": "Absorve vida a cada golpe — eco da sede ancestral.",
+      "type": "rune",
+      "rarity": "rare",
+      "rank": "C",
+      "required_rank": "C",
+      "required_level": 10,
+      "shop_price_coins": null,
+      "shop_price_gems": 2000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "lifesteal_pct": 12
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_LIFESTEAL_B",
+      "name": "Runa da Sede Imortal",
+      "description": "Absorve vida a cada golpe — eco da sede ancestral.",
+      "type": "rune",
+      "rarity": "epic",
+      "rank": "B",
+      "required_rank": "B",
+      "required_level": 20,
+      "shop_price_coins": null,
+      "shop_price_gems": 8000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "lifesteal_pct": 20
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "chest_rare"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_STRENGTH_E",
+      "name": "Runa da Força",
+      "description": "Endurece tendões e ossos — o peso do mundo se torna pluma.",
+      "type": "rune",
+      "rarity": "common",
+      "rank": "E",
+      "required_rank": "E",
+      "required_level": 1,
+      "shop_price_coins": null,
+      "shop_price_gems": 100,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "str": 5
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_STRENGTH_D",
+      "name": "Runa do Músculo Bruto",
+      "description": "Endurece tendões e ossos — o peso do mundo se torna pluma.",
+      "type": "rune",
+      "rarity": "uncommon",
+      "rank": "D",
+      "required_rank": "D",
+      "required_level": 5,
+      "shop_price_coins": null,
+      "shop_price_gems": 500,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "str": 10
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_STRENGTH_C",
+      "name": "Runa do Colosso",
+      "description": "Endurece tendões e ossos — o peso do mundo se torna pluma.",
+      "type": "rune",
+      "rarity": "rare",
+      "rank": "C",
+      "required_rank": "C",
+      "required_level": 10,
+      "shop_price_coins": null,
+      "shop_price_gems": 2000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "str": 20
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_STRENGTH_B",
+      "name": "Runa do Titã",
+      "description": "Endurece tendões e ossos — o peso do mundo se torna pluma.",
+      "type": "rune",
+      "rarity": "epic",
+      "rank": "B",
+      "required_rank": "B",
+      "required_level": 20,
+      "shop_price_coins": null,
+      "shop_price_gems": 8000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "str": 40
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "chest_rare"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_AGILITY_E",
+      "name": "Runa da Presteza",
+      "description": "Agiliza movimentos — leveza gravada no metal.",
+      "type": "rune",
+      "rarity": "common",
+      "rank": "E",
+      "required_rank": "E",
+      "required_level": 1,
+      "shop_price_coins": null,
+      "shop_price_gems": 100,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "agi": 5
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_AGILITY_D",
+      "name": "Runa do Vento Rápido",
+      "description": "Agiliza movimentos — leveza gravada no metal.",
+      "type": "rune",
+      "rarity": "uncommon",
+      "rank": "D",
+      "required_rank": "D",
+      "required_level": 5,
+      "shop_price_coins": null,
+      "shop_price_gems": 500,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "agi": 10
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_AGILITY_C",
+      "name": "Runa da Dança das Lâminas",
+      "description": "Agiliza movimentos — leveza gravada no metal.",
+      "type": "rune",
+      "rarity": "rare",
+      "rank": "C",
+      "required_rank": "C",
+      "required_level": 10,
+      "shop_price_coins": null,
+      "shop_price_gems": 2000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "agi": 20
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_AGILITY_B",
+      "name": "Runa do Corvo",
+      "description": "Agiliza movimentos — leveza gravada no metal.",
+      "type": "rune",
+      "rarity": "epic",
+      "rank": "B",
+      "required_rank": "B",
+      "required_level": 20,
+      "shop_price_coins": null,
+      "shop_price_gems": 8000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "agi": 40
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "chest_rare"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_MIND_E",
+      "name": "Runa da Clareza",
+      "description": "A mente afiada vê o que o olho ignora.",
+      "type": "rune",
+      "rarity": "common",
+      "rank": "E",
+      "required_rank": "E",
+      "required_level": 1,
+      "shop_price_coins": null,
+      "shop_price_gems": 100,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "int": 5
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_MIND_D",
+      "name": "Runa da Mente Aguda",
+      "description": "A mente afiada vê o que o olho ignora.",
+      "type": "rune",
+      "rarity": "uncommon",
+      "rank": "D",
+      "required_rank": "D",
+      "required_level": 5,
+      "shop_price_coins": null,
+      "shop_price_gems": 500,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "int": 10
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_MIND_C",
+      "name": "Runa do Sábio Silencioso",
+      "description": "A mente afiada vê o que o olho ignora.",
+      "type": "rune",
+      "rarity": "rare",
+      "rank": "C",
+      "required_rank": "C",
+      "required_level": 10,
+      "shop_price_coins": null,
+      "shop_price_gems": 2000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "int": 20
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_MIND_B",
+      "name": "Runa do Oráculo",
+      "description": "A mente afiada vê o que o olho ignora.",
+      "type": "rune",
+      "rarity": "epic",
+      "rank": "B",
+      "required_rank": "B",
+      "required_level": 20,
+      "shop_price_coins": null,
+      "shop_price_gems": 8000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "int": 40
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "chest_rare"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_SPIRIT_E",
+      "name": "Runa do Sopro",
+      "description": "Fortalece o laço entre corpo e alma — cada respiração afiada.",
+      "type": "rune",
+      "rarity": "common",
+      "rank": "E",
+      "required_rank": "E",
+      "required_level": 1,
+      "shop_price_coins": null,
+      "shop_price_gems": 100,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "spi": 5
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_SPIRIT_D",
+      "name": "Runa da Alma Desperta",
+      "description": "Fortalece o laço entre corpo e alma — cada respiração afiada.",
+      "type": "rune",
+      "rarity": "uncommon",
+      "rank": "D",
+      "required_rank": "D",
+      "required_level": 5,
+      "shop_price_coins": null,
+      "shop_price_gems": 500,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "spi": 10
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_SPIRIT_C",
+      "name": "Runa do Vitalista",
+      "description": "Fortalece o laço entre corpo e alma — cada respiração afiada.",
+      "type": "rune",
+      "rarity": "rare",
+      "rank": "C",
+      "required_rank": "C",
+      "required_level": 10,
+      "shop_price_coins": null,
+      "shop_price_gems": 2000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "spi": 20
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_SPIRIT_B",
+      "name": "Runa do Guardião Eterno",
+      "description": "Fortalece o laço entre corpo e alma — cada respiração afiada.",
+      "type": "rune",
+      "rarity": "epic",
+      "rank": "B",
+      "required_rank": "B",
+      "required_level": 20,
+      "shop_price_coins": null,
+      "shop_price_gems": 8000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "spi": 40
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "chest_rare"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_GUARD_E",
+      "name": "Runa da Couraça",
+      "description": "Reforça defesas passivas — o metal lembra de cada impacto.",
+      "type": "rune",
+      "rarity": "common",
+      "rank": "E",
+      "required_rank": "E",
+      "required_level": 1,
+      "shop_price_coins": null,
+      "shop_price_gems": 100,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "def": 10
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_GUARD_D",
+      "name": "Runa da Muralha",
+      "description": "Reforça defesas passivas — o metal lembra de cada impacto.",
+      "type": "rune",
+      "rarity": "uncommon",
+      "rank": "D",
+      "required_rank": "D",
+      "required_level": 5,
+      "shop_price_coins": null,
+      "shop_price_gems": 500,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "def": 20
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_GUARD_C",
+      "name": "Runa da Fortaleza",
+      "description": "Reforça defesas passivas — o metal lembra de cada impacto.",
+      "type": "rune",
+      "rarity": "rare",
+      "rank": "C",
+      "required_rank": "C",
+      "required_level": 10,
+      "shop_price_coins": null,
+      "shop_price_gems": 2000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "def": 40
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_GUARD_B",
+      "name": "Runa do Baluarte",
+      "description": "Reforça defesas passivas — o metal lembra de cada impacto.",
+      "type": "rune",
+      "rarity": "epic",
+      "rank": "B",
+      "required_rank": "B",
+      "required_level": 20,
+      "shop_price_coins": null,
+      "shop_price_gems": 8000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "def": 80
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "chest_rare"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_VITALITY_E",
+      "name": "Runa do Vigor",
+      "description": "Sopra vitalidade bruta no portador — a vida se estende.",
+      "type": "rune",
+      "rarity": "common",
+      "rank": "E",
+      "required_rank": "E",
+      "required_level": 1,
+      "shop_price_coins": null,
+      "shop_price_gems": 100,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "hp": 25
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_VITALITY_D",
+      "name": "Runa da Carne Rija",
+      "description": "Sopra vitalidade bruta no portador — a vida se estende.",
+      "type": "rune",
+      "rarity": "uncommon",
+      "rank": "D",
+      "required_rank": "D",
+      "required_level": 5,
+      "shop_price_coins": null,
+      "shop_price_gems": 500,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "hp": 50
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_VITALITY_C",
+      "name": "Runa do Coração Forte",
+      "description": "Sopra vitalidade bruta no portador — a vida se estende.",
+      "type": "rune",
+      "rarity": "rare",
+      "rank": "C",
+      "required_rank": "C",
+      "required_level": 10,
+      "shop_price_coins": null,
+      "shop_price_gems": 2000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "hp": 100
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_VITALITY_B",
+      "name": "Runa do Pulmão de Ferro",
+      "description": "Sopra vitalidade bruta no portador — a vida se estende.",
+      "type": "rune",
+      "rarity": "epic",
+      "rank": "B",
+      "required_rank": "B",
+      "required_level": 20,
+      "shop_price_coins": null,
+      "shop_price_gems": 8000,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "hp": 200
+      },
+      "sources": [
+        {
+          "type": "loot_boss"
+        },
+        {
+          "type": "chest_rare"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_SAGE_E",
+      "name": "Runa do Mana Límpido",
+      "description": "Acelera o fluxo vital de mana — a fonte nunca seca.",
+      "type": "rune",
+      "rarity": "common",
+      "rank": "E",
+      "required_rank": "E",
+      "required_level": 1,
+      "shop_price_coins": null,
+      "shop_price_gems": 100,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "mana_regen_pct": 1
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
+    },
+    {
+      "key": "RUNE_SAGE_D",
+      "name": "Runa do Rio Mágico",
+      "description": "Acelera o fluxo vital de mana — a fonte nunca seca.",
+      "type": "rune",
+      "rarity": "uncommon",
+      "rank": "D",
+      "required_rank": "D",
+      "required_level": 5,
+      "shop_price_coins": null,
+      "shop_price_gems": 500,
+      "stack_max": 99,
+      "is_stackable": true,
+      "is_consumable": true,
+      "is_tradable": false,
+      "is_sellable": true,
+      "is_equippable": false,
+      "is_secret": false,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {
+        "mana_regen_pct": 2
+      },
+      "sources": [
+        {
+          "type": "loot_world"
+        },
+        {
+          "type": "quest_reward"
+        }
+      ]
     }
   ],
   "version": "v0.28.1-sprint2.2-bloco2",

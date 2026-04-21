@@ -153,16 +153,50 @@ class PlayerInventoryService {
         .go();
   }
 
-  // Stubs craftItem/forgeItem removidos na Sprint 2.2 — agora via
-  // CraftingService.craft. enchantItem fica pra Sprint 2.3.
+  // Sprint 2.3 fix (D.2) — APIs equivalentes às antigas PlayerEnchantsService,
+  // agora que runas vivem no player_inventory como items normais.
 
-  Future<bool> enchantItem({
-    required int inventoryId,
-    required String runeOrSapKey,
+  // Verifica se o jogador tem pelo menos 1 unidade (qualquer stack, qualquer
+  // equipagem) do item informado.
+  Future<bool> hasItem(int playerId, String itemKey) async {
+    final rows = await (_db.select(_db.playerInventoryTable)
+          ..where((t) =>
+              t.playerId.equals(playerId) & t.itemKey.equals(itemKey)))
+        .get();
+    return rows.any((r) => r.quantity > 0);
+  }
+
+  // Consome 1 unidade por chave de item (não por inventoryId). Pega a
+  // primeira entry não-equipada. Se quantity cai a zero, DELETE a row.
+  // Throw StateError se o player não tem nenhuma entry — caller usa pra
+  // forçar rollback em transações atômicas (ex: EnchantService).
+  Future<void> consumeOneByKey({
+    required int playerId,
+    required String itemKey,
   }) async {
-    // ignore: avoid_print
-    print('[player_inventory_service] enchantItem($inventoryId, '
-        '$runeOrSapKey) — TODO Sprint 2.3');
-    return false;
+    final row = await (_db.select(_db.playerInventoryTable)
+          ..where((t) =>
+              t.playerId.equals(playerId) &
+              t.itemKey.equals(itemKey) &
+              t.isEquipped.equals(false))
+          ..orderBy([(t) => OrderingTerm.asc(t.id)])
+          ..limit(1))
+        .getSingleOrNull();
+    if (row == null || row.quantity <= 0) {
+      throw StateError(
+          'Tentou consumir item $itemKey do player $playerId, '
+          'mas não tem em inventário (não-equipado).');
+    }
+    if (row.quantity == 1) {
+      await (_db.delete(_db.playerInventoryTable)
+            ..where((t) => t.id.equals(row.id)))
+          .go();
+    } else {
+      await (_db.update(_db.playerInventoryTable)
+            ..where((t) => t.id.equals(row.id)))
+          .write(PlayerInventoryTableCompanion(
+        quantity: Value(row.quantity - 1),
+      ));
+    }
   }
 }

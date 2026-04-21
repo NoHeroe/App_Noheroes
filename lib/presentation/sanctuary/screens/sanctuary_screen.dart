@@ -240,6 +240,8 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
 
     await TutorialManager.runAll(
       context,
+      ref: ref,
+      playerId: player.id,
       level: player.level,
       hasClass: hasClass,
       hasFaction: hasFaction,

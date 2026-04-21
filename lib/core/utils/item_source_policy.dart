@@ -104,6 +104,16 @@ class ItemSourcePolicy {
           SourceType.lootBoss, SourceType.chestRare, SourceType.craft, SourceType.lootRegion,
         ];
 
+      // Sprint 2.3 — runas: drop via world/boss + quest reward. Fragment rare
+      // em B via chest_rare. Sem shop direct (gemstore usa shop_price_gems).
+      case ItemType.rune:
+        if (rarity.index <= ItemRarity.uncommon.index) {
+          return const [SourceType.lootWorld, SourceType.questReward];
+        }
+        return const [
+          SourceType.lootBoss, SourceType.chestRare, SourceType.questReward,
+        ];
+
       case ItemType.misc:
         return const [SourceType.shop, SourceType.lootWorld];
     }

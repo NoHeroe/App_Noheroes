@@ -836,7 +836,7 @@
           "quantity": 1
         },
         {
-          "item_key": "RUNE_MIND",
+          "item_key": "RUNE_MIND_E",
           "quantity": 1
         },
         {
@@ -1143,7 +1143,7 @@
       "result_quantity": 1,
       "materials": [
         {
-          "item_key": "RUNE_BEGINNER",
+          "item_key": "RUNE_FRAGMENT_RAW",
           "quantity": 1
         },
         {

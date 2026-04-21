@@ -12,13 +12,14 @@ void main() {
       items = (data['items'] as List).cast<Map<String, dynamic>>();
     });
 
-    test('tem exatamente 193 entries', () {
-      expect(items.length, 193);
+    test('tem exatamente 241 entries', () {
+      expect(items.length, 241);
     });
 
     test('todas as keys são únicas', () {
       final keys = items.map((e) => e['key'] as String).toSet();
-      expect(keys.length, 193, reason: 'keys duplicadas no catálogo');
+      expect(keys.length, items.length,
+          reason: 'keys duplicadas no catálogo');
     });
 
     test('campos obrigatórios (key, name, type, rarity) presentes e não-vazios', () {
@@ -40,11 +41,13 @@ void main() {
         byType[t] = (byType[t] ?? 0) + 1;
       }
       // Valores confirmados pela inspeção do JSON.
+      // Sprint 2.3: material 22→20 (RUNE_MIND/SPIRIT removed); +rune:50.
       expect(byType, {
         'armor':      57,
+        'rune':       50, // Sprint 2.3 — 6 eixos × 4 ranks + sage E/D
         'weapon':     34,
         'consumable': 24,
-        'material':   22, // 10 legados + 12 novos do Sprint 2.2
+        'material':   20, // 22 legados - 2 removidos (reencarnados como rune)
         'accessory':  18,
         'relic':      18,
         'cosmetic':    6,
@@ -65,11 +68,13 @@ void main() {
         final r = (item['rank'] as String?) ?? '__null__';
         byRank[r] = (byRank[r] ?? 0) + 1;
       }
+      // Sprint 2.3 — remove RUNE_MIND/SPIRIT (rank E), adiciona 50 runas
+      // (E=13, D=13, C=12, B=12).
       expect(byRank, {
-        'E':        90, // 80 legados + 10 novos materiais rank E
-        'D':        59, // 57 legados + 2 novos materiais rank D
-        'C':         7,
-        'B':         4,
+        'E':       101, // 90 - 2 (removidos) + 13 (novas runas E)
+        'D':        72, // 59 + 13 (novas runas D)
+        'C':        19, // 7 + 12 (novas runas C)
+        'B':        16, // 4 + 12 (novas runas B)
         'A':         7,
         'S':        24,
         '__null__':  2,
@@ -143,6 +148,24 @@ void main() {
           reason: 'starter ${item['key']} tem rank=$rank — esperado E ou null',
         );
       }
+    });
+
+    // Sprint 2.3 — runas migradas pra items_catalog (type:rune).
+    test('catálogo tem 50 runas (type rune)', () {
+      final runes = items.where((i) => i['type'] == 'rune').toList();
+      expect(runes, hasLength(50));
+    });
+
+    test('runas têm distribuição de rank esperada', () {
+      final ranks = <String, int>{};
+      for (final r in items.where((i) => i['type'] == 'rune')) {
+        final rank = r['required_rank'] as String;
+        ranks[rank] = (ranks[rank] ?? 0) + 1;
+      }
+      expect(ranks['E'], greaterThanOrEqualTo(12));
+      expect(ranks['D'], greaterThanOrEqualTo(12));
+      expect(ranks['C'], greaterThanOrEqualTo(11));
+      expect(ranks['B'], greaterThanOrEqualTo(11));
     });
   });
 }

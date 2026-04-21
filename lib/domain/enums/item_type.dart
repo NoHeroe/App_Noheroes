@@ -1,5 +1,6 @@
-// Ver ADR 0008 — 16 tipos canônicos. Tipos no JSON usam snake_case
-// (`dark_item`), enum Dart usa camelCase (`darkItem`). fromString mapeia.
+// Ver ADR 0008 — 17 tipos canônicos (Sprint 2.3 adicionou `rune`).
+// Tipos no JSON usam snake_case (`dark_item`), enum Dart usa camelCase
+// (`darkItem`). fromString mapeia.
 enum ItemType {
   weapon,
   armor,
@@ -16,6 +17,7 @@ enum ItemType {
   lore,
   currency,
   darkItem,
+  rune,
   misc,
 }
 
@@ -36,6 +38,7 @@ extension ItemTypeExt on ItemType {
     ItemType.lore       => 'Lore',
     ItemType.currency   => 'Moeda',
     ItemType.darkItem   => 'Item Sombrio',
+    ItemType.rune       => 'Runa',
     ItemType.misc       => 'Misc',
   };
 }
@@ -60,6 +63,7 @@ class ItemTypeParser {
     'currency':   ItemType.currency,
     'dark_item':  ItemType.darkItem,
     'darkItem':   ItemType.darkItem,
+    'rune':       ItemType.rune,
     'misc':       ItemType.misc,
   };
 

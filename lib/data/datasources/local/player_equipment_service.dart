@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import '../../../core/utils/item_equip_policy.dart';
 import '../../../domain/enums/equipment_slot.dart';
+import '../../../domain/enums/item_type.dart';
 import '../../../domain/models/inventory_entry_with_spec.dart';
 import '../../../domain/models/player_snapshot.dart';
 import '../../database/app_database.dart';
@@ -122,6 +123,28 @@ class PlayerEquipmentService {
   Future<Map<String, num>> aggregatedStatsOf(int playerId) async {
     final equipped = await equippedItemsOf(playerId);
     // Respeita evolution_stage pra items is_evolving (ex.: Colar da Guilda).
-    return ItemEquipPolicy.aggregateStatsFromEquippedEntries(equipped);
+    final agg = ItemEquipPolicy.aggregateStatsFromEquippedEntries(equipped);
+
+    // Sprint 2.3 Bloco 7.3 — soma efeitos das runas aplicadas em itens
+    // equipados. Policy permanece pura (síncrona); aqui é async porque
+    // depende do catálogo. Seivas ficam fora até Sprint 2.4 ativar cargas
+    // — somar agora daria bônus permanente, quebrando o contrato "temporário".
+    //
+    // Sprint 2.3 fix (D.2) — runas agora são items no items_catalog; lemos
+    // do mesmo catálogo que o resto do equipamento, e effects vem direto
+    // de ItemSpec.effects (Map<String, dynamic>, filtramos num).
+    for (final e in equipped) {
+      final runeKey = e.entry.appliedRuneKey;
+      if (runeKey == null) continue;
+      final rune = await _catalog.findByKey(runeKey);
+      if (rune == null || rune.type != ItemType.rune) continue;
+      rune.effects.forEach((k, v) {
+        if (v is num) {
+          agg[k] = (agg[k] ?? 0) + v;
+        }
+      });
+    }
+
+    return agg;
   }
 }
