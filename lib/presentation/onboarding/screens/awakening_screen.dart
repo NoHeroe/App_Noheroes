@@ -93,10 +93,11 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
       _nameCtrl.text.trim().isEmpty ? 'Sombra' : _nameCtrl.text.trim(),
       _narrativeMode,
     );
-    if (_selectedHabit != null) {
-      final h = _habits.firstWhere((h) => h.$1 == _selectedHabit);
-      await ds.createInitialHabit(player.id, h.$1, h.$3);
-    }
+    // Sprint 3.1 Bloco 1 — criação imediata de hábito removida. A missão
+    // escolhida aqui será usada no Bloco 14 como hint do perfil inicial
+    // (MissionAssignmentService consulta _selectedHabit via prefs).
+    // TODO(sprint-missoes-bloco14): persistir `_selectedHabit` pra ser
+    // consumido pelo assignment inicial.
     await TutorialService.markDone(TutorialPhase.phase0_onboarding);
     final updated = await ds.currentSession();
     if (mounted) {

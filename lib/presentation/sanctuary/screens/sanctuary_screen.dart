@@ -9,13 +9,14 @@ import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/npc_session.dart';
 import '../../../data/datasources/local/npc_reputation_service.dart';
-import '../../../data/datasources/local/shadow_quest_service.dart';
+// Sprint 3.1 Bloco 1 — ShadowQuestService e QuestAdmissionService foram
+// .bakados. Reentregues nos Blocos 7 (QuestAdmission refactor) e na Sprint
+// Shadow futura. Hooks abaixo ficam como noop até lá.
 import '../../shared/widgets/milestone_popup.dart';
 import '../../shared/widgets/npc_dialog_overlay.dart';
 import '../../shared/widgets/app_snack.dart';
 import '../../shared/tutorial_manager.dart';
 import '../../../data/datasources/local/tutorial_service.dart';
-import '../../../data/datasources/local/quest_admission_service.dart';
 import '../../../data/database/tables/players_table_ext.dart';
 import '../widgets/caelum_day_banner.dart';
 import '../widgets/shadow_status_card.dart';
@@ -77,23 +78,13 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
   Future<void> _runDailyReset() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
-    await ref.read(habitDsProvider).applyDailyReset(player.id);
-    ref.invalidate(habitsProvider);
-    await _checkFactionAdmission();
-    await _checkShadowQuests();
-    // Assign missões de classe do dia
-    if (player.classType != null && player.classType!.isNotEmpty) {
-      await ref.read(classQuestServiceProvider).assignDailyQuests(
-          player.id, player.classType!);
-      ref.invalidate(todayClassQuestsProvider);
-    }
-    // Assign missão de facção da semana
-    final faction = player.factionType ?? '';
-    if (faction.isNotEmpty && faction != 'none' && !faction.startsWith('pending:')) {
-      await ref.read(factionQuestServiceProvider).assignWeeklyQuest(
-          player.id, faction);
-      ref.invalidate(activeFactionQuestProvider);
-    }
+    // Sprint 3.1 Bloco 1 — daily reset legacy neutralizado. Novo fluxo vive
+    // em DailyResetService (Bloco 14) e será disparado por um provider
+    // reativo que substitui este _runDailyReset inteiro no Bloco 10.
+    // Check de admissão de facção fica por enquanto como noop também
+    // (QuestAdmissionService .bakado — volta no Bloco 7).
+    // ignore: unused_local_variable
+    final _ = player; // silencia lint até Bloco 10 reconectar.
   }
 
   Future<void> _checkLevelUp(int newLevel) async {
@@ -127,44 +118,10 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     return unlocks;
   }
 
-  Future<void> _checkShadowQuests() async {
-    final player = ref.read(currentPlayerProvider);
-    if (player == null) return;
-    final db = ref.read(appDatabaseProvider);
-    final service = ShadowQuestService(db);
-    await service.clearOldShadowQuests(player.id, player.shadowState);
-    final assigned = await service.checkAndAssign(player.id, player.shadowState);
-    if (assigned.isNotEmpty && mounted) {
-      ref.invalidate(habitsProvider);
-    }
-  }
-
-  Future<void> _checkFactionAdmission() async {
-    final player = ref.read(currentPlayerProvider);
-    if (player == null) return;
-    final faction = player.factionType ?? '';
-
-    final factionId = faction.replaceFirst('pending:', '');
-    final db = ref.read(appDatabaseProvider);
-    final service = QuestAdmissionService(db);
-    final passed = await service.checkFactionAdmission(player.id, factionId);
-
-    if (passed && mounted) {
-      await service.confirmFaction(player.id, factionId);
-      final updated = await db.managers.playersTable
-          .filter((f) => f.id(player.id))
-          .getSingleOrNull();
-      ref.read(currentPlayerProvider.notifier).state = updated;
-      if (updated != null) {
-        await _checkLevelUp(updated.level);
-        if (mounted) await _checkLevelTriggers();
-      }
-      ref.invalidate(habitsProvider);
-      if (mounted) {
-        AppSnack.success(context, 'Admissão aprovada! Bem-vindo à facção.');
-      }
-    }
-  }
+  // Sprint 3.1 Bloco 1 — `_checkShadowQuests` e `_checkFactionAdmission`
+  // neutralizados. ShadowQuestService e QuestAdmissionService estão .bakados;
+  // os fluxos correspondentes reentram pelos Blocos 7 (admissão refatorada)
+  // e pela Sprint Shadow futura.
 
   Future<void> _checkNpcDialog() async {
     final player = ref.read(currentPlayerProvider);

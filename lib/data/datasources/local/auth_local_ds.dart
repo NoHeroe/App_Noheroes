@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../database/app_database.dart';
 import '../../database/daos/player_dao.dart';
 import '../../database/tables/players_table.dart';
-import 'habit_local_ds.dart';
 import 'recipes_catalog_seeder.dart';
 import 'package:drift/drift.dart';
 
@@ -102,13 +101,8 @@ class AuthLocalDs {
     return PlayerDao(_db).completeOnboarding(id, shadowName, narrativeMode);
   }
 
-  Future<void> createInitialHabit(
-      int playerId, String habitTitle, String category) async {
-    final habitDs = HabitLocalDs(_db);
-    await habitDs.createSystemHabit(
-      playerId: playerId,
-      title: habitTitle,
-      category: category,
-    );
-  }
+  // Sprint 3.1 Bloco 1 — `createInitialHabit` removido. A missão inicial
+  // escolhida no Awakening vai voltar via MissionAssignmentService no Bloco 14
+  // (assign de missões diárias sob o perfil recém-criado — antes da calibração
+  // do Bloco 9 dispara um perfil `default_physical` temporário).
 }

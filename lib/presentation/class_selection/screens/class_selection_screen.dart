@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/datasources/local/class_bonus_service.dart';
-import '../../../data/datasources/local/quest_admission_service.dart';
+// Sprint 3.1 Bloco 1 — QuestAdmissionService .bakado (volta no Bloco 7).
 import '../../shared/widgets/app_snack.dart';
 
 class ClassSelectionScreen extends ConsumerStatefulWidget {
@@ -87,17 +87,16 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
       final db = ref.read(appDatabaseProvider);
       await ClassBonusService(db).applyClassBonus(player.id, cls['id'] as String);
 
-      // Assigna as 3 missoes de classe diarias imediatamente
-      await ref.read(classQuestServiceProvider)
-          .assignDailyQuests(player.id, cls['id'] as String);
+      // Sprint 3.1 Bloco 1 — ClassQuestService .bakado. O assignment de
+      // missões de classe do dia (3 aleatórias) volta no Bloco 7 via
+      // QuestAdmissionService refatorado, já disparando o evento
+      // `ClassSelected` consumido pela calibração (Bloco 9).
 
       final updated = await db.managers.playersTable
           .filter((f) => f.id(player.id))
           .getSingleOrNull();
       if (!mounted) return;
       ref.read(currentPlayerProvider.notifier).state = updated;
-      ref.invalidate(habitsProvider);
-      ref.invalidate(todayClassQuestsProvider);
       setState(() => _loading = false);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

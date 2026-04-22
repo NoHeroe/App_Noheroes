@@ -6,18 +6,10 @@ import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'tables/players_table.dart';
-import 'tables/class_quests_table.dart';
-import 'tables/faction_quests_table.dart';
-import 'tables/habits_table.dart';
-import 'tables/habit_logs_table.dart';
 import 'tables/items_table.dart';
 import 'tables/inventory_table.dart';
 import 'tables/shop_items_table.dart';
-import 'tables/achievements_table.dart';
-import 'tables/player_achievements_table.dart';
 import 'daos/player_dao.dart';
-import 'daos/habit_dao.dart';
-import 'daos/achievement_dao.dart';
 import 'daos/guild_dao.dart';
 import '../datasources/local/vitalism_catalog_seeder.dart';
 import '../datasources/local/items_catalog_seeder.dart';
@@ -35,19 +27,24 @@ import 'tables/player_inventory_table.dart';
 import 'tables/player_equipment_table.dart';
 import 'tables/recipes_catalog_table.dart';
 import 'tables/player_recipes_unlocked_table.dart';
+// Sprint 3.1 — schema 24, reset brutal. Novas tabelas unificam hábitos/quests
+// e adicionam preferências do quiz, conquistas, reputação e individuais.
+import 'tables/player_mission_progress_table.dart';
+import 'tables/player_mission_preferences_table.dart';
+import 'tables/player_individual_missions_table.dart';
+import 'tables/player_achievements_completed_table.dart';
+import 'tables/player_faction_reputation_table.dart';
+import 'tables/active_faction_quests_table.dart';
 
 part 'app_database.g.dart';
 
 @DriftDatabase(
   tables: [
-    PlayersTable, HabitsTable, HabitLogsTable,
+    PlayersTable,
     ItemsTable, InventoryTable, ShopItemsTable,
-    AchievementsTable, PlayerAchievementsTable,
     GuildStatusTable,
     NpcReputationTable,
     DiaryEntriesTable,
-    ClassQuestsTable,
-    FactionQuestsTable,
     GuildAscensionTable,
     VitalismUniqueCatalogTable,
     PlayerVitalismAffinitiesTable,
@@ -58,20 +55,36 @@ part 'app_database.g.dart';
     PlayerEquipmentTable,
     RecipesCatalogTable,
     PlayerRecipesUnlockedTable,
+    // Sprint 3.1 — schema 24.
+    PlayerMissionProgressTable,
+    PlayerMissionPreferencesTable,
+    PlayerIndividualMissionsTable,
+    PlayerAchievementsCompletedTable,
+    PlayerFactionReputationTable,
+    ActiveFactionQuestsTable,
   ],
-  daos: [PlayerDao, HabitDao, AchievementDao, GuildDao],
+  daos: [PlayerDao, GuildDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
+  /// Construtor exclusivo de testes — recebe um `QueryExecutor` arbitrário
+  /// (tipicamente `NativeDatabase.memory()` do drift) pra isolar cada caso.
+  ///
+  /// Adicionado na Sprint 3.1 Bloco 1 pra destravar o teste do schema 24
+  /// (`test/data/database/schema_24_test.dart`).
+  AppDatabase.forTesting(super.executor);
+
   @override
-  int get schemaVersion => 23;
+  int get schemaVersion => 24;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) async {
       await m.createAll();
-      await _seedAchievements();
+      // Sprint 3.1 — _seedAchievements() removido. Catálogo passa a ser o
+      // JSON assets/data/achievements.json lido em runtime pelo
+      // AchievementsService (Bloco 8).
       await VitalismCatalogSeeder(this).seed();
       await ItemsCatalogSeeder(this).seed();
       await RecipesCatalogSeeder(this).seed();
@@ -79,9 +92,13 @@ class AppDatabase extends _$AppDatabase {
       // ItemType.rune. EnchantsCatalogSeeder removido em schema 23.
     },
     onUpgrade: (m, from, to) async {
+      // Sprint 3.1 Bloco 1 — steps com refs a tabelas dropadas (habits,
+      // habit_logs, class_quests, active_faction_quests, achievements,
+      // player_achievements) ficam como noop: o reset brutal de `from < 24`
+      // mais abaixo dropa e recria o modelo novo direto. Manter aqui só
+      // pra preservar a ordem das migrações sucessivas de players/etc.
       if (from < 2) {
-        await m.createTable(habitsTable);
-        await m.createTable(habitLogsTable);
+        // noop — habits e habit_logs dropadas no from<24
       }
       if (from < 3) {
         await m.addColumn(playersTable, playersTable.strength);
@@ -103,14 +120,10 @@ class AppDatabase extends _$AppDatabase {
         // da migration 20.
       }
       if (from < 5) {
-        await m.createTable(achievementsTable);
-        await m.createTable(playerAchievementsTable);
-        await _seedAchievements();
+        // noop — achievements e player_achievements dropadas no from<24
       }
       if (from < 7) {
-        try {
-          await m.addColumn(habitsTable, habitsTable.requirements as GeneratedColumn<Object>);
-        } catch (_) {}
+        // noop — habits.requirements dropada no from<24
       }
       if (from < 6) {
         // Migração segura: adiciona colunas novas sem quebrar dados existentes
@@ -135,10 +148,7 @@ class AppDatabase extends _$AppDatabase {
         } catch (_) {}
       }
       if (from < 11) {
-        try {
-          await m.addColumn(playerAchievementsTable,
-              playerAchievementsTable.collectedAt);
-        } catch (_) {}
+        // noop — player_achievements.collectedAt dropada no from<24
       }
       if (from < 12) {
         try {
@@ -151,11 +161,7 @@ class AppDatabase extends _$AppDatabase {
         } catch (_) {}
       }
       if (from < 14) {
-        try {
-          await m.addColumn(achievementsTable, achievementsTable.rarity);
-          await m.addColumn(achievementsTable, achievementsTable.titleReward);
-          await m.addColumn(achievementsTable, achievementsTable.category2);
-        } catch (_) {}
+        // noop — colunas em achievements dropadas no from<24
       }
       if (from < 15) {
         try {
@@ -163,10 +169,7 @@ class AppDatabase extends _$AppDatabase {
         } catch (_) {}
       }
       if (from < 16) {
-        try {
-          await m.createTable(classQuestsTable);
-          await m.createTable(factionQuestsTable);
-        } catch (_) {}
+        // noop — class_quests e faction_quests dropadas no from<24
       }
       if (from < 17) {
         try {
@@ -313,6 +316,53 @@ class AppDatabase extends _$AppDatabase {
           print('[migration 22→23] DROP failed: $e');
         }
       }
+      if (from < 24) {
+        // Sprint 3.1 — RESET BRUTAL. App sem usuários reais (R4-Q1), sem
+        // backfill. Dropa hábitos/quests/achievements legacy e cria o novo
+        // modelo unificado (ver tabelas em tables/player_mission_*.dart).
+        //
+        // Achievements (catálogo + player_achievements) removidos da Drift:
+        // catálogo passa a ser JSON em runtime (Bloco 8), progresso do
+        // jogador vive em player_achievements_completed.
+        //
+        // active_faction_quests é recriada com UNIQUE
+        // (player_id, faction_id, week_start), fechando dívida da Sprint 2.3
+        // e eliminando a race condition do assignWeeklyQuest.
+        try {
+          await customStatement('DROP TABLE IF EXISTS habits');
+          await customStatement('DROP TABLE IF EXISTS habit_logs');
+          await customStatement('DROP TABLE IF EXISTS class_quests');
+          await customStatement('DROP TABLE IF EXISTS active_faction_quests');
+          await customStatement('DROP TABLE IF EXISTS achievements');
+          await customStatement('DROP TABLE IF EXISTS player_achievements');
+          // ignore: avoid_print
+          print('[migration 23→24] dropped legacy habit/quest/achievement tables');
+        } catch (e) {
+          // ignore: avoid_print
+          print('[migration 23→24] DROP legacy failed: $e');
+        }
+        try {
+          await m.createTable(playerMissionProgressTable);
+          await m.createTable(playerMissionPreferencesTable);
+          await m.createTable(playerIndividualMissionsTable);
+          await m.createTable(playerAchievementsCompletedTable);
+          await m.createTable(playerFactionReputationTable);
+          await m.createTable(activeFactionQuestsTable);
+          // Índice UNIQUE declarado via @TableIndex na própria tabela — a
+          // chamada abaixo garante que ele seja criado mesmo em upgrade
+          // (createAll só roda em onCreate).
+          await m.createIndex(Index(
+            'unique_player_faction_week',
+            'CREATE UNIQUE INDEX IF NOT EXISTS unique_player_faction_week '
+                'ON active_faction_quests (player_id, faction_id, week_start)',
+          ));
+          // ignore: avoid_print
+          print('[migration 23→24] created 6 new mission tables + UNIQUE');
+        } catch (e) {
+          // ignore: avoid_print
+          print('[migration 23→24] CREATE new failed: $e');
+        }
+      }
     },
     beforeOpen: (details) async {
       await _selfHealCatalogs();
@@ -378,32 +428,9 @@ class AppDatabase extends _$AppDatabase {
     }
   }
 
-  Future<void> _seedAchievements() async {
-    try {
-      final raw = await rootBundle.loadString('assets/data/achievements.json');
-      final data = json.decode(raw) as Map<String, dynamic>;
-      final list = (data['achievements'] as List).cast<Map<String, dynamic>>();
-      for (final a in list) {
-        await into(achievementsTable).insert(
-          AchievementsTableCompanion(
-            key:         Value(a['key'] as String),
-            title:       Value(a['title'] as String),
-            description: Value(a['description'] as String),
-            category:    Value(a['category'] as String),
-            xpReward:    Value(a['xp'] as int? ?? 0),
-            goldReward:  Value(a['gold'] as int? ?? 0),
-            gemReward:   Value(a['gems'] as int? ?? 0),
-            isSecret:    Value(a['secret'] as bool? ?? false),
-            rarity:      Value(a['rarity'] as String? ?? 'common'),
-            titleReward: Value(a['title_reward'] as String?),
-          ),
-          mode: InsertMode.insertOrIgnore,
-        );
-      }
-    } catch (e) {
-      // Fallback se asset não carregado ainda
-    }
-  }
+  // Sprint 3.1 — _seedAchievements() removido. Catálogo agora é JSON em
+  // runtime (AchievementsService lê assets/data/achievements.json no Bloco 8).
+  // player_achievements_completed guarda apenas a interseção jogador × key.
 
   static QueryExecutor _openConnection() {
     return LazyDatabase(() async {

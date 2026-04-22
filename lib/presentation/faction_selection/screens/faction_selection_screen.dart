@@ -5,7 +5,12 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/datasources/local/class_bonus_service.dart';
-import '../../../data/datasources/local/quest_admission_service.dart';
+// Sprint 3.1 Bloco 1 — QuestAdmissionService e factionsServiceProvider
+// foram .bakados. Este ecrã continua exibindo a escolha (lê JSON direto) e
+// marca a facção como `pending:<id>` em players; a criação das missões de
+// admissão volta no Bloco 7 via QuestAdmissionService refatorado.
+import 'package:flutter/services.dart' show rootBundle;
+import 'dart:convert';
 import '../../shared/widgets/app_snack.dart';
 import '../../../data/datasources/local/npc_reputation_service.dart';
 import '../../../core/utils/asset_loader.dart';
@@ -31,10 +36,19 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
   Future<void> _loadFactions() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
-    final svc = ref.read(factionsServiceProvider);
-    final list = await svc.availableForSelection(player);
-    if (!mounted) return;
-    setState(() => _factions = list);
+    // Sprint 3.1 Bloco 1 — leitura direta do JSON como fallback mínimo
+    // enquanto FactionsService (com filtro de secretas por achievement)
+    // não é reimplementado no Bloco 7.
+    try {
+      final raw = await rootBundle.loadString('assets/data/factions.json');
+      final data = json.decode(raw) as Map<String, dynamic>;
+      final list = (data['factions'] as List).cast<Map<String, dynamic>>();
+      if (!mounted) return;
+      setState(() => _factions = list);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _factions = []);
+    }
   }
 
   Color _color(Map c) => Color(int.parse(c['color'] as String));
@@ -95,9 +109,12 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
     setState(() => _loading = true);
     final db = ref.read(appDatabaseProvider);
     final factionId = faction['id'] as String;
-    await QuestAdmissionService(db).startFactionAdmission(
-      player.id,
-      factionId,
+    // Sprint 3.1 Bloco 1 — QuestAdmissionService .bakado. Marca a facção como
+    // `pending:<id>` em players; as missões de admissão serão criadas pelo
+    // service refatorado no Bloco 7.
+    await db.customStatement(
+      "UPDATE players SET faction_type = ? WHERE id = ?",
+      ['pending:$factionId', player.id],
     );
     // +5 reputação com NPC da facção ao iniciar admissão
     try {
@@ -110,11 +127,10 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
         .getSingleOrNull();
     if (mounted) {
       ref.read(currentPlayerProvider.notifier).state = updated;
-      ref.invalidate(habitsProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('3 missões de admissão criadas! Complete-as para entrar na facção.'),
+            content: Text('Facção marcada como pendente. Missões de admissão virão no próximo bloco.'),
             backgroundColor: AppColors.mp,
             duration: const Duration(seconds: 4),
           ),

@@ -1,13 +1,6 @@
-import '../data/database/daos/achievement_dao.dart';
-import '../data/database/tables/player_achievements_table.dart';
-import '../data/database/tables/achievements_table.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/database/app_database.dart';
-import '../data/database/tables/players_table.dart';
 import '../data/datasources/local/auth_local_ds.dart';
-import '../data/datasources/local/habit_local_ds.dart';
-import '../data/datasources/local/class_quest_service.dart';
-import '../data/datasources/local/faction_quest_service.dart';
 import '../data/datasources/local/vitalism_unique_service.dart';
 import '../data/datasources/local/items_catalog_service.dart';
 import '../data/datasources/local/player_inventory_service.dart';
@@ -18,7 +11,6 @@ import '../data/datasources/local/recipes_catalog_service.dart';
 import '../data/datasources/local/player_recipes_service.dart';
 import '../data/datasources/local/crafting_service.dart';
 import '../data/datasources/local/enchant_service.dart';
-import '../data/datasources/local/factions_service.dart';
 import '../data/database/daos/player_dao.dart';
 
 // Banco singleton
@@ -89,15 +81,7 @@ final craftingServiceProvider = Provider<CraftingService>((ref) {
   );
 });
 
-// Sprint 2.3 Bloco 0.A — facções filtradas (oculta secretas sem achievement).
-final factionsServiceProvider = Provider<FactionsService>((ref) {
-  return FactionsService(ref.watch(appDatabaseProvider));
-});
-
 // Sprint 2.3 fix (D.2) — runas migradas pra items_catalog como ItemType.rune.
-// Providers antigos (enchantsCatalogServiceProvider, playerEnchantsServiceProvider)
-// removidos. Tabelas enchants_catalog e player_enchants_inventory serão
-// dropadas pela migration 22→23 em F8.
 final enchantServiceProvider = Provider<EnchantService>((ref) {
   return EnchantService(
     ref.watch(appDatabaseProvider),
@@ -109,11 +93,6 @@ final enchantServiceProvider = Provider<EnchantService>((ref) {
 // Auth datasource
 final authDsProvider = Provider<AuthLocalDs>((ref) {
   return AuthLocalDs(ref.watch(appDatabaseProvider));
-});
-
-// Habit datasource
-final habitDsProvider = Provider<HabitLocalDs>((ref) {
-  return HabitLocalDs(ref.watch(appDatabaseProvider));
 });
 
 // Jogador atual — StateProvider simples
@@ -133,64 +112,18 @@ final playerStreamProvider = StreamProvider<PlayersTableData?>((ref) {
       .watchSingleOrNull();
 });
 
-// Hábitos do jogador com status do dia
-final habitsProvider = FutureProvider<List<HabitWithStatus>>((ref) async {
-  final player = ref.watch(currentPlayerProvider);
-  if (player == null) return [];
-  return ref.watch(habitDsProvider).getHabitsWithStatus(player.id);
-});
-
-// Achievement providers
-final achievementsProvider = FutureProvider<List<AchievementsTableData>>((ref) {
-  return AchievementDao(ref.watch(appDatabaseProvider)).getAllAchievements();
-});
-
-final unlockedAchievementsProvider =
-    FutureProvider<List<PlayerAchievementsTableData>>((ref) async {
-  final player = ref.watch(currentPlayerProvider);
-  if (player == null) return [];
-  return AchievementDao(ref.watch(appDatabaseProvider)).getUnlocked(player.id);
-});
-
-// ── Class Quest Providers ──
-final classQuestServiceProvider = Provider<ClassQuestService>((ref) {
-  return ClassQuestService(ref.read(appDatabaseProvider));
-});
-
-final todayClassQuestsProvider = FutureProvider.autoDispose<List<ClassQuestsTableData>>((ref) async {
-  final player = ref.watch(currentPlayerProvider);
-  if (player == null) return [];
-  if (player.level < 5) return [];
-  if (player.classType == null || player.classType!.isEmpty) return [];
-  final service = ref.read(classQuestServiceProvider);
-  await service.assignDailyQuests(player.id, player.classType!);
-  return service.getTodayQuests(player.id);
-});
-
-// ── Faction Quest Providers ──
-final factionQuestServiceProvider = Provider<FactionQuestService>((ref) {
-  return FactionQuestService(ref.read(appDatabaseProvider));
-});
-
-final activeFactionQuestProvider = FutureProvider.autoDispose<FactionQuestsTableData?>((ref) async {
-  final player = ref.watch(currentPlayerProvider);
-  if (player == null) return null;
-  if (player.level < 7) return null;
-  final faction = player.factionType ?? '';
-  if (faction.isEmpty || faction == 'none' || faction.startsWith('pending:')) return null;
-  final service = ref.read(factionQuestServiceProvider);
-  return service.assignWeeklyQuest(player.id, faction);
-});
-
-// Conta de habitos completados hoje (inclui pausados/nao-repetiveis ja concluidos)
-final todayCompletedCountProvider = FutureProvider.autoDispose<int>((ref) async {
-  final player = ref.watch(currentPlayerProvider);
-  if (player == null) return 0;
-  final db = ref.read(appDatabaseProvider);
-  final logs = await db.habitDao.getTodayLogs(player.id);
-  // Conta unicos por habitId, apenas completados ou parciais
-  final completed = logs.where(
-      (l) => l.status == 'completed' || l.status == 'partial');
-  return completed.map((l) => l.habitId).toSet().length;
-});
-
+// ─── Sprint 3.1 (v0.29.0) ─────────────────────────────────────────────────
+// Providers legacy removidos neste bloco 1 (schema 24, reset brutal):
+//   - habitsProvider, habitDsProvider, todayCompletedCountProvider
+//   - achievementsProvider, unlockedAchievementsProvider
+//   - classQuestServiceProvider, todayClassQuestsProvider
+//   - factionQuestServiceProvider, activeFactionQuestProvider
+//   - factionsServiceProvider
+// Serão substituídos nos blocos seguintes:
+//   - Bloco 4: missionRepositoryProvider, achievementRepositoryProvider,
+//     preferencesRepositoryProvider, factionReputationRepositoryProvider
+//   - Bloco 6: missionProgressServiceProvider
+//   - Bloco 7: classQuestServiceProvider / factionQuestServiceProvider /
+//     questAdmissionServiceProvider refatorados
+//   - Bloco 8: achievementsServiceProvider (JSON-driven)
+//   - Bloco 9: missionPreferencesServiceProvider

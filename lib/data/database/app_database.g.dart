@@ -1590,1273 +1590,6 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
   }
 }
 
-class $HabitsTableTable extends HabitsTable
-    with TableInfo<$HabitsTableTable, HabitsTableData> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $HabitsTableTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _playerIdMeta =
-      const VerificationMeta('playerId');
-  @override
-  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
-      'player_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _titleMeta = const VerificationMeta('title');
-  @override
-  late final GeneratedColumn<String> title = GeneratedColumn<String>(
-      'title', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _descriptionMeta =
-      const VerificationMeta('description');
-  @override
-  late final GeneratedColumn<String> description = GeneratedColumn<String>(
-      'description', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(''));
-  static const VerificationMeta _categoryMeta =
-      const VerificationMeta('category');
-  @override
-  late final GeneratedColumn<String> category = GeneratedColumn<String>(
-      'category', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _rankMeta = const VerificationMeta('rank');
-  @override
-  late final GeneratedColumn<String> rank = GeneratedColumn<String>(
-      'rank', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('e'));
-  static const VerificationMeta _isSystemHabitMeta =
-      const VerificationMeta('isSystemHabit');
-  @override
-  late final GeneratedColumn<bool> isSystemHabit = GeneratedColumn<bool>(
-      'is_system_habit', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_system_habit" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _isRepeatableMeta =
-      const VerificationMeta('isRepeatable');
-  @override
-  late final GeneratedColumn<bool> isRepeatable = GeneratedColumn<bool>(
-      'is_repeatable', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_repeatable" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _isPausedMeta =
-      const VerificationMeta('isPaused');
-  @override
-  late final GeneratedColumn<bool> isPaused = GeneratedColumn<bool>(
-      'is_paused', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_paused" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _xpRewardMeta =
-      const VerificationMeta('xpReward');
-  @override
-  late final GeneratedColumn<int> xpReward = GeneratedColumn<int>(
-      'xp_reward', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(20));
-  static const VerificationMeta _goldRewardMeta =
-      const VerificationMeta('goldReward');
-  @override
-  late final GeneratedColumn<int> goldReward = GeneratedColumn<int>(
-      'gold_reward', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(10));
-  static const VerificationMeta _streakCountMeta =
-      const VerificationMeta('streakCount');
-  @override
-  late final GeneratedColumn<int> streakCount = GeneratedColumn<int>(
-      'streak_count', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _totalCompletedMeta =
-      const VerificationMeta('totalCompleted');
-  @override
-  late final GeneratedColumn<int> totalCompleted = GeneratedColumn<int>(
-      'total_completed', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _requirementsMeta =
-      const VerificationMeta('requirements');
-  @override
-  late final GeneratedColumn<String> requirements = GeneratedColumn<String>(
-      'requirements', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _questTypeMeta =
-      const VerificationMeta('questType');
-  @override
-  late final GeneratedColumn<String> questType = GeneratedColumn<String>(
-      'quest_type', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('individual'));
-  static const VerificationMeta _metricUnitMeta =
-      const VerificationMeta('metricUnit');
-  @override
-  late final GeneratedColumn<String> metricUnit = GeneratedColumn<String>(
-      'metric_unit', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('reps'));
-  static const VerificationMeta _autoDescriptionMeta =
-      const VerificationMeta('autoDescription');
-  @override
-  late final GeneratedColumn<String> autoDescription = GeneratedColumn<String>(
-      'auto_description', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  @override
-  List<GeneratedColumn> get $columns => [
-        id,
-        playerId,
-        title,
-        description,
-        category,
-        rank,
-        isSystemHabit,
-        isRepeatable,
-        isPaused,
-        xpReward,
-        goldReward,
-        streakCount,
-        totalCompleted,
-        requirements,
-        questType,
-        metricUnit,
-        autoDescription,
-        createdAt
-      ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'habits';
-  @override
-  VerificationContext validateIntegrity(Insertable<HabitsTableData> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('player_id')) {
-      context.handle(_playerIdMeta,
-          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
-    } else if (isInserting) {
-      context.missing(_playerIdMeta);
-    }
-    if (data.containsKey('title')) {
-      context.handle(
-          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
-    } else if (isInserting) {
-      context.missing(_titleMeta);
-    }
-    if (data.containsKey('description')) {
-      context.handle(
-          _descriptionMeta,
-          description.isAcceptableOrUnknown(
-              data['description']!, _descriptionMeta));
-    }
-    if (data.containsKey('category')) {
-      context.handle(_categoryMeta,
-          category.isAcceptableOrUnknown(data['category']!, _categoryMeta));
-    } else if (isInserting) {
-      context.missing(_categoryMeta);
-    }
-    if (data.containsKey('rank')) {
-      context.handle(
-          _rankMeta, rank.isAcceptableOrUnknown(data['rank']!, _rankMeta));
-    }
-    if (data.containsKey('is_system_habit')) {
-      context.handle(
-          _isSystemHabitMeta,
-          isSystemHabit.isAcceptableOrUnknown(
-              data['is_system_habit']!, _isSystemHabitMeta));
-    }
-    if (data.containsKey('is_repeatable')) {
-      context.handle(
-          _isRepeatableMeta,
-          isRepeatable.isAcceptableOrUnknown(
-              data['is_repeatable']!, _isRepeatableMeta));
-    }
-    if (data.containsKey('is_paused')) {
-      context.handle(_isPausedMeta,
-          isPaused.isAcceptableOrUnknown(data['is_paused']!, _isPausedMeta));
-    }
-    if (data.containsKey('xp_reward')) {
-      context.handle(_xpRewardMeta,
-          xpReward.isAcceptableOrUnknown(data['xp_reward']!, _xpRewardMeta));
-    }
-    if (data.containsKey('gold_reward')) {
-      context.handle(
-          _goldRewardMeta,
-          goldReward.isAcceptableOrUnknown(
-              data['gold_reward']!, _goldRewardMeta));
-    }
-    if (data.containsKey('streak_count')) {
-      context.handle(
-          _streakCountMeta,
-          streakCount.isAcceptableOrUnknown(
-              data['streak_count']!, _streakCountMeta));
-    }
-    if (data.containsKey('total_completed')) {
-      context.handle(
-          _totalCompletedMeta,
-          totalCompleted.isAcceptableOrUnknown(
-              data['total_completed']!, _totalCompletedMeta));
-    }
-    if (data.containsKey('requirements')) {
-      context.handle(
-          _requirementsMeta,
-          requirements.isAcceptableOrUnknown(
-              data['requirements']!, _requirementsMeta));
-    }
-    if (data.containsKey('quest_type')) {
-      context.handle(_questTypeMeta,
-          questType.isAcceptableOrUnknown(data['quest_type']!, _questTypeMeta));
-    }
-    if (data.containsKey('metric_unit')) {
-      context.handle(
-          _metricUnitMeta,
-          metricUnit.isAcceptableOrUnknown(
-              data['metric_unit']!, _metricUnitMeta));
-    }
-    if (data.containsKey('auto_description')) {
-      context.handle(
-          _autoDescriptionMeta,
-          autoDescription.isAcceptableOrUnknown(
-              data['auto_description']!, _autoDescriptionMeta));
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  HabitsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return HabitsTableData(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      playerId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
-      title: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
-      description: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
-      category: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}category'])!,
-      rank: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}rank'])!,
-      isSystemHabit: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_system_habit'])!,
-      isRepeatable: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_repeatable'])!,
-      isPaused: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_paused'])!,
-      xpReward: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}xp_reward'])!,
-      goldReward: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}gold_reward'])!,
-      streakCount: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}streak_count'])!,
-      totalCompleted: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}total_completed'])!,
-      requirements: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}requirements']),
-      questType: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}quest_type'])!,
-      metricUnit: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}metric_unit'])!,
-      autoDescription: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}auto_description']),
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-    );
-  }
-
-  @override
-  $HabitsTableTable createAlias(String alias) {
-    return $HabitsTableTable(attachedDatabase, alias);
-  }
-}
-
-class HabitsTableData extends DataClass implements Insertable<HabitsTableData> {
-  final int id;
-  final int playerId;
-  final String title;
-  final String description;
-  final String category;
-  final String rank;
-  final bool isSystemHabit;
-  final bool isRepeatable;
-  final bool isPaused;
-  final int xpReward;
-  final int goldReward;
-  final int streakCount;
-  final int totalCompleted;
-  final String? requirements;
-  final String questType;
-  final String metricUnit;
-  final String? autoDescription;
-  final DateTime createdAt;
-  const HabitsTableData(
-      {required this.id,
-      required this.playerId,
-      required this.title,
-      required this.description,
-      required this.category,
-      required this.rank,
-      required this.isSystemHabit,
-      required this.isRepeatable,
-      required this.isPaused,
-      required this.xpReward,
-      required this.goldReward,
-      required this.streakCount,
-      required this.totalCompleted,
-      this.requirements,
-      required this.questType,
-      required this.metricUnit,
-      this.autoDescription,
-      required this.createdAt});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['player_id'] = Variable<int>(playerId);
-    map['title'] = Variable<String>(title);
-    map['description'] = Variable<String>(description);
-    map['category'] = Variable<String>(category);
-    map['rank'] = Variable<String>(rank);
-    map['is_system_habit'] = Variable<bool>(isSystemHabit);
-    map['is_repeatable'] = Variable<bool>(isRepeatable);
-    map['is_paused'] = Variable<bool>(isPaused);
-    map['xp_reward'] = Variable<int>(xpReward);
-    map['gold_reward'] = Variable<int>(goldReward);
-    map['streak_count'] = Variable<int>(streakCount);
-    map['total_completed'] = Variable<int>(totalCompleted);
-    if (!nullToAbsent || requirements != null) {
-      map['requirements'] = Variable<String>(requirements);
-    }
-    map['quest_type'] = Variable<String>(questType);
-    map['metric_unit'] = Variable<String>(metricUnit);
-    if (!nullToAbsent || autoDescription != null) {
-      map['auto_description'] = Variable<String>(autoDescription);
-    }
-    map['created_at'] = Variable<DateTime>(createdAt);
-    return map;
-  }
-
-  HabitsTableCompanion toCompanion(bool nullToAbsent) {
-    return HabitsTableCompanion(
-      id: Value(id),
-      playerId: Value(playerId),
-      title: Value(title),
-      description: Value(description),
-      category: Value(category),
-      rank: Value(rank),
-      isSystemHabit: Value(isSystemHabit),
-      isRepeatable: Value(isRepeatable),
-      isPaused: Value(isPaused),
-      xpReward: Value(xpReward),
-      goldReward: Value(goldReward),
-      streakCount: Value(streakCount),
-      totalCompleted: Value(totalCompleted),
-      requirements: requirements == null && nullToAbsent
-          ? const Value.absent()
-          : Value(requirements),
-      questType: Value(questType),
-      metricUnit: Value(metricUnit),
-      autoDescription: autoDescription == null && nullToAbsent
-          ? const Value.absent()
-          : Value(autoDescription),
-      createdAt: Value(createdAt),
-    );
-  }
-
-  factory HabitsTableData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return HabitsTableData(
-      id: serializer.fromJson<int>(json['id']),
-      playerId: serializer.fromJson<int>(json['playerId']),
-      title: serializer.fromJson<String>(json['title']),
-      description: serializer.fromJson<String>(json['description']),
-      category: serializer.fromJson<String>(json['category']),
-      rank: serializer.fromJson<String>(json['rank']),
-      isSystemHabit: serializer.fromJson<bool>(json['isSystemHabit']),
-      isRepeatable: serializer.fromJson<bool>(json['isRepeatable']),
-      isPaused: serializer.fromJson<bool>(json['isPaused']),
-      xpReward: serializer.fromJson<int>(json['xpReward']),
-      goldReward: serializer.fromJson<int>(json['goldReward']),
-      streakCount: serializer.fromJson<int>(json['streakCount']),
-      totalCompleted: serializer.fromJson<int>(json['totalCompleted']),
-      requirements: serializer.fromJson<String?>(json['requirements']),
-      questType: serializer.fromJson<String>(json['questType']),
-      metricUnit: serializer.fromJson<String>(json['metricUnit']),
-      autoDescription: serializer.fromJson<String?>(json['autoDescription']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'playerId': serializer.toJson<int>(playerId),
-      'title': serializer.toJson<String>(title),
-      'description': serializer.toJson<String>(description),
-      'category': serializer.toJson<String>(category),
-      'rank': serializer.toJson<String>(rank),
-      'isSystemHabit': serializer.toJson<bool>(isSystemHabit),
-      'isRepeatable': serializer.toJson<bool>(isRepeatable),
-      'isPaused': serializer.toJson<bool>(isPaused),
-      'xpReward': serializer.toJson<int>(xpReward),
-      'goldReward': serializer.toJson<int>(goldReward),
-      'streakCount': serializer.toJson<int>(streakCount),
-      'totalCompleted': serializer.toJson<int>(totalCompleted),
-      'requirements': serializer.toJson<String?>(requirements),
-      'questType': serializer.toJson<String>(questType),
-      'metricUnit': serializer.toJson<String>(metricUnit),
-      'autoDescription': serializer.toJson<String?>(autoDescription),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-    };
-  }
-
-  HabitsTableData copyWith(
-          {int? id,
-          int? playerId,
-          String? title,
-          String? description,
-          String? category,
-          String? rank,
-          bool? isSystemHabit,
-          bool? isRepeatable,
-          bool? isPaused,
-          int? xpReward,
-          int? goldReward,
-          int? streakCount,
-          int? totalCompleted,
-          Value<String?> requirements = const Value.absent(),
-          String? questType,
-          String? metricUnit,
-          Value<String?> autoDescription = const Value.absent(),
-          DateTime? createdAt}) =>
-      HabitsTableData(
-        id: id ?? this.id,
-        playerId: playerId ?? this.playerId,
-        title: title ?? this.title,
-        description: description ?? this.description,
-        category: category ?? this.category,
-        rank: rank ?? this.rank,
-        isSystemHabit: isSystemHabit ?? this.isSystemHabit,
-        isRepeatable: isRepeatable ?? this.isRepeatable,
-        isPaused: isPaused ?? this.isPaused,
-        xpReward: xpReward ?? this.xpReward,
-        goldReward: goldReward ?? this.goldReward,
-        streakCount: streakCount ?? this.streakCount,
-        totalCompleted: totalCompleted ?? this.totalCompleted,
-        requirements:
-            requirements.present ? requirements.value : this.requirements,
-        questType: questType ?? this.questType,
-        metricUnit: metricUnit ?? this.metricUnit,
-        autoDescription: autoDescription.present
-            ? autoDescription.value
-            : this.autoDescription,
-        createdAt: createdAt ?? this.createdAt,
-      );
-  HabitsTableData copyWithCompanion(HabitsTableCompanion data) {
-    return HabitsTableData(
-      id: data.id.present ? data.id.value : this.id,
-      playerId: data.playerId.present ? data.playerId.value : this.playerId,
-      title: data.title.present ? data.title.value : this.title,
-      description:
-          data.description.present ? data.description.value : this.description,
-      category: data.category.present ? data.category.value : this.category,
-      rank: data.rank.present ? data.rank.value : this.rank,
-      isSystemHabit: data.isSystemHabit.present
-          ? data.isSystemHabit.value
-          : this.isSystemHabit,
-      isRepeatable: data.isRepeatable.present
-          ? data.isRepeatable.value
-          : this.isRepeatable,
-      isPaused: data.isPaused.present ? data.isPaused.value : this.isPaused,
-      xpReward: data.xpReward.present ? data.xpReward.value : this.xpReward,
-      goldReward:
-          data.goldReward.present ? data.goldReward.value : this.goldReward,
-      streakCount:
-          data.streakCount.present ? data.streakCount.value : this.streakCount,
-      totalCompleted: data.totalCompleted.present
-          ? data.totalCompleted.value
-          : this.totalCompleted,
-      requirements: data.requirements.present
-          ? data.requirements.value
-          : this.requirements,
-      questType: data.questType.present ? data.questType.value : this.questType,
-      metricUnit:
-          data.metricUnit.present ? data.metricUnit.value : this.metricUnit,
-      autoDescription: data.autoDescription.present
-          ? data.autoDescription.value
-          : this.autoDescription,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('HabitsTableData(')
-          ..write('id: $id, ')
-          ..write('playerId: $playerId, ')
-          ..write('title: $title, ')
-          ..write('description: $description, ')
-          ..write('category: $category, ')
-          ..write('rank: $rank, ')
-          ..write('isSystemHabit: $isSystemHabit, ')
-          ..write('isRepeatable: $isRepeatable, ')
-          ..write('isPaused: $isPaused, ')
-          ..write('xpReward: $xpReward, ')
-          ..write('goldReward: $goldReward, ')
-          ..write('streakCount: $streakCount, ')
-          ..write('totalCompleted: $totalCompleted, ')
-          ..write('requirements: $requirements, ')
-          ..write('questType: $questType, ')
-          ..write('metricUnit: $metricUnit, ')
-          ..write('autoDescription: $autoDescription, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-      id,
-      playerId,
-      title,
-      description,
-      category,
-      rank,
-      isSystemHabit,
-      isRepeatable,
-      isPaused,
-      xpReward,
-      goldReward,
-      streakCount,
-      totalCompleted,
-      requirements,
-      questType,
-      metricUnit,
-      autoDescription,
-      createdAt);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is HabitsTableData &&
-          other.id == this.id &&
-          other.playerId == this.playerId &&
-          other.title == this.title &&
-          other.description == this.description &&
-          other.category == this.category &&
-          other.rank == this.rank &&
-          other.isSystemHabit == this.isSystemHabit &&
-          other.isRepeatable == this.isRepeatable &&
-          other.isPaused == this.isPaused &&
-          other.xpReward == this.xpReward &&
-          other.goldReward == this.goldReward &&
-          other.streakCount == this.streakCount &&
-          other.totalCompleted == this.totalCompleted &&
-          other.requirements == this.requirements &&
-          other.questType == this.questType &&
-          other.metricUnit == this.metricUnit &&
-          other.autoDescription == this.autoDescription &&
-          other.createdAt == this.createdAt);
-}
-
-class HabitsTableCompanion extends UpdateCompanion<HabitsTableData> {
-  final Value<int> id;
-  final Value<int> playerId;
-  final Value<String> title;
-  final Value<String> description;
-  final Value<String> category;
-  final Value<String> rank;
-  final Value<bool> isSystemHabit;
-  final Value<bool> isRepeatable;
-  final Value<bool> isPaused;
-  final Value<int> xpReward;
-  final Value<int> goldReward;
-  final Value<int> streakCount;
-  final Value<int> totalCompleted;
-  final Value<String?> requirements;
-  final Value<String> questType;
-  final Value<String> metricUnit;
-  final Value<String?> autoDescription;
-  final Value<DateTime> createdAt;
-  const HabitsTableCompanion({
-    this.id = const Value.absent(),
-    this.playerId = const Value.absent(),
-    this.title = const Value.absent(),
-    this.description = const Value.absent(),
-    this.category = const Value.absent(),
-    this.rank = const Value.absent(),
-    this.isSystemHabit = const Value.absent(),
-    this.isRepeatable = const Value.absent(),
-    this.isPaused = const Value.absent(),
-    this.xpReward = const Value.absent(),
-    this.goldReward = const Value.absent(),
-    this.streakCount = const Value.absent(),
-    this.totalCompleted = const Value.absent(),
-    this.requirements = const Value.absent(),
-    this.questType = const Value.absent(),
-    this.metricUnit = const Value.absent(),
-    this.autoDescription = const Value.absent(),
-    this.createdAt = const Value.absent(),
-  });
-  HabitsTableCompanion.insert({
-    this.id = const Value.absent(),
-    required int playerId,
-    required String title,
-    this.description = const Value.absent(),
-    required String category,
-    this.rank = const Value.absent(),
-    this.isSystemHabit = const Value.absent(),
-    this.isRepeatable = const Value.absent(),
-    this.isPaused = const Value.absent(),
-    this.xpReward = const Value.absent(),
-    this.goldReward = const Value.absent(),
-    this.streakCount = const Value.absent(),
-    this.totalCompleted = const Value.absent(),
-    this.requirements = const Value.absent(),
-    this.questType = const Value.absent(),
-    this.metricUnit = const Value.absent(),
-    this.autoDescription = const Value.absent(),
-    this.createdAt = const Value.absent(),
-  })  : playerId = Value(playerId),
-        title = Value(title),
-        category = Value(category);
-  static Insertable<HabitsTableData> custom({
-    Expression<int>? id,
-    Expression<int>? playerId,
-    Expression<String>? title,
-    Expression<String>? description,
-    Expression<String>? category,
-    Expression<String>? rank,
-    Expression<bool>? isSystemHabit,
-    Expression<bool>? isRepeatable,
-    Expression<bool>? isPaused,
-    Expression<int>? xpReward,
-    Expression<int>? goldReward,
-    Expression<int>? streakCount,
-    Expression<int>? totalCompleted,
-    Expression<String>? requirements,
-    Expression<String>? questType,
-    Expression<String>? metricUnit,
-    Expression<String>? autoDescription,
-    Expression<DateTime>? createdAt,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (playerId != null) 'player_id': playerId,
-      if (title != null) 'title': title,
-      if (description != null) 'description': description,
-      if (category != null) 'category': category,
-      if (rank != null) 'rank': rank,
-      if (isSystemHabit != null) 'is_system_habit': isSystemHabit,
-      if (isRepeatable != null) 'is_repeatable': isRepeatable,
-      if (isPaused != null) 'is_paused': isPaused,
-      if (xpReward != null) 'xp_reward': xpReward,
-      if (goldReward != null) 'gold_reward': goldReward,
-      if (streakCount != null) 'streak_count': streakCount,
-      if (totalCompleted != null) 'total_completed': totalCompleted,
-      if (requirements != null) 'requirements': requirements,
-      if (questType != null) 'quest_type': questType,
-      if (metricUnit != null) 'metric_unit': metricUnit,
-      if (autoDescription != null) 'auto_description': autoDescription,
-      if (createdAt != null) 'created_at': createdAt,
-    });
-  }
-
-  HabitsTableCompanion copyWith(
-      {Value<int>? id,
-      Value<int>? playerId,
-      Value<String>? title,
-      Value<String>? description,
-      Value<String>? category,
-      Value<String>? rank,
-      Value<bool>? isSystemHabit,
-      Value<bool>? isRepeatable,
-      Value<bool>? isPaused,
-      Value<int>? xpReward,
-      Value<int>? goldReward,
-      Value<int>? streakCount,
-      Value<int>? totalCompleted,
-      Value<String?>? requirements,
-      Value<String>? questType,
-      Value<String>? metricUnit,
-      Value<String?>? autoDescription,
-      Value<DateTime>? createdAt}) {
-    return HabitsTableCompanion(
-      id: id ?? this.id,
-      playerId: playerId ?? this.playerId,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      category: category ?? this.category,
-      rank: rank ?? this.rank,
-      isSystemHabit: isSystemHabit ?? this.isSystemHabit,
-      isRepeatable: isRepeatable ?? this.isRepeatable,
-      isPaused: isPaused ?? this.isPaused,
-      xpReward: xpReward ?? this.xpReward,
-      goldReward: goldReward ?? this.goldReward,
-      streakCount: streakCount ?? this.streakCount,
-      totalCompleted: totalCompleted ?? this.totalCompleted,
-      requirements: requirements ?? this.requirements,
-      questType: questType ?? this.questType,
-      metricUnit: metricUnit ?? this.metricUnit,
-      autoDescription: autoDescription ?? this.autoDescription,
-      createdAt: createdAt ?? this.createdAt,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (playerId.present) {
-      map['player_id'] = Variable<int>(playerId.value);
-    }
-    if (title.present) {
-      map['title'] = Variable<String>(title.value);
-    }
-    if (description.present) {
-      map['description'] = Variable<String>(description.value);
-    }
-    if (category.present) {
-      map['category'] = Variable<String>(category.value);
-    }
-    if (rank.present) {
-      map['rank'] = Variable<String>(rank.value);
-    }
-    if (isSystemHabit.present) {
-      map['is_system_habit'] = Variable<bool>(isSystemHabit.value);
-    }
-    if (isRepeatable.present) {
-      map['is_repeatable'] = Variable<bool>(isRepeatable.value);
-    }
-    if (isPaused.present) {
-      map['is_paused'] = Variable<bool>(isPaused.value);
-    }
-    if (xpReward.present) {
-      map['xp_reward'] = Variable<int>(xpReward.value);
-    }
-    if (goldReward.present) {
-      map['gold_reward'] = Variable<int>(goldReward.value);
-    }
-    if (streakCount.present) {
-      map['streak_count'] = Variable<int>(streakCount.value);
-    }
-    if (totalCompleted.present) {
-      map['total_completed'] = Variable<int>(totalCompleted.value);
-    }
-    if (requirements.present) {
-      map['requirements'] = Variable<String>(requirements.value);
-    }
-    if (questType.present) {
-      map['quest_type'] = Variable<String>(questType.value);
-    }
-    if (metricUnit.present) {
-      map['metric_unit'] = Variable<String>(metricUnit.value);
-    }
-    if (autoDescription.present) {
-      map['auto_description'] = Variable<String>(autoDescription.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('HabitsTableCompanion(')
-          ..write('id: $id, ')
-          ..write('playerId: $playerId, ')
-          ..write('title: $title, ')
-          ..write('description: $description, ')
-          ..write('category: $category, ')
-          ..write('rank: $rank, ')
-          ..write('isSystemHabit: $isSystemHabit, ')
-          ..write('isRepeatable: $isRepeatable, ')
-          ..write('isPaused: $isPaused, ')
-          ..write('xpReward: $xpReward, ')
-          ..write('goldReward: $goldReward, ')
-          ..write('streakCount: $streakCount, ')
-          ..write('totalCompleted: $totalCompleted, ')
-          ..write('requirements: $requirements, ')
-          ..write('questType: $questType, ')
-          ..write('metricUnit: $metricUnit, ')
-          ..write('autoDescription: $autoDescription, ')
-          ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $HabitLogsTableTable extends HabitLogsTable
-    with TableInfo<$HabitLogsTableTable, HabitLogsTableData> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $HabitLogsTableTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _habitIdMeta =
-      const VerificationMeta('habitId');
-  @override
-  late final GeneratedColumn<int> habitId = GeneratedColumn<int>(
-      'habit_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _playerIdMeta =
-      const VerificationMeta('playerId');
-  @override
-  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
-      'player_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _statusMeta = const VerificationMeta('status');
-  @override
-  late final GeneratedColumn<String> status = GeneratedColumn<String>(
-      'status', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _xpGainedMeta =
-      const VerificationMeta('xpGained');
-  @override
-  late final GeneratedColumn<int> xpGained = GeneratedColumn<int>(
-      'xp_gained', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _goldGainedMeta =
-      const VerificationMeta('goldGained');
-  @override
-  late final GeneratedColumn<int> goldGained = GeneratedColumn<int>(
-      'gold_gained', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _shadowImpactMeta =
-      const VerificationMeta('shadowImpact');
-  @override
-  late final GeneratedColumn<int> shadowImpact = GeneratedColumn<int>(
-      'shadow_impact', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _logDateMeta =
-      const VerificationMeta('logDate');
-  @override
-  late final GeneratedColumn<DateTime> logDate = GeneratedColumn<DateTime>(
-      'log_date', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  @override
-  List<GeneratedColumn> get $columns => [
-        id,
-        habitId,
-        playerId,
-        status,
-        xpGained,
-        goldGained,
-        shadowImpact,
-        logDate
-      ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'habit_logs';
-  @override
-  VerificationContext validateIntegrity(Insertable<HabitLogsTableData> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('habit_id')) {
-      context.handle(_habitIdMeta,
-          habitId.isAcceptableOrUnknown(data['habit_id']!, _habitIdMeta));
-    } else if (isInserting) {
-      context.missing(_habitIdMeta);
-    }
-    if (data.containsKey('player_id')) {
-      context.handle(_playerIdMeta,
-          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
-    } else if (isInserting) {
-      context.missing(_playerIdMeta);
-    }
-    if (data.containsKey('status')) {
-      context.handle(_statusMeta,
-          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
-    } else if (isInserting) {
-      context.missing(_statusMeta);
-    }
-    if (data.containsKey('xp_gained')) {
-      context.handle(_xpGainedMeta,
-          xpGained.isAcceptableOrUnknown(data['xp_gained']!, _xpGainedMeta));
-    }
-    if (data.containsKey('gold_gained')) {
-      context.handle(
-          _goldGainedMeta,
-          goldGained.isAcceptableOrUnknown(
-              data['gold_gained']!, _goldGainedMeta));
-    }
-    if (data.containsKey('shadow_impact')) {
-      context.handle(
-          _shadowImpactMeta,
-          shadowImpact.isAcceptableOrUnknown(
-              data['shadow_impact']!, _shadowImpactMeta));
-    }
-    if (data.containsKey('log_date')) {
-      context.handle(_logDateMeta,
-          logDate.isAcceptableOrUnknown(data['log_date']!, _logDateMeta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  HabitLogsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return HabitLogsTableData(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      habitId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}habit_id'])!,
-      playerId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
-      status: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
-      xpGained: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}xp_gained'])!,
-      goldGained: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}gold_gained'])!,
-      shadowImpact: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}shadow_impact'])!,
-      logDate: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}log_date'])!,
-    );
-  }
-
-  @override
-  $HabitLogsTableTable createAlias(String alias) {
-    return $HabitLogsTableTable(attachedDatabase, alias);
-  }
-}
-
-class HabitLogsTableData extends DataClass
-    implements Insertable<HabitLogsTableData> {
-  final int id;
-  final int habitId;
-  final int playerId;
-  final String status;
-  final int xpGained;
-  final int goldGained;
-  final int shadowImpact;
-  final DateTime logDate;
-  const HabitLogsTableData(
-      {required this.id,
-      required this.habitId,
-      required this.playerId,
-      required this.status,
-      required this.xpGained,
-      required this.goldGained,
-      required this.shadowImpact,
-      required this.logDate});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['habit_id'] = Variable<int>(habitId);
-    map['player_id'] = Variable<int>(playerId);
-    map['status'] = Variable<String>(status);
-    map['xp_gained'] = Variable<int>(xpGained);
-    map['gold_gained'] = Variable<int>(goldGained);
-    map['shadow_impact'] = Variable<int>(shadowImpact);
-    map['log_date'] = Variable<DateTime>(logDate);
-    return map;
-  }
-
-  HabitLogsTableCompanion toCompanion(bool nullToAbsent) {
-    return HabitLogsTableCompanion(
-      id: Value(id),
-      habitId: Value(habitId),
-      playerId: Value(playerId),
-      status: Value(status),
-      xpGained: Value(xpGained),
-      goldGained: Value(goldGained),
-      shadowImpact: Value(shadowImpact),
-      logDate: Value(logDate),
-    );
-  }
-
-  factory HabitLogsTableData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return HabitLogsTableData(
-      id: serializer.fromJson<int>(json['id']),
-      habitId: serializer.fromJson<int>(json['habitId']),
-      playerId: serializer.fromJson<int>(json['playerId']),
-      status: serializer.fromJson<String>(json['status']),
-      xpGained: serializer.fromJson<int>(json['xpGained']),
-      goldGained: serializer.fromJson<int>(json['goldGained']),
-      shadowImpact: serializer.fromJson<int>(json['shadowImpact']),
-      logDate: serializer.fromJson<DateTime>(json['logDate']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'habitId': serializer.toJson<int>(habitId),
-      'playerId': serializer.toJson<int>(playerId),
-      'status': serializer.toJson<String>(status),
-      'xpGained': serializer.toJson<int>(xpGained),
-      'goldGained': serializer.toJson<int>(goldGained),
-      'shadowImpact': serializer.toJson<int>(shadowImpact),
-      'logDate': serializer.toJson<DateTime>(logDate),
-    };
-  }
-
-  HabitLogsTableData copyWith(
-          {int? id,
-          int? habitId,
-          int? playerId,
-          String? status,
-          int? xpGained,
-          int? goldGained,
-          int? shadowImpact,
-          DateTime? logDate}) =>
-      HabitLogsTableData(
-        id: id ?? this.id,
-        habitId: habitId ?? this.habitId,
-        playerId: playerId ?? this.playerId,
-        status: status ?? this.status,
-        xpGained: xpGained ?? this.xpGained,
-        goldGained: goldGained ?? this.goldGained,
-        shadowImpact: shadowImpact ?? this.shadowImpact,
-        logDate: logDate ?? this.logDate,
-      );
-  HabitLogsTableData copyWithCompanion(HabitLogsTableCompanion data) {
-    return HabitLogsTableData(
-      id: data.id.present ? data.id.value : this.id,
-      habitId: data.habitId.present ? data.habitId.value : this.habitId,
-      playerId: data.playerId.present ? data.playerId.value : this.playerId,
-      status: data.status.present ? data.status.value : this.status,
-      xpGained: data.xpGained.present ? data.xpGained.value : this.xpGained,
-      goldGained:
-          data.goldGained.present ? data.goldGained.value : this.goldGained,
-      shadowImpact: data.shadowImpact.present
-          ? data.shadowImpact.value
-          : this.shadowImpact,
-      logDate: data.logDate.present ? data.logDate.value : this.logDate,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('HabitLogsTableData(')
-          ..write('id: $id, ')
-          ..write('habitId: $habitId, ')
-          ..write('playerId: $playerId, ')
-          ..write('status: $status, ')
-          ..write('xpGained: $xpGained, ')
-          ..write('goldGained: $goldGained, ')
-          ..write('shadowImpact: $shadowImpact, ')
-          ..write('logDate: $logDate')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(id, habitId, playerId, status, xpGained,
-      goldGained, shadowImpact, logDate);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is HabitLogsTableData &&
-          other.id == this.id &&
-          other.habitId == this.habitId &&
-          other.playerId == this.playerId &&
-          other.status == this.status &&
-          other.xpGained == this.xpGained &&
-          other.goldGained == this.goldGained &&
-          other.shadowImpact == this.shadowImpact &&
-          other.logDate == this.logDate);
-}
-
-class HabitLogsTableCompanion extends UpdateCompanion<HabitLogsTableData> {
-  final Value<int> id;
-  final Value<int> habitId;
-  final Value<int> playerId;
-  final Value<String> status;
-  final Value<int> xpGained;
-  final Value<int> goldGained;
-  final Value<int> shadowImpact;
-  final Value<DateTime> logDate;
-  const HabitLogsTableCompanion({
-    this.id = const Value.absent(),
-    this.habitId = const Value.absent(),
-    this.playerId = const Value.absent(),
-    this.status = const Value.absent(),
-    this.xpGained = const Value.absent(),
-    this.goldGained = const Value.absent(),
-    this.shadowImpact = const Value.absent(),
-    this.logDate = const Value.absent(),
-  });
-  HabitLogsTableCompanion.insert({
-    this.id = const Value.absent(),
-    required int habitId,
-    required int playerId,
-    required String status,
-    this.xpGained = const Value.absent(),
-    this.goldGained = const Value.absent(),
-    this.shadowImpact = const Value.absent(),
-    this.logDate = const Value.absent(),
-  })  : habitId = Value(habitId),
-        playerId = Value(playerId),
-        status = Value(status);
-  static Insertable<HabitLogsTableData> custom({
-    Expression<int>? id,
-    Expression<int>? habitId,
-    Expression<int>? playerId,
-    Expression<String>? status,
-    Expression<int>? xpGained,
-    Expression<int>? goldGained,
-    Expression<int>? shadowImpact,
-    Expression<DateTime>? logDate,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (habitId != null) 'habit_id': habitId,
-      if (playerId != null) 'player_id': playerId,
-      if (status != null) 'status': status,
-      if (xpGained != null) 'xp_gained': xpGained,
-      if (goldGained != null) 'gold_gained': goldGained,
-      if (shadowImpact != null) 'shadow_impact': shadowImpact,
-      if (logDate != null) 'log_date': logDate,
-    });
-  }
-
-  HabitLogsTableCompanion copyWith(
-      {Value<int>? id,
-      Value<int>? habitId,
-      Value<int>? playerId,
-      Value<String>? status,
-      Value<int>? xpGained,
-      Value<int>? goldGained,
-      Value<int>? shadowImpact,
-      Value<DateTime>? logDate}) {
-    return HabitLogsTableCompanion(
-      id: id ?? this.id,
-      habitId: habitId ?? this.habitId,
-      playerId: playerId ?? this.playerId,
-      status: status ?? this.status,
-      xpGained: xpGained ?? this.xpGained,
-      goldGained: goldGained ?? this.goldGained,
-      shadowImpact: shadowImpact ?? this.shadowImpact,
-      logDate: logDate ?? this.logDate,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (habitId.present) {
-      map['habit_id'] = Variable<int>(habitId.value);
-    }
-    if (playerId.present) {
-      map['player_id'] = Variable<int>(playerId.value);
-    }
-    if (status.present) {
-      map['status'] = Variable<String>(status.value);
-    }
-    if (xpGained.present) {
-      map['xp_gained'] = Variable<int>(xpGained.value);
-    }
-    if (goldGained.present) {
-      map['gold_gained'] = Variable<int>(goldGained.value);
-    }
-    if (shadowImpact.present) {
-      map['shadow_impact'] = Variable<int>(shadowImpact.value);
-    }
-    if (logDate.present) {
-      map['log_date'] = Variable<DateTime>(logDate.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('HabitLogsTableCompanion(')
-          ..write('id: $id, ')
-          ..write('habitId: $habitId, ')
-          ..write('playerId: $playerId, ')
-          ..write('status: $status, ')
-          ..write('xpGained: $xpGained, ')
-          ..write('goldGained: $goldGained, ')
-          ..write('shadowImpact: $shadowImpact, ')
-          ..write('logDate: $logDate')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class $ItemsTableTable extends ItemsTable
     with TableInfo<$ItemsTableTable, ItemsTableData> {
   @override
@@ -4395,951 +3128,6 @@ class ShopItemsTableCompanion extends UpdateCompanion<ShopItemsTableData> {
   }
 }
 
-class $AchievementsTableTable extends AchievementsTable
-    with TableInfo<$AchievementsTableTable, AchievementsTableData> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $AchievementsTableTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _keyMeta = const VerificationMeta('key');
-  @override
-  late final GeneratedColumn<String> key = GeneratedColumn<String>(
-      'key', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
-  static const VerificationMeta _titleMeta = const VerificationMeta('title');
-  @override
-  late final GeneratedColumn<String> title = GeneratedColumn<String>(
-      'title', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _descriptionMeta =
-      const VerificationMeta('description');
-  @override
-  late final GeneratedColumn<String> description = GeneratedColumn<String>(
-      'description', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _categoryMeta =
-      const VerificationMeta('category');
-  @override
-  late final GeneratedColumn<String> category = GeneratedColumn<String>(
-      'category', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _iconNameMeta =
-      const VerificationMeta('iconName');
-  @override
-  late final GeneratedColumn<String> iconName = GeneratedColumn<String>(
-      'icon_name', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('star'));
-  static const VerificationMeta _xpRewardMeta =
-      const VerificationMeta('xpReward');
-  @override
-  late final GeneratedColumn<int> xpReward = GeneratedColumn<int>(
-      'xp_reward', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(50));
-  static const VerificationMeta _goldRewardMeta =
-      const VerificationMeta('goldReward');
-  @override
-  late final GeneratedColumn<int> goldReward = GeneratedColumn<int>(
-      'gold_reward', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(25));
-  static const VerificationMeta _gemRewardMeta =
-      const VerificationMeta('gemReward');
-  @override
-  late final GeneratedColumn<int> gemReward = GeneratedColumn<int>(
-      'gem_reward', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _isSecretMeta =
-      const VerificationMeta('isSecret');
-  @override
-  late final GeneratedColumn<bool> isSecret = GeneratedColumn<bool>(
-      'is_secret', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_secret" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _rarityMeta = const VerificationMeta('rarity');
-  @override
-  late final GeneratedColumn<String> rarity = GeneratedColumn<String>(
-      'rarity', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('common'));
-  static const VerificationMeta _titleRewardMeta =
-      const VerificationMeta('titleReward');
-  @override
-  late final GeneratedColumn<String> titleReward = GeneratedColumn<String>(
-      'title_reward', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _category2Meta =
-      const VerificationMeta('category2');
-  @override
-  late final GeneratedColumn<String> category2 = GeneratedColumn<String>(
-      'category2', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  @override
-  List<GeneratedColumn> get $columns => [
-        id,
-        key,
-        title,
-        description,
-        category,
-        iconName,
-        xpReward,
-        goldReward,
-        gemReward,
-        isSecret,
-        rarity,
-        titleReward,
-        category2
-      ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'achievements';
-  @override
-  VerificationContext validateIntegrity(
-      Insertable<AchievementsTableData> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('key')) {
-      context.handle(
-          _keyMeta, key.isAcceptableOrUnknown(data['key']!, _keyMeta));
-    } else if (isInserting) {
-      context.missing(_keyMeta);
-    }
-    if (data.containsKey('title')) {
-      context.handle(
-          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
-    } else if (isInserting) {
-      context.missing(_titleMeta);
-    }
-    if (data.containsKey('description')) {
-      context.handle(
-          _descriptionMeta,
-          description.isAcceptableOrUnknown(
-              data['description']!, _descriptionMeta));
-    } else if (isInserting) {
-      context.missing(_descriptionMeta);
-    }
-    if (data.containsKey('category')) {
-      context.handle(_categoryMeta,
-          category.isAcceptableOrUnknown(data['category']!, _categoryMeta));
-    } else if (isInserting) {
-      context.missing(_categoryMeta);
-    }
-    if (data.containsKey('icon_name')) {
-      context.handle(_iconNameMeta,
-          iconName.isAcceptableOrUnknown(data['icon_name']!, _iconNameMeta));
-    }
-    if (data.containsKey('xp_reward')) {
-      context.handle(_xpRewardMeta,
-          xpReward.isAcceptableOrUnknown(data['xp_reward']!, _xpRewardMeta));
-    }
-    if (data.containsKey('gold_reward')) {
-      context.handle(
-          _goldRewardMeta,
-          goldReward.isAcceptableOrUnknown(
-              data['gold_reward']!, _goldRewardMeta));
-    }
-    if (data.containsKey('gem_reward')) {
-      context.handle(_gemRewardMeta,
-          gemReward.isAcceptableOrUnknown(data['gem_reward']!, _gemRewardMeta));
-    }
-    if (data.containsKey('is_secret')) {
-      context.handle(_isSecretMeta,
-          isSecret.isAcceptableOrUnknown(data['is_secret']!, _isSecretMeta));
-    }
-    if (data.containsKey('rarity')) {
-      context.handle(_rarityMeta,
-          rarity.isAcceptableOrUnknown(data['rarity']!, _rarityMeta));
-    }
-    if (data.containsKey('title_reward')) {
-      context.handle(
-          _titleRewardMeta,
-          titleReward.isAcceptableOrUnknown(
-              data['title_reward']!, _titleRewardMeta));
-    }
-    if (data.containsKey('category2')) {
-      context.handle(_category2Meta,
-          category2.isAcceptableOrUnknown(data['category2']!, _category2Meta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  AchievementsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return AchievementsTableData(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      key: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}key'])!,
-      title: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
-      description: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
-      category: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}category'])!,
-      iconName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}icon_name'])!,
-      xpReward: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}xp_reward'])!,
-      goldReward: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}gold_reward'])!,
-      gemReward: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}gem_reward'])!,
-      isSecret: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_secret'])!,
-      rarity: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}rarity'])!,
-      titleReward: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}title_reward']),
-      category2: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}category2']),
-    );
-  }
-
-  @override
-  $AchievementsTableTable createAlias(String alias) {
-    return $AchievementsTableTable(attachedDatabase, alias);
-  }
-}
-
-class AchievementsTableData extends DataClass
-    implements Insertable<AchievementsTableData> {
-  final int id;
-  final String key;
-  final String title;
-  final String description;
-  final String category;
-  final String iconName;
-  final int xpReward;
-  final int goldReward;
-  final int gemReward;
-  final bool isSecret;
-  final String rarity;
-  final String? titleReward;
-  final String? category2;
-  const AchievementsTableData(
-      {required this.id,
-      required this.key,
-      required this.title,
-      required this.description,
-      required this.category,
-      required this.iconName,
-      required this.xpReward,
-      required this.goldReward,
-      required this.gemReward,
-      required this.isSecret,
-      required this.rarity,
-      this.titleReward,
-      this.category2});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['key'] = Variable<String>(key);
-    map['title'] = Variable<String>(title);
-    map['description'] = Variable<String>(description);
-    map['category'] = Variable<String>(category);
-    map['icon_name'] = Variable<String>(iconName);
-    map['xp_reward'] = Variable<int>(xpReward);
-    map['gold_reward'] = Variable<int>(goldReward);
-    map['gem_reward'] = Variable<int>(gemReward);
-    map['is_secret'] = Variable<bool>(isSecret);
-    map['rarity'] = Variable<String>(rarity);
-    if (!nullToAbsent || titleReward != null) {
-      map['title_reward'] = Variable<String>(titleReward);
-    }
-    if (!nullToAbsent || category2 != null) {
-      map['category2'] = Variable<String>(category2);
-    }
-    return map;
-  }
-
-  AchievementsTableCompanion toCompanion(bool nullToAbsent) {
-    return AchievementsTableCompanion(
-      id: Value(id),
-      key: Value(key),
-      title: Value(title),
-      description: Value(description),
-      category: Value(category),
-      iconName: Value(iconName),
-      xpReward: Value(xpReward),
-      goldReward: Value(goldReward),
-      gemReward: Value(gemReward),
-      isSecret: Value(isSecret),
-      rarity: Value(rarity),
-      titleReward: titleReward == null && nullToAbsent
-          ? const Value.absent()
-          : Value(titleReward),
-      category2: category2 == null && nullToAbsent
-          ? const Value.absent()
-          : Value(category2),
-    );
-  }
-
-  factory AchievementsTableData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return AchievementsTableData(
-      id: serializer.fromJson<int>(json['id']),
-      key: serializer.fromJson<String>(json['key']),
-      title: serializer.fromJson<String>(json['title']),
-      description: serializer.fromJson<String>(json['description']),
-      category: serializer.fromJson<String>(json['category']),
-      iconName: serializer.fromJson<String>(json['iconName']),
-      xpReward: serializer.fromJson<int>(json['xpReward']),
-      goldReward: serializer.fromJson<int>(json['goldReward']),
-      gemReward: serializer.fromJson<int>(json['gemReward']),
-      isSecret: serializer.fromJson<bool>(json['isSecret']),
-      rarity: serializer.fromJson<String>(json['rarity']),
-      titleReward: serializer.fromJson<String?>(json['titleReward']),
-      category2: serializer.fromJson<String?>(json['category2']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'key': serializer.toJson<String>(key),
-      'title': serializer.toJson<String>(title),
-      'description': serializer.toJson<String>(description),
-      'category': serializer.toJson<String>(category),
-      'iconName': serializer.toJson<String>(iconName),
-      'xpReward': serializer.toJson<int>(xpReward),
-      'goldReward': serializer.toJson<int>(goldReward),
-      'gemReward': serializer.toJson<int>(gemReward),
-      'isSecret': serializer.toJson<bool>(isSecret),
-      'rarity': serializer.toJson<String>(rarity),
-      'titleReward': serializer.toJson<String?>(titleReward),
-      'category2': serializer.toJson<String?>(category2),
-    };
-  }
-
-  AchievementsTableData copyWith(
-          {int? id,
-          String? key,
-          String? title,
-          String? description,
-          String? category,
-          String? iconName,
-          int? xpReward,
-          int? goldReward,
-          int? gemReward,
-          bool? isSecret,
-          String? rarity,
-          Value<String?> titleReward = const Value.absent(),
-          Value<String?> category2 = const Value.absent()}) =>
-      AchievementsTableData(
-        id: id ?? this.id,
-        key: key ?? this.key,
-        title: title ?? this.title,
-        description: description ?? this.description,
-        category: category ?? this.category,
-        iconName: iconName ?? this.iconName,
-        xpReward: xpReward ?? this.xpReward,
-        goldReward: goldReward ?? this.goldReward,
-        gemReward: gemReward ?? this.gemReward,
-        isSecret: isSecret ?? this.isSecret,
-        rarity: rarity ?? this.rarity,
-        titleReward: titleReward.present ? titleReward.value : this.titleReward,
-        category2: category2.present ? category2.value : this.category2,
-      );
-  AchievementsTableData copyWithCompanion(AchievementsTableCompanion data) {
-    return AchievementsTableData(
-      id: data.id.present ? data.id.value : this.id,
-      key: data.key.present ? data.key.value : this.key,
-      title: data.title.present ? data.title.value : this.title,
-      description:
-          data.description.present ? data.description.value : this.description,
-      category: data.category.present ? data.category.value : this.category,
-      iconName: data.iconName.present ? data.iconName.value : this.iconName,
-      xpReward: data.xpReward.present ? data.xpReward.value : this.xpReward,
-      goldReward:
-          data.goldReward.present ? data.goldReward.value : this.goldReward,
-      gemReward: data.gemReward.present ? data.gemReward.value : this.gemReward,
-      isSecret: data.isSecret.present ? data.isSecret.value : this.isSecret,
-      rarity: data.rarity.present ? data.rarity.value : this.rarity,
-      titleReward:
-          data.titleReward.present ? data.titleReward.value : this.titleReward,
-      category2: data.category2.present ? data.category2.value : this.category2,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('AchievementsTableData(')
-          ..write('id: $id, ')
-          ..write('key: $key, ')
-          ..write('title: $title, ')
-          ..write('description: $description, ')
-          ..write('category: $category, ')
-          ..write('iconName: $iconName, ')
-          ..write('xpReward: $xpReward, ')
-          ..write('goldReward: $goldReward, ')
-          ..write('gemReward: $gemReward, ')
-          ..write('isSecret: $isSecret, ')
-          ..write('rarity: $rarity, ')
-          ..write('titleReward: $titleReward, ')
-          ..write('category2: $category2')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-      id,
-      key,
-      title,
-      description,
-      category,
-      iconName,
-      xpReward,
-      goldReward,
-      gemReward,
-      isSecret,
-      rarity,
-      titleReward,
-      category2);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is AchievementsTableData &&
-          other.id == this.id &&
-          other.key == this.key &&
-          other.title == this.title &&
-          other.description == this.description &&
-          other.category == this.category &&
-          other.iconName == this.iconName &&
-          other.xpReward == this.xpReward &&
-          other.goldReward == this.goldReward &&
-          other.gemReward == this.gemReward &&
-          other.isSecret == this.isSecret &&
-          other.rarity == this.rarity &&
-          other.titleReward == this.titleReward &&
-          other.category2 == this.category2);
-}
-
-class AchievementsTableCompanion
-    extends UpdateCompanion<AchievementsTableData> {
-  final Value<int> id;
-  final Value<String> key;
-  final Value<String> title;
-  final Value<String> description;
-  final Value<String> category;
-  final Value<String> iconName;
-  final Value<int> xpReward;
-  final Value<int> goldReward;
-  final Value<int> gemReward;
-  final Value<bool> isSecret;
-  final Value<String> rarity;
-  final Value<String?> titleReward;
-  final Value<String?> category2;
-  const AchievementsTableCompanion({
-    this.id = const Value.absent(),
-    this.key = const Value.absent(),
-    this.title = const Value.absent(),
-    this.description = const Value.absent(),
-    this.category = const Value.absent(),
-    this.iconName = const Value.absent(),
-    this.xpReward = const Value.absent(),
-    this.goldReward = const Value.absent(),
-    this.gemReward = const Value.absent(),
-    this.isSecret = const Value.absent(),
-    this.rarity = const Value.absent(),
-    this.titleReward = const Value.absent(),
-    this.category2 = const Value.absent(),
-  });
-  AchievementsTableCompanion.insert({
-    this.id = const Value.absent(),
-    required String key,
-    required String title,
-    required String description,
-    required String category,
-    this.iconName = const Value.absent(),
-    this.xpReward = const Value.absent(),
-    this.goldReward = const Value.absent(),
-    this.gemReward = const Value.absent(),
-    this.isSecret = const Value.absent(),
-    this.rarity = const Value.absent(),
-    this.titleReward = const Value.absent(),
-    this.category2 = const Value.absent(),
-  })  : key = Value(key),
-        title = Value(title),
-        description = Value(description),
-        category = Value(category);
-  static Insertable<AchievementsTableData> custom({
-    Expression<int>? id,
-    Expression<String>? key,
-    Expression<String>? title,
-    Expression<String>? description,
-    Expression<String>? category,
-    Expression<String>? iconName,
-    Expression<int>? xpReward,
-    Expression<int>? goldReward,
-    Expression<int>? gemReward,
-    Expression<bool>? isSecret,
-    Expression<String>? rarity,
-    Expression<String>? titleReward,
-    Expression<String>? category2,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (key != null) 'key': key,
-      if (title != null) 'title': title,
-      if (description != null) 'description': description,
-      if (category != null) 'category': category,
-      if (iconName != null) 'icon_name': iconName,
-      if (xpReward != null) 'xp_reward': xpReward,
-      if (goldReward != null) 'gold_reward': goldReward,
-      if (gemReward != null) 'gem_reward': gemReward,
-      if (isSecret != null) 'is_secret': isSecret,
-      if (rarity != null) 'rarity': rarity,
-      if (titleReward != null) 'title_reward': titleReward,
-      if (category2 != null) 'category2': category2,
-    });
-  }
-
-  AchievementsTableCompanion copyWith(
-      {Value<int>? id,
-      Value<String>? key,
-      Value<String>? title,
-      Value<String>? description,
-      Value<String>? category,
-      Value<String>? iconName,
-      Value<int>? xpReward,
-      Value<int>? goldReward,
-      Value<int>? gemReward,
-      Value<bool>? isSecret,
-      Value<String>? rarity,
-      Value<String?>? titleReward,
-      Value<String?>? category2}) {
-    return AchievementsTableCompanion(
-      id: id ?? this.id,
-      key: key ?? this.key,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      category: category ?? this.category,
-      iconName: iconName ?? this.iconName,
-      xpReward: xpReward ?? this.xpReward,
-      goldReward: goldReward ?? this.goldReward,
-      gemReward: gemReward ?? this.gemReward,
-      isSecret: isSecret ?? this.isSecret,
-      rarity: rarity ?? this.rarity,
-      titleReward: titleReward ?? this.titleReward,
-      category2: category2 ?? this.category2,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (key.present) {
-      map['key'] = Variable<String>(key.value);
-    }
-    if (title.present) {
-      map['title'] = Variable<String>(title.value);
-    }
-    if (description.present) {
-      map['description'] = Variable<String>(description.value);
-    }
-    if (category.present) {
-      map['category'] = Variable<String>(category.value);
-    }
-    if (iconName.present) {
-      map['icon_name'] = Variable<String>(iconName.value);
-    }
-    if (xpReward.present) {
-      map['xp_reward'] = Variable<int>(xpReward.value);
-    }
-    if (goldReward.present) {
-      map['gold_reward'] = Variable<int>(goldReward.value);
-    }
-    if (gemReward.present) {
-      map['gem_reward'] = Variable<int>(gemReward.value);
-    }
-    if (isSecret.present) {
-      map['is_secret'] = Variable<bool>(isSecret.value);
-    }
-    if (rarity.present) {
-      map['rarity'] = Variable<String>(rarity.value);
-    }
-    if (titleReward.present) {
-      map['title_reward'] = Variable<String>(titleReward.value);
-    }
-    if (category2.present) {
-      map['category2'] = Variable<String>(category2.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('AchievementsTableCompanion(')
-          ..write('id: $id, ')
-          ..write('key: $key, ')
-          ..write('title: $title, ')
-          ..write('description: $description, ')
-          ..write('category: $category, ')
-          ..write('iconName: $iconName, ')
-          ..write('xpReward: $xpReward, ')
-          ..write('goldReward: $goldReward, ')
-          ..write('gemReward: $gemReward, ')
-          ..write('isSecret: $isSecret, ')
-          ..write('rarity: $rarity, ')
-          ..write('titleReward: $titleReward, ')
-          ..write('category2: $category2')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $PlayerAchievementsTableTable extends PlayerAchievementsTable
-    with TableInfo<$PlayerAchievementsTableTable, PlayerAchievementsTableData> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $PlayerAchievementsTableTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _playerIdMeta =
-      const VerificationMeta('playerId');
-  @override
-  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
-      'player_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _achievementKeyMeta =
-      const VerificationMeta('achievementKey');
-  @override
-  late final GeneratedColumn<String> achievementKey = GeneratedColumn<String>(
-      'achievement_key', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _unlockedAtMeta =
-      const VerificationMeta('unlockedAt');
-  @override
-  late final GeneratedColumn<DateTime> unlockedAt = GeneratedColumn<DateTime>(
-      'unlocked_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _collectedAtMeta =
-      const VerificationMeta('collectedAt');
-  @override
-  late final GeneratedColumn<DateTime> collectedAt = GeneratedColumn<DateTime>(
-      'collected_at', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  @override
-  List<GeneratedColumn> get $columns =>
-      [id, playerId, achievementKey, unlockedAt, collectedAt];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'player_achievements';
-  @override
-  VerificationContext validateIntegrity(
-      Insertable<PlayerAchievementsTableData> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('player_id')) {
-      context.handle(_playerIdMeta,
-          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
-    } else if (isInserting) {
-      context.missing(_playerIdMeta);
-    }
-    if (data.containsKey('achievement_key')) {
-      context.handle(
-          _achievementKeyMeta,
-          achievementKey.isAcceptableOrUnknown(
-              data['achievement_key']!, _achievementKeyMeta));
-    } else if (isInserting) {
-      context.missing(_achievementKeyMeta);
-    }
-    if (data.containsKey('unlocked_at')) {
-      context.handle(
-          _unlockedAtMeta,
-          unlockedAt.isAcceptableOrUnknown(
-              data['unlocked_at']!, _unlockedAtMeta));
-    }
-    if (data.containsKey('collected_at')) {
-      context.handle(
-          _collectedAtMeta,
-          collectedAt.isAcceptableOrUnknown(
-              data['collected_at']!, _collectedAtMeta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  PlayerAchievementsTableData map(Map<String, dynamic> data,
-      {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return PlayerAchievementsTableData(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      playerId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
-      achievementKey: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}achievement_key'])!,
-      unlockedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}unlocked_at'])!,
-      collectedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}collected_at']),
-    );
-  }
-
-  @override
-  $PlayerAchievementsTableTable createAlias(String alias) {
-    return $PlayerAchievementsTableTable(attachedDatabase, alias);
-  }
-}
-
-class PlayerAchievementsTableData extends DataClass
-    implements Insertable<PlayerAchievementsTableData> {
-  final int id;
-  final int playerId;
-  final String achievementKey;
-  final DateTime unlockedAt;
-  final DateTime? collectedAt;
-  const PlayerAchievementsTableData(
-      {required this.id,
-      required this.playerId,
-      required this.achievementKey,
-      required this.unlockedAt,
-      this.collectedAt});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['player_id'] = Variable<int>(playerId);
-    map['achievement_key'] = Variable<String>(achievementKey);
-    map['unlocked_at'] = Variable<DateTime>(unlockedAt);
-    if (!nullToAbsent || collectedAt != null) {
-      map['collected_at'] = Variable<DateTime>(collectedAt);
-    }
-    return map;
-  }
-
-  PlayerAchievementsTableCompanion toCompanion(bool nullToAbsent) {
-    return PlayerAchievementsTableCompanion(
-      id: Value(id),
-      playerId: Value(playerId),
-      achievementKey: Value(achievementKey),
-      unlockedAt: Value(unlockedAt),
-      collectedAt: collectedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(collectedAt),
-    );
-  }
-
-  factory PlayerAchievementsTableData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return PlayerAchievementsTableData(
-      id: serializer.fromJson<int>(json['id']),
-      playerId: serializer.fromJson<int>(json['playerId']),
-      achievementKey: serializer.fromJson<String>(json['achievementKey']),
-      unlockedAt: serializer.fromJson<DateTime>(json['unlockedAt']),
-      collectedAt: serializer.fromJson<DateTime?>(json['collectedAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'playerId': serializer.toJson<int>(playerId),
-      'achievementKey': serializer.toJson<String>(achievementKey),
-      'unlockedAt': serializer.toJson<DateTime>(unlockedAt),
-      'collectedAt': serializer.toJson<DateTime?>(collectedAt),
-    };
-  }
-
-  PlayerAchievementsTableData copyWith(
-          {int? id,
-          int? playerId,
-          String? achievementKey,
-          DateTime? unlockedAt,
-          Value<DateTime?> collectedAt = const Value.absent()}) =>
-      PlayerAchievementsTableData(
-        id: id ?? this.id,
-        playerId: playerId ?? this.playerId,
-        achievementKey: achievementKey ?? this.achievementKey,
-        unlockedAt: unlockedAt ?? this.unlockedAt,
-        collectedAt: collectedAt.present ? collectedAt.value : this.collectedAt,
-      );
-  PlayerAchievementsTableData copyWithCompanion(
-      PlayerAchievementsTableCompanion data) {
-    return PlayerAchievementsTableData(
-      id: data.id.present ? data.id.value : this.id,
-      playerId: data.playerId.present ? data.playerId.value : this.playerId,
-      achievementKey: data.achievementKey.present
-          ? data.achievementKey.value
-          : this.achievementKey,
-      unlockedAt:
-          data.unlockedAt.present ? data.unlockedAt.value : this.unlockedAt,
-      collectedAt:
-          data.collectedAt.present ? data.collectedAt.value : this.collectedAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('PlayerAchievementsTableData(')
-          ..write('id: $id, ')
-          ..write('playerId: $playerId, ')
-          ..write('achievementKey: $achievementKey, ')
-          ..write('unlockedAt: $unlockedAt, ')
-          ..write('collectedAt: $collectedAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode =>
-      Object.hash(id, playerId, achievementKey, unlockedAt, collectedAt);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is PlayerAchievementsTableData &&
-          other.id == this.id &&
-          other.playerId == this.playerId &&
-          other.achievementKey == this.achievementKey &&
-          other.unlockedAt == this.unlockedAt &&
-          other.collectedAt == this.collectedAt);
-}
-
-class PlayerAchievementsTableCompanion
-    extends UpdateCompanion<PlayerAchievementsTableData> {
-  final Value<int> id;
-  final Value<int> playerId;
-  final Value<String> achievementKey;
-  final Value<DateTime> unlockedAt;
-  final Value<DateTime?> collectedAt;
-  const PlayerAchievementsTableCompanion({
-    this.id = const Value.absent(),
-    this.playerId = const Value.absent(),
-    this.achievementKey = const Value.absent(),
-    this.unlockedAt = const Value.absent(),
-    this.collectedAt = const Value.absent(),
-  });
-  PlayerAchievementsTableCompanion.insert({
-    this.id = const Value.absent(),
-    required int playerId,
-    required String achievementKey,
-    this.unlockedAt = const Value.absent(),
-    this.collectedAt = const Value.absent(),
-  })  : playerId = Value(playerId),
-        achievementKey = Value(achievementKey);
-  static Insertable<PlayerAchievementsTableData> custom({
-    Expression<int>? id,
-    Expression<int>? playerId,
-    Expression<String>? achievementKey,
-    Expression<DateTime>? unlockedAt,
-    Expression<DateTime>? collectedAt,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (playerId != null) 'player_id': playerId,
-      if (achievementKey != null) 'achievement_key': achievementKey,
-      if (unlockedAt != null) 'unlocked_at': unlockedAt,
-      if (collectedAt != null) 'collected_at': collectedAt,
-    });
-  }
-
-  PlayerAchievementsTableCompanion copyWith(
-      {Value<int>? id,
-      Value<int>? playerId,
-      Value<String>? achievementKey,
-      Value<DateTime>? unlockedAt,
-      Value<DateTime?>? collectedAt}) {
-    return PlayerAchievementsTableCompanion(
-      id: id ?? this.id,
-      playerId: playerId ?? this.playerId,
-      achievementKey: achievementKey ?? this.achievementKey,
-      unlockedAt: unlockedAt ?? this.unlockedAt,
-      collectedAt: collectedAt ?? this.collectedAt,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (playerId.present) {
-      map['player_id'] = Variable<int>(playerId.value);
-    }
-    if (achievementKey.present) {
-      map['achievement_key'] = Variable<String>(achievementKey.value);
-    }
-    if (unlockedAt.present) {
-      map['unlocked_at'] = Variable<DateTime>(unlockedAt.value);
-    }
-    if (collectedAt.present) {
-      map['collected_at'] = Variable<DateTime>(collectedAt.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('PlayerAchievementsTableCompanion(')
-          ..write('id: $id, ')
-          ..write('playerId: $playerId, ')
-          ..write('achievementKey: $achievementKey, ')
-          ..write('unlockedAt: $unlockedAt, ')
-          ..write('collectedAt: $collectedAt')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class $GuildStatusTableTable extends GuildStatusTable
     with TableInfo<$GuildStatusTableTable, GuildStatusTableData> {
   @override
@@ -6458,1439 +4246,6 @@ class DiaryEntriesTableCompanion
           ..write('wordCount: $wordCount, ')
           ..write('entryDate: $entryDate, ')
           ..write('updatedAt: $updatedAt')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $ClassQuestsTableTable extends ClassQuestsTable
-    with TableInfo<$ClassQuestsTableTable, ClassQuestsTableData> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $ClassQuestsTableTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _playerIdMeta =
-      const VerificationMeta('playerId');
-  @override
-  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
-      'player_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _classTypeMeta =
-      const VerificationMeta('classType');
-  @override
-  late final GeneratedColumn<String> classType = GeneratedColumn<String>(
-      'class_type', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _questKeyMeta =
-      const VerificationMeta('questKey');
-  @override
-  late final GeneratedColumn<String> questKey = GeneratedColumn<String>(
-      'quest_key', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _titleMeta = const VerificationMeta('title');
-  @override
-  late final GeneratedColumn<String> title = GeneratedColumn<String>(
-      'title', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _descriptionMeta =
-      const VerificationMeta('description');
-  @override
-  late final GeneratedColumn<String> description = GeneratedColumn<String>(
-      'description', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _checkTypeMeta =
-      const VerificationMeta('checkType');
-  @override
-  late final GeneratedColumn<String> checkType = GeneratedColumn<String>(
-      'check_type', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _checkParamsJsonMeta =
-      const VerificationMeta('checkParamsJson');
-  @override
-  late final GeneratedColumn<String> checkParamsJson = GeneratedColumn<String>(
-      'check_params_json', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _xpRewardMeta =
-      const VerificationMeta('xpReward');
-  @override
-  late final GeneratedColumn<int> xpReward = GeneratedColumn<int>(
-      'xp_reward', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _goldRewardMeta =
-      const VerificationMeta('goldReward');
-  @override
-  late final GeneratedColumn<int> goldReward = GeneratedColumn<int>(
-      'gold_reward', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _assignedDateMeta =
-      const VerificationMeta('assignedDate');
-  @override
-  late final GeneratedColumn<String> assignedDate = GeneratedColumn<String>(
-      'assigned_date', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _completedMeta =
-      const VerificationMeta('completed');
-  @override
-  late final GeneratedColumn<bool> completed = GeneratedColumn<bool>(
-      'completed', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("completed" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _progressMeta =
-      const VerificationMeta('progress');
-  @override
-  late final GeneratedColumn<int> progress = GeneratedColumn<int>(
-      'progress', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _progressTargetMeta =
-      const VerificationMeta('progressTarget');
-  @override
-  late final GeneratedColumn<int> progressTarget = GeneratedColumn<int>(
-      'progress_target', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(1));
-  @override
-  List<GeneratedColumn> get $columns => [
-        id,
-        playerId,
-        classType,
-        questKey,
-        title,
-        description,
-        checkType,
-        checkParamsJson,
-        xpReward,
-        goldReward,
-        assignedDate,
-        completed,
-        progress,
-        progressTarget
-      ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'active_class_quests';
-  @override
-  VerificationContext validateIntegrity(
-      Insertable<ClassQuestsTableData> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('player_id')) {
-      context.handle(_playerIdMeta,
-          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
-    } else if (isInserting) {
-      context.missing(_playerIdMeta);
-    }
-    if (data.containsKey('class_type')) {
-      context.handle(_classTypeMeta,
-          classType.isAcceptableOrUnknown(data['class_type']!, _classTypeMeta));
-    } else if (isInserting) {
-      context.missing(_classTypeMeta);
-    }
-    if (data.containsKey('quest_key')) {
-      context.handle(_questKeyMeta,
-          questKey.isAcceptableOrUnknown(data['quest_key']!, _questKeyMeta));
-    } else if (isInserting) {
-      context.missing(_questKeyMeta);
-    }
-    if (data.containsKey('title')) {
-      context.handle(
-          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
-    } else if (isInserting) {
-      context.missing(_titleMeta);
-    }
-    if (data.containsKey('description')) {
-      context.handle(
-          _descriptionMeta,
-          description.isAcceptableOrUnknown(
-              data['description']!, _descriptionMeta));
-    } else if (isInserting) {
-      context.missing(_descriptionMeta);
-    }
-    if (data.containsKey('check_type')) {
-      context.handle(_checkTypeMeta,
-          checkType.isAcceptableOrUnknown(data['check_type']!, _checkTypeMeta));
-    } else if (isInserting) {
-      context.missing(_checkTypeMeta);
-    }
-    if (data.containsKey('check_params_json')) {
-      context.handle(
-          _checkParamsJsonMeta,
-          checkParamsJson.isAcceptableOrUnknown(
-              data['check_params_json']!, _checkParamsJsonMeta));
-    } else if (isInserting) {
-      context.missing(_checkParamsJsonMeta);
-    }
-    if (data.containsKey('xp_reward')) {
-      context.handle(_xpRewardMeta,
-          xpReward.isAcceptableOrUnknown(data['xp_reward']!, _xpRewardMeta));
-    }
-    if (data.containsKey('gold_reward')) {
-      context.handle(
-          _goldRewardMeta,
-          goldReward.isAcceptableOrUnknown(
-              data['gold_reward']!, _goldRewardMeta));
-    }
-    if (data.containsKey('assigned_date')) {
-      context.handle(
-          _assignedDateMeta,
-          assignedDate.isAcceptableOrUnknown(
-              data['assigned_date']!, _assignedDateMeta));
-    } else if (isInserting) {
-      context.missing(_assignedDateMeta);
-    }
-    if (data.containsKey('completed')) {
-      context.handle(_completedMeta,
-          completed.isAcceptableOrUnknown(data['completed']!, _completedMeta));
-    }
-    if (data.containsKey('progress')) {
-      context.handle(_progressMeta,
-          progress.isAcceptableOrUnknown(data['progress']!, _progressMeta));
-    }
-    if (data.containsKey('progress_target')) {
-      context.handle(
-          _progressTargetMeta,
-          progressTarget.isAcceptableOrUnknown(
-              data['progress_target']!, _progressTargetMeta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  ClassQuestsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return ClassQuestsTableData(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      playerId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
-      classType: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}class_type'])!,
-      questKey: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}quest_key'])!,
-      title: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
-      description: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
-      checkType: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}check_type'])!,
-      checkParamsJson: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}check_params_json'])!,
-      xpReward: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}xp_reward'])!,
-      goldReward: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}gold_reward'])!,
-      assignedDate: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}assigned_date'])!,
-      completed: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}completed'])!,
-      progress: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}progress'])!,
-      progressTarget: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}progress_target'])!,
-    );
-  }
-
-  @override
-  $ClassQuestsTableTable createAlias(String alias) {
-    return $ClassQuestsTableTable(attachedDatabase, alias);
-  }
-}
-
-class ClassQuestsTableData extends DataClass
-    implements Insertable<ClassQuestsTableData> {
-  final int id;
-  final int playerId;
-  final String classType;
-  final String questKey;
-  final String title;
-  final String description;
-  final String checkType;
-  final String checkParamsJson;
-  final int xpReward;
-  final int goldReward;
-  final String assignedDate;
-  final bool completed;
-  final int progress;
-  final int progressTarget;
-  const ClassQuestsTableData(
-      {required this.id,
-      required this.playerId,
-      required this.classType,
-      required this.questKey,
-      required this.title,
-      required this.description,
-      required this.checkType,
-      required this.checkParamsJson,
-      required this.xpReward,
-      required this.goldReward,
-      required this.assignedDate,
-      required this.completed,
-      required this.progress,
-      required this.progressTarget});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['player_id'] = Variable<int>(playerId);
-    map['class_type'] = Variable<String>(classType);
-    map['quest_key'] = Variable<String>(questKey);
-    map['title'] = Variable<String>(title);
-    map['description'] = Variable<String>(description);
-    map['check_type'] = Variable<String>(checkType);
-    map['check_params_json'] = Variable<String>(checkParamsJson);
-    map['xp_reward'] = Variable<int>(xpReward);
-    map['gold_reward'] = Variable<int>(goldReward);
-    map['assigned_date'] = Variable<String>(assignedDate);
-    map['completed'] = Variable<bool>(completed);
-    map['progress'] = Variable<int>(progress);
-    map['progress_target'] = Variable<int>(progressTarget);
-    return map;
-  }
-
-  ClassQuestsTableCompanion toCompanion(bool nullToAbsent) {
-    return ClassQuestsTableCompanion(
-      id: Value(id),
-      playerId: Value(playerId),
-      classType: Value(classType),
-      questKey: Value(questKey),
-      title: Value(title),
-      description: Value(description),
-      checkType: Value(checkType),
-      checkParamsJson: Value(checkParamsJson),
-      xpReward: Value(xpReward),
-      goldReward: Value(goldReward),
-      assignedDate: Value(assignedDate),
-      completed: Value(completed),
-      progress: Value(progress),
-      progressTarget: Value(progressTarget),
-    );
-  }
-
-  factory ClassQuestsTableData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return ClassQuestsTableData(
-      id: serializer.fromJson<int>(json['id']),
-      playerId: serializer.fromJson<int>(json['playerId']),
-      classType: serializer.fromJson<String>(json['classType']),
-      questKey: serializer.fromJson<String>(json['questKey']),
-      title: serializer.fromJson<String>(json['title']),
-      description: serializer.fromJson<String>(json['description']),
-      checkType: serializer.fromJson<String>(json['checkType']),
-      checkParamsJson: serializer.fromJson<String>(json['checkParamsJson']),
-      xpReward: serializer.fromJson<int>(json['xpReward']),
-      goldReward: serializer.fromJson<int>(json['goldReward']),
-      assignedDate: serializer.fromJson<String>(json['assignedDate']),
-      completed: serializer.fromJson<bool>(json['completed']),
-      progress: serializer.fromJson<int>(json['progress']),
-      progressTarget: serializer.fromJson<int>(json['progressTarget']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'playerId': serializer.toJson<int>(playerId),
-      'classType': serializer.toJson<String>(classType),
-      'questKey': serializer.toJson<String>(questKey),
-      'title': serializer.toJson<String>(title),
-      'description': serializer.toJson<String>(description),
-      'checkType': serializer.toJson<String>(checkType),
-      'checkParamsJson': serializer.toJson<String>(checkParamsJson),
-      'xpReward': serializer.toJson<int>(xpReward),
-      'goldReward': serializer.toJson<int>(goldReward),
-      'assignedDate': serializer.toJson<String>(assignedDate),
-      'completed': serializer.toJson<bool>(completed),
-      'progress': serializer.toJson<int>(progress),
-      'progressTarget': serializer.toJson<int>(progressTarget),
-    };
-  }
-
-  ClassQuestsTableData copyWith(
-          {int? id,
-          int? playerId,
-          String? classType,
-          String? questKey,
-          String? title,
-          String? description,
-          String? checkType,
-          String? checkParamsJson,
-          int? xpReward,
-          int? goldReward,
-          String? assignedDate,
-          bool? completed,
-          int? progress,
-          int? progressTarget}) =>
-      ClassQuestsTableData(
-        id: id ?? this.id,
-        playerId: playerId ?? this.playerId,
-        classType: classType ?? this.classType,
-        questKey: questKey ?? this.questKey,
-        title: title ?? this.title,
-        description: description ?? this.description,
-        checkType: checkType ?? this.checkType,
-        checkParamsJson: checkParamsJson ?? this.checkParamsJson,
-        xpReward: xpReward ?? this.xpReward,
-        goldReward: goldReward ?? this.goldReward,
-        assignedDate: assignedDate ?? this.assignedDate,
-        completed: completed ?? this.completed,
-        progress: progress ?? this.progress,
-        progressTarget: progressTarget ?? this.progressTarget,
-      );
-  ClassQuestsTableData copyWithCompanion(ClassQuestsTableCompanion data) {
-    return ClassQuestsTableData(
-      id: data.id.present ? data.id.value : this.id,
-      playerId: data.playerId.present ? data.playerId.value : this.playerId,
-      classType: data.classType.present ? data.classType.value : this.classType,
-      questKey: data.questKey.present ? data.questKey.value : this.questKey,
-      title: data.title.present ? data.title.value : this.title,
-      description:
-          data.description.present ? data.description.value : this.description,
-      checkType: data.checkType.present ? data.checkType.value : this.checkType,
-      checkParamsJson: data.checkParamsJson.present
-          ? data.checkParamsJson.value
-          : this.checkParamsJson,
-      xpReward: data.xpReward.present ? data.xpReward.value : this.xpReward,
-      goldReward:
-          data.goldReward.present ? data.goldReward.value : this.goldReward,
-      assignedDate: data.assignedDate.present
-          ? data.assignedDate.value
-          : this.assignedDate,
-      completed: data.completed.present ? data.completed.value : this.completed,
-      progress: data.progress.present ? data.progress.value : this.progress,
-      progressTarget: data.progressTarget.present
-          ? data.progressTarget.value
-          : this.progressTarget,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('ClassQuestsTableData(')
-          ..write('id: $id, ')
-          ..write('playerId: $playerId, ')
-          ..write('classType: $classType, ')
-          ..write('questKey: $questKey, ')
-          ..write('title: $title, ')
-          ..write('description: $description, ')
-          ..write('checkType: $checkType, ')
-          ..write('checkParamsJson: $checkParamsJson, ')
-          ..write('xpReward: $xpReward, ')
-          ..write('goldReward: $goldReward, ')
-          ..write('assignedDate: $assignedDate, ')
-          ..write('completed: $completed, ')
-          ..write('progress: $progress, ')
-          ..write('progressTarget: $progressTarget')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-      id,
-      playerId,
-      classType,
-      questKey,
-      title,
-      description,
-      checkType,
-      checkParamsJson,
-      xpReward,
-      goldReward,
-      assignedDate,
-      completed,
-      progress,
-      progressTarget);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is ClassQuestsTableData &&
-          other.id == this.id &&
-          other.playerId == this.playerId &&
-          other.classType == this.classType &&
-          other.questKey == this.questKey &&
-          other.title == this.title &&
-          other.description == this.description &&
-          other.checkType == this.checkType &&
-          other.checkParamsJson == this.checkParamsJson &&
-          other.xpReward == this.xpReward &&
-          other.goldReward == this.goldReward &&
-          other.assignedDate == this.assignedDate &&
-          other.completed == this.completed &&
-          other.progress == this.progress &&
-          other.progressTarget == this.progressTarget);
-}
-
-class ClassQuestsTableCompanion extends UpdateCompanion<ClassQuestsTableData> {
-  final Value<int> id;
-  final Value<int> playerId;
-  final Value<String> classType;
-  final Value<String> questKey;
-  final Value<String> title;
-  final Value<String> description;
-  final Value<String> checkType;
-  final Value<String> checkParamsJson;
-  final Value<int> xpReward;
-  final Value<int> goldReward;
-  final Value<String> assignedDate;
-  final Value<bool> completed;
-  final Value<int> progress;
-  final Value<int> progressTarget;
-  const ClassQuestsTableCompanion({
-    this.id = const Value.absent(),
-    this.playerId = const Value.absent(),
-    this.classType = const Value.absent(),
-    this.questKey = const Value.absent(),
-    this.title = const Value.absent(),
-    this.description = const Value.absent(),
-    this.checkType = const Value.absent(),
-    this.checkParamsJson = const Value.absent(),
-    this.xpReward = const Value.absent(),
-    this.goldReward = const Value.absent(),
-    this.assignedDate = const Value.absent(),
-    this.completed = const Value.absent(),
-    this.progress = const Value.absent(),
-    this.progressTarget = const Value.absent(),
-  });
-  ClassQuestsTableCompanion.insert({
-    this.id = const Value.absent(),
-    required int playerId,
-    required String classType,
-    required String questKey,
-    required String title,
-    required String description,
-    required String checkType,
-    required String checkParamsJson,
-    this.xpReward = const Value.absent(),
-    this.goldReward = const Value.absent(),
-    required String assignedDate,
-    this.completed = const Value.absent(),
-    this.progress = const Value.absent(),
-    this.progressTarget = const Value.absent(),
-  })  : playerId = Value(playerId),
-        classType = Value(classType),
-        questKey = Value(questKey),
-        title = Value(title),
-        description = Value(description),
-        checkType = Value(checkType),
-        checkParamsJson = Value(checkParamsJson),
-        assignedDate = Value(assignedDate);
-  static Insertable<ClassQuestsTableData> custom({
-    Expression<int>? id,
-    Expression<int>? playerId,
-    Expression<String>? classType,
-    Expression<String>? questKey,
-    Expression<String>? title,
-    Expression<String>? description,
-    Expression<String>? checkType,
-    Expression<String>? checkParamsJson,
-    Expression<int>? xpReward,
-    Expression<int>? goldReward,
-    Expression<String>? assignedDate,
-    Expression<bool>? completed,
-    Expression<int>? progress,
-    Expression<int>? progressTarget,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (playerId != null) 'player_id': playerId,
-      if (classType != null) 'class_type': classType,
-      if (questKey != null) 'quest_key': questKey,
-      if (title != null) 'title': title,
-      if (description != null) 'description': description,
-      if (checkType != null) 'check_type': checkType,
-      if (checkParamsJson != null) 'check_params_json': checkParamsJson,
-      if (xpReward != null) 'xp_reward': xpReward,
-      if (goldReward != null) 'gold_reward': goldReward,
-      if (assignedDate != null) 'assigned_date': assignedDate,
-      if (completed != null) 'completed': completed,
-      if (progress != null) 'progress': progress,
-      if (progressTarget != null) 'progress_target': progressTarget,
-    });
-  }
-
-  ClassQuestsTableCompanion copyWith(
-      {Value<int>? id,
-      Value<int>? playerId,
-      Value<String>? classType,
-      Value<String>? questKey,
-      Value<String>? title,
-      Value<String>? description,
-      Value<String>? checkType,
-      Value<String>? checkParamsJson,
-      Value<int>? xpReward,
-      Value<int>? goldReward,
-      Value<String>? assignedDate,
-      Value<bool>? completed,
-      Value<int>? progress,
-      Value<int>? progressTarget}) {
-    return ClassQuestsTableCompanion(
-      id: id ?? this.id,
-      playerId: playerId ?? this.playerId,
-      classType: classType ?? this.classType,
-      questKey: questKey ?? this.questKey,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      checkType: checkType ?? this.checkType,
-      checkParamsJson: checkParamsJson ?? this.checkParamsJson,
-      xpReward: xpReward ?? this.xpReward,
-      goldReward: goldReward ?? this.goldReward,
-      assignedDate: assignedDate ?? this.assignedDate,
-      completed: completed ?? this.completed,
-      progress: progress ?? this.progress,
-      progressTarget: progressTarget ?? this.progressTarget,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (playerId.present) {
-      map['player_id'] = Variable<int>(playerId.value);
-    }
-    if (classType.present) {
-      map['class_type'] = Variable<String>(classType.value);
-    }
-    if (questKey.present) {
-      map['quest_key'] = Variable<String>(questKey.value);
-    }
-    if (title.present) {
-      map['title'] = Variable<String>(title.value);
-    }
-    if (description.present) {
-      map['description'] = Variable<String>(description.value);
-    }
-    if (checkType.present) {
-      map['check_type'] = Variable<String>(checkType.value);
-    }
-    if (checkParamsJson.present) {
-      map['check_params_json'] = Variable<String>(checkParamsJson.value);
-    }
-    if (xpReward.present) {
-      map['xp_reward'] = Variable<int>(xpReward.value);
-    }
-    if (goldReward.present) {
-      map['gold_reward'] = Variable<int>(goldReward.value);
-    }
-    if (assignedDate.present) {
-      map['assigned_date'] = Variable<String>(assignedDate.value);
-    }
-    if (completed.present) {
-      map['completed'] = Variable<bool>(completed.value);
-    }
-    if (progress.present) {
-      map['progress'] = Variable<int>(progress.value);
-    }
-    if (progressTarget.present) {
-      map['progress_target'] = Variable<int>(progressTarget.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('ClassQuestsTableCompanion(')
-          ..write('id: $id, ')
-          ..write('playerId: $playerId, ')
-          ..write('classType: $classType, ')
-          ..write('questKey: $questKey, ')
-          ..write('title: $title, ')
-          ..write('description: $description, ')
-          ..write('checkType: $checkType, ')
-          ..write('checkParamsJson: $checkParamsJson, ')
-          ..write('xpReward: $xpReward, ')
-          ..write('goldReward: $goldReward, ')
-          ..write('assignedDate: $assignedDate, ')
-          ..write('completed: $completed, ')
-          ..write('progress: $progress, ')
-          ..write('progressTarget: $progressTarget')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $FactionQuestsTableTable extends FactionQuestsTable
-    with TableInfo<$FactionQuestsTableTable, FactionQuestsTableData> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $FactionQuestsTableTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _playerIdMeta =
-      const VerificationMeta('playerId');
-  @override
-  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
-      'player_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _factionIdMeta =
-      const VerificationMeta('factionId');
-  @override
-  late final GeneratedColumn<String> factionId = GeneratedColumn<String>(
-      'faction_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _questKeyMeta =
-      const VerificationMeta('questKey');
-  @override
-  late final GeneratedColumn<String> questKey = GeneratedColumn<String>(
-      'quest_key', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _titleMeta = const VerificationMeta('title');
-  @override
-  late final GeneratedColumn<String> title = GeneratedColumn<String>(
-      'title', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _descriptionMeta =
-      const VerificationMeta('description');
-  @override
-  late final GeneratedColumn<String> description = GeneratedColumn<String>(
-      'description', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _checkTypeMeta =
-      const VerificationMeta('checkType');
-  @override
-  late final GeneratedColumn<String> checkType = GeneratedColumn<String>(
-      'check_type', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _checkParamsJsonMeta =
-      const VerificationMeta('checkParamsJson');
-  @override
-  late final GeneratedColumn<String> checkParamsJson = GeneratedColumn<String>(
-      'check_params_json', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _xpRewardMeta =
-      const VerificationMeta('xpReward');
-  @override
-  late final GeneratedColumn<int> xpReward = GeneratedColumn<int>(
-      'xp_reward', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _goldRewardMeta =
-      const VerificationMeta('goldReward');
-  @override
-  late final GeneratedColumn<int> goldReward = GeneratedColumn<int>(
-      'gold_reward', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _factionItemChanceMeta =
-      const VerificationMeta('factionItemChance');
-  @override
-  late final GeneratedColumn<double> factionItemChance =
-      GeneratedColumn<double>('faction_item_chance', aliasedName, false,
-          type: DriftSqlType.double,
-          requiredDuringInsert: false,
-          defaultValue: const Constant(0.05));
-  static const VerificationMeta _weekStartMeta =
-      const VerificationMeta('weekStart');
-  @override
-  late final GeneratedColumn<String> weekStart = GeneratedColumn<String>(
-      'week_start', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _completedMeta =
-      const VerificationMeta('completed');
-  @override
-  late final GeneratedColumn<bool> completed = GeneratedColumn<bool>(
-      'completed', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("completed" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _progressMeta =
-      const VerificationMeta('progress');
-  @override
-  late final GeneratedColumn<int> progress = GeneratedColumn<int>(
-      'progress', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _progressTargetMeta =
-      const VerificationMeta('progressTarget');
-  @override
-  late final GeneratedColumn<int> progressTarget = GeneratedColumn<int>(
-      'progress_target', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(1));
-  static const VerificationMeta _lastQuestKeyMeta =
-      const VerificationMeta('lastQuestKey');
-  @override
-  late final GeneratedColumn<String> lastQuestKey = GeneratedColumn<String>(
-      'last_quest_key', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(''));
-  @override
-  List<GeneratedColumn> get $columns => [
-        id,
-        playerId,
-        factionId,
-        questKey,
-        title,
-        description,
-        checkType,
-        checkParamsJson,
-        xpReward,
-        goldReward,
-        factionItemChance,
-        weekStart,
-        completed,
-        progress,
-        progressTarget,
-        lastQuestKey
-      ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'active_faction_quests';
-  @override
-  VerificationContext validateIntegrity(
-      Insertable<FactionQuestsTableData> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('player_id')) {
-      context.handle(_playerIdMeta,
-          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
-    } else if (isInserting) {
-      context.missing(_playerIdMeta);
-    }
-    if (data.containsKey('faction_id')) {
-      context.handle(_factionIdMeta,
-          factionId.isAcceptableOrUnknown(data['faction_id']!, _factionIdMeta));
-    } else if (isInserting) {
-      context.missing(_factionIdMeta);
-    }
-    if (data.containsKey('quest_key')) {
-      context.handle(_questKeyMeta,
-          questKey.isAcceptableOrUnknown(data['quest_key']!, _questKeyMeta));
-    } else if (isInserting) {
-      context.missing(_questKeyMeta);
-    }
-    if (data.containsKey('title')) {
-      context.handle(
-          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
-    } else if (isInserting) {
-      context.missing(_titleMeta);
-    }
-    if (data.containsKey('description')) {
-      context.handle(
-          _descriptionMeta,
-          description.isAcceptableOrUnknown(
-              data['description']!, _descriptionMeta));
-    } else if (isInserting) {
-      context.missing(_descriptionMeta);
-    }
-    if (data.containsKey('check_type')) {
-      context.handle(_checkTypeMeta,
-          checkType.isAcceptableOrUnknown(data['check_type']!, _checkTypeMeta));
-    } else if (isInserting) {
-      context.missing(_checkTypeMeta);
-    }
-    if (data.containsKey('check_params_json')) {
-      context.handle(
-          _checkParamsJsonMeta,
-          checkParamsJson.isAcceptableOrUnknown(
-              data['check_params_json']!, _checkParamsJsonMeta));
-    } else if (isInserting) {
-      context.missing(_checkParamsJsonMeta);
-    }
-    if (data.containsKey('xp_reward')) {
-      context.handle(_xpRewardMeta,
-          xpReward.isAcceptableOrUnknown(data['xp_reward']!, _xpRewardMeta));
-    }
-    if (data.containsKey('gold_reward')) {
-      context.handle(
-          _goldRewardMeta,
-          goldReward.isAcceptableOrUnknown(
-              data['gold_reward']!, _goldRewardMeta));
-    }
-    if (data.containsKey('faction_item_chance')) {
-      context.handle(
-          _factionItemChanceMeta,
-          factionItemChance.isAcceptableOrUnknown(
-              data['faction_item_chance']!, _factionItemChanceMeta));
-    }
-    if (data.containsKey('week_start')) {
-      context.handle(_weekStartMeta,
-          weekStart.isAcceptableOrUnknown(data['week_start']!, _weekStartMeta));
-    } else if (isInserting) {
-      context.missing(_weekStartMeta);
-    }
-    if (data.containsKey('completed')) {
-      context.handle(_completedMeta,
-          completed.isAcceptableOrUnknown(data['completed']!, _completedMeta));
-    }
-    if (data.containsKey('progress')) {
-      context.handle(_progressMeta,
-          progress.isAcceptableOrUnknown(data['progress']!, _progressMeta));
-    }
-    if (data.containsKey('progress_target')) {
-      context.handle(
-          _progressTargetMeta,
-          progressTarget.isAcceptableOrUnknown(
-              data['progress_target']!, _progressTargetMeta));
-    }
-    if (data.containsKey('last_quest_key')) {
-      context.handle(
-          _lastQuestKeyMeta,
-          lastQuestKey.isAcceptableOrUnknown(
-              data['last_quest_key']!, _lastQuestKeyMeta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  FactionQuestsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return FactionQuestsTableData(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      playerId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
-      factionId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}faction_id'])!,
-      questKey: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}quest_key'])!,
-      title: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
-      description: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
-      checkType: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}check_type'])!,
-      checkParamsJson: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}check_params_json'])!,
-      xpReward: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}xp_reward'])!,
-      goldReward: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}gold_reward'])!,
-      factionItemChance: attachedDatabase.typeMapping.read(
-          DriftSqlType.double, data['${effectivePrefix}faction_item_chance'])!,
-      weekStart: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}week_start'])!,
-      completed: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}completed'])!,
-      progress: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}progress'])!,
-      progressTarget: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}progress_target'])!,
-      lastQuestKey: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}last_quest_key'])!,
-    );
-  }
-
-  @override
-  $FactionQuestsTableTable createAlias(String alias) {
-    return $FactionQuestsTableTable(attachedDatabase, alias);
-  }
-}
-
-class FactionQuestsTableData extends DataClass
-    implements Insertable<FactionQuestsTableData> {
-  final int id;
-  final int playerId;
-  final String factionId;
-  final String questKey;
-  final String title;
-  final String description;
-  final String checkType;
-  final String checkParamsJson;
-  final int xpReward;
-  final int goldReward;
-  final double factionItemChance;
-  final String weekStart;
-  final bool completed;
-  final int progress;
-  final int progressTarget;
-  final String lastQuestKey;
-  const FactionQuestsTableData(
-      {required this.id,
-      required this.playerId,
-      required this.factionId,
-      required this.questKey,
-      required this.title,
-      required this.description,
-      required this.checkType,
-      required this.checkParamsJson,
-      required this.xpReward,
-      required this.goldReward,
-      required this.factionItemChance,
-      required this.weekStart,
-      required this.completed,
-      required this.progress,
-      required this.progressTarget,
-      required this.lastQuestKey});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['player_id'] = Variable<int>(playerId);
-    map['faction_id'] = Variable<String>(factionId);
-    map['quest_key'] = Variable<String>(questKey);
-    map['title'] = Variable<String>(title);
-    map['description'] = Variable<String>(description);
-    map['check_type'] = Variable<String>(checkType);
-    map['check_params_json'] = Variable<String>(checkParamsJson);
-    map['xp_reward'] = Variable<int>(xpReward);
-    map['gold_reward'] = Variable<int>(goldReward);
-    map['faction_item_chance'] = Variable<double>(factionItemChance);
-    map['week_start'] = Variable<String>(weekStart);
-    map['completed'] = Variable<bool>(completed);
-    map['progress'] = Variable<int>(progress);
-    map['progress_target'] = Variable<int>(progressTarget);
-    map['last_quest_key'] = Variable<String>(lastQuestKey);
-    return map;
-  }
-
-  FactionQuestsTableCompanion toCompanion(bool nullToAbsent) {
-    return FactionQuestsTableCompanion(
-      id: Value(id),
-      playerId: Value(playerId),
-      factionId: Value(factionId),
-      questKey: Value(questKey),
-      title: Value(title),
-      description: Value(description),
-      checkType: Value(checkType),
-      checkParamsJson: Value(checkParamsJson),
-      xpReward: Value(xpReward),
-      goldReward: Value(goldReward),
-      factionItemChance: Value(factionItemChance),
-      weekStart: Value(weekStart),
-      completed: Value(completed),
-      progress: Value(progress),
-      progressTarget: Value(progressTarget),
-      lastQuestKey: Value(lastQuestKey),
-    );
-  }
-
-  factory FactionQuestsTableData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return FactionQuestsTableData(
-      id: serializer.fromJson<int>(json['id']),
-      playerId: serializer.fromJson<int>(json['playerId']),
-      factionId: serializer.fromJson<String>(json['factionId']),
-      questKey: serializer.fromJson<String>(json['questKey']),
-      title: serializer.fromJson<String>(json['title']),
-      description: serializer.fromJson<String>(json['description']),
-      checkType: serializer.fromJson<String>(json['checkType']),
-      checkParamsJson: serializer.fromJson<String>(json['checkParamsJson']),
-      xpReward: serializer.fromJson<int>(json['xpReward']),
-      goldReward: serializer.fromJson<int>(json['goldReward']),
-      factionItemChance: serializer.fromJson<double>(json['factionItemChance']),
-      weekStart: serializer.fromJson<String>(json['weekStart']),
-      completed: serializer.fromJson<bool>(json['completed']),
-      progress: serializer.fromJson<int>(json['progress']),
-      progressTarget: serializer.fromJson<int>(json['progressTarget']),
-      lastQuestKey: serializer.fromJson<String>(json['lastQuestKey']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'playerId': serializer.toJson<int>(playerId),
-      'factionId': serializer.toJson<String>(factionId),
-      'questKey': serializer.toJson<String>(questKey),
-      'title': serializer.toJson<String>(title),
-      'description': serializer.toJson<String>(description),
-      'checkType': serializer.toJson<String>(checkType),
-      'checkParamsJson': serializer.toJson<String>(checkParamsJson),
-      'xpReward': serializer.toJson<int>(xpReward),
-      'goldReward': serializer.toJson<int>(goldReward),
-      'factionItemChance': serializer.toJson<double>(factionItemChance),
-      'weekStart': serializer.toJson<String>(weekStart),
-      'completed': serializer.toJson<bool>(completed),
-      'progress': serializer.toJson<int>(progress),
-      'progressTarget': serializer.toJson<int>(progressTarget),
-      'lastQuestKey': serializer.toJson<String>(lastQuestKey),
-    };
-  }
-
-  FactionQuestsTableData copyWith(
-          {int? id,
-          int? playerId,
-          String? factionId,
-          String? questKey,
-          String? title,
-          String? description,
-          String? checkType,
-          String? checkParamsJson,
-          int? xpReward,
-          int? goldReward,
-          double? factionItemChance,
-          String? weekStart,
-          bool? completed,
-          int? progress,
-          int? progressTarget,
-          String? lastQuestKey}) =>
-      FactionQuestsTableData(
-        id: id ?? this.id,
-        playerId: playerId ?? this.playerId,
-        factionId: factionId ?? this.factionId,
-        questKey: questKey ?? this.questKey,
-        title: title ?? this.title,
-        description: description ?? this.description,
-        checkType: checkType ?? this.checkType,
-        checkParamsJson: checkParamsJson ?? this.checkParamsJson,
-        xpReward: xpReward ?? this.xpReward,
-        goldReward: goldReward ?? this.goldReward,
-        factionItemChance: factionItemChance ?? this.factionItemChance,
-        weekStart: weekStart ?? this.weekStart,
-        completed: completed ?? this.completed,
-        progress: progress ?? this.progress,
-        progressTarget: progressTarget ?? this.progressTarget,
-        lastQuestKey: lastQuestKey ?? this.lastQuestKey,
-      );
-  FactionQuestsTableData copyWithCompanion(FactionQuestsTableCompanion data) {
-    return FactionQuestsTableData(
-      id: data.id.present ? data.id.value : this.id,
-      playerId: data.playerId.present ? data.playerId.value : this.playerId,
-      factionId: data.factionId.present ? data.factionId.value : this.factionId,
-      questKey: data.questKey.present ? data.questKey.value : this.questKey,
-      title: data.title.present ? data.title.value : this.title,
-      description:
-          data.description.present ? data.description.value : this.description,
-      checkType: data.checkType.present ? data.checkType.value : this.checkType,
-      checkParamsJson: data.checkParamsJson.present
-          ? data.checkParamsJson.value
-          : this.checkParamsJson,
-      xpReward: data.xpReward.present ? data.xpReward.value : this.xpReward,
-      goldReward:
-          data.goldReward.present ? data.goldReward.value : this.goldReward,
-      factionItemChance: data.factionItemChance.present
-          ? data.factionItemChance.value
-          : this.factionItemChance,
-      weekStart: data.weekStart.present ? data.weekStart.value : this.weekStart,
-      completed: data.completed.present ? data.completed.value : this.completed,
-      progress: data.progress.present ? data.progress.value : this.progress,
-      progressTarget: data.progressTarget.present
-          ? data.progressTarget.value
-          : this.progressTarget,
-      lastQuestKey: data.lastQuestKey.present
-          ? data.lastQuestKey.value
-          : this.lastQuestKey,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('FactionQuestsTableData(')
-          ..write('id: $id, ')
-          ..write('playerId: $playerId, ')
-          ..write('factionId: $factionId, ')
-          ..write('questKey: $questKey, ')
-          ..write('title: $title, ')
-          ..write('description: $description, ')
-          ..write('checkType: $checkType, ')
-          ..write('checkParamsJson: $checkParamsJson, ')
-          ..write('xpReward: $xpReward, ')
-          ..write('goldReward: $goldReward, ')
-          ..write('factionItemChance: $factionItemChance, ')
-          ..write('weekStart: $weekStart, ')
-          ..write('completed: $completed, ')
-          ..write('progress: $progress, ')
-          ..write('progressTarget: $progressTarget, ')
-          ..write('lastQuestKey: $lastQuestKey')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-      id,
-      playerId,
-      factionId,
-      questKey,
-      title,
-      description,
-      checkType,
-      checkParamsJson,
-      xpReward,
-      goldReward,
-      factionItemChance,
-      weekStart,
-      completed,
-      progress,
-      progressTarget,
-      lastQuestKey);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is FactionQuestsTableData &&
-          other.id == this.id &&
-          other.playerId == this.playerId &&
-          other.factionId == this.factionId &&
-          other.questKey == this.questKey &&
-          other.title == this.title &&
-          other.description == this.description &&
-          other.checkType == this.checkType &&
-          other.checkParamsJson == this.checkParamsJson &&
-          other.xpReward == this.xpReward &&
-          other.goldReward == this.goldReward &&
-          other.factionItemChance == this.factionItemChance &&
-          other.weekStart == this.weekStart &&
-          other.completed == this.completed &&
-          other.progress == this.progress &&
-          other.progressTarget == this.progressTarget &&
-          other.lastQuestKey == this.lastQuestKey);
-}
-
-class FactionQuestsTableCompanion
-    extends UpdateCompanion<FactionQuestsTableData> {
-  final Value<int> id;
-  final Value<int> playerId;
-  final Value<String> factionId;
-  final Value<String> questKey;
-  final Value<String> title;
-  final Value<String> description;
-  final Value<String> checkType;
-  final Value<String> checkParamsJson;
-  final Value<int> xpReward;
-  final Value<int> goldReward;
-  final Value<double> factionItemChance;
-  final Value<String> weekStart;
-  final Value<bool> completed;
-  final Value<int> progress;
-  final Value<int> progressTarget;
-  final Value<String> lastQuestKey;
-  const FactionQuestsTableCompanion({
-    this.id = const Value.absent(),
-    this.playerId = const Value.absent(),
-    this.factionId = const Value.absent(),
-    this.questKey = const Value.absent(),
-    this.title = const Value.absent(),
-    this.description = const Value.absent(),
-    this.checkType = const Value.absent(),
-    this.checkParamsJson = const Value.absent(),
-    this.xpReward = const Value.absent(),
-    this.goldReward = const Value.absent(),
-    this.factionItemChance = const Value.absent(),
-    this.weekStart = const Value.absent(),
-    this.completed = const Value.absent(),
-    this.progress = const Value.absent(),
-    this.progressTarget = const Value.absent(),
-    this.lastQuestKey = const Value.absent(),
-  });
-  FactionQuestsTableCompanion.insert({
-    this.id = const Value.absent(),
-    required int playerId,
-    required String factionId,
-    required String questKey,
-    required String title,
-    required String description,
-    required String checkType,
-    required String checkParamsJson,
-    this.xpReward = const Value.absent(),
-    this.goldReward = const Value.absent(),
-    this.factionItemChance = const Value.absent(),
-    required String weekStart,
-    this.completed = const Value.absent(),
-    this.progress = const Value.absent(),
-    this.progressTarget = const Value.absent(),
-    this.lastQuestKey = const Value.absent(),
-  })  : playerId = Value(playerId),
-        factionId = Value(factionId),
-        questKey = Value(questKey),
-        title = Value(title),
-        description = Value(description),
-        checkType = Value(checkType),
-        checkParamsJson = Value(checkParamsJson),
-        weekStart = Value(weekStart);
-  static Insertable<FactionQuestsTableData> custom({
-    Expression<int>? id,
-    Expression<int>? playerId,
-    Expression<String>? factionId,
-    Expression<String>? questKey,
-    Expression<String>? title,
-    Expression<String>? description,
-    Expression<String>? checkType,
-    Expression<String>? checkParamsJson,
-    Expression<int>? xpReward,
-    Expression<int>? goldReward,
-    Expression<double>? factionItemChance,
-    Expression<String>? weekStart,
-    Expression<bool>? completed,
-    Expression<int>? progress,
-    Expression<int>? progressTarget,
-    Expression<String>? lastQuestKey,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (playerId != null) 'player_id': playerId,
-      if (factionId != null) 'faction_id': factionId,
-      if (questKey != null) 'quest_key': questKey,
-      if (title != null) 'title': title,
-      if (description != null) 'description': description,
-      if (checkType != null) 'check_type': checkType,
-      if (checkParamsJson != null) 'check_params_json': checkParamsJson,
-      if (xpReward != null) 'xp_reward': xpReward,
-      if (goldReward != null) 'gold_reward': goldReward,
-      if (factionItemChance != null) 'faction_item_chance': factionItemChance,
-      if (weekStart != null) 'week_start': weekStart,
-      if (completed != null) 'completed': completed,
-      if (progress != null) 'progress': progress,
-      if (progressTarget != null) 'progress_target': progressTarget,
-      if (lastQuestKey != null) 'last_quest_key': lastQuestKey,
-    });
-  }
-
-  FactionQuestsTableCompanion copyWith(
-      {Value<int>? id,
-      Value<int>? playerId,
-      Value<String>? factionId,
-      Value<String>? questKey,
-      Value<String>? title,
-      Value<String>? description,
-      Value<String>? checkType,
-      Value<String>? checkParamsJson,
-      Value<int>? xpReward,
-      Value<int>? goldReward,
-      Value<double>? factionItemChance,
-      Value<String>? weekStart,
-      Value<bool>? completed,
-      Value<int>? progress,
-      Value<int>? progressTarget,
-      Value<String>? lastQuestKey}) {
-    return FactionQuestsTableCompanion(
-      id: id ?? this.id,
-      playerId: playerId ?? this.playerId,
-      factionId: factionId ?? this.factionId,
-      questKey: questKey ?? this.questKey,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      checkType: checkType ?? this.checkType,
-      checkParamsJson: checkParamsJson ?? this.checkParamsJson,
-      xpReward: xpReward ?? this.xpReward,
-      goldReward: goldReward ?? this.goldReward,
-      factionItemChance: factionItemChance ?? this.factionItemChance,
-      weekStart: weekStart ?? this.weekStart,
-      completed: completed ?? this.completed,
-      progress: progress ?? this.progress,
-      progressTarget: progressTarget ?? this.progressTarget,
-      lastQuestKey: lastQuestKey ?? this.lastQuestKey,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (playerId.present) {
-      map['player_id'] = Variable<int>(playerId.value);
-    }
-    if (factionId.present) {
-      map['faction_id'] = Variable<String>(factionId.value);
-    }
-    if (questKey.present) {
-      map['quest_key'] = Variable<String>(questKey.value);
-    }
-    if (title.present) {
-      map['title'] = Variable<String>(title.value);
-    }
-    if (description.present) {
-      map['description'] = Variable<String>(description.value);
-    }
-    if (checkType.present) {
-      map['check_type'] = Variable<String>(checkType.value);
-    }
-    if (checkParamsJson.present) {
-      map['check_params_json'] = Variable<String>(checkParamsJson.value);
-    }
-    if (xpReward.present) {
-      map['xp_reward'] = Variable<int>(xpReward.value);
-    }
-    if (goldReward.present) {
-      map['gold_reward'] = Variable<int>(goldReward.value);
-    }
-    if (factionItemChance.present) {
-      map['faction_item_chance'] = Variable<double>(factionItemChance.value);
-    }
-    if (weekStart.present) {
-      map['week_start'] = Variable<String>(weekStart.value);
-    }
-    if (completed.present) {
-      map['completed'] = Variable<bool>(completed.value);
-    }
-    if (progress.present) {
-      map['progress'] = Variable<int>(progress.value);
-    }
-    if (progressTarget.present) {
-      map['progress_target'] = Variable<int>(progressTarget.value);
-    }
-    if (lastQuestKey.present) {
-      map['last_quest_key'] = Variable<String>(lastQuestKey.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('FactionQuestsTableCompanion(')
-          ..write('id: $id, ')
-          ..write('playerId: $playerId, ')
-          ..write('factionId: $factionId, ')
-          ..write('questKey: $questKey, ')
-          ..write('title: $title, ')
-          ..write('description: $description, ')
-          ..write('checkType: $checkType, ')
-          ..write('checkParamsJson: $checkParamsJson, ')
-          ..write('xpReward: $xpReward, ')
-          ..write('goldReward: $goldReward, ')
-          ..write('factionItemChance: $factionItemChance, ')
-          ..write('weekStart: $weekStart, ')
-          ..write('completed: $completed, ')
-          ..write('progress: $progress, ')
-          ..write('progressTarget: $progressTarget, ')
-          ..write('lastQuestKey: $lastQuestKey')
           ..write(')'))
         .toString();
   }
@@ -13338,29 +9693,2902 @@ class PlayerRecipesUnlockedTableCompanion
   }
 }
 
+class $PlayerMissionProgressTableTable extends PlayerMissionProgressTable
+    with
+        TableInfo<$PlayerMissionProgressTableTable, PlayerMissionProgressData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlayerMissionProgressTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _missionKeyMeta =
+      const VerificationMeta('missionKey');
+  @override
+  late final GeneratedColumn<String> missionKey = GeneratedColumn<String>(
+      'mission_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _modalityMeta =
+      const VerificationMeta('modality');
+  @override
+  late final GeneratedColumn<String> modality = GeneratedColumn<String>(
+      'modality', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _tabOriginMeta =
+      const VerificationMeta('tabOrigin');
+  @override
+  late final GeneratedColumn<String> tabOrigin = GeneratedColumn<String>(
+      'tab_origin', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _rankMeta = const VerificationMeta('rank');
+  @override
+  late final GeneratedColumn<String> rank = GeneratedColumn<String>(
+      'rank', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _targetValueMeta =
+      const VerificationMeta('targetValue');
+  @override
+  late final GeneratedColumn<int> targetValue = GeneratedColumn<int>(
+      'target_value', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _currentValueMeta =
+      const VerificationMeta('currentValue');
+  @override
+  late final GeneratedColumn<int> currentValue = GeneratedColumn<int>(
+      'current_value', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _rewardJsonMeta =
+      const VerificationMeta('rewardJson');
+  @override
+  late final GeneratedColumn<String> rewardJson = GeneratedColumn<String>(
+      'reward_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _startedAtMeta =
+      const VerificationMeta('startedAt');
+  @override
+  late final GeneratedColumn<int> startedAt = GeneratedColumn<int>(
+      'started_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _completedAtMeta =
+      const VerificationMeta('completedAt');
+  @override
+  late final GeneratedColumn<int> completedAt = GeneratedColumn<int>(
+      'completed_at', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _failedAtMeta =
+      const VerificationMeta('failedAt');
+  @override
+  late final GeneratedColumn<int> failedAt = GeneratedColumn<int>(
+      'failed_at', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _rewardClaimedMeta =
+      const VerificationMeta('rewardClaimed');
+  @override
+  late final GeneratedColumn<bool> rewardClaimed = GeneratedColumn<bool>(
+      'reward_claimed', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("reward_claimed" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _metaJsonMeta =
+      const VerificationMeta('metaJson');
+  @override
+  late final GeneratedColumn<String> metaJson = GeneratedColumn<String>(
+      'meta_json', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('{}'));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        playerId,
+        missionKey,
+        modality,
+        tabOrigin,
+        rank,
+        targetValue,
+        currentValue,
+        rewardJson,
+        startedAt,
+        completedAt,
+        failedAt,
+        rewardClaimed,
+        metaJson
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'player_mission_progress';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<PlayerMissionProgressData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('mission_key')) {
+      context.handle(
+          _missionKeyMeta,
+          missionKey.isAcceptableOrUnknown(
+              data['mission_key']!, _missionKeyMeta));
+    } else if (isInserting) {
+      context.missing(_missionKeyMeta);
+    }
+    if (data.containsKey('modality')) {
+      context.handle(_modalityMeta,
+          modality.isAcceptableOrUnknown(data['modality']!, _modalityMeta));
+    } else if (isInserting) {
+      context.missing(_modalityMeta);
+    }
+    if (data.containsKey('tab_origin')) {
+      context.handle(_tabOriginMeta,
+          tabOrigin.isAcceptableOrUnknown(data['tab_origin']!, _tabOriginMeta));
+    } else if (isInserting) {
+      context.missing(_tabOriginMeta);
+    }
+    if (data.containsKey('rank')) {
+      context.handle(
+          _rankMeta, rank.isAcceptableOrUnknown(data['rank']!, _rankMeta));
+    } else if (isInserting) {
+      context.missing(_rankMeta);
+    }
+    if (data.containsKey('target_value')) {
+      context.handle(
+          _targetValueMeta,
+          targetValue.isAcceptableOrUnknown(
+              data['target_value']!, _targetValueMeta));
+    } else if (isInserting) {
+      context.missing(_targetValueMeta);
+    }
+    if (data.containsKey('current_value')) {
+      context.handle(
+          _currentValueMeta,
+          currentValue.isAcceptableOrUnknown(
+              data['current_value']!, _currentValueMeta));
+    }
+    if (data.containsKey('reward_json')) {
+      context.handle(
+          _rewardJsonMeta,
+          rewardJson.isAcceptableOrUnknown(
+              data['reward_json']!, _rewardJsonMeta));
+    } else if (isInserting) {
+      context.missing(_rewardJsonMeta);
+    }
+    if (data.containsKey('started_at')) {
+      context.handle(_startedAtMeta,
+          startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta));
+    } else if (isInserting) {
+      context.missing(_startedAtMeta);
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+          _completedAtMeta,
+          completedAt.isAcceptableOrUnknown(
+              data['completed_at']!, _completedAtMeta));
+    }
+    if (data.containsKey('failed_at')) {
+      context.handle(_failedAtMeta,
+          failedAt.isAcceptableOrUnknown(data['failed_at']!, _failedAtMeta));
+    }
+    if (data.containsKey('reward_claimed')) {
+      context.handle(
+          _rewardClaimedMeta,
+          rewardClaimed.isAcceptableOrUnknown(
+              data['reward_claimed']!, _rewardClaimedMeta));
+    }
+    if (data.containsKey('meta_json')) {
+      context.handle(_metaJsonMeta,
+          metaJson.isAcceptableOrUnknown(data['meta_json']!, _metaJsonMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PlayerMissionProgressData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlayerMissionProgressData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      missionKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}mission_key'])!,
+      modality: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}modality'])!,
+      tabOrigin: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}tab_origin'])!,
+      rank: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}rank'])!,
+      targetValue: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}target_value'])!,
+      currentValue: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}current_value'])!,
+      rewardJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}reward_json'])!,
+      startedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}started_at'])!,
+      completedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}completed_at']),
+      failedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}failed_at']),
+      rewardClaimed: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}reward_claimed'])!,
+      metaJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}meta_json'])!,
+    );
+  }
+
+  @override
+  $PlayerMissionProgressTableTable createAlias(String alias) {
+    return $PlayerMissionProgressTableTable(attachedDatabase, alias);
+  }
+}
+
+class PlayerMissionProgressData extends DataClass
+    implements Insertable<PlayerMissionProgressData> {
+  final int id;
+
+  /// FK lógico pra `players.id`. Mantido como int pra compatibilidade com
+  /// o schema atual; migração pra UUID fica pra Época Supabase.
+  final int playerId;
+
+  /// Chave estável da missão no catálogo JSON (ex: `DAILY_PUSHUPS_E`,
+  /// `CLASS_WARRIOR_ENDURANCE`). Mapeia pra entrada declarativa de reward.
+  final String missionKey;
+
+  /// Família: `internal`, `real`, `individual`, `mista` (ADR 0014).
+  final String modality;
+
+  /// Aba de origem: `daily`, `class`, `faction`, `extras`, `admission`.
+  final String tabOrigin;
+
+  /// Rank da missão (E/D/C/B/A/S) — usado no assignment e rank gating.
+  final String rank;
+  final int targetValue;
+  final int currentValue;
+
+  /// Reward declarado (JSON com xp/gold/gems/seivas/items/achievements/...).
+  /// Resolver aplica SOULSLIKE multipliers na hora do grant.
+  final String rewardJson;
+  final int startedAt;
+  final int? completedAt;
+  final int? failedAt;
+
+  /// True quando reward já foi creditada (idempotência).
+  final bool rewardClaimed;
+
+  /// Meta extras (ex: sub-tarefas da família mista, breakdown por requisito).
+  final String metaJson;
+  const PlayerMissionProgressData(
+      {required this.id,
+      required this.playerId,
+      required this.missionKey,
+      required this.modality,
+      required this.tabOrigin,
+      required this.rank,
+      required this.targetValue,
+      required this.currentValue,
+      required this.rewardJson,
+      required this.startedAt,
+      this.completedAt,
+      this.failedAt,
+      required this.rewardClaimed,
+      required this.metaJson});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['mission_key'] = Variable<String>(missionKey);
+    map['modality'] = Variable<String>(modality);
+    map['tab_origin'] = Variable<String>(tabOrigin);
+    map['rank'] = Variable<String>(rank);
+    map['target_value'] = Variable<int>(targetValue);
+    map['current_value'] = Variable<int>(currentValue);
+    map['reward_json'] = Variable<String>(rewardJson);
+    map['started_at'] = Variable<int>(startedAt);
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<int>(completedAt);
+    }
+    if (!nullToAbsent || failedAt != null) {
+      map['failed_at'] = Variable<int>(failedAt);
+    }
+    map['reward_claimed'] = Variable<bool>(rewardClaimed);
+    map['meta_json'] = Variable<String>(metaJson);
+    return map;
+  }
+
+  PlayerMissionProgressTableCompanion toCompanion(bool nullToAbsent) {
+    return PlayerMissionProgressTableCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      missionKey: Value(missionKey),
+      modality: Value(modality),
+      tabOrigin: Value(tabOrigin),
+      rank: Value(rank),
+      targetValue: Value(targetValue),
+      currentValue: Value(currentValue),
+      rewardJson: Value(rewardJson),
+      startedAt: Value(startedAt),
+      completedAt: completedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAt),
+      failedAt: failedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(failedAt),
+      rewardClaimed: Value(rewardClaimed),
+      metaJson: Value(metaJson),
+    );
+  }
+
+  factory PlayerMissionProgressData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlayerMissionProgressData(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      missionKey: serializer.fromJson<String>(json['missionKey']),
+      modality: serializer.fromJson<String>(json['modality']),
+      tabOrigin: serializer.fromJson<String>(json['tabOrigin']),
+      rank: serializer.fromJson<String>(json['rank']),
+      targetValue: serializer.fromJson<int>(json['targetValue']),
+      currentValue: serializer.fromJson<int>(json['currentValue']),
+      rewardJson: serializer.fromJson<String>(json['rewardJson']),
+      startedAt: serializer.fromJson<int>(json['startedAt']),
+      completedAt: serializer.fromJson<int?>(json['completedAt']),
+      failedAt: serializer.fromJson<int?>(json['failedAt']),
+      rewardClaimed: serializer.fromJson<bool>(json['rewardClaimed']),
+      metaJson: serializer.fromJson<String>(json['metaJson']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'missionKey': serializer.toJson<String>(missionKey),
+      'modality': serializer.toJson<String>(modality),
+      'tabOrigin': serializer.toJson<String>(tabOrigin),
+      'rank': serializer.toJson<String>(rank),
+      'targetValue': serializer.toJson<int>(targetValue),
+      'currentValue': serializer.toJson<int>(currentValue),
+      'rewardJson': serializer.toJson<String>(rewardJson),
+      'startedAt': serializer.toJson<int>(startedAt),
+      'completedAt': serializer.toJson<int?>(completedAt),
+      'failedAt': serializer.toJson<int?>(failedAt),
+      'rewardClaimed': serializer.toJson<bool>(rewardClaimed),
+      'metaJson': serializer.toJson<String>(metaJson),
+    };
+  }
+
+  PlayerMissionProgressData copyWith(
+          {int? id,
+          int? playerId,
+          String? missionKey,
+          String? modality,
+          String? tabOrigin,
+          String? rank,
+          int? targetValue,
+          int? currentValue,
+          String? rewardJson,
+          int? startedAt,
+          Value<int?> completedAt = const Value.absent(),
+          Value<int?> failedAt = const Value.absent(),
+          bool? rewardClaimed,
+          String? metaJson}) =>
+      PlayerMissionProgressData(
+        id: id ?? this.id,
+        playerId: playerId ?? this.playerId,
+        missionKey: missionKey ?? this.missionKey,
+        modality: modality ?? this.modality,
+        tabOrigin: tabOrigin ?? this.tabOrigin,
+        rank: rank ?? this.rank,
+        targetValue: targetValue ?? this.targetValue,
+        currentValue: currentValue ?? this.currentValue,
+        rewardJson: rewardJson ?? this.rewardJson,
+        startedAt: startedAt ?? this.startedAt,
+        completedAt: completedAt.present ? completedAt.value : this.completedAt,
+        failedAt: failedAt.present ? failedAt.value : this.failedAt,
+        rewardClaimed: rewardClaimed ?? this.rewardClaimed,
+        metaJson: metaJson ?? this.metaJson,
+      );
+  PlayerMissionProgressData copyWithCompanion(
+      PlayerMissionProgressTableCompanion data) {
+    return PlayerMissionProgressData(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      missionKey:
+          data.missionKey.present ? data.missionKey.value : this.missionKey,
+      modality: data.modality.present ? data.modality.value : this.modality,
+      tabOrigin: data.tabOrigin.present ? data.tabOrigin.value : this.tabOrigin,
+      rank: data.rank.present ? data.rank.value : this.rank,
+      targetValue:
+          data.targetValue.present ? data.targetValue.value : this.targetValue,
+      currentValue: data.currentValue.present
+          ? data.currentValue.value
+          : this.currentValue,
+      rewardJson:
+          data.rewardJson.present ? data.rewardJson.value : this.rewardJson,
+      startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
+      completedAt:
+          data.completedAt.present ? data.completedAt.value : this.completedAt,
+      failedAt: data.failedAt.present ? data.failedAt.value : this.failedAt,
+      rewardClaimed: data.rewardClaimed.present
+          ? data.rewardClaimed.value
+          : this.rewardClaimed,
+      metaJson: data.metaJson.present ? data.metaJson.value : this.metaJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerMissionProgressData(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('missionKey: $missionKey, ')
+          ..write('modality: $modality, ')
+          ..write('tabOrigin: $tabOrigin, ')
+          ..write('rank: $rank, ')
+          ..write('targetValue: $targetValue, ')
+          ..write('currentValue: $currentValue, ')
+          ..write('rewardJson: $rewardJson, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('failedAt: $failedAt, ')
+          ..write('rewardClaimed: $rewardClaimed, ')
+          ..write('metaJson: $metaJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      playerId,
+      missionKey,
+      modality,
+      tabOrigin,
+      rank,
+      targetValue,
+      currentValue,
+      rewardJson,
+      startedAt,
+      completedAt,
+      failedAt,
+      rewardClaimed,
+      metaJson);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlayerMissionProgressData &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.missionKey == this.missionKey &&
+          other.modality == this.modality &&
+          other.tabOrigin == this.tabOrigin &&
+          other.rank == this.rank &&
+          other.targetValue == this.targetValue &&
+          other.currentValue == this.currentValue &&
+          other.rewardJson == this.rewardJson &&
+          other.startedAt == this.startedAt &&
+          other.completedAt == this.completedAt &&
+          other.failedAt == this.failedAt &&
+          other.rewardClaimed == this.rewardClaimed &&
+          other.metaJson == this.metaJson);
+}
+
+class PlayerMissionProgressTableCompanion
+    extends UpdateCompanion<PlayerMissionProgressData> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> missionKey;
+  final Value<String> modality;
+  final Value<String> tabOrigin;
+  final Value<String> rank;
+  final Value<int> targetValue;
+  final Value<int> currentValue;
+  final Value<String> rewardJson;
+  final Value<int> startedAt;
+  final Value<int?> completedAt;
+  final Value<int?> failedAt;
+  final Value<bool> rewardClaimed;
+  final Value<String> metaJson;
+  const PlayerMissionProgressTableCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.missionKey = const Value.absent(),
+    this.modality = const Value.absent(),
+    this.tabOrigin = const Value.absent(),
+    this.rank = const Value.absent(),
+    this.targetValue = const Value.absent(),
+    this.currentValue = const Value.absent(),
+    this.rewardJson = const Value.absent(),
+    this.startedAt = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.failedAt = const Value.absent(),
+    this.rewardClaimed = const Value.absent(),
+    this.metaJson = const Value.absent(),
+  });
+  PlayerMissionProgressTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String missionKey,
+    required String modality,
+    required String tabOrigin,
+    required String rank,
+    required int targetValue,
+    this.currentValue = const Value.absent(),
+    required String rewardJson,
+    required int startedAt,
+    this.completedAt = const Value.absent(),
+    this.failedAt = const Value.absent(),
+    this.rewardClaimed = const Value.absent(),
+    this.metaJson = const Value.absent(),
+  })  : playerId = Value(playerId),
+        missionKey = Value(missionKey),
+        modality = Value(modality),
+        tabOrigin = Value(tabOrigin),
+        rank = Value(rank),
+        targetValue = Value(targetValue),
+        rewardJson = Value(rewardJson),
+        startedAt = Value(startedAt);
+  static Insertable<PlayerMissionProgressData> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? missionKey,
+    Expression<String>? modality,
+    Expression<String>? tabOrigin,
+    Expression<String>? rank,
+    Expression<int>? targetValue,
+    Expression<int>? currentValue,
+    Expression<String>? rewardJson,
+    Expression<int>? startedAt,
+    Expression<int>? completedAt,
+    Expression<int>? failedAt,
+    Expression<bool>? rewardClaimed,
+    Expression<String>? metaJson,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (missionKey != null) 'mission_key': missionKey,
+      if (modality != null) 'modality': modality,
+      if (tabOrigin != null) 'tab_origin': tabOrigin,
+      if (rank != null) 'rank': rank,
+      if (targetValue != null) 'target_value': targetValue,
+      if (currentValue != null) 'current_value': currentValue,
+      if (rewardJson != null) 'reward_json': rewardJson,
+      if (startedAt != null) 'started_at': startedAt,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (failedAt != null) 'failed_at': failedAt,
+      if (rewardClaimed != null) 'reward_claimed': rewardClaimed,
+      if (metaJson != null) 'meta_json': metaJson,
+    });
+  }
+
+  PlayerMissionProgressTableCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? playerId,
+      Value<String>? missionKey,
+      Value<String>? modality,
+      Value<String>? tabOrigin,
+      Value<String>? rank,
+      Value<int>? targetValue,
+      Value<int>? currentValue,
+      Value<String>? rewardJson,
+      Value<int>? startedAt,
+      Value<int?>? completedAt,
+      Value<int?>? failedAt,
+      Value<bool>? rewardClaimed,
+      Value<String>? metaJson}) {
+    return PlayerMissionProgressTableCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      missionKey: missionKey ?? this.missionKey,
+      modality: modality ?? this.modality,
+      tabOrigin: tabOrigin ?? this.tabOrigin,
+      rank: rank ?? this.rank,
+      targetValue: targetValue ?? this.targetValue,
+      currentValue: currentValue ?? this.currentValue,
+      rewardJson: rewardJson ?? this.rewardJson,
+      startedAt: startedAt ?? this.startedAt,
+      completedAt: completedAt ?? this.completedAt,
+      failedAt: failedAt ?? this.failedAt,
+      rewardClaimed: rewardClaimed ?? this.rewardClaimed,
+      metaJson: metaJson ?? this.metaJson,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (missionKey.present) {
+      map['mission_key'] = Variable<String>(missionKey.value);
+    }
+    if (modality.present) {
+      map['modality'] = Variable<String>(modality.value);
+    }
+    if (tabOrigin.present) {
+      map['tab_origin'] = Variable<String>(tabOrigin.value);
+    }
+    if (rank.present) {
+      map['rank'] = Variable<String>(rank.value);
+    }
+    if (targetValue.present) {
+      map['target_value'] = Variable<int>(targetValue.value);
+    }
+    if (currentValue.present) {
+      map['current_value'] = Variable<int>(currentValue.value);
+    }
+    if (rewardJson.present) {
+      map['reward_json'] = Variable<String>(rewardJson.value);
+    }
+    if (startedAt.present) {
+      map['started_at'] = Variable<int>(startedAt.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<int>(completedAt.value);
+    }
+    if (failedAt.present) {
+      map['failed_at'] = Variable<int>(failedAt.value);
+    }
+    if (rewardClaimed.present) {
+      map['reward_claimed'] = Variable<bool>(rewardClaimed.value);
+    }
+    if (metaJson.present) {
+      map['meta_json'] = Variable<String>(metaJson.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerMissionProgressTableCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('missionKey: $missionKey, ')
+          ..write('modality: $modality, ')
+          ..write('tabOrigin: $tabOrigin, ')
+          ..write('rank: $rank, ')
+          ..write('targetValue: $targetValue, ')
+          ..write('currentValue: $currentValue, ')
+          ..write('rewardJson: $rewardJson, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('failedAt: $failedAt, ')
+          ..write('rewardClaimed: $rewardClaimed, ')
+          ..write('metaJson: $metaJson')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PlayerMissionPreferencesTableTable extends PlayerMissionPreferencesTable
+    with
+        TableInfo<$PlayerMissionPreferencesTableTable,
+            PlayerMissionPreferencesData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlayerMissionPreferencesTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _primaryFocusMeta =
+      const VerificationMeta('primaryFocus');
+  @override
+  late final GeneratedColumn<String> primaryFocus = GeneratedColumn<String>(
+      'primary_focus', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _intensityMeta =
+      const VerificationMeta('intensity');
+  @override
+  late final GeneratedColumn<String> intensity = GeneratedColumn<String>(
+      'intensity', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _missionStyleMeta =
+      const VerificationMeta('missionStyle');
+  @override
+  late final GeneratedColumn<String> missionStyle = GeneratedColumn<String>(
+      'mission_style', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _physicalSubfocusMeta =
+      const VerificationMeta('physicalSubfocus');
+  @override
+  late final GeneratedColumn<String> physicalSubfocus = GeneratedColumn<String>(
+      'physical_subfocus', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('[]'));
+  static const VerificationMeta _mentalSubfocusMeta =
+      const VerificationMeta('mentalSubfocus');
+  @override
+  late final GeneratedColumn<String> mentalSubfocus = GeneratedColumn<String>(
+      'mental_subfocus', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('[]'));
+  static const VerificationMeta _spiritualSubfocusMeta =
+      const VerificationMeta('spiritualSubfocus');
+  @override
+  late final GeneratedColumn<String> spiritualSubfocus =
+      GeneratedColumn<String>('spiritual_subfocus', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultValue: const Constant('[]'));
+  static const VerificationMeta _timeDailyMinutesMeta =
+      const VerificationMeta('timeDailyMinutes');
+  @override
+  late final GeneratedColumn<int> timeDailyMinutes = GeneratedColumn<int>(
+      'time_daily_minutes', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(30));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _updatesCountMeta =
+      const VerificationMeta('updatesCount');
+  @override
+  late final GeneratedColumn<int> updatesCount = GeneratedColumn<int>(
+      'updates_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  @override
+  List<GeneratedColumn> get $columns => [
+        playerId,
+        primaryFocus,
+        intensity,
+        missionStyle,
+        physicalSubfocus,
+        mentalSubfocus,
+        spiritualSubfocus,
+        timeDailyMinutes,
+        createdAt,
+        updatedAt,
+        updatesCount
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'player_mission_preferences';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<PlayerMissionPreferencesData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    }
+    if (data.containsKey('primary_focus')) {
+      context.handle(
+          _primaryFocusMeta,
+          primaryFocus.isAcceptableOrUnknown(
+              data['primary_focus']!, _primaryFocusMeta));
+    } else if (isInserting) {
+      context.missing(_primaryFocusMeta);
+    }
+    if (data.containsKey('intensity')) {
+      context.handle(_intensityMeta,
+          intensity.isAcceptableOrUnknown(data['intensity']!, _intensityMeta));
+    } else if (isInserting) {
+      context.missing(_intensityMeta);
+    }
+    if (data.containsKey('mission_style')) {
+      context.handle(
+          _missionStyleMeta,
+          missionStyle.isAcceptableOrUnknown(
+              data['mission_style']!, _missionStyleMeta));
+    } else if (isInserting) {
+      context.missing(_missionStyleMeta);
+    }
+    if (data.containsKey('physical_subfocus')) {
+      context.handle(
+          _physicalSubfocusMeta,
+          physicalSubfocus.isAcceptableOrUnknown(
+              data['physical_subfocus']!, _physicalSubfocusMeta));
+    }
+    if (data.containsKey('mental_subfocus')) {
+      context.handle(
+          _mentalSubfocusMeta,
+          mentalSubfocus.isAcceptableOrUnknown(
+              data['mental_subfocus']!, _mentalSubfocusMeta));
+    }
+    if (data.containsKey('spiritual_subfocus')) {
+      context.handle(
+          _spiritualSubfocusMeta,
+          spiritualSubfocus.isAcceptableOrUnknown(
+              data['spiritual_subfocus']!, _spiritualSubfocusMeta));
+    }
+    if (data.containsKey('time_daily_minutes')) {
+      context.handle(
+          _timeDailyMinutesMeta,
+          timeDailyMinutes.isAcceptableOrUnknown(
+              data['time_daily_minutes']!, _timeDailyMinutesMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('updates_count')) {
+      context.handle(
+          _updatesCountMeta,
+          updatesCount.isAcceptableOrUnknown(
+              data['updates_count']!, _updatesCountMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {playerId};
+  @override
+  PlayerMissionPreferencesData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlayerMissionPreferencesData(
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      primaryFocus: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}primary_focus'])!,
+      intensity: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}intensity'])!,
+      missionStyle: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}mission_style'])!,
+      physicalSubfocus: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}physical_subfocus'])!,
+      mentalSubfocus: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}mental_subfocus'])!,
+      spiritualSubfocus: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}spiritual_subfocus'])!,
+      timeDailyMinutes: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}time_daily_minutes'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
+      updatesCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}updates_count'])!,
+    );
+  }
+
+  @override
+  $PlayerMissionPreferencesTableTable createAlias(String alias) {
+    return $PlayerMissionPreferencesTableTable(attachedDatabase, alias);
+  }
+}
+
+class PlayerMissionPreferencesData extends DataClass
+    implements Insertable<PlayerMissionPreferencesData> {
+  final int playerId;
+
+  /// P1 — `fisico`, `mental`, `espiritual`, `vitalismo`.
+  /// (4 categorias adaptadas da Rodada 1.)
+  final String primaryFocus;
+
+  /// P2 — `light`, `medium`, `heavy`, `adaptive`.
+  final String intensity;
+
+  /// P3 — `real`, `internal`, `mixed`.
+  final String missionStyle;
+
+  /// P4, P5, P6 — arrays JSON condicionais. Default `[]` quando não aplicável.
+  final String physicalSubfocus;
+  final String mentalSubfocus;
+  final String spiritualSubfocus;
+
+  /// P7 — minutos disponíveis por dia.
+  final int timeDailyMinutes;
+  final int createdAt;
+  final int updatedAt;
+
+  /// Incrementa a cada refazer (gating de custo: 0 grátis, 1ª = 100 gemas +
+  /// 1 Seiva, 2ª+ = 300 gemas + 3 Seivas).
+  final int updatesCount;
+  const PlayerMissionPreferencesData(
+      {required this.playerId,
+      required this.primaryFocus,
+      required this.intensity,
+      required this.missionStyle,
+      required this.physicalSubfocus,
+      required this.mentalSubfocus,
+      required this.spiritualSubfocus,
+      required this.timeDailyMinutes,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.updatesCount});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['player_id'] = Variable<int>(playerId);
+    map['primary_focus'] = Variable<String>(primaryFocus);
+    map['intensity'] = Variable<String>(intensity);
+    map['mission_style'] = Variable<String>(missionStyle);
+    map['physical_subfocus'] = Variable<String>(physicalSubfocus);
+    map['mental_subfocus'] = Variable<String>(mentalSubfocus);
+    map['spiritual_subfocus'] = Variable<String>(spiritualSubfocus);
+    map['time_daily_minutes'] = Variable<int>(timeDailyMinutes);
+    map['created_at'] = Variable<int>(createdAt);
+    map['updated_at'] = Variable<int>(updatedAt);
+    map['updates_count'] = Variable<int>(updatesCount);
+    return map;
+  }
+
+  PlayerMissionPreferencesTableCompanion toCompanion(bool nullToAbsent) {
+    return PlayerMissionPreferencesTableCompanion(
+      playerId: Value(playerId),
+      primaryFocus: Value(primaryFocus),
+      intensity: Value(intensity),
+      missionStyle: Value(missionStyle),
+      physicalSubfocus: Value(physicalSubfocus),
+      mentalSubfocus: Value(mentalSubfocus),
+      spiritualSubfocus: Value(spiritualSubfocus),
+      timeDailyMinutes: Value(timeDailyMinutes),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      updatesCount: Value(updatesCount),
+    );
+  }
+
+  factory PlayerMissionPreferencesData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlayerMissionPreferencesData(
+      playerId: serializer.fromJson<int>(json['playerId']),
+      primaryFocus: serializer.fromJson<String>(json['primaryFocus']),
+      intensity: serializer.fromJson<String>(json['intensity']),
+      missionStyle: serializer.fromJson<String>(json['missionStyle']),
+      physicalSubfocus: serializer.fromJson<String>(json['physicalSubfocus']),
+      mentalSubfocus: serializer.fromJson<String>(json['mentalSubfocus']),
+      spiritualSubfocus: serializer.fromJson<String>(json['spiritualSubfocus']),
+      timeDailyMinutes: serializer.fromJson<int>(json['timeDailyMinutes']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+      updatesCount: serializer.fromJson<int>(json['updatesCount']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'playerId': serializer.toJson<int>(playerId),
+      'primaryFocus': serializer.toJson<String>(primaryFocus),
+      'intensity': serializer.toJson<String>(intensity),
+      'missionStyle': serializer.toJson<String>(missionStyle),
+      'physicalSubfocus': serializer.toJson<String>(physicalSubfocus),
+      'mentalSubfocus': serializer.toJson<String>(mentalSubfocus),
+      'spiritualSubfocus': serializer.toJson<String>(spiritualSubfocus),
+      'timeDailyMinutes': serializer.toJson<int>(timeDailyMinutes),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+      'updatesCount': serializer.toJson<int>(updatesCount),
+    };
+  }
+
+  PlayerMissionPreferencesData copyWith(
+          {int? playerId,
+          String? primaryFocus,
+          String? intensity,
+          String? missionStyle,
+          String? physicalSubfocus,
+          String? mentalSubfocus,
+          String? spiritualSubfocus,
+          int? timeDailyMinutes,
+          int? createdAt,
+          int? updatedAt,
+          int? updatesCount}) =>
+      PlayerMissionPreferencesData(
+        playerId: playerId ?? this.playerId,
+        primaryFocus: primaryFocus ?? this.primaryFocus,
+        intensity: intensity ?? this.intensity,
+        missionStyle: missionStyle ?? this.missionStyle,
+        physicalSubfocus: physicalSubfocus ?? this.physicalSubfocus,
+        mentalSubfocus: mentalSubfocus ?? this.mentalSubfocus,
+        spiritualSubfocus: spiritualSubfocus ?? this.spiritualSubfocus,
+        timeDailyMinutes: timeDailyMinutes ?? this.timeDailyMinutes,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        updatesCount: updatesCount ?? this.updatesCount,
+      );
+  PlayerMissionPreferencesData copyWithCompanion(
+      PlayerMissionPreferencesTableCompanion data) {
+    return PlayerMissionPreferencesData(
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      primaryFocus: data.primaryFocus.present
+          ? data.primaryFocus.value
+          : this.primaryFocus,
+      intensity: data.intensity.present ? data.intensity.value : this.intensity,
+      missionStyle: data.missionStyle.present
+          ? data.missionStyle.value
+          : this.missionStyle,
+      physicalSubfocus: data.physicalSubfocus.present
+          ? data.physicalSubfocus.value
+          : this.physicalSubfocus,
+      mentalSubfocus: data.mentalSubfocus.present
+          ? data.mentalSubfocus.value
+          : this.mentalSubfocus,
+      spiritualSubfocus: data.spiritualSubfocus.present
+          ? data.spiritualSubfocus.value
+          : this.spiritualSubfocus,
+      timeDailyMinutes: data.timeDailyMinutes.present
+          ? data.timeDailyMinutes.value
+          : this.timeDailyMinutes,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      updatesCount: data.updatesCount.present
+          ? data.updatesCount.value
+          : this.updatesCount,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerMissionPreferencesData(')
+          ..write('playerId: $playerId, ')
+          ..write('primaryFocus: $primaryFocus, ')
+          ..write('intensity: $intensity, ')
+          ..write('missionStyle: $missionStyle, ')
+          ..write('physicalSubfocus: $physicalSubfocus, ')
+          ..write('mentalSubfocus: $mentalSubfocus, ')
+          ..write('spiritualSubfocus: $spiritualSubfocus, ')
+          ..write('timeDailyMinutes: $timeDailyMinutes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('updatesCount: $updatesCount')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      playerId,
+      primaryFocus,
+      intensity,
+      missionStyle,
+      physicalSubfocus,
+      mentalSubfocus,
+      spiritualSubfocus,
+      timeDailyMinutes,
+      createdAt,
+      updatedAt,
+      updatesCount);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlayerMissionPreferencesData &&
+          other.playerId == this.playerId &&
+          other.primaryFocus == this.primaryFocus &&
+          other.intensity == this.intensity &&
+          other.missionStyle == this.missionStyle &&
+          other.physicalSubfocus == this.physicalSubfocus &&
+          other.mentalSubfocus == this.mentalSubfocus &&
+          other.spiritualSubfocus == this.spiritualSubfocus &&
+          other.timeDailyMinutes == this.timeDailyMinutes &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.updatesCount == this.updatesCount);
+}
+
+class PlayerMissionPreferencesTableCompanion
+    extends UpdateCompanion<PlayerMissionPreferencesData> {
+  final Value<int> playerId;
+  final Value<String> primaryFocus;
+  final Value<String> intensity;
+  final Value<String> missionStyle;
+  final Value<String> physicalSubfocus;
+  final Value<String> mentalSubfocus;
+  final Value<String> spiritualSubfocus;
+  final Value<int> timeDailyMinutes;
+  final Value<int> createdAt;
+  final Value<int> updatedAt;
+  final Value<int> updatesCount;
+  const PlayerMissionPreferencesTableCompanion({
+    this.playerId = const Value.absent(),
+    this.primaryFocus = const Value.absent(),
+    this.intensity = const Value.absent(),
+    this.missionStyle = const Value.absent(),
+    this.physicalSubfocus = const Value.absent(),
+    this.mentalSubfocus = const Value.absent(),
+    this.spiritualSubfocus = const Value.absent(),
+    this.timeDailyMinutes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.updatesCount = const Value.absent(),
+  });
+  PlayerMissionPreferencesTableCompanion.insert({
+    this.playerId = const Value.absent(),
+    required String primaryFocus,
+    required String intensity,
+    required String missionStyle,
+    this.physicalSubfocus = const Value.absent(),
+    this.mentalSubfocus = const Value.absent(),
+    this.spiritualSubfocus = const Value.absent(),
+    this.timeDailyMinutes = const Value.absent(),
+    required int createdAt,
+    required int updatedAt,
+    this.updatesCount = const Value.absent(),
+  })  : primaryFocus = Value(primaryFocus),
+        intensity = Value(intensity),
+        missionStyle = Value(missionStyle),
+        createdAt = Value(createdAt),
+        updatedAt = Value(updatedAt);
+  static Insertable<PlayerMissionPreferencesData> custom({
+    Expression<int>? playerId,
+    Expression<String>? primaryFocus,
+    Expression<String>? intensity,
+    Expression<String>? missionStyle,
+    Expression<String>? physicalSubfocus,
+    Expression<String>? mentalSubfocus,
+    Expression<String>? spiritualSubfocus,
+    Expression<int>? timeDailyMinutes,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+    Expression<int>? updatesCount,
+  }) {
+    return RawValuesInsertable({
+      if (playerId != null) 'player_id': playerId,
+      if (primaryFocus != null) 'primary_focus': primaryFocus,
+      if (intensity != null) 'intensity': intensity,
+      if (missionStyle != null) 'mission_style': missionStyle,
+      if (physicalSubfocus != null) 'physical_subfocus': physicalSubfocus,
+      if (mentalSubfocus != null) 'mental_subfocus': mentalSubfocus,
+      if (spiritualSubfocus != null) 'spiritual_subfocus': spiritualSubfocus,
+      if (timeDailyMinutes != null) 'time_daily_minutes': timeDailyMinutes,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (updatesCount != null) 'updates_count': updatesCount,
+    });
+  }
+
+  PlayerMissionPreferencesTableCompanion copyWith(
+      {Value<int>? playerId,
+      Value<String>? primaryFocus,
+      Value<String>? intensity,
+      Value<String>? missionStyle,
+      Value<String>? physicalSubfocus,
+      Value<String>? mentalSubfocus,
+      Value<String>? spiritualSubfocus,
+      Value<int>? timeDailyMinutes,
+      Value<int>? createdAt,
+      Value<int>? updatedAt,
+      Value<int>? updatesCount}) {
+    return PlayerMissionPreferencesTableCompanion(
+      playerId: playerId ?? this.playerId,
+      primaryFocus: primaryFocus ?? this.primaryFocus,
+      intensity: intensity ?? this.intensity,
+      missionStyle: missionStyle ?? this.missionStyle,
+      physicalSubfocus: physicalSubfocus ?? this.physicalSubfocus,
+      mentalSubfocus: mentalSubfocus ?? this.mentalSubfocus,
+      spiritualSubfocus: spiritualSubfocus ?? this.spiritualSubfocus,
+      timeDailyMinutes: timeDailyMinutes ?? this.timeDailyMinutes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      updatesCount: updatesCount ?? this.updatesCount,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (primaryFocus.present) {
+      map['primary_focus'] = Variable<String>(primaryFocus.value);
+    }
+    if (intensity.present) {
+      map['intensity'] = Variable<String>(intensity.value);
+    }
+    if (missionStyle.present) {
+      map['mission_style'] = Variable<String>(missionStyle.value);
+    }
+    if (physicalSubfocus.present) {
+      map['physical_subfocus'] = Variable<String>(physicalSubfocus.value);
+    }
+    if (mentalSubfocus.present) {
+      map['mental_subfocus'] = Variable<String>(mentalSubfocus.value);
+    }
+    if (spiritualSubfocus.present) {
+      map['spiritual_subfocus'] = Variable<String>(spiritualSubfocus.value);
+    }
+    if (timeDailyMinutes.present) {
+      map['time_daily_minutes'] = Variable<int>(timeDailyMinutes.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (updatesCount.present) {
+      map['updates_count'] = Variable<int>(updatesCount.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerMissionPreferencesTableCompanion(')
+          ..write('playerId: $playerId, ')
+          ..write('primaryFocus: $primaryFocus, ')
+          ..write('intensity: $intensity, ')
+          ..write('missionStyle: $missionStyle, ')
+          ..write('physicalSubfocus: $physicalSubfocus, ')
+          ..write('mentalSubfocus: $mentalSubfocus, ')
+          ..write('spiritualSubfocus: $spiritualSubfocus, ')
+          ..write('timeDailyMinutes: $timeDailyMinutes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('updatesCount: $updatesCount')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PlayerIndividualMissionsTableTable extends PlayerIndividualMissionsTable
+    with
+        TableInfo<$PlayerIndividualMissionsTableTable,
+            PlayerIndividualMissionData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlayerIndividualMissionsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _categoryMeta =
+      const VerificationMeta('category');
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+      'category', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _intensityIndexMeta =
+      const VerificationMeta('intensityIndex');
+  @override
+  late final GeneratedColumn<int> intensityIndex = GeneratedColumn<int>(
+      'intensity_index', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _frequencyMeta =
+      const VerificationMeta('frequency');
+  @override
+  late final GeneratedColumn<String> frequency = GeneratedColumn<String>(
+      'frequency', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _repeatsMeta =
+      const VerificationMeta('repeats');
+  @override
+  late final GeneratedColumn<bool> repeats = GeneratedColumn<bool>(
+      'repeats', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("repeats" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  static const VerificationMeta _rewardJsonMeta =
+      const VerificationMeta('rewardJson');
+  @override
+  late final GeneratedColumn<String> rewardJson = GeneratedColumn<String>(
+      'reward_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _deletedAtMeta =
+      const VerificationMeta('deletedAt');
+  @override
+  late final GeneratedColumn<int> deletedAt = GeneratedColumn<int>(
+      'deleted_at', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _completionCountMeta =
+      const VerificationMeta('completionCount');
+  @override
+  late final GeneratedColumn<int> completionCount = GeneratedColumn<int>(
+      'completion_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _failureCountMeta =
+      const VerificationMeta('failureCount');
+  @override
+  late final GeneratedColumn<int> failureCount = GeneratedColumn<int>(
+      'failure_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        playerId,
+        name,
+        description,
+        category,
+        intensityIndex,
+        frequency,
+        repeats,
+        rewardJson,
+        createdAt,
+        deletedAt,
+        completionCount,
+        failureCount
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'player_individual_missions';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<PlayerIndividualMissionData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    if (data.containsKey('category')) {
+      context.handle(_categoryMeta,
+          category.isAcceptableOrUnknown(data['category']!, _categoryMeta));
+    } else if (isInserting) {
+      context.missing(_categoryMeta);
+    }
+    if (data.containsKey('intensity_index')) {
+      context.handle(
+          _intensityIndexMeta,
+          intensityIndex.isAcceptableOrUnknown(
+              data['intensity_index']!, _intensityIndexMeta));
+    } else if (isInserting) {
+      context.missing(_intensityIndexMeta);
+    }
+    if (data.containsKey('frequency')) {
+      context.handle(_frequencyMeta,
+          frequency.isAcceptableOrUnknown(data['frequency']!, _frequencyMeta));
+    } else if (isInserting) {
+      context.missing(_frequencyMeta);
+    }
+    if (data.containsKey('repeats')) {
+      context.handle(_repeatsMeta,
+          repeats.isAcceptableOrUnknown(data['repeats']!, _repeatsMeta));
+    }
+    if (data.containsKey('reward_json')) {
+      context.handle(
+          _rewardJsonMeta,
+          rewardJson.isAcceptableOrUnknown(
+              data['reward_json']!, _rewardJsonMeta));
+    } else if (isInserting) {
+      context.missing(_rewardJsonMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(_deletedAtMeta,
+          deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
+    }
+    if (data.containsKey('completion_count')) {
+      context.handle(
+          _completionCountMeta,
+          completionCount.isAcceptableOrUnknown(
+              data['completion_count']!, _completionCountMeta));
+    }
+    if (data.containsKey('failure_count')) {
+      context.handle(
+          _failureCountMeta,
+          failureCount.isAcceptableOrUnknown(
+              data['failure_count']!, _failureCountMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PlayerIndividualMissionData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlayerIndividualMissionData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description']),
+      category: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}category'])!,
+      intensityIndex: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}intensity_index'])!,
+      frequency: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}frequency'])!,
+      repeats: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}repeats'])!,
+      rewardJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}reward_json'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      deletedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}deleted_at']),
+      completionCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}completion_count'])!,
+      failureCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}failure_count'])!,
+    );
+  }
+
+  @override
+  $PlayerIndividualMissionsTableTable createAlias(String alias) {
+    return $PlayerIndividualMissionsTableTable(attachedDatabase, alias);
+  }
+}
+
+class PlayerIndividualMissionData extends DataClass
+    implements Insertable<PlayerIndividualMissionData> {
+  final int id;
+  final int playerId;
+  final String name;
+  final String? description;
+
+  /// `fisico`, `mental`, `espiritual`, `vitalismo`.
+  final String category;
+
+  /// 1..4 (leve, médio, pesado, extremo).
+  final int intensityIndex;
+
+  /// `daily`, `weekly`, `monthly`, `one-shot`.
+  final String frequency;
+  final bool repeats;
+
+  /// Reward calculada no momento da criação, em JSON declarativo.
+  final String rewardJson;
+  final int createdAt;
+
+  /// Soft delete — preserva histórico e evita race conditions com progresso
+  /// ativo quando jogador remove missão antes do reset.
+  final int? deletedAt;
+  final int completionCount;
+  final int failureCount;
+  const PlayerIndividualMissionData(
+      {required this.id,
+      required this.playerId,
+      required this.name,
+      this.description,
+      required this.category,
+      required this.intensityIndex,
+      required this.frequency,
+      required this.repeats,
+      required this.rewardJson,
+      required this.createdAt,
+      this.deletedAt,
+      required this.completionCount,
+      required this.failureCount});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['category'] = Variable<String>(category);
+    map['intensity_index'] = Variable<int>(intensityIndex);
+    map['frequency'] = Variable<String>(frequency);
+    map['repeats'] = Variable<bool>(repeats);
+    map['reward_json'] = Variable<String>(rewardJson);
+    map['created_at'] = Variable<int>(createdAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<int>(deletedAt);
+    }
+    map['completion_count'] = Variable<int>(completionCount);
+    map['failure_count'] = Variable<int>(failureCount);
+    return map;
+  }
+
+  PlayerIndividualMissionsTableCompanion toCompanion(bool nullToAbsent) {
+    return PlayerIndividualMissionsTableCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      name: Value(name),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      category: Value(category),
+      intensityIndex: Value(intensityIndex),
+      frequency: Value(frequency),
+      repeats: Value(repeats),
+      rewardJson: Value(rewardJson),
+      createdAt: Value(createdAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      completionCount: Value(completionCount),
+      failureCount: Value(failureCount),
+    );
+  }
+
+  factory PlayerIndividualMissionData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlayerIndividualMissionData(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      name: serializer.fromJson<String>(json['name']),
+      description: serializer.fromJson<String?>(json['description']),
+      category: serializer.fromJson<String>(json['category']),
+      intensityIndex: serializer.fromJson<int>(json['intensityIndex']),
+      frequency: serializer.fromJson<String>(json['frequency']),
+      repeats: serializer.fromJson<bool>(json['repeats']),
+      rewardJson: serializer.fromJson<String>(json['rewardJson']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      deletedAt: serializer.fromJson<int?>(json['deletedAt']),
+      completionCount: serializer.fromJson<int>(json['completionCount']),
+      failureCount: serializer.fromJson<int>(json['failureCount']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'name': serializer.toJson<String>(name),
+      'description': serializer.toJson<String?>(description),
+      'category': serializer.toJson<String>(category),
+      'intensityIndex': serializer.toJson<int>(intensityIndex),
+      'frequency': serializer.toJson<String>(frequency),
+      'repeats': serializer.toJson<bool>(repeats),
+      'rewardJson': serializer.toJson<String>(rewardJson),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'deletedAt': serializer.toJson<int?>(deletedAt),
+      'completionCount': serializer.toJson<int>(completionCount),
+      'failureCount': serializer.toJson<int>(failureCount),
+    };
+  }
+
+  PlayerIndividualMissionData copyWith(
+          {int? id,
+          int? playerId,
+          String? name,
+          Value<String?> description = const Value.absent(),
+          String? category,
+          int? intensityIndex,
+          String? frequency,
+          bool? repeats,
+          String? rewardJson,
+          int? createdAt,
+          Value<int?> deletedAt = const Value.absent(),
+          int? completionCount,
+          int? failureCount}) =>
+      PlayerIndividualMissionData(
+        id: id ?? this.id,
+        playerId: playerId ?? this.playerId,
+        name: name ?? this.name,
+        description: description.present ? description.value : this.description,
+        category: category ?? this.category,
+        intensityIndex: intensityIndex ?? this.intensityIndex,
+        frequency: frequency ?? this.frequency,
+        repeats: repeats ?? this.repeats,
+        rewardJson: rewardJson ?? this.rewardJson,
+        createdAt: createdAt ?? this.createdAt,
+        deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+        completionCount: completionCount ?? this.completionCount,
+        failureCount: failureCount ?? this.failureCount,
+      );
+  PlayerIndividualMissionData copyWithCompanion(
+      PlayerIndividualMissionsTableCompanion data) {
+    return PlayerIndividualMissionData(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      name: data.name.present ? data.name.value : this.name,
+      description:
+          data.description.present ? data.description.value : this.description,
+      category: data.category.present ? data.category.value : this.category,
+      intensityIndex: data.intensityIndex.present
+          ? data.intensityIndex.value
+          : this.intensityIndex,
+      frequency: data.frequency.present ? data.frequency.value : this.frequency,
+      repeats: data.repeats.present ? data.repeats.value : this.repeats,
+      rewardJson:
+          data.rewardJson.present ? data.rewardJson.value : this.rewardJson,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      completionCount: data.completionCount.present
+          ? data.completionCount.value
+          : this.completionCount,
+      failureCount: data.failureCount.present
+          ? data.failureCount.value
+          : this.failureCount,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerIndividualMissionData(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('category: $category, ')
+          ..write('intensityIndex: $intensityIndex, ')
+          ..write('frequency: $frequency, ')
+          ..write('repeats: $repeats, ')
+          ..write('rewardJson: $rewardJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('completionCount: $completionCount, ')
+          ..write('failureCount: $failureCount')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      playerId,
+      name,
+      description,
+      category,
+      intensityIndex,
+      frequency,
+      repeats,
+      rewardJson,
+      createdAt,
+      deletedAt,
+      completionCount,
+      failureCount);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlayerIndividualMissionData &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.name == this.name &&
+          other.description == this.description &&
+          other.category == this.category &&
+          other.intensityIndex == this.intensityIndex &&
+          other.frequency == this.frequency &&
+          other.repeats == this.repeats &&
+          other.rewardJson == this.rewardJson &&
+          other.createdAt == this.createdAt &&
+          other.deletedAt == this.deletedAt &&
+          other.completionCount == this.completionCount &&
+          other.failureCount == this.failureCount);
+}
+
+class PlayerIndividualMissionsTableCompanion
+    extends UpdateCompanion<PlayerIndividualMissionData> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> name;
+  final Value<String?> description;
+  final Value<String> category;
+  final Value<int> intensityIndex;
+  final Value<String> frequency;
+  final Value<bool> repeats;
+  final Value<String> rewardJson;
+  final Value<int> createdAt;
+  final Value<int?> deletedAt;
+  final Value<int> completionCount;
+  final Value<int> failureCount;
+  const PlayerIndividualMissionsTableCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.description = const Value.absent(),
+    this.category = const Value.absent(),
+    this.intensityIndex = const Value.absent(),
+    this.frequency = const Value.absent(),
+    this.repeats = const Value.absent(),
+    this.rewardJson = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.completionCount = const Value.absent(),
+    this.failureCount = const Value.absent(),
+  });
+  PlayerIndividualMissionsTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String name,
+    this.description = const Value.absent(),
+    required String category,
+    required int intensityIndex,
+    required String frequency,
+    this.repeats = const Value.absent(),
+    required String rewardJson,
+    required int createdAt,
+    this.deletedAt = const Value.absent(),
+    this.completionCount = const Value.absent(),
+    this.failureCount = const Value.absent(),
+  })  : playerId = Value(playerId),
+        name = Value(name),
+        category = Value(category),
+        intensityIndex = Value(intensityIndex),
+        frequency = Value(frequency),
+        rewardJson = Value(rewardJson),
+        createdAt = Value(createdAt);
+  static Insertable<PlayerIndividualMissionData> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? name,
+    Expression<String>? description,
+    Expression<String>? category,
+    Expression<int>? intensityIndex,
+    Expression<String>? frequency,
+    Expression<bool>? repeats,
+    Expression<String>? rewardJson,
+    Expression<int>? createdAt,
+    Expression<int>? deletedAt,
+    Expression<int>? completionCount,
+    Expression<int>? failureCount,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (category != null) 'category': category,
+      if (intensityIndex != null) 'intensity_index': intensityIndex,
+      if (frequency != null) 'frequency': frequency,
+      if (repeats != null) 'repeats': repeats,
+      if (rewardJson != null) 'reward_json': rewardJson,
+      if (createdAt != null) 'created_at': createdAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (completionCount != null) 'completion_count': completionCount,
+      if (failureCount != null) 'failure_count': failureCount,
+    });
+  }
+
+  PlayerIndividualMissionsTableCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? playerId,
+      Value<String>? name,
+      Value<String?>? description,
+      Value<String>? category,
+      Value<int>? intensityIndex,
+      Value<String>? frequency,
+      Value<bool>? repeats,
+      Value<String>? rewardJson,
+      Value<int>? createdAt,
+      Value<int?>? deletedAt,
+      Value<int>? completionCount,
+      Value<int>? failureCount}) {
+    return PlayerIndividualMissionsTableCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      intensityIndex: intensityIndex ?? this.intensityIndex,
+      frequency: frequency ?? this.frequency,
+      repeats: repeats ?? this.repeats,
+      rewardJson: rewardJson ?? this.rewardJson,
+      createdAt: createdAt ?? this.createdAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      completionCount: completionCount ?? this.completionCount,
+      failureCount: failureCount ?? this.failureCount,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (intensityIndex.present) {
+      map['intensity_index'] = Variable<int>(intensityIndex.value);
+    }
+    if (frequency.present) {
+      map['frequency'] = Variable<String>(frequency.value);
+    }
+    if (repeats.present) {
+      map['repeats'] = Variable<bool>(repeats.value);
+    }
+    if (rewardJson.present) {
+      map['reward_json'] = Variable<String>(rewardJson.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<int>(deletedAt.value);
+    }
+    if (completionCount.present) {
+      map['completion_count'] = Variable<int>(completionCount.value);
+    }
+    if (failureCount.present) {
+      map['failure_count'] = Variable<int>(failureCount.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerIndividualMissionsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('category: $category, ')
+          ..write('intensityIndex: $intensityIndex, ')
+          ..write('frequency: $frequency, ')
+          ..write('repeats: $repeats, ')
+          ..write('rewardJson: $rewardJson, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('completionCount: $completionCount, ')
+          ..write('failureCount: $failureCount')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PlayerAchievementsCompletedTableTable
+    extends PlayerAchievementsCompletedTable
+    with
+        TableInfo<$PlayerAchievementsCompletedTableTable,
+            PlayerAchievementCompletedData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlayerAchievementsCompletedTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _achievementKeyMeta =
+      const VerificationMeta('achievementKey');
+  @override
+  late final GeneratedColumn<String> achievementKey = GeneratedColumn<String>(
+      'achievement_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _completedAtMeta =
+      const VerificationMeta('completedAt');
+  @override
+  late final GeneratedColumn<int> completedAt = GeneratedColumn<int>(
+      'completed_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _rewardClaimedMeta =
+      const VerificationMeta('rewardClaimed');
+  @override
+  late final GeneratedColumn<bool> rewardClaimed = GeneratedColumn<bool>(
+      'reward_claimed', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("reward_claimed" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [playerId, achievementKey, completedAt, rewardClaimed];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'player_achievements_completed';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<PlayerAchievementCompletedData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('achievement_key')) {
+      context.handle(
+          _achievementKeyMeta,
+          achievementKey.isAcceptableOrUnknown(
+              data['achievement_key']!, _achievementKeyMeta));
+    } else if (isInserting) {
+      context.missing(_achievementKeyMeta);
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+          _completedAtMeta,
+          completedAt.isAcceptableOrUnknown(
+              data['completed_at']!, _completedAtMeta));
+    } else if (isInserting) {
+      context.missing(_completedAtMeta);
+    }
+    if (data.containsKey('reward_claimed')) {
+      context.handle(
+          _rewardClaimedMeta,
+          rewardClaimed.isAcceptableOrUnknown(
+              data['reward_claimed']!, _rewardClaimedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {playerId, achievementKey};
+  @override
+  PlayerAchievementCompletedData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlayerAchievementCompletedData(
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      achievementKey: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}achievement_key'])!,
+      completedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}completed_at'])!,
+      rewardClaimed: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}reward_claimed'])!,
+    );
+  }
+
+  @override
+  $PlayerAchievementsCompletedTableTable createAlias(String alias) {
+    return $PlayerAchievementsCompletedTableTable(attachedDatabase, alias);
+  }
+}
+
+class PlayerAchievementCompletedData extends DataClass
+    implements Insertable<PlayerAchievementCompletedData> {
+  final int playerId;
+
+  /// Chave estável da conquista (ex: `ACH_FIRST_CRAFT`). Mapeia pra JSON.
+  final String achievementKey;
+  final int completedAt;
+
+  /// Idempotência do grant — reward só é creditada 1x mesmo que o trigger
+  /// recalcule a conquista.
+  final bool rewardClaimed;
+  const PlayerAchievementCompletedData(
+      {required this.playerId,
+      required this.achievementKey,
+      required this.completedAt,
+      required this.rewardClaimed});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['player_id'] = Variable<int>(playerId);
+    map['achievement_key'] = Variable<String>(achievementKey);
+    map['completed_at'] = Variable<int>(completedAt);
+    map['reward_claimed'] = Variable<bool>(rewardClaimed);
+    return map;
+  }
+
+  PlayerAchievementsCompletedTableCompanion toCompanion(bool nullToAbsent) {
+    return PlayerAchievementsCompletedTableCompanion(
+      playerId: Value(playerId),
+      achievementKey: Value(achievementKey),
+      completedAt: Value(completedAt),
+      rewardClaimed: Value(rewardClaimed),
+    );
+  }
+
+  factory PlayerAchievementCompletedData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlayerAchievementCompletedData(
+      playerId: serializer.fromJson<int>(json['playerId']),
+      achievementKey: serializer.fromJson<String>(json['achievementKey']),
+      completedAt: serializer.fromJson<int>(json['completedAt']),
+      rewardClaimed: serializer.fromJson<bool>(json['rewardClaimed']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'playerId': serializer.toJson<int>(playerId),
+      'achievementKey': serializer.toJson<String>(achievementKey),
+      'completedAt': serializer.toJson<int>(completedAt),
+      'rewardClaimed': serializer.toJson<bool>(rewardClaimed),
+    };
+  }
+
+  PlayerAchievementCompletedData copyWith(
+          {int? playerId,
+          String? achievementKey,
+          int? completedAt,
+          bool? rewardClaimed}) =>
+      PlayerAchievementCompletedData(
+        playerId: playerId ?? this.playerId,
+        achievementKey: achievementKey ?? this.achievementKey,
+        completedAt: completedAt ?? this.completedAt,
+        rewardClaimed: rewardClaimed ?? this.rewardClaimed,
+      );
+  PlayerAchievementCompletedData copyWithCompanion(
+      PlayerAchievementsCompletedTableCompanion data) {
+    return PlayerAchievementCompletedData(
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      achievementKey: data.achievementKey.present
+          ? data.achievementKey.value
+          : this.achievementKey,
+      completedAt:
+          data.completedAt.present ? data.completedAt.value : this.completedAt,
+      rewardClaimed: data.rewardClaimed.present
+          ? data.rewardClaimed.value
+          : this.rewardClaimed,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerAchievementCompletedData(')
+          ..write('playerId: $playerId, ')
+          ..write('achievementKey: $achievementKey, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('rewardClaimed: $rewardClaimed')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(playerId, achievementKey, completedAt, rewardClaimed);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlayerAchievementCompletedData &&
+          other.playerId == this.playerId &&
+          other.achievementKey == this.achievementKey &&
+          other.completedAt == this.completedAt &&
+          other.rewardClaimed == this.rewardClaimed);
+}
+
+class PlayerAchievementsCompletedTableCompanion
+    extends UpdateCompanion<PlayerAchievementCompletedData> {
+  final Value<int> playerId;
+  final Value<String> achievementKey;
+  final Value<int> completedAt;
+  final Value<bool> rewardClaimed;
+  final Value<int> rowid;
+  const PlayerAchievementsCompletedTableCompanion({
+    this.playerId = const Value.absent(),
+    this.achievementKey = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.rewardClaimed = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlayerAchievementsCompletedTableCompanion.insert({
+    required int playerId,
+    required String achievementKey,
+    required int completedAt,
+    this.rewardClaimed = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : playerId = Value(playerId),
+        achievementKey = Value(achievementKey),
+        completedAt = Value(completedAt);
+  static Insertable<PlayerAchievementCompletedData> custom({
+    Expression<int>? playerId,
+    Expression<String>? achievementKey,
+    Expression<int>? completedAt,
+    Expression<bool>? rewardClaimed,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (playerId != null) 'player_id': playerId,
+      if (achievementKey != null) 'achievement_key': achievementKey,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (rewardClaimed != null) 'reward_claimed': rewardClaimed,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlayerAchievementsCompletedTableCompanion copyWith(
+      {Value<int>? playerId,
+      Value<String>? achievementKey,
+      Value<int>? completedAt,
+      Value<bool>? rewardClaimed,
+      Value<int>? rowid}) {
+    return PlayerAchievementsCompletedTableCompanion(
+      playerId: playerId ?? this.playerId,
+      achievementKey: achievementKey ?? this.achievementKey,
+      completedAt: completedAt ?? this.completedAt,
+      rewardClaimed: rewardClaimed ?? this.rewardClaimed,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (achievementKey.present) {
+      map['achievement_key'] = Variable<String>(achievementKey.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<int>(completedAt.value);
+    }
+    if (rewardClaimed.present) {
+      map['reward_claimed'] = Variable<bool>(rewardClaimed.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerAchievementsCompletedTableCompanion(')
+          ..write('playerId: $playerId, ')
+          ..write('achievementKey: $achievementKey, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('rewardClaimed: $rewardClaimed, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PlayerFactionReputationTableTable extends PlayerFactionReputationTable
+    with
+        TableInfo<$PlayerFactionReputationTableTable,
+            PlayerFactionReputationData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlayerFactionReputationTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _factionIdMeta =
+      const VerificationMeta('factionId');
+  @override
+  late final GeneratedColumn<String> factionId = GeneratedColumn<String>(
+      'faction_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _reputationMeta =
+      const VerificationMeta('reputation');
+  @override
+  late final GeneratedColumn<int> reputation = GeneratedColumn<int>(
+      'reputation', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(50));
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [playerId, factionId, reputation, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'player_faction_reputation';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<PlayerFactionReputationData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('faction_id')) {
+      context.handle(_factionIdMeta,
+          factionId.isAcceptableOrUnknown(data['faction_id']!, _factionIdMeta));
+    } else if (isInserting) {
+      context.missing(_factionIdMeta);
+    }
+    if (data.containsKey('reputation')) {
+      context.handle(
+          _reputationMeta,
+          reputation.isAcceptableOrUnknown(
+              data['reputation']!, _reputationMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {playerId, factionId};
+  @override
+  PlayerFactionReputationData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlayerFactionReputationData(
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      factionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}faction_id'])!,
+      reputation: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}reputation'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $PlayerFactionReputationTableTable createAlias(String alias) {
+    return $PlayerFactionReputationTableTable(attachedDatabase, alias);
+  }
+}
+
+class PlayerFactionReputationData extends DataClass
+    implements Insertable<PlayerFactionReputationData> {
+  final int playerId;
+  final String factionId;
+
+  /// Clamp lógico entre 0 e 100 aplicado na camada de service.
+  final int reputation;
+  final int updatedAt;
+  const PlayerFactionReputationData(
+      {required this.playerId,
+      required this.factionId,
+      required this.reputation,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['player_id'] = Variable<int>(playerId);
+    map['faction_id'] = Variable<String>(factionId);
+    map['reputation'] = Variable<int>(reputation);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  PlayerFactionReputationTableCompanion toCompanion(bool nullToAbsent) {
+    return PlayerFactionReputationTableCompanion(
+      playerId: Value(playerId),
+      factionId: Value(factionId),
+      reputation: Value(reputation),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory PlayerFactionReputationData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlayerFactionReputationData(
+      playerId: serializer.fromJson<int>(json['playerId']),
+      factionId: serializer.fromJson<String>(json['factionId']),
+      reputation: serializer.fromJson<int>(json['reputation']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'playerId': serializer.toJson<int>(playerId),
+      'factionId': serializer.toJson<String>(factionId),
+      'reputation': serializer.toJson<int>(reputation),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  PlayerFactionReputationData copyWith(
+          {int? playerId,
+          String? factionId,
+          int? reputation,
+          int? updatedAt}) =>
+      PlayerFactionReputationData(
+        playerId: playerId ?? this.playerId,
+        factionId: factionId ?? this.factionId,
+        reputation: reputation ?? this.reputation,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  PlayerFactionReputationData copyWithCompanion(
+      PlayerFactionReputationTableCompanion data) {
+    return PlayerFactionReputationData(
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      factionId: data.factionId.present ? data.factionId.value : this.factionId,
+      reputation:
+          data.reputation.present ? data.reputation.value : this.reputation,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerFactionReputationData(')
+          ..write('playerId: $playerId, ')
+          ..write('factionId: $factionId, ')
+          ..write('reputation: $reputation, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(playerId, factionId, reputation, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlayerFactionReputationData &&
+          other.playerId == this.playerId &&
+          other.factionId == this.factionId &&
+          other.reputation == this.reputation &&
+          other.updatedAt == this.updatedAt);
+}
+
+class PlayerFactionReputationTableCompanion
+    extends UpdateCompanion<PlayerFactionReputationData> {
+  final Value<int> playerId;
+  final Value<String> factionId;
+  final Value<int> reputation;
+  final Value<int> updatedAt;
+  final Value<int> rowid;
+  const PlayerFactionReputationTableCompanion({
+    this.playerId = const Value.absent(),
+    this.factionId = const Value.absent(),
+    this.reputation = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlayerFactionReputationTableCompanion.insert({
+    required int playerId,
+    required String factionId,
+    this.reputation = const Value.absent(),
+    required int updatedAt,
+    this.rowid = const Value.absent(),
+  })  : playerId = Value(playerId),
+        factionId = Value(factionId),
+        updatedAt = Value(updatedAt);
+  static Insertable<PlayerFactionReputationData> custom({
+    Expression<int>? playerId,
+    Expression<String>? factionId,
+    Expression<int>? reputation,
+    Expression<int>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (playerId != null) 'player_id': playerId,
+      if (factionId != null) 'faction_id': factionId,
+      if (reputation != null) 'reputation': reputation,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlayerFactionReputationTableCompanion copyWith(
+      {Value<int>? playerId,
+      Value<String>? factionId,
+      Value<int>? reputation,
+      Value<int>? updatedAt,
+      Value<int>? rowid}) {
+    return PlayerFactionReputationTableCompanion(
+      playerId: playerId ?? this.playerId,
+      factionId: factionId ?? this.factionId,
+      reputation: reputation ?? this.reputation,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (factionId.present) {
+      map['faction_id'] = Variable<String>(factionId.value);
+    }
+    if (reputation.present) {
+      map['reputation'] = Variable<int>(reputation.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerFactionReputationTableCompanion(')
+          ..write('playerId: $playerId, ')
+          ..write('factionId: $factionId, ')
+          ..write('reputation: $reputation, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ActiveFactionQuestsTableTable extends ActiveFactionQuestsTable
+    with TableInfo<$ActiveFactionQuestsTableTable, ActiveFactionQuestData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ActiveFactionQuestsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _factionIdMeta =
+      const VerificationMeta('factionId');
+  @override
+  late final GeneratedColumn<String> factionId = GeneratedColumn<String>(
+      'faction_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _missionKeyMeta =
+      const VerificationMeta('missionKey');
+  @override
+  late final GeneratedColumn<String> missionKey = GeneratedColumn<String>(
+      'mission_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _weekStartMeta =
+      const VerificationMeta('weekStart');
+  @override
+  late final GeneratedColumn<String> weekStart = GeneratedColumn<String>(
+      'week_start', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _assignedAtMeta =
+      const VerificationMeta('assignedAt');
+  @override
+  late final GeneratedColumn<int> assignedAt = GeneratedColumn<int>(
+      'assigned_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, playerId, factionId, missionKey, weekStart, assignedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'active_faction_quests';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<ActiveFactionQuestData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('faction_id')) {
+      context.handle(_factionIdMeta,
+          factionId.isAcceptableOrUnknown(data['faction_id']!, _factionIdMeta));
+    } else if (isInserting) {
+      context.missing(_factionIdMeta);
+    }
+    if (data.containsKey('mission_key')) {
+      context.handle(
+          _missionKeyMeta,
+          missionKey.isAcceptableOrUnknown(
+              data['mission_key']!, _missionKeyMeta));
+    } else if (isInserting) {
+      context.missing(_missionKeyMeta);
+    }
+    if (data.containsKey('week_start')) {
+      context.handle(_weekStartMeta,
+          weekStart.isAcceptableOrUnknown(data['week_start']!, _weekStartMeta));
+    } else if (isInserting) {
+      context.missing(_weekStartMeta);
+    }
+    if (data.containsKey('assigned_at')) {
+      context.handle(
+          _assignedAtMeta,
+          assignedAt.isAcceptableOrUnknown(
+              data['assigned_at']!, _assignedAtMeta));
+    } else if (isInserting) {
+      context.missing(_assignedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ActiveFactionQuestData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ActiveFactionQuestData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      factionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}faction_id'])!,
+      missionKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}mission_key'])!,
+      weekStart: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}week_start'])!,
+      assignedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}assigned_at'])!,
+    );
+  }
+
+  @override
+  $ActiveFactionQuestsTableTable createAlias(String alias) {
+    return $ActiveFactionQuestsTableTable(attachedDatabase, alias);
+  }
+}
+
+class ActiveFactionQuestData extends DataClass
+    implements Insertable<ActiveFactionQuestData> {
+  final int id;
+  final int playerId;
+  final String factionId;
+
+  /// Chave da quest no catálogo JSON (assets/data/faction_quests_weekly.json).
+  final String missionKey;
+
+  /// yyyy-MM-dd da segunda-feira — âncora do reset semanal.
+  final String weekStart;
+  final int assignedAt;
+  const ActiveFactionQuestData(
+      {required this.id,
+      required this.playerId,
+      required this.factionId,
+      required this.missionKey,
+      required this.weekStart,
+      required this.assignedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['faction_id'] = Variable<String>(factionId);
+    map['mission_key'] = Variable<String>(missionKey);
+    map['week_start'] = Variable<String>(weekStart);
+    map['assigned_at'] = Variable<int>(assignedAt);
+    return map;
+  }
+
+  ActiveFactionQuestsTableCompanion toCompanion(bool nullToAbsent) {
+    return ActiveFactionQuestsTableCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      factionId: Value(factionId),
+      missionKey: Value(missionKey),
+      weekStart: Value(weekStart),
+      assignedAt: Value(assignedAt),
+    );
+  }
+
+  factory ActiveFactionQuestData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ActiveFactionQuestData(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      factionId: serializer.fromJson<String>(json['factionId']),
+      missionKey: serializer.fromJson<String>(json['missionKey']),
+      weekStart: serializer.fromJson<String>(json['weekStart']),
+      assignedAt: serializer.fromJson<int>(json['assignedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'factionId': serializer.toJson<String>(factionId),
+      'missionKey': serializer.toJson<String>(missionKey),
+      'weekStart': serializer.toJson<String>(weekStart),
+      'assignedAt': serializer.toJson<int>(assignedAt),
+    };
+  }
+
+  ActiveFactionQuestData copyWith(
+          {int? id,
+          int? playerId,
+          String? factionId,
+          String? missionKey,
+          String? weekStart,
+          int? assignedAt}) =>
+      ActiveFactionQuestData(
+        id: id ?? this.id,
+        playerId: playerId ?? this.playerId,
+        factionId: factionId ?? this.factionId,
+        missionKey: missionKey ?? this.missionKey,
+        weekStart: weekStart ?? this.weekStart,
+        assignedAt: assignedAt ?? this.assignedAt,
+      );
+  ActiveFactionQuestData copyWithCompanion(
+      ActiveFactionQuestsTableCompanion data) {
+    return ActiveFactionQuestData(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      factionId: data.factionId.present ? data.factionId.value : this.factionId,
+      missionKey:
+          data.missionKey.present ? data.missionKey.value : this.missionKey,
+      weekStart: data.weekStart.present ? data.weekStart.value : this.weekStart,
+      assignedAt:
+          data.assignedAt.present ? data.assignedAt.value : this.assignedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActiveFactionQuestData(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('factionId: $factionId, ')
+          ..write('missionKey: $missionKey, ')
+          ..write('weekStart: $weekStart, ')
+          ..write('assignedAt: $assignedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, playerId, factionId, missionKey, weekStart, assignedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ActiveFactionQuestData &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.factionId == this.factionId &&
+          other.missionKey == this.missionKey &&
+          other.weekStart == this.weekStart &&
+          other.assignedAt == this.assignedAt);
+}
+
+class ActiveFactionQuestsTableCompanion
+    extends UpdateCompanion<ActiveFactionQuestData> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> factionId;
+  final Value<String> missionKey;
+  final Value<String> weekStart;
+  final Value<int> assignedAt;
+  const ActiveFactionQuestsTableCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.factionId = const Value.absent(),
+    this.missionKey = const Value.absent(),
+    this.weekStart = const Value.absent(),
+    this.assignedAt = const Value.absent(),
+  });
+  ActiveFactionQuestsTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String factionId,
+    required String missionKey,
+    required String weekStart,
+    required int assignedAt,
+  })  : playerId = Value(playerId),
+        factionId = Value(factionId),
+        missionKey = Value(missionKey),
+        weekStart = Value(weekStart),
+        assignedAt = Value(assignedAt);
+  static Insertable<ActiveFactionQuestData> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? factionId,
+    Expression<String>? missionKey,
+    Expression<String>? weekStart,
+    Expression<int>? assignedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (factionId != null) 'faction_id': factionId,
+      if (missionKey != null) 'mission_key': missionKey,
+      if (weekStart != null) 'week_start': weekStart,
+      if (assignedAt != null) 'assigned_at': assignedAt,
+    });
+  }
+
+  ActiveFactionQuestsTableCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? playerId,
+      Value<String>? factionId,
+      Value<String>? missionKey,
+      Value<String>? weekStart,
+      Value<int>? assignedAt}) {
+    return ActiveFactionQuestsTableCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      factionId: factionId ?? this.factionId,
+      missionKey: missionKey ?? this.missionKey,
+      weekStart: weekStart ?? this.weekStart,
+      assignedAt: assignedAt ?? this.assignedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (factionId.present) {
+      map['faction_id'] = Variable<String>(factionId.value);
+    }
+    if (missionKey.present) {
+      map['mission_key'] = Variable<String>(missionKey.value);
+    }
+    if (weekStart.present) {
+      map['week_start'] = Variable<String>(weekStart.value);
+    }
+    if (assignedAt.present) {
+      map['assigned_at'] = Variable<int>(assignedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActiveFactionQuestsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('factionId: $factionId, ')
+          ..write('missionKey: $missionKey, ')
+          ..write('weekStart: $weekStart, ')
+          ..write('assignedAt: $assignedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $PlayersTableTable playersTable = $PlayersTableTable(this);
-  late final $HabitsTableTable habitsTable = $HabitsTableTable(this);
-  late final $HabitLogsTableTable habitLogsTable = $HabitLogsTableTable(this);
   late final $ItemsTableTable itemsTable = $ItemsTableTable(this);
   late final $InventoryTableTable inventoryTable = $InventoryTableTable(this);
   late final $ShopItemsTableTable shopItemsTable = $ShopItemsTableTable(this);
-  late final $AchievementsTableTable achievementsTable =
-      $AchievementsTableTable(this);
-  late final $PlayerAchievementsTableTable playerAchievementsTable =
-      $PlayerAchievementsTableTable(this);
   late final $GuildStatusTableTable guildStatusTable =
       $GuildStatusTableTable(this);
   late final $NpcReputationTableTable npcReputationTable =
       $NpcReputationTableTable(this);
   late final $DiaryEntriesTableTable diaryEntriesTable =
       $DiaryEntriesTableTable(this);
-  late final $ClassQuestsTableTable classQuestsTable =
-      $ClassQuestsTableTable(this);
-  late final $FactionQuestsTableTable factionQuestsTable =
-      $FactionQuestsTableTable(this);
   late final $GuildAscensionTableTable guildAscensionTable =
       $GuildAscensionTableTable(this);
   late final $VitalismUniqueCatalogTableTable vitalismUniqueCatalogTable =
@@ -13381,10 +12609,22 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $RecipesCatalogTableTable(this);
   late final $PlayerRecipesUnlockedTableTable playerRecipesUnlockedTable =
       $PlayerRecipesUnlockedTableTable(this);
+  late final $PlayerMissionProgressTableTable playerMissionProgressTable =
+      $PlayerMissionProgressTableTable(this);
+  late final $PlayerMissionPreferencesTableTable playerMissionPreferencesTable =
+      $PlayerMissionPreferencesTableTable(this);
+  late final $PlayerIndividualMissionsTableTable playerIndividualMissionsTable =
+      $PlayerIndividualMissionsTableTable(this);
+  late final $PlayerAchievementsCompletedTableTable
+      playerAchievementsCompletedTable =
+      $PlayerAchievementsCompletedTableTable(this);
+  late final $PlayerFactionReputationTableTable playerFactionReputationTable =
+      $PlayerFactionReputationTableTable(this);
+  late final $ActiveFactionQuestsTableTable activeFactionQuestsTable =
+      $ActiveFactionQuestsTableTable(this);
+  late final Index uniquePlayerFactionWeek = Index('unique_player_faction_week',
+      'CREATE UNIQUE INDEX unique_player_faction_week ON active_faction_quests (player_id, faction_id, week_start)');
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
-  late final HabitDao habitDao = HabitDao(this as AppDatabase);
-  late final AchievementDao achievementDao =
-      AchievementDao(this as AppDatabase);
   late final GuildDao guildDao = GuildDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -13392,18 +12632,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
         playersTable,
-        habitsTable,
-        habitLogsTable,
         itemsTable,
         inventoryTable,
         shopItemsTable,
-        achievementsTable,
-        playerAchievementsTable,
         guildStatusTable,
         npcReputationTable,
         diaryEntriesTable,
-        classQuestsTable,
-        factionQuestsTable,
         guildAscensionTable,
         vitalismUniqueCatalogTable,
         playerVitalismAffinitiesTable,
@@ -13413,7 +12647,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         playerInventoryTable,
         playerEquipmentTable,
         recipesCatalogTable,
-        playerRecipesUnlockedTable
+        playerRecipesUnlockedTable,
+        playerMissionProgressTable,
+        playerMissionPreferencesTable,
+        playerIndividualMissionsTable,
+        playerAchievementsCompletedTable,
+        playerFactionReputationTable,
+        activeFactionQuestsTable,
+        uniquePlayerFactionWeek
       ];
 }
 
@@ -14080,589 +13321,6 @@ typedef $$PlayersTableTableProcessedTableManager = ProcessedTableManager<
       BaseReferences<_$AppDatabase, $PlayersTableTable, PlayersTableData>
     ),
     PlayersTableData,
-    PrefetchHooks Function()>;
-typedef $$HabitsTableTableCreateCompanionBuilder = HabitsTableCompanion
-    Function({
-  Value<int> id,
-  required int playerId,
-  required String title,
-  Value<String> description,
-  required String category,
-  Value<String> rank,
-  Value<bool> isSystemHabit,
-  Value<bool> isRepeatable,
-  Value<bool> isPaused,
-  Value<int> xpReward,
-  Value<int> goldReward,
-  Value<int> streakCount,
-  Value<int> totalCompleted,
-  Value<String?> requirements,
-  Value<String> questType,
-  Value<String> metricUnit,
-  Value<String?> autoDescription,
-  Value<DateTime> createdAt,
-});
-typedef $$HabitsTableTableUpdateCompanionBuilder = HabitsTableCompanion
-    Function({
-  Value<int> id,
-  Value<int> playerId,
-  Value<String> title,
-  Value<String> description,
-  Value<String> category,
-  Value<String> rank,
-  Value<bool> isSystemHabit,
-  Value<bool> isRepeatable,
-  Value<bool> isPaused,
-  Value<int> xpReward,
-  Value<int> goldReward,
-  Value<int> streakCount,
-  Value<int> totalCompleted,
-  Value<String?> requirements,
-  Value<String> questType,
-  Value<String> metricUnit,
-  Value<String?> autoDescription,
-  Value<DateTime> createdAt,
-});
-
-class $$HabitsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $HabitsTableTable> {
-  $$HabitsTableTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get playerId => $composableBuilder(
-      column: $table.playerId, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get title => $composableBuilder(
-      column: $table.title, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get category => $composableBuilder(
-      column: $table.category, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get rank => $composableBuilder(
-      column: $table.rank, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isSystemHabit => $composableBuilder(
-      column: $table.isSystemHabit, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isRepeatable => $composableBuilder(
-      column: $table.isRepeatable, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isPaused => $composableBuilder(
-      column: $table.isPaused, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get xpReward => $composableBuilder(
-      column: $table.xpReward, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get goldReward => $composableBuilder(
-      column: $table.goldReward, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get streakCount => $composableBuilder(
-      column: $table.streakCount, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get totalCompleted => $composableBuilder(
-      column: $table.totalCompleted,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get requirements => $composableBuilder(
-      column: $table.requirements, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get questType => $composableBuilder(
-      column: $table.questType, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get metricUnit => $composableBuilder(
-      column: $table.metricUnit, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get autoDescription => $composableBuilder(
-      column: $table.autoDescription,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
-}
-
-class $$HabitsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $HabitsTableTable> {
-  $$HabitsTableTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get playerId => $composableBuilder(
-      column: $table.playerId, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get title => $composableBuilder(
-      column: $table.title, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get category => $composableBuilder(
-      column: $table.category, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get rank => $composableBuilder(
-      column: $table.rank, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isSystemHabit => $composableBuilder(
-      column: $table.isSystemHabit,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isRepeatable => $composableBuilder(
-      column: $table.isRepeatable,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isPaused => $composableBuilder(
-      column: $table.isPaused, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get xpReward => $composableBuilder(
-      column: $table.xpReward, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get goldReward => $composableBuilder(
-      column: $table.goldReward, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get streakCount => $composableBuilder(
-      column: $table.streakCount, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get totalCompleted => $composableBuilder(
-      column: $table.totalCompleted,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get requirements => $composableBuilder(
-      column: $table.requirements,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get questType => $composableBuilder(
-      column: $table.questType, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get metricUnit => $composableBuilder(
-      column: $table.metricUnit, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get autoDescription => $composableBuilder(
-      column: $table.autoDescription,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
-}
-
-class $$HabitsTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $HabitsTableTable> {
-  $$HabitsTableTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<int> get playerId =>
-      $composableBuilder(column: $table.playerId, builder: (column) => column);
-
-  GeneratedColumn<String> get title =>
-      $composableBuilder(column: $table.title, builder: (column) => column);
-
-  GeneratedColumn<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => column);
-
-  GeneratedColumn<String> get category =>
-      $composableBuilder(column: $table.category, builder: (column) => column);
-
-  GeneratedColumn<String> get rank =>
-      $composableBuilder(column: $table.rank, builder: (column) => column);
-
-  GeneratedColumn<bool> get isSystemHabit => $composableBuilder(
-      column: $table.isSystemHabit, builder: (column) => column);
-
-  GeneratedColumn<bool> get isRepeatable => $composableBuilder(
-      column: $table.isRepeatable, builder: (column) => column);
-
-  GeneratedColumn<bool> get isPaused =>
-      $composableBuilder(column: $table.isPaused, builder: (column) => column);
-
-  GeneratedColumn<int> get xpReward =>
-      $composableBuilder(column: $table.xpReward, builder: (column) => column);
-
-  GeneratedColumn<int> get goldReward => $composableBuilder(
-      column: $table.goldReward, builder: (column) => column);
-
-  GeneratedColumn<int> get streakCount => $composableBuilder(
-      column: $table.streakCount, builder: (column) => column);
-
-  GeneratedColumn<int> get totalCompleted => $composableBuilder(
-      column: $table.totalCompleted, builder: (column) => column);
-
-  GeneratedColumn<String> get requirements => $composableBuilder(
-      column: $table.requirements, builder: (column) => column);
-
-  GeneratedColumn<String> get questType =>
-      $composableBuilder(column: $table.questType, builder: (column) => column);
-
-  GeneratedColumn<String> get metricUnit => $composableBuilder(
-      column: $table.metricUnit, builder: (column) => column);
-
-  GeneratedColumn<String> get autoDescription => $composableBuilder(
-      column: $table.autoDescription, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-}
-
-class $$HabitsTableTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $HabitsTableTable,
-    HabitsTableData,
-    $$HabitsTableTableFilterComposer,
-    $$HabitsTableTableOrderingComposer,
-    $$HabitsTableTableAnnotationComposer,
-    $$HabitsTableTableCreateCompanionBuilder,
-    $$HabitsTableTableUpdateCompanionBuilder,
-    (
-      HabitsTableData,
-      BaseReferences<_$AppDatabase, $HabitsTableTable, HabitsTableData>
-    ),
-    HabitsTableData,
-    PrefetchHooks Function()> {
-  $$HabitsTableTableTableManager(_$AppDatabase db, $HabitsTableTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$HabitsTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$HabitsTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$HabitsTableTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<int> playerId = const Value.absent(),
-            Value<String> title = const Value.absent(),
-            Value<String> description = const Value.absent(),
-            Value<String> category = const Value.absent(),
-            Value<String> rank = const Value.absent(),
-            Value<bool> isSystemHabit = const Value.absent(),
-            Value<bool> isRepeatable = const Value.absent(),
-            Value<bool> isPaused = const Value.absent(),
-            Value<int> xpReward = const Value.absent(),
-            Value<int> goldReward = const Value.absent(),
-            Value<int> streakCount = const Value.absent(),
-            Value<int> totalCompleted = const Value.absent(),
-            Value<String?> requirements = const Value.absent(),
-            Value<String> questType = const Value.absent(),
-            Value<String> metricUnit = const Value.absent(),
-            Value<String?> autoDescription = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-          }) =>
-              HabitsTableCompanion(
-            id: id,
-            playerId: playerId,
-            title: title,
-            description: description,
-            category: category,
-            rank: rank,
-            isSystemHabit: isSystemHabit,
-            isRepeatable: isRepeatable,
-            isPaused: isPaused,
-            xpReward: xpReward,
-            goldReward: goldReward,
-            streakCount: streakCount,
-            totalCompleted: totalCompleted,
-            requirements: requirements,
-            questType: questType,
-            metricUnit: metricUnit,
-            autoDescription: autoDescription,
-            createdAt: createdAt,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required int playerId,
-            required String title,
-            Value<String> description = const Value.absent(),
-            required String category,
-            Value<String> rank = const Value.absent(),
-            Value<bool> isSystemHabit = const Value.absent(),
-            Value<bool> isRepeatable = const Value.absent(),
-            Value<bool> isPaused = const Value.absent(),
-            Value<int> xpReward = const Value.absent(),
-            Value<int> goldReward = const Value.absent(),
-            Value<int> streakCount = const Value.absent(),
-            Value<int> totalCompleted = const Value.absent(),
-            Value<String?> requirements = const Value.absent(),
-            Value<String> questType = const Value.absent(),
-            Value<String> metricUnit = const Value.absent(),
-            Value<String?> autoDescription = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-          }) =>
-              HabitsTableCompanion.insert(
-            id: id,
-            playerId: playerId,
-            title: title,
-            description: description,
-            category: category,
-            rank: rank,
-            isSystemHabit: isSystemHabit,
-            isRepeatable: isRepeatable,
-            isPaused: isPaused,
-            xpReward: xpReward,
-            goldReward: goldReward,
-            streakCount: streakCount,
-            totalCompleted: totalCompleted,
-            requirements: requirements,
-            questType: questType,
-            metricUnit: metricUnit,
-            autoDescription: autoDescription,
-            createdAt: createdAt,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ));
-}
-
-typedef $$HabitsTableTableProcessedTableManager = ProcessedTableManager<
-    _$AppDatabase,
-    $HabitsTableTable,
-    HabitsTableData,
-    $$HabitsTableTableFilterComposer,
-    $$HabitsTableTableOrderingComposer,
-    $$HabitsTableTableAnnotationComposer,
-    $$HabitsTableTableCreateCompanionBuilder,
-    $$HabitsTableTableUpdateCompanionBuilder,
-    (
-      HabitsTableData,
-      BaseReferences<_$AppDatabase, $HabitsTableTable, HabitsTableData>
-    ),
-    HabitsTableData,
-    PrefetchHooks Function()>;
-typedef $$HabitLogsTableTableCreateCompanionBuilder = HabitLogsTableCompanion
-    Function({
-  Value<int> id,
-  required int habitId,
-  required int playerId,
-  required String status,
-  Value<int> xpGained,
-  Value<int> goldGained,
-  Value<int> shadowImpact,
-  Value<DateTime> logDate,
-});
-typedef $$HabitLogsTableTableUpdateCompanionBuilder = HabitLogsTableCompanion
-    Function({
-  Value<int> id,
-  Value<int> habitId,
-  Value<int> playerId,
-  Value<String> status,
-  Value<int> xpGained,
-  Value<int> goldGained,
-  Value<int> shadowImpact,
-  Value<DateTime> logDate,
-});
-
-class $$HabitLogsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $HabitLogsTableTable> {
-  $$HabitLogsTableTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get habitId => $composableBuilder(
-      column: $table.habitId, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get playerId => $composableBuilder(
-      column: $table.playerId, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get status => $composableBuilder(
-      column: $table.status, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get xpGained => $composableBuilder(
-      column: $table.xpGained, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get goldGained => $composableBuilder(
-      column: $table.goldGained, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get shadowImpact => $composableBuilder(
-      column: $table.shadowImpact, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get logDate => $composableBuilder(
-      column: $table.logDate, builder: (column) => ColumnFilters(column));
-}
-
-class $$HabitLogsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $HabitLogsTableTable> {
-  $$HabitLogsTableTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get habitId => $composableBuilder(
-      column: $table.habitId, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get playerId => $composableBuilder(
-      column: $table.playerId, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get status => $composableBuilder(
-      column: $table.status, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get xpGained => $composableBuilder(
-      column: $table.xpGained, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get goldGained => $composableBuilder(
-      column: $table.goldGained, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get shadowImpact => $composableBuilder(
-      column: $table.shadowImpact,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get logDate => $composableBuilder(
-      column: $table.logDate, builder: (column) => ColumnOrderings(column));
-}
-
-class $$HabitLogsTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $HabitLogsTableTable> {
-  $$HabitLogsTableTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<int> get habitId =>
-      $composableBuilder(column: $table.habitId, builder: (column) => column);
-
-  GeneratedColumn<int> get playerId =>
-      $composableBuilder(column: $table.playerId, builder: (column) => column);
-
-  GeneratedColumn<String> get status =>
-      $composableBuilder(column: $table.status, builder: (column) => column);
-
-  GeneratedColumn<int> get xpGained =>
-      $composableBuilder(column: $table.xpGained, builder: (column) => column);
-
-  GeneratedColumn<int> get goldGained => $composableBuilder(
-      column: $table.goldGained, builder: (column) => column);
-
-  GeneratedColumn<int> get shadowImpact => $composableBuilder(
-      column: $table.shadowImpact, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get logDate =>
-      $composableBuilder(column: $table.logDate, builder: (column) => column);
-}
-
-class $$HabitLogsTableTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $HabitLogsTableTable,
-    HabitLogsTableData,
-    $$HabitLogsTableTableFilterComposer,
-    $$HabitLogsTableTableOrderingComposer,
-    $$HabitLogsTableTableAnnotationComposer,
-    $$HabitLogsTableTableCreateCompanionBuilder,
-    $$HabitLogsTableTableUpdateCompanionBuilder,
-    (
-      HabitLogsTableData,
-      BaseReferences<_$AppDatabase, $HabitLogsTableTable, HabitLogsTableData>
-    ),
-    HabitLogsTableData,
-    PrefetchHooks Function()> {
-  $$HabitLogsTableTableTableManager(
-      _$AppDatabase db, $HabitLogsTableTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$HabitLogsTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$HabitLogsTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$HabitLogsTableTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<int> habitId = const Value.absent(),
-            Value<int> playerId = const Value.absent(),
-            Value<String> status = const Value.absent(),
-            Value<int> xpGained = const Value.absent(),
-            Value<int> goldGained = const Value.absent(),
-            Value<int> shadowImpact = const Value.absent(),
-            Value<DateTime> logDate = const Value.absent(),
-          }) =>
-              HabitLogsTableCompanion(
-            id: id,
-            habitId: habitId,
-            playerId: playerId,
-            status: status,
-            xpGained: xpGained,
-            goldGained: goldGained,
-            shadowImpact: shadowImpact,
-            logDate: logDate,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required int habitId,
-            required int playerId,
-            required String status,
-            Value<int> xpGained = const Value.absent(),
-            Value<int> goldGained = const Value.absent(),
-            Value<int> shadowImpact = const Value.absent(),
-            Value<DateTime> logDate = const Value.absent(),
-          }) =>
-              HabitLogsTableCompanion.insert(
-            id: id,
-            habitId: habitId,
-            playerId: playerId,
-            status: status,
-            xpGained: xpGained,
-            goldGained: goldGained,
-            shadowImpact: shadowImpact,
-            logDate: logDate,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ));
-}
-
-typedef $$HabitLogsTableTableProcessedTableManager = ProcessedTableManager<
-    _$AppDatabase,
-    $HabitLogsTableTable,
-    HabitLogsTableData,
-    $$HabitLogsTableTableFilterComposer,
-    $$HabitLogsTableTableOrderingComposer,
-    $$HabitLogsTableTableAnnotationComposer,
-    $$HabitLogsTableTableCreateCompanionBuilder,
-    $$HabitLogsTableTableUpdateCompanionBuilder,
-    (
-      HabitLogsTableData,
-      BaseReferences<_$AppDatabase, $HabitLogsTableTable, HabitLogsTableData>
-    ),
-    HabitLogsTableData,
     PrefetchHooks Function()>;
 typedef $$ItemsTableTableCreateCompanionBuilder = ItemsTableCompanion Function({
   Value<int> id,
@@ -15408,473 +14066,6 @@ typedef $$ShopItemsTableTableProcessedTableManager = ProcessedTableManager<
     ),
     ShopItemsTableData,
     PrefetchHooks Function()>;
-typedef $$AchievementsTableTableCreateCompanionBuilder
-    = AchievementsTableCompanion Function({
-  Value<int> id,
-  required String key,
-  required String title,
-  required String description,
-  required String category,
-  Value<String> iconName,
-  Value<int> xpReward,
-  Value<int> goldReward,
-  Value<int> gemReward,
-  Value<bool> isSecret,
-  Value<String> rarity,
-  Value<String?> titleReward,
-  Value<String?> category2,
-});
-typedef $$AchievementsTableTableUpdateCompanionBuilder
-    = AchievementsTableCompanion Function({
-  Value<int> id,
-  Value<String> key,
-  Value<String> title,
-  Value<String> description,
-  Value<String> category,
-  Value<String> iconName,
-  Value<int> xpReward,
-  Value<int> goldReward,
-  Value<int> gemReward,
-  Value<bool> isSecret,
-  Value<String> rarity,
-  Value<String?> titleReward,
-  Value<String?> category2,
-});
-
-class $$AchievementsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $AchievementsTableTable> {
-  $$AchievementsTableTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get key => $composableBuilder(
-      column: $table.key, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get title => $composableBuilder(
-      column: $table.title, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get category => $composableBuilder(
-      column: $table.category, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get iconName => $composableBuilder(
-      column: $table.iconName, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get xpReward => $composableBuilder(
-      column: $table.xpReward, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get goldReward => $composableBuilder(
-      column: $table.goldReward, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get gemReward => $composableBuilder(
-      column: $table.gemReward, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isSecret => $composableBuilder(
-      column: $table.isSecret, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get rarity => $composableBuilder(
-      column: $table.rarity, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get titleReward => $composableBuilder(
-      column: $table.titleReward, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get category2 => $composableBuilder(
-      column: $table.category2, builder: (column) => ColumnFilters(column));
-}
-
-class $$AchievementsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $AchievementsTableTable> {
-  $$AchievementsTableTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get key => $composableBuilder(
-      column: $table.key, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get title => $composableBuilder(
-      column: $table.title, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get category => $composableBuilder(
-      column: $table.category, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get iconName => $composableBuilder(
-      column: $table.iconName, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get xpReward => $composableBuilder(
-      column: $table.xpReward, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get goldReward => $composableBuilder(
-      column: $table.goldReward, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get gemReward => $composableBuilder(
-      column: $table.gemReward, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isSecret => $composableBuilder(
-      column: $table.isSecret, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get rarity => $composableBuilder(
-      column: $table.rarity, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get titleReward => $composableBuilder(
-      column: $table.titleReward, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get category2 => $composableBuilder(
-      column: $table.category2, builder: (column) => ColumnOrderings(column));
-}
-
-class $$AchievementsTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $AchievementsTableTable> {
-  $$AchievementsTableTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<String> get key =>
-      $composableBuilder(column: $table.key, builder: (column) => column);
-
-  GeneratedColumn<String> get title =>
-      $composableBuilder(column: $table.title, builder: (column) => column);
-
-  GeneratedColumn<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => column);
-
-  GeneratedColumn<String> get category =>
-      $composableBuilder(column: $table.category, builder: (column) => column);
-
-  GeneratedColumn<String> get iconName =>
-      $composableBuilder(column: $table.iconName, builder: (column) => column);
-
-  GeneratedColumn<int> get xpReward =>
-      $composableBuilder(column: $table.xpReward, builder: (column) => column);
-
-  GeneratedColumn<int> get goldReward => $composableBuilder(
-      column: $table.goldReward, builder: (column) => column);
-
-  GeneratedColumn<int> get gemReward =>
-      $composableBuilder(column: $table.gemReward, builder: (column) => column);
-
-  GeneratedColumn<bool> get isSecret =>
-      $composableBuilder(column: $table.isSecret, builder: (column) => column);
-
-  GeneratedColumn<String> get rarity =>
-      $composableBuilder(column: $table.rarity, builder: (column) => column);
-
-  GeneratedColumn<String> get titleReward => $composableBuilder(
-      column: $table.titleReward, builder: (column) => column);
-
-  GeneratedColumn<String> get category2 =>
-      $composableBuilder(column: $table.category2, builder: (column) => column);
-}
-
-class $$AchievementsTableTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $AchievementsTableTable,
-    AchievementsTableData,
-    $$AchievementsTableTableFilterComposer,
-    $$AchievementsTableTableOrderingComposer,
-    $$AchievementsTableTableAnnotationComposer,
-    $$AchievementsTableTableCreateCompanionBuilder,
-    $$AchievementsTableTableUpdateCompanionBuilder,
-    (
-      AchievementsTableData,
-      BaseReferences<_$AppDatabase, $AchievementsTableTable,
-          AchievementsTableData>
-    ),
-    AchievementsTableData,
-    PrefetchHooks Function()> {
-  $$AchievementsTableTableTableManager(
-      _$AppDatabase db, $AchievementsTableTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$AchievementsTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$AchievementsTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$AchievementsTableTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<String> key = const Value.absent(),
-            Value<String> title = const Value.absent(),
-            Value<String> description = const Value.absent(),
-            Value<String> category = const Value.absent(),
-            Value<String> iconName = const Value.absent(),
-            Value<int> xpReward = const Value.absent(),
-            Value<int> goldReward = const Value.absent(),
-            Value<int> gemReward = const Value.absent(),
-            Value<bool> isSecret = const Value.absent(),
-            Value<String> rarity = const Value.absent(),
-            Value<String?> titleReward = const Value.absent(),
-            Value<String?> category2 = const Value.absent(),
-          }) =>
-              AchievementsTableCompanion(
-            id: id,
-            key: key,
-            title: title,
-            description: description,
-            category: category,
-            iconName: iconName,
-            xpReward: xpReward,
-            goldReward: goldReward,
-            gemReward: gemReward,
-            isSecret: isSecret,
-            rarity: rarity,
-            titleReward: titleReward,
-            category2: category2,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required String key,
-            required String title,
-            required String description,
-            required String category,
-            Value<String> iconName = const Value.absent(),
-            Value<int> xpReward = const Value.absent(),
-            Value<int> goldReward = const Value.absent(),
-            Value<int> gemReward = const Value.absent(),
-            Value<bool> isSecret = const Value.absent(),
-            Value<String> rarity = const Value.absent(),
-            Value<String?> titleReward = const Value.absent(),
-            Value<String?> category2 = const Value.absent(),
-          }) =>
-              AchievementsTableCompanion.insert(
-            id: id,
-            key: key,
-            title: title,
-            description: description,
-            category: category,
-            iconName: iconName,
-            xpReward: xpReward,
-            goldReward: goldReward,
-            gemReward: gemReward,
-            isSecret: isSecret,
-            rarity: rarity,
-            titleReward: titleReward,
-            category2: category2,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ));
-}
-
-typedef $$AchievementsTableTableProcessedTableManager = ProcessedTableManager<
-    _$AppDatabase,
-    $AchievementsTableTable,
-    AchievementsTableData,
-    $$AchievementsTableTableFilterComposer,
-    $$AchievementsTableTableOrderingComposer,
-    $$AchievementsTableTableAnnotationComposer,
-    $$AchievementsTableTableCreateCompanionBuilder,
-    $$AchievementsTableTableUpdateCompanionBuilder,
-    (
-      AchievementsTableData,
-      BaseReferences<_$AppDatabase, $AchievementsTableTable,
-          AchievementsTableData>
-    ),
-    AchievementsTableData,
-    PrefetchHooks Function()>;
-typedef $$PlayerAchievementsTableTableCreateCompanionBuilder
-    = PlayerAchievementsTableCompanion Function({
-  Value<int> id,
-  required int playerId,
-  required String achievementKey,
-  Value<DateTime> unlockedAt,
-  Value<DateTime?> collectedAt,
-});
-typedef $$PlayerAchievementsTableTableUpdateCompanionBuilder
-    = PlayerAchievementsTableCompanion Function({
-  Value<int> id,
-  Value<int> playerId,
-  Value<String> achievementKey,
-  Value<DateTime> unlockedAt,
-  Value<DateTime?> collectedAt,
-});
-
-class $$PlayerAchievementsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $PlayerAchievementsTableTable> {
-  $$PlayerAchievementsTableTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get playerId => $composableBuilder(
-      column: $table.playerId, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get achievementKey => $composableBuilder(
-      column: $table.achievementKey,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get unlockedAt => $composableBuilder(
-      column: $table.unlockedAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get collectedAt => $composableBuilder(
-      column: $table.collectedAt, builder: (column) => ColumnFilters(column));
-}
-
-class $$PlayerAchievementsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $PlayerAchievementsTableTable> {
-  $$PlayerAchievementsTableTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get playerId => $composableBuilder(
-      column: $table.playerId, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get achievementKey => $composableBuilder(
-      column: $table.achievementKey,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get unlockedAt => $composableBuilder(
-      column: $table.unlockedAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get collectedAt => $composableBuilder(
-      column: $table.collectedAt, builder: (column) => ColumnOrderings(column));
-}
-
-class $$PlayerAchievementsTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $PlayerAchievementsTableTable> {
-  $$PlayerAchievementsTableTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<int> get playerId =>
-      $composableBuilder(column: $table.playerId, builder: (column) => column);
-
-  GeneratedColumn<String> get achievementKey => $composableBuilder(
-      column: $table.achievementKey, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get unlockedAt => $composableBuilder(
-      column: $table.unlockedAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get collectedAt => $composableBuilder(
-      column: $table.collectedAt, builder: (column) => column);
-}
-
-class $$PlayerAchievementsTableTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $PlayerAchievementsTableTable,
-    PlayerAchievementsTableData,
-    $$PlayerAchievementsTableTableFilterComposer,
-    $$PlayerAchievementsTableTableOrderingComposer,
-    $$PlayerAchievementsTableTableAnnotationComposer,
-    $$PlayerAchievementsTableTableCreateCompanionBuilder,
-    $$PlayerAchievementsTableTableUpdateCompanionBuilder,
-    (
-      PlayerAchievementsTableData,
-      BaseReferences<_$AppDatabase, $PlayerAchievementsTableTable,
-          PlayerAchievementsTableData>
-    ),
-    PlayerAchievementsTableData,
-    PrefetchHooks Function()> {
-  $$PlayerAchievementsTableTableTableManager(
-      _$AppDatabase db, $PlayerAchievementsTableTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$PlayerAchievementsTableTableFilterComposer(
-                  $db: db, $table: table),
-          createOrderingComposer: () =>
-              $$PlayerAchievementsTableTableOrderingComposer(
-                  $db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$PlayerAchievementsTableTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<int> playerId = const Value.absent(),
-            Value<String> achievementKey = const Value.absent(),
-            Value<DateTime> unlockedAt = const Value.absent(),
-            Value<DateTime?> collectedAt = const Value.absent(),
-          }) =>
-              PlayerAchievementsTableCompanion(
-            id: id,
-            playerId: playerId,
-            achievementKey: achievementKey,
-            unlockedAt: unlockedAt,
-            collectedAt: collectedAt,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required int playerId,
-            required String achievementKey,
-            Value<DateTime> unlockedAt = const Value.absent(),
-            Value<DateTime?> collectedAt = const Value.absent(),
-          }) =>
-              PlayerAchievementsTableCompanion.insert(
-            id: id,
-            playerId: playerId,
-            achievementKey: achievementKey,
-            unlockedAt: unlockedAt,
-            collectedAt: collectedAt,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ));
-}
-
-typedef $$PlayerAchievementsTableTableProcessedTableManager
-    = ProcessedTableManager<
-        _$AppDatabase,
-        $PlayerAchievementsTableTable,
-        PlayerAchievementsTableData,
-        $$PlayerAchievementsTableTableFilterComposer,
-        $$PlayerAchievementsTableTableOrderingComposer,
-        $$PlayerAchievementsTableTableAnnotationComposer,
-        $$PlayerAchievementsTableTableCreateCompanionBuilder,
-        $$PlayerAchievementsTableTableUpdateCompanionBuilder,
-        (
-          PlayerAchievementsTableData,
-          BaseReferences<_$AppDatabase, $PlayerAchievementsTableTable,
-              PlayerAchievementsTableData>
-        ),
-        PlayerAchievementsTableData,
-        PrefetchHooks Function()>;
 typedef $$GuildStatusTableTableCreateCompanionBuilder
     = GuildStatusTableCompanion Function({
   Value<int> id,
@@ -16467,659 +14658,6 @@ typedef $$DiaryEntriesTableTableProcessedTableManager = ProcessedTableManager<
           DiaryEntriesTableData>
     ),
     DiaryEntriesTableData,
-    PrefetchHooks Function()>;
-typedef $$ClassQuestsTableTableCreateCompanionBuilder
-    = ClassQuestsTableCompanion Function({
-  Value<int> id,
-  required int playerId,
-  required String classType,
-  required String questKey,
-  required String title,
-  required String description,
-  required String checkType,
-  required String checkParamsJson,
-  Value<int> xpReward,
-  Value<int> goldReward,
-  required String assignedDate,
-  Value<bool> completed,
-  Value<int> progress,
-  Value<int> progressTarget,
-});
-typedef $$ClassQuestsTableTableUpdateCompanionBuilder
-    = ClassQuestsTableCompanion Function({
-  Value<int> id,
-  Value<int> playerId,
-  Value<String> classType,
-  Value<String> questKey,
-  Value<String> title,
-  Value<String> description,
-  Value<String> checkType,
-  Value<String> checkParamsJson,
-  Value<int> xpReward,
-  Value<int> goldReward,
-  Value<String> assignedDate,
-  Value<bool> completed,
-  Value<int> progress,
-  Value<int> progressTarget,
-});
-
-class $$ClassQuestsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $ClassQuestsTableTable> {
-  $$ClassQuestsTableTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get playerId => $composableBuilder(
-      column: $table.playerId, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get classType => $composableBuilder(
-      column: $table.classType, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get questKey => $composableBuilder(
-      column: $table.questKey, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get title => $composableBuilder(
-      column: $table.title, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get checkType => $composableBuilder(
-      column: $table.checkType, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get checkParamsJson => $composableBuilder(
-      column: $table.checkParamsJson,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get xpReward => $composableBuilder(
-      column: $table.xpReward, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get goldReward => $composableBuilder(
-      column: $table.goldReward, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get assignedDate => $composableBuilder(
-      column: $table.assignedDate, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get completed => $composableBuilder(
-      column: $table.completed, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get progress => $composableBuilder(
-      column: $table.progress, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get progressTarget => $composableBuilder(
-      column: $table.progressTarget,
-      builder: (column) => ColumnFilters(column));
-}
-
-class $$ClassQuestsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $ClassQuestsTableTable> {
-  $$ClassQuestsTableTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get playerId => $composableBuilder(
-      column: $table.playerId, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get classType => $composableBuilder(
-      column: $table.classType, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get questKey => $composableBuilder(
-      column: $table.questKey, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get title => $composableBuilder(
-      column: $table.title, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get checkType => $composableBuilder(
-      column: $table.checkType, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get checkParamsJson => $composableBuilder(
-      column: $table.checkParamsJson,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get xpReward => $composableBuilder(
-      column: $table.xpReward, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get goldReward => $composableBuilder(
-      column: $table.goldReward, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get assignedDate => $composableBuilder(
-      column: $table.assignedDate,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get completed => $composableBuilder(
-      column: $table.completed, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get progress => $composableBuilder(
-      column: $table.progress, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get progressTarget => $composableBuilder(
-      column: $table.progressTarget,
-      builder: (column) => ColumnOrderings(column));
-}
-
-class $$ClassQuestsTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ClassQuestsTableTable> {
-  $$ClassQuestsTableTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<int> get playerId =>
-      $composableBuilder(column: $table.playerId, builder: (column) => column);
-
-  GeneratedColumn<String> get classType =>
-      $composableBuilder(column: $table.classType, builder: (column) => column);
-
-  GeneratedColumn<String> get questKey =>
-      $composableBuilder(column: $table.questKey, builder: (column) => column);
-
-  GeneratedColumn<String> get title =>
-      $composableBuilder(column: $table.title, builder: (column) => column);
-
-  GeneratedColumn<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => column);
-
-  GeneratedColumn<String> get checkType =>
-      $composableBuilder(column: $table.checkType, builder: (column) => column);
-
-  GeneratedColumn<String> get checkParamsJson => $composableBuilder(
-      column: $table.checkParamsJson, builder: (column) => column);
-
-  GeneratedColumn<int> get xpReward =>
-      $composableBuilder(column: $table.xpReward, builder: (column) => column);
-
-  GeneratedColumn<int> get goldReward => $composableBuilder(
-      column: $table.goldReward, builder: (column) => column);
-
-  GeneratedColumn<String> get assignedDate => $composableBuilder(
-      column: $table.assignedDate, builder: (column) => column);
-
-  GeneratedColumn<bool> get completed =>
-      $composableBuilder(column: $table.completed, builder: (column) => column);
-
-  GeneratedColumn<int> get progress =>
-      $composableBuilder(column: $table.progress, builder: (column) => column);
-
-  GeneratedColumn<int> get progressTarget => $composableBuilder(
-      column: $table.progressTarget, builder: (column) => column);
-}
-
-class $$ClassQuestsTableTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $ClassQuestsTableTable,
-    ClassQuestsTableData,
-    $$ClassQuestsTableTableFilterComposer,
-    $$ClassQuestsTableTableOrderingComposer,
-    $$ClassQuestsTableTableAnnotationComposer,
-    $$ClassQuestsTableTableCreateCompanionBuilder,
-    $$ClassQuestsTableTableUpdateCompanionBuilder,
-    (
-      ClassQuestsTableData,
-      BaseReferences<_$AppDatabase, $ClassQuestsTableTable,
-          ClassQuestsTableData>
-    ),
-    ClassQuestsTableData,
-    PrefetchHooks Function()> {
-  $$ClassQuestsTableTableTableManager(
-      _$AppDatabase db, $ClassQuestsTableTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$ClassQuestsTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ClassQuestsTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ClassQuestsTableTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<int> playerId = const Value.absent(),
-            Value<String> classType = const Value.absent(),
-            Value<String> questKey = const Value.absent(),
-            Value<String> title = const Value.absent(),
-            Value<String> description = const Value.absent(),
-            Value<String> checkType = const Value.absent(),
-            Value<String> checkParamsJson = const Value.absent(),
-            Value<int> xpReward = const Value.absent(),
-            Value<int> goldReward = const Value.absent(),
-            Value<String> assignedDate = const Value.absent(),
-            Value<bool> completed = const Value.absent(),
-            Value<int> progress = const Value.absent(),
-            Value<int> progressTarget = const Value.absent(),
-          }) =>
-              ClassQuestsTableCompanion(
-            id: id,
-            playerId: playerId,
-            classType: classType,
-            questKey: questKey,
-            title: title,
-            description: description,
-            checkType: checkType,
-            checkParamsJson: checkParamsJson,
-            xpReward: xpReward,
-            goldReward: goldReward,
-            assignedDate: assignedDate,
-            completed: completed,
-            progress: progress,
-            progressTarget: progressTarget,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required int playerId,
-            required String classType,
-            required String questKey,
-            required String title,
-            required String description,
-            required String checkType,
-            required String checkParamsJson,
-            Value<int> xpReward = const Value.absent(),
-            Value<int> goldReward = const Value.absent(),
-            required String assignedDate,
-            Value<bool> completed = const Value.absent(),
-            Value<int> progress = const Value.absent(),
-            Value<int> progressTarget = const Value.absent(),
-          }) =>
-              ClassQuestsTableCompanion.insert(
-            id: id,
-            playerId: playerId,
-            classType: classType,
-            questKey: questKey,
-            title: title,
-            description: description,
-            checkType: checkType,
-            checkParamsJson: checkParamsJson,
-            xpReward: xpReward,
-            goldReward: goldReward,
-            assignedDate: assignedDate,
-            completed: completed,
-            progress: progress,
-            progressTarget: progressTarget,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ));
-}
-
-typedef $$ClassQuestsTableTableProcessedTableManager = ProcessedTableManager<
-    _$AppDatabase,
-    $ClassQuestsTableTable,
-    ClassQuestsTableData,
-    $$ClassQuestsTableTableFilterComposer,
-    $$ClassQuestsTableTableOrderingComposer,
-    $$ClassQuestsTableTableAnnotationComposer,
-    $$ClassQuestsTableTableCreateCompanionBuilder,
-    $$ClassQuestsTableTableUpdateCompanionBuilder,
-    (
-      ClassQuestsTableData,
-      BaseReferences<_$AppDatabase, $ClassQuestsTableTable,
-          ClassQuestsTableData>
-    ),
-    ClassQuestsTableData,
-    PrefetchHooks Function()>;
-typedef $$FactionQuestsTableTableCreateCompanionBuilder
-    = FactionQuestsTableCompanion Function({
-  Value<int> id,
-  required int playerId,
-  required String factionId,
-  required String questKey,
-  required String title,
-  required String description,
-  required String checkType,
-  required String checkParamsJson,
-  Value<int> xpReward,
-  Value<int> goldReward,
-  Value<double> factionItemChance,
-  required String weekStart,
-  Value<bool> completed,
-  Value<int> progress,
-  Value<int> progressTarget,
-  Value<String> lastQuestKey,
-});
-typedef $$FactionQuestsTableTableUpdateCompanionBuilder
-    = FactionQuestsTableCompanion Function({
-  Value<int> id,
-  Value<int> playerId,
-  Value<String> factionId,
-  Value<String> questKey,
-  Value<String> title,
-  Value<String> description,
-  Value<String> checkType,
-  Value<String> checkParamsJson,
-  Value<int> xpReward,
-  Value<int> goldReward,
-  Value<double> factionItemChance,
-  Value<String> weekStart,
-  Value<bool> completed,
-  Value<int> progress,
-  Value<int> progressTarget,
-  Value<String> lastQuestKey,
-});
-
-class $$FactionQuestsTableTableFilterComposer
-    extends Composer<_$AppDatabase, $FactionQuestsTableTable> {
-  $$FactionQuestsTableTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get playerId => $composableBuilder(
-      column: $table.playerId, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get factionId => $composableBuilder(
-      column: $table.factionId, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get questKey => $composableBuilder(
-      column: $table.questKey, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get title => $composableBuilder(
-      column: $table.title, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get checkType => $composableBuilder(
-      column: $table.checkType, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get checkParamsJson => $composableBuilder(
-      column: $table.checkParamsJson,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get xpReward => $composableBuilder(
-      column: $table.xpReward, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get goldReward => $composableBuilder(
-      column: $table.goldReward, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get factionItemChance => $composableBuilder(
-      column: $table.factionItemChance,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get weekStart => $composableBuilder(
-      column: $table.weekStart, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get completed => $composableBuilder(
-      column: $table.completed, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get progress => $composableBuilder(
-      column: $table.progress, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get progressTarget => $composableBuilder(
-      column: $table.progressTarget,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get lastQuestKey => $composableBuilder(
-      column: $table.lastQuestKey, builder: (column) => ColumnFilters(column));
-}
-
-class $$FactionQuestsTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $FactionQuestsTableTable> {
-  $$FactionQuestsTableTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get playerId => $composableBuilder(
-      column: $table.playerId, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get factionId => $composableBuilder(
-      column: $table.factionId, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get questKey => $composableBuilder(
-      column: $table.questKey, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get title => $composableBuilder(
-      column: $table.title, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get checkType => $composableBuilder(
-      column: $table.checkType, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get checkParamsJson => $composableBuilder(
-      column: $table.checkParamsJson,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get xpReward => $composableBuilder(
-      column: $table.xpReward, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get goldReward => $composableBuilder(
-      column: $table.goldReward, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<double> get factionItemChance => $composableBuilder(
-      column: $table.factionItemChance,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get weekStart => $composableBuilder(
-      column: $table.weekStart, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get completed => $composableBuilder(
-      column: $table.completed, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get progress => $composableBuilder(
-      column: $table.progress, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get progressTarget => $composableBuilder(
-      column: $table.progressTarget,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get lastQuestKey => $composableBuilder(
-      column: $table.lastQuestKey,
-      builder: (column) => ColumnOrderings(column));
-}
-
-class $$FactionQuestsTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $FactionQuestsTableTable> {
-  $$FactionQuestsTableTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<int> get playerId =>
-      $composableBuilder(column: $table.playerId, builder: (column) => column);
-
-  GeneratedColumn<String> get factionId =>
-      $composableBuilder(column: $table.factionId, builder: (column) => column);
-
-  GeneratedColumn<String> get questKey =>
-      $composableBuilder(column: $table.questKey, builder: (column) => column);
-
-  GeneratedColumn<String> get title =>
-      $composableBuilder(column: $table.title, builder: (column) => column);
-
-  GeneratedColumn<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => column);
-
-  GeneratedColumn<String> get checkType =>
-      $composableBuilder(column: $table.checkType, builder: (column) => column);
-
-  GeneratedColumn<String> get checkParamsJson => $composableBuilder(
-      column: $table.checkParamsJson, builder: (column) => column);
-
-  GeneratedColumn<int> get xpReward =>
-      $composableBuilder(column: $table.xpReward, builder: (column) => column);
-
-  GeneratedColumn<int> get goldReward => $composableBuilder(
-      column: $table.goldReward, builder: (column) => column);
-
-  GeneratedColumn<double> get factionItemChance => $composableBuilder(
-      column: $table.factionItemChance, builder: (column) => column);
-
-  GeneratedColumn<String> get weekStart =>
-      $composableBuilder(column: $table.weekStart, builder: (column) => column);
-
-  GeneratedColumn<bool> get completed =>
-      $composableBuilder(column: $table.completed, builder: (column) => column);
-
-  GeneratedColumn<int> get progress =>
-      $composableBuilder(column: $table.progress, builder: (column) => column);
-
-  GeneratedColumn<int> get progressTarget => $composableBuilder(
-      column: $table.progressTarget, builder: (column) => column);
-
-  GeneratedColumn<String> get lastQuestKey => $composableBuilder(
-      column: $table.lastQuestKey, builder: (column) => column);
-}
-
-class $$FactionQuestsTableTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $FactionQuestsTableTable,
-    FactionQuestsTableData,
-    $$FactionQuestsTableTableFilterComposer,
-    $$FactionQuestsTableTableOrderingComposer,
-    $$FactionQuestsTableTableAnnotationComposer,
-    $$FactionQuestsTableTableCreateCompanionBuilder,
-    $$FactionQuestsTableTableUpdateCompanionBuilder,
-    (
-      FactionQuestsTableData,
-      BaseReferences<_$AppDatabase, $FactionQuestsTableTable,
-          FactionQuestsTableData>
-    ),
-    FactionQuestsTableData,
-    PrefetchHooks Function()> {
-  $$FactionQuestsTableTableTableManager(
-      _$AppDatabase db, $FactionQuestsTableTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$FactionQuestsTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$FactionQuestsTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$FactionQuestsTableTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<int> playerId = const Value.absent(),
-            Value<String> factionId = const Value.absent(),
-            Value<String> questKey = const Value.absent(),
-            Value<String> title = const Value.absent(),
-            Value<String> description = const Value.absent(),
-            Value<String> checkType = const Value.absent(),
-            Value<String> checkParamsJson = const Value.absent(),
-            Value<int> xpReward = const Value.absent(),
-            Value<int> goldReward = const Value.absent(),
-            Value<double> factionItemChance = const Value.absent(),
-            Value<String> weekStart = const Value.absent(),
-            Value<bool> completed = const Value.absent(),
-            Value<int> progress = const Value.absent(),
-            Value<int> progressTarget = const Value.absent(),
-            Value<String> lastQuestKey = const Value.absent(),
-          }) =>
-              FactionQuestsTableCompanion(
-            id: id,
-            playerId: playerId,
-            factionId: factionId,
-            questKey: questKey,
-            title: title,
-            description: description,
-            checkType: checkType,
-            checkParamsJson: checkParamsJson,
-            xpReward: xpReward,
-            goldReward: goldReward,
-            factionItemChance: factionItemChance,
-            weekStart: weekStart,
-            completed: completed,
-            progress: progress,
-            progressTarget: progressTarget,
-            lastQuestKey: lastQuestKey,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required int playerId,
-            required String factionId,
-            required String questKey,
-            required String title,
-            required String description,
-            required String checkType,
-            required String checkParamsJson,
-            Value<int> xpReward = const Value.absent(),
-            Value<int> goldReward = const Value.absent(),
-            Value<double> factionItemChance = const Value.absent(),
-            required String weekStart,
-            Value<bool> completed = const Value.absent(),
-            Value<int> progress = const Value.absent(),
-            Value<int> progressTarget = const Value.absent(),
-            Value<String> lastQuestKey = const Value.absent(),
-          }) =>
-              FactionQuestsTableCompanion.insert(
-            id: id,
-            playerId: playerId,
-            factionId: factionId,
-            questKey: questKey,
-            title: title,
-            description: description,
-            checkType: checkType,
-            checkParamsJson: checkParamsJson,
-            xpReward: xpReward,
-            goldReward: goldReward,
-            factionItemChance: factionItemChance,
-            weekStart: weekStart,
-            completed: completed,
-            progress: progress,
-            progressTarget: progressTarget,
-            lastQuestKey: lastQuestKey,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ));
-}
-
-typedef $$FactionQuestsTableTableProcessedTableManager = ProcessedTableManager<
-    _$AppDatabase,
-    $FactionQuestsTableTable,
-    FactionQuestsTableData,
-    $$FactionQuestsTableTableFilterComposer,
-    $$FactionQuestsTableTableOrderingComposer,
-    $$FactionQuestsTableTableAnnotationComposer,
-    $$FactionQuestsTableTableCreateCompanionBuilder,
-    $$FactionQuestsTableTableUpdateCompanionBuilder,
-    (
-      FactionQuestsTableData,
-      BaseReferences<_$AppDatabase, $FactionQuestsTableTable,
-          FactionQuestsTableData>
-    ),
-    FactionQuestsTableData,
     PrefetchHooks Function()>;
 typedef $$GuildAscensionTableTableCreateCompanionBuilder
     = GuildAscensionTableCompanion Function({
@@ -19735,37 +17273,1432 @@ typedef $$PlayerRecipesUnlockedTableTableProcessedTableManager
         ),
         PlayerRecipesUnlockedTableData,
         PrefetchHooks Function()>;
+typedef $$PlayerMissionProgressTableTableCreateCompanionBuilder
+    = PlayerMissionProgressTableCompanion Function({
+  Value<int> id,
+  required int playerId,
+  required String missionKey,
+  required String modality,
+  required String tabOrigin,
+  required String rank,
+  required int targetValue,
+  Value<int> currentValue,
+  required String rewardJson,
+  required int startedAt,
+  Value<int?> completedAt,
+  Value<int?> failedAt,
+  Value<bool> rewardClaimed,
+  Value<String> metaJson,
+});
+typedef $$PlayerMissionProgressTableTableUpdateCompanionBuilder
+    = PlayerMissionProgressTableCompanion Function({
+  Value<int> id,
+  Value<int> playerId,
+  Value<String> missionKey,
+  Value<String> modality,
+  Value<String> tabOrigin,
+  Value<String> rank,
+  Value<int> targetValue,
+  Value<int> currentValue,
+  Value<String> rewardJson,
+  Value<int> startedAt,
+  Value<int?> completedAt,
+  Value<int?> failedAt,
+  Value<bool> rewardClaimed,
+  Value<String> metaJson,
+});
+
+class $$PlayerMissionProgressTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PlayerMissionProgressTableTable> {
+  $$PlayerMissionProgressTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get missionKey => $composableBuilder(
+      column: $table.missionKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get modality => $composableBuilder(
+      column: $table.modality, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get tabOrigin => $composableBuilder(
+      column: $table.tabOrigin, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get rank => $composableBuilder(
+      column: $table.rank, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get targetValue => $composableBuilder(
+      column: $table.targetValue, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get currentValue => $composableBuilder(
+      column: $table.currentValue, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get rewardJson => $composableBuilder(
+      column: $table.rewardJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get startedAt => $composableBuilder(
+      column: $table.startedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get failedAt => $composableBuilder(
+      column: $table.failedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get rewardClaimed => $composableBuilder(
+      column: $table.rewardClaimed, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get metaJson => $composableBuilder(
+      column: $table.metaJson, builder: (column) => ColumnFilters(column));
+}
+
+class $$PlayerMissionProgressTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlayerMissionProgressTableTable> {
+  $$PlayerMissionProgressTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get missionKey => $composableBuilder(
+      column: $table.missionKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get modality => $composableBuilder(
+      column: $table.modality, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get tabOrigin => $composableBuilder(
+      column: $table.tabOrigin, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get rank => $composableBuilder(
+      column: $table.rank, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get targetValue => $composableBuilder(
+      column: $table.targetValue, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get currentValue => $composableBuilder(
+      column: $table.currentValue,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get rewardJson => $composableBuilder(
+      column: $table.rewardJson, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get startedAt => $composableBuilder(
+      column: $table.startedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get failedAt => $composableBuilder(
+      column: $table.failedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get rewardClaimed => $composableBuilder(
+      column: $table.rewardClaimed,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get metaJson => $composableBuilder(
+      column: $table.metaJson, builder: (column) => ColumnOrderings(column));
+}
+
+class $$PlayerMissionProgressTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlayerMissionProgressTableTable> {
+  $$PlayerMissionProgressTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get missionKey => $composableBuilder(
+      column: $table.missionKey, builder: (column) => column);
+
+  GeneratedColumn<String> get modality =>
+      $composableBuilder(column: $table.modality, builder: (column) => column);
+
+  GeneratedColumn<String> get tabOrigin =>
+      $composableBuilder(column: $table.tabOrigin, builder: (column) => column);
+
+  GeneratedColumn<String> get rank =>
+      $composableBuilder(column: $table.rank, builder: (column) => column);
+
+  GeneratedColumn<int> get targetValue => $composableBuilder(
+      column: $table.targetValue, builder: (column) => column);
+
+  GeneratedColumn<int> get currentValue => $composableBuilder(
+      column: $table.currentValue, builder: (column) => column);
+
+  GeneratedColumn<String> get rewardJson => $composableBuilder(
+      column: $table.rewardJson, builder: (column) => column);
+
+  GeneratedColumn<int> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get failedAt =>
+      $composableBuilder(column: $table.failedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get rewardClaimed => $composableBuilder(
+      column: $table.rewardClaimed, builder: (column) => column);
+
+  GeneratedColumn<String> get metaJson =>
+      $composableBuilder(column: $table.metaJson, builder: (column) => column);
+}
+
+class $$PlayerMissionProgressTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlayerMissionProgressTableTable,
+    PlayerMissionProgressData,
+    $$PlayerMissionProgressTableTableFilterComposer,
+    $$PlayerMissionProgressTableTableOrderingComposer,
+    $$PlayerMissionProgressTableTableAnnotationComposer,
+    $$PlayerMissionProgressTableTableCreateCompanionBuilder,
+    $$PlayerMissionProgressTableTableUpdateCompanionBuilder,
+    (
+      PlayerMissionProgressData,
+      BaseReferences<_$AppDatabase, $PlayerMissionProgressTableTable,
+          PlayerMissionProgressData>
+    ),
+    PlayerMissionProgressData,
+    PrefetchHooks Function()> {
+  $$PlayerMissionProgressTableTableTableManager(
+      _$AppDatabase db, $PlayerMissionProgressTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlayerMissionProgressTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlayerMissionProgressTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlayerMissionProgressTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> playerId = const Value.absent(),
+            Value<String> missionKey = const Value.absent(),
+            Value<String> modality = const Value.absent(),
+            Value<String> tabOrigin = const Value.absent(),
+            Value<String> rank = const Value.absent(),
+            Value<int> targetValue = const Value.absent(),
+            Value<int> currentValue = const Value.absent(),
+            Value<String> rewardJson = const Value.absent(),
+            Value<int> startedAt = const Value.absent(),
+            Value<int?> completedAt = const Value.absent(),
+            Value<int?> failedAt = const Value.absent(),
+            Value<bool> rewardClaimed = const Value.absent(),
+            Value<String> metaJson = const Value.absent(),
+          }) =>
+              PlayerMissionProgressTableCompanion(
+            id: id,
+            playerId: playerId,
+            missionKey: missionKey,
+            modality: modality,
+            tabOrigin: tabOrigin,
+            rank: rank,
+            targetValue: targetValue,
+            currentValue: currentValue,
+            rewardJson: rewardJson,
+            startedAt: startedAt,
+            completedAt: completedAt,
+            failedAt: failedAt,
+            rewardClaimed: rewardClaimed,
+            metaJson: metaJson,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int playerId,
+            required String missionKey,
+            required String modality,
+            required String tabOrigin,
+            required String rank,
+            required int targetValue,
+            Value<int> currentValue = const Value.absent(),
+            required String rewardJson,
+            required int startedAt,
+            Value<int?> completedAt = const Value.absent(),
+            Value<int?> failedAt = const Value.absent(),
+            Value<bool> rewardClaimed = const Value.absent(),
+            Value<String> metaJson = const Value.absent(),
+          }) =>
+              PlayerMissionProgressTableCompanion.insert(
+            id: id,
+            playerId: playerId,
+            missionKey: missionKey,
+            modality: modality,
+            tabOrigin: tabOrigin,
+            rank: rank,
+            targetValue: targetValue,
+            currentValue: currentValue,
+            rewardJson: rewardJson,
+            startedAt: startedAt,
+            completedAt: completedAt,
+            failedAt: failedAt,
+            rewardClaimed: rewardClaimed,
+            metaJson: metaJson,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PlayerMissionProgressTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $PlayerMissionProgressTableTable,
+        PlayerMissionProgressData,
+        $$PlayerMissionProgressTableTableFilterComposer,
+        $$PlayerMissionProgressTableTableOrderingComposer,
+        $$PlayerMissionProgressTableTableAnnotationComposer,
+        $$PlayerMissionProgressTableTableCreateCompanionBuilder,
+        $$PlayerMissionProgressTableTableUpdateCompanionBuilder,
+        (
+          PlayerMissionProgressData,
+          BaseReferences<_$AppDatabase, $PlayerMissionProgressTableTable,
+              PlayerMissionProgressData>
+        ),
+        PlayerMissionProgressData,
+        PrefetchHooks Function()>;
+typedef $$PlayerMissionPreferencesTableTableCreateCompanionBuilder
+    = PlayerMissionPreferencesTableCompanion Function({
+  Value<int> playerId,
+  required String primaryFocus,
+  required String intensity,
+  required String missionStyle,
+  Value<String> physicalSubfocus,
+  Value<String> mentalSubfocus,
+  Value<String> spiritualSubfocus,
+  Value<int> timeDailyMinutes,
+  required int createdAt,
+  required int updatedAt,
+  Value<int> updatesCount,
+});
+typedef $$PlayerMissionPreferencesTableTableUpdateCompanionBuilder
+    = PlayerMissionPreferencesTableCompanion Function({
+  Value<int> playerId,
+  Value<String> primaryFocus,
+  Value<String> intensity,
+  Value<String> missionStyle,
+  Value<String> physicalSubfocus,
+  Value<String> mentalSubfocus,
+  Value<String> spiritualSubfocus,
+  Value<int> timeDailyMinutes,
+  Value<int> createdAt,
+  Value<int> updatedAt,
+  Value<int> updatesCount,
+});
+
+class $$PlayerMissionPreferencesTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PlayerMissionPreferencesTableTable> {
+  $$PlayerMissionPreferencesTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get primaryFocus => $composableBuilder(
+      column: $table.primaryFocus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get intensity => $composableBuilder(
+      column: $table.intensity, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get missionStyle => $composableBuilder(
+      column: $table.missionStyle, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get physicalSubfocus => $composableBuilder(
+      column: $table.physicalSubfocus,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get mentalSubfocus => $composableBuilder(
+      column: $table.mentalSubfocus,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get spiritualSubfocus => $composableBuilder(
+      column: $table.spiritualSubfocus,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get timeDailyMinutes => $composableBuilder(
+      column: $table.timeDailyMinutes,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatesCount => $composableBuilder(
+      column: $table.updatesCount, builder: (column) => ColumnFilters(column));
+}
+
+class $$PlayerMissionPreferencesTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlayerMissionPreferencesTableTable> {
+  $$PlayerMissionPreferencesTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get primaryFocus => $composableBuilder(
+      column: $table.primaryFocus,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get intensity => $composableBuilder(
+      column: $table.intensity, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get missionStyle => $composableBuilder(
+      column: $table.missionStyle,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get physicalSubfocus => $composableBuilder(
+      column: $table.physicalSubfocus,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get mentalSubfocus => $composableBuilder(
+      column: $table.mentalSubfocus,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get spiritualSubfocus => $composableBuilder(
+      column: $table.spiritualSubfocus,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get timeDailyMinutes => $composableBuilder(
+      column: $table.timeDailyMinutes,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatesCount => $composableBuilder(
+      column: $table.updatesCount,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$PlayerMissionPreferencesTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlayerMissionPreferencesTableTable> {
+  $$PlayerMissionPreferencesTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get primaryFocus => $composableBuilder(
+      column: $table.primaryFocus, builder: (column) => column);
+
+  GeneratedColumn<String> get intensity =>
+      $composableBuilder(column: $table.intensity, builder: (column) => column);
+
+  GeneratedColumn<String> get missionStyle => $composableBuilder(
+      column: $table.missionStyle, builder: (column) => column);
+
+  GeneratedColumn<String> get physicalSubfocus => $composableBuilder(
+      column: $table.physicalSubfocus, builder: (column) => column);
+
+  GeneratedColumn<String> get mentalSubfocus => $composableBuilder(
+      column: $table.mentalSubfocus, builder: (column) => column);
+
+  GeneratedColumn<String> get spiritualSubfocus => $composableBuilder(
+      column: $table.spiritualSubfocus, builder: (column) => column);
+
+  GeneratedColumn<int> get timeDailyMinutes => $composableBuilder(
+      column: $table.timeDailyMinutes, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatesCount => $composableBuilder(
+      column: $table.updatesCount, builder: (column) => column);
+}
+
+class $$PlayerMissionPreferencesTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlayerMissionPreferencesTableTable,
+    PlayerMissionPreferencesData,
+    $$PlayerMissionPreferencesTableTableFilterComposer,
+    $$PlayerMissionPreferencesTableTableOrderingComposer,
+    $$PlayerMissionPreferencesTableTableAnnotationComposer,
+    $$PlayerMissionPreferencesTableTableCreateCompanionBuilder,
+    $$PlayerMissionPreferencesTableTableUpdateCompanionBuilder,
+    (
+      PlayerMissionPreferencesData,
+      BaseReferences<_$AppDatabase, $PlayerMissionPreferencesTableTable,
+          PlayerMissionPreferencesData>
+    ),
+    PlayerMissionPreferencesData,
+    PrefetchHooks Function()> {
+  $$PlayerMissionPreferencesTableTableTableManager(
+      _$AppDatabase db, $PlayerMissionPreferencesTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlayerMissionPreferencesTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlayerMissionPreferencesTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlayerMissionPreferencesTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            Value<String> primaryFocus = const Value.absent(),
+            Value<String> intensity = const Value.absent(),
+            Value<String> missionStyle = const Value.absent(),
+            Value<String> physicalSubfocus = const Value.absent(),
+            Value<String> mentalSubfocus = const Value.absent(),
+            Value<String> spiritualSubfocus = const Value.absent(),
+            Value<int> timeDailyMinutes = const Value.absent(),
+            Value<int> createdAt = const Value.absent(),
+            Value<int> updatedAt = const Value.absent(),
+            Value<int> updatesCount = const Value.absent(),
+          }) =>
+              PlayerMissionPreferencesTableCompanion(
+            playerId: playerId,
+            primaryFocus: primaryFocus,
+            intensity: intensity,
+            missionStyle: missionStyle,
+            physicalSubfocus: physicalSubfocus,
+            mentalSubfocus: mentalSubfocus,
+            spiritualSubfocus: spiritualSubfocus,
+            timeDailyMinutes: timeDailyMinutes,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            updatesCount: updatesCount,
+          ),
+          createCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            required String primaryFocus,
+            required String intensity,
+            required String missionStyle,
+            Value<String> physicalSubfocus = const Value.absent(),
+            Value<String> mentalSubfocus = const Value.absent(),
+            Value<String> spiritualSubfocus = const Value.absent(),
+            Value<int> timeDailyMinutes = const Value.absent(),
+            required int createdAt,
+            required int updatedAt,
+            Value<int> updatesCount = const Value.absent(),
+          }) =>
+              PlayerMissionPreferencesTableCompanion.insert(
+            playerId: playerId,
+            primaryFocus: primaryFocus,
+            intensity: intensity,
+            missionStyle: missionStyle,
+            physicalSubfocus: physicalSubfocus,
+            mentalSubfocus: mentalSubfocus,
+            spiritualSubfocus: spiritualSubfocus,
+            timeDailyMinutes: timeDailyMinutes,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            updatesCount: updatesCount,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PlayerMissionPreferencesTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $PlayerMissionPreferencesTableTable,
+        PlayerMissionPreferencesData,
+        $$PlayerMissionPreferencesTableTableFilterComposer,
+        $$PlayerMissionPreferencesTableTableOrderingComposer,
+        $$PlayerMissionPreferencesTableTableAnnotationComposer,
+        $$PlayerMissionPreferencesTableTableCreateCompanionBuilder,
+        $$PlayerMissionPreferencesTableTableUpdateCompanionBuilder,
+        (
+          PlayerMissionPreferencesData,
+          BaseReferences<_$AppDatabase, $PlayerMissionPreferencesTableTable,
+              PlayerMissionPreferencesData>
+        ),
+        PlayerMissionPreferencesData,
+        PrefetchHooks Function()>;
+typedef $$PlayerIndividualMissionsTableTableCreateCompanionBuilder
+    = PlayerIndividualMissionsTableCompanion Function({
+  Value<int> id,
+  required int playerId,
+  required String name,
+  Value<String?> description,
+  required String category,
+  required int intensityIndex,
+  required String frequency,
+  Value<bool> repeats,
+  required String rewardJson,
+  required int createdAt,
+  Value<int?> deletedAt,
+  Value<int> completionCount,
+  Value<int> failureCount,
+});
+typedef $$PlayerIndividualMissionsTableTableUpdateCompanionBuilder
+    = PlayerIndividualMissionsTableCompanion Function({
+  Value<int> id,
+  Value<int> playerId,
+  Value<String> name,
+  Value<String?> description,
+  Value<String> category,
+  Value<int> intensityIndex,
+  Value<String> frequency,
+  Value<bool> repeats,
+  Value<String> rewardJson,
+  Value<int> createdAt,
+  Value<int?> deletedAt,
+  Value<int> completionCount,
+  Value<int> failureCount,
+});
+
+class $$PlayerIndividualMissionsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PlayerIndividualMissionsTableTable> {
+  $$PlayerIndividualMissionsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get category => $composableBuilder(
+      column: $table.category, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get intensityIndex => $composableBuilder(
+      column: $table.intensityIndex,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get frequency => $composableBuilder(
+      column: $table.frequency, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get repeats => $composableBuilder(
+      column: $table.repeats, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get rewardJson => $composableBuilder(
+      column: $table.rewardJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get completionCount => $composableBuilder(
+      column: $table.completionCount,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get failureCount => $composableBuilder(
+      column: $table.failureCount, builder: (column) => ColumnFilters(column));
+}
+
+class $$PlayerIndividualMissionsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlayerIndividualMissionsTableTable> {
+  $$PlayerIndividualMissionsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get category => $composableBuilder(
+      column: $table.category, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get intensityIndex => $composableBuilder(
+      column: $table.intensityIndex,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get frequency => $composableBuilder(
+      column: $table.frequency, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get repeats => $composableBuilder(
+      column: $table.repeats, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get rewardJson => $composableBuilder(
+      column: $table.rewardJson, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get deletedAt => $composableBuilder(
+      column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get completionCount => $composableBuilder(
+      column: $table.completionCount,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get failureCount => $composableBuilder(
+      column: $table.failureCount,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$PlayerIndividualMissionsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlayerIndividualMissionsTableTable> {
+  $$PlayerIndividualMissionsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<int> get intensityIndex => $composableBuilder(
+      column: $table.intensityIndex, builder: (column) => column);
+
+  GeneratedColumn<String> get frequency =>
+      $composableBuilder(column: $table.frequency, builder: (column) => column);
+
+  GeneratedColumn<bool> get repeats =>
+      $composableBuilder(column: $table.repeats, builder: (column) => column);
+
+  GeneratedColumn<String> get rewardJson => $composableBuilder(
+      column: $table.rewardJson, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get completionCount => $composableBuilder(
+      column: $table.completionCount, builder: (column) => column);
+
+  GeneratedColumn<int> get failureCount => $composableBuilder(
+      column: $table.failureCount, builder: (column) => column);
+}
+
+class $$PlayerIndividualMissionsTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlayerIndividualMissionsTableTable,
+    PlayerIndividualMissionData,
+    $$PlayerIndividualMissionsTableTableFilterComposer,
+    $$PlayerIndividualMissionsTableTableOrderingComposer,
+    $$PlayerIndividualMissionsTableTableAnnotationComposer,
+    $$PlayerIndividualMissionsTableTableCreateCompanionBuilder,
+    $$PlayerIndividualMissionsTableTableUpdateCompanionBuilder,
+    (
+      PlayerIndividualMissionData,
+      BaseReferences<_$AppDatabase, $PlayerIndividualMissionsTableTable,
+          PlayerIndividualMissionData>
+    ),
+    PlayerIndividualMissionData,
+    PrefetchHooks Function()> {
+  $$PlayerIndividualMissionsTableTableTableManager(
+      _$AppDatabase db, $PlayerIndividualMissionsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlayerIndividualMissionsTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlayerIndividualMissionsTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlayerIndividualMissionsTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> playerId = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String?> description = const Value.absent(),
+            Value<String> category = const Value.absent(),
+            Value<int> intensityIndex = const Value.absent(),
+            Value<String> frequency = const Value.absent(),
+            Value<bool> repeats = const Value.absent(),
+            Value<String> rewardJson = const Value.absent(),
+            Value<int> createdAt = const Value.absent(),
+            Value<int?> deletedAt = const Value.absent(),
+            Value<int> completionCount = const Value.absent(),
+            Value<int> failureCount = const Value.absent(),
+          }) =>
+              PlayerIndividualMissionsTableCompanion(
+            id: id,
+            playerId: playerId,
+            name: name,
+            description: description,
+            category: category,
+            intensityIndex: intensityIndex,
+            frequency: frequency,
+            repeats: repeats,
+            rewardJson: rewardJson,
+            createdAt: createdAt,
+            deletedAt: deletedAt,
+            completionCount: completionCount,
+            failureCount: failureCount,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int playerId,
+            required String name,
+            Value<String?> description = const Value.absent(),
+            required String category,
+            required int intensityIndex,
+            required String frequency,
+            Value<bool> repeats = const Value.absent(),
+            required String rewardJson,
+            required int createdAt,
+            Value<int?> deletedAt = const Value.absent(),
+            Value<int> completionCount = const Value.absent(),
+            Value<int> failureCount = const Value.absent(),
+          }) =>
+              PlayerIndividualMissionsTableCompanion.insert(
+            id: id,
+            playerId: playerId,
+            name: name,
+            description: description,
+            category: category,
+            intensityIndex: intensityIndex,
+            frequency: frequency,
+            repeats: repeats,
+            rewardJson: rewardJson,
+            createdAt: createdAt,
+            deletedAt: deletedAt,
+            completionCount: completionCount,
+            failureCount: failureCount,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PlayerIndividualMissionsTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $PlayerIndividualMissionsTableTable,
+        PlayerIndividualMissionData,
+        $$PlayerIndividualMissionsTableTableFilterComposer,
+        $$PlayerIndividualMissionsTableTableOrderingComposer,
+        $$PlayerIndividualMissionsTableTableAnnotationComposer,
+        $$PlayerIndividualMissionsTableTableCreateCompanionBuilder,
+        $$PlayerIndividualMissionsTableTableUpdateCompanionBuilder,
+        (
+          PlayerIndividualMissionData,
+          BaseReferences<_$AppDatabase, $PlayerIndividualMissionsTableTable,
+              PlayerIndividualMissionData>
+        ),
+        PlayerIndividualMissionData,
+        PrefetchHooks Function()>;
+typedef $$PlayerAchievementsCompletedTableTableCreateCompanionBuilder
+    = PlayerAchievementsCompletedTableCompanion Function({
+  required int playerId,
+  required String achievementKey,
+  required int completedAt,
+  Value<bool> rewardClaimed,
+  Value<int> rowid,
+});
+typedef $$PlayerAchievementsCompletedTableTableUpdateCompanionBuilder
+    = PlayerAchievementsCompletedTableCompanion Function({
+  Value<int> playerId,
+  Value<String> achievementKey,
+  Value<int> completedAt,
+  Value<bool> rewardClaimed,
+  Value<int> rowid,
+});
+
+class $$PlayerAchievementsCompletedTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PlayerAchievementsCompletedTableTable> {
+  $$PlayerAchievementsCompletedTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get achievementKey => $composableBuilder(
+      column: $table.achievementKey,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get rewardClaimed => $composableBuilder(
+      column: $table.rewardClaimed, builder: (column) => ColumnFilters(column));
+}
+
+class $$PlayerAchievementsCompletedTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlayerAchievementsCompletedTableTable> {
+  $$PlayerAchievementsCompletedTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get achievementKey => $composableBuilder(
+      column: $table.achievementKey,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get rewardClaimed => $composableBuilder(
+      column: $table.rewardClaimed,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$PlayerAchievementsCompletedTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlayerAchievementsCompletedTableTable> {
+  $$PlayerAchievementsCompletedTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get achievementKey => $composableBuilder(
+      column: $table.achievementKey, builder: (column) => column);
+
+  GeneratedColumn<int> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get rewardClaimed => $composableBuilder(
+      column: $table.rewardClaimed, builder: (column) => column);
+}
+
+class $$PlayerAchievementsCompletedTableTableTableManager
+    extends RootTableManager<
+        _$AppDatabase,
+        $PlayerAchievementsCompletedTableTable,
+        PlayerAchievementCompletedData,
+        $$PlayerAchievementsCompletedTableTableFilterComposer,
+        $$PlayerAchievementsCompletedTableTableOrderingComposer,
+        $$PlayerAchievementsCompletedTableTableAnnotationComposer,
+        $$PlayerAchievementsCompletedTableTableCreateCompanionBuilder,
+        $$PlayerAchievementsCompletedTableTableUpdateCompanionBuilder,
+        (
+          PlayerAchievementCompletedData,
+          BaseReferences<_$AppDatabase, $PlayerAchievementsCompletedTableTable,
+              PlayerAchievementCompletedData>
+        ),
+        PlayerAchievementCompletedData,
+        PrefetchHooks Function()> {
+  $$PlayerAchievementsCompletedTableTableTableManager(
+      _$AppDatabase db, $PlayerAchievementsCompletedTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlayerAchievementsCompletedTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlayerAchievementsCompletedTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlayerAchievementsCompletedTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            Value<String> achievementKey = const Value.absent(),
+            Value<int> completedAt = const Value.absent(),
+            Value<bool> rewardClaimed = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlayerAchievementsCompletedTableCompanion(
+            playerId: playerId,
+            achievementKey: achievementKey,
+            completedAt: completedAt,
+            rewardClaimed: rewardClaimed,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required int playerId,
+            required String achievementKey,
+            required int completedAt,
+            Value<bool> rewardClaimed = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlayerAchievementsCompletedTableCompanion.insert(
+            playerId: playerId,
+            achievementKey: achievementKey,
+            completedAt: completedAt,
+            rewardClaimed: rewardClaimed,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PlayerAchievementsCompletedTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $PlayerAchievementsCompletedTableTable,
+        PlayerAchievementCompletedData,
+        $$PlayerAchievementsCompletedTableTableFilterComposer,
+        $$PlayerAchievementsCompletedTableTableOrderingComposer,
+        $$PlayerAchievementsCompletedTableTableAnnotationComposer,
+        $$PlayerAchievementsCompletedTableTableCreateCompanionBuilder,
+        $$PlayerAchievementsCompletedTableTableUpdateCompanionBuilder,
+        (
+          PlayerAchievementCompletedData,
+          BaseReferences<_$AppDatabase, $PlayerAchievementsCompletedTableTable,
+              PlayerAchievementCompletedData>
+        ),
+        PlayerAchievementCompletedData,
+        PrefetchHooks Function()>;
+typedef $$PlayerFactionReputationTableTableCreateCompanionBuilder
+    = PlayerFactionReputationTableCompanion Function({
+  required int playerId,
+  required String factionId,
+  Value<int> reputation,
+  required int updatedAt,
+  Value<int> rowid,
+});
+typedef $$PlayerFactionReputationTableTableUpdateCompanionBuilder
+    = PlayerFactionReputationTableCompanion Function({
+  Value<int> playerId,
+  Value<String> factionId,
+  Value<int> reputation,
+  Value<int> updatedAt,
+  Value<int> rowid,
+});
+
+class $$PlayerFactionReputationTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PlayerFactionReputationTableTable> {
+  $$PlayerFactionReputationTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get factionId => $composableBuilder(
+      column: $table.factionId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get reputation => $composableBuilder(
+      column: $table.reputation, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$PlayerFactionReputationTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlayerFactionReputationTableTable> {
+  $$PlayerFactionReputationTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get factionId => $composableBuilder(
+      column: $table.factionId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get reputation => $composableBuilder(
+      column: $table.reputation, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$PlayerFactionReputationTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlayerFactionReputationTableTable> {
+  $$PlayerFactionReputationTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get factionId =>
+      $composableBuilder(column: $table.factionId, builder: (column) => column);
+
+  GeneratedColumn<int> get reputation => $composableBuilder(
+      column: $table.reputation, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$PlayerFactionReputationTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlayerFactionReputationTableTable,
+    PlayerFactionReputationData,
+    $$PlayerFactionReputationTableTableFilterComposer,
+    $$PlayerFactionReputationTableTableOrderingComposer,
+    $$PlayerFactionReputationTableTableAnnotationComposer,
+    $$PlayerFactionReputationTableTableCreateCompanionBuilder,
+    $$PlayerFactionReputationTableTableUpdateCompanionBuilder,
+    (
+      PlayerFactionReputationData,
+      BaseReferences<_$AppDatabase, $PlayerFactionReputationTableTable,
+          PlayerFactionReputationData>
+    ),
+    PlayerFactionReputationData,
+    PrefetchHooks Function()> {
+  $$PlayerFactionReputationTableTableTableManager(
+      _$AppDatabase db, $PlayerFactionReputationTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlayerFactionReputationTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlayerFactionReputationTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlayerFactionReputationTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            Value<String> factionId = const Value.absent(),
+            Value<int> reputation = const Value.absent(),
+            Value<int> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlayerFactionReputationTableCompanion(
+            playerId: playerId,
+            factionId: factionId,
+            reputation: reputation,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required int playerId,
+            required String factionId,
+            Value<int> reputation = const Value.absent(),
+            required int updatedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlayerFactionReputationTableCompanion.insert(
+            playerId: playerId,
+            factionId: factionId,
+            reputation: reputation,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PlayerFactionReputationTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $PlayerFactionReputationTableTable,
+        PlayerFactionReputationData,
+        $$PlayerFactionReputationTableTableFilterComposer,
+        $$PlayerFactionReputationTableTableOrderingComposer,
+        $$PlayerFactionReputationTableTableAnnotationComposer,
+        $$PlayerFactionReputationTableTableCreateCompanionBuilder,
+        $$PlayerFactionReputationTableTableUpdateCompanionBuilder,
+        (
+          PlayerFactionReputationData,
+          BaseReferences<_$AppDatabase, $PlayerFactionReputationTableTable,
+              PlayerFactionReputationData>
+        ),
+        PlayerFactionReputationData,
+        PrefetchHooks Function()>;
+typedef $$ActiveFactionQuestsTableTableCreateCompanionBuilder
+    = ActiveFactionQuestsTableCompanion Function({
+  Value<int> id,
+  required int playerId,
+  required String factionId,
+  required String missionKey,
+  required String weekStart,
+  required int assignedAt,
+});
+typedef $$ActiveFactionQuestsTableTableUpdateCompanionBuilder
+    = ActiveFactionQuestsTableCompanion Function({
+  Value<int> id,
+  Value<int> playerId,
+  Value<String> factionId,
+  Value<String> missionKey,
+  Value<String> weekStart,
+  Value<int> assignedAt,
+});
+
+class $$ActiveFactionQuestsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ActiveFactionQuestsTableTable> {
+  $$ActiveFactionQuestsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get factionId => $composableBuilder(
+      column: $table.factionId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get missionKey => $composableBuilder(
+      column: $table.missionKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get weekStart => $composableBuilder(
+      column: $table.weekStart, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get assignedAt => $composableBuilder(
+      column: $table.assignedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$ActiveFactionQuestsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ActiveFactionQuestsTableTable> {
+  $$ActiveFactionQuestsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get factionId => $composableBuilder(
+      column: $table.factionId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get missionKey => $composableBuilder(
+      column: $table.missionKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get weekStart => $composableBuilder(
+      column: $table.weekStart, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get assignedAt => $composableBuilder(
+      column: $table.assignedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$ActiveFactionQuestsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ActiveFactionQuestsTableTable> {
+  $$ActiveFactionQuestsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get factionId =>
+      $composableBuilder(column: $table.factionId, builder: (column) => column);
+
+  GeneratedColumn<String> get missionKey => $composableBuilder(
+      column: $table.missionKey, builder: (column) => column);
+
+  GeneratedColumn<String> get weekStart =>
+      $composableBuilder(column: $table.weekStart, builder: (column) => column);
+
+  GeneratedColumn<int> get assignedAt => $composableBuilder(
+      column: $table.assignedAt, builder: (column) => column);
+}
+
+class $$ActiveFactionQuestsTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ActiveFactionQuestsTableTable,
+    ActiveFactionQuestData,
+    $$ActiveFactionQuestsTableTableFilterComposer,
+    $$ActiveFactionQuestsTableTableOrderingComposer,
+    $$ActiveFactionQuestsTableTableAnnotationComposer,
+    $$ActiveFactionQuestsTableTableCreateCompanionBuilder,
+    $$ActiveFactionQuestsTableTableUpdateCompanionBuilder,
+    (
+      ActiveFactionQuestData,
+      BaseReferences<_$AppDatabase, $ActiveFactionQuestsTableTable,
+          ActiveFactionQuestData>
+    ),
+    ActiveFactionQuestData,
+    PrefetchHooks Function()> {
+  $$ActiveFactionQuestsTableTableTableManager(
+      _$AppDatabase db, $ActiveFactionQuestsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ActiveFactionQuestsTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ActiveFactionQuestsTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ActiveFactionQuestsTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> playerId = const Value.absent(),
+            Value<String> factionId = const Value.absent(),
+            Value<String> missionKey = const Value.absent(),
+            Value<String> weekStart = const Value.absent(),
+            Value<int> assignedAt = const Value.absent(),
+          }) =>
+              ActiveFactionQuestsTableCompanion(
+            id: id,
+            playerId: playerId,
+            factionId: factionId,
+            missionKey: missionKey,
+            weekStart: weekStart,
+            assignedAt: assignedAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int playerId,
+            required String factionId,
+            required String missionKey,
+            required String weekStart,
+            required int assignedAt,
+          }) =>
+              ActiveFactionQuestsTableCompanion.insert(
+            id: id,
+            playerId: playerId,
+            factionId: factionId,
+            missionKey: missionKey,
+            weekStart: weekStart,
+            assignedAt: assignedAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$ActiveFactionQuestsTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $ActiveFactionQuestsTableTable,
+        ActiveFactionQuestData,
+        $$ActiveFactionQuestsTableTableFilterComposer,
+        $$ActiveFactionQuestsTableTableOrderingComposer,
+        $$ActiveFactionQuestsTableTableAnnotationComposer,
+        $$ActiveFactionQuestsTableTableCreateCompanionBuilder,
+        $$ActiveFactionQuestsTableTableUpdateCompanionBuilder,
+        (
+          ActiveFactionQuestData,
+          BaseReferences<_$AppDatabase, $ActiveFactionQuestsTableTable,
+              ActiveFactionQuestData>
+        ),
+        ActiveFactionQuestData,
+        PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
   $$PlayersTableTableTableManager get playersTable =>
       $$PlayersTableTableTableManager(_db, _db.playersTable);
-  $$HabitsTableTableTableManager get habitsTable =>
-      $$HabitsTableTableTableManager(_db, _db.habitsTable);
-  $$HabitLogsTableTableTableManager get habitLogsTable =>
-      $$HabitLogsTableTableTableManager(_db, _db.habitLogsTable);
   $$ItemsTableTableTableManager get itemsTable =>
       $$ItemsTableTableTableManager(_db, _db.itemsTable);
   $$InventoryTableTableTableManager get inventoryTable =>
       $$InventoryTableTableTableManager(_db, _db.inventoryTable);
   $$ShopItemsTableTableTableManager get shopItemsTable =>
       $$ShopItemsTableTableTableManager(_db, _db.shopItemsTable);
-  $$AchievementsTableTableTableManager get achievementsTable =>
-      $$AchievementsTableTableTableManager(_db, _db.achievementsTable);
-  $$PlayerAchievementsTableTableTableManager get playerAchievementsTable =>
-      $$PlayerAchievementsTableTableTableManager(
-          _db, _db.playerAchievementsTable);
   $$GuildStatusTableTableTableManager get guildStatusTable =>
       $$GuildStatusTableTableTableManager(_db, _db.guildStatusTable);
   $$NpcReputationTableTableTableManager get npcReputationTable =>
       $$NpcReputationTableTableTableManager(_db, _db.npcReputationTable);
   $$DiaryEntriesTableTableTableManager get diaryEntriesTable =>
       $$DiaryEntriesTableTableTableManager(_db, _db.diaryEntriesTable);
-  $$ClassQuestsTableTableTableManager get classQuestsTable =>
-      $$ClassQuestsTableTableTableManager(_db, _db.classQuestsTable);
-  $$FactionQuestsTableTableTableManager get factionQuestsTable =>
-      $$FactionQuestsTableTableTableManager(_db, _db.factionQuestsTable);
   $$GuildAscensionTableTableTableManager get guildAscensionTable =>
       $$GuildAscensionTableTableTableManager(_db, _db.guildAscensionTable);
   $$VitalismUniqueCatalogTableTableTableManager
@@ -19794,4 +18727,27 @@ class $AppDatabaseManager {
       get playerRecipesUnlockedTable =>
           $$PlayerRecipesUnlockedTableTableTableManager(
               _db, _db.playerRecipesUnlockedTable);
+  $$PlayerMissionProgressTableTableTableManager
+      get playerMissionProgressTable =>
+          $$PlayerMissionProgressTableTableTableManager(
+              _db, _db.playerMissionProgressTable);
+  $$PlayerMissionPreferencesTableTableTableManager
+      get playerMissionPreferencesTable =>
+          $$PlayerMissionPreferencesTableTableTableManager(
+              _db, _db.playerMissionPreferencesTable);
+  $$PlayerIndividualMissionsTableTableTableManager
+      get playerIndividualMissionsTable =>
+          $$PlayerIndividualMissionsTableTableTableManager(
+              _db, _db.playerIndividualMissionsTable);
+  $$PlayerAchievementsCompletedTableTableTableManager
+      get playerAchievementsCompletedTable =>
+          $$PlayerAchievementsCompletedTableTableTableManager(
+              _db, _db.playerAchievementsCompletedTable);
+  $$PlayerFactionReputationTableTableTableManager
+      get playerFactionReputationTable =>
+          $$PlayerFactionReputationTableTableTableManager(
+              _db, _db.playerFactionReputationTable);
+  $$ActiveFactionQuestsTableTableTableManager get activeFactionQuestsTable =>
+      $$ActiveFactionQuestsTableTableTableManager(
+          _db, _db.activeFactionQuestsTable);
 }
