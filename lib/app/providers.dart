@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../core/events/app_event_bus.dart';
 import '../data/database/app_database.dart';
 import '../data/datasources/local/auth_local_ds.dart';
 import '../data/datasources/local/vitalism_unique_service.dart';
@@ -18,6 +19,20 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
   ref.onDispose(() => db.close());
   return db;
+});
+
+// Sprint 3.1 Bloco 2 — EventBus local singleton. Consumidores do bus
+// (strategies, services refatorados, UI animada) leem via `ref.watch`
+// ou `ref.read`. Pós-dispose é noop silencioso — ver `AppEventBus.dispose`.
+final appEventBusProvider = Provider<AppEventBus>((ref) {
+  final bus = AppEventBus();
+  ref.onDispose(() {
+    // Fire-and-forget: Riverpod `onDispose` é síncrono, mas
+    // `AppEventBus.dispose` retorna Future. A microtask resolve na próxima
+    // volta do event loop; em produção isso é tudo que precisamos.
+    bus.dispose();
+  });
+  return bus;
 });
 
 // Vitalismos Únicos — orquestra pool, despertar, ritual e stubs de PvP.
