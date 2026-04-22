@@ -23,7 +23,9 @@ class PlayerMissionProgressTable extends Table {
   /// `CLASS_WARRIOR_ENDURANCE`). Mapeia pra entrada declarativa de reward.
   TextColumn get missionKey => text()();
 
-  /// Família: `internal`, `real`, `individual`, `mista` (ADR 0014).
+  /// Família: `internal`, `real`, `individual`, `mixed` (ADR 0014).
+  /// Valores canônicos definidos em `lib/domain/enums/mission_modality.dart`
+  /// (Bloco 3) — display PT-BR (Mista) fica na UI.
   TextColumn get modality => text()();
 
   /// Aba de origem: `daily`, `class`, `faction`, `extras`, `admission`.
