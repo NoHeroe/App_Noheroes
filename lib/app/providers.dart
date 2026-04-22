@@ -2,6 +2,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/events/app_event_bus.dart';
 import '../data/database/app_database.dart';
 import '../data/datasources/local/auth_local_ds.dart';
+import '../data/repositories/drift/active_faction_quests_repository_drift.dart';
+import '../data/repositories/drift/mission_preferences_repository_drift.dart';
+import '../data/repositories/drift/mission_repository_drift.dart';
+import '../data/repositories/drift/player_achievements_repository_drift.dart';
+import '../data/repositories/drift/player_faction_reputation_repository_drift.dart';
+import '../data/repositories/drift/player_individual_missions_repository_drift.dart';
+import '../domain/repositories/active_faction_quests_repository.dart';
+import '../domain/repositories/mission_preferences_repository.dart';
+import '../domain/repositories/mission_repository.dart';
+import '../domain/repositories/player_achievements_repository.dart';
+import '../domain/repositories/player_faction_reputation_repository.dart';
+import '../domain/repositories/player_individual_missions_repository.dart';
 import '../data/datasources/local/vitalism_unique_service.dart';
 import '../data/datasources/local/items_catalog_service.dart';
 import '../data/datasources/local/player_inventory_service.dart';
@@ -125,6 +137,43 @@ final playerStreamProvider = StreamProvider<PlayersTableData?>((ref) {
   return (db.select(db.playersTable)
         ..where((t) => t.id.equals(player.id)))
       .watchSingleOrNull();
+});
+
+// Sprint 3.1 Bloco 4 — Repository Pattern (ADR 0016).
+//
+// Cada provider retorna a **interface** — swap Supabase futuro é trocar
+// 1 linha por Repository sem tocar em nenhum consumer. Consumidores
+// (strategies Bloco 6, services Bloco 7+) fazem `ref.read(...)` sem
+// conhecer a impl concreta.
+final missionRepositoryProvider = Provider<MissionRepository>((ref) {
+  return MissionRepositoryDrift(ref.watch(appDatabaseProvider));
+});
+
+final missionPreferencesRepositoryProvider =
+    Provider<MissionPreferencesRepository>((ref) {
+  return MissionPreferencesRepositoryDrift(ref.watch(appDatabaseProvider));
+});
+
+final playerAchievementsRepositoryProvider =
+    Provider<PlayerAchievementsRepository>((ref) {
+  return PlayerAchievementsRepositoryDrift(ref.watch(appDatabaseProvider));
+});
+
+final playerFactionReputationRepositoryProvider =
+    Provider<PlayerFactionReputationRepository>((ref) {
+  return PlayerFactionReputationRepositoryDrift(
+      ref.watch(appDatabaseProvider));
+});
+
+final playerIndividualMissionsRepositoryProvider =
+    Provider<PlayerIndividualMissionsRepository>((ref) {
+  return PlayerIndividualMissionsRepositoryDrift(
+      ref.watch(appDatabaseProvider));
+});
+
+final activeFactionQuestsRepositoryProvider =
+    Provider<ActiveFactionQuestsRepository>((ref) {
+  return ActiveFactionQuestsRepositoryDrift(ref.watch(appDatabaseProvider));
 });
 
 // ─── Sprint 3.1 (v0.29.0) ─────────────────────────────────────────────────
