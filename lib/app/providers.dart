@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/events/app_event_bus.dart';
 import '../data/database/app_database.dart';
 import '../data/datasources/local/auth_local_ds.dart';
+import '../data/services/reward_grant_service.dart';
+import '../domain/services/reward_resolve_service.dart';
 import '../data/repositories/drift/active_faction_quests_repository_drift.dart';
 import '../data/repositories/drift/mission_preferences_repository_drift.dart';
 import '../data/repositories/drift/mission_repository_drift.dart';
@@ -137,6 +139,22 @@ final playerStreamProvider = StreamProvider<PlayersTableData?>((ref) {
   return (db.select(db.playersTable)
         ..where((t) => t.id.equals(player.id)))
       .watchSingleOrNull();
+});
+
+// Sprint 3.1 Bloco 5 — RewardResolve (puro) + RewardGrant (atômico).
+final rewardResolveServiceProvider = Provider<RewardResolveService>((ref) {
+  return RewardResolveService(ref.watch(itemsCatalogServiceProvider));
+});
+
+final rewardGrantServiceProvider = Provider<RewardGrantService>((ref) {
+  return RewardGrantService(
+    db: ref.watch(appDatabaseProvider),
+    missionRepo: ref.watch(missionRepositoryProvider),
+    inventory: ref.watch(playerInventoryServiceProvider),
+    recipes: ref.watch(playerRecipesServiceProvider),
+    factionRep: ref.watch(playerFactionReputationRepositoryProvider),
+    eventBus: ref.watch(appEventBusProvider),
+  );
 });
 
 // Sprint 3.1 Bloco 4 — Repository Pattern (ADR 0016).
