@@ -24,6 +24,13 @@ abstract class MissionRepository {
     MissionTabOrigin tab,
   );
 
+  /// Sprint 3.1 Bloco 10a.1 — missões não-ativas (completadas OU falhadas)
+  /// de **todas** as abas. Alimenta a aba Histórico de `/quests` (Bloco 12
+  /// refina integração com drawer Santuário). Ordenação DESC pelo
+  /// timestamp de conclusão/falha — `coalesce(completed_at, failed_at)`
+  /// garante que missões falhadas também entrem, mais recentes primeiro.
+  Future<List<MissionProgress>> findHistorical(int playerId);
+
   /// Stream reativa das missões ativas — consumida pela UI do Bloco 10
   /// pra animar barras e popups. Emite nova lista em cada mudança de row.
   Stream<List<MissionProgress>> watchActive(int playerId);

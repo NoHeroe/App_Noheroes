@@ -22,6 +22,7 @@ import '../presentation/shop/screens/shops_list_screen.dart';
 import '../presentation/class_selection/screens/class_selection_screen.dart';
 import '../presentation/faction_selection/screens/faction_selection_screen.dart';
 import '../presentation/mission_calibration/screens/mission_calibration_screen.dart';
+import '../presentation/quests/screens/quests_screen.dart';
 import '../presentation/dev/dev_panel_screen.dart';
 import '../presentation/battle/screens/battle_hub_screen.dart';
 import '../presentation/vitalism/screens/void_ritual_screen.dart';
@@ -44,9 +45,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/register',     builder: (c, s) => const RegisterScreen()),
       GoRoute(path: '/awakening',    builder: (c, s) => const AwakeningScreen()),
       GoRoute(path: '/sanctuary',    builder: (c, s) => const SanctuaryScreen()),
-      // /habits será refeita como /quests no Bloco 10 (UI das 6 abas).
+      // /habits mantém placeholder (rota legada) até usuários antigos pararem
+      // de usá-la; telas reais viverão em /quests.
       GoRoute(path: '/habits',       builder: (c, s) => const _UnderConstruction(feature: 'Missões (/quests)', block: 'Bloco 10')),
-      GoRoute(path: '/quests',       builder: (c, s) => const _UnderConstruction(feature: 'Missões (/quests)', block: 'Bloco 10')),
+      // Sprint 3.1 Bloco 10a.1 — /quests virou tela real (6 abas + chips).
+      GoRoute(path: '/quests',       builder: (c, s) => const QuestsScreen()),
       GoRoute(path: '/character',    builder: (c, s) => const CharacterScreen()),
       GoRoute(path: '/regions',      builder: (c, s) => const RegionsScreen()),
       // /shadow será refeita no Bloco 12 (migração de stats da Câmara pro Histórico).

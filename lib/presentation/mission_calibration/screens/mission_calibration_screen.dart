@@ -19,7 +19,7 @@ import '../widgets/quiz_option_tile.dart';
 ///      `primaryFocus` escolhido em P1.
 ///   2. Obrigatórios: P1, P2, P3, P7. Subfocus (P4/P5/P6) aceitam 0-3.
 ///   3. Submit → `MissionPreferencesService.save` → emite
-///      `MissionPreferencesChanged` → navega pra `/sanctuary`.
+///      `MissionPreferencesChanged` → navega pra `/quests`.
 ///
 /// Wipe de subfocus ao mudar P1 fica em `MissionPreferences.withPrimaryFocus`
 /// (Bloco 9). Aqui o draft local replica a mesma semântica durante a
@@ -186,10 +186,7 @@ class _MissionCalibrationScreenState
       ),
     );
     if (!mounted) return;
-    // TODO(bloco10): trocar pra ctx.go('/quests') quando a tela real
-    // for entregue. Bloco 9 navega pra /sanctuary porque /quests é
-    // _UnderConstruction até lá.
-    context.go('/sanctuary');
+    context.go('/quests');
   }
 
   @override

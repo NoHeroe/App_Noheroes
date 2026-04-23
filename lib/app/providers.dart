@@ -312,6 +312,18 @@ final missionPreferencesServiceProvider =
   );
 });
 
+// Sprint 3.1 Bloco 10a.1 — Gate de "Refazer calibração" no SanctuaryDrawer
+// (Bloco 10a.2 consome). FutureProvider.family resolve o check async pro
+// drawer sem widget rebuild caro. autodispose garante que múltiplas
+// aberturas do drawer não acumulam providers.
+final canRecalibrateProvider = FutureProvider.autoDispose
+    .family<bool, ({int playerId, int playerLevel})>((ref, args) async {
+  return ref.watch(missionPreferencesServiceProvider).canRecalibrate(
+        playerId: args.playerId,
+        playerLevel: args.playerLevel,
+      );
+});
+
 // Sprint 3.1 Bloco 4 — Repository Pattern (ADR 0016).
 //
 // Cada provider retorna a **interface** — swap Supabase futuro é trocar
