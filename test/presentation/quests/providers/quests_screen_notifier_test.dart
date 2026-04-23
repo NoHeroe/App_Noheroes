@@ -14,6 +14,7 @@ import 'package:noheroes_app/domain/models/mission_progress.dart';
 import 'package:noheroes_app/domain/models/reward_declared.dart';
 import 'package:noheroes_app/domain/repositories/mission_repository.dart';
 import 'package:noheroes_app/presentation/quests/providers/quests_screen_notifier.dart';
+import 'package:noheroes_app/presentation/quests/widgets/history_filter_chips.dart';
 
 /// Fake Repository pra testes — rastreia chamadas + permite seedar
 /// resultados por (tab, isHistorical).
@@ -23,6 +24,7 @@ class _FakeMissionRepo implements MissionRepository {
 
   int findByTabCalls = 0;
   int findHistoricalCalls = 0;
+  int findCompletedInWindowCalls = 0;
 
   _FakeMissionRepo({
     this.byTab = const {},
@@ -40,6 +42,16 @@ class _FakeMissionRepo implements MissionRepository {
   Future<List<MissionProgress>> findHistorical(int playerId) async {
     findHistoricalCalls++;
     return historical;
+  }
+
+  @override
+  Future<List<MissionProgress>> findCompletedInWindow(
+    int playerId, {
+    required DateTime from,
+    required DateTime to,
+  }) async {
+    findCompletedInWindowCalls++;
+    return const [];
   }
 
   @override
@@ -72,6 +84,8 @@ MissionProgress _mkMission({
   required MissionTabOrigin tab,
   MissionCategory? category,
   MissionModality modality = MissionModality.real,
+  DateTime? completedAt,
+  DateTime? failedAt,
 }) {
   final meta = category == null
       ? '{}'
@@ -87,6 +101,8 @@ MissionProgress _mkMission({
     currentValue: 0,
     reward: const RewardDeclared(xp: 10),
     startedAt: DateTime.now(),
+    completedAt: completedAt,
+    failedAt: failedAt,
     rewardClaimed: false,
     metaJson: meta,
   );
@@ -305,6 +321,63 @@ void main() {
       final state = c.read(questsScreenNotifierProvider(1)).value!;
       expect(state.categoryFilters, isEmpty);
       expect(state.missions.length, 2);
+    });
+
+    test('setActiveTab(history) carrega last7DaysWindow via repo', () async {
+      final repo = _FakeMissionRepo(
+        byTab: {MissionTabOrigin.daily: const []},
+        historical: const [],
+      );
+      final bus = AppEventBus();
+      addTearDown(bus.dispose);
+      final c = _makeContainer(repo: repo, bus: bus);
+      addTearDown(c.dispose);
+
+      await c.read(questsScreenNotifierProvider(1).future);
+      expect(repo.findCompletedInWindowCalls, 0,
+          reason: 'daily tab não carrega janela 7d');
+
+      await c
+          .read(questsScreenNotifierProvider(1).notifier)
+          .setActiveTab(QuestTab.history);
+      expect(repo.findCompletedInWindowCalls, 1);
+    });
+
+    test('setHistoryFilter muda filtro e filteredHistory reflete', () async {
+      final repo = _FakeMissionRepo(
+        byTab: {MissionTabOrigin.daily: const []},
+        historical: [
+          _mkMission(
+              id: 1,
+              tab: MissionTabOrigin.daily,
+              completedAt: DateTime.now()),
+          _mkMission(
+              id: 2,
+              tab: MissionTabOrigin.daily,
+              failedAt: DateTime.now()),
+        ],
+      );
+      final bus = AppEventBus();
+      addTearDown(bus.dispose);
+      final c = _makeContainer(repo: repo, bus: bus);
+      addTearDown(c.dispose);
+
+      await c.read(questsScreenNotifierProvider(1).future);
+      final notifier = c.read(questsScreenNotifierProvider(1).notifier);
+      await notifier.setActiveTab(QuestTab.history);
+      var state = c.read(questsScreenNotifierProvider(1)).value!;
+      expect(state.historyFilter, HistoryFilter.todas);
+      expect(state.filteredHistory.length, 2);
+
+      notifier.setHistoryFilter(HistoryFilter.concluidas);
+      state = c.read(questsScreenNotifierProvider(1)).value!;
+      expect(state.filteredHistory.length, 1);
+      expect(state.filteredHistory.first.id, 1);
+
+      notifier.setHistoryFilter(HistoryFilter.falhadas);
+      state = c.read(questsScreenNotifierProvider(1)).value!;
+      expect(state.filteredHistory.length, 1);
+      expect(state.filteredHistory.first.id, 2);
     });
 
     test(

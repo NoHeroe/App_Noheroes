@@ -10,6 +10,7 @@ import '../../../domain/enums/mission_tab_origin.dart';
 import '../../../domain/models/extras_mission_spec.dart';
 import '../../../domain/models/mission_progress.dart';
 import '../../../domain/repositories/mission_repository.dart';
+import '../widgets/history_filter_chips.dart';
 
 /// Sprint 3.1 Bloco 10a.1 — abas da tela `/quests`. `classTab` evita
 /// colisão com a keyword `class` do Dart; storage do `MissionTabOrigin`
@@ -41,11 +42,24 @@ class QuestsScreenState {
   /// `ExtrasCard` (ExtrasMissionSpec).
   final List<ExtrasMissionSpec> extras;
 
+  /// Sprint 3.1 Bloco 12 — filtro client-side da aba Histórico
+  /// (todas/concluídas/falhadas). Default `todas`. Aplicado como view
+  /// sobre `missions` via getter `filteredHistory`.
+  final HistoryFilter historyFilter;
+
+  /// Sprint 3.1 Bloco 12 — janela de 7 dias consumida pelo
+  /// `WeeklyMissionsChart` + `MissionCounters` (Hoje/Semana derivam
+  /// daqui; Total vem de `players.totalQuestsCompleted`). Vazia fora
+  /// da aba Histórico.
+  final List<MissionProgress> last7DaysWindow;
+
   const QuestsScreenState({
     required this.activeTab,
     required this.categoryFilters,
     required this.missions,
     this.extras = const [],
+    this.historyFilter = HistoryFilter.todas,
+    this.last7DaysWindow = const [],
   });
 
   QuestsScreenState copyWith({
@@ -53,13 +67,34 @@ class QuestsScreenState {
     Set<MissionCategory>? categoryFilters,
     List<MissionProgress>? missions,
     List<ExtrasMissionSpec>? extras,
+    HistoryFilter? historyFilter,
+    List<MissionProgress>? last7DaysWindow,
   }) {
     return QuestsScreenState(
       activeTab: activeTab ?? this.activeTab,
       categoryFilters: categoryFilters ?? this.categoryFilters,
       missions: missions ?? this.missions,
       extras: extras ?? this.extras,
+      historyFilter: historyFilter ?? this.historyFilter,
+      last7DaysWindow: last7DaysWindow ?? this.last7DaysWindow,
     );
+  }
+
+  /// View client-side de `missions` respeitando `historyFilter`. Só faz
+  /// sentido chamar quando `activeTab == history`.
+  List<MissionProgress> get filteredHistory {
+    switch (historyFilter) {
+      case HistoryFilter.todas:
+        return missions;
+      case HistoryFilter.concluidas:
+        return missions
+            .where((m) => m.completedAt != null)
+            .toList(growable: false);
+      case HistoryFilter.falhadas:
+        return missions
+            .where((m) => m.failedAt != null)
+            .toList(growable: false);
+    }
   }
 }
 
@@ -134,11 +169,30 @@ class QuestsScreenNotifier
 
     final missions = await _loadForTab(repo, playerId, activeTab, filters);
     final extras = await _loadExtrasFor(activeTab);
+    final last7 = await _loadLast7DaysFor(activeTab, repo, playerId);
     return QuestsScreenState(
       activeTab: activeTab,
       categoryFilters: filters,
       missions: missions,
       extras: extras,
+      historyFilter: prev?.historyFilter ?? HistoryFilter.todas,
+      last7DaysWindow: last7,
+    );
+  }
+
+  /// Bloco 12 — janela de 7 dias pro gráfico semanal + counters. Só
+  /// carrega na aba history; outras abas ficam com lista vazia.
+  Future<List<MissionProgress>> _loadLast7DaysFor(
+    QuestTab tab,
+    MissionRepository repo,
+    int playerId,
+  ) async {
+    if (tab != QuestTab.history) return const [];
+    final now = DateTime.now();
+    return repo.findCompletedInWindow(
+      playerId,
+      from: now.subtract(const Duration(days: 7)),
+      to: now,
     );
   }
 
@@ -153,11 +207,21 @@ class QuestsScreenNotifier
     final missions =
         await _loadForTab(repo, playerId, tab, current.categoryFilters);
     final extras = await _loadExtrasFor(tab);
+    final last7 = await _loadLast7DaysFor(tab, repo, playerId);
     state = AsyncValue.data(current.copyWith(
       activeTab: tab,
       missions: missions,
       extras: extras,
+      last7DaysWindow: last7,
     ));
+  }
+
+  /// Bloco 12 — seta filtro da aba Histórico. Client-side, zero re-query.
+  void setHistoryFilter(HistoryFilter filter) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    if (current.historyFilter == filter) return;
+    state = AsyncValue.data(current.copyWith(historyFilter: filter));
   }
 
   /// Carrega catálogo Extras quando `tab == extras` — senão retorna

@@ -33,6 +33,14 @@ class _FakeMissionRepo implements MissionRepository {
   Future<List<MissionProgress>> findHistorical(int playerId) async => const [];
 
   @override
+  Future<List<MissionProgress>> findCompletedInWindow(
+    int playerId, {
+    required DateTime from,
+    required DateTime to,
+  }) async =>
+      const [];
+
+  @override
   Future<List<MissionProgress>> findActive(int playerId) async => const [];
 
   @override

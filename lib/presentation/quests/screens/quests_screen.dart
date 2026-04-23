@@ -10,11 +10,15 @@ import '../../../domain/models/mission_progress.dart';
 import '../providers/quests_screen_notifier.dart';
 import '../widgets/category_filter_chips.dart';
 import '../widgets/extras_card.dart';
+import '../widgets/history_filter_chips.dart';
+import '../widgets/history_mission_card.dart';
 import '../widgets/individual_mission_card.dart';
 import '../widgets/internal_mission_card.dart';
+import '../widgets/mission_counters.dart';
 import '../widgets/mixed_mission_card.dart';
 import '../widgets/quest_tab_chips.dart';
 import '../widgets/real_task_mission_card.dart';
+import '../widgets/weekly_missions_chart.dart';
 
 /// Sprint 3.1 Bloco 10a.1 — tela `/quests` com 6 abas + chips de filtro.
 ///
@@ -74,10 +78,12 @@ class QuestsScreen extends ConsumerWidget {
         ),
         data: (state) => _QuestsBody(
           state: state,
+          player: player,
           onSelectTab: notifier.setActiveTab,
           onToggleCategory: notifier.toggleCategoryFilter,
           onClearCategories: notifier.clearFilters,
           onRefresh: notifier.refresh,
+          onSelectHistoryFilter: notifier.setHistoryFilter,
         ),
       ),
     );
@@ -104,81 +110,135 @@ String _emptyMessageFor(QuestTab tab) {
 
 class _QuestsBody extends StatelessWidget {
   final QuestsScreenState state;
+  final dynamic player; // PlayersTableData — tipo via currentPlayerProvider
   final ValueChanged<QuestTab> onSelectTab;
   final ValueChanged<MissionCategory> onToggleCategory;
   final VoidCallback onClearCategories;
   final Future<void> Function() onRefresh;
+  final ValueChanged<HistoryFilter> onSelectHistoryFilter;
 
   const _QuestsBody({
     required this.state,
+    required this.player,
     required this.onSelectTab,
     required this.onToggleCategory,
     required this.onClearCategories,
     required this.onRefresh,
+    required this.onSelectHistoryFilter,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Bloco 11a — aba Extras mostra MissionProgress individuais do jogador
-    // (user_created=true) + catálogo Extras (NPCs/Lore/Secret-revealed).
-    // Outras abas mostram só missions do repo.
     final isExtras = state.activeTab == QuestTab.extras;
-    final missions = state.missions;
+    final isHistory = state.activeTab == QuestTab.history;
+    final missions =
+        isHistory ? state.filteredHistory : state.missions;
     final extras = state.extras;
-    final totalItems = isExtras ? missions.length + extras.length : missions.length;
+    final totalItems =
+        isExtras ? missions.length + extras.length : missions.length;
 
     return Column(
       children: [
         const SizedBox(height: 8),
         QuestTabChips(active: state.activeTab, onSelect: onSelectTab),
         const SizedBox(height: 8),
-        CategoryFilterChips(
-          active: state.categoryFilters,
-          onToggle: onToggleCategory,
-          onClear: onClearCategories,
-        ),
+        if (isHistory)
+          HistoryFilterChips(
+            active: state.historyFilter,
+            onSelect: onSelectHistoryFilter,
+          )
+        else
+          CategoryFilterChips(
+            active: state.categoryFilters,
+            onToggle: onToggleCategory,
+            onClear: onClearCategories,
+          ),
         const SizedBox(height: 8),
         Expanded(
           child: RefreshIndicator(
             onRefresh: onRefresh,
-            child: totalItems == 0
-                ? ListView(
-                    key: const ValueKey('quests-empty'),
-                    children: [
-                      const SizedBox(height: 80),
-                      Center(
-                        child: Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 32),
-                          child: Text(
-                            _emptyMessageFor(state.activeTab),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                                color: AppColors.textMuted),
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : ListView.builder(
-                    key: const ValueKey('quests-list'),
-                    itemCount: totalItems,
-                    itemBuilder: (_, i) {
-                      // Em Extras: primeiro as individuais ativas, depois
-                      // o catálogo de NPCs/Lore.
-                      if (isExtras && i >= missions.length) {
-                        return ExtrasCard(
-                          spec: extras[i - missions.length],
-                        );
-                      }
-                      return _MissionCardDispatcher(
-                        mission: missions[i],
-                      );
-                    },
-                  ),
+            child: isHistory
+                ? _buildHistoryBody(missions)
+                : _buildDefaultBody(missions, extras, isExtras, totalItems),
           ),
         ),
       ],
+    );
+  }
+
+  /// Bloco 12 — aba Histórico tem header fixo (chart + counters) e lista
+  /// filtrada por `historyFilter` abaixo. ListView único pra permitir
+  /// scroll vertical incluindo header.
+  Widget _buildHistoryBody(List<MissionProgress> missions) {
+    final totalQuests =
+        (player as dynamic)?.totalQuestsCompleted as int? ?? 0;
+    return ListView(
+      key: const ValueKey('quests-history-list'),
+      children: [
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: WeeklyMissionsChart(
+              missionsLast7Days: state.last7DaysWindow),
+        ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: MissionCounters(
+            missionsLast7Days: state.last7DaysWindow,
+            totalQuestsCompleted: totalQuests,
+          ),
+        ),
+        const SizedBox(height: 16),
+        if (missions.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 32, vertical: 40),
+            child: Text(
+              _emptyMessageFor(QuestTab.history),
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.textMuted),
+            ),
+          )
+        else
+          ...missions.map((m) => HistoryMissionCard(mission: m)),
+      ],
+    );
+  }
+
+  Widget _buildDefaultBody(
+    List<MissionProgress> missions,
+    List extras,
+    bool isExtras,
+    int totalItems,
+  ) {
+    if (totalItems == 0) {
+      return ListView(
+        key: const ValueKey('quests-empty'),
+        children: [
+          const SizedBox(height: 80),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                _emptyMessageFor(state.activeTab),
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textMuted),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return ListView.builder(
+      key: const ValueKey('quests-list'),
+      itemCount: totalItems,
+      itemBuilder: (_, i) {
+        if (isExtras && i >= missions.length) {
+          return ExtrasCard(spec: extras[i - missions.length]);
+        }
+        return _MissionCardDispatcher(mission: missions[i]);
+      },
     );
   }
 }

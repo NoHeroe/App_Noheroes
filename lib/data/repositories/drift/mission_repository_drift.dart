@@ -96,6 +96,45 @@ class MissionRepositoryDrift implements MissionRepository {
   }
 
   @override
+  Future<List<MissionProgress>> findCompletedInWindow(
+    int playerId, {
+    required DateTime from,
+    required DateTime to,
+  }) async {
+    final rows = await _db.customSelect(
+      'SELECT * FROM player_mission_progress '
+      'WHERE player_id = ? '
+      'AND (completed_at IS NOT NULL OR failed_at IS NOT NULL) '
+      'AND COALESCE(completed_at, failed_at) BETWEEN ? AND ? '
+      'ORDER BY COALESCE(completed_at, failed_at) DESC',
+      variables: [
+        Variable.withInt(playerId),
+        Variable.withInt(from.millisecondsSinceEpoch),
+        Variable.withInt(to.millisecondsSinceEpoch),
+      ],
+      readsFrom: {_db.playerMissionProgressTable},
+    ).get();
+    return rows
+        .map((row) => _toDomain(PlayerMissionProgressData(
+              id: row.read<int>('id'),
+              playerId: row.read<int>('player_id'),
+              missionKey: row.read<String>('mission_key'),
+              modality: row.read<String>('modality'),
+              tabOrigin: row.read<String>('tab_origin'),
+              rank: row.read<String>('rank'),
+              targetValue: row.read<int>('target_value'),
+              currentValue: row.read<int>('current_value'),
+              rewardJson: row.read<String>('reward_json'),
+              startedAt: row.read<int>('started_at'),
+              completedAt: row.readNullable<int>('completed_at'),
+              failedAt: row.readNullable<int>('failed_at'),
+              rewardClaimed: row.read<bool>('reward_claimed'),
+              metaJson: row.read<String>('meta_json'),
+            )))
+        .toList(growable: false);
+  }
+
+  @override
   Stream<List<MissionProgress>> watchActive(int playerId) {
     final query = _db.select(_db.playerMissionProgressTable)
       ..where((t) => t.playerId.equals(playerId))
