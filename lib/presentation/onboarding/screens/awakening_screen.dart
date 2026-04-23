@@ -1,11 +1,53 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/guild_rank.dart';
 import '../../../data/datasources/local/tutorial_service.dart';
+import '../../../domain/enums/intensity.dart';
+import '../../../domain/enums/mission_category.dart';
+import '../../../domain/enums/mission_modality.dart';
+import '../../../domain/enums/mission_style.dart';
+import '../../../domain/enums/mission_tab_origin.dart';
+import '../../../domain/models/mission_preferences.dart';
+import '../../../domain/models/mission_progress.dart';
+import '../../../domain/services/mission_balancer_service.dart';
 
+/// Sprint 3.1 Bloco 14.6a — Onboarding Soulslike Fundido.
+///
+/// Funde o awakening narrativo (v0.28.2) com o quiz de calibração
+/// (Bloco 9) numa cerimônia única executada no despertar. Substitui a
+/// phase13 do TutorialManager — que foi removida do `runAll` — e grava
+/// as preferências de missão direto do Awakening.
+///
+/// ## Fluxo
+///   0. Ruínas: "Você desperta entre ruínas..."
+///   1. O Vazio: "Você não é de Caelum..."
+///   2. Nome: "Como devemos lhe chamar?"
+///   3. Encruzilhada: escolha direta entre os 4 pilares (peso x2)
+///   4-6. Três cenários morais, cada um com 4 opções mapeadas aos pilares
+///   7. Conclusão: "Vai. Que Caelum reconheça..."
+///
+/// ## Compilação do foco
+/// Votação ponderada: direta conta 2, cada cenário conta 1. Empate
+/// resolvido pela escolha direta. Lógica isolada em [AwakeningCeremony]
+/// pra ser coberta por testes unitários.
+///
+/// ## Efeitos colaterais no finish
+///   - `AuthLocalDs.completeOnboarding` (name + narrativeMode='longa')
+///   - `MissionPreferencesService.save` (primaryFocus + defaults)
+///   - 4x `MissionRepository.insert` (uma missão por pilar, modality
+///     `real`, tab `individual`, reward calculada pelo
+///     [MissionBalancerService])
+///   - `TutorialService.markDone(phase0_onboarding)` +
+///     `markDone(phase13_mission_calibration)` — este último pra não
+///     disparar o quiz antigo via drawer residual
+///   - `context.go('/sanctuary')`
 class AwakeningScreen extends ConsumerStatefulWidget {
   const AwakeningScreen({super.key});
   @override
@@ -22,31 +64,80 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
 
   int _step = 0;
   final _nameCtrl = TextEditingController();
-  String _narrativeMode = 'longa';
-  String? _selectedHabit;
+  MissionCategory? _directChoice;
+  final List<MissionCategory?> _scenarioChoices = [null, null, null];
   bool _ready = false;
-
-  final _habits = [
-    ('Hidratação', '💧', 'spiritual',  'Beber água conscientemente todos os dias'),
-    ('Treino',     '⚔️', 'physical',   'Mover o corpo com intenção e disciplina'),
-    ('Leitura',    '📖', 'mental',     'Expandir a mente através do conhecimento'),
-    ('Meditação',  '🌑', 'spiritual',  'Silenciar o ruído interno diariamente'),
-    ('Escrita',    '✍️', 'mental',     'Registrar pensamentos e experiências'),
-    ('Sono',       '🌙', 'spiritual',  'Honrar o descanso como parte da jornada'),
-  ];
+  bool _finishing = false;
 
   List<_Scene> get _scenes => [
-    _Scene(npc: null, text: 'Você desperta entre ruínas antigas…\n\nA luz do céu parece quebrada.\n\nHá algo errado com seu corpo.', mood: _Mood.ruins),
-    _Scene(npc: 'O Vazio', text: '"Você não é de Caelum.\n\nSua forma aqui é uma Sombra — ainda instável.\n\nSe quiser sobreviver, vai precisar aprender rápido."', mood: _Mood.npc, isVoid: true),
-    _Scene(npc: 'O Vazio', text: 'Como devemos lhe chamar?', mood: _Mood.identity, isNameInput: true, isVoid: true),
-    _Scene(npc: 'O Vazio', text: '"Todo ser em Caelum tem um ritual.\n\nNão é uma tarefa — é um pacto.\n\nEscolha o que você se compromete a honrar."', mood: _Mood.ritual, isHabitChoice: true, isVoid: true),
-  ];
+        // 0 — Ruínas
+        const _Scene(
+          npc: null,
+          text:
+              'Você desperta entre ruínas antigas…\n\nA luz do céu parece quebrada.\n\nHá algo errado com seu corpo.',
+          mood: _Mood.ruins,
+        ),
+        // 1 — O Vazio se apresenta
+        const _Scene(
+          npc: 'O Vazio',
+          text:
+              '"Você não é de Caelum.\n\nSua forma aqui é uma Sombra — ainda instável.\n\nSe quiser sobreviver, vai precisar aprender rápido."',
+          mood: _Mood.npc,
+          isVoid: true,
+        ),
+        // 2 — Nome
+        const _Scene(
+          npc: 'O Vazio',
+          text: 'Como devemos lhe chamar?',
+          mood: _Mood.identity,
+          isNameInput: true,
+          isVoid: true,
+        ),
+        // 3 — Encruzilhada (direta, peso x2)
+        const _Scene(
+          npc: 'O Vazio',
+          text:
+              '"Quatro pilares sustentam quem caminha em Caelum.\n\nQual deles chama teu nome primeiro?"',
+          mood: _Mood.crossroads,
+          isDirectChoice: true,
+          isVoid: true,
+        ),
+        // 4 — Cenário 1: Besta Ferida
+        _scenarioScene(0),
+        // 5 — Cenário 2: Torre em Ruínas
+        _scenarioScene(1),
+        // 6 — Cenário 3: Pacto Oferecido
+        _scenarioScene(2),
+        // 7 — Conclusão
+        const _Scene(
+          npc: 'O Vazio',
+          text:
+              '"Tuas escolhas pesaram.\n\nCaelum já reconhece por onde vais andar.\n\nVai. A Sombra te segue."',
+          mood: _Mood.conclusion,
+          isFinish: true,
+          isVoid: true,
+        ),
+      ];
+
+  _Scene _scenarioScene(int index) {
+    final scenario = AwakeningCeremony.scenarios[index];
+    return _Scene(
+      npc: 'O Vazio',
+      text: scenario.prompt,
+      mood: _Mood.scenario,
+      isScenario: true,
+      scenarioIndex: index,
+      isVoid: true,
+    );
+  }
 
   @override
   void initState() {
     super.initState();
-    _bgCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500));
-    _dialogCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    _bgCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1500));
+    _dialogCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 400));
     _bgFade = CurvedAnimation(parent: _bgCtrl, curve: Curves.easeIn);
     _dialogSlide = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
         .animate(CurvedAnimation(parent: _dialogCtrl, curve: Curves.easeOut));
@@ -66,11 +157,19 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
   }
 
   Future<void> _advance() async {
-    if (!_ready) return;
+    if (!_ready || _finishing) return;
     final scene = _scenes[_step];
 
     if (scene.isNameInput && _nameCtrl.text.trim().isEmpty) return;
-    if (scene.isHabitChoice && _selectedHabit == null) return;
+    if (scene.isDirectChoice && _directChoice == null) return;
+    if (scene.isScenario && _scenarioChoices[scene.scenarioIndex!] == null) {
+      return;
+    }
+
+    if (scene.isFinish) {
+      await _finish();
+      return;
+    }
 
     if (_step >= _scenes.length - 1) {
       await _finish();
@@ -85,34 +184,88 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
   }
 
   Future<void> _finish() async {
+    if (_finishing) return;
+    setState(() => _finishing = true);
+
     final player = ref.read(currentPlayerProvider);
-    if (player == null) { if (mounted) context.go('/sanctuary'); return; }
-    final ds = ref.read(authDsProvider);
-    await ds.completeOnboarding(
-      player.id,
-      _nameCtrl.text.trim().isEmpty ? 'Sombra' : _nameCtrl.text.trim(),
-      _narrativeMode,
-    );
-    // Sprint 3.1 Bloco 1 — criação imediata de hábito removida. A missão
-    // escolhida aqui será usada no Bloco 14 como hint do perfil inicial
-    // (MissionAssignmentService consulta _selectedHabit via prefs).
-    // TODO(sprint-missoes-bloco14): persistir `_selectedHabit` pra ser
-    // consumido pelo assignment inicial.
-    await TutorialService.markDone(TutorialPhase.phase0_onboarding);
-    final updated = await ds.currentSession();
-    if (mounted) {
-      ref.read(currentPlayerProvider.notifier).state = updated;
-      context.go('/sanctuary');
+    if (player == null) {
+      if (mounted) context.go('/sanctuary');
+      return;
     }
+
+    final primaryFocus = AwakeningCeremony.compilePrimaryFocus(
+      direct: _directChoice!,
+      scenarios: List<MissionCategory>.from(
+          _scenarioChoices.map((c) => c!)),
+    );
+
+    final now = DateTime.now();
+    final name = _nameCtrl.text.trim().isEmpty
+        ? 'Sombra'
+        : _nameCtrl.text.trim();
+
+    final authDs = ref.read(authDsProvider);
+    await authDs.completeOnboarding(player.id, name, 'longa');
+
+    await ref.read(missionPreferencesServiceProvider).save(
+          MissionPreferences(
+            playerId: player.id,
+            primaryFocus: primaryFocus,
+            intensity: Intensity.medium,
+            missionStyle: MissionStyle.mixed,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+    final balancer = ref.read(missionBalancerServiceProvider);
+    final repo = ref.read(missionRepositoryProvider);
+    for (final cat in MissionCategory.values) {
+      final spec = AwakeningCeremony.initialMissionFor(cat);
+      final reward = balancer.calculate(BalancerInput(
+        categoria: cat,
+        intensity: Intensity.light,
+        rank: GuildRank.e,
+        isRepetivel: false,
+      ));
+      await repo.insert(MissionProgress(
+        id: 0,
+        playerId: player.id,
+        missionKey: spec.missionKey,
+        modality: MissionModality.real,
+        tabOrigin: MissionTabOrigin.individual,
+        rank: GuildRank.e,
+        targetValue: spec.targetValue,
+        currentValue: 0,
+        reward: reward,
+        startedAt: now,
+        rewardClaimed: false,
+        metaJson: jsonEncode({
+          'category': cat.storage,
+          'initial_mission': true,
+          'goal_label': spec.goalLabel,
+        }),
+      ));
+    }
+
+    await TutorialService.markDone(TutorialPhase.phase0_onboarding);
+    await TutorialService.markDone(TutorialPhase.phase13_mission_calibration);
+
+    final updated = await authDs.currentSession();
+    if (!mounted) return;
+    ref.read(currentPlayerProvider.notifier).state = updated;
+    context.go('/sanctuary');
   }
 
   @override
   Widget build(BuildContext context) {
     final scene = _scenes[_step];
+    final tapAdvances = !scene.isNameInput &&
+        !scene.isDirectChoice &&
+        !scene.isScenario &&
+        !scene.isFinish;
     return GestureDetector(
-      onTap: (!scene.isNameInput && !scene.isHabitChoice)
-          ? _advance
-          : null,
+      onTap: tapAdvances ? _advance : null,
       behavior: HitTestBehavior.opaque,
       child: Scaffold(
         backgroundColor: Colors.black,
@@ -120,9 +273,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
         body: Stack(
           fit: StackFit.expand,
           children: [
-            // Background
             FadeTransition(opacity: _bgFade, child: _SceneBg(mood: scene.mood)),
-            // Gradient de baixo para cima
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -137,7 +288,6 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
                 ),
               ),
             ),
-            // Conteúdo central (para cenas sem NPC)
             if (scene.npc == null)
               Center(
                 child: Padding(
@@ -157,10 +307,11 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
                   ),
                 ),
               ),
-            // NPC Dialog — embaixo
-            if (scene.npc != null || scene.isHabitChoice || scene.isNameInput)
+            if (scene.npc != null)
               Positioned(
-                left: 0, right: 0, bottom: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
                 child: SlideTransition(
                   position: _dialogSlide,
                   child: FadeTransition(
@@ -169,8 +320,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
                   ),
                 ),
               ),
-            // Hint toque — indicador visual pulsante (so em cenas sem input)
-            if (!scene.isNameInput && !scene.isHabitChoice)
+            if (tapAdvances)
               Align(
                 alignment: const Alignment(0, -0.3),
                 child: FadeTransition(
@@ -187,10 +337,10 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
   Widget _buildBottomDialog(_Scene scene) {
     final isVoid = scene.isVoid;
     final color = isVoid ? AppColors.purple : AppColors.gold;
-    final hasNpc = scene.npc != null;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(16, 16, 16, MediaQuery.of(context).padding.bottom + 24),
+      padding: EdgeInsets.fromLTRB(
+          16, 16, 16, MediaQuery.of(context).padding.bottom + 24),
       decoration: BoxDecoration(
         color: const Color(0xFF0A0010).withValues(alpha: 0.97),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -199,29 +349,39 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (hasNpc) Row(
+          Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              // Avatar NPC
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 52, height: 52,
+                    width: 52,
+                    height: 52,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: AppColors.shadowVoid,
-                      border: Border.all(color: color.withValues(alpha: 0.7), width: 2),
-                      boxShadow: [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 12)],
+                      border: Border.all(
+                          color: color.withValues(alpha: 0.7), width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                            color: color.withValues(alpha: 0.3),
+                            blurRadius: 12)
+                      ],
                     ),
-                    child: Icon(isVoid ? Icons.blur_on : Icons.person_outline, color: color, size: 26),
+                    child: Icon(
+                        isVoid ? Icons.blur_on : Icons.person_outline,
+                        color: color,
+                        size: 26),
                   ),
                   const SizedBox(height: 4),
-                  Text(scene.npc!, style: GoogleFonts.roboto(fontSize: 8, color: color, letterSpacing: 1), textAlign: TextAlign.center),
+                  Text(scene.npc!,
+                      style: GoogleFonts.roboto(
+                          fontSize: 8, color: color, letterSpacing: 1),
+                      textAlign: TextAlign.center),
                 ],
               ),
               const SizedBox(width: 12),
-              // Balão de fala
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.all(14),
@@ -233,33 +393,46 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
                       bottomLeft: Radius.circular(14),
                       bottomRight: Radius.circular(14),
                     ),
-                    border: Border.all(color: color.withValues(alpha: 0.25)),
+                    border:
+                        Border.all(color: color.withValues(alpha: 0.25)),
                   ),
-                  child: Text(scene.text,
-                      style: GoogleFonts.roboto(
-                          fontSize: 14, color: AppColors.textPrimary,
-                          height: 1.6, fontStyle: FontStyle.italic)),
+                  child: Text(
+                    scene.text,
+                    style: GoogleFonts.roboto(
+                        fontSize: 14,
+                        color: AppColors.textPrimary,
+                        height: 1.6,
+                        fontStyle: FontStyle.italic),
+                  ),
                 ),
               ),
             ],
           ),
-          // Inputs
           if (scene.isNameInput) ...[
             const SizedBox(height: 16),
             _buildNameInput(),
             const SizedBox(height: 12),
             _buildBtn('Confirmar', _advance),
           ],
-          if (scene.isNarrativeChoice) ...[
-            _buildNarrativeChoice(),
-          ],
-          if (scene.isHabitChoice) ...[
-            const SizedBox(height: 16),
-            _buildHabitChoice(),
-            if (_selectedHabit != null) ...[
-              const SizedBox(height: 12),
-              _buildBtn('Despertar', _advance),
+          if (scene.isDirectChoice) ...[
+            const SizedBox(height: 14),
+            _buildDirectChoice(),
+            if (_directChoice != null) ...[
+              const SizedBox(height: 10),
+              _buildBtn('Continuar', _advance),
             ],
+          ],
+          if (scene.isScenario) ...[
+            const SizedBox(height: 14),
+            _buildScenarioChoice(scene.scenarioIndex!),
+            if (_scenarioChoices[scene.scenarioIndex!] != null) ...[
+              const SizedBox(height: 10),
+              _buildBtn('Seguir adiante', _advance),
+            ],
+          ],
+          if (scene.isFinish) ...[
+            const SizedBox(height: 14),
+            _buildBtn(_finishing ? 'Despertando…' : 'Despertar', _advance),
           ],
         ],
       ),
@@ -267,100 +440,225 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
   }
 
   Widget _buildNameInput() => TextField(
-    controller: _nameCtrl,
-    style: GoogleFonts.cinzelDecorative(color: AppColors.textPrimary, fontSize: 16),
-    textAlign: TextAlign.center,
-    autofocus: false,
-    decoration: InputDecoration(
-      hintText: 'Nome da sua Sombra',
-      hintStyle: GoogleFonts.roboto(color: AppColors.textMuted),
-      filled: true, fillColor: Colors.white.withValues(alpha: 0.05),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.purple)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.purple, width: 1.5)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
-    ),
-  );
-
-  Widget _buildNarrativeChoice() => Column(
-    children: [
-      Padding(
-        padding: const EdgeInsets.only(bottom: 12, top: 4),
-        child: Text('Como prefere receber as mensagens de Caelum?',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.roboto(fontSize: 13, color: AppColors.textSecondary)),
-      ),
-      ...['longa', 'curta'].map((mode) {
-        final selected = _narrativeMode == mode;
-        return GestureDetector(
-          onTap: () async {
-            setState(() => _narrativeMode = mode);
-            await Future.delayed(const Duration(milliseconds: 300));
-            _advance();
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: double.infinity,
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              border: Border.all(color: selected ? AppColors.purple : AppColors.border, width: selected ? 1.5 : 1),
+        controller: _nameCtrl,
+        style: GoogleFonts.cinzelDecorative(
+            color: AppColors.textPrimary, fontSize: 16),
+        textAlign: TextAlign.center,
+        autofocus: false,
+        decoration: InputDecoration(
+          hintText: 'Nome da sua Sombra',
+          hintStyle: GoogleFonts.roboto(color: AppColors.textMuted),
+          filled: true,
+          fillColor: Colors.white.withValues(alpha: 0.05),
+          border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              color: selected ? AppColors.purple.withValues(alpha: 0.1) : Colors.transparent,
-            ),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(mode == 'longa' ? 'Narrativa Completa' : 'Narrativa Direta',
-                  style: GoogleFonts.cinzelDecorative(fontSize: 12, color: selected ? AppColors.textPrimary : AppColors.textSecondary)),
-              const SizedBox(height: 3),
-              Text(mode == 'longa' ? 'Imersão total. Caelum fala com profundidade.' : 'Objetivo e direto. Menos texto, mais ação.',
-                  style: GoogleFonts.roboto(fontSize: 11, color: AppColors.textMuted)),
-            ]),
-          ),
-        );
-      }),
-    ],
-  );
-
-  Widget _buildHabitChoice() => Column(
-    children: _habits.map((h) {
-      final selected = _selectedHabit == h.$1;
-      return GestureDetector(
-        onTap: () => setState(() => _selectedHabit = h.$1),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          width: double.infinity,
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            border: Border.all(color: selected ? AppColors.gold : AppColors.border, width: selected ? 1.5 : 1),
-            borderRadius: BorderRadius.circular(12),
-            color: selected ? AppColors.gold.withValues(alpha: 0.08) : Colors.white.withValues(alpha: 0.03),
-          ),
-          child: Row(children: [
-            Text(h.$2, style: const TextStyle(fontSize: 20)),
-            const SizedBox(width: 12),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(h.$1, style: GoogleFonts.cinzelDecorative(fontSize: 12, color: selected ? AppColors.gold : AppColors.textPrimary)),
-              Text(h.$4, style: GoogleFonts.roboto(fontSize: 10, color: AppColors.textMuted)),
-            ])),
-            if (selected) const Icon(Icons.check_circle, color: AppColors.gold, size: 18),
-          ]),
+              borderSide: const BorderSide(color: AppColors.purple)),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide:
+                  const BorderSide(color: AppColors.purple, width: 1.5)),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border)),
         ),
       );
-    }).toList(),
-  );
+
+  Widget _buildDirectChoice() => Column(
+        children: MissionCategory.values.map((cat) {
+          final selected = _directChoice == cat;
+          return _ChoiceTile(
+            label: cat.display,
+            hint: _pillarHint(cat),
+            selected: selected,
+            onTap: () => setState(() => _directChoice = cat),
+          );
+        }).toList(),
+      );
+
+  Widget _buildScenarioChoice(int index) {
+    final scenario = AwakeningCeremony.scenarios[index];
+    return Column(
+      children: scenario.options.map((opt) {
+        final selected = _scenarioChoices[index] == opt.mapsTo;
+        return _ChoiceTile(
+          label: opt.label,
+          hint: null,
+          selected: selected,
+          onTap: () => setState(() => _scenarioChoices[index] = opt.mapsTo),
+        );
+      }).toList(),
+    );
+  }
+
+  String _pillarHint(MissionCategory cat) => switch (cat) {
+        MissionCategory.fisico => 'Corpo que resiste. Força forjada na carne.',
+        MissionCategory.mental => 'Mente afiada. Estudo e estratégia.',
+        MissionCategory.espiritual =>
+          'Silêncio interno. Rituais e presença.',
+        MissionCategory.vitalismo =>
+          'Ciclo entre os pilares. Fluxo que integra.',
+      };
 
   Widget _buildBtn(String label, VoidCallback onTap) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      width: double.infinity, height: 50,
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.purple, width: 1.5),
-        borderRadius: BorderRadius.circular(12),
-        color: AppColors.purple.withValues(alpha: 0.15),
-      ),
-      child: Center(child: Text(label, style: GoogleFonts.cinzelDecorative(fontSize: 13, color: AppColors.textPrimary, letterSpacing: 1.5))),
+        onTap: _finishing ? null : onTap,
+        child: Container(
+          width: double.infinity,
+          height: 50,
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.purple, width: 1.5),
+            borderRadius: BorderRadius.circular(12),
+            color: AppColors.purple.withValues(alpha: 0.15),
+          ),
+          child: Center(
+            child: Text(label,
+                style: GoogleFonts.cinzelDecorative(
+                    fontSize: 13,
+                    color: AppColors.textPrimary,
+                    letterSpacing: 1.5)),
+          ),
+        ),
+      );
+}
+
+/// Cerimônia do Awakening 14.6a — lógica pura extraída do widget pra ser
+/// coberta por testes unitários. A tela consome diretamente via chamadas
+/// estáticas, mantendo `AwakeningScreen` enxuto.
+class AwakeningCeremony {
+  const AwakeningCeremony._();
+
+  /// Votação ponderada: direta pesa 2, cada cenário pesa 1. Empate é
+  /// resolvido pela escolha direta (sempre entra no pool de empatados
+  /// por construção).
+  static MissionCategory compilePrimaryFocus({
+    required MissionCategory direct,
+    required List<MissionCategory> scenarios,
+  }) {
+    final votes = <MissionCategory, int>{for (final c in MissionCategory.values) c: 0};
+    votes[direct] = (votes[direct] ?? 0) + 2;
+    for (final s in scenarios) {
+      votes[s] = (votes[s] ?? 0) + 1;
+    }
+    var maxVotes = -1;
+    final leaders = <MissionCategory>[];
+    for (final entry in votes.entries) {
+      if (entry.value > maxVotes) {
+        maxVotes = entry.value;
+        leaders
+          ..clear()
+          ..add(entry.key);
+      } else if (entry.value == maxVotes) {
+        leaders.add(entry.key);
+      }
+    }
+    if (leaders.contains(direct)) return direct;
+    return leaders.first;
+  }
+
+  static InitialMissionSpec initialMissionFor(MissionCategory cat) =>
+      switch (cat) {
+        MissionCategory.fisico => const InitialMissionSpec(
+            missionKey: 'awakening_primeira_forja',
+            goalLabel: 'A Primeira Forja — 20 flexões',
+            targetValue: 20,
+          ),
+        MissionCategory.mental => const InitialMissionSpec(
+            missionKey: 'awakening_primeiro_veu',
+            goalLabel: 'O Primeiro Véu — ler 15 páginas',
+            targetValue: 15,
+          ),
+        MissionCategory.espiritual => const InitialMissionSpec(
+            missionKey: 'awakening_primeiro_silencio',
+            goalLabel: 'O Primeiro Silêncio — 10 minutos em silêncio',
+            targetValue: 10,
+          ),
+        MissionCategory.vitalismo => const InitialMissionSpec(
+            missionKey: 'awakening_primeiro_ciclo',
+            goalLabel:
+                'O Primeiro Ciclo — 10 flexões + 10 páginas + 10 min silêncio',
+            targetValue: 30,
+          ),
+      };
+
+  static const List<AwakeningScenario> scenarios = [
+    AwakeningScenario(
+      prompt:
+          '"Uma besta ferida — teu companheiro de caminho — agoniza aos teus pés. O que fazes?"',
+      options: [
+        AwakeningOption(
+            label: 'Pôr fim ao sofrimento de uma vez, com tuas próprias mãos',
+            mapsTo: MissionCategory.fisico),
+        AwakeningOption(
+            label: 'Abandonar o aliado e seguir adiante',
+            mapsTo: MissionCategory.mental),
+        AwakeningOption(
+            label: 'Tentar curá-lo — não sabes ainda como',
+            mapsTo: MissionCategory.espiritual),
+        AwakeningOption(
+            label: 'Velar ao lado dele até o ciclo se fechar',
+            mapsTo: MissionCategory.vitalismo),
+      ],
     ),
-  );
+    AwakeningScenario(
+      prompt:
+          '"Uma torre em ruínas ergue-se à frente. Na base, gravado em pedra: \'Só os dignos entram\'. E agora?"',
+      options: [
+        AwakeningOption(
+            label: 'Forçar a entrada a golpes — a dignidade se prova na ação',
+            mapsTo: MissionCategory.fisico),
+        AwakeningOption(
+            label: 'Decifrar a inscrição antes de tocar em nada',
+            mapsTo: MissionCategory.mental),
+        AwakeningOption(
+            label: 'Ajoelhar e pedir permissão ao que habita ali',
+            mapsTo: MissionCategory.espiritual),
+        AwakeningOption(
+            label: 'Rodear a torre até achar outra passagem',
+            mapsTo: MissionCategory.vitalismo),
+      ],
+    ),
+    AwakeningScenario(
+      prompt:
+          '"Uma entidade sem forma te oferece poder em troca de um fragmento da tua alma. Resposta?"',
+      options: [
+        AwakeningOption(
+            label: 'Aceitar e carregar o peso',
+            mapsTo: MissionCategory.fisico),
+        AwakeningOption(
+            label: 'Negociar as condições, frase por frase',
+            mapsTo: MissionCategory.mental),
+        AwakeningOption(
+            label: 'Recusar — a alma não é moeda',
+            mapsTo: MissionCategory.espiritual),
+        AwakeningOption(
+            label: 'Provar o pacto e ver até onde vai',
+            mapsTo: MissionCategory.vitalismo),
+      ],
+    ),
+  ];
+}
+
+class InitialMissionSpec {
+  final String missionKey;
+  final String goalLabel;
+  final int targetValue;
+
+  const InitialMissionSpec({
+    required this.missionKey,
+    required this.goalLabel,
+    required this.targetValue,
+  });
+}
+
+class AwakeningScenario {
+  final String prompt;
+  final List<AwakeningOption> options;
+  const AwakeningScenario({required this.prompt, required this.options});
+}
+
+class AwakeningOption {
+  final String label;
+  final MissionCategory mapsTo;
+  const AwakeningOption({required this.label, required this.mapsTo});
 }
 
 class _Scene {
@@ -368,35 +666,120 @@ class _Scene {
   final String text;
   final _Mood mood;
   final bool isNameInput;
-  final bool isNarrativeChoice;
-  final bool isHabitChoice;
+  final bool isDirectChoice;
+  final bool isScenario;
+  final int? scenarioIndex;
+  final bool isFinish;
   final bool isVoid;
-  const _Scene({required this.npc, required this.text, required this.mood,
-    this.isNameInput = false, this.isNarrativeChoice = false,
-    this.isHabitChoice = false, this.isVoid = false});
+  const _Scene({
+    required this.npc,
+    required this.text,
+    required this.mood,
+    this.isNameInput = false,
+    this.isDirectChoice = false,
+    this.isScenario = false,
+    this.scenarioIndex,
+    this.isFinish = false,
+    this.isVoid = false,
+  });
 }
 
-enum _Mood { ruins, npc, identity, ritual }
+enum _Mood { ruins, npc, identity, crossroads, scenario, conclusion }
+
+class _ChoiceTile extends StatelessWidget {
+  final String label;
+  final String? hint;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ChoiceTile({
+    required this.label,
+    required this.hint,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(
+              color: selected ? AppColors.gold : AppColors.border,
+              width: selected ? 1.5 : 1),
+          borderRadius: BorderRadius.circular(12),
+          color: selected
+              ? AppColors.gold.withValues(alpha: 0.08)
+              : Colors.white.withValues(alpha: 0.03),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.cinzelDecorative(
+                        fontSize: 12,
+                        color:
+                            selected ? AppColors.gold : AppColors.textPrimary),
+                  ),
+                  if (hint != null) ...[
+                    const SizedBox(height: 3),
+                    Text(hint!,
+                        style: GoogleFonts.roboto(
+                            fontSize: 10, color: AppColors.textMuted)),
+                  ],
+                ],
+              ),
+            ),
+            if (selected)
+              const Icon(Icons.check_circle,
+                  color: AppColors.gold, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _SceneBg extends StatefulWidget {
   final _Mood mood;
-  const _SceneBg({super.key, required this.mood});
-  @override State<_SceneBg> createState() => _SceneBgState();
+  const _SceneBg({required this.mood});
+  @override
+  State<_SceneBg> createState() => _SceneBgState();
 }
 
-class _SceneBgState extends State<_SceneBg> with SingleTickerProviderStateMixin {
+class _SceneBgState extends State<_SceneBg>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 8))..repeat(reverse: true);
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(seconds: 8))
+      ..repeat(reverse: true);
   }
-  @override void dispose() { _ctrl.dispose(); super.dispose(); }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
-    animation: _ctrl,
-    builder: (_, __) => CustomPaint(painter: _BgPainter(mood: widget.mood, t: _ctrl.value), child: Container()),
-  );
+        animation: _ctrl,
+        builder: (_, __) => CustomPaint(
+            painter: _BgPainter(mood: widget.mood, t: _ctrl.value),
+            child: Container()),
+      );
 }
 
 class _BgPainter extends CustomPainter {
@@ -409,20 +792,35 @@ class _BgPainter extends CustomPainter {
     final p = Paint();
     switch (mood) {
       case _Mood.ruins:
-        _bg(canvas, size, p, const Color(0xFF0A0015), const Color(0xFF1A0A2E));
+        _bg(canvas, size, p, const Color(0xFF0A0015),
+            const Color(0xFF1A0A2E));
         _drawRuins(canvas, size, p);
         break;
       case _Mood.npc:
-        _bg(canvas, size, p, const Color(0xFF0D0010), const Color(0xFF120820));
+        _bg(canvas, size, p, const Color(0xFF0D0010),
+            const Color(0xFF120820));
         _glow(canvas, size, p, const Color(0xFF4A1080));
         break;
       case _Mood.identity:
-        _bg(canvas, size, p, const Color(0xFF080010), const Color(0xFF0F0520));
+        _bg(canvas, size, p, const Color(0xFF080010),
+            const Color(0xFF0F0520));
         _glow(canvas, size, p, const Color(0xFF7C3AED));
         _goldGlow(canvas, size, p);
         break;
-      case _Mood.ritual:
-        _bg(canvas, size, p, const Color(0xFF0A0005), const Color(0xFF1A0530));
+      case _Mood.crossroads:
+        _bg(canvas, size, p, const Color(0xFF0A0010),
+            const Color(0xFF180A30));
+        _glow(canvas, size, p, const Color(0xFF8B3DFF));
+        _goldGlow(canvas, size, p);
+        break;
+      case _Mood.scenario:
+        _bg(canvas, size, p, const Color(0xFF0B0014),
+            const Color(0xFF1A0628));
+        _glow(canvas, size, p, const Color(0xFF5A1F90));
+        break;
+      case _Mood.conclusion:
+        _bg(canvas, size, p, const Color(0xFF0A0005),
+            const Color(0xFF1A0530));
         _glow(canvas, size, p, const Color(0xFF8B3DFF));
         _goldGlow(canvas, size, p);
         break;
@@ -430,30 +828,41 @@ class _BgPainter extends CustomPainter {
   }
 
   void _bg(Canvas c, Size s, Paint p, Color top, Color bot) {
-    p.shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [top, bot]).createShader(Offset.zero & s);
+    p.shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [top, bot])
+        .createShader(Offset.zero & s);
     c.drawRect(Offset.zero & s, p);
     p.shader = null;
   }
 
   void _drawRuins(Canvas c, Size s, Paint p) {
-    // Fragmentos de ruínas
     p.color = const Color(0xFF3D1F6E).withValues(alpha: 0.4 + t * 0.2);
     p.strokeWidth = 1.5;
     p.style = PaintingStyle.stroke;
     final lines = [
       [Offset(0, s.height * 0.15), Offset(s.width * 0.4, s.height * 0.12)],
-      [Offset(s.width * 0.4, s.height * 0.12), Offset(s.width * 0.7, s.height * 0.18)],
-      [Offset(s.width * 0.7, s.height * 0.18), Offset(s.width, s.height * 0.14)],
-      // Pilares
+      [
+        Offset(s.width * 0.4, s.height * 0.12),
+        Offset(s.width * 0.7, s.height * 0.18)
+      ],
+      [
+        Offset(s.width * 0.7, s.height * 0.18),
+        Offset(s.width, s.height * 0.14)
+      ],
       [Offset(s.width * 0.1, s.height * 0.12), Offset(s.width * 0.1, s.height * 0.45)],
       [Offset(s.width * 0.9, s.height * 0.14), Offset(s.width * 0.9, s.height * 0.42)],
       [Offset(s.width * 0.4, s.height * 0.08), Offset(s.width * 0.4, s.height * 0.35)],
     ];
-    for (final l in lines) c.drawLine(l[0], l[1], p);
+    for (final l in lines) {
+      c.drawLine(l[0], l[1], p);
+    }
     p.style = PaintingStyle.fill;
     p.color = const Color(0xFF8B3DFF).withValues(alpha: 0.3 + t * 0.3);
-    for (final l in lines) c.drawCircle(l[0], 2 + t * 1.5, p);
-    // Partículas
+    for (final l in lines) {
+      c.drawCircle(l[0], 2 + t * 1.5, p);
+    }
     p.maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
     for (var i = 0; i < 8; i++) {
       final x = s.width * (0.1 + i * 0.1 + t * 0.02);
@@ -482,7 +891,6 @@ class _BgPainter extends CustomPainter {
   bool shouldRepaint(covariant _BgPainter o) => o.t != t || o.mood != mood;
 }
 
-// Indicador visual pulsante que sinaliza "toque para continuar"
 class _PulsingTapHint extends StatefulWidget {
   @override
   State<_PulsingTapHint> createState() => _PulsingTapHintState();
@@ -518,7 +926,8 @@ class _PulsingTapHintState extends State<_PulsingTapHint>
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 28, height: 28,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: AppColors.textMuted, width: 1),
@@ -531,4 +940,3 @@ class _PulsingTapHintState extends State<_PulsingTapHint>
     );
   }
 }
-

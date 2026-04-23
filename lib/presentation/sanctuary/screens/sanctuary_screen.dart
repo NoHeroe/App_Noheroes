@@ -207,13 +207,9 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       isVitalistWithoutAffinity = owned.isEmpty;
     }
 
-    // Sprint 3.1 Bloco 9 — phase13 precisa de hasCalibrated pra decidir
-    // se dispara o quiz. Consulta barata (1 query single-row).
-    final hasCalibrated = await ref
-        .read(missionPreferencesServiceProvider)
-        .hasValidPreferences(player.id);
-    if (!mounted) return;
-
+    // Sprint 3.1 Bloco 14.6a — `hasCalibrated` deixa de ser consultado
+    // aqui: a calibração agora é feita no `AwakeningScreen` (onboarding),
+    // e `TutorialManager.runAll` não dispara mais o quiz via phase13.
     await TutorialManager.runAll(
       context,
       ref: ref,
@@ -222,7 +218,6 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       hasClass: hasClass,
       hasFaction: hasFaction,
       hasPlaystyle: hasPlaystyle,
-      hasCalibrated: hasCalibrated,
       isVitalistWithoutAffinity: isVitalistWithoutAffinity,
     );
   }
