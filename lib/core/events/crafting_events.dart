@@ -7,6 +7,7 @@ import 'app_event.dart';
 /// Emissão fica pra Bloco 7 (refactor CraftingService + EnchantService).
 
 class ItemCrafted extends AppEvent {
+  @override
   final int playerId;
   final String itemKey;
   final String recipeKey;
@@ -24,6 +25,7 @@ class ItemCrafted extends AppEvent {
 }
 
 class ItemEnchanted extends AppEvent {
+  @override
   final int playerId;
 
   /// Key do item base que recebeu a runa.

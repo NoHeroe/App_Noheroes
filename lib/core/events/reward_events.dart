@@ -11,6 +11,7 @@ import 'app_event.dart';
 /// `rewardResolvedJson` carrega a reward após SOULSLIKE + random resolver
 /// (ADR 0013 + 0017) — ou seja, valores finais, não os declarados no JSON.
 class RewardGranted extends AppEvent {
+  @override
   final int playerId;
   final String rewardResolvedJson;
 
@@ -28,6 +29,7 @@ class RewardGranted extends AppEvent {
 /// pelo `AchievementsService` (Bloco 8) antes do emit — idempotência
 /// garantida pela PK composta da tabela.
 class AchievementUnlocked extends AppEvent {
+  @override
   final int playerId;
   final String achievementKey;
 

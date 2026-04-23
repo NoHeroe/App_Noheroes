@@ -14,6 +14,7 @@ import 'app_event.dart';
 /// Disparado no momento em que a entrada nasce em `player_mission_progress`.
 class MissionStarted extends AppEvent {
   final String missionKey;
+  @override
   final int playerId;
 
   /// `internal` | `real` | `individual` | `mista` (ADR 0014).
@@ -39,6 +40,7 @@ class MissionStarted extends AppEvent {
 /// fica a cargo de quem consome (UI normalmente debouncia pra animação).
 class MissionProgressed extends AppEvent {
   final String missionKey;
+  @override
   final int playerId;
   final int currentValue;
   final int targetValue;
@@ -61,6 +63,7 @@ class MissionProgressed extends AppEvent {
 /// separado, disparado pelo `RewardGrantService` (Bloco 5).
 class MissionCompleted extends AppEvent {
   final String missionKey;
+  @override
   final int playerId;
 
   /// JSON da reward resolvida (após SOULSLIKE + rank resolver). Mantido como
@@ -84,6 +87,7 @@ class MissionCompleted extends AppEvent {
 /// parcial (parcial = falha silenciosa nelas).
 class MissionPartial extends AppEvent {
   final String missionKey;
+  @override
   final int playerId;
 
   /// Percentual final (25..299 inclusive — 300% é limite superior; 100 é
@@ -116,6 +120,7 @@ class MissionFailureReason {
 /// Missão falhou. `reason` usa os valores canônicos de [MissionFailureReason].
 class MissionFailed extends AppEvent {
   final String missionKey;
+  @override
   final int playerId;
   final String reason;
 
@@ -135,6 +140,7 @@ class MissionFailed extends AppEvent {
 /// programático). `MissionAssignmentService` do Bloco 14 escuta pra
 /// recalcular pools.
 class MissionPreferencesChanged extends AppEvent {
+  @override
   final int playerId;
 
   MissionPreferencesChanged({required this.playerId, super.at});

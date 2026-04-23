@@ -11,6 +11,7 @@ import 'app_event.dart';
 /// ambos pra badges de consistência.
 
 class StreakMaintained extends AppEvent {
+  @override
   final int playerId;
 
   /// Streak atual após o incremento (em dias).
@@ -28,6 +29,7 @@ class StreakMaintained extends AppEvent {
 }
 
 class StreakBroken extends AppEvent {
+  @override
   final int playerId;
 
   /// Streak imediatamente antes da quebra (em dias). Útil pra badge "era

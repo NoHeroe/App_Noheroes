@@ -107,8 +107,9 @@ class MissionProgressService {
 
   Future<void> _onEvent(AppEvent event) async {
     if (_disposed) return;
-    // Descobrir playerId do evento pra filtrar missões candidatas.
-    final playerId = _extractPlayerId(event);
+    // Bloco 7 pré-clean: usa o getter `playerId` abstrato da AppEvent
+    // (Bloco 2) — sem `as dynamic` fallback.
+    final playerId = event.playerId;
     if (playerId == null) return;
     final active = await _repo.findActive(playerId);
     if (_disposed) return;
@@ -197,17 +198,4 @@ class MissionProgressService {
         rewardDeclared: m.reward,
         metaJson: m.metaJson,
       );
-
-  /// Todos os AppEvent do Bloco 2 têm `playerId`. Extrai pra filtrar
-  /// missões do jogador correto antes de percorrer a lista ativa.
-  int? _extractPlayerId(AppEvent event) {
-    // Import recursivo seria feio aqui; uso dynamic dispatch simples.
-    final e = event as dynamic;
-    try {
-      final pid = e.playerId;
-      return pid is int ? pid : null;
-    } catch (_) {
-      return null;
-    }
-  }
 }

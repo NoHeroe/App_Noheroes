@@ -9,6 +9,7 @@ import 'app_event.dart';
 /// `/mission_calibration`. Também dispara assign das missões diárias de
 /// classe pelo `QuestAdmissionService` refatorado (Bloco 7).
 class ClassSelected extends AppEvent {
+  @override
   final int playerId;
   final String classId;
 
@@ -26,6 +27,7 @@ class ClassSelected extends AppEvent {
 /// Jogador entrou numa facção (admissão aprovada em `active_faction_quests`
 /// ou migração de `pending:X` pra `X` em `players.faction_type`).
 class FactionJoined extends AppEvent {
+  @override
   final int playerId;
   final String factionId;
 
@@ -43,6 +45,7 @@ class FactionJoined extends AppEvent {
 /// Jogador saiu de uma facção (acessível a partir do nível 7 conforme plano
 /// §Admissão). Pode cascatear em `FactionJoined` se troca imediata.
 class FactionLeft extends AppEvent {
+  @override
   final int playerId;
   final String factionId;
 

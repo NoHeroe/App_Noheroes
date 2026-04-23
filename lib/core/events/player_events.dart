@@ -5,6 +5,7 @@ import 'app_event.dart';
 /// Jogador subiu de nível. `previousLevel` facilita diferenciais (ex:
 /// milestone popup quando passa de 24 pra 25 libera vitalismo avançado).
 class LevelUp extends AppEvent {
+  @override
   final int playerId;
   final int newLevel;
   final int previousLevel;
@@ -37,6 +38,7 @@ class GoldSink {
 /// forge, enchant, ritual, etc.). Strategies internal (Bloco 6) escutam
 /// pra quests tipo "gaste 5000 ouro".
 class GoldSpent extends AppEvent {
+  @override
   final int playerId;
   final int amount;
 
@@ -65,6 +67,7 @@ class GemSink {
 }
 
 class GemsSpent extends AppEvent {
+  @override
   final int playerId;
   final int amount;
 
