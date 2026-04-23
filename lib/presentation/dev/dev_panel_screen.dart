@@ -1,20 +1,26 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:drift/drift.dart' show Value;
+import 'package:drift/drift.dart' show Value, Variable;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../app/providers.dart';
+import '../../core/config/faction_alliances.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/events/app_event.dart';
 import '../../core/utils/guild_rank.dart';
 import '../../data/database/daos/player_dao.dart';
 import '../../data/database/app_database.dart';
-import '../../data/database/tables/players_table.dart';
 import '../../data/datasources/local/tutorial_service.dart';
+import '../../domain/enums/intensity.dart';
 import '../../domain/enums/item_type.dart';
+import '../../domain/enums/mission_category.dart';
 import '../../domain/enums/source_type.dart';
 import '../../domain/models/item_spec.dart';
 import '../../domain/models/player_snapshot.dart';
+import '../../domain/services/individual_creation_service.dart';
 import '../shared/widgets/app_snack.dart';
 
 class DevPanelScreen extends ConsumerStatefulWidget {
@@ -30,8 +36,40 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
   final _gemsCtrl  = TextEditingController();
   bool _saving = false;
 
+  // Sprint 3.1 Bloco 14 — Events inspector. Ring buffer 20 entries FIFO,
+  // captura todos eventos do bus via .on<AppEvent>() (base class). State
+  // local do widget — não persiste ao sair do Dev Panel (aceitável pra
+  // debug).
+  static const int _kEventBufferMax = 20;
+  final List<_EventLogEntry> _eventBuffer = [];
+  StreamSubscription<AppEvent>? _eventSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // Assina post-frame pra garantir que ProviderScope está pronto.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final bus = ref.read(appEventBusProvider);
+      _eventSub = bus.on<AppEvent>().listen((e) {
+        if (!mounted) return;
+        setState(() {
+          _eventBuffer.insert(0, _EventLogEntry(
+            at: DateTime.now(),
+            type: e.runtimeType.toString(),
+            repr: e.toString(),
+          ));
+          if (_eventBuffer.length > _kEventBufferMax) {
+            _eventBuffer.removeLast();
+          }
+        });
+      });
+    });
+  }
+
   @override
   void dispose() {
+    _eventSub?.cancel();
     _levelCtrl.dispose();
     _goldCtrl.dispose();
     _xpCtrl.dispose();
@@ -217,6 +255,59 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
             const SizedBox(height: 10),
             _actionBtn('Resetar quests completas',
                 AppColors.hp, _resetQuestsCompleted),
+            const SizedBox(height: 24),
+
+            // ────────────────── Sprint 3.1 Bloco 14 ──────────────────
+            _section('MISSÕES (Sprint 3.1)'),
+            _actionBtn('Reset daily now (bypass 24h)',
+                AppColors.purple, _forceDailyReset),
+            const SizedBox(height: 10),
+            _actionBtn('Reset weekly now (bypass 7d)',
+                AppColors.purple, _forceWeeklyReset),
+            const SizedBox(height: 10),
+            _actionBtn('Forçar complete primeira missão ativa',
+                AppColors.shadowAscending, _forceCompleteFirst),
+            const SizedBox(height: 10),
+            _actionBtn('Forçar fail primeira missão ativa',
+                AppColors.hp, _forceFailFirst),
+            const SizedBox(height: 24),
+
+            _section('CALIBRAÇÃO (Bloco 9)'),
+            _actionBtn('Reset preferences + phase13 flag',
+                AppColors.hp, _resetPreferences),
+            const SizedBox(height: 24),
+
+            _section('CURRENCY (recálculo correto)'),
+            _actionBtn('+100 gold', AppColors.gold, _addGold100),
+            const SizedBox(height: 10),
+            _actionBtn('+50 gems', AppColors.purple, _addGems50),
+            const SizedBox(height: 10),
+            _actionBtn('+200 XP (via addXp — recalcula level/HP)',
+                AppColors.shadowAscending, _addXp200),
+            const SizedBox(height: 24),
+
+            _section('REPUTAÇÃO FACÇÕES'),
+            for (final f in kKnownFactions) _buildFactionRepRow(f),
+            const SizedBox(height: 24),
+
+            _section('RANK shortcuts (debug, sem custo)'),
+            _actionBtn('Promover +1 rank',
+                AppColors.gold, _promoteRank),
+            const SizedBox(height: 10),
+            _actionBtn('Rebaixar -1 rank',
+                AppColors.hp, _demoteRank),
+            const SizedBox(height: 24),
+
+            _section('INDIVIDUAIS'),
+            _actionBtn('Criar individual random',
+                AppColors.purple, _createRandomIndividual),
+            const SizedBox(height: 10),
+            _actionBtn('Deletar TODAS individuais ativas',
+                AppColors.hp, _deleteAllIndividuals),
+            const SizedBox(height: 24),
+
+            _section('EVENTS INSPECTOR (últimos $_kEventBufferMax)'),
+            _buildEventsList(),
           ],
         ),
       ),
@@ -602,6 +693,293 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
               style: GoogleFonts.roboto(fontSize: 13, color: color)),
         ),
       );
+
+  // ────────────── Sprint 3.1 Bloco 14 — handlers ───────────────────
+
+  Future<void> _forceDailyReset() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final db = ref.read(appDatabaseProvider);
+    // Bypass check 24h: seta last_daily_reset=null.
+    await db.customUpdate(
+      'UPDATE players SET last_daily_reset = NULL WHERE id = ?',
+      variables: [Variable.withInt(player.id)],
+      updates: {db.playersTable},
+    );
+    final result = await ref.read(dailyResetServiceProvider).checkAndApply(player.id);
+    if (!mounted) return;
+    AppSnack.success(context,
+        'Daily reset: ${result.processed} processadas / '
+        '${result.reassignedDaily} novas daily / ${result.reassignedClass} novas classe');
+  }
+
+  Future<void> _forceWeeklyReset() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final db = ref.read(appDatabaseProvider);
+    await db.customUpdate(
+      'UPDATE players SET last_weekly_reset = NULL WHERE id = ?',
+      variables: [Variable.withInt(player.id)],
+      updates: {db.playersTable},
+    );
+    final result = await ref.read(weeklyResetServiceProvider).checkAndApply(player.id);
+    if (!mounted) return;
+    AppSnack.success(context,
+        'Weekly reset: ${result.processed} processadas / reassigned=${result.reassigned}');
+  }
+
+  Future<void> _forceCompleteFirst() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final repo = ref.read(missionRepositoryProvider);
+    final active = await repo.findActive(player.id);
+    if (active.isEmpty) {
+      if (!mounted) return;
+      AppSnack.error(context, 'Sem missões ativas');
+      return;
+    }
+    final first = active.first;
+    await repo.markCompleted(first.id, at: DateTime.now(), rewardClaimed: true);
+    if (!mounted) return;
+    AppSnack.success(context, 'Completada: ${first.missionKey}');
+  }
+
+  Future<void> _forceFailFirst() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final repo = ref.read(missionRepositoryProvider);
+    final active = await repo.findActive(player.id);
+    if (active.isEmpty) {
+      if (!mounted) return;
+      AppSnack.error(context, 'Sem missões ativas');
+      return;
+    }
+    final first = active.first;
+    await repo.markFailed(first.id, at: DateTime.now());
+    if (!mounted) return;
+    AppSnack.success(context, 'Falhou: ${first.missionKey}');
+  }
+
+  Future<void> _resetPreferences() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final repo = ref.read(missionPreferencesRepositoryProvider);
+    await repo.deleteForPlayer(player.id);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(
+        'tutorial_${TutorialPhase.phase13_mission_calibration.name}');
+    if (!mounted) return;
+    AppSnack.success(context, 'Prefs zeradas + phase13 flag resetada');
+  }
+
+  Future<void> _addGold100() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final db = ref.read(appDatabaseProvider);
+    await PlayerDao(db).addGold(player.id, 100);
+    if (!mounted) return;
+    AppSnack.success(context, '+100 ouro');
+  }
+
+  Future<void> _addGems50() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final db = ref.read(appDatabaseProvider);
+    await db.customUpdate(
+      'UPDATE players SET gems = gems + 50 WHERE id = ?',
+      variables: [Variable.withInt(player.id)],
+      updates: {db.playersTable},
+    );
+    if (!mounted) return;
+    AppSnack.success(context, '+50 gemas');
+  }
+
+  Future<void> _addXp200() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final db = ref.read(appDatabaseProvider);
+    final levelUp = await PlayerDao(db).addXp(player.id, 200);
+    if (levelUp != null) {
+      ref.read(appEventBusProvider).publish(levelUp);
+    }
+    if (!mounted) return;
+    AppSnack.success(context,
+        levelUp == null ? '+200 XP' : '+200 XP → level ${levelUp.newLevel}');
+  }
+
+  Future<void> _promoteRank() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final current = GuildRankSystem.fromString(player.guildRank.toLowerCase());
+    final order = [GuildRank.e, GuildRank.d, GuildRank.c,
+      GuildRank.b, GuildRank.a, GuildRank.s];
+    final idx = order.indexOf(current);
+    if (idx < 0 || idx == order.length - 1) {
+      if (!mounted) return;
+      AppSnack.error(context, 'Rank máximo já é S');
+      return;
+    }
+    await _setRank(order[idx + 1]);
+  }
+
+  Future<void> _demoteRank() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final current = GuildRankSystem.fromString(player.guildRank.toLowerCase());
+    final order = [GuildRank.e, GuildRank.d, GuildRank.c,
+      GuildRank.b, GuildRank.a, GuildRank.s];
+    final idx = order.indexOf(current);
+    if (idx <= 0) {
+      if (!mounted) return;
+      AppSnack.error(context, 'Rank mínimo já é E');
+      return;
+    }
+    await _setRank(order[idx - 1]);
+  }
+
+  Future<void> _setRank(GuildRank newRank) async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final db = ref.read(appDatabaseProvider);
+    await (db.update(db.playersTable)
+          ..where((t) => t.id.equals(player.id)))
+        .write(PlayersTableCompanion(guildRank: Value(newRank.name)));
+    final updated = await PlayerDao(db).findById(player.id);
+    if (!mounted) return;
+    ref.read(currentPlayerProvider.notifier).state = updated;
+    AppSnack.success(context, 'Rank → ${newRank.name.toUpperCase()}');
+  }
+
+  Future<void> _createRandomIndividual() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final service = ref.read(individualCreationServiceProvider);
+    final rank = GuildRankSystem.fromString(player.guildRank.toLowerCase());
+    try {
+      await service.createIndividual(IndividualCreationParams(
+        playerId: player.id,
+        name: 'Individual DEV ${DateTime.now().millisecondsSinceEpoch}',
+        description: 'Missão criada via Dev Panel pra teste.',
+        categoria: MissionCategory.fisico,
+        intensity: Intensity.medium,
+        frequencia: IndividualFrequency.dias,
+        quantityTarget: 10,
+        isRepetivel: false,
+        rank: rank,
+      ));
+      if (!mounted) return;
+      AppSnack.success(context, 'Individual random criada');
+    } on IndividualLimitExceededException catch (_) {
+      if (!mounted) return;
+      AppSnack.error(context, 'Limite 5 atingido');
+    }
+  }
+
+  Future<void> _deleteAllIndividuals() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final repo = ref.read(missionRepositoryProvider);
+    final active = await repo.findActive(player.id);
+    int deleted = 0;
+    for (final m in active) {
+      // Individuais têm modality individual. Marca failed diretamente
+      // (bypass de custo — Dev Panel é debug).
+      if (m.missionKey.startsWith('IND_USER_')) {
+        await repo.markFailed(m.id, at: DateTime.now());
+        deleted++;
+      }
+    }
+    if (!mounted) return;
+    AppSnack.success(context, '$deleted individuais falhadas');
+  }
+
+  Widget _buildFactionRepRow(String factionKey) {
+    return FutureBuilder<int>(
+      future: ref.read(factionReputationServiceProvider).current(
+          ref.read(currentPlayerProvider)?.id ?? 0, factionKey),
+      builder: (ctx, snap) {
+        final rep = snap.data ?? 50;
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 110,
+                child: Text(factionKey,
+                    style: GoogleFonts.roboto(
+                        fontSize: 12, color: AppColors.textSecondary)),
+              ),
+              SizedBox(
+                width: 40,
+                child: Text('$rep',
+                    style: GoogleFonts.cinzelDecorative(
+                        fontSize: 13, color: AppColors.gold)),
+              ),
+              TextButton(
+                onPressed: () => _adjustRep(factionKey, 10),
+                child: const Text('+10'),
+              ),
+              TextButton(
+                onPressed: () => _adjustRep(factionKey, -10),
+                child: const Text('-10'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _adjustRep(String factionKey, int delta) async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    await ref.read(factionReputationServiceProvider).adjustReputation(
+        playerId: player.id, factionId: factionKey, delta: delta);
+    if (!mounted) return;
+    setState(() {}); // rebuild FutureBuilder
+    AppSnack.success(context,
+        '$factionKey $delta (matrix propaga só se preenchida)');
+  }
+
+  Widget _buildEventsList() {
+    if (_eventBuffer.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Text('(sem eventos capturados ainda)',
+            style: GoogleFonts.roboto(
+                fontSize: 11, color: AppColors.textMuted)),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final entry in _eventBuffer)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Text(
+              '${entry.at.toIso8601String().substring(11, 19)}  '
+              '${entry.type}  ${entry.repr}',
+              style: GoogleFonts.robotoMono(
+                  fontSize: 10, color: AppColors.textSecondary),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Sprint 3.1 Bloco 14 — entry do events inspector ring buffer.
+class _EventLogEntry {
+  final DateTime at;
+  final String type;
+  final String repr;
+  const _EventLogEntry({
+    required this.at,
+    required this.type,
+    required this.repr,
+  });
 }
 
 class _RankChoice {

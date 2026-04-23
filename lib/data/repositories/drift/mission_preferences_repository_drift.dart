@@ -65,4 +65,11 @@ class MissionPreferencesRepositoryDrift
         .getSingleOrNull();
     return row?.updatesCount ?? 0;
   }
+
+  @override
+  Future<void> deleteForPlayer(int playerId) async {
+    await (_db.delete(_db.playerMissionPreferencesTable)
+          ..where((t) => t.playerId.equals(playerId)))
+        .go();
+  }
 }

@@ -20,4 +20,9 @@ abstract class MissionPreferencesRepository {
   /// Atalho pro gating de refazer (Bloco 9): retorna `updates_count`
   /// atual do jogador, ou 0 se nunca calibrou.
   Future<int> updatesCountOf(int playerId);
+
+  /// Sprint 3.1 Bloco 14 — apaga a row de prefs do jogador (Dev Panel
+  /// "Reset preferences + phase13 flag"). Noop silencioso se não existe.
+  /// Complementa com `TutorialService.markDone`/reset via caller.
+  Future<void> deleteForPlayer(int playerId);
 }
