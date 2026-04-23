@@ -1,0 +1,21 @@
+{
+  "missions": [
+    {"key": "ASC_E_TO_D_1", "title": "Prova Inicial", "description": "Complete 30 missões diárias.", "modality": "internal", "category": "mental", "tab_origin": "admission", "rank": "e", "ascension_to": "d", "target_value": 30, "reward": {"xp": 500, "gold": 250}},
+    {"key": "ASC_E_TO_D_2", "title": "Constância de Rank D", "description": "Mantenha streak de 14 dias.", "modality": "internal", "category": "mental", "tab_origin": "admission", "rank": "e", "ascension_to": "d", "target_value": 14, "reward": {"xp": 450, "gold": 225}},
+
+    {"key": "ASC_D_TO_C_1", "title": "Prova da Disciplina", "description": "Complete 60 missões diárias.", "modality": "internal", "category": "mental", "tab_origin": "admission", "rank": "d", "ascension_to": "c", "target_value": 60, "reward": {"xp": 900, "gold": 450}},
+    {"key": "ASC_D_TO_C_2", "title": "Passo Rank C", "description": "Complete 10 missões de classe.", "modality": "internal", "category": "fisico", "tab_origin": "admission", "rank": "d", "ascension_to": "c", "target_value": 10, "reward": {"xp": 850, "gold": 425}},
+
+    {"key": "ASC_C_TO_B_1", "title": "Marco dos 100", "description": "Complete 100 missões totais.", "modality": "internal", "category": "mental", "tab_origin": "admission", "rank": "c", "ascension_to": "b", "target_value": 100, "reward": {"xp": 1400, "gold": 700}},
+    {"key": "ASC_C_TO_B_2", "title": "Streak Lendário", "description": "Mantenha streak de 30 dias.", "modality": "internal", "category": "mental", "tab_origin": "admission", "rank": "c", "ascension_to": "b", "target_value": 30, "reward": {"xp": 1300, "gold": 650}},
+
+    {"key": "ASC_B_TO_A_1", "title": "Caminho do Mestre", "description": "Complete 200 missões totais.", "modality": "internal", "category": "mental", "tab_origin": "admission", "rank": "b", "ascension_to": "a", "target_value": 200, "reward": {"xp": 2000, "gold": 1000}},
+    {"key": "ASC_B_TO_A_2", "title": "Forja Contínua", "description": "Complete 25 missões de facção.", "modality": "internal", "category": "mental", "tab_origin": "admission", "rank": "b", "ascension_to": "a", "target_value": 25, "reward": {"xp": 1900, "gold": 950}},
+
+    {"key": "ASC_A_TO_S_1", "title": "Prova Final", "description": "Complete 500 missões totais.", "modality": "internal", "category": "mental", "tab_origin": "admission", "rank": "a", "ascension_to": "s", "target_value": 500, "reward": {"xp": 3500, "gold": 1750}},
+    {"key": "ASC_A_TO_S_2", "title": "Última Forja", "description": "Mantenha streak de 60 dias.", "modality": "internal", "category": "mental", "tab_origin": "admission", "rank": "a", "ascension_to": "s", "target_value": 60, "reward": {"xp": 3300, "gold": 1650}},
+
+    {"key": "ASC_S_PROVA_MESTRE", "title": "Prova do Mestre", "description": "Complete 1000 missões totais.", "modality": "internal", "category": "mental", "tab_origin": "admission", "rank": "s", "ascension_to": "s", "target_value": 1000, "reward": {"xp": 5000, "gold": 2500}},
+    {"key": "ASC_S_ETERNIDADE", "title": "Eternidade", "description": "365 dias de streak.", "modality": "internal", "category": "mental", "tab_origin": "admission", "rank": "s", "ascension_to": "s", "target_value": 365, "reward": {"xp": 10000, "gold": 5000}}
+  ]
+}

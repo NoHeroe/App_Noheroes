@@ -49,6 +49,10 @@ flutter:
     - assets/data/npc_dialogues.json
     - assets/data/lore_quests.json
     - assets/data/extras_catalog.json
+    - assets/data/missions_daily.json
+    - assets/data/missions_class.json
+    - assets/data/missions_faction_weekly.json
+    - assets/data/missions_ascension.json
     - assets/data/lore_entries.json
     - assets/data/library_works.json
     - assets/data/classes.json

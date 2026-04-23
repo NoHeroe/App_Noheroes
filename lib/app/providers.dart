@@ -14,7 +14,9 @@ import '../domain/enums/mission_modality.dart';
 import '../domain/enums/rank_codec.dart';
 import '../domain/models/player_snapshot.dart';
 import '../data/datasources/local/extras_catalog_service.dart';
+import '../data/datasources/local/mission_catalogs_service.dart';
 import '../domain/services/achievements_service.dart';
+import '../domain/services/mission_assignment_service.dart';
 import '../domain/services/individual_creation_service.dart';
 import '../domain/services/individual_delete_service.dart';
 import '../domain/services/mission_balancer_service.dart';
@@ -343,6 +345,22 @@ final individualCreationServiceProvider =
 
 final extrasCatalogServiceProvider = Provider<ExtrasCatalogService>((_) {
   return ExtrasCatalogService();
+});
+
+// Sprint 3.1 Bloco 13a — catálogos estáticos de missões (daily/class/
+// faction-weekly/ascension) + MissionAssignmentService.
+final missionCatalogsServiceProvider =
+    Provider<MissionCatalogsService>((_) => MissionCatalogsService());
+
+final missionAssignmentServiceProvider =
+    Provider<MissionAssignmentService>((ref) {
+  return MissionAssignmentService(
+    missionRepo: ref.watch(missionRepositoryProvider),
+    prefsService: ref.watch(missionPreferencesServiceProvider),
+    catalogs: ref.watch(missionCatalogsServiceProvider),
+    factionRepo: ref.watch(activeFactionQuestsRepositoryProvider),
+    bus: ref.watch(appEventBusProvider),
+  );
 });
 
 // Sprint 3.1 Bloco 10a.1 — Gate de "Refazer calibração" no SanctuaryDrawer
