@@ -32,3 +32,38 @@ class MissionNotFoundException implements Exception {
   @override
   String toString() => 'MissionNotFound(id=$missionProgressId)';
 }
+
+/// Sprint 3.1 Bloco 8 — análogo da [RewardAlreadyGrantedException] pra
+/// grant de conquista. Idempotência via
+/// `player_achievements_completed.reward_claimed`.
+class AchievementRewardAlreadyGrantedException implements Exception {
+  final int playerId;
+  final String achievementKey;
+
+  const AchievementRewardAlreadyGrantedException({
+    required this.playerId,
+    required this.achievementKey,
+  });
+
+  @override
+  String toString() =>
+      'AchievementRewardAlreadyGranted(player=$playerId, key=$achievementKey)';
+}
+
+/// Sprint 3.1 Bloco 8 — caller chamou [grantAchievement] sem a conquista
+/// ter sido marcada como completa primeiro (faltou `markCompleted`).
+/// Erro de programação — fluxo normal no `AchievementsService` sempre
+/// marca antes de grantar.
+class AchievementNotUnlockedException implements Exception {
+  final int playerId;
+  final String achievementKey;
+
+  const AchievementNotUnlockedException({
+    required this.playerId,
+    required this.achievementKey,
+  });
+
+  @override
+  String toString() =>
+      'AchievementNotUnlocked(player=$playerId, key=$achievementKey)';
+}

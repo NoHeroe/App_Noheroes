@@ -7,6 +7,7 @@ import '../../domain/exceptions/reward_exceptions.dart';
 import '../../domain/models/reward_grant_result.dart';
 import '../../domain/models/reward_resolved.dart';
 import '../../domain/repositories/mission_repository.dart';
+import '../../domain/repositories/player_achievements_repository.dart';
 import '../../domain/repositories/player_faction_reputation_repository.dart';
 import '../database/app_database.dart';
 import '../datasources/local/player_inventory_service.dart';
@@ -27,6 +28,7 @@ import '../datasources/local/player_recipes_service.dart';
 class RewardGrantService {
   final AppDatabase _db;
   final MissionRepository _missionRepo;
+  final PlayerAchievementsRepository _achievementsRepo;
   final PlayerInventoryService _inventory;
   final PlayerRecipesService _recipes;
   final PlayerFactionReputationRepository _factionRep;
@@ -35,12 +37,14 @@ class RewardGrantService {
   RewardGrantService({
     required AppDatabase db,
     required MissionRepository missionRepo,
+    required PlayerAchievementsRepository achievementsRepo,
     required PlayerInventoryService inventory,
     required PlayerRecipesService recipes,
     required PlayerFactionReputationRepository factionRep,
     required AppEventBus eventBus,
   })  : _db = db,
         _missionRepo = missionRepo,
+        _achievementsRepo = achievementsRepo,
         _inventory = inventory,
         _recipes = recipes,
         _factionRep = factionRep,
@@ -161,6 +165,124 @@ class RewardGrantService {
     _eventBus.publish(RewardGranted(
       playerId: playerId,
       rewardResolvedJson: resolved.toJsonString(),
+    ));
+
+    return result;
+  }
+
+  /// Sprint 3.1 Bloco 8 — variante do [grant] pra rewards de conquista.
+  ///
+  /// Diferenças em relação ao [grant]:
+  ///
+  ///   - Idempotência via `player_achievements_completed.reward_claimed`
+  ///     (não `player_mission_progress`). Caller (`AchievementsService`)
+  ///     deve ter chamado `markCompleted` ANTES — grant não cria a row.
+  ///   - **Não incrementa** `total_quests_completed` — é contador de
+  ///     missões, não de conquistas.
+  ///   - Propaga todas as mesmas operações atômicas (xp/gold/gems, items,
+  ///     recipes, reputação) e emite o mesmo `RewardGranted` pós-commit.
+  ///
+  /// Débito técnico herdado (Bloco 15.5): xp via `customUpdate` sem
+  /// recalc de level/HP max. Mesmo comportamento do [grant] — fix
+  /// consolidado em Bloco 15.5.
+  ///
+  /// Lança:
+  ///   - [AchievementNotUnlockedException] se row não existe
+  ///   - [AchievementRewardAlreadyGrantedException] se já foi grantada
+  ///   - propaga exceptions de persistência (rollback total)
+  Future<RewardGrantResult> grantAchievement({
+    required int playerId,
+    required String achievementKey,
+    required RewardResolved resolved,
+  }) async {
+    // Mesma observação do grant: seivas ainda não persistem no schema 24.
+    if (resolved.seivas != 0) {
+      // ignore: avoid_print
+      print('[reward-grant] TODO(sprint-2.4): persistência de '
+          '${resolved.seivas} seivas pra player $playerId (achievement '
+          '$achievementKey) — schema pendente.');
+    }
+
+    final result = await _db.transaction(() async {
+      // 1. Check precondition + idempotência DENTRO da transação.
+      final completed =
+          await _achievementsRepo.isCompleted(playerId, achievementKey);
+      if (!completed) {
+        throw AchievementNotUnlockedException(
+          playerId: playerId,
+          achievementKey: achievementKey,
+        );
+      }
+      final alreadyClaimed =
+          await _achievementsRepo.isRewardClaimed(playerId, achievementKey);
+      if (alreadyClaimed) {
+        throw AchievementRewardAlreadyGrantedException(
+          playerId: playerId,
+          achievementKey: achievementKey,
+        );
+      }
+
+      // 2. Credita currencies — mesmo pattern do grant.
+      if (resolved.xp != 0 || resolved.gold != 0 || resolved.gems != 0) {
+        await _db.customUpdate(
+          'UPDATE players SET xp = xp + ?, gold = gold + ?, '
+          'gems = gems + ? WHERE id = ?',
+          variables: [
+            Variable.withInt(resolved.xp),
+            Variable.withInt(resolved.gold),
+            Variable.withInt(resolved.gems),
+            Variable.withInt(playerId),
+          ],
+          updates: {_db.playersTable},
+        );
+      }
+
+      // 3. Items — delega pro PlayerInventoryService. SourceType.achievement
+      //    alinha ADR 0010 (fonte canônica distinta de questReward).
+      for (final item in resolved.items) {
+        await _inventory.addItem(
+          playerId: playerId,
+          itemKey: item.key,
+          quantity: item.quantity,
+          acquiredVia: SourceType.achievement,
+        );
+      }
+
+      // 4. Recipes unlock.
+      for (final recipeKey in resolved.recipesToUnlock) {
+        await _recipes.unlock(
+          playerId: playerId,
+          recipeKey: recipeKey,
+          via: SourceType.achievement,
+        );
+      }
+
+      // 5. Reputação de facção (raro em achievement mas contratualmente
+      //    suportado pelo schema declarativo).
+      if (resolved.factionId != null &&
+          resolved.factionReputationDelta != null) {
+        await _factionRep.delta(
+          playerId,
+          resolved.factionId!,
+          resolved.factionReputationDelta!,
+        );
+      }
+
+      // 6. Marca reward_claimed. Previne re-grant em retry do listener.
+      await _achievementsRepo.markRewardClaimed(playerId, achievementKey);
+
+      return RewardGrantResult(resolved: resolved);
+    });
+
+    // 7. Emite evento FORA da transação — só chega aqui se commit OK.
+    //    Flag `fromAchievementCascade=true` faz o AchievementsService
+    //    ignorar este evento no listener (a cascata síncrona já cuidou
+    //    dos achievementsToCheck com depth correto). Outros listeners
+    //    (UI, analytics) consomem normalmente.
+    _eventBus.publish(RewardGranted(
+      playerId: playerId,
+      rewardResolvedJson: resolved.toJsonString(),
+      fromAchievementCascade: true,
     ));
 
     return result;

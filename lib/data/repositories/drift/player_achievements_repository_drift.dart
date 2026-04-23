@@ -57,6 +57,16 @@ class PlayerAchievementsRepositoryDrift
   }
 
   @override
+  Future<bool> isRewardClaimed(int playerId, String achievementKey) async {
+    final row = await (_db.select(_db.playerAchievementsCompletedTable)
+          ..where((t) =>
+              t.playerId.equals(playerId) &
+              t.achievementKey.equals(achievementKey)))
+        .getSingleOrNull();
+    return row != null && row.rewardClaimed;
+  }
+
+  @override
   Future<int> countCompleted(int playerId) async {
     final count = _db.playerAchievementsCompletedTable.playerId.count();
     final query = _db.selectOnly(_db.playerAchievementsCompletedTable)

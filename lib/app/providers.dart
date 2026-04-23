@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/events/app_event_bus.dart';
 import '../core/utils/guild_rank.dart';
@@ -6,10 +8,12 @@ import '../data/datasources/local/auth_local_ds.dart';
 import '../data/datasources/local/class_quest_service.dart';
 import '../data/datasources/local/faction_quest_service.dart';
 import '../data/datasources/local/quest_admission_service.dart';
+import '../core/events/reward_events.dart';
 import '../data/services/reward_grant_service.dart';
 import '../domain/enums/mission_modality.dart';
 import '../domain/enums/rank_codec.dart';
 import '../domain/models/player_snapshot.dart';
+import '../domain/services/achievements_service.dart';
 import '../domain/services/mission_progress_service.dart';
 import '../domain/services/reward_resolve_service.dart';
 import '../domain/strategies/individual_modality_strategy.dart';
@@ -246,11 +250,55 @@ final rewardGrantServiceProvider = Provider<RewardGrantService>((ref) {
   return RewardGrantService(
     db: ref.watch(appDatabaseProvider),
     missionRepo: ref.watch(missionRepositoryProvider),
+    achievementsRepo: ref.watch(playerAchievementsRepositoryProvider),
     inventory: ref.watch(playerInventoryServiceProvider),
     recipes: ref.watch(playerRecipesServiceProvider),
     factionRep: ref.watch(playerFactionReputationRepositoryProvider),
     eventBus: ref.watch(appEventBusProvider),
   );
+});
+
+// Sprint 3.1 Bloco 8 — AchievementsService JSON-driven.
+//
+// Lazy sync: o provider cria o service e dispara `attach()` em
+// fire-and-forget. A assinatura do listener é guardada num capture
+// local e cancelada em `ref.onDispose`. `ensureLoaded` dentro do service
+// é idempotente, então o handler tolera eventos chegando antes do
+// carregamento completar (trata como "conquistas not-yet-loaded" →
+// noop + log). Em produção o bus começa silencioso até o jogador agir.
+final achievementsServiceProvider = Provider<AchievementsService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  final service = AchievementsService(
+    achievementsRepo: ref.watch(playerAchievementsRepositoryProvider),
+    rewardResolve: ref.watch(rewardResolveServiceProvider),
+    rewardGrant: ref.watch(rewardGrantServiceProvider),
+    bus: ref.watch(appEventBusProvider),
+    resolvePlayerFacts: (playerId) async {
+      final row = await (db.select(db.playersTable)
+            ..where((t) => t.id.equals(playerId)))
+          .getSingle();
+      final rank = row.guildRank == 'none'
+          ? null
+          : RankCodec.fromString(row.guildRank.toLowerCase());
+      return PlayerFacts(
+        level: row.level,
+        totalQuestsCompleted: row.totalQuestsCompleted,
+        snapshot: PlayerSnapshot(
+          level: row.level,
+          rank: rank ?? GuildRank.e,
+          classKey: row.classType,
+          factionKey: row.factionType,
+        ),
+      );
+    },
+  );
+  StreamSubscription<RewardGranted>? sub;
+  // fire-and-forget: carrega catálogo + registra listener em background.
+  service.attach().then((s) => sub = s);
+  ref.onDispose(() {
+    sub?.cancel();
+  });
+  return service;
 });
 
 // Sprint 3.1 Bloco 4 — Repository Pattern (ADR 0016).

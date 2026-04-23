@@ -13,6 +13,7 @@ import 'package:noheroes_app/data/datasources/local/player_recipes_service.dart'
 import 'package:noheroes_app/data/datasources/local/quest_admission_service.dart';
 import 'package:noheroes_app/data/datasources/local/recipes_catalog_service.dart';
 import 'package:noheroes_app/data/repositories/drift/mission_repository_drift.dart';
+import 'package:noheroes_app/data/repositories/drift/player_achievements_repository_drift.dart';
 import 'package:noheroes_app/data/repositories/drift/player_faction_reputation_repository_drift.dart';
 import 'package:noheroes_app/data/services/reward_grant_service.dart';
 import 'package:noheroes_app/domain/enums/mission_modality.dart';
@@ -63,6 +64,7 @@ RewardGrantService _makeGranter(AppDatabase db, AppEventBus bus) {
   return RewardGrantService(
     db: db,
     missionRepo: MissionRepositoryDrift(db),
+    achievementsRepo: PlayerAchievementsRepositoryDrift(db),
     inventory: PlayerInventoryService(db, catalog),
     recipes: PlayerRecipesService(db, RecipesCatalogService(db)),
     factionRep: PlayerFactionReputationRepositoryDrift(db),

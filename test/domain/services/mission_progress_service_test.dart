@@ -12,6 +12,7 @@ import 'package:noheroes_app/data/datasources/local/player_inventory_service.dar
 import 'package:noheroes_app/data/datasources/local/player_recipes_service.dart';
 import 'package:noheroes_app/data/datasources/local/recipes_catalog_service.dart';
 import 'package:noheroes_app/data/repositories/drift/mission_repository_drift.dart';
+import 'package:noheroes_app/data/repositories/drift/player_achievements_repository_drift.dart';
 import 'package:noheroes_app/data/repositories/drift/player_faction_reputation_repository_drift.dart';
 import 'package:noheroes_app/data/services/reward_grant_service.dart';
 import 'package:noheroes_app/domain/enums/mission_modality.dart';
@@ -80,6 +81,7 @@ MissionProgressService _newService(
     granter: RewardGrantService(
       db: db,
       missionRepo: repo,
+      achievementsRepo: PlayerAchievementsRepositoryDrift(db),
       inventory: PlayerInventoryService(db, catalog),
       recipes: PlayerRecipesService(db, RecipesCatalogService(db)),
       factionRep: PlayerFactionReputationRepositoryDrift(db),

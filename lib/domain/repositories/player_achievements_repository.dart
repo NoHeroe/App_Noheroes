@@ -25,6 +25,11 @@ abstract class PlayerAchievementsRepository {
   /// Marca `reward_claimed = 1`. Chamado após grant bem-sucedido.
   Future<void> markRewardClaimed(int playerId, String achievementKey);
 
+  /// `true` se a row existe **e** já teve reward creditada. Usado pelo
+  /// `RewardGrantService.grantAchievement` (Bloco 8) como guard de
+  /// idempotência dentro da transação.
+  Future<bool> isRewardClaimed(int playerId, String achievementKey);
+
   /// Total de conquistas desbloqueadas — consumido por conquistas
   /// meta (`trigger: meta`, completar N outras — Bloco 8).
   Future<int> countCompleted(int playerId);

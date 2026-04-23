@@ -1,101 +1,82 @@
 {
   "achievements": [
-    {"key":"first_level","title":"Primeiro Passo","description":"Atingiu o Nível 2.","category":"progression","rarity":"common","xp":50,"gold":25,"gems":0,"secret":false},
-    {"key":"level_5","title":"Forma Tomando Shape","description":"Atingiu o Nível 5.","category":"progression","rarity":"common","xp":150,"gold":75,"gems":1,"secret":false},
-    {"key":"level_10","title":"Sombra Reconhecida","description":"Atingiu o Nível 10.","category":"progression","rarity":"rare","xp":300,"gold":150,"gems":2,"secret":false},
-    {"key":"level_25","title":"Despertar Vitalista","description":"Atingiu o Nível 25.","category":"progression","rarity":"rare","xp":500,"gold":250,"gems":3,"secret":false},
-    {"key":"level_50","title":"Meio Caminho","description":"Atingiu o Nível 50.","category":"progression","rarity":"epic","xp":800,"gold":400,"gems":5,"secret":false},
-    {"key":"level_75","title":"Veterano de Caelum","description":"Atingiu o Nível 75.","category":"progression","rarity":"epic","xp":1200,"gold":600,"gems":8,"secret":false},
-    {"key":"level_99","title":"A Forma Final","description":"Atingiu o Nível 99. A jornada não termina aqui.","category":"progression","rarity":"legendary","xp":2000,"gold":1000,"gems":15,"secret":false,"title_reward":"A Forma Final"},
-    {"key":"caelum_7","title":"Uma Semana em Caelum","description":"7 dias em Caelum.","category":"progression","rarity":"common","xp":100,"gold":50,"gems":1,"secret":false},
-    {"key":"caelum_14","title":"Duas Semanas","description":"14 dias em Caelum.","category":"progression","rarity":"common","xp":150,"gold":75,"gems":1,"secret":false},
-    {"key":"caelum_30","title":"Um Mês em Caelum","description":"30 dias em Caelum.","category":"progression","rarity":"rare","xp":300,"gold":150,"gems":3,"secret":false},
-    {"key":"caelum_60","title":"Dois Meses","description":"60 dias em Caelum.","category":"progression","rarity":"rare","xp":400,"gold":200,"gems":4,"secret":false},
-    {"key":"caelum_100","title":"Cem Dias em Caelum","description":"100 dias. Você não é mais um estranho aqui.","category":"progression","rarity":"epic","xp":600,"gold":300,"gems":5,"secret":false,"title_reward":"Veterano de Caelum"},
-    {"key":"caelum_365","title":"Um Ano em Caelum","description":"365 dias. Lendário.","category":"progression","rarity":"legendary","xp":2000,"gold":1000,"gems":20,"secret":false,"title_reward":"Filho de Caelum"},
-    {"key":"guild_rank_d","title":"Aventureiro Reconhecido","description":"Atingiu Rank D na Guilda.","category":"progression","rarity":"common","xp":300,"gold":150,"gems":2,"secret":false},
-    {"key":"guild_rank_c","title":"Veterano da Guilda","description":"Atingiu Rank C na Guilda.","category":"progression","rarity":"rare","xp":500,"gold":250,"gems":3,"secret":false},
-    {"key":"guild_rank_s","title":"Lenda de Caelum","description":"Atingiu o lendário Rank S.","category":"progression","rarity":"divine","xp":5000,"gold":2000,"gems":25,"secret":true,"title_reward":"Lenda de Caelum"},
-    {"key":"first_habit","title":"Primeiro Ritual","description":"Completou seu primeiro ritual.","category":"habits","rarity":"common","xp":50,"gold":25,"gems":0,"secret":false},
-    {"key":"habit_10","title":"Disciplina Inicial","description":"10 rituais completados.","category":"habits","rarity":"common","xp":100,"gold":50,"gems":0,"secret":false},
-    {"key":"habit_30","title":"O Hábito Começa Aqui","description":"30 rituais completados.","category":"habits","rarity":"common","xp":150,"gold":75,"gems":1,"secret":false},
-    {"key":"habit_50","title":"Caminho da Disciplina","description":"50 rituais completados.","category":"habits","rarity":"rare","xp":200,"gold":100,"gems":1,"secret":false},
-    {"key":"habit_100","title":"Cem Rituais","description":"100 rituais completados.","category":"habits","rarity":"rare","xp":400,"gold":200,"gems":2,"secret":false},
-    {"key":"habit_300","title":"Trezentos Rituais","description":"300 rituais completados.","category":"habits","rarity":"epic","xp":800,"gold":400,"gems":4,"secret":false,"title_reward":"Disciplinado"},
-    {"key":"habit_500","title":"Quinhentos Rituais","description":"500 rituais. Isso é real.","category":"habits","rarity":"epic","xp":1200,"gold":600,"gems":6,"secret":false},
-    {"key":"habit_1000","title":"Mil Rituais","description":"1000 rituais. Raro demais.","category":"habits","rarity":"legendary","xp":3000,"gold":1500,"gems":15,"secret":true,"title_reward":"O Ritualista"},
-    {"key":"streak_7","title":"Semana Impecável","description":"7 dias de streak.","category":"habits","rarity":"common","xp":150,"gold":75,"gems":1,"secret":false},
-    {"key":"streak_14","title":"Duas Semanas Sem Falhar","description":"14 dias de streak.","category":"habits","rarity":"common","xp":200,"gold":100,"gems":1,"secret":false},
-    {"key":"streak_30","title":"Mês Sem Falhas","description":"30 dias de streak.","category":"habits","rarity":"rare","xp":500,"gold":250,"gems":3,"secret":false,"title_reward":"Implacável"},
-    {"key":"streak_60","title":"Dois Meses Perfeitos","description":"60 dias de streak.","category":"habits","rarity":"epic","xp":800,"gold":400,"gems":5,"secret":false},
-    {"key":"streak_100","title":"Cem Dias Consecutivos","description":"100 dias sem quebrar. Absurdo.","category":"habits","rarity":"legendary","xp":2000,"gold":1000,"gems":10,"secret":true,"title_reward":"Inquebrantável"},
-    {"key":"niet_accepted","title":"Honestidade Brutal","description":"Assumiu um Niet pela primeira vez.","category":"habits","rarity":"common","xp":30,"gold":15,"gems":0,"secret":false},
-    {"key":"shadow_stable","title":"Equilíbrio Interno","description":"Manteve sombra estável por 3 dias consecutivos.","category":"shadow","rarity":"common","xp":100,"gold":50,"gems":0,"secret":false},
-    {"key":"shadow_unstable_first","title":"A Sombra Acorda","description":"Sua sombra ficou instável pela primeira vez.","category":"shadow","rarity":"common","xp":50,"gold":0,"gems":0,"secret":false},
-    {"key":"shadow_chaotic","title":"Caos Interno","description":"Sua sombra atingiu estado Caótico.","category":"shadow","rarity":"rare","xp":0,"gold":0,"gems":0,"secret":false},
-    {"key":"shadow_abyssal","title":"O Abismo","description":"Sua sombra atingiu o estado Abissal.","category":"shadow","rarity":"epic","xp":0,"gold":0,"gems":0,"secret":true},
-    {"key":"shadow_ascend","title":"Ascensão Real","description":"Sua sombra atingiu estado Ascendente.","category":"shadow","rarity":"epic","xp":500,"gold":250,"gems":5,"secret":true,"title_reward":"Ascendente"},
-    {"key":"shadow_boss_win","title":"Confronto Interno","description":"Derrotou um Shadow Boss.","category":"shadow","rarity":"epic","xp":800,"gold":400,"gems":6,"secret":true},
-    {"key":"shadow_boss_3","title":"Três Confrontos","description":"Derrotou 3 Shadow Bosses.","category":"shadow","rarity":"legendary","xp":1500,"gold":750,"gems":10,"secret":true,"title_reward":"Domador de Sombras"},
-    {"key":"shadow_recovery","title":"Retorno das Cinzas","description":"Saiu do estado Abissal de volta para Estável.","category":"shadow","rarity":"rare","xp":300,"gold":150,"gems":3,"secret":false},
-    {"key":"shadow_30_stable","title":"Trinta Dias Estável","description":"30 dias com sombra estável.","category":"shadow","rarity":"epic","xp":600,"gold":300,"gems":5,"secret":false,"title_reward":"Equilibrado"},
-    {"key":"shadow_no_chaos_60","title":"Dois Meses Sem Caos","description":"60 dias sem sombra caótica ou abissal.","category":"shadow","rarity":"legendary","xp":1200,"gold":600,"gems":8,"secret":true},
-    {"key":"shadow_ascend_twice","title":"Ascensão Dupla","description":"Atingiu Ascensão duas vezes.","category":"shadow","rarity":"legendary","xp":1000,"gold":500,"gems":8,"secret":true},
-    {"key":"shadow_abyssal_survived","title":"Sobrevivente do Abismo","description":"Ficou 7 dias no estado Abissal e sobreviveu.","category":"shadow","rarity":"divine","xp":2000,"gold":0,"gems":10,"secret":true,"title_reward":"O Abissal"},
-    {"key":"class_chosen","title":"Um Caminho Escolhido","description":"Escolheu sua classe.","category":"class","rarity":"common","xp":200,"gold":100,"gems":1,"secret":false},
-    {"key":"class_quest_1","title":"Primeira Missão de Classe","description":"Completou sua primeira missão de classe.","category":"class","rarity":"common","xp":150,"gold":75,"gems":1,"secret":false},
-    {"key":"class_quest_10","title":"Trilha da Classe","description":"10 missões de classe completadas.","category":"class","rarity":"rare","xp":300,"gold":150,"gems":2,"secret":false},
-    {"key":"class_quest_30","title":"Mestre do Caminho","description":"30 missões de classe completadas.","category":"class","rarity":"epic","xp":600,"gold":300,"gems":4,"secret":false,"title_reward":"Mestre"},
-    {"key":"class_warrior_streak","title":"Guerreiro de Ferro","description":"7 dias de streak com hábitos físicos.","category":"class","rarity":"rare","xp":250,"gold":125,"gems":2,"secret":false},
-    {"key":"class_mage_streak","title":"Mente Afiada","description":"7 dias de streak com hábitos mentais.","category":"class","rarity":"rare","xp":250,"gold":125,"gems":2,"secret":false},
-    {"key":"class_shadow_unlocked","title":"A Trama das Sombras","description":"Desbloqueou o Tecelão de Sombras.","category":"class","rarity":"epic","xp":500,"gold":250,"gems":5,"secret":true,"title_reward":"Tecelão"},
-    {"key":"class_subclass","title":"A Segunda Forma","description":"Desbloqueou uma subclasse.","category":"class","rarity":"epic","xp":800,"gold":400,"gems":6,"secret":false},
-    {"key":"faction_joined","title":"Lealdade Jurada","description":"Entrou em uma facção.","category":"faction","rarity":"common","xp":200,"gold":100,"gems":1,"secret":false},
-    {"key":"faction_quest_1","title":"Servindo à Causa","description":"Completou sua primeira missão de facção.","category":"faction","rarity":"common","xp":150,"gold":75,"gems":1,"secret":false},
-    {"key":"faction_quest_20","title":"Soldado Fiel","description":"20 missões de facção completadas.","category":"faction","rarity":"rare","xp":400,"gold":200,"gems":3,"secret":false},
-    {"key":"faction_rep_loyal","title":"Leal à Facção","description":"Atingiu reputação Leal com o NPC da sua facção.","category":"faction","rarity":"rare","xp":300,"gold":150,"gems":2,"secret":false},
-    {"key":"faction_rep_devout","title":"Devoto","description":"Atingiu reputação Devoto com o NPC da sua facção.","category":"faction","rarity":"epic","xp":600,"gold":300,"gems":5,"secret":false,"title_reward":"Devoto"},
-    {"key":"faction_admission","title":"Passou no Teste","description":"Completou o teste de admissão da facção.","category":"faction","rarity":"rare","xp":250,"gold":125,"gems":2,"secret":false},
-    {"key":"faction_guild_member","title":"Membro da Guilda","description":"Tornou-se membro oficial da Guilda de Aventureiros.","category":"faction","rarity":"common","xp":200,"gold":100,"gems":1,"secret":false},
-    {"key":"faction_secret_error","title":"Arquivo Aberto","description":"Fez contato com a facção ERROR.","category":"faction","rarity":"epic","xp":500,"gold":0,"gems":5,"secret":true,"title_reward":"Agente"},
-    {"key":"region_aureum_first","title":"Campos de Aureum","description":"Visitou os Campos de Aureum pela primeira vez.","category":"regions","rarity":"common","xp":100,"gold":50,"gems":0,"secret":false},
-    {"key":"region_ruins_first","title":"As Ruínas Exteriores","description":"Explorou as Ruínas Exteriores.","category":"regions","rarity":"common","xp":150,"gold":75,"gems":1,"secret":false},
-    {"key":"region_forest_first","title":"Floresta Branca","description":"Adentrou a Floresta Branca.","category":"regions","rarity":"rare","xp":200,"gold":100,"gems":2,"secret":false},
-    {"key":"region_valley_first","title":"Vale Estilhaçado","description":"Atravessou o Vale Estilhaçado.","category":"regions","rarity":"rare","xp":200,"gold":100,"gems":2,"secret":false},
-    {"key":"region_vallarys","title":"Portais de Vallarys","description":"Chegou a Vallarys.","category":"regions","rarity":"epic","xp":400,"gold":200,"gems":4,"secret":false},
-    {"key":"region_draconis","title":"Nova Draconis","description":"Pisou em Nova Draconis.","category":"regions","rarity":"epic","xp":500,"gold":250,"gems":5,"secret":false},
-    {"key":"region_thanam","title":"Thanam","description":"Chegou a Thanam. Poucos chegam aqui.","category":"regions","rarity":"legendary","xp":1000,"gold":500,"gems":10,"secret":true,"title_reward":"O Que Foi a Thanam"},
-    {"key":"region_all_4","title":"Explorador de Caelum","description":"Visitou as 4 regiões iniciais.","category":"regions","rarity":"rare","xp":300,"gold":150,"gems":3,"secret":false},
-    {"key":"region_secret_found","title":"Além do Mapa","description":"Encontrou uma área secreta.","category":"regions","rarity":"epic","xp":600,"gold":300,"gems":5,"secret":true},
-    {"key":"region_fissure","title":"Fenda Dimensional","description":"Entrou em uma Fenda Dimensional.","category":"regions","rarity":"epic","xp":500,"gold":250,"gems":5,"secret":false},
-    {"key":"lore_first","title":"O Primeiro Registro","description":"Leu sua primeira entrada de lore.","category":"lore","rarity":"common","xp":75,"gold":35,"gems":0,"secret":false},
-    {"key":"lore_5","title":"Curioso de Caelum","description":"Leu 5 entradas de lore.","category":"lore","rarity":"common","xp":150,"gold":75,"gems":1,"secret":false},
-    {"key":"lore_all","title":"O Cronista","description":"Desbloqueou todo o lore disponível.","category":"lore","rarity":"epic","xp":800,"gold":400,"gems":6,"secret":false,"title_reward":"O Cronista"},
-    {"key":"diary_first","title":"Primeiro Registro Pessoal","description":"Escreveu sua primeira entrada no diário.","category":"lore","rarity":"common","xp":50,"gold":25,"gems":0,"secret":false},
-    {"key":"diary_30_days","title":"Cronista do Cotidiano","description":"30 entradas no diário.","category":"lore","rarity":"rare","xp":300,"gold":150,"gems":2,"secret":false},
-    {"key":"library_work_read","title":"Leitor de Caelum","description":"Leu uma obra na Biblioteca Dimensional.","category":"lore","rarity":"common","xp":100,"gold":50,"gems":1,"secret":false},
-    {"key":"lore_quest_1","title":"Missão da História","description":"Completou sua primeira missão de lore.","category":"lore","rarity":"rare","xp":200,"gold":100,"gems":2,"secret":false},
-    {"key":"gold_500","title":"Acumulador","description":"Acumulou 500 de ouro.","category":"economy","rarity":"common","xp":100,"gold":0,"gems":1,"secret":false},
-    {"key":"gold_5000","title":"Tesouro de Caelum","description":"Acumulou 5000 de ouro.","category":"economy","rarity":"rare","xp":300,"gold":0,"gems":3,"secret":false},
-    {"key":"gold_50000","title":"Senhor das Moedas","description":"Acumulou 50000 de ouro.","category":"economy","rarity":"epic","xp":800,"gold":0,"gems":8,"secret":false,"title_reward":"O Rico"},
-    {"key":"gems_50","title":"Colecionador de Gemas","description":"Acumulou 50 gemas.","category":"economy","rarity":"rare","xp":200,"gold":100,"gems":0,"secret":false},
-    {"key":"first_buy","title":"Mercador de Caelum","description":"Comprou algo na loja.","category":"economy","rarity":"common","xp":50,"gold":25,"gems":0,"secret":false},
-    {"key":"first_item","title":"Primeiro Tesouro","description":"Adquiriu seu primeiro item.","category":"economy","rarity":"common","xp":75,"gold":35,"gems":0,"secret":false},
-    {"key":"items_10","title":"Coleção Iniciante","description":"10 itens no inventário.","category":"economy","rarity":"common","xp":150,"gold":75,"gems":1,"secret":false},
-    {"key":"shop_guild_first","title":"Loja da Guilda","description":"Comprou na loja da Guilda pela primeira vez.","category":"economy","rarity":"common","xp":100,"gold":50,"gems":1,"secret":false},
-    {"key":"exploration_secret_1","title":"Olhos Abertos","description":"Encontrou seu primeiro segredo em Caelum.","category":"exploration","rarity":"rare","xp":250,"gold":125,"gems":2,"secret":true},
-    {"key":"exploration_npc_devout","title":"Amigo Improvável","description":"Atingiu reputação Devoto com qualquer NPC.","category":"exploration","rarity":"epic","xp":500,"gold":250,"gems":4,"secret":false},
-    {"key":"exploration_all_npcs","title":"Todos os Rostos","description":"Conheceu todos os NPCs disponíveis.","category":"exploration","rarity":"epic","xp":600,"gold":300,"gems":5,"secret":false,"title_reward":"O Conectado"},
-    {"key":"exploration_class_npc","title":"Mentor Encontrado","description":"Fez contato com o NPC mentor da sua classe.","category":"exploration","rarity":"rare","xp":200,"gold":100,"gems":2,"secret":false},
-    {"key":"exploration_shadow_npc","title":"Entidade Percebida","description":"Um NPC reagiu à sua Sombra de forma especial.","category":"exploration","rarity":"epic","xp":400,"gold":200,"gems":4,"secret":true},
-    {"key":"exploration_login_streak","title":"Presença Constante","description":"Login por 30 dias consecutivos.","category":"exploration","rarity":"rare","xp":300,"gold":150,"gems":2,"secret":false},
-    {"key":"exploration_secret_area","title":"Além dos Limites","description":"Acessou uma área que não deveria existir.","category":"exploration","rarity":"legendary","xp":1000,"gold":500,"gems":8,"secret":true,"title_reward":"O Intruso"},
-    {"key":"epic_no_fail_week","title":"Semana Perfeita","description":"7 dias sem falhar uma única missão.","category":"epic","rarity":"epic","xp":500,"gold":250,"gems":5,"secret":false},
-    {"key":"epic_no_fail_month","title":"Mês Perfeito","description":"30 dias sem falhar nenhuma missão.","category":"epic","rarity":"legendary","xp":2000,"gold":1000,"gems":12,"secret":false,"title_reward":"O Imaculado"},
-    {"key":"epic_max_shadow_stable","title":"A Sombra Domada","description":"Nível 50+ com sombra sempre estável.","category":"epic","rarity":"legendary","xp":1500,"gold":750,"gems":10,"secret":true},
-    {"key":"epic_all_regions","title":"O Cartógrafo","description":"Visitou todas as regiões disponíveis.","category":"epic","rarity":"legendary","xp":2000,"gold":1000,"gems":15,"secret":false,"title_reward":"O Cartógrafo"},
-    {"key":"epic_endgame","title":"Além do Fim","description":"Completou tudo que estava disponível no lançamento.","category":"epic","rarity":"divine","xp":5000,"gold":2000,"gems":30,"secret":true,"title_reward":"O Completo"},
-    {"key":"epic_shadow_boss_no_penalty","title":"Pureza de Combate","description":"Derrotou um Shadow Boss sem penalidades ativas.","category":"epic","rarity":"divine","xp":3000,"gold":1500,"gems":20,"secret":true,"title_reward":"Purificado"},
-    {"key":"epic_1year_streak","title":"Um Ano Inteiro","description":"365 dias de streak. Isso é lendário.","category":"epic","rarity":"divine","xp":10000,"gold":5000,"gems":50,"secret":true,"title_reward":"O Imortal"}
+    {
+      "key": "ACH_FIRST_QUEST",
+      "name": "Primeira Missão",
+      "description": "Complete sua primeira missão.",
+      "category": "progression",
+      "trigger": {
+        "type": "event_count",
+        "event": "MissionCompleted",
+        "count": 1
+      },
+      "reward": {
+        "xp": 100,
+        "gold": 50
+      },
+      "is_secret": false
+    },
+    {
+      "key": "ACH_LEVEL_5",
+      "name": "Despertar",
+      "description": "Atinja nível 5.",
+      "category": "progression",
+      "trigger": {
+        "type": "threshold_stat",
+        "stat": "level",
+        "value": 5
+      },
+      "reward": {
+        "gems": 5,
+        "achievements_to_check": ["ACH_META_TWO"]
+      },
+      "is_secret": false
+    },
+    {
+      "key": "ACH_META_TWO",
+      "name": "Dobra",
+      "description": "Desbloqueie 2 conquistas.",
+      "category": "meta",
+      "trigger": {
+        "type": "meta",
+        "target_count": 2
+      },
+      "reward": {
+        "gold": 200
+      },
+      "is_secret": false
+    },
+    {
+      "key": "ACH_TEN_QUESTS",
+      "name": "Calejado",
+      "description": "Complete 10 missões.",
+      "category": "progression",
+      "trigger": {
+        "type": "event_count",
+        "event": "MissionCompleted",
+        "count": 10
+      },
+      "reward": {
+        "gems": 10,
+        "items": [
+          {"key": "RUNE_RANDOM_E", "quantity": 1, "chance_pct": 100}
+        ]
+      },
+      "is_secret": false
+    },
+    {
+      "key": "ACH_SECRET_FIRST_UNLOCK",
+      "name": "Arqueiro das Sombras",
+      "description": "Uma conquista secreta aparece depois de desbloquear a primeira.",
+      "category": "meta",
+      "trigger": {
+        "type": "meta",
+        "target_count": 1
+      },
+      "reward": {
+        "seivas": 1
+      },
+      "is_secret": true
+    }
   ]
 }
