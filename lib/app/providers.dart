@@ -117,6 +117,7 @@ final craftingServiceProvider = Provider<CraftingService>((ref) {
     ref.watch(itemsCatalogServiceProvider),
     ref.watch(playerInventoryServiceProvider),
     PlayerDao(db),
+    ref.watch(appEventBusProvider),
   );
 });
 

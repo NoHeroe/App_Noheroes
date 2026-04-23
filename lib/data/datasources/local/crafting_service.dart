@@ -1,4 +1,7 @@
 import 'package:drift/drift.dart';
+import '../../../core/events/app_event_bus.dart';
+import '../../../core/events/crafting_events.dart';
+import '../../../core/events/player_events.dart';
 import '../../../core/utils/craft_policy.dart';
 import '../../../domain/enums/recipe_type.dart';
 import '../../../domain/enums/source_type.dart';
@@ -21,6 +24,7 @@ class CraftingService {
   final ItemsCatalogService _items;
   final PlayerInventoryService _inventory;
   final PlayerDao _playerDao;
+  final AppEventBus _eventBus;
 
   CraftingService(
     this._db,
@@ -29,6 +33,7 @@ class CraftingService {
     this._items,
     this._inventory,
     this._playerDao,
+    this._eventBus,
   );
 
   Future<CraftResult> craft({
@@ -39,8 +44,15 @@ class CraftingService {
   }) async {
     if (quantity <= 0) return CraftResult.failed(CraftRejectReason.dbError);
 
+    // Sprint 3.1 Bloco 7a — capturado dentro da transação pra emit pós-commit.
+    // Se o transaction rolar exception, o catch retorna failed e estes
+    // ficam 0/'' — nenhum evento é publicado.
+    var capturedCost = 0;
+    var capturedItemKey = '';
+    var capturedRecipeType = RecipeType.craft;
+
     try {
-      return await _db.transaction<CraftResult>(() async {
+      final result = await _db.transaction<CraftResult>(() async {
         // 1. Receita existe?
         final recipe = await _recipes.findByKey(recipeKey);
         if (recipe == null) {
@@ -138,6 +150,9 @@ class CraftingService {
             updates: {_db.playersTable},
           );
         }
+        capturedCost = totalCost;
+        capturedItemKey = recipe.resultItemKey;
+        capturedRecipeType = recipe.type;
 
         // 9. Adiciona item resultado no inventário.
         final acquiredVia = recipe.type == RecipeType.forge
@@ -157,7 +172,33 @@ class CraftingService {
 
         return CraftResult.ok(inventoryId: invId, quantity: producedQty);
       });
+
+      // Sprint 3.1 Bloco 7a — emit FORA da transação. Só publica se:
+      //   - result.isOk (transação commitou sucesso, não short-circuit com
+      //     CraftResult.failed de dentro da lambda)
+      // ItemCrafted: sempre emitido em sucesso.
+      // GoldSpent: só quando cost > 0 (receitas grátis existem).
+      if (result.isOk) {
+        if (capturedCost > 0) {
+          _eventBus.publish(GoldSpent(
+            playerId: playerId,
+            amount: capturedCost,
+            source: capturedRecipeType == RecipeType.forge
+                ? GoldSink.forge
+                : 'craft',
+          ));
+        }
+        _eventBus.publish(ItemCrafted(
+          playerId: playerId,
+          itemKey: capturedItemKey,
+          recipeKey: recipeKey,
+        ));
+      }
+      return result;
     } catch (e) {
+      // Rollback ocorreu — captured vars ficam zeradas / vazias.
+      // Eventos NÃO são emitidos (garantido porque o emit vive depois
+      // do try, só executa se não propagou exception).
       // ignore: avoid_print
       print('[crafting_service] craft($recipeKey ×$quantity) failed: $e');
       return CraftResult.failed(CraftRejectReason.dbError);
