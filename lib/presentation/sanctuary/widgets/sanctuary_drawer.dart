@@ -160,24 +160,30 @@ class SanctuaryDrawer extends ConsumerWidget {
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                children: items
-                    .map((item) => ListTile(
-                          leading: Icon(item.icon,
-                              color: AppColors.textSecondary, size: 20),
-                          title: Text(item.label,
-                              style: GoogleFonts.roboto(
-                                  fontSize: 14,
-                                  color: AppColors.textPrimary)),
-                          trailing: const Icon(Icons.chevron_right,
-                              color: AppColors.textMuted, size: 18),
-                          onTap: item.route != null
-                              ? () {
-                                  Navigator.pop(context);
-                                  context.go(item.route!);
-                                }
-                              : null,
-                        ))
-                    .toList(),
+                children: [
+                  ...items.map((item) => ListTile(
+                        leading: Icon(item.icon,
+                            color: AppColors.textSecondary, size: 20),
+                        title: Text(item.label,
+                            style: GoogleFonts.roboto(
+                                fontSize: 14,
+                                color: AppColors.textPrimary)),
+                        trailing: const Icon(Icons.chevron_right,
+                            color: AppColors.textMuted, size: 18),
+                        onTap: item.route != null
+                            ? () {
+                                Navigator.pop(context);
+                                context.go(item.route!);
+                              }
+                            : null,
+                      )),
+                  // Sprint 3.1 Bloco 10a.2 — item "Refazer Calibração"
+                  // condicional. Oculto se canRecalibrate=false (lvl<10
+                  // OU nunca calibrou). Ver MissionPreferencesService.
+                  if (player != null)
+                    _RecalibrateTile(
+                        playerId: player.id, playerLevel: player.level),
+                ],
               ),
             ),
 
@@ -244,6 +250,54 @@ class _Item {
   final IconData icon;
   final String? route;
   _Item(this.label, this.icon, this.route);
+}
+
+/// Sprint 3.1 Bloco 10a.2 — item "Refazer Calibração" no SanctuaryDrawer.
+///
+/// Consome `canRecalibrateProvider` (FutureProvider.family) declarado no
+/// Bloco 10a.1. Gate hard (DESIGN_DOC §7):
+///
+///   - `playerLevel >= 10` E já tem prefs → renderiza item
+///   - Qualquer outra combinação (lvl < 10, nunca calibrou, erro, loading)
+///     → `SizedBox.shrink` (item **oculto**, não desabilitado)
+///
+/// Navega pra `/mission_calibration?recalibrate=true`. A tela (Bloco 10b)
+/// lê o query param pra aplicar o fluxo de refazer (cobra via
+/// `chargeRecalibration` baseado em `updatesCount`).
+class _RecalibrateTile extends ConsumerWidget {
+  final int playerId;
+  final int playerLevel;
+  const _RecalibrateTile({required this.playerId, required this.playerLevel});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncGate = ref.watch(canRecalibrateProvider(
+      (playerId: playerId, playerLevel: playerLevel),
+    ));
+    return asyncGate.when(
+      data: (canRecalibrate) {
+        if (!canRecalibrate) return const SizedBox.shrink();
+        return ListTile(
+          key: const ValueKey('drawer-recalibrate'),
+          leading: const Icon(Icons.psychology_outlined,
+              color: AppColors.textSecondary, size: 20),
+          title: Text(
+            'Refazer Calibração',
+            style: GoogleFonts.roboto(
+                fontSize: 14, color: AppColors.textPrimary),
+          ),
+          trailing: const Icon(Icons.chevron_right,
+              color: AppColors.textMuted, size: 18),
+          onTap: () {
+            Navigator.pop(context);
+            context.go('/mission_calibration?recalibrate=true');
+          },
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
 }
 
 class _InfoChip extends StatelessWidget {

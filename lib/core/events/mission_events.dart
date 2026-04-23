@@ -115,6 +115,14 @@ class MissionFailureReason {
   static const expired = 'expired'; // reset diário/semanal bateu sem conclusão
   static const abandoned = 'abandoned'; // jogador desistiu via UI (0%)
   static const below25pct = 'below_25pct'; // tentou confirmar com <25%
+
+  /// Sprint 3.1 Bloco 10a.2 — jogador pagou pra deletar individual
+  /// repetível. Semanticamente: falha custosa que debita currency
+  /// (gold+gems por rank) em vez de subir sombra. Histórico do Bloco 12
+  /// discrimina visualmente: badge "Apagada" vs "Expirou"/"Desistiu".
+  /// Reusar `failedAt` em vez de criar coluna `deleted_at` porque
+  /// é solução final, não workaround — ver decisão D2 do plan-first.
+  static const deletedByUser = 'deleted_by_user';
 }
 
 /// Missão falhou. `reason` usa os valores canônicos de [MissionFailureReason].

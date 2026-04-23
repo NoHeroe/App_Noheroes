@@ -14,6 +14,7 @@ import '../domain/enums/mission_modality.dart';
 import '../domain/enums/rank_codec.dart';
 import '../domain/models/player_snapshot.dart';
 import '../domain/services/achievements_service.dart';
+import '../domain/services/individual_delete_service.dart';
 import '../domain/services/mission_preferences_service.dart';
 import '../domain/services/mission_progress_service.dart';
 import '../domain/services/reward_resolve_service.dart';
@@ -309,6 +310,16 @@ final missionPreferencesServiceProvider =
     repo: ref.watch(missionPreferencesRepositoryProvider),
     bus: ref.watch(appEventBusProvider),
     db: ref.watch(appDatabaseProvider),
+  );
+});
+
+// Sprint 3.1 Bloco 10a.2 — IndividualDeleteService (apaga individuais).
+final individualDeleteServiceProvider =
+    Provider<IndividualDeleteService>((ref) {
+  return IndividualDeleteService(
+    db: ref.watch(appDatabaseProvider),
+    missionRepo: ref.watch(missionRepositoryProvider),
+    bus: ref.watch(appEventBusProvider),
   );
 });
 
