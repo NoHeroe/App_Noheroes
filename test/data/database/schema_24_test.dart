@@ -14,8 +14,10 @@ import 'package:noheroes_app/data/database/app_database.dart';
 /// - PK composta em `player_achievements_completed` rejeita duplicata.
 /// - PK composta em `player_faction_reputation` rejeita duplicata.
 /// - PK simples em `player_mission_preferences` rejeita duplicata.
-///
-/// Não testa upgrade (reset brutal conforme R4-Q1).
+/// - **Upgrade 23→24** (Bloco 7 pré-clean): simula DB com schema 23
+///   (tabelas legacy via PRAGMA user_version=23) e valida que `onUpgrade`
+///   dropa legacy, cria novas e aplica UNIQUE (fecha Regra 6 do vault
+///   literalmente; reset brutal continua o comportamento canônico).
 void main() {
   late AppDatabase db;
 
@@ -283,6 +285,114 @@ void main() {
       expect(row.completionCount, 0);
       expect(row.failureCount, 0);
       expect(row.repeats, isTrue);
+    });
+  });
+
+  // Bloco 7 pré-clean: fecha Regra 6 do vault literalmente. Simula
+  // schema 23 seedando tabelas legacy + PRAGMA user_version=23 via
+  // callback `setup` do NativeDatabase.memory. Drift detecta
+  // 23 < schemaVersion=24 e chama `onUpgrade`, executando o
+  // `if (from < 24)` (reset brutal).
+  group('Sprint 3.1 — upgrade 23→24 (reset brutal via onUpgrade)', () {
+    late AppDatabase legacyDb;
+
+    setUp(() {
+      legacyDb = AppDatabase.forTesting(NativeDatabase.memory(setup: (raw) {
+        // Tabelas legacy que a migration do schema 24 deve dropar.
+        raw.execute('CREATE TABLE habits (id INTEGER PRIMARY KEY, '
+            'player_id INTEGER NOT NULL, title TEXT);');
+        raw.execute('CREATE TABLE habit_logs (id INTEGER PRIMARY KEY, '
+            'habit_id INTEGER NOT NULL);');
+        raw.execute('CREATE TABLE class_quests (id INTEGER PRIMARY KEY, '
+            'player_id INTEGER NOT NULL);');
+        raw.execute(
+            'CREATE TABLE active_faction_quests (id INTEGER PRIMARY KEY, '
+            'player_id INTEGER NOT NULL, faction_id TEXT);');
+        raw.execute('CREATE TABLE achievements (id INTEGER PRIMARY KEY, '
+            'key TEXT UNIQUE);');
+        raw.execute(
+            'CREATE TABLE player_achievements (id INTEGER PRIMARY KEY, '
+            'player_id INTEGER NOT NULL, achievement_key TEXT);');
+        raw.execute('PRAGMA user_version = 23;');
+      }));
+    });
+
+    tearDown(() async => legacyDb.close());
+
+    test('onUpgrade não lança', () async {
+      // Qualquer query dispara o beforeOpen que dispara onUpgrade.
+      await expectLater(
+        legacyDb.customSelect('SELECT 1 AS x').get(),
+        completes,
+      );
+    });
+
+    test('tabelas legacy foram dropadas após upgrade', () async {
+      // Trigger migration.
+      await legacyDb.customSelect('SELECT 1').get();
+      for (final legacy in [
+        'habits',
+        'habit_logs',
+        'class_quests',
+        'achievements',
+        'player_achievements',
+      ]) {
+        final rows = await legacyDb
+            .customSelect("SELECT name FROM sqlite_master WHERE type='table' "
+                "AND name='$legacy'")
+            .get();
+        expect(rows, isEmpty,
+            reason: 'legacy $legacy não deveria existir pós-upgrade');
+      }
+    });
+
+    test('6 tabelas novas do schema 24 existem pós-upgrade', () async {
+      await legacyDb.customSelect('SELECT 1').get();
+      for (final table in [
+        'player_mission_progress',
+        'player_mission_preferences',
+        'player_individual_missions',
+        'player_achievements_completed',
+        'player_faction_reputation',
+        'active_faction_quests',
+      ]) {
+        final rows = await legacyDb
+            .customSelect('SELECT COUNT(*) AS c FROM $table')
+            .get();
+        expect(rows.single.data['c'], 0,
+            reason: '$table deve existir e estar vazia pós-upgrade');
+      }
+    });
+
+    test('UNIQUE em active_faction_quests funciona pós-upgrade', () async {
+      await legacyDb.customSelect('SELECT 1').get();
+      await legacyDb.customInsert(
+        'INSERT INTO active_faction_quests '
+        '(player_id, faction_id, mission_key, week_start, assigned_at) '
+        'VALUES (?, ?, ?, ?, ?)',
+        variables: [
+          Variable.withInt(1),
+          Variable.withString('noryan'),
+          Variable.withString('Q1'),
+          Variable.withString('2026-04-20'),
+          Variable.withInt(1000),
+        ],
+      );
+      await expectLater(
+        legacyDb.customInsert(
+          'INSERT INTO active_faction_quests '
+          '(player_id, faction_id, mission_key, week_start, assigned_at) '
+          'VALUES (?, ?, ?, ?, ?)',
+          variables: [
+            Variable.withInt(1),
+            Variable.withString('noryan'),
+            Variable.withString('Q2'),
+            Variable.withString('2026-04-20'),
+            Variable.withInt(2000),
+          ],
+        ),
+        throwsA(anything),
+      );
     });
   });
 }
