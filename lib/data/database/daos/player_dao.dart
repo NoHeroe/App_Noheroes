@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import '../app_database.dart';
 import '../tables/players_table.dart';
+import '../../../core/events/player_events.dart';
 import '../../../core/utils/xp_calculator.dart';
 
 part 'player_dao.g.dart';
@@ -63,9 +64,27 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
     ));
   }
 
-  Future<void> addXp(int id, int xpAmount) async {
+  /// Credita XP ao jogador, recalculando level / xpToNext / HP máximo /
+  /// attribute points conforme marcos de scaling (10,15,20,25,30,40,50,
+  /// 60,70,80,99 — varia por classe).
+  ///
+  /// Sprint 3.1 Bloco 7a — retorna `LevelUp` event (não publicado) quando
+  /// o level mudou; caller publica no [AppEventBus] se houver.
+  /// Exemplo canônico:
+  /// ```dart
+  /// final evt = await playerDao.addXp(id, 100);
+  /// if (evt != null) eventBus.publish(evt);
+  /// ```
+  /// PlayerDao fica desacoplado do EventBus — camada data não conhece
+  /// camada core/events (ADR 0016).
+  ///
+  /// Nenhum caller vivo chama addXp hoje (callers antigos foram .bakados
+  /// no Bloco 1). `LevelUp` event fica dormente até Bloco 14 (assignment)
+  /// e Bloco 15.5 (fix do RewardGrantService usar addXp dentro da
+  /// transaction) ligarem.
+  Future<LevelUp?> addXp(int id, int xpAmount) async {
     final player = await findById(id);
-    if (player == null) return;
+    if (player == null) return null;
 
     int newXp = player.xp + xpAmount;
     int newLevel = player.level;
@@ -101,6 +120,18 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
       maxHp: Value(newMaxHp),
       maxMp: Value(newMaxMp),
     ));
+
+    // Sprint 3.1 Bloco 7a — retorna LevelUp quando level mudou.
+    // Caller publica no bus (PlayerDao é camada data — desacoplada
+    // do EventBus por ADR 0016).
+    if (newLevel > oldLevel) {
+      return LevelUp(
+        playerId: id,
+        newLevel: newLevel,
+        previousLevel: oldLevel,
+      );
+    }
+    return null;
   }
 
   // Pontos de atributo extras nos marcos de nível por classe
