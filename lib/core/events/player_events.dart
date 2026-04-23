@@ -58,6 +58,7 @@ class GoldSpent extends AppEvent {
 /// Gemas foram gastas. Fontes canônicas reaproveitam [GoldSink] mais:
 class GemSink {
   static const shop = 'shop';
+  static const enchant = 'enchant'; // custo de runa (Bloco 7a — EnchantService)
   static const recalibration = 'recalibration'; // refazer quiz (Bloco 9)
   static const individualDelete = 'individual_delete'; // Bloco 11
   static const ascension = 'ascension';

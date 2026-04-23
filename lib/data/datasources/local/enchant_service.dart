@@ -1,4 +1,7 @@
 import 'package:drift/drift.dart';
+import '../../../core/events/app_event_bus.dart';
+import '../../../core/events/crafting_events.dart';
+import '../../../core/events/player_events.dart';
 import '../../../core/utils/enchant_policy.dart';
 import '../../../domain/models/enchant_result.dart';
 import '../../../domain/models/enchant_spec.dart';
@@ -27,8 +30,10 @@ class EnchantService {
   final AppDatabase _db;
   final ItemsCatalogService _items;
   final PlayerInventoryService _playerInventory;
+  final AppEventBus _eventBus;
 
-  EnchantService(this._db, this._items, this._playerInventory);
+  EnchantService(
+      this._db, this._items, this._playerInventory, this._eventBus);
 
   // Resolve um item do catálogo e devolve como EnchantSpec. Retorna null
   // se a key não existe OU o item não é do tipo runa (defensivo — protege
@@ -117,8 +122,13 @@ class EnchantService {
     }
 
     // 8. Transação atômica — debit gems + consume runa + set applied_rune_key.
+    // Sprint 3.1 Bloco 7a — vars capturadas dentro da transação pra emit
+    // pós-commit. Rollback deixa as vars originais (0/'') e o publish
+    // vive fora do try; não alcançado se exception propagar.
+    var capturedCost = 0;
+    var capturedTargetItemKey = '';
     try {
-      return await _db.transaction<EnchantResult>(() async {
+      final result = await _db.transaction<EnchantResult>(() async {
         final cost = enchant.costGems ?? 0;
         if (cost > 0) {
           await _db.customUpdate(
@@ -146,11 +156,31 @@ class EnchantService {
           appliedRuneKey: Value(enchantKey),
         ));
 
+        capturedCost = cost;
+        capturedTargetItemKey = invRow.itemKey;
+
         return EnchantResult.allowed(
           applied: enchant,
           replaced: currentRune,
         );
       });
+
+      // Emit pós-commit.
+      if (result.allowed) {
+        if (capturedCost > 0) {
+          _eventBus.publish(GemsSpent(
+            playerId: playerId,
+            amount: capturedCost,
+            source: GemSink.enchant,
+          ));
+        }
+        _eventBus.publish(ItemEnchanted(
+          playerId: playerId,
+          itemKey: capturedTargetItemKey,
+          runeKey: enchantKey,
+        ));
+      }
+      return result;
     } catch (e) {
       // ignore: avoid_print
       print('[enchant_service] applyEnchantToItem(playerId=$playerId, '

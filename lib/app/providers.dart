@@ -127,6 +127,7 @@ final enchantServiceProvider = Provider<EnchantService>((ref) {
     ref.watch(appDatabaseProvider),
     ref.watch(itemsCatalogServiceProvider),
     ref.watch(playerInventoryServiceProvider),
+    ref.watch(appEventBusProvider),
   );
 });
 
