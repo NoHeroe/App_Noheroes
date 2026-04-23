@@ -120,6 +120,37 @@ class TutorialManager {
     );
   }
 
+  // ── FASE 13 — Calibração de Missões (nível 5 + classe) ──────────────────
+  // Sprint 3.1 Bloco 9 — dispara o quiz de 7 perguntas após phase5_class.
+  // Pré-condições duras: hasClass && !hasCalibrated. Sem classe escolhida
+  // ou já calibrado → noop. Padrão de polling do runAll (não usa
+  // subscription no bus; ClassSelected event continua emitido pra
+  // outros consumers).
+  static Future<void> phase13MissionCalibration(
+    BuildContext ctx, {
+    required bool hasClass,
+    required bool hasCalibrated,
+  }) async {
+    if (!await TutorialService.shouldShow(
+        TutorialPhase.phase13_mission_calibration)) {
+      return;
+    }
+    if (!hasClass || hasCalibrated) return;
+    if (!ctx.mounted) return;
+    await NpcDialogOverlay.show(
+      ctx,
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
+      message:
+          'Antes de receber missões, calibra teu caminho. Responde o que '
+          'te move.',
+    );
+    await TutorialService.markDone(
+        TutorialPhase.phase13_mission_calibration);
+    if (!ctx.mounted) return;
+    ctx.go('/mission_calibration');
+  }
+
   // ── FASE 6 — Guilda (nível 6) ─────────────────────────────────────────────
   static Future<void> phase6Guild(BuildContext ctx) async {
     if (!await TutorialService.shouldShow(TutorialPhase.phase6_guild)) return;
@@ -362,6 +393,7 @@ class TutorialManager {
     required bool hasClass,
     required bool hasFaction,
     required bool hasPlaystyle,
+    required bool hasCalibrated,
     required bool isVitalistWithoutAffinity,
   }) async {
     if (level >= 1 && ctx.mounted) await phase1Sanctuary(ctx);
@@ -369,6 +401,13 @@ class TutorialManager {
     if (level >= 3 && ctx.mounted) await phase3Shop(ctx);
     if (level >= 4 && ctx.mounted) await phase4Regions(ctx);
     if (level >= 5 && ctx.mounted) await phase5Class(ctx, hasClass: hasClass);
+    // Phase13 entra entre phase5 (classe) e phase6 (guilda): quiz só faz
+    // sentido após classe escolhida, e deve completar antes de o fluxo
+    // avançar pra guilda/facção.
+    if (level >= 5 && ctx.mounted) {
+      await phase13MissionCalibration(ctx,
+          hasClass: hasClass, hasCalibrated: hasCalibrated);
+    }
     if (level >= 6 && ctx.mounted) await phase6Guild(ctx);
     if (level >= 7 && ctx.mounted) await phase7Factions(ctx, hasFaction: hasFaction);
     if (level >= 10 && ctx.mounted) await phase8Shadow(ctx);

@@ -67,3 +67,24 @@ class AchievementNotUnlockedException implements Exception {
   String toString() =>
       'AchievementNotUnlocked(player=$playerId, key=$achievementKey)';
 }
+
+/// Sprint 3.1 Bloco 9 — saldo de gems do jogador insuficiente pra cobrir o
+/// débito solicitado. Consumida pelo `MissionPreferencesService.
+/// chargeRecalibration` (refazer calibração) e apropriada pra outros
+/// débitos futuros (shops premium, etc). Diferencia de erro real —
+/// UI/caller deve mostrar mensagem amigável.
+class InsufficientGemsException implements Exception {
+  final int playerId;
+  final int required;
+  final int available;
+
+  const InsufficientGemsException({
+    required this.playerId,
+    required this.required,
+    required this.available,
+  });
+
+  @override
+  String toString() =>
+      'InsufficientGems(player=$playerId, need=$required, have=$available)';
+}

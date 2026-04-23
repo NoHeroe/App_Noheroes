@@ -14,6 +14,7 @@ import '../domain/enums/mission_modality.dart';
 import '../domain/enums/rank_codec.dart';
 import '../domain/models/player_snapshot.dart';
 import '../domain/services/achievements_service.dart';
+import '../domain/services/mission_preferences_service.dart';
 import '../domain/services/mission_progress_service.dart';
 import '../domain/services/reward_resolve_service.dart';
 import '../domain/strategies/individual_modality_strategy.dart';
@@ -299,6 +300,16 @@ final achievementsServiceProvider = Provider<AchievementsService>((ref) {
     sub?.cancel();
   });
   return service;
+});
+
+// Sprint 3.1 Bloco 9 — MissionPreferencesService (quiz de calibração).
+final missionPreferencesServiceProvider =
+    Provider<MissionPreferencesService>((ref) {
+  return MissionPreferencesService(
+    repo: ref.watch(missionPreferencesRepositoryProvider),
+    bus: ref.watch(appEventBusProvider),
+    db: ref.watch(appDatabaseProvider),
+  );
 });
 
 // Sprint 3.1 Bloco 4 — Repository Pattern (ADR 0016).

@@ -67,6 +67,45 @@ class MissionPreferences {
     );
   }
 
+  /// Sprint 3.1 Bloco 9 — troca `primaryFocus` com **wipe condicional**
+  /// dos subfocus que não são aplicáveis ao novo foco:
+  ///
+  /// - Físico → zera mental + spiritual (P5/P6 não aparecem no quiz)
+  /// - Mental → zera physical + spiritual
+  /// - Espiritual → zera physical + mental
+  /// - Vitalismo → **preserva todos** (P4/P5/P6 renderizam)
+  ///
+  /// Motivo: `MissionCalibrationScreen` só renderiza subfocus aplicáveis.
+  /// Se o jogador chega no P4/P5/P6 como Vitalismo, preenche os 3, volta
+  /// e muda pra Físico, sem esse wipe `save()` persistiria valores que
+  /// ele não viu mais — data corruption silenciosa do ponto de vista
+  /// dele. Usado como `draft = draft.withPrimaryFocus(newFocus)` no
+  /// callback da P1.
+  MissionPreferences withPrimaryFocus(MissionCategory newFocus) {
+    switch (newFocus) {
+      case MissionCategory.fisico:
+        return copyWith(
+          primaryFocus: newFocus,
+          mentalSubfocus: const [],
+          spiritualSubfocus: const [],
+        );
+      case MissionCategory.mental:
+        return copyWith(
+          primaryFocus: newFocus,
+          physicalSubfocus: const [],
+          spiritualSubfocus: const [],
+        );
+      case MissionCategory.espiritual:
+        return copyWith(
+          primaryFocus: newFocus,
+          physicalSubfocus: const [],
+          mentalSubfocus: const [],
+        );
+      case MissionCategory.vitalismo:
+        return copyWith(primaryFocus: newFocus);
+    }
+  }
+
   static List<String> _parseSubfocusList(dynamic raw, String field) {
     if (raw == null || raw == '') return const [];
     if (raw is List) {

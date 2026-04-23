@@ -21,6 +21,7 @@ import '../presentation/shop/screens/shop_screen.dart';
 import '../presentation/shop/screens/shops_list_screen.dart';
 import '../presentation/class_selection/screens/class_selection_screen.dart';
 import '../presentation/faction_selection/screens/faction_selection_screen.dart';
+import '../presentation/mission_calibration/screens/mission_calibration_screen.dart';
 import '../presentation/dev/dev_panel_screen.dart';
 import '../presentation/battle/screens/battle_hub_screen.dart';
 import '../presentation/vitalism/screens/void_ritual_screen.dart';
@@ -84,6 +85,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/achievements',       builder: (c, s) => const _UnderConstruction(feature: 'Conquistas', block: 'Bloco 8')),
       GoRoute(path: '/class-selection',    builder: (c, s) => const ClassSelectionScreen()),
       GoRoute(path: '/faction-selection',  builder: (c, s) => const FactionSelectionScreen()),
+      // Sprint 3.1 Bloco 9 — Quiz de calibração.
+      GoRoute(
+        path: '/mission_calibration',
+        builder: (c, s) => const MissionCalibrationScreen(),
+        redirect: (context, state) {
+          final player = ref.read(currentPlayerProvider);
+          if (player == null) return '/login';
+          if (player.level < 5) return '/sanctuary';
+          final cls = player.classType;
+          if (cls == null || cls.isEmpty) return '/class-selection';
+          return null;
+        },
+      ),
       GoRoute(path: '/dev',                builder: (c, s) => const DevPanelScreen()),
       GoRoute(path: '/battle',             builder: (c, s) => const BattleHubScreen()),
       // /history será refeita no Bloco 12.
