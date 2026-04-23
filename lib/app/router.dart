@@ -21,6 +21,7 @@ import '../presentation/shop/screens/shop_screen.dart';
 import '../presentation/shop/screens/shops_list_screen.dart';
 import '../presentation/class_selection/screens/class_selection_screen.dart';
 import '../presentation/faction_selection/screens/faction_selection_screen.dart';
+import '../presentation/individual_creation/screens/individual_creation_screen.dart';
 import '../presentation/mission_calibration/screens/mission_calibration_screen.dart';
 import '../presentation/quests/screens/quests_screen.dart';
 import '../presentation/dev/dev_panel_screen.dart';
@@ -50,6 +51,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/habits',       builder: (c, s) => const _UnderConstruction(feature: 'Missões (/quests)', block: 'Bloco 10')),
       // Sprint 3.1 Bloco 10a.1 — /quests virou tela real (6 abas + chips).
       GoRoute(path: '/quests',       builder: (c, s) => const QuestsScreen()),
+      // Sprint 3.1 Bloco 11b.1 — form criação de missão individual.
+      GoRoute(
+        path: '/individual_creation',
+        builder: (c, s) => const IndividualCreationScreen(),
+        redirect: (context, state) {
+          final player = ref.read(currentPlayerProvider);
+          if (player == null) return '/login';
+          if (player.level < 5) return '/sanctuary';
+          final cls = player.classType;
+          if (cls == null || cls.isEmpty) return '/class-selection';
+          return null;
+        },
+      ),
       GoRoute(path: '/character',    builder: (c, s) => const CharacterScreen()),
       GoRoute(path: '/regions',      builder: (c, s) => const RegionsScreen()),
       // /shadow será refeita no Bloco 12 (migração de stats da Câmara pro Histórico).
