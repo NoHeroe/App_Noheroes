@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:flutter/services.dart';
+import '../../../core/events/app_event_bus.dart';
+import '../../../core/events/player_events.dart';
 import '../../../core/utils/item_equip_policy.dart';
 import '../../../core/utils/item_source_policy.dart';
 import '../../../domain/enums/source_type.dart';
@@ -46,9 +48,10 @@ class ShopsService {
   final AppDatabase _db;
   final ItemsCatalogService _catalog;
   final PlayerInventoryService _inventory;
+  final AppEventBus _eventBus;
   Future<List<ShopSpec>>? _cacheFuture;
 
-  ShopsService(this._db, this._catalog, this._inventory);
+  ShopsService(this._db, this._catalog, this._inventory, this._eventBus);
 
   Future<List<ShopSpec>> listShops() => _cacheFuture ??= _loadAll();
 
@@ -260,6 +263,26 @@ class ShopsService {
         acquiredVia: SourceType.shop,
       );
       if (invId < 0) return BuyResult.rejected(BuyRejectReason.dbError);
+
+      // Sprint 3.1 Bloco 7a — emit depois que o addItem confirmou.
+      // ShopsService não usa transaction wrapping (bug pré-existente:
+      // se addItem falha após UPDATE players, jogador perde currency —
+      // fora do escopo do 7a corrigir). Emit vive aqui pra refletir que
+      // o débito + item foram de fato persistidos.
+      if (priceCoins != null && priceCoins > 0) {
+        _eventBus.publish(GoldSpent(
+          playerId: playerId,
+          amount: priceCoins,
+          source: GoldSink.shop,
+        ));
+      }
+      if (priceGems != null && priceGems > 0) {
+        _eventBus.publish(GemsSpent(
+          playerId: playerId,
+          amount: priceGems,
+          source: GemSink.shop,
+        ));
+      }
       return BuyResult.ok(invId);
     } catch (_) {
       return BuyResult.rejected(BuyRejectReason.dbError);

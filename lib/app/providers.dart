@@ -93,6 +93,7 @@ final shopsServiceProvider = Provider<ShopsService>((ref) {
     ref.watch(appDatabaseProvider),
     ref.watch(itemsCatalogServiceProvider),
     ref.watch(playerInventoryServiceProvider),
+    ref.watch(appEventBusProvider),
   );
 });
 
