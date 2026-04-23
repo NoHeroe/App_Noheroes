@@ -48,6 +48,7 @@ flutter:
     - assets/data/shadow_phrases.json
     - assets/data/npc_dialogues.json
     - assets/data/lore_quests.json
+    - assets/data/extras_catalog.json
     - assets/data/lore_entries.json
     - assets/data/library_works.json
     - assets/data/classes.json

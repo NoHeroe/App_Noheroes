@@ -144,6 +144,34 @@ class MissionFailed extends AppEvent {
       'MissionFailed($missionKey, player=$playerId, reason=$reason)';
 }
 
+/// Sprint 3.1 Bloco 11a — missão **individual** foi criada pelo jogador
+/// (via form de criação). Emitido pelo `IndividualCreationService`
+/// pós-commit. Hoje sem listeners — deixa o hook preparado pra
+/// `AchievementsService` cascatear (ex: "Primeira missão individual
+/// criada") ou assignment de Bloco 14 reagir.
+///
+/// `categoria` é `String` (storage) pra evitar import recíproco com
+/// `domain/enums` — listeners parseiam via `MissionCategoryCodec`.
+class IndividualCreated extends AppEvent {
+  @override
+  final int playerId;
+  final int missionProgressId;
+  final String missionKey;
+  final String categoria;
+
+  IndividualCreated({
+    required this.playerId,
+    required this.missionProgressId,
+    required this.missionKey,
+    required this.categoria,
+    super.at,
+  });
+
+  @override
+  String toString() =>
+      'IndividualCreated(player=$playerId, key=$missionKey, cat=$categoria)';
+}
+
 /// Preferências do jogador mudaram (primeira calibração, refazer, ou update
 /// programático). `MissionAssignmentService` do Bloco 14 escuta pra
 /// recalcular pools.

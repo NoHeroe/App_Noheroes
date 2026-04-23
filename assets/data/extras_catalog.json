@@ -1,0 +1,62 @@
+{
+  "extras": [
+    {
+      "key": "NPC_LOST_MERCHANT",
+      "type": "npc",
+      "title": "O Mercador Perdido",
+      "description": "Um mercador de Vanaran se perdeu nas montanhas de aço.",
+      "narrative": "Sua carruagem foi encontrada na beira da estrada. Estamos procurando alguém generoso que possa pagar pra que alguns aventureiros nos ajudem a encontrá-lo...",
+      "unlock_level": 3,
+      "reward_xp": 150,
+      "reward_gold": 80
+    },
+    {
+      "key": "NPC_OLD_HERMIT",
+      "type": "npc",
+      "title": "O Eremita das Ruínas",
+      "description": "Um velho eremita guarda segredos da Primeira Era.",
+      "narrative": "Ele fala em enigmas. Quem resolver três, ganha acesso ao livro que ele esconde.",
+      "unlock_level": 8,
+      "reward_xp": 400,
+      "reward_gold": 200
+    },
+    {
+      "key": "NPC_SHADOW_SEEKER",
+      "type": "npc",
+      "title": "Caçadora de Sombras",
+      "description": "Uma caçadora oferece contrato pra quem enfrentar a própria Sombra.",
+      "narrative": "Ela só contrata quem já viu o fundo do abismo. Cuidado com o que promete.",
+      "unlock_level": 15,
+      "reward_xp": 800,
+      "reward_gold": 400
+    },
+    {
+      "key": "SECRET_VOID_ECHO",
+      "type": "secret",
+      "title": "Eco do Vazio",
+      "description": "Algo te chamou no silêncio.",
+      "narrative": "A voz não era sua. Mas respondeu quando você pensou.",
+      "is_secret": true,
+      "reward_xp": 300,
+      "reward_gold": 0
+    },
+    {
+      "key": "SECRET_HIDDEN_PATH",
+      "type": "secret",
+      "title": "O Caminho Escondido",
+      "description": "Entre duas árvores idênticas, há uma que não devia estar ali.",
+      "is_secret": true,
+      "reward_xp": 500,
+      "reward_gold": 100
+    },
+    {
+      "key": "EVENT_STUB_UNITY",
+      "type": "event",
+      "title": "Eventos em breve",
+      "description": "Missões de Eventos chegam quando Caelum ganhar vida dinâmica. (Stub — futuro Unity.)",
+      "unlock_level": 1,
+      "reward_xp": 0,
+      "reward_gold": 0
+    }
+  ]
+}

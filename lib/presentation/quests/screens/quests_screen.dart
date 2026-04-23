@@ -8,6 +8,7 @@ import '../../../domain/enums/mission_modality.dart';
 import '../../../domain/models/mission_progress.dart';
 import '../providers/quests_screen_notifier.dart';
 import '../widgets/category_filter_chips.dart';
+import '../widgets/extras_card.dart';
 import '../widgets/individual_mission_card.dart';
 import '../widgets/internal_mission_card.dart';
 import '../widgets/mixed_mission_card.dart';
@@ -104,7 +105,14 @@ class _QuestsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Bloco 11a — aba Extras mostra MissionProgress individuais do jogador
+    // (user_created=true) + catálogo Extras (NPCs/Lore/Secret-revealed).
+    // Outras abas mostram só missions do repo.
+    final isExtras = state.activeTab == QuestTab.extras;
     final missions = state.missions;
+    final extras = state.extras;
+    final totalItems = isExtras ? missions.length + extras.length : missions.length;
+
     return Column(
       children: [
         const SizedBox(height: 8),
@@ -119,7 +127,7 @@ class _QuestsBody extends StatelessWidget {
         Expanded(
           child: RefreshIndicator(
             onRefresh: onRefresh,
-            child: missions.isEmpty
+            child: totalItems == 0
                 ? ListView(
                     key: const ValueKey('quests-empty'),
                     children: [
@@ -140,10 +148,19 @@ class _QuestsBody extends StatelessWidget {
                   )
                 : ListView.builder(
                     key: const ValueKey('quests-list'),
-                    itemCount: missions.length,
-                    itemBuilder: (_, i) => _MissionCardDispatcher(
-                      mission: missions[i],
-                    ),
+                    itemCount: totalItems,
+                    itemBuilder: (_, i) {
+                      // Em Extras: primeiro as individuais ativas, depois
+                      // o catálogo de NPCs/Lore.
+                      if (isExtras && i >= missions.length) {
+                        return ExtrasCard(
+                          spec: extras[i - missions.length],
+                        );
+                      }
+                      return _MissionCardDispatcher(
+                        mission: missions[i],
+                      );
+                    },
                   ),
           ),
         ),

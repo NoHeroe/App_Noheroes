@@ -7,6 +7,7 @@ import '../../../core/events/mission_events.dart';
 import '../../../core/events/reward_events.dart';
 import '../../../domain/enums/mission_category.dart';
 import '../../../domain/enums/mission_tab_origin.dart';
+import '../../../domain/models/extras_mission_spec.dart';
 import '../../../domain/models/mission_progress.dart';
 import '../../../domain/repositories/mission_repository.dart';
 
@@ -33,21 +34,31 @@ class QuestsScreenState {
   /// started_at; history: DESC por COALESCE(completed_at, failed_at)).
   final List<MissionProgress> missions;
 
+  /// Sprint 3.1 Bloco 11a — catálogo de missões Extras carregado da
+  /// aba Extras (NPCs/Lore/Secretas-reveladas/Evento-stub). Vazia em
+  /// outras abas. Renderização pelo `_MissionCardDispatcher` (Bloco
+  /// 10a.1) decide entre `MissionCardBase` (MissionProgress) e
+  /// `ExtrasCard` (ExtrasMissionSpec).
+  final List<ExtrasMissionSpec> extras;
+
   const QuestsScreenState({
     required this.activeTab,
     required this.categoryFilters,
     required this.missions,
+    this.extras = const [],
   });
 
   QuestsScreenState copyWith({
     QuestTab? activeTab,
     Set<MissionCategory>? categoryFilters,
     List<MissionProgress>? missions,
+    List<ExtrasMissionSpec>? extras,
   }) {
     return QuestsScreenState(
       activeTab: activeTab ?? this.activeTab,
       categoryFilters: categoryFilters ?? this.categoryFilters,
       missions: missions ?? this.missions,
+      extras: extras ?? this.extras,
     );
   }
 }
@@ -115,10 +126,12 @@ class QuestsScreenNotifier
     });
 
     final missions = await _loadForTab(repo, playerId, activeTab, filters);
+    final extras = await _loadExtrasFor(activeTab);
     return QuestsScreenState(
       activeTab: activeTab,
       categoryFilters: filters,
       missions: missions,
+      extras: extras,
     );
   }
 
@@ -132,10 +145,23 @@ class QuestsScreenNotifier
     final playerId = arg;
     final missions =
         await _loadForTab(repo, playerId, tab, current.categoryFilters);
+    final extras = await _loadExtrasFor(tab);
     state = AsyncValue.data(current.copyWith(
       activeTab: tab,
       missions: missions,
+      extras: extras,
     ));
+  }
+
+  /// Carrega catálogo Extras quando `tab == extras` — senão retorna
+  /// lista vazia. Filtra secretas não-reveladas (Bloco 11a: todas
+  /// secretas do catálogo ficam ocultas por default; Bloco 13 ou
+  /// futuro implementa triggers de revelação).
+  Future<List<ExtrasMissionSpec>> _loadExtrasFor(QuestTab tab) async {
+    if (tab != QuestTab.extras) return const [];
+    final catalog = ref.read(extrasCatalogServiceProvider);
+    final all = await catalog.loadAll();
+    return all.where((e) => !e.isSecret).toList(growable: false);
   }
 
   /// Adiciona/remove [cat] dos filtros e refaz a query. Assinatura

@@ -13,8 +13,11 @@ import '../data/services/reward_grant_service.dart';
 import '../domain/enums/mission_modality.dart';
 import '../domain/enums/rank_codec.dart';
 import '../domain/models/player_snapshot.dart';
+import '../data/datasources/local/extras_catalog_service.dart';
 import '../domain/services/achievements_service.dart';
+import '../domain/services/individual_creation_service.dart';
 import '../domain/services/individual_delete_service.dart';
+import '../domain/services/mission_balancer_service.dart';
 import '../domain/services/mission_preferences_service.dart';
 import '../domain/services/mission_progress_service.dart';
 import '../domain/services/reward_resolve_service.dart';
@@ -321,6 +324,25 @@ final individualDeleteServiceProvider =
     missionRepo: ref.watch(missionRepositoryProvider),
     bus: ref.watch(appEventBusProvider),
   );
+});
+
+// Sprint 3.1 Bloco 11a — MissionBalancer (pure logic) + IndividualCreation
+// (atomic) + ExtrasCatalog (lê JSONs).
+final missionBalancerServiceProvider =
+    Provider<MissionBalancerService>((_) => const MissionBalancerService());
+
+final individualCreationServiceProvider =
+    Provider<IndividualCreationService>((ref) {
+  return IndividualCreationService(
+    db: ref.watch(appDatabaseProvider),
+    missionRepo: ref.watch(missionRepositoryProvider),
+    balancer: ref.watch(missionBalancerServiceProvider),
+    bus: ref.watch(appEventBusProvider),
+  );
+});
+
+final extrasCatalogServiceProvider = Provider<ExtrasCatalogService>((_) {
+  return ExtrasCatalogService();
 });
 
 // Sprint 3.1 Bloco 10a.1 — Gate de "Refazer calibração" no SanctuaryDrawer

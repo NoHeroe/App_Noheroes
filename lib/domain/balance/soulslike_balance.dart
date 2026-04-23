@@ -30,6 +30,20 @@ class SoulslikeBalance {
 
   /// Boost aplicado em pool rank S pra players lvl 91-99.
   static const double lateGameSPlusBonus = 0.05;
+
+  /// Sprint 3.1 Bloco 11a — multiplicadores por categoria (DESIGN_DOC §5
+  /// linha 210-215). Aplicados no `MissionBalancerService` pra modular
+  /// reward de missões individuais: categorias que Raul considera mais
+  /// "raras/difíceis" (espiritual, vitalismo) pagam mais.
+  ///
+  /// Keys são `MissionCategory.storage` pra evitar import recíproco com
+  /// `domain/enums` (SoulslikeBalance é puro e independe de enums).
+  static const Map<String, double> categoryMultipliers = {
+    'fisico': 1.0,
+    'mental': 1.1,
+    'espiritual': 1.2,
+    'vitalismo': 1.15,
+  };
 }
 
 /// Clampa [pct] em [0, 300]. `maxProgressPct` do ADR 0013.
