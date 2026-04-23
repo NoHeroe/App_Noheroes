@@ -258,6 +258,29 @@ void main() {
       expect(repo.findByTabCalls, greaterThan(before));
     });
 
+    test('IndividualCreated no bus → invalida state (refetch)', () async {
+      // Bloco 11b.2 — form de criação emite IndividualCreated; notifier
+      // rebuilds pra que a aba Extras exiba a nova missão individual
+      // ativa sem pull-to-refresh manual.
+      final repo = _FakeMissionRepo(byTab: {MissionTabOrigin.daily: const []});
+      final bus = AppEventBus();
+      addTearDown(bus.dispose);
+      final c = _makeContainer(repo: repo, bus: bus);
+      addTearDown(c.dispose);
+
+      await c.read(questsScreenNotifierProvider(1).future);
+      final before = repo.findByTabCalls;
+      bus.publish(IndividualCreated(
+        playerId: 1,
+        missionProgressId: 42,
+        missionKey: 'IND_USER_X',
+        categoria: 'fisico',
+      ));
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      await c.read(questsScreenNotifierProvider(1).future);
+      expect(repo.findByTabCalls, greaterThan(before));
+    });
+
     test('clearFilters zera o set e mostra lista completa', () async {
       final repo = _FakeMissionRepo(byTab: {
         MissionTabOrigin.daily: [

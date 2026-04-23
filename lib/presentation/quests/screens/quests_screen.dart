@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
@@ -43,6 +44,7 @@ class QuestsScreen extends ConsumerWidget {
     final notifier =
         ref.read(questsScreenNotifierProvider(player.id).notifier);
 
+    final activeTab = asyncState.valueOrNull?.activeTab;
     return Scaffold(
       backgroundColor: AppColors.black,
       appBar: AppBar(
@@ -50,6 +52,18 @@ class QuestsScreen extends ConsumerWidget {
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.textPrimary,
       ),
+      // Bloco 11b.2 — FAB "Criar missão individual" visível APENAS na
+      // aba Extras (sub-seção Individuais). Oculto nas demais (daily,
+      // classe, facção, admissão, histórico não aceitam criação).
+      floatingActionButton: activeTab == QuestTab.extras
+          ? FloatingActionButton.extended(
+              key: const ValueKey('quests-fab-create-individual'),
+              backgroundColor: AppColors.purple,
+              icon: const Icon(Icons.add),
+              label: const Text('Criar missão'),
+              onPressed: () => context.go('/individual_creation'),
+            )
+          : null,
       body: asyncState.when(
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppColors.purple),

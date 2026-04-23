@@ -119,10 +119,17 @@ class QuestsScreenNotifier
         .on<RewardGranted>()
         .where((e) => e.playerId == playerId)
         .listen((_) => ref.invalidateSelf());
+    // Bloco 11b.2 — nova missão individual criada via form → refresh
+    // imediato da aba Extras (sub-seção Individuais) sem pull-to-refresh.
+    final subIndividualCreated = bus
+        .on<IndividualCreated>()
+        .where((e) => e.playerId == playerId)
+        .listen((_) => ref.invalidateSelf());
     ref.onDispose(() {
       subCompleted.cancel();
       subFailed.cancel();
       subReward.cancel();
+      subIndividualCreated.cancel();
     });
 
     final missions = await _loadForTab(repo, playerId, activeTab, filters);
