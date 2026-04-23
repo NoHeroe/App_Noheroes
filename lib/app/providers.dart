@@ -3,6 +3,9 @@ import '../core/events/app_event_bus.dart';
 import '../core/utils/guild_rank.dart';
 import '../data/database/app_database.dart';
 import '../data/datasources/local/auth_local_ds.dart';
+import '../data/datasources/local/class_quest_service.dart';
+import '../data/datasources/local/faction_quest_service.dart';
+import '../data/datasources/local/quest_admission_service.dart';
 import '../data/services/reward_grant_service.dart';
 import '../domain/enums/mission_modality.dart';
 import '../domain/enums/rank_codec.dart';
@@ -152,6 +155,28 @@ final playerStreamProvider = StreamProvider<PlayersTableData?>((ref) {
   return (db.select(db.playersTable)
         ..where((t) => t.id.equals(player.id)))
       .watchSingleOrNull();
+});
+
+// Sprint 3.1 Bloco 7b — quest services reescritos (Class, Faction,
+// QuestAdmission). Todos usam Repository + EventBus; nenhum toca tabelas
+// legacy (habits/class_quests/faction_quests foram dropadas na migration
+// schema 24).
+final classQuestServiceProvider = Provider<ClassQuestService>((ref) {
+  return ClassQuestService(ref.watch(missionRepositoryProvider));
+});
+
+final factionQuestServiceProvider = Provider<FactionQuestService>((ref) {
+  return FactionQuestService(
+      ref.watch(activeFactionQuestsRepositoryProvider));
+});
+
+final questAdmissionServiceProvider = Provider<QuestAdmissionService>((ref) {
+  return QuestAdmissionService(
+    ref.watch(appDatabaseProvider),
+    ref.watch(missionRepositoryProvider),
+    ref.watch(classQuestServiceProvider),
+    ref.watch(appEventBusProvider),
+  );
 });
 
 // Sprint 3.1 Bloco 6 — Strategies + MissionProgressService (ADR 0014).

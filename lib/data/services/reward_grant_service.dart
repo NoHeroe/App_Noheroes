@@ -108,6 +108,19 @@ class RewardGrantService {
         );
       }
 
+      // 3b. Sprint 3.1 Bloco 7b — fix bug 4 (totalQuestsCompleted
+      //     parcial). No legacy só class/faction/guild incrementavam
+      //     esse contador. Agora CADA missão que grantou reward
+      //     incrementa 1x — diárias, individuais, classe, facção,
+      //     admissão todas contam. Idempotência garantida pelo check
+      //     de rewardClaimed no passo 1.
+      await _db.customUpdate(
+        'UPDATE players SET total_quests_completed = '
+        'total_quests_completed + 1 WHERE id = ?',
+        variables: [Variable.withInt(playerId)],
+        updates: {_db.playersTable},
+      );
+
       // 4. Items — delega pro PlayerInventoryService que já existe.
       //    Cada addItem respeita stacking/durabilidade do schema
       //    (Sprint 2.1). SourceType.questReward alinha ADR 0010.
