@@ -88,10 +88,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/achievements',       builder: (c, s) => const _UnderConstruction(feature: 'Conquistas', block: 'Bloco 8')),
       GoRoute(path: '/class-selection',    builder: (c, s) => const ClassSelectionScreen()),
       GoRoute(path: '/faction-selection',  builder: (c, s) => const FactionSelectionScreen()),
-      // Sprint 3.1 Bloco 9 — Quiz de calibração.
+      // Sprint 3.1 Bloco 9 — Quiz de calibração inicial.
+      // Sprint 3.1 Bloco 10b — também aceita `?recalibrate=true` (modo
+      // refazer, acessado via SanctuaryDrawer item Refazer Calibração).
       GoRoute(
         path: '/mission_calibration',
-        builder: (c, s) => const MissionCalibrationScreen(),
+        builder: (c, s) => MissionCalibrationScreen(
+          isRecalibrate:
+              s.uri.queryParameters['recalibrate'] == 'true',
+        ),
         redirect: (context, state) {
           final player = ref.read(currentPlayerProvider);
           if (player == null) return '/login';

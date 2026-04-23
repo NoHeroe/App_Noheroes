@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../providers/quests_screen_notifier.dart';
 
 /// Sprint 3.1 Bloco 10a.1 — chips horizontais das 6 abas de `/quests`.
@@ -41,6 +42,16 @@ class QuestTabChips extends StatelessWidget {
             key: ValueKey('quest-tab-${tab.name}'),
             label: Text(_labels[tab]!),
             selected: selected,
+            selectedColor: AppColors.purple,
+            backgroundColor: AppColors.surface,
+            labelStyle: TextStyle(
+              color: selected
+                  ? AppColors.textPrimary
+                  : AppColors.textSecondary,
+            ),
+            side: BorderSide(
+              color: selected ? AppColors.purple : AppColors.border,
+            ),
             onSelected: (_) => onSelect(tab),
           );
         },

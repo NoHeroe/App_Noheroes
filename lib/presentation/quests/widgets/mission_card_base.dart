@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_colors.dart';
 import '../../../domain/models/mission_progress.dart';
 
 /// Sprint 3.1 Bloco 10a.1 — shell comum dos MissionCards.
@@ -29,7 +30,12 @@ class MissionCardBase extends StatelessWidget {
     final isCompleted = mission.completedAt != null;
     final isFailed = mission.failedAt != null;
     return Card(
+      color: AppColors.surface,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(color: AppColors.border),
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -75,12 +81,16 @@ class _RankBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        border: Border.all(color: Theme.of(context).dividerColor),
+        border: Border.all(color: AppColors.gold),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         rank.toUpperCase(),
-        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: AppColors.gold,
+        ),
       ),
     );
   }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +8,10 @@ import '../../../app/providers.dart';
 import '../../../domain/enums/intensity.dart';
 import '../../../domain/enums/mission_category.dart';
 import '../../../domain/enums/mission_style.dart';
+import '../../../domain/exceptions/reward_exceptions.dart';
 import '../../../domain/models/mission_preferences.dart';
+import '../../../domain/services/mission_preferences_service.dart';
+import '../../shared/widgets/npc_dialog_overlay.dart';
 import '../widgets/quiz_option_tile.dart';
 
 /// Sprint 3.1 Bloco 9 — tela do quiz de calibração (DESIGN_DOC §7).
@@ -25,7 +30,19 @@ import '../widgets/quiz_option_tile.dart';
 /// (Bloco 9). Aqui o draft local replica a mesma semântica durante a
 /// navegação do quiz.
 class MissionCalibrationScreen extends ConsumerStatefulWidget {
-  const MissionCalibrationScreen({super.key});
+  /// Sprint 3.1 Bloco 10b — `true` quando a tela foi aberta via
+  /// `/mission_calibration?recalibrate=true` (item Refazer Calibração no
+  /// SanctuaryDrawer). O fluxo inicia com NPC de abertura + confirm de
+  /// custo (se `cost > 0`) + `chargeRecalibration` ANTES do quiz. Após
+  /// submit, aplica pattern Regra 4 (invalidate + delay + go) porque
+  /// `chargeRecalibration` invalidou `playersTable` stream.
+  ///
+  /// `false` = calibração inicial (quiz de onboarding pós-escolha de
+  /// classe, phase13 do TutorialManager). Submit vai direto pra /quests
+  /// sem charge, sem delay.
+  final bool isRecalibrate;
+
+  const MissionCalibrationScreen({super.key, this.isRecalibrate = false});
 
   @override
   ConsumerState<MissionCalibrationScreen> createState() =>
@@ -46,6 +63,114 @@ class _MissionCalibrationScreenState
 
   int _stepIndex = 0;
   bool _submitting = false;
+
+  /// Bloco 10b — gate do fluxo recalibrate. No modo inicial é `true`
+  /// logo no initState; no modo recalibrate vira `true` só após NPC
+  /// abertura + confirm de custo + `chargeRecalibration`. Enquanto
+  /// `false`, a tela renderiza placeholder de loading.
+  bool _gateResolved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.isRecalibrate) {
+      // Calibração inicial: libera quiz imediatamente.
+      _gateResolved = true;
+      return;
+    }
+    // Recalibrate: roda o gate após primeiro frame pra ter acesso a
+    // ref/context seguros.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _resolveGate());
+  }
+
+  /// Fluxo recalibrate ordenado (Bloco 10b decisão de ordem):
+  ///   1. NPC "O Vazio" abertura anuncia refazer
+  ///   2. Confirm dialog de custo (pula se free)
+  ///   3. `chargeRecalibration` se pagou (pula se free)
+  ///   4. Libera quiz
+  ///
+  /// Cancel no dialog → volta pra `/sanctuary`. InsufficientGems →
+  /// SnackBar + volta pra `/sanctuary`.
+  Future<void> _resolveGate() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final service = ref.read(missionPreferencesServiceProvider);
+
+    // 1. NPC abertura (storytelling — sem bloqueio transacional).
+    if (!mounted) return;
+    await NpcDialogOverlay.show(
+      context,
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
+      message: 'Refazendo o caminho. Responde o que mudou.',
+    );
+    if (!mounted) return;
+
+    // 2. Computa custo pelo updatesCount atual.
+    final count = await service.currentUpdatesCount(player.id);
+    final cost = service.costForRecalibration(count);
+    if (!mounted) return;
+
+    if (cost.isFree) {
+      // Free (1ª refazer): pula confirm + charge.
+      setState(() => _gateResolved = true);
+      return;
+    }
+
+    // 3. Confirm dialog mostrando custo.
+    final confirmed = await _showCostConfirmDialog(cost);
+    if (!mounted) return;
+    if (confirmed != true) {
+      context.go('/sanctuary');
+      return;
+    }
+
+    // 4. Charge. Se saldo insuficiente, SnackBar + volta.
+    try {
+      await service.chargeRecalibration(player.id, cost);
+    } on InsufficientGemsException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Gemas insuficientes. Precisa de ${e.required} gemas.'),
+        ),
+      );
+      if (!mounted) return;
+      context.go('/sanctuary');
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _gateResolved = true);
+  }
+
+  Future<bool?> _showCostConfirmDialog(RecalibrationCost cost) {
+    final seivaLabel = cost.seivas == 0
+        ? ''
+        : ' e ${cost.seivas} ${cost.seivas == 1 ? "Seiva" : "Seivas"}';
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Refazer calibração?'),
+        content: Text(
+          'Vai custar ${cost.gems} gemas$seivaLabel. Tem certeza?',
+        ),
+        actions: [
+          TextButton(
+            key: const ValueKey('recalibrate-cost-cancel'),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            key: const ValueKey('recalibrate-cost-confirm'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Pagar e refazer'),
+          ),
+        ],
+      ),
+    );
+  }
 
   // Ordem dinâmica conforme foco — recalculada a cada build.
   List<_QuizStep> get _visibleSteps {
@@ -169,33 +294,45 @@ class _MissionCalibrationScreenState
       if (mounted) setState(() => _submitting = false);
     }
     if (!mounted) return;
-    // TODO(bloco10): copy final polida via NPC overlay dark-fantasy.
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Calibrado'),
-        content: const Text(
-            'Teu caminho está calibrado. Que Caelum reconheça.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Prosseguir'),
-          ),
-        ],
-      ),
+
+    // Bloco 10b — NPC conclusão polida (substitui AlertDialog do Bloco 9).
+    await NpcDialogOverlay.show(
+      context,
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
+      message: 'Teu caminho está calibrado. Que Caelum reconheça.',
     );
     if (!mounted) return;
+
+    // Regra 4 (race condition) — aplica SÓ no modo recalibrate onde o
+    // `chargeRecalibration` invalidou `playersTable` stream.
+    // Calibração inicial não invalidou nada → navega direto. O
+    // `ref.invalidate` retorna `void` sync, então o pattern efetivo é
+    // invalidate → delay 400ms → go (sem `unawaited` porque invalidate
+    // não retorna Future).
+    if (widget.isRecalibrate) {
+      ref.invalidate(playerStreamProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      if (!mounted) return;
+    }
     context.go('/quests');
   }
 
   @override
   Widget build(BuildContext context) {
+    // Bloco 10b — no modo recalibrate, antes do gate resolver (NPC +
+    // confirm + charge), renderiza placeholder. Evita o jogador ver o
+    // quiz antes de pagar.
+    if (!_gateResolved) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     final steps = _visibleSteps;
     final step = steps[_stepIndex.clamp(0, steps.length - 1)];
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Calibração'),
+        title: Text(widget.isRecalibrate ? 'Recalibração' : 'Calibração'),
         leading: _stepIndex == 0
             ? null
             : IconButton(

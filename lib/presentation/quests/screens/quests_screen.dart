@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../../domain/enums/mission_category.dart';
 import '../../../domain/enums/mission_modality.dart';
 import '../../../domain/models/mission_progress.dart';
@@ -42,12 +43,19 @@ class QuestsScreen extends ConsumerWidget {
         ref.read(questsScreenNotifierProvider(player.id).notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Missões')),
+      backgroundColor: AppColors.black,
+      appBar: AppBar(
+        title: const Text('Missões'),
+        backgroundColor: AppColors.surface,
+        foregroundColor: AppColors.textPrimary,
+      ),
       body: asyncState.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.purple),
+        ),
         error: (e, _) => Center(
           child: Text('Erro: $e',
-              style: const TextStyle(color: Colors.red)),
+              style: const TextStyle(color: AppColors.hp)),
         ),
         data: (state) => _QuestsBody(
           state: state,
@@ -58,6 +66,24 @@ class QuestsScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+/// Sprint 3.1 Bloco 10b — copy diferenciado de empty state por aba.
+String _emptyMessageFor(QuestTab tab) {
+  switch (tab) {
+    case QuestTab.daily:
+      return 'Nenhuma missão diária hoje. Volta amanhã.';
+    case QuestTab.classTab:
+      return 'Aguardando missões de classe.';
+    case QuestTab.faction:
+      return 'Nenhuma missão de facção ativa.';
+    case QuestTab.extras:
+      return 'Sem extras disponíveis. Explora regiões pra desbloquear.';
+    case QuestTab.admission:
+      return 'Complete a admissão pra entrar na facção.';
+    case QuestTab.history:
+      return 'Nada no histórico ainda.';
   }
 }
 
@@ -96,9 +122,20 @@ class _QuestsBody extends StatelessWidget {
             child: missions.isEmpty
                 ? ListView(
                     key: const ValueKey('quests-empty'),
-                    children: const [
-                      SizedBox(height: 80),
-                      Center(child: Text('Nenhuma missão nesta aba.')),
+                    children: [
+                      const SizedBox(height: 80),
+                      Center(
+                        child: Padding(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 32),
+                          child: Text(
+                            _emptyMessageFor(state.activeTab),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                color: AppColors.textMuted),
+                          ),
+                        ),
+                      ),
                     ],
                   )
                 : ListView.builder(

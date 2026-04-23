@@ -175,13 +175,15 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    // Estado inicial: daily (vazio)
-    expect(find.text('Nenhuma missão nesta aba.'), findsOneWidget);
+    // Estado inicial: daily (vazio) — Bloco 10b usa copy específico por aba
+    expect(find.text('Nenhuma missão diária hoje. Volta amanhã.'),
+        findsOneWidget);
 
     // Tap em Classe → lista não-vazia com 1 missão
     await tester.tap(find.byKey(const ValueKey('quest-tab-classTab')));
     await tester.pumpAndSettle();
-    expect(find.text('Nenhuma missão nesta aba.'), findsNothing);
+    expect(find.text('Nenhuma missão diária hoje. Volta amanhã.'),
+        findsNothing);
     expect(find.text('M1'), findsOneWidget);
   });
 
@@ -217,7 +219,8 @@ void main() {
       player: _fakePlayer(),
     ));
     await tester.pumpAndSettle();
-    expect(find.text('Nenhuma missão nesta aba.'), findsOneWidget);
+    expect(find.text('Nenhuma missão diária hoje. Volta amanhã.'),
+        findsOneWidget);
   });
 
   testWidgets('lista com missão internal renderiza InternalMissionCard',
