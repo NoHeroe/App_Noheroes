@@ -1,9 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/events/app_event_bus.dart';
+import '../core/utils/guild_rank.dart';
 import '../data/database/app_database.dart';
 import '../data/datasources/local/auth_local_ds.dart';
 import '../data/services/reward_grant_service.dart';
+import '../domain/enums/mission_modality.dart';
+import '../domain/enums/rank_codec.dart';
+import '../domain/models/player_snapshot.dart';
+import '../domain/services/mission_progress_service.dart';
 import '../domain/services/reward_resolve_service.dart';
+import '../domain/strategies/individual_modality_strategy.dart';
+import '../domain/strategies/internal_modality_strategy.dart';
+import '../domain/strategies/mission_strategy.dart';
+import '../domain/strategies/mixed_modality_strategy.dart';
+import '../domain/strategies/real_task_modality_strategy.dart';
 import '../data/repositories/drift/active_faction_quests_repository_drift.dart';
 import '../data/repositories/drift/mission_preferences_repository_drift.dart';
 import '../data/repositories/drift/mission_repository_drift.dart';
@@ -139,6 +149,64 @@ final playerStreamProvider = StreamProvider<PlayersTableData?>((ref) {
   return (db.select(db.playersTable)
         ..where((t) => t.id.equals(player.id)))
       .watchSingleOrNull();
+});
+
+// Sprint 3.1 Bloco 6 — Strategies + MissionProgressService (ADR 0014).
+final internalModalityStrategyProvider =
+    Provider<InternalModalityStrategy>((_) => InternalModalityStrategy());
+
+final realTaskModalityStrategyProvider =
+    Provider<RealTaskModalityStrategy>((_) => RealTaskModalityStrategy());
+
+final individualModalityStrategyProvider =
+    Provider<IndividualModalityStrategy>(
+        (_) => IndividualModalityStrategy());
+
+final mixedModalityStrategyProvider =
+    Provider<MixedModalityStrategy>((ref) {
+  return MixedModalityStrategy(
+    ref.watch(internalModalityStrategyProvider),
+    ref.watch(realTaskModalityStrategyProvider),
+  );
+});
+
+final missionProgressServiceProvider =
+    Provider<MissionProgressService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  final service = MissionProgressService(
+    repo: ref.watch(missionRepositoryProvider),
+    resolver: ref.watch(rewardResolveServiceProvider),
+    granter: ref.watch(rewardGrantServiceProvider),
+    eventBus: ref.watch(appEventBusProvider),
+    strategies: <MissionModality, MissionStrategy>{
+      MissionModality.internal: ref.watch(internalModalityStrategyProvider),
+      MissionModality.real: ref.watch(realTaskModalityStrategyProvider),
+      MissionModality.individual:
+          ref.watch(individualModalityStrategyProvider),
+      MissionModality.mixed: ref.watch(mixedModalityStrategyProvider),
+    },
+    resolvePlayer: (playerId) async {
+      final row = await (db.select(db.playersTable)
+            ..where((t) => t.id.equals(playerId)))
+          .getSingle();
+      final rank = row.guildRank == 'none'
+          ? null
+          : RankCodec.fromString(row.guildRank.toLowerCase());
+      return PlayerSnapshot(
+        level: row.level,
+        rank: rank ?? GuildRank.e,
+        classKey: row.classType,
+        factionKey: row.factionType,
+      );
+    },
+  );
+  ref.onDispose(() {
+    // fire-and-forget — dispose é async mas onDispose do Riverpod
+    // é síncrono. Flag `_disposed` no service bloqueia chamadas tardias
+    // em microtask entre o set e o cancel.
+    service.dispose();
+  });
+  return service;
 });
 
 // Sprint 3.1 Bloco 5 — RewardResolve (puro) + RewardGrant (atômico).
