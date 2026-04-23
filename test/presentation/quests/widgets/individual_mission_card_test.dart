@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:noheroes_app/app/providers.dart';
 import 'package:noheroes_app/core/utils/guild_rank.dart';
+import 'package:noheroes_app/core/utils/requirements_helper.dart';
 import 'package:noheroes_app/domain/enums/mission_modality.dart';
 import 'package:noheroes_app/domain/enums/mission_tab_origin.dart';
 import 'package:noheroes_app/domain/models/mission_progress.dart';
@@ -32,6 +35,19 @@ class _FakeDeleteService implements IndividualDeleteService {
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
 
+/// Sprint 3.1 Bloco 14.6b — missões individuais guardam requirements[]
+/// no metaJson. Helper cria o meta no novo formato.
+String _metaWithRequirements({String name = 'Forja Matinal'}) {
+  return jsonEncode({
+    'name': name,
+    'description': 'Descrição livre',
+    'category': 'fisico',
+    'requirements': RequirementsHelper.serialize([
+      RequirementItem(label: 'Flexões', target: 20, unit: 'reps'),
+    ]),
+  });
+}
+
 MissionProgress _individual({int id = 1, GuildRank rank = GuildRank.e}) {
   return MissionProgress(
     id: id,
@@ -40,12 +56,12 @@ MissionProgress _individual({int id = 1, GuildRank rank = GuildRank.e}) {
     modality: MissionModality.individual,
     tabOrigin: MissionTabOrigin.extras,
     rank: rank,
-    targetValue: 10,
+    targetValue: 20,
     currentValue: 0,
     reward: const RewardDeclared(),
     startedAt: DateTime.now(),
     rewardClaimed: false,
-    metaJson: '{}',
+    metaJson: _metaWithRequirements(),
   );
 }
 
@@ -53,9 +69,6 @@ Widget _harness(MissionProgress m, _FakeDeleteService fake) {
   return ProviderScope(
     overrides: [
       individualDeleteServiceProvider.overrideWithValue(fake),
-      // missionProgressServiceProvider não é chamado pelos testes de UI
-      // do delete — os botões ± disparam onUserAction mas não testamos
-      // aqui (coberto em test do service no Bloco 6).
     ],
     child: MaterialApp(
       home: Scaffold(body: IndividualMissionCard(mission: m)),
@@ -64,13 +77,15 @@ Widget _harness(MissionProgress m, _FakeDeleteService fake) {
 }
 
 void main() {
-  testWidgets('renderiza 6 botões ± + botão Apagar', (tester) async {
+  testWidgets('renderiza 6 botões ± por sub-requirement + botão Apagar',
+      (tester) async {
     final fake = _FakeDeleteService();
     await tester.pumpWidget(_harness(_individual(), fake));
     await tester.pumpAndSettle();
 
     for (final d in const [-25, -10, -1, 1, 10, 25]) {
-      expect(find.byKey(ValueKey('individual-delta-1-$d')), findsOneWidget);
+      expect(find.byKey(ValueKey('individual-sub-0-delta-$d')),
+          findsOneWidget);
     }
     expect(find.byKey(const ValueKey('individual-delete-1')), findsOneWidget);
   });
@@ -84,7 +99,6 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('individual-delete-1')));
     await tester.pumpAndSettle();
 
-    // Dialog aberto. Custo rank E = 50 gold + 20 gems.
     expect(find.text('Apagar missão individual?'), findsOneWidget);
     expect(find.textContaining('50 ouro'), findsOneWidget);
     expect(find.textContaining('20 gemas'), findsOneWidget);
@@ -95,14 +109,12 @@ void main() {
     await tester.pumpWidget(_harness(_individual(), fake));
     await tester.pumpAndSettle();
 
-    // Cancel path
     await tester.tap(find.byKey(const ValueKey('individual-delete-1')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('individual-delete-cancel')));
     await tester.pumpAndSettle();
     expect(fake.calls, 0);
 
-    // Confirm path
     await tester.tap(find.byKey(const ValueKey('individual-delete-1')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('individual-delete-confirm')));
@@ -121,18 +133,19 @@ void main() {
       modality: MissionModality.individual,
       tabOrigin: MissionTabOrigin.extras,
       rank: GuildRank.e,
-      targetValue: 10,
+      targetValue: 20,
       currentValue: 0,
       reward: const RewardDeclared(),
       startedAt: DateTime.now(),
       failedAt: DateTime.now(),
       rewardClaimed: false,
-      metaJson: '{}',
+      metaJson: _metaWithRequirements(),
     );
     await tester.pumpWidget(_harness(failed, fake));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('individual-delete-2')), findsNothing);
-    expect(find.byKey(const ValueKey('individual-delta-2-1')), findsNothing);
+    expect(find.byKey(const ValueKey('individual-sub-0-delta-1')),
+        findsNothing);
   });
 }
 

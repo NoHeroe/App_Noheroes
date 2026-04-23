@@ -11,6 +11,7 @@ import '../../core/config/faction_alliances.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/events/app_event.dart';
 import '../../core/utils/guild_rank.dart';
+import '../../core/utils/requirements_helper.dart';
 import '../../data/database/daos/player_dao.dart';
 import '../../data/database/app_database.dart';
 import '../../data/datasources/local/tutorial_service.dart';
@@ -863,7 +864,13 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
         categoria: MissionCategory.fisico,
         intensity: Intensity.medium,
         frequencia: IndividualFrequency.dias,
-        quantityTarget: 10,
+        requirements: [
+          RequirementItem(
+            label: 'Flexões',
+            target: 10,
+            unit: 'reps',
+          ),
+        ],
         isRepetivel: false,
         rank: rank,
       ));

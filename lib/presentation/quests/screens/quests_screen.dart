@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../domain/enums/mission_category.dart';
 import '../../../domain/enums/mission_modality.dart';
 import '../../../domain/models/mission_progress.dart';
+import '../../individual_creation/widgets/create_individual_mission_sheet.dart';
 import '../providers/quests_screen_notifier.dart';
 import '../widgets/category_filter_chips.dart';
 import '../widgets/extras_card.dart';
@@ -48,7 +49,6 @@ class QuestsScreen extends ConsumerWidget {
     final notifier =
         ref.read(questsScreenNotifierProvider(player.id).notifier);
 
-    final activeTab = asyncState.valueOrNull?.activeTab;
     return Scaffold(
       backgroundColor: AppColors.black,
       appBar: AppBar(
@@ -56,18 +56,6 @@ class QuestsScreen extends ConsumerWidget {
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.textPrimary,
       ),
-      // Bloco 11b.2 — FAB "Criar missão individual" visível APENAS na
-      // aba Extras (sub-seção Individuais). Oculto nas demais (daily,
-      // classe, facção, admissão, histórico não aceitam criação).
-      floatingActionButton: activeTab == QuestTab.extras
-          ? FloatingActionButton.extended(
-              key: const ValueKey('quests-fab-create-individual'),
-              backgroundColor: AppColors.purple,
-              icon: const Icon(Icons.add),
-              label: const Text('Criar missão'),
-              onPressed: () => context.go('/individual_creation'),
-            )
-          : null,
       body: asyncState.when(
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppColors.purple),
@@ -216,6 +204,11 @@ class _QuestsBody extends StatelessWidget {
       return ListView(
         key: const ValueKey('quests-empty'),
         children: [
+          if (isExtras)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(12, 8, 12, 4),
+              child: _CreateIndividualInlineButton(),
+            ),
           const SizedBox(height: 80),
           Center(
             child: Padding(
@@ -230,15 +223,76 @@ class _QuestsBody extends StatelessWidget {
         ],
       );
     }
+    // Bloco 14.6b — botão "Nova Missão Individual" vira um header inline
+    // da aba Extras, substituindo o FAB removido.
+    final headerOffset = isExtras ? 1 : 0;
     return ListView.builder(
       key: const ValueKey('quests-list'),
-      itemCount: totalItems,
+      itemCount: totalItems + headerOffset,
       itemBuilder: (_, i) {
-        if (isExtras && i >= missions.length) {
-          return ExtrasCard(spec: extras[i - missions.length]);
+        if (isExtras && i == 0) {
+          return const Padding(
+            padding: EdgeInsets.fromLTRB(12, 8, 12, 4),
+            child: _CreateIndividualInlineButton(),
+          );
         }
-        return _MissionCardDispatcher(mission: missions[i]);
+        final idx = i - headerOffset;
+        if (isExtras && idx >= missions.length) {
+          return ExtrasCard(spec: extras[idx - missions.length]);
+        }
+        return _MissionCardDispatcher(mission: missions[idx]);
       },
+    );
+  }
+}
+
+/// Sprint 3.1 Bloco 14.6b — botão inline "Nova Missão Individual".
+/// Substitui o FAB flutuante do Bloco 11b.2 (CEO preferiu pattern
+/// v0.28.2: botão contextual na seção). Fica fixo no topo da aba
+/// Extras (visível no empty state e na lista).
+class _CreateIndividualInlineButton extends ConsumerWidget {
+  const _CreateIndividualInlineButton();
+
+  Future<void> _openSheet(BuildContext context, WidgetRef ref) async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final result = await showCreateIndividualMissionSheet(context);
+    if (result == true) {
+      final notifier = ref.read(
+          questsScreenNotifierProvider(player.id).notifier);
+      await notifier.refresh();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      key: const ValueKey('quests-create-individual-inline'),
+      onTap: () => _openSheet(context, ref),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.purple.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.purple, width: 1.2),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.add, color: AppColors.purple, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              'NOVA MISSÃO INDIVIDUAL',
+              style: GoogleFonts.cinzelDecorative(
+                fontSize: 12,
+                color: AppColors.purpleLight,
+                letterSpacing: 2,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

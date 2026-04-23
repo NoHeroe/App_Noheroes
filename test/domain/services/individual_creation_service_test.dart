@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:noheroes_app/core/events/app_event_bus.dart';
 import 'package:noheroes_app/core/events/mission_events.dart';
 import 'package:noheroes_app/core/utils/guild_rank.dart';
+import 'package:noheroes_app/core/utils/requirements_helper.dart';
 import 'package:noheroes_app/data/database/app_database.dart';
 import 'package:noheroes_app/data/repositories/drift/mission_repository_drift.dart';
 import 'package:noheroes_app/domain/balance/individual_creation_balance.dart';
@@ -54,7 +55,7 @@ Future<int> _seedActiveIndividual(
 IndividualCreationParams _params(int playerId, {
   String name = 'Flexões',
   String description = 'Fazer flexões',
-  int quantityTarget = 20,
+  List<RequirementItem>? requirements,
   IndividualFrequency frequencia = IndividualFrequency.dias,
   bool isRepetivel = false,
 }) =>
@@ -65,7 +66,8 @@ IndividualCreationParams _params(int playerId, {
       categoria: MissionCategory.fisico,
       intensity: Intensity.medium,
       frequencia: frequencia,
-      quantityTarget: quantityTarget,
+      requirements: requirements ??
+          [RequirementItem(label: 'Flexões', target: 20, unit: 'reps')],
       isRepetivel: isRepetivel,
       rank: GuildRank.e,
     );
@@ -113,10 +115,15 @@ void main() {
       expect(meta['name'], 'Flexões');
       expect(meta['description'], 'Fazer flexões');
       expect(meta['frequencia'], 'dias');
-      expect(meta['quantity_target'], 20);
       expect(meta['is_repetivel'], false);
       expect(meta['user_created'], true);
       expect(meta['category'], 'fisico');
+      // Sprint 3.1 Bloco 14.6b — requirements múltiplos.
+      final reqs = RequirementsHelper.parse(meta['requirements'] as String);
+      expect(reqs, hasLength(1));
+      expect(reqs.single.label, 'Flexões');
+      expect(reqs.single.target, 20);
+      expect(reqs.single.unit, 'reps');
       // deadline_at = now + 1 dia (aprox — validamos que existe)
       expect(meta['deadline_at'], isA<int>());
 
@@ -180,12 +187,42 @@ void main() {
       expect(active, isEmpty);
     });
 
-    test('quantityTarget <= 0 → ArgumentError', () async {
+    test('requirements vazia → ArgumentError', () async {
       final playerId = await _seedPlayer(db);
       expect(
-        () => service.createIndividual(_params(playerId, quantityTarget: 0)),
+        () => service
+            .createIndividual(_params(playerId, requirements: const [])),
         throwsA(isA<ArgumentError>()),
       );
+    });
+
+    test('requirement.target <= 0 → ArgumentError', () async {
+      final playerId = await _seedPlayer(db);
+      expect(
+        () => service.createIndividual(_params(
+          playerId,
+          requirements: [
+            RequirementItem(label: 'Zero', target: 0, unit: 'reps'),
+          ],
+        )),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
+    test('requirements múltiplos: targetValue = sum(targets)', () async {
+      final playerId = await _seedPlayer(db);
+      final id = await service.createIndividual(_params(
+        playerId,
+        requirements: [
+          RequirementItem(label: 'Flexões', target: 20, unit: 'reps'),
+          RequirementItem(label: 'Corrida', target: 3, unit: 'km'),
+        ],
+      ));
+      final mission = (await repo.findById(id))!;
+      expect(mission.targetValue, 23);
+      final reqs = RequirementsHelper.parse(
+          (jsonDecode(mission.metaJson)['requirements']) as String);
+      expect(reqs, hasLength(2));
     });
   });
 }
