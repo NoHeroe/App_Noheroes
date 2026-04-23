@@ -82,11 +82,17 @@ class MissionAssignmentService {
 
   /// Assigna [kClassPerDay] missões de classe pro jogador. Filtra pool
   /// por `class_key` + rank. Retorna ids criadas.
+  ///
+  /// Bloco 13b — `classKey` nullable: se `null` ou vazio, early-return
+  /// silencioso `const []`. Jogador sem classe escolhida (pré-phase5
+  /// ou Rogue guest) não recebe class missions. DailyResetService
+  /// chama com `player.classType` direto sem precisar validar.
   Future<List<int>> assignClassDaily({
     required int playerId,
-    required String classKey,
+    required String? classKey,
     required GuildRank playerRank,
   }) async {
+    if (classKey == null || classKey.isEmpty) return const [];
     final pool = await _catalogs.loadClass(classKey);
     if (pool.isEmpty) return const [];
     final filtered = RankPools.filterByRank<Map<String, dynamic>>(

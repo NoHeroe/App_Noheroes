@@ -178,6 +178,18 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
   Future<void> _checkLevelTriggers() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null || !mounted) return;
+
+    // Sprint 3.1 Bloco 13b — boot-check de daily/weekly reset.
+    // Silencioso (erros logados no service, não propagados). Fire-and-forget
+    // pra não bloquear UI. Reset services retornam DailyResetResult/
+    // WeeklyResetResult — ignoramos o retorno aqui.
+    unawaited(
+      ref.read(dailyResetServiceProvider).checkAndApply(player.id),
+    );
+    unawaited(
+      ref.read(weeklyResetServiceProvider).checkAndApply(player.id),
+    );
+
     final hasClass = (player.classType?.isNotEmpty ?? false);
     final hasFaction = (player.factionType?.isNotEmpty ?? false)
         && player.factionType != 'none'

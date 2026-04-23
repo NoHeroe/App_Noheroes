@@ -76,7 +76,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 24;
+  int get schemaVersion => 25;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -361,6 +361,21 @@ class AppDatabase extends _$AppDatabase {
         } catch (e) {
           // ignore: avoid_print
           print('[migration 23→24] CREATE new failed: $e');
+        }
+      }
+      if (from < 25) {
+        // Sprint 3.1 Bloco 13b — adiciona 2 colunas nullable pra persistir
+        // boot-check do DailyResetService/WeeklyResetService (ms epoch).
+        // Nullable = null aceita pra users pré-reset (tratado como ">24h/7d
+        // atrás" no service → primeira chamada aplica reset).
+        try {
+          await m.addColumn(playersTable, playersTable.lastDailyReset);
+          await m.addColumn(playersTable, playersTable.lastWeeklyReset);
+          // ignore: avoid_print
+          print('[migration 24→25] added last_daily_reset + last_weekly_reset');
+        } catch (e) {
+          // ignore: avoid_print
+          print('[migration 24→25] addColumn failed: $e');
         }
       }
     },

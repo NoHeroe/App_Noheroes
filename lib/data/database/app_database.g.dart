@@ -290,6 +290,18 @@ class $PlayersTableTable extends PlayersTable
   late final GeneratedColumn<DateTime> lastStreakDate =
       GeneratedColumn<DateTime>('last_streak_date', aliasedName, true,
           type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _lastDailyResetMeta =
+      const VerificationMeta('lastDailyReset');
+  @override
+  late final GeneratedColumn<int> lastDailyReset = GeneratedColumn<int>(
+      'last_daily_reset', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _lastWeeklyResetMeta =
+      const VerificationMeta('lastWeeklyReset');
+  @override
+  late final GeneratedColumn<int> lastWeeklyReset = GeneratedColumn<int>(
+      'last_weekly_reset', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -328,7 +340,9 @@ class $PlayersTableTable extends PlayersTable
         playStyle,
         createdAt,
         lastLoginAt,
-        lastStreakDate
+        lastStreakDate,
+        lastDailyReset,
+        lastWeeklyReset
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -522,6 +536,18 @@ class $PlayersTableTable extends PlayersTable
           lastStreakDate.isAcceptableOrUnknown(
               data['last_streak_date']!, _lastStreakDateMeta));
     }
+    if (data.containsKey('last_daily_reset')) {
+      context.handle(
+          _lastDailyResetMeta,
+          lastDailyReset.isAcceptableOrUnknown(
+              data['last_daily_reset']!, _lastDailyResetMeta));
+    }
+    if (data.containsKey('last_weekly_reset')) {
+      context.handle(
+          _lastWeeklyResetMeta,
+          lastWeeklyReset.isAcceptableOrUnknown(
+              data['last_weekly_reset']!, _lastWeeklyResetMeta));
+    }
     return context;
   }
 
@@ -605,6 +631,10 @@ class $PlayersTableTable extends PlayersTable
           DriftSqlType.dateTime, data['${effectivePrefix}last_login_at'])!,
       lastStreakDate: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}last_streak_date']),
+      lastDailyReset: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}last_daily_reset']),
+      lastWeeklyReset: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}last_weekly_reset']),
     );
   }
 
@@ -653,6 +683,8 @@ class PlayersTableData extends DataClass
   final DateTime createdAt;
   final DateTime lastLoginAt;
   final DateTime? lastStreakDate;
+  final int? lastDailyReset;
+  final int? lastWeeklyReset;
   const PlayersTableData(
       {required this.id,
       required this.email,
@@ -690,7 +722,9 @@ class PlayersTableData extends DataClass
       required this.playStyle,
       required this.createdAt,
       required this.lastLoginAt,
-      this.lastStreakDate});
+      this.lastStreakDate,
+      this.lastDailyReset,
+      this.lastWeeklyReset});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -736,6 +770,12 @@ class PlayersTableData extends DataClass
     map['last_login_at'] = Variable<DateTime>(lastLoginAt);
     if (!nullToAbsent || lastStreakDate != null) {
       map['last_streak_date'] = Variable<DateTime>(lastStreakDate);
+    }
+    if (!nullToAbsent || lastDailyReset != null) {
+      map['last_daily_reset'] = Variable<int>(lastDailyReset);
+    }
+    if (!nullToAbsent || lastWeeklyReset != null) {
+      map['last_weekly_reset'] = Variable<int>(lastWeeklyReset);
     }
     return map;
   }
@@ -785,6 +825,12 @@ class PlayersTableData extends DataClass
       lastStreakDate: lastStreakDate == null && nullToAbsent
           ? const Value.absent()
           : Value(lastStreakDate),
+      lastDailyReset: lastDailyReset == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastDailyReset),
+      lastWeeklyReset: lastWeeklyReset == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastWeeklyReset),
     );
   }
 
@@ -830,6 +876,8 @@ class PlayersTableData extends DataClass
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       lastLoginAt: serializer.fromJson<DateTime>(json['lastLoginAt']),
       lastStreakDate: serializer.fromJson<DateTime?>(json['lastStreakDate']),
+      lastDailyReset: serializer.fromJson<int?>(json['lastDailyReset']),
+      lastWeeklyReset: serializer.fromJson<int?>(json['lastWeeklyReset']),
     );
   }
   @override
@@ -873,6 +921,8 @@ class PlayersTableData extends DataClass
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'lastLoginAt': serializer.toJson<DateTime>(lastLoginAt),
       'lastStreakDate': serializer.toJson<DateTime?>(lastStreakDate),
+      'lastDailyReset': serializer.toJson<int?>(lastDailyReset),
+      'lastWeeklyReset': serializer.toJson<int?>(lastWeeklyReset),
     };
   }
 
@@ -913,7 +963,9 @@ class PlayersTableData extends DataClass
           String? playStyle,
           DateTime? createdAt,
           DateTime? lastLoginAt,
-          Value<DateTime?> lastStreakDate = const Value.absent()}) =>
+          Value<DateTime?> lastStreakDate = const Value.absent(),
+          Value<int?> lastDailyReset = const Value.absent(),
+          Value<int?> lastWeeklyReset = const Value.absent()}) =>
       PlayersTableData(
         id: id ?? this.id,
         email: email ?? this.email,
@@ -953,6 +1005,11 @@ class PlayersTableData extends DataClass
         lastLoginAt: lastLoginAt ?? this.lastLoginAt,
         lastStreakDate:
             lastStreakDate.present ? lastStreakDate.value : this.lastStreakDate,
+        lastDailyReset:
+            lastDailyReset.present ? lastDailyReset.value : this.lastDailyReset,
+        lastWeeklyReset: lastWeeklyReset.present
+            ? lastWeeklyReset.value
+            : this.lastWeeklyReset,
       );
   PlayersTableData copyWithCompanion(PlayersTableCompanion data) {
     return PlayersTableData(
@@ -1021,6 +1078,12 @@ class PlayersTableData extends DataClass
       lastStreakDate: data.lastStreakDate.present
           ? data.lastStreakDate.value
           : this.lastStreakDate,
+      lastDailyReset: data.lastDailyReset.present
+          ? data.lastDailyReset.value
+          : this.lastDailyReset,
+      lastWeeklyReset: data.lastWeeklyReset.present
+          ? data.lastWeeklyReset.value
+          : this.lastWeeklyReset,
     );
   }
 
@@ -1063,7 +1126,9 @@ class PlayersTableData extends DataClass
           ..write('playStyle: $playStyle, ')
           ..write('createdAt: $createdAt, ')
           ..write('lastLoginAt: $lastLoginAt, ')
-          ..write('lastStreakDate: $lastStreakDate')
+          ..write('lastStreakDate: $lastStreakDate, ')
+          ..write('lastDailyReset: $lastDailyReset, ')
+          ..write('lastWeeklyReset: $lastWeeklyReset')
           ..write(')'))
         .toString();
   }
@@ -1106,7 +1171,9 @@ class PlayersTableData extends DataClass
         playStyle,
         createdAt,
         lastLoginAt,
-        lastStreakDate
+        lastStreakDate,
+        lastDailyReset,
+        lastWeeklyReset
       ]);
   @override
   bool operator ==(Object other) =>
@@ -1148,7 +1215,9 @@ class PlayersTableData extends DataClass
           other.playStyle == this.playStyle &&
           other.createdAt == this.createdAt &&
           other.lastLoginAt == this.lastLoginAt &&
-          other.lastStreakDate == this.lastStreakDate);
+          other.lastStreakDate == this.lastStreakDate &&
+          other.lastDailyReset == this.lastDailyReset &&
+          other.lastWeeklyReset == this.lastWeeklyReset);
 }
 
 class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
@@ -1189,6 +1258,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
   final Value<DateTime> createdAt;
   final Value<DateTime> lastLoginAt;
   final Value<DateTime?> lastStreakDate;
+  final Value<int?> lastDailyReset;
+  final Value<int?> lastWeeklyReset;
   const PlayersTableCompanion({
     this.id = const Value.absent(),
     this.email = const Value.absent(),
@@ -1227,6 +1298,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.createdAt = const Value.absent(),
     this.lastLoginAt = const Value.absent(),
     this.lastStreakDate = const Value.absent(),
+    this.lastDailyReset = const Value.absent(),
+    this.lastWeeklyReset = const Value.absent(),
   });
   PlayersTableCompanion.insert({
     this.id = const Value.absent(),
@@ -1266,6 +1339,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.createdAt = const Value.absent(),
     this.lastLoginAt = const Value.absent(),
     this.lastStreakDate = const Value.absent(),
+    this.lastDailyReset = const Value.absent(),
+    this.lastWeeklyReset = const Value.absent(),
   })  : email = Value(email),
         passwordHash = Value(passwordHash);
   static Insertable<PlayersTableData> custom({
@@ -1306,6 +1381,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     Expression<DateTime>? createdAt,
     Expression<DateTime>? lastLoginAt,
     Expression<DateTime>? lastStreakDate,
+    Expression<int>? lastDailyReset,
+    Expression<int>? lastWeeklyReset,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1346,6 +1423,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       if (createdAt != null) 'created_at': createdAt,
       if (lastLoginAt != null) 'last_login_at': lastLoginAt,
       if (lastStreakDate != null) 'last_streak_date': lastStreakDate,
+      if (lastDailyReset != null) 'last_daily_reset': lastDailyReset,
+      if (lastWeeklyReset != null) 'last_weekly_reset': lastWeeklyReset,
     });
   }
 
@@ -1386,7 +1465,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       Value<String>? playStyle,
       Value<DateTime>? createdAt,
       Value<DateTime>? lastLoginAt,
-      Value<DateTime?>? lastStreakDate}) {
+      Value<DateTime?>? lastStreakDate,
+      Value<int?>? lastDailyReset,
+      Value<int?>? lastWeeklyReset}) {
     return PlayersTableCompanion(
       id: id ?? this.id,
       email: email ?? this.email,
@@ -1425,6 +1506,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       createdAt: createdAt ?? this.createdAt,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       lastStreakDate: lastStreakDate ?? this.lastStreakDate,
+      lastDailyReset: lastDailyReset ?? this.lastDailyReset,
+      lastWeeklyReset: lastWeeklyReset ?? this.lastWeeklyReset,
     );
   }
 
@@ -1542,6 +1625,12 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     if (lastStreakDate.present) {
       map['last_streak_date'] = Variable<DateTime>(lastStreakDate.value);
     }
+    if (lastDailyReset.present) {
+      map['last_daily_reset'] = Variable<int>(lastDailyReset.value);
+    }
+    if (lastWeeklyReset.present) {
+      map['last_weekly_reset'] = Variable<int>(lastWeeklyReset.value);
+    }
     return map;
   }
 
@@ -1584,7 +1673,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
           ..write('playStyle: $playStyle, ')
           ..write('createdAt: $createdAt, ')
           ..write('lastLoginAt: $lastLoginAt, ')
-          ..write('lastStreakDate: $lastStreakDate')
+          ..write('lastStreakDate: $lastStreakDate, ')
+          ..write('lastDailyReset: $lastDailyReset, ')
+          ..write('lastWeeklyReset: $lastWeeklyReset')
           ..write(')'))
         .toString();
   }
@@ -9964,7 +10055,9 @@ class PlayerMissionProgressData extends DataClass
   /// `CLASS_WARRIOR_ENDURANCE`). Mapeia pra entrada declarativa de reward.
   final String missionKey;
 
-  /// Família: `internal`, `real`, `individual`, `mista` (ADR 0014).
+  /// Família: `internal`, `real`, `individual`, `mixed` (ADR 0014).
+  /// Valores canônicos definidos em `lib/domain/enums/mission_modality.dart`
+  /// (Bloco 3) — display PT-BR (Mista) fica na UI.
   final String modality;
 
   /// Aba de origem: `daily`, `class`, `faction`, `extras`, `admission`.
@@ -12697,6 +12790,8 @@ typedef $$PlayersTableTableCreateCompanionBuilder = PlayersTableCompanion
   Value<DateTime> createdAt,
   Value<DateTime> lastLoginAt,
   Value<DateTime?> lastStreakDate,
+  Value<int?> lastDailyReset,
+  Value<int?> lastWeeklyReset,
 });
 typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
     Function({
@@ -12737,6 +12832,8 @@ typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
   Value<DateTime> createdAt,
   Value<DateTime> lastLoginAt,
   Value<DateTime?> lastStreakDate,
+  Value<int?> lastDailyReset,
+  Value<int?> lastWeeklyReset,
 });
 
 class $$PlayersTableTableFilterComposer
@@ -12863,6 +12960,14 @@ class $$PlayersTableTableFilterComposer
 
   ColumnFilters<DateTime> get lastStreakDate => $composableBuilder(
       column: $table.lastStreakDate,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get lastDailyReset => $composableBuilder(
+      column: $table.lastDailyReset,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get lastWeeklyReset => $composableBuilder(
+      column: $table.lastWeeklyReset,
       builder: (column) => ColumnFilters(column));
 }
 
@@ -12996,6 +13101,14 @@ class $$PlayersTableTableOrderingComposer
   ColumnOrderings<DateTime> get lastStreakDate => $composableBuilder(
       column: $table.lastStreakDate,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get lastDailyReset => $composableBuilder(
+      column: $table.lastDailyReset,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get lastWeeklyReset => $composableBuilder(
+      column: $table.lastWeeklyReset,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$PlayersTableTableAnnotationComposer
@@ -13117,6 +13230,12 @@ class $$PlayersTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get lastStreakDate => $composableBuilder(
       column: $table.lastStreakDate, builder: (column) => column);
+
+  GeneratedColumn<int> get lastDailyReset => $composableBuilder(
+      column: $table.lastDailyReset, builder: (column) => column);
+
+  GeneratedColumn<int> get lastWeeklyReset => $composableBuilder(
+      column: $table.lastWeeklyReset, builder: (column) => column);
 }
 
 class $$PlayersTableTableTableManager extends RootTableManager<
@@ -13182,6 +13301,8 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> lastLoginAt = const Value.absent(),
             Value<DateTime?> lastStreakDate = const Value.absent(),
+            Value<int?> lastDailyReset = const Value.absent(),
+            Value<int?> lastWeeklyReset = const Value.absent(),
           }) =>
               PlayersTableCompanion(
             id: id,
@@ -13221,6 +13342,8 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             createdAt: createdAt,
             lastLoginAt: lastLoginAt,
             lastStreakDate: lastStreakDate,
+            lastDailyReset: lastDailyReset,
+            lastWeeklyReset: lastWeeklyReset,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -13260,6 +13383,8 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> lastLoginAt = const Value.absent(),
             Value<DateTime?> lastStreakDate = const Value.absent(),
+            Value<int?> lastDailyReset = const Value.absent(),
+            Value<int?> lastWeeklyReset = const Value.absent(),
           }) =>
               PlayersTableCompanion.insert(
             id: id,
@@ -13299,6 +13424,8 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             createdAt: createdAt,
             lastLoginAt: lastLoginAt,
             lastStreakDate: lastStreakDate,
+            lastDailyReset: lastDailyReset,
+            lastWeeklyReset: lastWeeklyReset,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

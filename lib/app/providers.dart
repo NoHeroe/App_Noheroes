@@ -16,6 +16,8 @@ import '../domain/models/player_snapshot.dart';
 import '../data/datasources/local/extras_catalog_service.dart';
 import '../data/datasources/local/mission_catalogs_service.dart';
 import '../domain/services/achievements_service.dart';
+import '../domain/services/daily_reset_service.dart';
+import '../domain/services/faction_reputation_service.dart';
 import '../domain/services/mission_assignment_service.dart';
 import '../domain/services/individual_creation_service.dart';
 import '../domain/services/individual_delete_service.dart';
@@ -23,6 +25,7 @@ import '../domain/services/mission_balancer_service.dart';
 import '../domain/services/mission_preferences_service.dart';
 import '../domain/services/mission_progress_service.dart';
 import '../domain/services/reward_resolve_service.dart';
+import '../domain/services/weekly_reset_service.dart';
 import '../domain/strategies/individual_modality_strategy.dart';
 import '../domain/strategies/internal_modality_strategy.dart';
 import '../domain/strategies/mission_strategy.dart';
@@ -359,6 +362,38 @@ final missionAssignmentServiceProvider =
     prefsService: ref.watch(missionPreferencesServiceProvider),
     catalogs: ref.watch(missionCatalogsServiceProvider),
     factionRepo: ref.watch(activeFactionQuestsRepositoryProvider),
+    bus: ref.watch(appEventBusProvider),
+  );
+});
+
+// Sprint 3.1 Bloco 13b — daily/weekly reset + faction reputation.
+final factionReputationServiceProvider =
+    Provider<FactionReputationService>((ref) {
+  return FactionReputationService(
+    repo: ref.watch(playerFactionReputationRepositoryProvider),
+    bus: ref.watch(appEventBusProvider),
+  );
+});
+
+final dailyResetServiceProvider = Provider<DailyResetService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return DailyResetService(
+    db: db,
+    missionRepo: ref.watch(missionRepositoryProvider),
+    resolver: ref.watch(rewardResolveServiceProvider),
+    granter: ref.watch(rewardGrantServiceProvider),
+    assignment: ref.watch(missionAssignmentServiceProvider),
+    playerDao: PlayerDao(db),
+    bus: ref.watch(appEventBusProvider),
+  );
+});
+
+final weeklyResetServiceProvider = Provider<WeeklyResetService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return WeeklyResetService(
+    missionRepo: ref.watch(missionRepositoryProvider),
+    assignment: ref.watch(missionAssignmentServiceProvider),
+    playerDao: PlayerDao(db),
     bus: ref.watch(appEventBusProvider),
   );
 });

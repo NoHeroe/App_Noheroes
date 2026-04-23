@@ -30,8 +30,12 @@ void main() {
   });
 
   group('Sprint 3.1 — schema 24 fresh install', () {
-    test('schemaVersion é 24', () {
-      expect(db.schemaVersion, 24);
+    test('schemaVersion >= 24 (Bloco 13b bumpou pra 25)', () {
+      // Bloco 13b bumpou schema 24 → 25 adicionando 2 colunas nullable
+      // a players. Teste antigo esperava exato 24; agora valida só que
+      // estrutura 24 continua presente. Versão atual validada em
+      // schema_25_test.dart.
+      expect(db.schemaVersion, greaterThanOrEqualTo(24));
     });
 
     test('as 6 tabelas novas existem e respondem a COUNT', () async {

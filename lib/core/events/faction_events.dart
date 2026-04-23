@@ -58,3 +58,30 @@ class FactionLeft extends AppEvent {
   @override
   String toString() => 'FactionLeft(player=$playerId, faction=$factionId)';
 }
+
+/// Sprint 3.1 Bloco 13b — reputação numa facção mudou (delta aplicado).
+///
+/// Emitido pelo `FactionReputationService.adjustReputation` após persistir
+/// o novo valor. Cobre tanto a facção alvo do delta direto quanto as
+/// aliadas/rivais afetadas via propagação (`kFactionAlliances`). `newValue`
+/// é clamped 0-100 pelo repo.
+class FactionReputationChanged extends AppEvent {
+  @override
+  final int playerId;
+  final String factionId;
+  final int newValue;
+  final int previousValue;
+
+  FactionReputationChanged({
+    required this.playerId,
+    required this.factionId,
+    required this.newValue,
+    required this.previousValue,
+    super.at,
+  });
+
+  @override
+  String toString() =>
+      'FactionReputationChanged(player=$playerId, faction=$factionId, '
+      '$previousValue→$newValue)';
+}

@@ -147,6 +147,19 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
   // Pontos de atributo extras nos marcos de nível por classe
 
 
+  /// Sprint 3.1 Bloco 13b — marca timestamp do último daily reset.
+  /// `DailyResetService` chama dentro da transação de reset.
+  Future<void> markDailyReset(int id, DateTime at) async {
+    await (update(playersTable)..where((t) => t.id.equals(id))).write(
+        PlayersTableCompanion(lastDailyReset: Value(at.millisecondsSinceEpoch)));
+  }
+
+  /// Sprint 3.1 Bloco 13b — análogo pro weekly.
+  Future<void> markWeeklyReset(int id, DateTime at) async {
+    await (update(playersTable)..where((t) => t.id.equals(id))).write(
+        PlayersTableCompanion(lastWeeklyReset: Value(at.millisecondsSinceEpoch)));
+  }
+
   Future<void> addGold(int id, int amount) async {
     final player = await findById(id);
     if (player == null) return;

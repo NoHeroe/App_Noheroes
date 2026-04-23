@@ -66,4 +66,10 @@ class PlayersTable extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get lastLoginAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get lastStreakDate => dateTime().nullable()();
+
+  // Sprint 3.1 Bloco 13b — boot-check do DailyResetService/WeeklyResetService
+  // (ms epoch). Null = nunca resetou. Atualiza no fim da transação de reset
+  // via PlayerDao.markDailyReset/markWeeklyReset.
+  IntColumn get lastDailyReset => integer().nullable()();
+  IntColumn get lastWeeklyReset => integer().nullable()();
 }
