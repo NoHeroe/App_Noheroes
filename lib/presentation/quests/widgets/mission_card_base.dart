@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../domain/models/mission_progress.dart';
+import 'mission_status_badge.dart';
 
 /// Sprint 3.1 Bloco 10a.1 — shell comum dos MissionCards.
 ///
@@ -9,9 +10,10 @@ import '../../../domain/models/mission_progress.dart';
 /// conteúdo específico de cada modalidade (barra passiva / botões ± /
 /// sub-tasks / etc).
 ///
-/// Responsabilidades intencionalmente mínimas — delega a lógica
-/// específica pros cards especializados. Estética polida (partículas,
-/// dark-fantasy) fica pro Bloco 10b.
+/// Bloco 14.6c: ícones check/cancel duplicados do header foram
+/// substituídos por `MissionStatusBadge` textual (✓ Concluído /
+/// ◑ Parcial / ✗ Falhou / Pendente) — 1 widget único aplicado a
+/// todas as famílias.
 class MissionCardBase extends StatelessWidget {
   final MissionProgress mission;
   final Widget child;
@@ -27,8 +29,6 @@ class MissionCardBase extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isCompleted = mission.completedAt != null;
-    final isFailed = mission.failedAt != null;
     return Card(
       color: AppColors.surface,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -55,11 +55,7 @@ class MissionCardBase extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  if (isCompleted)
-                    const Icon(Icons.check_circle,
-                        color: Colors.green, size: 20)
-                  else if (isFailed)
-                    const Icon(Icons.cancel, color: Colors.red, size: 20),
+                  MissionStatusBadge(status: mission.status),
                 ],
               ),
               const SizedBox(height: 8),

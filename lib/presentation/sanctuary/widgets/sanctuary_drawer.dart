@@ -52,10 +52,8 @@ class SanctuaryDrawer extends ConsumerWidget {
       _Item('Mercado',       Icons.store_outlined,         '/shop'),
       _Item('Conquistas',    Icons.emoji_events_outlined,  '/achievements'),
       _Item('Reputação',     Icons.people_outline,          '/reputation'),
-      // Sprint 3.1 Bloco 12 — Histórico consolidado como aba do /quests.
-      // Rota legacy /history fica como _UnderConstruction até sprint
-      // futura decidir removê-la.
-      _Item('Histórico',     Icons.history,                '/quests'),
+      // Sprint 3.1 Bloco 14.6c — Histórico virou rota dedicada.
+      _Item('Histórico',     Icons.history,                '/history'),
       _Item('Amigos',        Icons.group_outlined,         null),
       _Item('Meus Produtos', Icons.book_outlined,          null),
       _Item('Configurações', Icons.settings_outlined,      null),

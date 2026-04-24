@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -7,29 +5,21 @@ import 'package:noheroes_app/app/providers.dart';
 import 'package:noheroes_app/core/events/app_event_bus.dart';
 import 'package:noheroes_app/core/events/mission_events.dart';
 import 'package:noheroes_app/core/utils/guild_rank.dart';
-import 'package:noheroes_app/domain/enums/mission_category.dart';
+import 'package:noheroes_app/data/datasources/local/extras_catalog_service.dart';
 import 'package:noheroes_app/domain/enums/mission_modality.dart';
 import 'package:noheroes_app/domain/enums/mission_tab_origin.dart';
+import 'package:noheroes_app/domain/models/extras_mission_spec.dart';
 import 'package:noheroes_app/domain/models/mission_progress.dart';
 import 'package:noheroes_app/domain/models/reward_declared.dart';
 import 'package:noheroes_app/domain/repositories/mission_repository.dart';
 import 'package:noheroes_app/presentation/quests/providers/quests_screen_notifier.dart';
-import 'package:noheroes_app/presentation/quests/widgets/history_filter_chips.dart';
 
-/// Fake Repository pra testes — rastreia chamadas + permite seedar
-/// resultados por (tab, isHistorical).
+/// Fake Repository pra testes — seedado por (tab) + rastreia chamadas.
 class _FakeMissionRepo implements MissionRepository {
   final Map<MissionTabOrigin, List<MissionProgress>> byTab;
-  final List<MissionProgress> historical;
-
   int findByTabCalls = 0;
-  int findHistoricalCalls = 0;
-  int findCompletedInWindowCalls = 0;
 
-  _FakeMissionRepo({
-    this.byTab = const {},
-    this.historical = const [],
-  });
+  _FakeMissionRepo({this.byTab = const {}});
 
   @override
   Future<List<MissionProgress>> findByTab(
@@ -39,20 +29,16 @@ class _FakeMissionRepo implements MissionRepository {
   }
 
   @override
-  Future<List<MissionProgress>> findHistorical(int playerId) async {
-    findHistoricalCalls++;
-    return historical;
-  }
+  Future<List<MissionProgress>> findHistorical(int playerId) async =>
+      const [];
 
   @override
   Future<List<MissionProgress>> findCompletedInWindow(
     int playerId, {
     required DateTime from,
     required DateTime to,
-  }) async {
-    findCompletedInWindowCalls++;
-    return const [];
-  }
+  }) async =>
+      const [];
 
   @override
   Future<List<MissionProgress>> findActive(int playerId) async => const [];
@@ -79,17 +65,25 @@ class _FakeMissionRepo implements MissionRepository {
       const Stream.empty();
 }
 
+/// Fake extras catalog — retorna o que for seedado, sem tocar assets.
+class _FakeExtrasCatalog implements ExtrasCatalogService {
+  final List<ExtrasMissionSpec> items;
+  _FakeExtrasCatalog({this.items = const []});
+
+  @override
+  Future<List<ExtrasMissionSpec>> loadAll() async => items;
+
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
 MissionProgress _mkMission({
   required int id,
   required MissionTabOrigin tab,
-  MissionCategory? category,
   MissionModality modality = MissionModality.real,
   DateTime? completedAt,
   DateTime? failedAt,
 }) {
-  final meta = category == null
-      ? '{}'
-      : jsonEncode({'category': category.storage});
   return MissionProgress(
     id: id,
     playerId: 1,
@@ -104,91 +98,74 @@ MissionProgress _mkMission({
     completedAt: completedAt,
     failedAt: failedAt,
     rewardClaimed: false,
-    metaJson: meta,
+    metaJson: '{}',
   );
 }
 
 ProviderContainer _makeContainer({
   required MissionRepository repo,
   required AppEventBus bus,
+  List<ExtrasMissionSpec> extras = const [],
 }) {
-  final container = ProviderContainer(overrides: [
+  return ProviderContainer(overrides: [
     missionRepositoryProvider.overrideWithValue(repo),
     appEventBusProvider.overrideWithValue(bus),
+    extrasCatalogServiceProvider.overrideWithValue(
+        _FakeExtrasCatalog(items: extras)),
   ]);
-  return container;
 }
 
 void main() {
-  group('QuestsScreenNotifier', () {
-    test('build inicial carrega daily via findByTab', () async {
-      final daily = [
-        _mkMission(id: 1, tab: MissionTabOrigin.daily),
-        _mkMission(id: 2, tab: MissionTabOrigin.daily),
-      ];
-      final repo = _FakeMissionRepo(byTab: {MissionTabOrigin.daily: daily});
+  group('QuestsScreenNotifier Sprint 14.6c', () {
+    test('build inicial carrega os 5 grupos paralelos + extras catalog',
+        () async {
+      final repo = _FakeMissionRepo(byTab: {
+        MissionTabOrigin.daily: [_mkMission(id: 1, tab: MissionTabOrigin.daily)],
+        MissionTabOrigin.classTab: [
+          _mkMission(id: 2, tab: MissionTabOrigin.classTab)
+        ],
+        MissionTabOrigin.faction: [],
+        MissionTabOrigin.admission: [],
+        MissionTabOrigin.extras: [
+          _mkMission(
+              id: 3,
+              tab: MissionTabOrigin.extras,
+              modality: MissionModality.individual),
+        ],
+      });
       final bus = AppEventBus();
       addTearDown(bus.dispose);
       final c = _makeContainer(repo: repo, bus: bus);
       addTearDown(c.dispose);
 
       final state = await c.read(questsScreenNotifierProvider(1).future);
-      expect(state.activeTab, QuestTab.daily);
-      expect(state.missions.length, 2);
-      expect(repo.findByTabCalls, 1);
+      expect(state.dailyMissions, hasLength(1));
+      expect(state.classMissions, hasLength(1));
+      expect(state.factionMissions, isEmpty);
+      expect(state.admissionMissions, isEmpty);
+      expect(state.individualMissions, hasLength(1));
+      expect(state.extrasCatalog, isEmpty);
+      // 5 findByTab calls: daily, class, faction, admission, extras.
+      expect(repo.findByTabCalls, 5);
     });
 
-    test('setActiveTab muda tab + refaz query', () async {
-      final daily = [_mkMission(id: 1, tab: MissionTabOrigin.daily)];
-      final class_ = [
-        _mkMission(id: 2, tab: MissionTabOrigin.classTab),
-        _mkMission(id: 3, tab: MissionTabOrigin.classTab),
-      ];
-      final repo = _FakeMissionRepo(byTab: {
-        MissionTabOrigin.daily: daily,
-        MissionTabOrigin.classTab: class_,
-      });
-      final bus = AppEventBus();
-      addTearDown(bus.dispose);
-      final c = _makeContainer(repo: repo, bus: bus);
-      addTearDown(c.dispose);
-
-      await c.read(questsScreenNotifierProvider(1).future);
-      final notifier = c.read(questsScreenNotifierProvider(1).notifier);
-      await notifier.setActiveTab(QuestTab.classTab);
-
-      final state = c.read(questsScreenNotifierProvider(1)).value!;
-      expect(state.activeTab, QuestTab.classTab);
-      expect(state.missions.length, 2);
-    });
-
-    test('setActiveTab history chama findHistorical', () async {
-      final repo = _FakeMissionRepo(
-        byTab: {MissionTabOrigin.daily: const []},
-        historical: [_mkMission(id: 5, tab: MissionTabOrigin.daily)],
-      );
-      final bus = AppEventBus();
-      addTearDown(bus.dispose);
-      final c = _makeContainer(repo: repo, bus: bus);
-      addTearDown(c.dispose);
-
-      await c.read(questsScreenNotifierProvider(1).future);
-      await c
-          .read(questsScreenNotifierProvider(1).notifier)
-          .setActiveTab(QuestTab.history);
-
-      expect(repo.findHistoricalCalls, 1);
-      expect(
-          c.read(questsScreenNotifierProvider(1)).value!.missions.length, 1);
-    });
-
-    test('toggleCategoryFilter adiciona e remove', () async {
+    test('doneCount soma missões `completedAt != null` de todas as seções',
+        () async {
+      final now = DateTime.now();
       final repo = _FakeMissionRepo(byTab: {
         MissionTabOrigin.daily: [
+          _mkMission(id: 1, tab: MissionTabOrigin.daily, completedAt: now),
+          _mkMission(id: 2, tab: MissionTabOrigin.daily),
+        ],
+        MissionTabOrigin.classTab: [
+          _mkMission(id: 3, tab: MissionTabOrigin.classTab, completedAt: now),
+        ],
+        MissionTabOrigin.extras: [
           _mkMission(
-              id: 1, tab: MissionTabOrigin.daily, category: MissionCategory.fisico),
-          _mkMission(
-              id: 2, tab: MissionTabOrigin.daily, category: MissionCategory.mental),
+              id: 4,
+              tab: MissionTabOrigin.extras,
+              modality: MissionModality.individual,
+              completedAt: now),
         ],
       });
       final bus = AppEventBus();
@@ -196,32 +173,14 @@ void main() {
       final c = _makeContainer(repo: repo, bus: bus);
       addTearDown(c.dispose);
 
-      await c.read(questsScreenNotifierProvider(1).future);
-      final notifier = c.read(questsScreenNotifierProvider(1).notifier);
-      await notifier.toggleCategoryFilter(MissionCategory.fisico);
-      var state = c.read(questsScreenNotifierProvider(1)).value!;
-      expect(state.categoryFilters, {MissionCategory.fisico});
-      expect(state.missions.length, 1);
-      expect(state.missions.first.id, 1);
-
-      await notifier.toggleCategoryFilter(MissionCategory.fisico);
-      state = c.read(questsScreenNotifierProvider(1)).value!;
-      expect(state.categoryFilters, isEmpty);
-      expect(state.missions.length, 2);
+      final state = await c.read(questsScreenNotifierProvider(1).future);
+      expect(state.doneCount, 3);
+      expect(state.totalCount, 4);
     });
 
-    test('filtros múltiplos AND — só tab + categoria batem', () async {
+    test('MissionCompleted no bus invalida state → rebuild', () async {
       final repo = _FakeMissionRepo(byTab: {
-        MissionTabOrigin.daily: [
-          _mkMission(
-              id: 1, tab: MissionTabOrigin.daily, category: MissionCategory.fisico),
-          _mkMission(
-              id: 2, tab: MissionTabOrigin.daily, category: MissionCategory.mental),
-          _mkMission(
-              id: 3,
-              tab: MissionTabOrigin.daily,
-              category: MissionCategory.espiritual),
-        ],
+        MissionTabOrigin.daily: [_mkMission(id: 1, tab: MissionTabOrigin.daily)],
       });
       final bus = AppEventBus();
       addTearDown(bus.dispose);
@@ -229,81 +188,53 @@ void main() {
       addTearDown(c.dispose);
 
       await c.read(questsScreenNotifierProvider(1).future);
-      final notifier = c.read(questsScreenNotifierProvider(1).notifier);
-      await notifier.toggleCategoryFilter(MissionCategory.fisico);
-      await notifier.toggleCategoryFilter(MissionCategory.mental);
-      final state = c.read(questsScreenNotifierProvider(1)).value!;
-      expect(state.missions.map((m) => m.id).toSet(), {1, 2});
-    });
+      final callsBeforeEvent = repo.findByTabCalls;
 
-    test('MissionCompleted no bus → invalida state (refetch)', () async {
-      final daily = [_mkMission(id: 1, tab: MissionTabOrigin.daily)];
-      final repo = _FakeMissionRepo(byTab: {MissionTabOrigin.daily: daily});
-      final bus = AppEventBus();
-      addTearDown(bus.dispose);
-      final c = _makeContainer(repo: repo, bus: bus);
-      addTearDown(c.dispose);
-
-      await c.read(questsScreenNotifierProvider(1).future);
-      final before = repo.findByTabCalls;
       bus.publish(MissionCompleted(
-          missionKey: 'M1',
-          playerId: 1,
-          rewardResolvedJson: '{}'));
-      // Aguarda a microtask do listener + invalidateSelf + rebuild.
-      await Future<void>.delayed(const Duration(milliseconds: 20));
+        playerId: 1,
+        missionKey: 'M1',
+        rewardResolvedJson: '{}',
+      ));
+      await Future<void>.delayed(const Duration(milliseconds: 10));
       await c.read(questsScreenNotifierProvider(1).future);
-      expect(repo.findByTabCalls, greaterThan(before));
+
+      expect(repo.findByTabCalls, greaterThan(callsBeforeEvent));
     });
 
-    test('MissionFailed no bus → invalida state (refetch)', () async {
-      final repo = _FakeMissionRepo(byTab: {MissionTabOrigin.daily: const []});
+    test('IndividualCreated no bus invalida state → rebuild', () async {
+      final repo = _FakeMissionRepo();
       final bus = AppEventBus();
       addTearDown(bus.dispose);
       final c = _makeContainer(repo: repo, bus: bus);
       addTearDown(c.dispose);
 
       await c.read(questsScreenNotifierProvider(1).future);
-      final before = repo.findByTabCalls;
-      bus.publish(MissionFailed(
-          missionKey: 'M1',
-          playerId: 1,
-          reason: MissionFailureReason.expired));
-      await Future<void>.delayed(const Duration(milliseconds: 20));
-      await c.read(questsScreenNotifierProvider(1).future);
-      expect(repo.findByTabCalls, greaterThan(before));
-    });
+      final callsBefore = repo.findByTabCalls;
 
-    test('IndividualCreated no bus → invalida state (refetch)', () async {
-      // Bloco 11b.2 — form de criação emite IndividualCreated; notifier
-      // rebuilds pra que a aba Extras exiba a nova missão individual
-      // ativa sem pull-to-refresh manual.
-      final repo = _FakeMissionRepo(byTab: {MissionTabOrigin.daily: const []});
-      final bus = AppEventBus();
-      addTearDown(bus.dispose);
-      final c = _makeContainer(repo: repo, bus: bus);
-      addTearDown(c.dispose);
-
-      await c.read(questsScreenNotifierProvider(1).future);
-      final before = repo.findByTabCalls;
       bus.publish(IndividualCreated(
         playerId: 1,
         missionProgressId: 42,
         missionKey: 'IND_USER_X',
         categoria: 'fisico',
       ));
-      await Future<void>.delayed(const Duration(milliseconds: 20));
+      await Future<void>.delayed(const Duration(milliseconds: 10));
       await c.read(questsScreenNotifierProvider(1).future);
-      expect(repo.findByTabCalls, greaterThan(before));
+
+      expect(repo.findByTabCalls, greaterThan(callsBefore));
     });
 
-    test('clearFilters zera o set e mostra lista completa', () async {
+    test('tab=extras filtra por modality=individual no state', () async {
       final repo = _FakeMissionRepo(byTab: {
-        MissionTabOrigin.daily: [
+        MissionTabOrigin.extras: [
           _mkMission(
-              id: 1, tab: MissionTabOrigin.daily, category: MissionCategory.fisico),
+              id: 1,
+              tab: MissionTabOrigin.extras,
+              modality: MissionModality.individual),
+          // Não-individual no tab_origin=extras (edge case futuro)
           _mkMission(
-              id: 2, tab: MissionTabOrigin.daily, category: MissionCategory.mental),
+              id: 2,
+              tab: MissionTabOrigin.extras,
+              modality: MissionModality.real),
         ],
       });
       final bus = AppEventBus();
@@ -311,109 +242,55 @@ void main() {
       final c = _makeContainer(repo: repo, bus: bus);
       addTearDown(c.dispose);
 
-      await c.read(questsScreenNotifierProvider(1).future);
-      final notifier = c.read(questsScreenNotifierProvider(1).notifier);
-      await notifier.toggleCategoryFilter(MissionCategory.fisico);
-      expect(
-          c.read(questsScreenNotifierProvider(1)).value!.missions.length, 1);
-
-      await notifier.clearFilters();
-      final state = c.read(questsScreenNotifierProvider(1)).value!;
-      expect(state.categoryFilters, isEmpty);
-      expect(state.missions.length, 2);
+      final state = await c.read(questsScreenNotifierProvider(1).future);
+      expect(state.individualMissions, hasLength(1));
+      expect(state.individualMissions.single.id, 1);
     });
 
-    test('setActiveTab(history) carrega last7DaysWindow via repo', () async {
-      final repo = _FakeMissionRepo(
-        byTab: {MissionTabOrigin.daily: const []},
-        historical: const [],
-      );
+    test('extras catalog: secretas filtradas fora do state', () async {
+      final repo = _FakeMissionRepo();
       final bus = AppEventBus();
       addTearDown(bus.dispose);
-      final c = _makeContainer(repo: repo, bus: bus);
-      addTearDown(c.dispose);
-
-      await c.read(questsScreenNotifierProvider(1).future);
-      expect(repo.findCompletedInWindowCalls, 0,
-          reason: 'daily tab não carrega janela 7d');
-
-      await c
-          .read(questsScreenNotifierProvider(1).notifier)
-          .setActiveTab(QuestTab.history);
-      expect(repo.findCompletedInWindowCalls, 1);
-    });
-
-    test('setHistoryFilter muda filtro e filteredHistory reflete', () async {
-      final repo = _FakeMissionRepo(
-        byTab: {MissionTabOrigin.daily: const []},
-        historical: [
-          _mkMission(
-              id: 1,
-              tab: MissionTabOrigin.daily,
-              completedAt: DateTime.now()),
-          _mkMission(
-              id: 2,
-              tab: MissionTabOrigin.daily,
-              failedAt: DateTime.now()),
+      final c = _makeContainer(
+        repo: repo,
+        bus: bus,
+        extras: [
+          const ExtrasMissionSpec(
+            key: 'E1',
+            title: 'Visível',
+            description: 'd',
+            type: ExtraMissionType.npc,
+            isSecret: false,
+          ),
+          const ExtrasMissionSpec(
+            key: 'E2',
+            title: 'Oculto',
+            description: 'd',
+            type: ExtraMissionType.secret,
+            isSecret: true,
+          ),
         ],
       );
-      final bus = AppEventBus();
-      addTearDown(bus.dispose);
-      final c = _makeContainer(repo: repo, bus: bus);
       addTearDown(c.dispose);
 
-      await c.read(questsScreenNotifierProvider(1).future);
-      final notifier = c.read(questsScreenNotifierProvider(1).notifier);
-      await notifier.setActiveTab(QuestTab.history);
-      var state = c.read(questsScreenNotifierProvider(1)).value!;
-      expect(state.historyFilter, HistoryFilter.todas);
-      expect(state.filteredHistory.length, 2);
-
-      notifier.setHistoryFilter(HistoryFilter.concluidas);
-      state = c.read(questsScreenNotifierProvider(1)).value!;
-      expect(state.filteredHistory.length, 1);
-      expect(state.filteredHistory.first.id, 1);
-
-      notifier.setHistoryFilter(HistoryFilter.falhadas);
-      state = c.read(questsScreenNotifierProvider(1)).value!;
-      expect(state.filteredHistory.length, 1);
-      expect(state.filteredHistory.first.id, 2);
+      final state = await c.read(questsScreenNotifierProvider(1).future);
+      expect(state.extrasCatalog, hasLength(1));
+      expect(state.extrasCatalog.single.key, 'E1');
     });
 
-    test(
-        'autodispose + invalidateSelf não duplica subscriptions (sem vazamento)',
-        () async {
-      // Smoke test de vazamento: após invalidateSelf, o evento seguinte
-      // dispara exatamente UM refetch (não 2, que seria o sintoma de
-      // subscription velha não cancelada). Aproximamos contando calls
-      // do repo pós primeiro evento vs pós segundo.
-      final repo = _FakeMissionRepo(byTab: {MissionTabOrigin.daily: const []});
+    test('refresh força rebuild', () async {
+      final repo = _FakeMissionRepo();
       final bus = AppEventBus();
       addTearDown(bus.dispose);
       final c = _makeContainer(repo: repo, bus: bus);
       addTearDown(c.dispose);
 
       await c.read(questsScreenNotifierProvider(1).future);
-      final notifier = c.read(questsScreenNotifierProvider(1).notifier);
-
-      // Força 1 invalidação (simula consumo do sub depois de um evento).
-      await notifier.refresh();
-      final afterFirstRefresh = repo.findByTabCalls;
-
-      // Dispara evento. Se subscriptions vazaram, cada sub antiga também
-      // invalidaria → múltiplos refetches. Esperamos exatamente +1 call.
-      bus.publish(MissionCompleted(
-          missionKey: 'M1',
-          playerId: 1,
-          rewardResolvedJson: '{}'));
-      await Future<void>.delayed(const Duration(milliseconds: 30));
-      await c.read(questsScreenNotifierProvider(1).future);
-
-      final delta = repo.findByTabCalls - afterFirstRefresh;
-      // Tolerância: 1 (sem vazamento) ou 2 (rebuilding state intermediário).
-      // Vazamento faria delta >= 3.
-      expect(delta, lessThanOrEqualTo(2),
-          reason: 'Subscription vazada dispara refetches extras');
+      final callsBefore = repo.findByTabCalls;
+      await c
+          .read(questsScreenNotifierProvider(1).notifier)
+          .refresh();
+      expect(repo.findByTabCalls, greaterThan(callsBefore));
     });
   });
 }

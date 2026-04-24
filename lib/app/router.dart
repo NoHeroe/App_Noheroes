@@ -22,6 +22,7 @@ import '../presentation/shop/screens/shops_list_screen.dart';
 import '../presentation/class_selection/screens/class_selection_screen.dart';
 import '../presentation/faction_selection/screens/faction_selection_screen.dart';
 import '../presentation/achievements/screens/achievements_screen.dart';
+import '../presentation/history/screens/history_screen.dart';
 import '../presentation/mission_calibration/screens/mission_calibration_screen.dart';
 import '../presentation/quests/screens/quests_screen.dart';
 import '../presentation/dev/dev_panel_screen.dart';
@@ -113,8 +114,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/dev',                builder: (c, s) => const DevPanelScreen()),
       GoRoute(path: '/battle',             builder: (c, s) => const BattleHubScreen()),
-      // /history será refeita no Bloco 12.
-      GoRoute(path: '/history',            builder: (c, s) => const _UnderConstruction(feature: 'Histórico', block: 'Bloco 12')),
+      // Sprint 3.1 Bloco 14.6c — /history vira rota dedicada (saiu
+      // da aba chip de /quests no redesign).
+      GoRoute(path: '/history',            builder: (c, s) => const HistoryScreen()),
       GoRoute(
         path: '/vitalism/void-ritual',
         builder: (c, s) => const VoidRitualScreen(),

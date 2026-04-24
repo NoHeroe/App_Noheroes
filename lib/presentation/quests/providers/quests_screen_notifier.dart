@@ -5,143 +5,107 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../core/events/mission_events.dart';
 import '../../../core/events/reward_events.dart';
-import '../../../domain/enums/mission_category.dart';
+import '../../../domain/enums/mission_modality.dart';
 import '../../../domain/enums/mission_tab_origin.dart';
 import '../../../domain/models/extras_mission_spec.dart';
 import '../../../domain/models/mission_progress.dart';
-import '../../../domain/repositories/mission_repository.dart';
-import '../widgets/history_filter_chips.dart';
 
-/// Sprint 3.1 Bloco 10a.1 — abas da tela `/quests`. `classTab` evita
-/// colisão com a keyword `class` do Dart; storage do `MissionTabOrigin`
-/// correspondente é `'class'` (ver `MissionTabOrigin.classTab`).
+/// Sprint 3.1 Bloco 14.6c — state da `/quests` após redesign (lista
+/// única com 6 seções sanfona, sem chips de navegação).
 ///
-/// A aba `history` **não** tem correspondência 1:1 com `MissionTabOrigin`
-/// — é uma view agregada (missões não-ativas de qualquer aba), resolvida
-/// via `MissionRepository.findHistorical`.
-enum QuestTab { daily, classTab, faction, extras, admission, history }
-
-/// Estado imutável consumido pela tela `/quests`. Todos os campos são
-/// derivados do Notifier — UI apenas renderiza.
+/// Carrega **todos** os grupos em paralelo num único `build()`:
+///   - `dailyMissions` — `findByTab(daily)`
+///   - `classMissions` — `findByTab(class)`
+///   - `factionMissions` — `findByTab(faction)`
+///   - `admissionMissions` — `findByTab(admission)`
+///   - `extrasCatalog` — `ExtrasCatalogService.loadAll` (gate TODO
+///      documentado em `docs/sprint_missoes/DEBITO_EXTRAS_GATE.md`)
+///   - `individualMissions` — `findByTab(extras)` filtrado por
+///      `modality == individual` OU `findByTab(individual)` direto
+///      (tab_origin separa no schema)
+///
+/// **Removido** do Bloco 10a.1 (pré-14.6c):
+///   - `activeTab` + `setActiveTab` — não há mais chips
+///   - `categoryFilters` + `toggleCategoryFilter` + `clearFilters`
+///   - `historyFilter` + `last7DaysWindow` + `filteredHistory` — tudo
+///     migrou pro `HistoryScreenNotifier` na rota `/history` dedicada
 class QuestsScreenState {
-  final QuestTab activeTab;
-
-  /// Filtros de categoria (chips). Conjunto vazio = "todas as categorias".
-  /// Consolida AND com o `activeTab` no resultado final.
-  final Set<MissionCategory> categoryFilters;
-
-  /// Lista filtrada conforme `activeTab` + `categoryFilters`. Ordenação
-  /// definida pelo repositório (activeTab ≠ history: DESC por
-  /// started_at; history: DESC por COALESCE(completed_at, failed_at)).
-  final List<MissionProgress> missions;
-
-  /// Sprint 3.1 Bloco 11a — catálogo de missões Extras carregado da
-  /// aba Extras (NPCs/Lore/Secretas-reveladas/Evento-stub). Vazia em
-  /// outras abas. Renderização pelo `_MissionCardDispatcher` (Bloco
-  /// 10a.1) decide entre `MissionCardBase` (MissionProgress) e
-  /// `ExtrasCard` (ExtrasMissionSpec).
-  final List<ExtrasMissionSpec> extras;
-
-  /// Sprint 3.1 Bloco 12 — filtro client-side da aba Histórico
-  /// (todas/concluídas/falhadas). Default `todas`. Aplicado como view
-  /// sobre `missions` via getter `filteredHistory`.
-  final HistoryFilter historyFilter;
-
-  /// Sprint 3.1 Bloco 12 — janela de 7 dias consumida pelo
-  /// `WeeklyMissionsChart` + `MissionCounters` (Hoje/Semana derivam
-  /// daqui; Total vem de `players.totalQuestsCompleted`). Vazia fora
-  /// da aba Histórico.
-  final List<MissionProgress> last7DaysWindow;
+  final List<MissionProgress> dailyMissions;
+  final List<MissionProgress> classMissions;
+  final List<MissionProgress> factionMissions;
+  final List<MissionProgress> admissionMissions;
+  final List<MissionProgress> individualMissions;
+  final List<ExtrasMissionSpec> extrasCatalog;
 
   const QuestsScreenState({
-    required this.activeTab,
-    required this.categoryFilters,
-    required this.missions,
-    this.extras = const [],
-    this.historyFilter = HistoryFilter.todas,
-    this.last7DaysWindow = const [],
+    this.dailyMissions = const [],
+    this.classMissions = const [],
+    this.factionMissions = const [],
+    this.admissionMissions = const [],
+    this.individualMissions = const [],
+    this.extrasCatalog = const [],
   });
 
-  QuestsScreenState copyWith({
-    QuestTab? activeTab,
-    Set<MissionCategory>? categoryFilters,
-    List<MissionProgress>? missions,
-    List<ExtrasMissionSpec>? extras,
-    HistoryFilter? historyFilter,
-    List<MissionProgress>? last7DaysWindow,
-  }) {
-    return QuestsScreenState(
-      activeTab: activeTab ?? this.activeTab,
-      categoryFilters: categoryFilters ?? this.categoryFilters,
-      missions: missions ?? this.missions,
-      extras: extras ?? this.extras,
-      historyFilter: historyFilter ?? this.historyFilter,
-      last7DaysWindow: last7DaysWindow ?? this.last7DaysWindow,
-    );
+  /// Total de missões (ativas + completadas + falhas) somado por grupo —
+  /// consumido pelo `QuestsHeader` no `done/total`.
+  int get totalCount =>
+      dailyMissions.length +
+      classMissions.length +
+      factionMissions.length +
+      admissionMissions.length +
+      individualMissions.length;
+
+  /// Subset com `completedAt != null` em todas as seções — jogador vê
+  /// quantas missões ele fechou no ciclo atual.
+  int get doneCount {
+    int c = 0;
+    for (final m in dailyMissions) {
+      if (m.completedAt != null) c++;
+    }
+    for (final m in classMissions) {
+      if (m.completedAt != null) c++;
+    }
+    for (final m in factionMissions) {
+      if (m.completedAt != null) c++;
+    }
+    for (final m in admissionMissions) {
+      if (m.completedAt != null) c++;
+    }
+    for (final m in individualMissions) {
+      if (m.completedAt != null) c++;
+    }
+    return c;
   }
 
-  /// View client-side de `missions` respeitando `historyFilter`. Só faz
-  /// sentido chamar quando `activeTab == history`.
-  List<MissionProgress> get filteredHistory {
-    switch (historyFilter) {
-      case HistoryFilter.todas:
-        return missions;
-      case HistoryFilter.concluidas:
-        return missions
-            .where((m) => m.completedAt != null)
-            .toList(growable: false);
-      case HistoryFilter.falhadas:
-        return missions
-            .where((m) => m.failedAt != null)
-            .toList(growable: false);
-    }
+  QuestsScreenState copyWith({
+    List<MissionProgress>? dailyMissions,
+    List<MissionProgress>? classMissions,
+    List<MissionProgress>? factionMissions,
+    List<MissionProgress>? admissionMissions,
+    List<MissionProgress>? individualMissions,
+    List<ExtrasMissionSpec>? extrasCatalog,
+  }) {
+    return QuestsScreenState(
+      dailyMissions: dailyMissions ?? this.dailyMissions,
+      classMissions: classMissions ?? this.classMissions,
+      factionMissions: factionMissions ?? this.factionMissions,
+      admissionMissions: admissionMissions ?? this.admissionMissions,
+      individualMissions: individualMissions ?? this.individualMissions,
+      extrasCatalog: extrasCatalog ?? this.extrasCatalog,
+    );
   }
 }
 
-/// Sprint 3.1 Bloco 10a.1 — Notifier central da tela `/quests`. Mantém
-/// state da aba ativa + filtros de categoria + lista reativa.
-///
-/// ## Pattern de subscription no bus
-///
-/// `build()` é reexecutado a cada `invalidateSelf()`. Subscriptions
-/// criadas dentro de `build` **sempre** precisam ser canceladas em
-/// `ref.onDispose` — senão cada refresh adiciona listeners fantasma
-/// (leak de memória + handlers duplicados).
-///
-/// Este Notifier assina 3 tipos de evento que invalidam o state:
-///   - `MissionCompleted` — missão fechada pelo jogador
-///   - `MissionFailed` — missão falhada (auto-complete à meia-noite ou
-///     desistência explícita)
-///   - `RewardGranted` — reward creditada (captura fim de class/faction
-///     quest que não emitem `MissionCompleted` próprio ainda)
-///
-/// Qualquer um dispara `ref.invalidateSelf()` — que reroda `build`, que
-/// cancela as subscriptions velhas via `ref.onDispose` (Riverpod chama
-/// o dispose ANTES de reexecutar o build) e cria novas.
-///
-/// ## Autodispose family
-///
-/// `AutoDisposeFamilyAsyncNotifier<State, int>` — `int` é o `playerId`.
-/// Autodispose libera recursos quando a tela `/quests` sai de tela
-/// (cancela subs, encerra). Reentrada na tela recria do zero com
-/// `findByTab(playerId, daily)` default.
+/// Notifier da `/quests` — carrega todos os grupos em paralelo, assina
+/// 4 tipos de evento no bus pra auto-refresh.
 class QuestsScreenNotifier
     extends AutoDisposeFamilyAsyncNotifier<QuestsScreenState, int> {
   @override
   Future<QuestsScreenState> build(int playerId) async {
     final bus = ref.read(appEventBusProvider);
     final repo = ref.read(missionRepositoryProvider);
+    final extrasService = ref.read(extrasCatalogServiceProvider);
 
-    // Capturar o activeTab e filtros do state anterior (se houver) — se
-    // o invalidateSelf acontece após uma mudança de aba, queremos
-    // preservar a aba. Previous state só existe após primeiro build.
-    final prev = state.valueOrNull;
-    final activeTab = prev?.activeTab ?? QuestTab.daily;
-    final filters = prev?.categoryFilters ?? const <MissionCategory>{};
-
-    // Subscriptions DEVEM ser canceladas em onDispose — senão cada
-    // invalidateSelf acumula listeners. Riverpod chama o onDispose do
-    // build anterior antes de rodar o novo.
     final subCompleted = bus
         .on<MissionCompleted>()
         .where((e) => e.playerId == playerId)
@@ -154,8 +118,6 @@ class QuestsScreenNotifier
         .on<RewardGranted>()
         .where((e) => e.playerId == playerId)
         .listen((_) => ref.invalidateSelf());
-    // Bloco 11b.2 — nova missão individual criada via form → refresh
-    // imediato da aba Extras (sub-seção Individuais) sem pull-to-refresh.
     final subIndividualCreated = bus
         .on<IndividualCreated>()
         .where((e) => e.playerId == playerId)
@@ -167,169 +129,45 @@ class QuestsScreenNotifier
       subIndividualCreated.cancel();
     });
 
-    final missions = await _loadForTab(repo, playerId, activeTab, filters);
-    final extras = await _loadExtrasFor(activeTab);
-    final last7 = await _loadLast7DaysFor(activeTab, repo, playerId);
+    final results = await Future.wait([
+      repo.findByTab(playerId, MissionTabOrigin.daily),
+      repo.findByTab(playerId, MissionTabOrigin.classTab),
+      repo.findByTab(playerId, MissionTabOrigin.faction),
+      repo.findByTab(playerId, MissionTabOrigin.admission),
+      repo.findByTab(playerId, MissionTabOrigin.extras),
+      extrasService.loadAll(),
+    ]);
+
+    final extrasSpecs = (results[5] as List<ExtrasMissionSpec>)
+        .where((e) => !e.isSecret)
+        .toList(growable: false);
+
+    // Individuais ficam persistidas com `tab_origin=extras` (decisão
+    // do Bloco 11a — individuais é sub-seção visual de Extras). No
+    // layout 14.6c separamos em seção própria, então filtramos pela
+    // modality.
+    final extrasTabMissions = results[4] as List<MissionProgress>;
+    final individuals = extrasTabMissions
+        .where((m) => m.modality == MissionModality.individual)
+        .toList(growable: false);
+
     return QuestsScreenState(
-      activeTab: activeTab,
-      categoryFilters: filters,
-      missions: missions,
-      extras: extras,
-      historyFilter: prev?.historyFilter ?? HistoryFilter.todas,
-      last7DaysWindow: last7,
+      dailyMissions: results[0] as List<MissionProgress>,
+      classMissions: results[1] as List<MissionProgress>,
+      factionMissions: results[2] as List<MissionProgress>,
+      admissionMissions: results[3] as List<MissionProgress>,
+      individualMissions: individuals,
+      extrasCatalog: extrasSpecs,
     );
   }
 
-  /// Bloco 12 — janela de 7 dias pro gráfico semanal + counters. Só
-  /// carrega na aba history; outras abas ficam com lista vazia.
-  Future<List<MissionProgress>> _loadLast7DaysFor(
-    QuestTab tab,
-    MissionRepository repo,
-    int playerId,
-  ) async {
-    if (tab != QuestTab.history) return const [];
-    final now = DateTime.now();
-    return repo.findCompletedInWindow(
-      playerId,
-      from: now.subtract(const Duration(days: 7)),
-      to: now,
-    );
-  }
-
-  /// Alterna pra [tab] e refaz a query. Preserva `categoryFilters`.
-  Future<void> setActiveTab(QuestTab tab) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    if (current.activeTab == tab) return;
-    state = AsyncValue.data(current.copyWith(activeTab: tab));
-    final repo = ref.read(missionRepositoryProvider);
-    final playerId = arg;
-    final missions =
-        await _loadForTab(repo, playerId, tab, current.categoryFilters);
-    final extras = await _loadExtrasFor(tab);
-    final last7 = await _loadLast7DaysFor(tab, repo, playerId);
-    state = AsyncValue.data(current.copyWith(
-      activeTab: tab,
-      missions: missions,
-      extras: extras,
-      last7DaysWindow: last7,
-    ));
-  }
-
-  /// Bloco 12 — seta filtro da aba Histórico. Client-side, zero re-query.
-  void setHistoryFilter(HistoryFilter filter) {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    if (current.historyFilter == filter) return;
-    state = AsyncValue.data(current.copyWith(historyFilter: filter));
-  }
-
-  /// Carrega catálogo Extras quando `tab == extras` — senão retorna
-  /// lista vazia. Filtra secretas não-reveladas (Bloco 11a: todas
-  /// secretas do catálogo ficam ocultas por default; Bloco 13 ou
-  /// futuro implementa triggers de revelação).
-  Future<List<ExtrasMissionSpec>> _loadExtrasFor(QuestTab tab) async {
-    if (tab != QuestTab.extras) return const [];
-    final catalog = ref.read(extrasCatalogServiceProvider);
-    final all = await catalog.loadAll();
-    return all.where((e) => !e.isSecret).toList(growable: false);
-  }
-
-  /// Adiciona/remove [cat] dos filtros e refaz a query. Assinatura
-  /// async pra permitir `await` nos testes — a UI chama fire-and-forget
-  /// (o state atualiza sozinho via rebuild quando o Future resolve).
-  Future<void> toggleCategoryFilter(MissionCategory cat) async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    final next = Set<MissionCategory>.from(current.categoryFilters);
-    if (!next.add(cat)) next.remove(cat);
-    state = AsyncValue.data(current.copyWith(categoryFilters: next));
-    await _reloadCurrentTab();
-  }
-
-  /// Limpa todos os filtros de categoria.
-  Future<void> clearFilters() async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    state = AsyncValue.data(current.copyWith(
-      categoryFilters: const <MissionCategory>{},
-    ));
-    await _reloadCurrentTab();
-  }
-
-  /// Força re-query do repo (pull-to-refresh do RefreshIndicator).
+  /// Força re-query (pull-to-refresh).
   Future<void> refresh() async {
     ref.invalidateSelf();
-    // Espera rebuild terminar — `future` completa após o próximo build.
     await future;
-  }
-
-  Future<void> _reloadCurrentTab() async {
-    final current = state.valueOrNull;
-    if (current == null) return;
-    final repo = ref.read(missionRepositoryProvider);
-    final missions = await _loadForTab(
-      repo,
-      arg,
-      current.activeTab,
-      current.categoryFilters,
-    );
-    final latest = state.valueOrNull ?? current;
-    state = AsyncValue.data(latest.copyWith(missions: missions));
-  }
-
-  Future<List<MissionProgress>> _loadForTab(
-    MissionRepository repo,
-    int playerId,
-    QuestTab tab,
-    Set<MissionCategory> filters,
-  ) async {
-    final List<MissionProgress> raw;
-    if (tab == QuestTab.history) {
-      raw = await repo.findHistorical(playerId);
-    } else {
-      raw = await repo.findByTab(playerId, _tabToOrigin(tab));
-    }
-    if (filters.isEmpty) return raw;
-    // Filtro de categoria é client-side — as categorias vivem no
-    // meta_json da missão (ou no RewardDeclared). Pro MVP do 10a.1:
-    // categoria é extraída do `metaJson` via key 'category' (strings
-    // do enum MissionCategory.storage). Missões sem essa key ficam
-    // de fora quando filtros estão ativos (comportamento opt-in).
-    return raw.where((m) {
-      final cat = _categoryOf(m);
-      return cat != null && filters.contains(cat);
-    }).toList(growable: false);
-  }
-
-  MissionTabOrigin _tabToOrigin(QuestTab tab) => switch (tab) {
-        QuestTab.daily => MissionTabOrigin.daily,
-        QuestTab.classTab => MissionTabOrigin.classTab,
-        QuestTab.faction => MissionTabOrigin.faction,
-        QuestTab.extras => MissionTabOrigin.extras,
-        QuestTab.admission => MissionTabOrigin.admission,
-        QuestTab.history => throw StateError(
-            'history não tem MissionTabOrigin correspondente'),
-      };
-
-  /// Extrai categoria da missão. No MVP lê do `metaJson`.
-  /// Bloco 14 (assignment) vai escrever explicitamente essa key ao
-  /// criar cada missão. Missões legacy sem a key retornam null.
-  MissionCategory? _categoryOf(MissionProgress m) {
-    try {
-      final raw = m.metaJson;
-      if (raw.isEmpty) return null;
-      // Parser leve — evita dependência de dart:convert aqui (bundle).
-      final match = RegExp(r'"category"\s*:\s*"(\w+)"').firstMatch(raw);
-      if (match == null) return null;
-      return MissionCategoryCodec.fromStorage(match.group(1)!);
-    } catch (_) {
-      return null;
-    }
   }
 }
 
-/// Provider exposto pra UI. `playerId` vem via `.call(playerId)`.
 final questsScreenNotifierProvider = AutoDisposeAsyncNotifierProviderFamily<
     QuestsScreenNotifier, QuestsScreenState, int>(
   QuestsScreenNotifier.new,

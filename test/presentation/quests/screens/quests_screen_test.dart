@@ -6,19 +6,19 @@ import 'package:noheroes_app/app/providers.dart';
 import 'package:noheroes_app/core/events/app_event_bus.dart';
 import 'package:noheroes_app/core/utils/guild_rank.dart';
 import 'package:noheroes_app/data/database/app_database.dart';
-import 'package:noheroes_app/domain/enums/mission_category.dart';
+import 'package:noheroes_app/data/datasources/local/extras_catalog_service.dart';
 import 'package:noheroes_app/domain/enums/mission_modality.dart';
 import 'package:noheroes_app/domain/enums/mission_tab_origin.dart';
+import 'package:noheroes_app/domain/models/extras_mission_spec.dart';
 import 'package:noheroes_app/domain/models/mission_progress.dart';
 import 'package:noheroes_app/domain/models/reward_declared.dart';
 import 'package:noheroes_app/domain/repositories/mission_repository.dart';
 import 'package:noheroes_app/presentation/quests/screens/quests_screen.dart';
 
-/// Widget tests focam em COMPORTAMENTO, não pixel.
-/// - render dos chips (tabs + categorias)
-/// - tap muda state observável
-/// - empty state renderiza texto
-/// - loading/error states renderizam widgets corretos
+/// Sprint 3.1 Bloco 14.6c — widget tests do /quests com sanfona.
+/// Não testa pixel — testa comportamento: seções renderizam
+/// condicionalmente, header agrega contadores, botão inline abre
+/// sheet.
 
 class _FakeMissionRepo implements MissionRepository {
   final Map<MissionTabOrigin, List<MissionProgress>> byTab;
@@ -30,7 +30,8 @@ class _FakeMissionRepo implements MissionRepository {
       byTab[tab] ?? const [];
 
   @override
-  Future<List<MissionProgress>> findHistorical(int playerId) async => const [];
+  Future<List<MissionProgress>> findHistorical(int playerId) async =>
+      const [];
 
   @override
   Future<List<MissionProgress>> findCompletedInWindow(
@@ -65,14 +66,24 @@ class _FakeMissionRepo implements MissionRepository {
       const Stream.empty();
 }
 
-PlayersTableData _fakePlayer({int id = 1}) {
-  // Construção manual — PlayersTableData vem do drift generator.
+class _FakeExtrasCatalog implements ExtrasCatalogService {
+  final List<ExtrasMissionSpec> items;
+  _FakeExtrasCatalog({this.items = const []});
+
+  @override
+  Future<List<ExtrasMissionSpec>> loadAll() async => items;
+
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
+PlayersTableData _fakePlayer({int streak = 0, int level = 5}) {
   return PlayersTableData(
-    id: id,
+    id: 1,
     email: 't@t',
     passwordHash: 'h',
     shadowName: 'Sombra',
-    level: 5,
+    level: level,
     xp: 0,
     xpToNext: 100,
     gold: 0,
@@ -91,7 +102,7 @@ PlayersTableData _fakePlayer({int id = 1}) {
     shadowState: 'stable',
     classType: null,
     factionType: null,
-    guildRank: 'none',
+    guildRank: 'e',
     narrativeMode: 'standard',
     playStyle: 'none',
     totalQuestsCompleted: 0,
@@ -102,24 +113,30 @@ PlayersTableData _fakePlayer({int id = 1}) {
     onboardingDone: true,
     lastLoginAt: DateTime.now(),
     lastStreakDate: DateTime.now(),
-    streakDays: 0,
+    streakDays: streak,
     caelumDay: 0,
     createdAt: DateTime.now(),
   );
 }
 
-MissionProgress _mkMission(int id, MissionTabOrigin tab, MissionModality mod) {
+MissionProgress _mkMission({
+  required int id,
+  required MissionTabOrigin tab,
+  MissionModality modality = MissionModality.real,
+  DateTime? completedAt,
+}) {
   return MissionProgress(
     id: id,
     playerId: 1,
     missionKey: 'M$id',
-    modality: mod,
+    modality: modality,
     tabOrigin: tab,
     rank: GuildRank.e,
     targetValue: 10,
     currentValue: 0,
     reward: const RewardDeclared(),
     startedAt: DateTime.now(),
+    completedAt: completedAt,
     rewardClaimed: false,
     metaJson: '{}',
   );
@@ -128,123 +145,162 @@ MissionProgress _mkMission(int id, MissionTabOrigin tab, MissionModality mod) {
 Widget _harness({
   required MissionRepository repo,
   required AppEventBus bus,
-  required PlayersTableData player,
+  PlayersTableData? player,
+  List<ExtrasMissionSpec> extras = const [],
 }) {
   return ProviderScope(
     overrides: [
       missionRepositoryProvider.overrideWithValue(repo),
       appEventBusProvider.overrideWithValue(bus),
-      currentPlayerProvider.overrideWith((ref) => player),
+      extrasCatalogServiceProvider
+          .overrideWithValue(_FakeExtrasCatalog(items: extras)),
+      currentPlayerProvider.overrideWith((_) => player ?? _fakePlayer()),
     ],
     child: const MaterialApp(home: QuestsScreen()),
   );
 }
 
 void main() {
-  testWidgets('renderiza 6 tab chips + 4 category chips', (tester) async {
+  testWidgets(
+      'Header renderiza título + contador 0/0 quando vazio; sem streak badge',
+      (tester) async {
+    final bus = AppEventBus();
+    addTearDown(bus.dispose);
+    await tester.pumpWidget(
+        _harness(repo: _FakeMissionRepo(), bus: bus));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.text('MISSÕES'), findsOneWidget);
+    expect(find.byKey(const ValueKey('quests-header-counter')),
+        findsOneWidget);
+    expect(find.text('0/0'), findsOneWidget);
+    expect(find.byKey(const ValueKey('quests-header-streak')), findsNothing);
+  });
+
+  testWidgets('Streak > 0: badge renderiza no header', (tester) async {
     final bus = AppEventBus();
     addTearDown(bus.dispose);
     await tester.pumpWidget(_harness(
       repo: _FakeMissionRepo(),
       bus: bus,
-      player: _fakePlayer(),
+      player: _fakePlayer(streak: 7),
     ));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
-    // 6 tabs
-    expect(find.byKey(const ValueKey('quest-tab-daily')), findsOneWidget);
-    expect(find.byKey(const ValueKey('quest-tab-classTab')), findsOneWidget);
-    expect(find.byKey(const ValueKey('quest-tab-faction')), findsOneWidget);
-    expect(find.byKey(const ValueKey('quest-tab-extras')), findsOneWidget);
-    expect(find.byKey(const ValueKey('quest-tab-admission')), findsOneWidget);
-    expect(find.byKey(const ValueKey('quest-tab-history')), findsOneWidget);
+    expect(find.byKey(const ValueKey('quests-header-streak')), findsOneWidget);
+    expect(find.text('7 dias'), findsOneWidget);
+  });
 
-    // 4 categorias
-    for (final cat in MissionCategory.values) {
-      expect(find.byKey(ValueKey('category-${cat.storage}')), findsOneWidget);
+  testWidgets('Seções vazias não renderizam header; Individuais sempre aparece',
+      (tester) async {
+    final bus = AppEventBus();
+    addTearDown(bus.dispose);
+    await tester.pumpWidget(
+        _harness(repo: _FakeMissionRepo(), bus: bus));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // Sem daily/class/faction/admission/extras → headers não aparecem
+    expect(find.text('RITUAIS DIÁRIOS'), findsNothing);
+    expect(find.text('MISSÕES DE CLASSE'), findsNothing);
+    expect(find.text('MISSÃO DA FACÇÃO'), findsNothing);
+    expect(find.text('ADMISSÃO DE FACÇÃO'), findsNothing);
+    expect(find.text('EXTRAS'), findsNothing);
+    // Individuais sempre aparece (jogador cria)
+    expect(find.text('MISSÕES INDIVIDUAIS'), findsOneWidget);
+    expect(find.text('Nenhuma missão individual ainda.'), findsOneWidget);
+  });
+
+  testWidgets('Daily + class + admission: 3 seções com headers renderizam',
+      (tester) async {
+    final bus = AppEventBus();
+    addTearDown(bus.dispose);
+    await tester.pumpWidget(_harness(
+      repo: _FakeMissionRepo(byTab: {
+        MissionTabOrigin.daily: [
+          _mkMission(id: 1, tab: MissionTabOrigin.daily)
+        ],
+        MissionTabOrigin.classTab: [
+          _mkMission(
+              id: 2,
+              tab: MissionTabOrigin.classTab,
+              modality: MissionModality.internal),
+        ],
+        MissionTabOrigin.admission: [
+          _mkMission(
+              id: 3,
+              tab: MissionTabOrigin.admission,
+              modality: MissionModality.internal),
+        ],
+      }),
+      bus: bus,
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.text('RITUAIS DIÁRIOS'), findsOneWidget);
+    expect(find.text('MISSÕES DE CLASSE'), findsOneWidget);
+    // Subtitle da classe
+    expect(find.text('Concluídas automaticamente ao agir.'), findsOneWidget);
+    expect(find.text('ADMISSÃO DE FACÇÃO'), findsOneWidget);
+    // Contador soma: 3 missões totais
+    expect(find.text('0/3'), findsOneWidget);
+  });
+
+  testWidgets('Sanfona colapsa/expande ao tap no header', (tester) async {
+    final bus = AppEventBus();
+    addTearDown(bus.dispose);
+    await tester.pumpWidget(_harness(
+      repo: _FakeMissionRepo(byTab: {
+        MissionTabOrigin.daily: [
+          _mkMission(id: 1, tab: MissionTabOrigin.daily),
+        ],
+      }),
+      bus: bus,
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // Default: expandida. AnimatedCrossFade mantém ambos children no tree
+    // durante transição — testamos via `crossFadeState` do widget.
+    AnimatedCrossFade findCrossFade() {
+      return tester.widget<AnimatedCrossFade>(find
+          .ancestor(
+            of: find.text('M1'),
+            matching: find.byType(AnimatedCrossFade),
+          )
+          .first);
     }
+
+    expect(findCrossFade().crossFadeState, CrossFadeState.showSecond);
+
+    // Tap no header colapsa
+    await tester.tap(find.byKey(const ValueKey('section-header-rituais-diários')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(findCrossFade().crossFadeState, CrossFadeState.showFirst);
+
+    // Tap de novo expande
+    await tester.tap(find.byKey(const ValueKey('section-header-rituais-diários')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(findCrossFade().crossFadeState, CrossFadeState.showSecond);
   });
 
-  testWidgets('tap em chip de tab muda activeTab (renderiza lista da tab)',
+  testWidgets('Botão inline Nova Missão Individual renderiza na seção Individuais',
       (tester) async {
-    final repo = _FakeMissionRepo(byTab: {
-      MissionTabOrigin.daily: const [],
-      MissionTabOrigin.classTab: [
-        _mkMission(1, MissionTabOrigin.classTab, MissionModality.internal),
-      ],
-    });
     final bus = AppEventBus();
     addTearDown(bus.dispose);
+    await tester.pumpWidget(
+        _harness(repo: _FakeMissionRepo(), bus: bus));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
-    await tester.pumpWidget(_harness(
-      repo: repo,
-      bus: bus,
-      player: _fakePlayer(),
-    ));
-    await tester.pumpAndSettle();
-
-    // Estado inicial: daily (vazio) — Bloco 10b usa copy específico por aba
-    expect(find.text('Nenhuma missão diária hoje. Volta amanhã.'),
+    expect(find.byKey(const ValueKey('quests-create-individual-inline')),
         findsOneWidget);
-
-    // Tap em Classe → lista não-vazia com 1 missão
-    await tester.tap(find.byKey(const ValueKey('quest-tab-classTab')));
-    await tester.pumpAndSettle();
-    expect(find.text('Nenhuma missão diária hoje. Volta amanhã.'),
-        findsNothing);
-    expect(find.text('M1'), findsOneWidget);
-  });
-
-  testWidgets('tap em category chip altera filtro (chip fica selected)',
-      (tester) async {
-    final bus = AppEventBus();
-    addTearDown(bus.dispose);
-    await tester.pumpWidget(_harness(
-      repo: _FakeMissionRepo(),
-      bus: bus,
-      player: _fakePlayer(),
-    ));
-    await tester.pumpAndSettle();
-
-    final chip = find.byKey(const ValueKey('category-fisico'));
-    expect(chip, findsOneWidget);
-
-    // Antes do tap: FilterChip.selected=false. Após tap: true.
-    FilterChip getChip() =>
-        tester.widget<FilterChip>(chip);
-    expect(getChip().selected, isFalse);
-    await tester.tap(chip);
-    await tester.pumpAndSettle();
-    expect(getChip().selected, isTrue);
-  });
-
-  testWidgets('lista vazia renderiza empty state', (tester) async {
-    final bus = AppEventBus();
-    addTearDown(bus.dispose);
-    await tester.pumpWidget(_harness(
-      repo: _FakeMissionRepo(byTab: {MissionTabOrigin.daily: const []}),
-      bus: bus,
-      player: _fakePlayer(),
-    ));
-    await tester.pumpAndSettle();
-    expect(find.text('Nenhuma missão diária hoje. Volta amanhã.'),
-        findsOneWidget);
-  });
-
-  testWidgets('lista com missão internal renderiza InternalMissionCard',
-      (tester) async {
-    final bus = AppEventBus();
-    addTearDown(bus.dispose);
-    final m =
-        _mkMission(42, MissionTabOrigin.daily, MissionModality.internal);
-    await tester.pumpWidget(_harness(
-      repo: _FakeMissionRepo(byTab: {MissionTabOrigin.daily: [m]}),
-      bus: bus,
-      player: _fakePlayer(),
-    ));
-    await tester.pumpAndSettle();
-    // Internal card tem LinearProgressIndicator (barra passiva).
-    expect(find.text('M42'), findsOneWidget);
-    expect(find.byType(LinearProgressIndicator), findsWidgets);
+    // Copy v0.28.2 — caixa mista
+    expect(find.text('Nova Missão Individual'), findsOneWidget);
   });
 }
