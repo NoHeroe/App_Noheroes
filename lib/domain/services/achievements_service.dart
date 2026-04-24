@@ -93,6 +93,7 @@ class AchievementsService {
 
   final Map<String, AchievementDefinition> _catalog = {};
   bool _loaded = false;
+  Future<void>? _loadingFuture;
 
   AchievementsService({
     required PlayerAchievementsRepository achievementsRepo,
@@ -114,8 +115,22 @@ class AchievementsService {
   /// Em catálogo malformado lança `FormatException` — Bloco 8 assume que
   /// o arquivo ou é válido ou é ausente; ausência de asset deixa o service
   /// com `_catalog` vazio (handler fica noop sem ruído).
+  ///
+  /// ## Race-free (Hotfix v0.29.1)
+  ///
+  /// Dois callers concorrentes (provider inicializa via `attach()` em
+  /// fire-and-forget + tela `/achievements` chama ao montar) podiam
+  /// entrar ambos no corpo antes de `_loaded=true`, preenchendo
+  /// `_catalog` duas vezes e estourando "key duplicada" no 2º loop.
+  /// Guardamos a Future da carga em andamento e fazemos callers
+  /// subsequentes awaitarem a mesma — uma só execução do loop.
   Future<void> ensureLoaded() async {
     if (_loaded) return;
+    _loadingFuture ??= _doLoad();
+    await _loadingFuture;
+  }
+
+  Future<void> _doLoad() async {
     String raw;
     try {
       raw = await _assetBundle.loadString(catalogAssetPath);

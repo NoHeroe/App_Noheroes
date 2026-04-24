@@ -9,7 +9,7 @@ class QuickActionsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actions = [
-      _Action('Missões', Icons.assignment_outlined, '/habits', AppColors.purple),
+      _Action('Missões', Icons.assignment_outlined, '/quests', AppColors.purple),
       _Action('Personagem', Icons.person_outline, '/character', AppColors.gold),
       _Action('Sombra', Icons.blur_on, '/shadow', AppColors.shadowStable),
       _Action('Regiões', Icons.map_outlined, '/regions', AppColors.mp),

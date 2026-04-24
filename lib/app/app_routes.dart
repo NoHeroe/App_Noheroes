@@ -3,7 +3,7 @@ class AppRoutes {
 
   static const awakening     = '/';
   static const sanctuary     = '/sanctuary';
-  static const habits        = '/habits';
+  static const quests        = '/quests';
   static const character     = '/character';
   static const shadowChamber = '/shadow';
   static const regions       = '/regions';

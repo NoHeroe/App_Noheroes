@@ -16,7 +16,7 @@ class NhBottomNav extends ConsumerWidget {
 
     final items = [
       _NavItem('Santuário', Icons.home_outlined,    Icons.home,        '/sanctuary', 1),
-      _NavItem('Missões',   Icons.assignment_outlined, Icons.assignment, '/habits',   1),
+      _NavItem('Missões',   Icons.assignment_outlined, Icons.assignment, '/quests',   1),
       _NavItem('Personagem',Icons.person_outline,   Icons.person,      '/character',  1),
       _NavItem('Regiões',   Icons.map_outlined,     Icons.map,         '/regions',    4),
       _NavItem('Sombra',    Icons.blur_on_outlined,  Icons.blur_on,    '/shadow',    10),
