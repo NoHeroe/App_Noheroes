@@ -74,6 +74,10 @@ class _FakeExtrasCatalog implements ExtrasCatalogService {
   Future<List<ExtrasMissionSpec>> loadAll() async => items;
 
   @override
+  Future<List<ExtrasMissionSpec>> loadAllForPlayer(int playerId) async =>
+      items;
+
+  @override
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
 

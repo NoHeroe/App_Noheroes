@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,16 +5,12 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/utils/guild_rank.dart';
 import '../../../data/datasources/local/tutorial_service.dart';
 import '../../../domain/enums/intensity.dart';
 import '../../../domain/enums/mission_category.dart';
-import '../../../domain/enums/mission_modality.dart';
 import '../../../domain/enums/mission_style.dart';
-import '../../../domain/enums/mission_tab_origin.dart';
+import '../../../domain/models/extras_mission_spec.dart';
 import '../../../domain/models/mission_preferences.dart';
-import '../../../domain/models/mission_progress.dart';
-import '../../../domain/services/mission_balancer_service.dart';
 
 /// Sprint 3.1 Bloco 14.6a — Onboarding Soulslike Fundido.
 ///
@@ -218,35 +212,15 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
           ),
         );
 
-    final balancer = ref.read(missionBalancerServiceProvider);
-    final repo = ref.read(missionRepositoryProvider);
-    for (final cat in MissionCategory.values) {
-      final spec = AwakeningCeremony.initialMissionFor(cat);
-      final reward = balancer.calculate(BalancerInput(
-        categoria: cat,
-        intensity: Intensity.light,
-        rank: GuildRank.e,
-        isRepetivel: false,
-      ));
-      await repo.insert(MissionProgress(
-        id: 0,
-        playerId: player.id,
-        missionKey: spec.missionKey,
-        modality: MissionModality.real,
-        tabOrigin: MissionTabOrigin.individual,
-        rank: GuildRank.e,
-        targetValue: spec.targetValue,
-        currentValue: 0,
-        reward: reward,
-        startedAt: now,
-        rewardClaimed: false,
-        metaJson: jsonEncode({
-          'category': cat.storage,
-          'initial_mission': true,
-          'goal_label': spec.goalLabel,
-        }),
-      ));
-    }
+    // Sprint 3.1 Bloco 14.5 — ao invés de inserir 4 MissionProgress
+    // (padrão abandonado pelo CEO), salva 1 `ExtrasMissionSpec`
+    // dinâmica em `SharedPreferences`. O `ExtrasCatalogService` faz
+    // merge com o catálogo estático e o `QuestsScreenNotifier` (14.6c)
+    // renderiza na seção EXTRAS de `/quests`.
+    final extraSpec = AwakeningCeremony.awakeningExtraFor(primaryFocus);
+    await ref
+        .read(extrasCatalogServiceProvider)
+        .saveAwakeningExtra(player.id, extraSpec);
 
     await TutorialService.markDone(TutorialPhase.phase0_onboarding);
     await TutorialService.markDone(TutorialPhase.phase13_mission_calibration);
@@ -554,28 +528,42 @@ class AwakeningCeremony {
     return leaders.first;
   }
 
-  static InitialMissionSpec initialMissionFor(MissionCategory cat) =>
-      switch (cat) {
-        MissionCategory.fisico => const InitialMissionSpec(
-            missionKey: 'awakening_primeira_forja',
-            goalLabel: 'A Primeira Forja — 20 flexões',
-            targetValue: 20,
+  /// Sprint 3.1 Bloco 14.5 — retorna a `ExtrasMissionSpec` baseada no
+  /// pilar compilado no quiz. 1 entry por jogador, doada pelo "O Vazio"
+  /// (type: npc). Copy canônico (aprovado CEO 14.5).
+  ///
+  /// Rewards zeradas — é missão narrativa sem rastreio quantitativo
+  /// de progresso; o botão "Aceitar" é placeholder no Bloco 11a
+  /// (débito em `DEBITO_EXTRAS_GATE.md`).
+  static ExtrasMissionSpec awakeningExtraFor(MissionCategory pillar) =>
+      switch (pillar) {
+        MissionCategory.fisico => const ExtrasMissionSpec(
+            key: 'awakening_primeira_forja',
+            type: ExtraMissionType.npc,
+            title: 'A Primeira Forja',
+            description:
+                'O Vazio observa teus músculos despertarem. Forje teu corpo pela primeira vez.',
           ),
-        MissionCategory.mental => const InitialMissionSpec(
-            missionKey: 'awakening_primeiro_veu',
-            goalLabel: 'O Primeiro Véu — ler 15 páginas',
-            targetValue: 15,
+        MissionCategory.mental => const ExtrasMissionSpec(
+            key: 'awakening_primeiro_veu',
+            type: ExtraMissionType.npc,
+            title: 'O Primeiro Véu',
+            description:
+                'O Vazio te oferece uma página em branco. Que tua mente lave o que vê.',
           ),
-        MissionCategory.espiritual => const InitialMissionSpec(
-            missionKey: 'awakening_primeiro_silencio',
-            goalLabel: 'O Primeiro Silêncio — 10 minutos em silêncio',
-            targetValue: 10,
+        MissionCategory.espiritual => const ExtrasMissionSpec(
+            key: 'awakening_primeiro_silencio',
+            type: ExtraMissionType.npc,
+            title: 'O Primeiro Silêncio',
+            description:
+                'O Vazio te convida ao silêncio. Escuta o que o mundo esconde.',
           ),
-        MissionCategory.vitalismo => const InitialMissionSpec(
-            missionKey: 'awakening_primeiro_ciclo',
-            goalLabel:
-                'O Primeiro Ciclo — 10 flexões + 10 páginas + 10 min silêncio',
-            targetValue: 30,
+        MissionCategory.vitalismo => const ExtrasMissionSpec(
+            key: 'awakening_primeiro_ciclo',
+            type: ExtraMissionType.npc,
+            title: 'O Primeiro Ciclo',
+            description:
+                'O Vazio observa teu equilíbrio. Une corpo, mente e alma pela primeira vez.',
           ),
       };
 
@@ -635,18 +623,6 @@ class AwakeningCeremony {
       ],
     ),
   ];
-}
-
-class InitialMissionSpec {
-  final String missionKey;
-  final String goalLabel;
-  final int targetValue;
-
-  const InitialMissionSpec({
-    required this.missionKey,
-    required this.goalLabel,
-    required this.targetValue,
-  });
 }
 
 class AwakeningScenario {

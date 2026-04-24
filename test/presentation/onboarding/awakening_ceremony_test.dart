@@ -1,6 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:noheroes_app/data/datasources/local/extras_catalog_service.dart';
 import 'package:noheroes_app/domain/enums/mission_category.dart';
+import 'package:noheroes_app/domain/models/extras_mission_spec.dart';
 import 'package:noheroes_app/presentation/onboarding/screens/awakening_screen.dart';
 
 /// Sprint 3.1 Bloco 14.6a — testes da lógica pura da cerimônia
@@ -65,21 +68,74 @@ void main() {
     });
   });
 
-  group('AwakeningCeremony.initialMissionFor', () {
-    test('cada pilar retorna uma spec distinta com targetValue > 0', () {
+  group('AwakeningCeremony.awakeningExtraFor (14.5)', () {
+    test('cada pilar retorna uma ExtrasMissionSpec distinta + type npc', () {
       final specs = {
         for (final c in MissionCategory.values)
-          c: AwakeningCeremony.initialMissionFor(c),
+          c: AwakeningCeremony.awakeningExtraFor(c),
       };
-      final keys = specs.values.map((s) => s.missionKey).toSet();
+      final keys = specs.values.map((s) => s.key).toSet();
       expect(keys.length, MissionCategory.values.length,
-          reason: 'Cada pilar precisa de missionKey único');
+          reason: 'Cada pilar precisa de key única');
       for (final entry in specs.entries) {
-        expect(entry.value.targetValue, greaterThan(0),
-            reason: '${entry.key.storage} precisa de targetValue positivo');
-        expect(entry.value.goalLabel, isNotEmpty,
-            reason: '${entry.key.storage} precisa de goalLabel não-vazio');
+        expect(entry.value.type.storage, 'npc',
+            reason: 'Awakening extra doada pelo Vazio deve ser type=npc');
+        expect(entry.value.title, isNotEmpty);
+        expect(entry.value.description, isNotEmpty);
       }
+    });
+
+    test('spec.toJson round-trip via fromJson preserva campos', () {
+      for (final c in MissionCategory.values) {
+        final original = AwakeningCeremony.awakeningExtraFor(c);
+        final roundTripped = ExtrasMissionSpec.fromJson(original.toJson());
+        expect(roundTripped.key, original.key);
+        expect(roundTripped.type, original.type);
+        expect(roundTripped.title, original.title);
+        expect(roundTripped.description, original.description);
+      }
+    });
+  });
+
+  group('ExtrasCatalogService.saveAwakeningExtra (14.5)', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues(const {});
+    });
+
+    test('save persiste JSON em SharedPreferences com key correta',
+        () async {
+      final service = ExtrasCatalogService();
+      final spec = AwakeningCeremony.awakeningExtraFor(MissionCategory.fisico);
+      await service.saveAwakeningExtra(42, spec);
+
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('awakening_extra_42');
+      expect(raw, isNotNull);
+      expect(raw, contains('awakening_primeira_forja'));
+      expect(raw, contains('A Primeira Forja'));
+    });
+
+    test('loadAllForPlayer retorna awakening extra no topo + estáticas',
+        () async {
+      final service = ExtrasCatalogService();
+      final spec = AwakeningCeremony.awakeningExtraFor(
+          MissionCategory.espiritual);
+      await service.saveAwakeningExtra(7, spec);
+
+      final all = await service.loadAllForPlayer(7);
+      expect(all, isNotEmpty);
+      expect(all.first.key, 'awakening_primeiro_silencio');
+    });
+
+    test('loadAllForPlayer sem awakening salvo retorna só estáticas',
+        () async {
+      final service = ExtrasCatalogService();
+      final all = await service.loadAllForPlayer(999);
+      // Não deve ter nenhuma key awakening_*
+      expect(
+        all.any((s) => s.key.startsWith('awakening_')),
+        isFalse,
+      );
     });
   });
 

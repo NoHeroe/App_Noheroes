@@ -135,7 +135,8 @@ class QuestsScreenNotifier
       repo.findByTab(playerId, MissionTabOrigin.faction),
       repo.findByTab(playerId, MissionTabOrigin.admission),
       repo.findByTab(playerId, MissionTabOrigin.extras),
-      extrasService.loadAll(),
+      // 14.5: carrega estáticas + awakening extra do jogador (SharedPreferences).
+      extrasService.loadAllForPlayer(playerId),
     ]);
 
     final extrasSpecs = (results[5] as List<ExtrasMissionSpec>)

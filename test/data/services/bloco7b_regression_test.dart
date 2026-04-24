@@ -99,10 +99,19 @@ void main() {
       );
 
       final row = await db.customSelect(
-          'SELECT xp, gold FROM players WHERE id = ?',
+          'SELECT xp, gold, level FROM players WHERE id = ?',
           variables: [Variable.withInt(playerId)]).getSingle();
-      expect(row.data['xp'], 120,
-          reason: 'bug 1 fechado: faction quest credita XP');
+      // Sprint 3.1 Bloco 14.5 — RewardGrantService agora usa
+      // PlayerDao.addXp que recalcula level/xp. Com xpToNext=100 no
+      // seed, +120 XP triggera level up: level 1 → 2, xp remainder = 20.
+      // Bug 1 do 7b era "XP não credita em faction quest" — continua
+      // fechado (XP total creditado foi 120, só foi consumido no level).
+      final newLevel = row.data['level'] as int;
+      final newXp = row.data['xp'] as int;
+      expect(newLevel, greaterThan(1),
+          reason: 'bug 1 fechado: grant credita XP e aciona level up');
+      expect(newXp, 20,
+          reason: 'xp remainder após level up = 120 - 100(xpToNext L1) = 20');
       expect(row.data['gold'], 52,
           reason: 'bug 1 fechado: faction quest credita gold');
     });

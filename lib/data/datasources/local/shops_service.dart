@@ -239,54 +239,61 @@ class ShopsService {
       return BuyResult.rejected(BuyRejectReason.insufficientGems);
     }
 
-    // Debita e entrega.
+    // Sprint 3.1 Bloco 14.5 — fix do débito #3 (ADR 0018): débito de
+    // currency + credit de item agora vivem na mesma `db.transaction`.
+    // Antes: 2-3 writes independentes; se `addItem` falhasse após
+    // `UPDATE players`, jogador perdia gold/gems sem receber item.
+    // Agora: rollback total em qualquer exceção, emits pós-commit.
+    final int invId;
     try {
-      if (priceCoins != null) {
-        await (_db.update(_db.playersTable)
-              ..where((t) => t.id.equals(playerId)))
-            .write(PlayersTableCompanion(
-          gold: Value(playerCoins - priceCoins),
-        ));
-      }
-      if (priceGems != null) {
-        await (_db.update(_db.playersTable)
-              ..where((t) => t.id.equals(playerId)))
-            .write(PlayersTableCompanion(
-          gems: Value(playerGems - priceGems),
-        ));
-      }
-
-      final invId = await _inventory.addItem(
-        playerId:    playerId,
-        itemKey:     itemKey,
-        quantity:    1,
-        acquiredVia: SourceType.shop,
-      );
-      if (invId < 0) return BuyResult.rejected(BuyRejectReason.dbError);
-
-      // Sprint 3.1 Bloco 7a — emit depois que o addItem confirmou.
-      // ShopsService não usa transaction wrapping (bug pré-existente:
-      // se addItem falha após UPDATE players, jogador perde currency —
-      // fora do escopo do 7a corrigir). Emit vive aqui pra refletir que
-      // o débito + item foram de fato persistidos.
-      if (priceCoins != null && priceCoins > 0) {
-        _eventBus.publish(GoldSpent(
-          playerId: playerId,
-          amount: priceCoins,
-          source: GoldSink.shop,
-        ));
-      }
-      if (priceGems != null && priceGems > 0) {
-        _eventBus.publish(GemsSpent(
-          playerId: playerId,
-          amount: priceGems,
-          source: GemSink.shop,
-        ));
-      }
-      return BuyResult.ok(invId);
+      invId = await _db.transaction<int>(() async {
+        if (priceCoins != null) {
+          await (_db.update(_db.playersTable)
+                ..where((t) => t.id.equals(playerId)))
+              .write(PlayersTableCompanion(
+            gold: Value(playerCoins - priceCoins),
+          ));
+        }
+        if (priceGems != null) {
+          await (_db.update(_db.playersTable)
+                ..where((t) => t.id.equals(playerId)))
+              .write(PlayersTableCompanion(
+            gems: Value(playerGems - priceGems),
+          ));
+        }
+        final id = await _inventory.addItem(
+          playerId:    playerId,
+          itemKey:     itemKey,
+          quantity:    1,
+          acquiredVia: SourceType.shop,
+        );
+        if (id < 0) {
+          throw StateError('addItem retornou $id (shop=$shopKey item=$itemKey)');
+        }
+        return id;
+      });
     } catch (_) {
       return BuyResult.rejected(BuyRejectReason.dbError);
     }
+
+    // Emits pós-commit — só chega aqui se a transação acima commitou
+    // inteira. Listeners (UI, analytics) consomem com a certeza de
+    // que débito + credit estão persistidos.
+    if (priceCoins != null && priceCoins > 0) {
+      _eventBus.publish(GoldSpent(
+        playerId: playerId,
+        amount: priceCoins,
+        source: GoldSink.shop,
+      ));
+    }
+    if (priceGems != null && priceGems > 0) {
+      _eventBus.publish(GemsSpent(
+        playerId: playerId,
+        amount: priceGems,
+        source: GemSink.shop,
+      ));
+    }
+    return BuyResult.ok(invId);
   }
 
   bool _canPlayerEnterShop(ShopSpec shop, PlayerSnapshot player) {

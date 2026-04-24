@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../core/events/app_event_bus.dart';
+import '../../core/events/player_events.dart';
 import '../../core/events/reward_events.dart';
 import '../../domain/enums/source_type.dart';
 import '../../domain/exceptions/reward_exceptions.dart';
@@ -10,6 +11,7 @@ import '../../domain/repositories/mission_repository.dart';
 import '../../domain/repositories/player_achievements_repository.dart';
 import '../../domain/repositories/player_faction_reputation_repository.dart';
 import '../database/app_database.dart';
+import '../database/daos/player_dao.dart';
 import '../datasources/local/player_inventory_service.dart';
 import '../datasources/local/player_recipes_service.dart';
 
@@ -69,6 +71,7 @@ class RewardGrantService {
           'pendente. Por ora apenas o evento registra o valor.');
     }
 
+    LevelUp? levelUpEvent;
     final result = await _db.transaction(() async {
       // 1. Check idempotência + existência — DENTRO da transação pra
       //    bloquear race com outro caller tentando grantar a mesma
@@ -93,17 +96,24 @@ class RewardGrantService {
         rewardClaimed: true,
       );
 
-      // 3. Credita currencies (xp + gold + gems) via customUpdate com
-      //    updates: {playersTable} — playerStreamProvider reage ao
-      //    commit e UI atualiza imediatamente (REGRAS §8). customUpdate
-      //    pula por inteiro se amount total é zero (evita write
-      //    desnecessário).
-      if (resolved.xp != 0 || resolved.gold != 0 || resolved.gems != 0) {
+      // 3. Sprint 3.1 Bloco 14.5 — fix do débito #1: XP passa pelo
+      //    `PlayerDao.addXp` (recalcula level, xpToNext, maxHp, maxMp,
+      //    attributePoints via `XpCalculator`). Gold/gems continuam via
+      //    `customUpdate` — só XP precisa de scaling.
+      //
+      //    `PlayerDao(_db)` dentro da transação usa o mesmo executor;
+      //    Drift enfileira todos os writes na tx corrente. Se level
+      //    mudou, `addXp` retorna `LevelUp` que emitimos pós-commit
+      //    junto com o `RewardGranted`.
+      if (resolved.xp != 0) {
+        levelUpEvent =
+            await PlayerDao(_db).addXp(playerId, resolved.xp);
+      }
+      if (resolved.gold != 0 || resolved.gems != 0) {
         await _db.customUpdate(
-          'UPDATE players SET xp = xp + ?, gold = gold + ?, '
-          'gems = gems + ? WHERE id = ?',
+          'UPDATE players SET gold = gold + ?, gems = gems + ? '
+          'WHERE id = ?',
           variables: [
-            Variable.withInt(resolved.xp),
             Variable.withInt(resolved.gold),
             Variable.withInt(resolved.gems),
             Variable.withInt(playerId),
@@ -160,8 +170,14 @@ class RewardGrantService {
       return RewardGrantResult(resolved: resolved);
     });
 
-    // 7. Emite evento FORA da transação — chega aqui só se commit OK.
+    // 7. Emite eventos FORA da transação — chega aqui só se commit OK.
     //    Qualquer exception acima propaga e este ponto não é alcançado.
+    //    14.5 — LevelUp (quando houve) emitido ANTES do RewardGranted
+    //    pra listeners que reagem a level (ex: `phaseUnlock` popups)
+    //    processarem primeiro.
+    if (levelUpEvent != null) {
+      _eventBus.publish(levelUpEvent!);
+    }
     _eventBus.publish(RewardGranted(
       playerId: playerId,
       rewardResolvedJson: resolved.toJsonString(),
@@ -203,6 +219,7 @@ class RewardGrantService {
           '$achievementKey) — schema pendente.');
     }
 
+    LevelUp? levelUpEvent;
     final result = await _db.transaction(() async {
       // 1. Check precondition + idempotência DENTRO da transação.
       final completed =
@@ -222,13 +239,17 @@ class RewardGrantService {
         );
       }
 
-      // 2. Credita currencies — mesmo pattern do grant.
-      if (resolved.xp != 0 || resolved.gold != 0 || resolved.gems != 0) {
+      // 2. Sprint 3.1 Bloco 14.5 — mesmo fix do `grant`: XP passa pelo
+      //    `PlayerDao.addXp` (scaling correto). Gold/gems via customUpdate.
+      if (resolved.xp != 0) {
+        levelUpEvent =
+            await PlayerDao(_db).addXp(playerId, resolved.xp);
+      }
+      if (resolved.gold != 0 || resolved.gems != 0) {
         await _db.customUpdate(
-          'UPDATE players SET xp = xp + ?, gold = gold + ?, '
-          'gems = gems + ? WHERE id = ?',
+          'UPDATE players SET gold = gold + ?, gems = gems + ? '
+          'WHERE id = ?',
           variables: [
-            Variable.withInt(resolved.xp),
             Variable.withInt(resolved.gold),
             Variable.withInt(resolved.gems),
             Variable.withInt(playerId),
@@ -274,11 +295,15 @@ class RewardGrantService {
       return RewardGrantResult(resolved: resolved);
     });
 
-    // 7. Emite evento FORA da transação — só chega aqui se commit OK.
-    //    Flag `fromAchievementCascade=true` faz o AchievementsService
-    //    ignorar este evento no listener (a cascata síncrona já cuidou
-    //    dos achievementsToCheck com depth correto). Outros listeners
-    //    (UI, analytics) consomem normalmente.
+    // 7. Emite eventos FORA da transação — só chega aqui se commit OK.
+    //    14.5: LevelUp (quando houve) emitido antes do RewardGranted.
+    //    Flag `fromAchievementCascade=true` no RewardGranted faz o
+    //    AchievementsService ignorar este evento no listener (a cascata
+    //    síncrona já cuidou dos achievementsToCheck com depth correto).
+    //    Outros listeners (UI, analytics) consomem normalmente.
+    if (levelUpEvent != null) {
+      _eventBus.publish(levelUpEvent!);
+    }
     _eventBus.publish(RewardGranted(
       playerId: playerId,
       rewardResolvedJson: resolved.toJsonString(),

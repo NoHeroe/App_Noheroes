@@ -47,9 +47,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/register',     builder: (c, s) => const RegisterScreen()),
       GoRoute(path: '/awakening',    builder: (c, s) => const AwakeningScreen()),
       GoRoute(path: '/sanctuary',    builder: (c, s) => const SanctuaryScreen()),
-      // /habits mantém placeholder (rota legada) até usuários antigos pararem
-      // de usá-la; telas reais viverão em /quests.
-      GoRoute(path: '/habits',       builder: (c, s) => const _UnderConstruction(feature: 'Missões (/quests)', block: 'Bloco 10')),
+      // Sprint 3.1 Bloco 14.5 — rota legacy /habits removida (schema 25
+      // resetou tudo; nenhum deep link conhecido dependia dela).
       // Sprint 3.1 Bloco 10a.1 — /quests virou tela real (6 abas + chips).
       GoRoute(path: '/quests',       builder: (c, s) => const QuestsScreen()),
       // Sprint 3.1 Bloco 14.6b — criação de missão individual virou

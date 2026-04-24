@@ -108,4 +108,19 @@ class ExtrasMissionSpec {
       rewardGold: (json['reward_gold'] as int?) ?? 0,
     );
   }
+
+  /// Sprint 3.1 Bloco 14.5 — serialize pra SharedPreferences (awakening
+  /// extra dinâmica por jogador). Round-trip via `fromJson` preservado
+  /// (mesmas keys e tipos).
+  Map<String, dynamic> toJson() => {
+        'key': key,
+        'type': type.storage,
+        'title': title,
+        'description': description,
+        if (narrative != null) 'narrative': narrative,
+        if (unlockLevel != null) 'unlock_level': unlockLevel,
+        'is_secret': isSecret,
+        'reward_xp': rewardXp,
+        'reward_gold': rewardGold,
+      };
 }
