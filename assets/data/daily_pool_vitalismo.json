@@ -1,0 +1,60 @@
+{
+  "modalidade": "vitalismo",
+  "cor_canonica": "#534AB7",
+  "pesos_subcategoria_por_pilar": {
+    "fisico": {
+      "treino": 0.40,
+      "recuperacao": 0.30,
+      "nutricao": 0.20,
+      "descanso": 0.10
+    },
+    "mental": {
+      "foco": 0.35,
+      "estudo": 0.30,
+      "organizacao": 0.20,
+      "criatividade": 0.15
+    },
+    "espiritual": {
+      "proposito": 0.35,
+      "silencio": 0.30,
+      "ritual": 0.20,
+      "conexao": 0.15
+    }
+  },
+  "titulos": [
+    "Caminho do Vitalista",
+    "Forja dos Três",
+    "Vita Plena",
+    "Pacto do Equilíbrio",
+    "A Disciplina dos Vitalistas",
+    "O Caminho que o Bom Dragão Aprova",
+    "Treino dos Convocados",
+    "A Forja Tripla",
+    "Sobreviver é Equilibrar",
+    "O Pulso do Vitalismo",
+    "Antes da Caça, os Três",
+    "Lumen Sustentada"
+  ],
+  "quotes": [
+    "O Vitalista mais forte de Caelum não treina apenas. Pensa, medita, treina.",
+    "Inerte tem 1. Mago tem 2. Vitalista tem os 3.",
+    "O corpo cansa. A mente cede. A alma fraqueja. Vitalistas equilibram os três.",
+    "Quem treina só corpo, vira músculo sem rumo.",
+    "Quem só estuda, vira mago sem corpo. Voidrins comem magos sem corpo.",
+    "Quem só medita, vira monge sem caminho. Caelum não tem espaço pra contemplação inerte.",
+    "Os Três Pilares não são opção. São sobrevivência.",
+    "O Bom Dragão observa o desequilíbrio. Ataca onde tu falhas.",
+    "Vitalismo não é talento. É escolha diária pelos três.",
+    "Sair pra caçar Voidrin sem os 3 prontos é morte certa.",
+    "A Vita acende quando corpo, mente e alma estão alinhados. Só então.",
+    "O Clã das Feras tinha corpo. O Clã do Sol tinha mente. Os dois caíram. Quem une os dois, talvez sobreviva.",
+    "Equilibrar é mais difícil que excelência num pilar. Por isso vale mais.",
+    "Aeon dogmatizou alma. Kaleidos dogmatizou mente. Caelum agora exige os três.",
+    "Vitalistas verdadeiros são raros. Os falsos morrem cedo.",
+    "Hoje, treina os três. Amanhã, os três te treinam de volta.",
+    "O motor mágico do Vitalista só funciona com os 3 cilindros vivos.",
+    "Quem prioriza um pilar, sacrifica os outros. Quem sacrifica, paga.",
+    "O Vitalismo não é meta. É manutenção. Nunca para.",
+    "Os Anciãos têm os três. Por isso voam. Tu também terás. Por isso treinas."
+  ]
+}

@@ -62,6 +62,10 @@ flutter:
     - assets/data/faction_quests_weekly.json
     - assets/data/quest_templates.json
     - assets/data/achievements.json
+    - assets/data/daily_pool_fisico.json
+    - assets/data/daily_pool_mental.json
+    - assets/data/daily_pool_espiritual.json
+    - assets/data/daily_pool_vitalismo.json
     - assets/data/shadow_quests.json
     - assets/data/vitalismos_unicos.json
     - assets/data/items_unified.json

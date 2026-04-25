@@ -17,6 +17,7 @@ import '../data/datasources/local/extras_catalog_service.dart';
 import '../data/datasources/local/mission_catalogs_service.dart';
 import '../domain/services/achievements_service.dart';
 import '../domain/services/body_metrics_service.dart';
+import '../domain/services/daily_pool_service.dart';
 import '../domain/services/daily_reset_service.dart';
 import '../domain/services/faction_reputation_service.dart';
 import '../domain/services/mission_assignment_service.dart';
@@ -317,6 +318,17 @@ final achievementsServiceProvider = Provider<AchievementsService>((ref) {
 final bodyMetricsServiceProvider = Provider<BodyMetricsService>((ref) {
   final db = ref.watch(appDatabaseProvider);
   return BodyMetricsService(dao: PlayerDao(db));
+});
+
+// Sprint 3.2 Etapa 1.1 — DailyPoolService (pools de missões diárias).
+// Carrega lazy os 4 JSONs `daily_pool_*.json` via fire-and-forget.
+// Etapa 1.2 implementa a geração; Etapa 1.3, a UI.
+final dailyPoolServiceProvider = Provider<DailyPoolService>((ref) {
+  final service = DailyPoolService();
+  // Fire-and-forget: assets ficam disponíveis ao primeiro consumo
+  // (StateError se chamarem antes de loadAll completar).
+  service.loadAll();
+  return service;
 });
 
 // Sprint 3.1 Bloco 9 — MissionPreferencesService (quiz de calibração).
