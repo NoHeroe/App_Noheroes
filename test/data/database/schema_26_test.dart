@@ -4,13 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:noheroes_app/data/database/app_database.dart';
 
-/// Sprint 3.1 Bloco 13b — valida schema 25.
+/// Sprint 3.2 Etapa 1.0 — valida schema 26.
 ///
 /// Cobre:
-/// - Fresh install aplica schema 25 sem erro (tabela `players` tem
-///   `last_daily_reset` + `last_weekly_reset` nullable).
-/// - Upgrade 24→25 adiciona as 2 colunas preservando rows existentes
-///   (pattern Bloco 7-preclean).
+/// - Fresh install aplica schema 26 sem erro (players tem `weight_kg`
+///   + `height_cm` nullable).
+/// - Upgrade 25→26 adiciona as 2 colunas preservando rows existentes
+///   (pattern Bloco 7-preclean idêntico ao schema_25_test).
 void main() {
   late AppDatabase db;
 
@@ -22,17 +22,14 @@ void main() {
     await db.close();
   });
 
-  // Pattern Bloco 7-preclean: simula schema 24 seedando tabela players
-  // schema-24 (sem as 2 colunas novas) + PRAGMA user_version=24. Drift
-  // detecta 24 < schemaVersion=25 e chama onUpgrade 24→25 (addColumn
-  // nullable).
-  group('Sprint 3.1 — upgrade 24→25 (2 columns nullable)', () {
+  // Pattern Bloco 7-preclean: simula schema 25 seedando tabela players
+  // schema-25 (sem as 2 colunas novas) + PRAGMA user_version=25. Drift
+  // detecta 25 < schemaVersion=26 e chama onUpgrade 25→26 (addColumn nullable).
+  group('Sprint 3.2 — upgrade 25→26 (2 columns nullable)', () {
     late AppDatabase legacyDb;
 
     setUp(() {
       legacyDb = AppDatabase.forTesting(NativeDatabase.memory(setup: (raw) {
-        // Cria schema 24 completo na mão — players sem last_daily_reset
-        // / last_weekly_reset. Drift onUpgrade 24→25 vai addColumn.
         raw.execute('''
           CREATE TABLE players (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,7 +68,9 @@ void main() {
             last_streak_date INTEGER,
             streak_days INTEGER NOT NULL DEFAULT 0,
             caelum_day INTEGER NOT NULL DEFAULT 0,
-            created_at INTEGER NOT NULL
+            created_at INTEGER NOT NULL,
+            last_daily_reset INTEGER,
+            last_weekly_reset INTEGER
           );
         ''');
         raw.execute(
@@ -80,15 +79,15 @@ void main() {
             "intelligence, constitution, spirit, charisma, "
             "attribute_points, shadow_corruption, vitalism_level, "
             "vitalism_xp, last_login_at, created_at) "
-            "VALUES ('legacy@test', 'h', 'L', 5, 0, 100, 0, 0, 1, 1, 1, "
+            "VALUES ('legacy26@test', 'h', 'L', 5, 0, 100, 0, 0, 1, 1, 1, "
             "1, 1, 1, 0, 0, 0, 0, 0, 0);");
-        raw.execute('PRAGMA user_version = 24;');
+        raw.execute('PRAGMA user_version = 25;');
       }));
     });
 
     tearDown(() async => legacyDb.close());
 
-    test('onUpgrade 24→25 não lança', () async {
+    test('onUpgrade 25→26 não lança', () async {
       await expectLater(
         legacyDb.customSelect('SELECT 1 AS x').get(),
         completes,
@@ -97,27 +96,22 @@ void main() {
 
     test('player pré-migration preservado; colunas novas vêm null',
         () async {
-      // Força open+migration.
       final rows = await legacyDb
           .customSelect('SELECT * FROM players WHERE email = ?',
-              variables: [Variable.withString('legacy@test')])
+              variables: [Variable.withString('legacy26@test')])
           .get();
       expect(rows.length, 1);
-      expect(rows.single.read<int?>('last_daily_reset'), isNull);
-      expect(rows.single.read<int?>('last_weekly_reset'), isNull);
+      expect(rows.single.read<int?>('weight_kg'), isNull);
+      expect(rows.single.read<int?>('height_cm'), isNull);
     });
   });
 
-  group('Schema 25 fresh install', () {
-    test('schemaVersion >= 25 (Bloco 13b ou superior)', () {
-      // Sprint 3.2 Etapa 1.0 — schemaVersion bumpado pra 26. Teste passa
-      // a validar `>= 25` pra cobrir esta migração e qualquer futura.
-      expect(db.schemaVersion, greaterThanOrEqualTo(25));
+  group('Schema 26 fresh install', () {
+    test('schemaVersion é 26', () {
+      expect(db.schemaVersion, 26);
     });
 
-    test('players tem last_daily_reset + last_weekly_reset nullable',
-        () async {
-      // Insere player sem specificar os novos campos — defaults nullable.
+    test('players tem weight_kg + height_cm nullable', () async {
       final id = await db.customInsert(
         "INSERT INTO players (email, password_hash, shadow_name, level, "
         "xp, xp_to_next, gold, gems, strength, dexterity, intelligence, "
@@ -126,18 +120,18 @@ void main() {
         "VALUES (?, ?, 'Sombra', 1, 0, 100, 0, 0, 1, 1, 1, 1, 1, 1, 0, "
         "0, 0, 0)",
         variables: [
-          Variable.withString('s25@t'),
+          Variable.withString('s26@t'),
           Variable.withString('h'),
         ],
       );
       final row = await (db.select(db.playersTable)
             ..where((t) => t.id.equals(id)))
           .getSingle();
-      expect(row.lastDailyReset, isNull);
-      expect(row.lastWeeklyReset, isNull);
+      expect(row.weightKg, isNull);
+      expect(row.heightCm, isNull);
     });
 
-    test('UPDATE last_daily_reset persiste', () async {
+    test('UPDATE weight_kg + height_cm persiste', () async {
       final id = await db.customInsert(
         "INSERT INTO players (email, password_hash, shadow_name, level, "
         "xp, xp_to_next, gold, gems, strength, dexterity, intelligence, "
@@ -145,17 +139,15 @@ void main() {
         "shadow_corruption, vitalism_level, vitalism_xp) "
         "VALUES (?, ?, 'S', 1, 0, 100, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0)",
         variables: [
-          Variable.withString('u25@t'),
+          Variable.withString('u26@t'),
           Variable.withString('h'),
         ],
       );
-      final now = DateTime.now().millisecondsSinceEpoch;
       await db.customUpdate(
-        'UPDATE players SET last_daily_reset = ?, last_weekly_reset = ? '
-        'WHERE id = ?',
+        'UPDATE players SET weight_kg = ?, height_cm = ? WHERE id = ?',
         variables: [
-          Variable.withInt(now),
-          Variable.withInt(now),
+          Variable.withInt(72),
+          Variable.withInt(178),
           Variable.withInt(id),
         ],
         updates: {db.playersTable},
@@ -163,8 +155,8 @@ void main() {
       final row = await (db.select(db.playersTable)
             ..where((t) => t.id.equals(id)))
           .getSingle();
-      expect(row.lastDailyReset, now);
-      expect(row.lastWeeklyReset, now);
+      expect(row.weightKg, 72);
+      expect(row.heightCm, 178);
     });
   });
 }

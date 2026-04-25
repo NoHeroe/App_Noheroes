@@ -160,6 +160,18 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
         PlayersTableCompanion(lastWeeklyReset: Value(at.millisecondsSinceEpoch)));
   }
 
+  /// Sprint 3.2 Etapa 1.0 — persiste peso/altura coletados na Calibração do
+  /// Sistema (onboarding) ou via edição inline na tela /perfil.
+  /// Ranges validados pelo BodyMetricsService antes de chegar aqui:
+  /// 20-300kg, 100-250cm.
+  Future<void> updateBodyMetrics(int id, {int? weightKg, int? heightCm}) async {
+    await (update(playersTable)..where((t) => t.id.equals(id)))
+        .write(PlayersTableCompanion(
+      weightKg: weightKg == null ? const Value.absent() : Value(weightKg),
+      heightCm: heightCm == null ? const Value.absent() : Value(heightCm),
+    ));
+  }
+
   Future<void> addGold(int id, int amount) async {
     final player = await findById(id);
     if (player == null) return;

@@ -76,7 +76,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 25;
+  int get schemaVersion => 26;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -376,6 +376,22 @@ class AppDatabase extends _$AppDatabase {
         } catch (e) {
           // ignore: avoid_print
           print('[migration 24→25] addColumn failed: $e');
+        }
+      }
+      if (from < 26) {
+        // Sprint 3.2 Etapa 1.0 — perfil + IMC. Adiciona weight_kg e height_cm
+        // nullable em players. Coletados na scene "Calibração do Sistema" do
+        // onboarding (obrigatório pra novos jogadores). Editáveis em /perfil.
+        // Null aceita pra jogadores pré-3.2 (tela de perfil exibe categoria
+        // "Incompleto" até preencherem).
+        try {
+          await m.addColumn(playersTable, playersTable.weightKg);
+          await m.addColumn(playersTable, playersTable.heightCm);
+          // ignore: avoid_print
+          print('[migration 25→26] added weight_kg + height_cm');
+        } catch (e) {
+          // ignore: avoid_print
+          print('[migration 25→26] addColumn failed: $e');
         }
       }
     },

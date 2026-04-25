@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -11,6 +12,7 @@ import '../../../domain/enums/mission_category.dart';
 import '../../../domain/enums/mission_style.dart';
 import '../../../domain/models/extras_mission_spec.dart';
 import '../../../domain/models/mission_preferences.dart';
+import '../../../domain/services/body_metrics_service.dart';
 
 /// Sprint 3.1 Bloco 14.6a — Onboarding Soulslike Fundido.
 ///
@@ -62,6 +64,14 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
   final List<MissionCategory?> _scenarioChoices = [null, null, null];
   bool _ready = false;
   bool _finishing = false;
+
+  // Sprint 3.2 Etapa 1.0 — Calibração do Sistema (pós-cerimônia, pré-finish).
+  // Visual separado da cerimônia: sem _SceneBg, sem narrativa do Vazio.
+  bool _inCalibration = false;
+  final _weightCtrl = TextEditingController();
+  final _heightCtrl = TextEditingController();
+  String? _weightError;
+  String? _heightError;
 
   List<_Scene> get _scenes => [
         // 0 — Ruínas
@@ -147,6 +157,8 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
     _bgCtrl.dispose();
     _dialogCtrl.dispose();
     _nameCtrl.dispose();
+    _weightCtrl.dispose();
+    _heightCtrl.dispose();
     super.dispose();
   }
 
@@ -161,12 +173,15 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
     }
 
     if (scene.isFinish) {
-      await _finish();
+      // Sprint 3.2 Etapa 1.0 — antes do finish narrativo, exibe a tela
+      // separada de Calibração do Sistema (peso/altura). Visual rompe
+      // com a cerimônia de propósito — é setup técnico funcional.
+      setState(() => _inCalibration = true);
       return;
     }
 
     if (_step >= _scenes.length - 1) {
-      await _finish();
+      setState(() => _inCalibration = true);
       return;
     }
 
@@ -175,6 +190,38 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
     setState(() => _step++);
     await _dialogCtrl.forward();
     setState(() => _ready = true);
+  }
+
+  /// Sprint 3.2 Etapa 1.0 — confirma a Calibração do Sistema.
+  /// Valida ranges, persiste peso/altura e dispara o `_finish` narrativo
+  /// original (preferences + extras + onboarding done + nav /sanctuary).
+  Future<void> _confirmCalibration() async {
+    if (_finishing) return;
+    final weight = int.tryParse(_weightCtrl.text.trim());
+    final height = int.tryParse(_heightCtrl.text.trim());
+    final service = ref.read(bodyMetricsServiceProvider);
+    final wOk = weight != null && service.isValidWeight(weight);
+    final hOk = height != null && service.isValidHeight(height);
+    setState(() {
+      _weightError = wOk
+          ? null
+          : 'Use um valor entre ${BodyMetricsService.minWeightKg} e '
+              '${BodyMetricsService.maxWeightKg} kg';
+      _heightError = hOk
+          ? null
+          : 'Use um valor entre ${BodyMetricsService.minHeightCm} e '
+              '${BodyMetricsService.maxHeightCm} cm';
+    });
+    if (!wOk || !hOk) return;
+
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) {
+      if (mounted) context.go('/sanctuary');
+      return;
+    }
+    await service.save(
+        playerId: player.id, weightKg: weight, heightCm: height);
+    await _finish();
   }
 
   Future<void> _finish() async {
@@ -233,6 +280,8 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
 
   @override
   Widget build(BuildContext context) {
+    if (_inCalibration) return _buildCalibrationScreen();
+
     final scene = _scenes[_step];
     final tapAdvances = !scene.isNameInput &&
         !scene.isDirectChoice &&
@@ -303,6 +352,162 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Sprint 3.2 Etapa 1.0 — tela "Calibração do Sistema".
+  ///
+  /// Visualmente separada da cerimônia de propósito (sem _SceneBg/animação,
+  /// sem narrativa do Vazio). É setup técnico funcional — pense nas telas
+  /// de alocação inicial de Dark Souls. Estética soulslike preservada via
+  /// CinzelDecorative + gold contido + borda gold simples.
+  Widget _buildCalibrationScreen() {
+    return Scaffold(
+      backgroundColor: AppColors.black,
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                    color: AppColors.gold.withValues(alpha: 0.5), width: 1),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'CALIBRAÇÃO DO SISTEMA',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.cinzelDecorative(
+                      fontSize: 14,
+                      color: AppColors.gold,
+                      letterSpacing: 3,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Antes de iniciar tuas missões, o sistema precisa calibrar tuas medidas pra calcular hidratação e nutrição corretas.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.roboto(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  _buildCalibrationField(
+                    keyName: 'calibration-weight',
+                    label: 'Peso',
+                    unit: 'kg',
+                    controller: _weightCtrl,
+                    error: _weightError,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildCalibrationField(
+                    keyName: 'calibration-height',
+                    label: 'Altura',
+                    unit: 'cm',
+                    controller: _heightCtrl,
+                    error: _heightError,
+                  ),
+                  const SizedBox(height: 24),
+                  AnimatedBuilder(
+                    animation: Listenable.merge([_weightCtrl, _heightCtrl]),
+                    builder: (_, __) {
+                      final w = int.tryParse(_weightCtrl.text.trim());
+                      final h = int.tryParse(_heightCtrl.text.trim());
+                      final svc = ref.read(bodyMetricsServiceProvider);
+                      final enabled = !_finishing &&
+                          w != null &&
+                          h != null &&
+                          svc.isValidWeight(w) &&
+                          svc.isValidHeight(h);
+                      return _buildCalibrationBtn(enabled);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCalibrationField({
+    required String keyName,
+    required String label,
+    required String unit,
+    required TextEditingController controller,
+    required String? error,
+  }) {
+    return TextField(
+      key: ValueKey(keyName),
+      controller: controller,
+      keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      style: GoogleFonts.roboto(color: AppColors.textPrimary, fontSize: 14),
+      decoration: InputDecoration(
+        labelText: label,
+        suffixText: unit,
+        labelStyle: GoogleFonts.roboto(color: AppColors.textMuted),
+        suffixStyle: GoogleFonts.roboto(color: AppColors.textMuted),
+        errorText: error,
+        filled: true,
+        fillColor: AppColors.surfaceAlt,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(
+              color: AppColors.gold.withValues(alpha: 0.7), width: 1.5),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCalibrationBtn(bool enabled) {
+    return GestureDetector(
+      key: const ValueKey('calibration-continue'),
+      onTap: enabled ? _confirmCalibration : null,
+      child: Container(
+        width: double.infinity,
+        height: 50,
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: enabled
+                ? AppColors.gold
+                : AppColors.gold.withValues(alpha: 0.25),
+            width: 1.5,
+          ),
+          borderRadius: BorderRadius.circular(6),
+          color: enabled
+              ? AppColors.gold.withValues(alpha: 0.1)
+              : Colors.transparent,
+        ),
+        child: Center(
+          child: Text(
+            _finishing ? 'CALIBRANDO…' : 'CONTINUAR',
+            style: GoogleFonts.cinzelDecorative(
+              fontSize: 12,
+              color: enabled ? AppColors.gold : AppColors.textMuted,
+              letterSpacing: 2,
+            ),
+          ),
         ),
       ),
     );
@@ -406,7 +611,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
           ],
           if (scene.isFinish) ...[
             const SizedBox(height: 14),
-            _buildBtn(_finishing ? 'Despertando…' : 'Despertar', _advance),
+            _buildBtn('Despertar', _advance),
           ],
         ],
       ),

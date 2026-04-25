@@ -72,4 +72,10 @@ class PlayersTable extends Table {
   // via PlayerDao.markDailyReset/markWeeklyReset.
   IntColumn get lastDailyReset => integer().nullable()();
   IntColumn get lastWeeklyReset => integer().nullable()();
+
+  // Sprint 3.2 Etapa 1.0 — dados físicos coletados na "Calibração do Sistema"
+  // (pós-cerimônia, pré-missões iniciais). Editáveis depois em /perfil.
+  // Null = jogador pré-3.2 que não passou pelo upgrade ainda.
+  IntColumn get weightKg => integer().nullable()();
+  IntColumn get heightCm => integer().nullable()();
 }

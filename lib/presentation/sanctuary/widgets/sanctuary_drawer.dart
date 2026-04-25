@@ -54,6 +54,8 @@ class SanctuaryDrawer extends ConsumerWidget {
       _Item('Reputação',     Icons.people_outline,          '/reputation'),
       // Sprint 3.1 Bloco 14.6c — Histórico virou rota dedicada.
       _Item('Histórico',     Icons.history,                '/history'),
+      // Sprint 3.2 Etapa 1.0 — Perfil (dados físicos + IMC + recomendações).
+      _Item('Perfil',        Icons.person_outline,         '/perfil'),
       _Item('Amigos',        Icons.group_outlined,         null),
       _Item('Meus Produtos', Icons.book_outlined,          null),
       _Item('Configurações', Icons.settings_outlined,      null),

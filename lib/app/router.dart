@@ -23,6 +23,7 @@ import '../presentation/class_selection/screens/class_selection_screen.dart';
 import '../presentation/faction_selection/screens/faction_selection_screen.dart';
 import '../presentation/achievements/screens/achievements_screen.dart';
 import '../presentation/history/screens/history_screen.dart';
+import '../presentation/profile/screens/profile_screen.dart';
 import '../presentation/mission_calibration/screens/mission_calibration_screen.dart';
 import '../presentation/quests/screens/quests_screen.dart';
 import '../presentation/dev/dev_panel_screen.dart';
@@ -116,6 +117,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Sprint 3.1 Bloco 14.6c — /history vira rota dedicada (saiu
       // da aba chip de /quests no redesign).
       GoRoute(path: '/history',            builder: (c, s) => const HistoryScreen()),
+      // Sprint 3.2 Etapa 1.0 — /perfil (identidade + dados físicos +
+      // recomendações diárias). Acessível pelo SanctuaryDrawer.
+      GoRoute(path: '/perfil',             builder: (c, s) => const ProfileScreen()),
       GoRoute(
         path: '/vitalism/void-ritual',
         builder: (c, s) => const VoidRitualScreen(),

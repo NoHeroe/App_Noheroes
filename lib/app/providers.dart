@@ -16,6 +16,7 @@ import '../domain/models/player_snapshot.dart';
 import '../data/datasources/local/extras_catalog_service.dart';
 import '../data/datasources/local/mission_catalogs_service.dart';
 import '../domain/services/achievements_service.dart';
+import '../domain/services/body_metrics_service.dart';
 import '../domain/services/daily_reset_service.dart';
 import '../domain/services/faction_reputation_service.dart';
 import '../domain/services/mission_assignment_service.dart';
@@ -309,6 +310,13 @@ final achievementsServiceProvider = Provider<AchievementsService>((ref) {
     sub?.cancel();
   });
   return service;
+});
+
+// Sprint 3.2 Etapa 1.0 — BodyMetricsService (IMC + recomendações diárias).
+// Lê/escreve weight_kg + height_cm em players via PlayerDao.
+final bodyMetricsServiceProvider = Provider<BodyMetricsService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return BodyMetricsService(dao: PlayerDao(db));
 });
 
 // Sprint 3.1 Bloco 9 — MissionPreferencesService (quiz de calibração).

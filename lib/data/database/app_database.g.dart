@@ -302,6 +302,18 @@ class $PlayersTableTable extends PlayersTable
   late final GeneratedColumn<int> lastWeeklyReset = GeneratedColumn<int>(
       'last_weekly_reset', aliasedName, true,
       type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _weightKgMeta =
+      const VerificationMeta('weightKg');
+  @override
+  late final GeneratedColumn<int> weightKg = GeneratedColumn<int>(
+      'weight_kg', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _heightCmMeta =
+      const VerificationMeta('heightCm');
+  @override
+  late final GeneratedColumn<int> heightCm = GeneratedColumn<int>(
+      'height_cm', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -342,7 +354,9 @@ class $PlayersTableTable extends PlayersTable
         lastLoginAt,
         lastStreakDate,
         lastDailyReset,
-        lastWeeklyReset
+        lastWeeklyReset,
+        weightKg,
+        heightCm
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -548,6 +562,14 @@ class $PlayersTableTable extends PlayersTable
           lastWeeklyReset.isAcceptableOrUnknown(
               data['last_weekly_reset']!, _lastWeeklyResetMeta));
     }
+    if (data.containsKey('weight_kg')) {
+      context.handle(_weightKgMeta,
+          weightKg.isAcceptableOrUnknown(data['weight_kg']!, _weightKgMeta));
+    }
+    if (data.containsKey('height_cm')) {
+      context.handle(_heightCmMeta,
+          heightCm.isAcceptableOrUnknown(data['height_cm']!, _heightCmMeta));
+    }
     return context;
   }
 
@@ -635,6 +657,10 @@ class $PlayersTableTable extends PlayersTable
           .read(DriftSqlType.int, data['${effectivePrefix}last_daily_reset']),
       lastWeeklyReset: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}last_weekly_reset']),
+      weightKg: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}weight_kg']),
+      heightCm: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}height_cm']),
     );
   }
 
@@ -685,6 +711,8 @@ class PlayersTableData extends DataClass
   final DateTime? lastStreakDate;
   final int? lastDailyReset;
   final int? lastWeeklyReset;
+  final int? weightKg;
+  final int? heightCm;
   const PlayersTableData(
       {required this.id,
       required this.email,
@@ -724,7 +752,9 @@ class PlayersTableData extends DataClass
       required this.lastLoginAt,
       this.lastStreakDate,
       this.lastDailyReset,
-      this.lastWeeklyReset});
+      this.lastWeeklyReset,
+      this.weightKg,
+      this.heightCm});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -776,6 +806,12 @@ class PlayersTableData extends DataClass
     }
     if (!nullToAbsent || lastWeeklyReset != null) {
       map['last_weekly_reset'] = Variable<int>(lastWeeklyReset);
+    }
+    if (!nullToAbsent || weightKg != null) {
+      map['weight_kg'] = Variable<int>(weightKg);
+    }
+    if (!nullToAbsent || heightCm != null) {
+      map['height_cm'] = Variable<int>(heightCm);
     }
     return map;
   }
@@ -831,6 +867,12 @@ class PlayersTableData extends DataClass
       lastWeeklyReset: lastWeeklyReset == null && nullToAbsent
           ? const Value.absent()
           : Value(lastWeeklyReset),
+      weightKg: weightKg == null && nullToAbsent
+          ? const Value.absent()
+          : Value(weightKg),
+      heightCm: heightCm == null && nullToAbsent
+          ? const Value.absent()
+          : Value(heightCm),
     );
   }
 
@@ -878,6 +920,8 @@ class PlayersTableData extends DataClass
       lastStreakDate: serializer.fromJson<DateTime?>(json['lastStreakDate']),
       lastDailyReset: serializer.fromJson<int?>(json['lastDailyReset']),
       lastWeeklyReset: serializer.fromJson<int?>(json['lastWeeklyReset']),
+      weightKg: serializer.fromJson<int?>(json['weightKg']),
+      heightCm: serializer.fromJson<int?>(json['heightCm']),
     );
   }
   @override
@@ -923,6 +967,8 @@ class PlayersTableData extends DataClass
       'lastStreakDate': serializer.toJson<DateTime?>(lastStreakDate),
       'lastDailyReset': serializer.toJson<int?>(lastDailyReset),
       'lastWeeklyReset': serializer.toJson<int?>(lastWeeklyReset),
+      'weightKg': serializer.toJson<int?>(weightKg),
+      'heightCm': serializer.toJson<int?>(heightCm),
     };
   }
 
@@ -965,7 +1011,9 @@ class PlayersTableData extends DataClass
           DateTime? lastLoginAt,
           Value<DateTime?> lastStreakDate = const Value.absent(),
           Value<int?> lastDailyReset = const Value.absent(),
-          Value<int?> lastWeeklyReset = const Value.absent()}) =>
+          Value<int?> lastWeeklyReset = const Value.absent(),
+          Value<int?> weightKg = const Value.absent(),
+          Value<int?> heightCm = const Value.absent()}) =>
       PlayersTableData(
         id: id ?? this.id,
         email: email ?? this.email,
@@ -1010,6 +1058,8 @@ class PlayersTableData extends DataClass
         lastWeeklyReset: lastWeeklyReset.present
             ? lastWeeklyReset.value
             : this.lastWeeklyReset,
+        weightKg: weightKg.present ? weightKg.value : this.weightKg,
+        heightCm: heightCm.present ? heightCm.value : this.heightCm,
       );
   PlayersTableData copyWithCompanion(PlayersTableCompanion data) {
     return PlayersTableData(
@@ -1084,6 +1134,8 @@ class PlayersTableData extends DataClass
       lastWeeklyReset: data.lastWeeklyReset.present
           ? data.lastWeeklyReset.value
           : this.lastWeeklyReset,
+      weightKg: data.weightKg.present ? data.weightKg.value : this.weightKg,
+      heightCm: data.heightCm.present ? data.heightCm.value : this.heightCm,
     );
   }
 
@@ -1128,7 +1180,9 @@ class PlayersTableData extends DataClass
           ..write('lastLoginAt: $lastLoginAt, ')
           ..write('lastStreakDate: $lastStreakDate, ')
           ..write('lastDailyReset: $lastDailyReset, ')
-          ..write('lastWeeklyReset: $lastWeeklyReset')
+          ..write('lastWeeklyReset: $lastWeeklyReset, ')
+          ..write('weightKg: $weightKg, ')
+          ..write('heightCm: $heightCm')
           ..write(')'))
         .toString();
   }
@@ -1173,7 +1227,9 @@ class PlayersTableData extends DataClass
         lastLoginAt,
         lastStreakDate,
         lastDailyReset,
-        lastWeeklyReset
+        lastWeeklyReset,
+        weightKg,
+        heightCm
       ]);
   @override
   bool operator ==(Object other) =>
@@ -1217,7 +1273,9 @@ class PlayersTableData extends DataClass
           other.lastLoginAt == this.lastLoginAt &&
           other.lastStreakDate == this.lastStreakDate &&
           other.lastDailyReset == this.lastDailyReset &&
-          other.lastWeeklyReset == this.lastWeeklyReset);
+          other.lastWeeklyReset == this.lastWeeklyReset &&
+          other.weightKg == this.weightKg &&
+          other.heightCm == this.heightCm);
 }
 
 class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
@@ -1260,6 +1318,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
   final Value<DateTime?> lastStreakDate;
   final Value<int?> lastDailyReset;
   final Value<int?> lastWeeklyReset;
+  final Value<int?> weightKg;
+  final Value<int?> heightCm;
   const PlayersTableCompanion({
     this.id = const Value.absent(),
     this.email = const Value.absent(),
@@ -1300,6 +1360,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.lastStreakDate = const Value.absent(),
     this.lastDailyReset = const Value.absent(),
     this.lastWeeklyReset = const Value.absent(),
+    this.weightKg = const Value.absent(),
+    this.heightCm = const Value.absent(),
   });
   PlayersTableCompanion.insert({
     this.id = const Value.absent(),
@@ -1341,6 +1403,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.lastStreakDate = const Value.absent(),
     this.lastDailyReset = const Value.absent(),
     this.lastWeeklyReset = const Value.absent(),
+    this.weightKg = const Value.absent(),
+    this.heightCm = const Value.absent(),
   })  : email = Value(email),
         passwordHash = Value(passwordHash);
   static Insertable<PlayersTableData> custom({
@@ -1383,6 +1447,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     Expression<DateTime>? lastStreakDate,
     Expression<int>? lastDailyReset,
     Expression<int>? lastWeeklyReset,
+    Expression<int>? weightKg,
+    Expression<int>? heightCm,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1425,6 +1491,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       if (lastStreakDate != null) 'last_streak_date': lastStreakDate,
       if (lastDailyReset != null) 'last_daily_reset': lastDailyReset,
       if (lastWeeklyReset != null) 'last_weekly_reset': lastWeeklyReset,
+      if (weightKg != null) 'weight_kg': weightKg,
+      if (heightCm != null) 'height_cm': heightCm,
     });
   }
 
@@ -1467,7 +1535,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       Value<DateTime>? lastLoginAt,
       Value<DateTime?>? lastStreakDate,
       Value<int?>? lastDailyReset,
-      Value<int?>? lastWeeklyReset}) {
+      Value<int?>? lastWeeklyReset,
+      Value<int?>? weightKg,
+      Value<int?>? heightCm}) {
     return PlayersTableCompanion(
       id: id ?? this.id,
       email: email ?? this.email,
@@ -1508,6 +1578,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       lastStreakDate: lastStreakDate ?? this.lastStreakDate,
       lastDailyReset: lastDailyReset ?? this.lastDailyReset,
       lastWeeklyReset: lastWeeklyReset ?? this.lastWeeklyReset,
+      weightKg: weightKg ?? this.weightKg,
+      heightCm: heightCm ?? this.heightCm,
     );
   }
 
@@ -1631,6 +1703,12 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     if (lastWeeklyReset.present) {
       map['last_weekly_reset'] = Variable<int>(lastWeeklyReset.value);
     }
+    if (weightKg.present) {
+      map['weight_kg'] = Variable<int>(weightKg.value);
+    }
+    if (heightCm.present) {
+      map['height_cm'] = Variable<int>(heightCm.value);
+    }
     return map;
   }
 
@@ -1675,7 +1753,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
           ..write('lastLoginAt: $lastLoginAt, ')
           ..write('lastStreakDate: $lastStreakDate, ')
           ..write('lastDailyReset: $lastDailyReset, ')
-          ..write('lastWeeklyReset: $lastWeeklyReset')
+          ..write('lastWeeklyReset: $lastWeeklyReset, ')
+          ..write('weightKg: $weightKg, ')
+          ..write('heightCm: $heightCm')
           ..write(')'))
         .toString();
   }
@@ -12792,6 +12872,8 @@ typedef $$PlayersTableTableCreateCompanionBuilder = PlayersTableCompanion
   Value<DateTime?> lastStreakDate,
   Value<int?> lastDailyReset,
   Value<int?> lastWeeklyReset,
+  Value<int?> weightKg,
+  Value<int?> heightCm,
 });
 typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
     Function({
@@ -12834,6 +12916,8 @@ typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
   Value<DateTime?> lastStreakDate,
   Value<int?> lastDailyReset,
   Value<int?> lastWeeklyReset,
+  Value<int?> weightKg,
+  Value<int?> heightCm,
 });
 
 class $$PlayersTableTableFilterComposer
@@ -12969,6 +13053,12 @@ class $$PlayersTableTableFilterComposer
   ColumnFilters<int> get lastWeeklyReset => $composableBuilder(
       column: $table.lastWeeklyReset,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get weightKg => $composableBuilder(
+      column: $table.weightKg, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get heightCm => $composableBuilder(
+      column: $table.heightCm, builder: (column) => ColumnFilters(column));
 }
 
 class $$PlayersTableTableOrderingComposer
@@ -13109,6 +13199,12 @@ class $$PlayersTableTableOrderingComposer
   ColumnOrderings<int> get lastWeeklyReset => $composableBuilder(
       column: $table.lastWeeklyReset,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get weightKg => $composableBuilder(
+      column: $table.weightKg, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get heightCm => $composableBuilder(
+      column: $table.heightCm, builder: (column) => ColumnOrderings(column));
 }
 
 class $$PlayersTableTableAnnotationComposer
@@ -13236,6 +13332,12 @@ class $$PlayersTableTableAnnotationComposer
 
   GeneratedColumn<int> get lastWeeklyReset => $composableBuilder(
       column: $table.lastWeeklyReset, builder: (column) => column);
+
+  GeneratedColumn<int> get weightKg =>
+      $composableBuilder(column: $table.weightKg, builder: (column) => column);
+
+  GeneratedColumn<int> get heightCm =>
+      $composableBuilder(column: $table.heightCm, builder: (column) => column);
 }
 
 class $$PlayersTableTableTableManager extends RootTableManager<
@@ -13303,6 +13405,8 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<DateTime?> lastStreakDate = const Value.absent(),
             Value<int?> lastDailyReset = const Value.absent(),
             Value<int?> lastWeeklyReset = const Value.absent(),
+            Value<int?> weightKg = const Value.absent(),
+            Value<int?> heightCm = const Value.absent(),
           }) =>
               PlayersTableCompanion(
             id: id,
@@ -13344,6 +13448,8 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             lastStreakDate: lastStreakDate,
             lastDailyReset: lastDailyReset,
             lastWeeklyReset: lastWeeklyReset,
+            weightKg: weightKg,
+            heightCm: heightCm,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -13385,6 +13491,8 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<DateTime?> lastStreakDate = const Value.absent(),
             Value<int?> lastDailyReset = const Value.absent(),
             Value<int?> lastWeeklyReset = const Value.absent(),
+            Value<int?> weightKg = const Value.absent(),
+            Value<int?> heightCm = const Value.absent(),
           }) =>
               PlayersTableCompanion.insert(
             id: id,
@@ -13426,6 +13534,8 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             lastStreakDate: lastStreakDate,
             lastDailyReset: lastDailyReset,
             lastWeeklyReset: lastWeeklyReset,
+            weightKg: weightKg,
+            heightCm: heightCm,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
