@@ -8,10 +8,13 @@ import 'package:noheroes_app/core/utils/guild_rank.dart';
 import 'package:noheroes_app/data/datasources/local/extras_catalog_service.dart';
 import 'package:noheroes_app/domain/enums/mission_modality.dart';
 import 'package:noheroes_app/domain/enums/mission_tab_origin.dart';
+import 'package:noheroes_app/domain/models/daily_mission.dart';
 import 'package:noheroes_app/domain/models/extras_mission_spec.dart';
 import 'package:noheroes_app/domain/models/mission_progress.dart';
 import 'package:noheroes_app/domain/models/reward_declared.dart';
 import 'package:noheroes_app/domain/repositories/mission_repository.dart';
+import 'package:noheroes_app/domain/services/daily_mission_generator_service.dart';
+import 'package:noheroes_app/domain/services/daily_mission_rollover_service.dart';
 import 'package:noheroes_app/presentation/quests/providers/quests_screen_notifier.dart';
 
 /// Fake Repository pra testes — seedado por (tab) + rastreia chamadas.
@@ -65,6 +68,32 @@ class _FakeMissionRepo implements MissionRepository {
       const Stream.empty();
 }
 
+/// Sprint 3.2 Etapa 1.3.A — fakes pros services de DailyMission.
+class _FakeDailyGenerator implements DailyMissionGeneratorService {
+  static const List<DailyMission> _empty = <DailyMission>[];
+
+  @override
+  Future<List<DailyMission>> getTodayMissions(int playerId) async => _empty;
+
+  @override
+  Future<List<DailyMission>> generateForToday(int playerId, {DateTime? date})
+      async => _empty;
+
+  @override
+  Future<DailyMission?> getMissionById(int id) async => null;
+
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
+class _FakeDailyRollover implements DailyMissionRolloverService {
+  @override
+  Future<void> processRollover(int playerId, {DateTime? now}) async {}
+
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
 /// Fake extras catalog — retorna o que for seedado, sem tocar assets.
 class _FakeExtrasCatalog implements ExtrasCatalogService {
   final List<ExtrasMissionSpec> items;
@@ -116,15 +145,18 @@ ProviderContainer _makeContainer({
     appEventBusProvider.overrideWithValue(bus),
     extrasCatalogServiceProvider.overrideWithValue(
         _FakeExtrasCatalog(items: extras)),
+    dailyMissionGeneratorServiceProvider
+        .overrideWithValue(_FakeDailyGenerator()),
+    dailyMissionRolloverServiceProvider
+        .overrideWithValue(_FakeDailyRollover()),
   ]);
 }
 
 void main() {
   group('QuestsScreenNotifier Sprint 14.6c', () {
-    test('build inicial carrega os 5 grupos paralelos + extras catalog',
+    test('build inicial carrega os 4 grupos legacy + extras + daily new',
         () async {
       final repo = _FakeMissionRepo(byTab: {
-        MissionTabOrigin.daily: [_mkMission(id: 1, tab: MissionTabOrigin.daily)],
         MissionTabOrigin.classTab: [
           _mkMission(id: 2, tab: MissionTabOrigin.classTab)
         ],
@@ -143,24 +175,24 @@ void main() {
       addTearDown(c.dispose);
 
       final state = await c.read(questsScreenNotifierProvider(1).future);
-      expect(state.dailyMissions, hasLength(1));
+      // dailyMissionsNew vem do _FakeDailyGenerator (vazio default).
+      expect(state.dailyMissionsNew, isEmpty);
       expect(state.classMissions, hasLength(1));
       expect(state.factionMissions, isEmpty);
       expect(state.admissionMissions, isEmpty);
       expect(state.individualMissions, hasLength(1));
       expect(state.extrasCatalog, isEmpty);
-      // 5 findByTab calls: daily, class, faction, admission, extras.
-      expect(repo.findByTabCalls, 5);
+      // 4 findByTab calls (classTab, faction, admission, extras) — daily
+      // legacy foi droppado da UI na Etapa 1.3.A.
+      expect(repo.findByTabCalls, 4);
     });
 
-    test('doneCount soma missões `completedAt != null` de todas as seções',
+    test('doneCount soma missões `completedAt != null` das seções legacy',
         () async {
+      // Etapa 1.3.A — doneCount não conta daily legacy nem dailyMissionsNew
+      // (essas têm fluxo próprio via DailyMissionStatus, não MissionProgress).
       final now = DateTime.now();
       final repo = _FakeMissionRepo(byTab: {
-        MissionTabOrigin.daily: [
-          _mkMission(id: 1, tab: MissionTabOrigin.daily, completedAt: now),
-          _mkMission(id: 2, tab: MissionTabOrigin.daily),
-        ],
         MissionTabOrigin.classTab: [
           _mkMission(id: 3, tab: MissionTabOrigin.classTab, completedAt: now),
         ],
@@ -178,13 +210,15 @@ void main() {
       addTearDown(c.dispose);
 
       final state = await c.read(questsScreenNotifierProvider(1).future);
-      expect(state.doneCount, 3);
-      expect(state.totalCount, 4);
+      expect(state.doneCount, 2);
+      expect(state.totalCount, 2);
     });
 
     test('MissionCompleted no bus invalida state → rebuild', () async {
       final repo = _FakeMissionRepo(byTab: {
-        MissionTabOrigin.daily: [_mkMission(id: 1, tab: MissionTabOrigin.daily)],
+        MissionTabOrigin.classTab: [
+          _mkMission(id: 1, tab: MissionTabOrigin.classTab),
+        ],
       });
       final bus = AppEventBus();
       addTearDown(bus.dispose);

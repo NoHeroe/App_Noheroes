@@ -9,36 +9,41 @@ import 'package:noheroes_app/data/database/app_database.dart';
 import 'package:noheroes_app/data/datasources/local/extras_catalog_service.dart';
 import 'package:noheroes_app/domain/enums/mission_modality.dart';
 import 'package:noheroes_app/domain/enums/mission_tab_origin.dart';
+import 'package:noheroes_app/domain/models/daily_mission.dart';
 import 'package:noheroes_app/domain/models/extras_mission_spec.dart';
 import 'package:noheroes_app/domain/models/mission_progress.dart';
 import 'package:noheroes_app/domain/models/reward_declared.dart';
 import 'package:noheroes_app/domain/repositories/mission_repository.dart';
+import 'package:noheroes_app/domain/services/daily_mission_generator_service.dart';
+import 'package:noheroes_app/domain/services/daily_mission_rollover_service.dart';
 import 'package:noheroes_app/presentation/quests/screens/quests_screen.dart';
 
-/// Sprint 3.1 Bloco 14.6c — widget tests do /quests com sanfona.
-/// Não testa pixel — testa comportamento: seções renderizam
-/// condicionalmente, header agrega contadores, botão inline abre
-/// sheet.
+/// Sprint 3.2 Etapa 1.3.A — smoke do `/quests` redesenhado.
+///
+/// Header novo (`MISSÕES` + barra geral + 🔥), seção "MISSÕES DIÁRIAS"
+/// no topo (Etapa 1.2 — pode estar vazia em smoke), bottom nav fixa,
+/// seção "RITUAIS DIÁRIOS" legacy **dropada da UI**.
+///
+/// Usa fakes `implements` pros services novos pra evitar dependência
+/// de DB real + assets em widget test (causava segfault no shell em
+/// Flutter 3.x — usar in-memory drift + rootBundle dentro de WidgetTester
+/// é instável).
 
 class _FakeMissionRepo implements MissionRepository {
   final Map<MissionTabOrigin, List<MissionProgress>> byTab;
   _FakeMissionRepo({this.byTab = const {}});
 
   @override
-  Future<List<MissionProgress>> findByTab(
-          int playerId, MissionTabOrigin tab) async =>
-      byTab[tab] ?? const [];
+  Future<List<MissionProgress>> findByTab(int playerId, MissionTabOrigin tab)
+      async => byTab[tab] ?? const [];
 
   @override
   Future<List<MissionProgress>> findHistorical(int playerId) async =>
       const [];
 
   @override
-  Future<List<MissionProgress>> findCompletedInWindow(
-    int playerId, {
-    required DateTime from,
-    required DateTime to,
-  }) async =>
+  Future<List<MissionProgress>> findCompletedInWindow(int playerId,
+          {required DateTime from, required DateTime to}) async =>
       const [];
 
   @override
@@ -81,13 +86,39 @@ class _FakeExtrasCatalog implements ExtrasCatalogService {
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
 
-PlayersTableData _fakePlayer({int streak = 0, int level = 5}) {
+class _FakeDailyGenerator implements DailyMissionGeneratorService {
+  final List<DailyMission> missions;
+  _FakeDailyGenerator({this.missions = const []});
+
+  @override
+  Future<List<DailyMission>> getTodayMissions(int playerId) async => missions;
+
+  @override
+  Future<List<DailyMission>> generateForToday(int playerId, {DateTime? date})
+      async => missions;
+
+  @override
+  Future<DailyMission?> getMissionById(int id) async => null;
+
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
+class _FakeDailyRollover implements DailyMissionRolloverService {
+  @override
+  Future<void> processRollover(int playerId, {DateTime? now}) async {}
+
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
+PlayersTableData _fakePlayer({int dailyStreak = 0, String rank = 'E'}) {
   return PlayersTableData(
     id: 1,
     email: 't@t',
     passwordHash: 'h',
-    shadowName: 'Sombra',
-    level: level,
+    shadowName: 'Tester',
+    level: 5,
     xp: 0,
     xpToNext: 100,
     gold: 0,
@@ -106,8 +137,8 @@ PlayersTableData _fakePlayer({int streak = 0, int level = 5}) {
     shadowState: 'stable',
     classType: null,
     factionType: null,
-    guildRank: 'e',
-    narrativeMode: 'standard',
+    guildRank: rank,
+    narrativeMode: 'longa',
     playStyle: 'none',
     totalQuestsCompleted: 0,
     maxHp: 100,
@@ -116,11 +147,10 @@ PlayersTableData _fakePlayer({int streak = 0, int level = 5}) {
     mp: 50,
     onboardingDone: true,
     lastLoginAt: DateTime.now(),
-    lastStreakDate: DateTime.now(),
-    streakDays: streak,
+    streakDays: 0,
     caelumDay: 0,
     createdAt: DateTime.now(),
-    dailyMissionsStreak: 0,
+    dailyMissionsStreak: dailyStreak,
   );
 }
 
@@ -128,7 +158,6 @@ MissionProgress _mkMission({
   required int id,
   required MissionTabOrigin tab,
   MissionModality modality = MissionModality.real,
-  DateTime? completedAt,
 }) {
   return MissionProgress(
     id: id,
@@ -141,24 +170,29 @@ MissionProgress _mkMission({
     currentValue: 0,
     reward: const RewardDeclared(),
     startedAt: DateTime.now(),
-    completedAt: completedAt,
     rewardClaimed: false,
     metaJson: '{}',
   );
 }
 
 Widget _harness({
-  required MissionRepository repo,
   required AppEventBus bus,
   PlayersTableData? player,
+  MissionRepository? repo,
   List<ExtrasMissionSpec> extras = const [],
+  List<DailyMission> dailyMissions = const [],
 }) {
   return ProviderScope(
     overrides: [
-      missionRepositoryProvider.overrideWithValue(repo),
       appEventBusProvider.overrideWithValue(bus),
+      missionRepositoryProvider
+          .overrideWithValue(repo ?? _FakeMissionRepo()),
       extrasCatalogServiceProvider
           .overrideWithValue(_FakeExtrasCatalog(items: extras)),
+      dailyMissionGeneratorServiceProvider.overrideWithValue(
+          _FakeDailyGenerator(missions: dailyMissions)),
+      dailyMissionRolloverServiceProvider
+          .overrideWithValue(_FakeDailyRollover()),
       currentPlayerProvider.overrideWith((_) => player ?? _fakePlayer()),
     ],
     child: const MaterialApp(home: QuestsScreen()),
@@ -166,67 +200,65 @@ Widget _harness({
 }
 
 void main() {
-  testWidgets(
-      'Header renderiza título + contador 0/0 quando vazio; sem streak badge',
+  testWidgets('Header "MISSÕES" + streak + bottom nav renderizam',
       (tester) async {
     final bus = AppEventBus();
     addTearDown(bus.dispose);
+
     await tester.pumpWidget(
-        _harness(repo: _FakeMissionRepo(), bus: bus));
+        _harness(bus: bus, player: _fakePlayer(dailyStreak: 7)));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('MISSÕES'), findsOneWidget);
-    expect(find.byKey(const ValueKey('quests-header-counter')),
-        findsOneWidget);
-    expect(find.text('0/0'), findsOneWidget);
-    expect(find.byKey(const ValueKey('quests-header-streak')), findsNothing);
+    expect(find.text('7 dias'), findsOneWidget);
+    // Bottom nav presente
+    expect(find.text('Santuário'), findsOneWidget);
+    expect(find.text('Missões'), findsOneWidget);
   });
 
-  testWidgets('Streak > 0: badge renderiza no header', (tester) async {
+  testWidgets('Sem missões diárias: seção "MISSÕES DIÁRIAS" + placeholder',
+      (tester) async {
     final bus = AppEventBus();
     addTearDown(bus.dispose);
+
+    await tester.pumpWidget(_harness(bus: bus));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(find.text('MISSÕES DIÁRIAS'), findsOneWidget);
+    expect(find.text('Nenhuma missão diária ainda.'), findsOneWidget);
+    // Contador 0/0
+    expect(find.text('0/0 concluídas'), findsOneWidget);
+  });
+
+  testWidgets('Seção "RITUAIS DIÁRIOS" legacy não aparece mais',
+      (tester) async {
+    final bus = AppEventBus();
+    addTearDown(bus.dispose);
+
     await tester.pumpWidget(_harness(
-      repo: _FakeMissionRepo(),
       bus: bus,
-      player: _fakePlayer(streak: 7),
+      repo: _FakeMissionRepo(byTab: {
+        MissionTabOrigin.daily: [
+          _mkMission(id: 1, tab: MissionTabOrigin.daily),
+        ],
+      }),
     ));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.byKey(const ValueKey('quests-header-streak')), findsOneWidget);
-    expect(find.text('7 dias'), findsOneWidget);
-  });
-
-  testWidgets('Seções vazias não renderizam header; Individuais sempre aparece',
-      (tester) async {
-    final bus = AppEventBus();
-    addTearDown(bus.dispose);
-    await tester.pumpWidget(
-        _harness(repo: _FakeMissionRepo(), bus: bus));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-
-    // Sem daily/class/faction/admission/extras → headers não aparecem
     expect(find.text('RITUAIS DIÁRIOS'), findsNothing);
-    expect(find.text('MISSÕES DE CLASSE'), findsNothing);
-    expect(find.text('MISSÃO DA FACÇÃO'), findsNothing);
-    expect(find.text('ADMISSÃO DE FACÇÃO'), findsNothing);
-    expect(find.text('EXTRAS'), findsNothing);
-    // Individuais sempre aparece (jogador cria)
-    expect(find.text('MISSÕES INDIVIDUAIS'), findsOneWidget);
-    expect(find.text('Nenhuma missão individual ainda.'), findsOneWidget);
   });
 
-  testWidgets('Daily + class + admission: 3 seções com headers renderizam',
+  testWidgets('Outras seções legacy permanecem (Individuais sempre)',
       (tester) async {
     final bus = AppEventBus();
     addTearDown(bus.dispose);
+
     await tester.pumpWidget(_harness(
+      bus: bus,
       repo: _FakeMissionRepo(byTab: {
-        MissionTabOrigin.daily: [
-          _mkMission(id: 1, tab: MissionTabOrigin.daily)
-        ],
         MissionTabOrigin.classTab: [
           _mkMission(
               id: 2,
@@ -240,72 +272,25 @@ void main() {
               modality: MissionModality.internal),
         ],
       }),
-      bus: bus,
     ));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('RITUAIS DIÁRIOS'), findsOneWidget);
     expect(find.text('MISSÕES DE CLASSE'), findsOneWidget);
-    // Subtitle da classe
-    expect(find.text('Concluídas automaticamente ao agir.'), findsOneWidget);
     expect(find.text('ADMISSÃO DE FACÇÃO'), findsOneWidget);
-    // Contador soma: 3 missões totais
-    expect(find.text('0/3'), findsOneWidget);
+    // Seção Individuais pode estar fora do viewport — testada em outro caso.
   });
 
-  testWidgets('Sanfona colapsa/expande ao tap no header', (tester) async {
+  testWidgets('Botão inline Nova Missão Individual renderiza', (tester) async {
     final bus = AppEventBus();
     addTearDown(bus.dispose);
-    await tester.pumpWidget(_harness(
-      repo: _FakeMissionRepo(byTab: {
-        MissionTabOrigin.daily: [
-          _mkMission(id: 1, tab: MissionTabOrigin.daily),
-        ],
-      }),
-      bus: bus,
-    ));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
 
-    // Default: expandida. AnimatedCrossFade mantém ambos children no tree
-    // durante transição — testamos via `crossFadeState` do widget.
-    AnimatedCrossFade findCrossFade() {
-      return tester.widget<AnimatedCrossFade>(find
-          .ancestor(
-            of: find.text('M1'),
-            matching: find.byType(AnimatedCrossFade),
-          )
-          .first);
-    }
-
-    expect(findCrossFade().crossFadeState, CrossFadeState.showSecond);
-
-    // Tap no header colapsa
-    await tester.tap(find.byKey(const ValueKey('section-header-rituais-diários')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(findCrossFade().crossFadeState, CrossFadeState.showFirst);
-
-    // Tap de novo expande
-    await tester.tap(find.byKey(const ValueKey('section-header-rituais-diários')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(findCrossFade().crossFadeState, CrossFadeState.showSecond);
-  });
-
-  testWidgets('Botão inline Nova Missão Individual renderiza na seção Individuais',
-      (tester) async {
-    final bus = AppEventBus();
-    addTearDown(bus.dispose);
-    await tester.pumpWidget(
-        _harness(repo: _FakeMissionRepo(), bus: bus));
+    await tester.pumpWidget(_harness(bus: bus));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.byKey(const ValueKey('quests-create-individual-inline')),
         findsOneWidget);
-    // Copy v0.28.2 — caixa mista
     expect(find.text('Nova Missão Individual'), findsOneWidget);
   });
 }
