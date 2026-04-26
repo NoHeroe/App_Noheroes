@@ -26,12 +26,16 @@ class DailySection extends StatefulWidget {
   final void Function(int missionId, String subTaskKey, int delta)
       onSubTaskDelta;
 
+  /// Hotfix Etapa 1.3.A — chamado quando o jogador clica ✓ no card.
+  final Future<void> Function(int missionId) onConfirm;
+
   const DailySection({
     super.key,
     required this.missions,
     required this.rewardsByMissionId,
     required this.rankLabel,
     required this.onSubTaskDelta,
+    required this.onConfirm,
   });
 
   @override
@@ -129,6 +133,7 @@ class _DailySectionState extends State<DailySection> {
                         rankLabel: widget.rankLabel,
                         onSubTaskDelta: (subKey, delta) =>
                             widget.onSubTaskDelta(m.id, subKey, delta),
+                        onConfirm: () => widget.onConfirm(m.id),
                       ),
                 ],
               ),

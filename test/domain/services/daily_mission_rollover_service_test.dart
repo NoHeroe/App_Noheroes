@@ -118,9 +118,11 @@ void main() {
       expect(fresh.rewardClaimed, isTrue);
 
       final p = await readPlayer();
-      // Rank C base 28 XP / 20 gold × (2/3 × 0.5) = 28 × 0.333 = 9 XP / 7 gold.
-      expect(p.xp, 9);
-      expect(p.gold, 7);
+      // Hotfix Etapa 1.3.A — partial = factor proporcional real:
+      //   factor = (1.0 + 1.0 + 5/30) / 3 = 2.166/3 = 0.722
+      //   28 × 0.722 = 20.22 → 20 XP; 20 × 0.722 = 14.44 → 14 gold.
+      expect(p.xp, 20);
+      expect(p.gold, 14);
     });
 
     test('failed: 0/3 completas → status=failed, sem reward', () async {

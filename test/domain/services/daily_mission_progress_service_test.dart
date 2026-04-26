@@ -20,7 +20,7 @@ DailyMission _mkMission({
   return DailyMission(
     id: 0,
     playerId: playerId,
-    data: '2026-04-25',
+    data: '2026-04-26',
     modalidade: MissionCategory.fisico,
     subCategoria: 'treino',
     tituloKey: 'Forja',
@@ -34,12 +34,16 @@ DailyMission _mkMission({
   );
 }
 
-DailySubTaskInstance _mkSub(String key, int target) => DailySubTaskInstance(
+DailySubTaskInstance _mkSub(String key, int target,
+        {int progresso = 0, bool? completed}) =>
+    DailySubTaskInstance(
       subTaskKey: key,
       nomeVisivel: key,
       escalaAlvo: target,
       unidade: 'x',
       tipoUnidade: DailyUnitType.contagem,
+      progressoAtual: progresso,
+      completed: completed ?? (progresso >= target),
     );
 
 void main() {
@@ -99,22 +103,41 @@ void main() {
     await bus.dispose();
   });
 
-  group('incrementSubTask', () {
-    test('atualiza progressoAtual da sub-tarefa', () async {
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'a', delta: 5);
-      final m = await read(missionId);
-      expect(m.subTarefas.firstWhere((s) => s.subTaskKey == 'a').progressoAtual,
-          5);
-      expect(m.status, DailyMissionStatus.pending);
-    });
+  // ─── incrementSubTask: SEM auto-complete (regra nova) ─────────────
 
-    test('marca completed quando atinge escala alvo', () async {
+  group('incrementSubTask (sem auto-complete)', () {
+    test('atualiza progressoAtual + marca sub completed; missão segue pending',
+        () async {
       await svc.incrementSubTask(
           missionId: missionId, subTaskKey: 'a', delta: 10);
       final m = await read(missionId);
+      expect(m.subTarefas
+              .firstWhere((s) => s.subTaskKey == 'a').progressoAtual,
+          10);
       expect(m.subTarefas.firstWhere((s) => s.subTaskKey == 'a').completed,
           isTrue);
+      // Missão fica pending — sem auto-complete.
+      expect(m.status, DailyMissionStatus.pending);
+      expect(m.rewardClaimed, isFalse);
+    });
+
+    test('completa 3/3: missão SEGUE pending (sem auto-complete)',
+        () async {
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'a', delta: 10);
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'b', delta: 20);
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'c', delta: 5);
+      final m = await read(missionId);
+      expect(m.status, DailyMissionStatus.pending);
+      expect(m.rewardClaimed, isFalse);
+      // Sub-tarefas individuais marcam completed.
+      expect(m.subTarefas.every((s) => s.completed), isTrue);
+      // Player NÃO recebeu reward ainda (precisa confirmar manualmente).
+      final p = await readPlayer();
+      expect(p.gold, 0);
+      expect(p.xp, 0);
     });
 
     test('delta negativo respeita mínimo 0', () async {
@@ -123,49 +146,63 @@ void main() {
       await svc.incrementSubTask(
           missionId: missionId, subTaskKey: 'a', delta: -100);
       final m = await read(missionId);
-      expect(m.subTarefas.firstWhere((s) => s.subTaskKey == 'a').progressoAtual,
+      expect(m.subTarefas
+              .firstWhere((s) => s.subTaskKey == 'a').progressoAtual,
           0);
     });
 
-    test('todas 3 completas → status=completed + reward + rewardClaimed',
+    test('progresso pode ultrapassar alvo (excedência acumulada)',
         () async {
-      // Rank C: 28 XP / 20 gold base.
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'a', delta: 25);
+      final m = await read(missionId);
+      expect(m.subTarefas
+              .firstWhere((s) => s.subTaskKey == 'a').progressoAtual,
+          25);
+      expect(m.subTarefas.firstWhere((s) => s.subTaskKey == 'a').completed,
+          isTrue);
+    });
+  });
+
+  // ─── confirmCompletion: status decision + reward ──────────────────
+
+  group('confirmCompletion: 3/3 ≥ 100% → completed + reward integral', () {
+    test('rank C base 28 XP / 20 gold sem bônus', () async {
+      // Subs nos alvos exatos.
       await svc.incrementSubTask(
           missionId: missionId, subTaskKey: 'a', delta: 10);
       await svc.incrementSubTask(
           missionId: missionId, subTaskKey: 'b', delta: 20);
       await svc.incrementSubTask(
           missionId: missionId, subTaskKey: 'c', delta: 5);
+
+      await svc.confirmCompletion(missionId: missionId);
+
       final m = await read(missionId);
       expect(m.status, DailyMissionStatus.completed);
       expect(m.rewardClaimed, isTrue);
       expect(m.completedAt, isNotNull);
 
       final p = await readPlayer();
-      expect(p.gold, 20, reason: 'rank C base = 20 gold');
-      // XP credita via addXp; rank C = 28 XP, level inicial 1, xpToNext 100.
       expect(p.xp, 28);
+      expect(p.gold, 20);
     });
 
-    test('idempotência: incrementar após completar é noop', () async {
-      // Completa
+    test('bônus excedência +20% quando todas ultrapassam', () async {
       await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'a', delta: 10);
+          missionId: missionId, subTaskKey: 'a', delta: 11);
       await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'b', delta: 20);
+          missionId: missionId, subTaskKey: 'b', delta: 21);
       await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'c', delta: 5);
-      final pAfter = await readPlayer();
-      // Tenta regrantar
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'a', delta: 10);
-      final pNow = await readPlayer();
-      expect(pNow.gold, pAfter.gold);
-      expect(pNow.xp, pAfter.xp);
+          missionId: missionId, subTaskKey: 'c', delta: 6);
+      await svc.confirmCompletion(missionId: missionId);
+      final p = await readPlayer();
+      // 28 × 1.2 = 33.6 → 34; 20 × 1.2 = 24
+      expect(p.xp, 34);
+      expect(p.gold, 24);
     });
 
-    test('streak ≥10 adiciona +50% reward', () async {
-      // Force streak = 10
+    test('streak ≥10 multiplica 1.5×', () async {
       await db.customUpdate(
         'UPDATE players SET daily_missions_streak = 10 WHERE id = ?',
         variables: [Variable.withInt(pid)],
@@ -177,68 +214,14 @@ void main() {
           missionId: missionId, subTaskKey: 'b', delta: 20);
       await svc.incrementSubTask(
           missionId: missionId, subTaskKey: 'c', delta: 5);
+      await svc.confirmCompletion(missionId: missionId);
       final p = await readPlayer();
-      // Rank C: 28 XP / 20 gold base × 1.5 = 42 XP / 30 gold.
-      expect(p.gold, 30);
+      // 28 × 1.5 = 42; 20 × 1.5 = 30
       expect(p.xp, 42);
+      expect(p.gold, 30);
     });
 
-    test('bônus excedência: todas ultrapassam → +20%', () async {
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'a', delta: 11); // > 10
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'b', delta: 21); // > 20
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'c', delta: 6); // > 5
-      final p = await readPlayer();
-      // Rank C × 1.2 = 33.6 XP → round 34 / 24 gold.
-      expect(p.gold, 24);
-      expect(p.xp, 34);
-    });
-
-    test('cap de 300% não deixa reward explodir', () async {
-      // streak 10 (×1.5) + excedência (×1.2) = ×1.8 → abaixo do cap.
-      // Pra forçar cap: streak ≥ 10 (1.5) × excedência (1.2) = 1.8.
-      // Cap é 3.0. Não bate. Como usamos só 2 multiplicadores, máximo
-      // é 1.5*1.2 = 1.8 < 3.0 cap. Confirma sem violar cap.
-      await db.customUpdate(
-        'UPDATE players SET daily_missions_streak = 50 WHERE id = ?',
-        variables: [Variable.withInt(pid)],
-        updates: {db.playersTable},
-      );
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'a', delta: 11);
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'b', delta: 21);
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'c', delta: 6);
-      final p = await readPlayer();
-      // 28 × 1.5 × 1.2 = 50.4 → 50; gold 20 × 1.8 = 36.
-      expect(p.xp, 50);
-      expect(p.gold, 36);
-    });
-  });
-
-  group('reward base por rank', () {
-    test('rank E = 8 XP / 5 gold', () async {
-      await db.customUpdate(
-        "UPDATE players SET guild_rank = 'E' WHERE id = ?",
-        variables: [Variable.withInt(pid)],
-        updates: {db.playersTable},
-      );
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'a', delta: 10);
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'b', delta: 20);
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'c', delta: 5);
-      final p = await readPlayer();
-      expect(p.xp, 8);
-      expect(p.gold, 5);
-    });
-
-    test('rank S = 120 XP / 80 gold (level up rola: 120 > xpToNext=100)',
-        () async {
+    test('rank S = 120 XP / 80 gold (level up rola)', () async {
       await db.customUpdate(
         "UPDATE players SET guild_rank = 'S' WHERE id = ?",
         variables: [Variable.withInt(pid)],
@@ -250,15 +233,269 @@ void main() {
           missionId: missionId, subTaskKey: 'b', delta: 20);
       await svc.incrementSubTask(
           missionId: missionId, subTaskKey: 'c', delta: 5);
+      await svc.confirmCompletion(missionId: missionId);
       final p = await readPlayer();
-      // 120 XP creditados; level 1→2 (xpToNext=100); resíduo XP = 20.
+      // 120 XP creditados; level 1→2; resíduo XP = 20.
       expect(p.level, 2);
-      expect(p.xp, 20, reason: 'resíduo após level up');
-      expect(p.gold, 80, reason: 'gold sem level up effect');
+      expect(p.xp, 20);
+      expect(p.gold, 80);
     });
   });
 
-  group('markFailed', () {
+  group('confirmCompletion: partial = factor proporcional (sem ×0.5)', () {
+    test('3 a 50% → partial, factor 0.5 → reward × 0.5', () async {
+      // Targets a=10, b=20, c=5 — preencher 50%: a=5, b=10, c=2 (com round)
+      // Com c=5 alvo, 50% = 2.5 → uso 3 pra ficar > 25%. Aliás 3/5=0.6.
+      // Vou reusar mock alvo padrão e mexer em valores.
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'a', delta: 5); // 5/10 = 0.5
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'b', delta: 10); // 10/20 = 0.5
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'c', delta: 3); // 3/5 = 0.6
+      await svc.confirmCompletion(missionId: missionId);
+      final m = await read(missionId);
+      expect(m.status, DailyMissionStatus.partial);
+      // factor = (0.5 + 0.5 + 0.6) / 3 = 0.5333...
+      // 28 × 0.5333 = 14.93 → 15; 20 × 0.5333 = 10.67 → 11
+      final p = await readPlayer();
+      expect(p.xp, 15);
+      expect(p.gold, 11);
+    });
+
+    test('1 a 100% + 2 a 0% → partial, factor 0.33', () async {
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'a', delta: 10);
+      // b e c ficam em 0
+      await svc.confirmCompletion(missionId: missionId);
+      final m = await read(missionId);
+      expect(m.status, DailyMissionStatus.partial);
+      // factor = (1.0 + 0 + 0) / 3 = 0.333...
+      // 28 × 0.333 = 9.33 → 9; 20 × 0.333 = 6.67 → 7
+      final p = await readPlayer();
+      expect(p.xp, 9);
+      expect(p.gold, 7);
+    });
+
+    test('2 a 100% + 1 a 50% → partial, factor 0.83', () async {
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'a', delta: 10);
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'b', delta: 20);
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'c', delta: 3); // 3/5 = 0.6
+      // Hmm: 0.6 não é 0.5. Vou usar c=5/2, mas escalaAlvo é 5, então
+      // 50% = 2.5 não é inteiro. Usa b com alvo 20, progresso 10 (=0.5)
+      // e adapta:
+      // Re-cria missão com alvos 10/10/10 pra ficar exato.
+      await dao.updateMission((await read(missionId)).copyWith(
+        subTarefas: [
+          _mkSub('a', 10, progresso: 10), // 1.0
+          _mkSub('b', 10, progresso: 10), // 1.0
+          _mkSub('c', 10, progresso: 5),  // 0.5
+        ],
+      ));
+      await svc.confirmCompletion(missionId: missionId);
+      final m = await read(missionId);
+      expect(m.status, DailyMissionStatus.partial);
+      // factor = (1.0 + 1.0 + 0.5) / 3 = 0.833...
+      // 28 × 0.833 = 23.33 → 23; 20 × 0.833 = 16.67 → 17
+      final p = await readPlayer();
+      expect(p.xp, 23);
+      expect(p.gold, 17);
+    });
+
+    test('1 a 100% + 2 a 30% → partial, factor 0.53', () async {
+      // Re-cria com alvos uniformes pra simplificar.
+      await dao.updateMission((await read(missionId)).copyWith(
+        subTarefas: [
+          _mkSub('a', 10, progresso: 10), // 1.0
+          _mkSub('b', 10, progresso: 3),  // 0.3
+          _mkSub('c', 10, progresso: 3),  // 0.3
+        ],
+      ));
+      await svc.confirmCompletion(missionId: missionId);
+      final m = await read(missionId);
+      expect(m.status, DailyMissionStatus.partial);
+      // factor = (1.0 + 0.3 + 0.3) / 3 = 0.533...
+      // 28 × 0.533 = 14.93 → 15; 20 × 0.533 = 10.67 → 11
+      final p = await readPlayer();
+      expect(p.xp, 15);
+      expect(p.gold, 11);
+    });
+
+    test('partial NÃO aplica streak nem excedência', () async {
+      await db.customUpdate(
+        'UPDATE players SET daily_missions_streak = 50 WHERE id = ?',
+        variables: [Variable.withInt(pid)],
+        updates: {db.playersTable},
+      );
+      await dao.updateMission((await read(missionId)).copyWith(
+        subTarefas: [
+          _mkSub('a', 10, progresso: 5), // 0.5
+          _mkSub('b', 10, progresso: 5), // 0.5
+          _mkSub('c', 10, progresso: 5), // 0.5
+        ],
+      ));
+      await svc.confirmCompletion(missionId: missionId);
+      final p = await readPlayer();
+      // factor = 0.5 × 28 = 14 (sem streak), gold 10.
+      expect(p.xp, 14);
+      expect(p.gold, 10);
+    });
+
+    test('cap 100% por sub-tarefa: excedência não conta no partial',
+        () async {
+      // Sub a com excedência forte, b e c bem abaixo: ainda partial.
+      await dao.updateMission((await read(missionId)).copyWith(
+        subTarefas: [
+          _mkSub('a', 10, progresso: 30), // cap 1.0
+          _mkSub('b', 10, progresso: 3),  // 0.3
+          _mkSub('c', 10, progresso: 3),  // 0.3
+        ],
+      ));
+      await svc.confirmCompletion(missionId: missionId);
+      final p = await readPlayer();
+      // factor = (1.0 + 0.3 + 0.3) / 3 = 0.533 — excedência cap em 1.0.
+      expect(p.xp, 15);
+    });
+  });
+
+  group('confirmCompletion: failed (todas <25%)', () {
+    test('3 a 20% → failed, zero reward', () async {
+      // Targets: a=10/b=20/c=5. <25% = a<2.5/b<5/c<1.25
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'a', delta: 2); // 2/10 = 20%
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'b', delta: 4); // 4/20 = 20%
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'c', delta: 1); // 1/5 = 20%
+      await svc.confirmCompletion(missionId: missionId);
+      final m = await read(missionId);
+      expect(m.status, DailyMissionStatus.failed);
+      expect(m.rewardClaimed, isTrue);
+      final p = await readPlayer();
+      expect(p.xp, 0);
+      expect(p.gold, 0);
+    });
+
+    test('todas 0/0 → failed', () async {
+      await svc.confirmCompletion(missionId: missionId);
+      final m = await read(missionId);
+      expect(m.status, DailyMissionStatus.failed);
+      final p = await readPlayer();
+      expect(p.xp, 0);
+      expect(p.gold, 0);
+    });
+  });
+
+  group('confirmCompletion: idempotência', () {
+    test('2× confirmCompletion lança RewardAlreadyGrantedException',
+        () async {
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'a', delta: 10);
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'b', delta: 20);
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'c', delta: 5);
+      await svc.confirmCompletion(missionId: missionId);
+      final pAfter = await readPlayer();
+
+      expect(
+        () => svc.confirmCompletion(missionId: missionId),
+        throwsA(isA<RewardAlreadyGrantedException>()),
+      );
+      // Reward não duplica.
+      final pNow = await readPlayer();
+      expect(pNow.xp, pAfter.xp);
+      expect(pNow.gold, pAfter.gold);
+    });
+  });
+
+  group('partialFactor (cálculo puro)', () {
+    test('3 a 100% → 1.0', () {
+      final m = _mkMission(playerId: 1, subs: [
+        _mkSub('a', 10, progresso: 10),
+        _mkSub('b', 10, progresso: 10),
+        _mkSub('c', 10, progresso: 10),
+      ]);
+      expect(DailyMissionProgressService.partialFactor(m), 1.0);
+    });
+
+    test('3 a 50% → 0.5', () {
+      final m = _mkMission(playerId: 1, subs: [
+        _mkSub('a', 10, progresso: 5),
+        _mkSub('b', 10, progresso: 5),
+        _mkSub('c', 10, progresso: 5),
+      ]);
+      expect(DailyMissionProgressService.partialFactor(m), 0.5);
+    });
+
+    test('cap 100% por sub: progresso 200% conta como 100%', () {
+      final m = _mkMission(playerId: 1, subs: [
+        _mkSub('a', 10, progresso: 20),
+        _mkSub('b', 10, progresso: 5),
+        _mkSub('c', 10, progresso: 5),
+      ]);
+      // (1.0 + 0.5 + 0.5) / 3 = 0.666...
+      expect(
+          DailyMissionProgressService.partialFactor(m), closeTo(0.666, 0.01));
+    });
+
+    test('1 a 100% + 2 a 0% → 0.333', () {
+      final m = _mkMission(playerId: 1, subs: [
+        _mkSub('a', 10, progresso: 10),
+        _mkSub('b', 10, progresso: 0),
+        _mkSub('c', 10, progresso: 0),
+      ]);
+      expect(
+          DailyMissionProgressService.partialFactor(m), closeTo(0.333, 0.01));
+    });
+  });
+
+  group('previewStatus', () {
+    test('3 a 100% → completed', () {
+      final m = _mkMission(playerId: 1, subs: [
+        _mkSub('a', 10, progresso: 10),
+        _mkSub('b', 10, progresso: 10),
+        _mkSub('c', 10, progresso: 10),
+      ]);
+      expect(DailyMissionProgressService.previewStatus(m),
+          DailyMissionStatus.completed);
+    });
+
+    test('3 a 20% → failed', () {
+      final m = _mkMission(playerId: 1, subs: [
+        _mkSub('a', 10, progresso: 2),
+        _mkSub('b', 10, progresso: 2),
+        _mkSub('c', 10, progresso: 2),
+      ]);
+      expect(DailyMissionProgressService.previewStatus(m),
+          DailyMissionStatus.failed);
+    });
+
+    test('mistura → partial', () {
+      final m = _mkMission(playerId: 1, subs: [
+        _mkSub('a', 10, progresso: 10),
+        _mkSub('b', 10, progresso: 5),
+        _mkSub('c', 10, progresso: 0),
+      ]);
+      expect(DailyMissionProgressService.previewStatus(m),
+          DailyMissionStatus.partial);
+    });
+
+    test('todas no limiar 25% → partial (≥ failureThreshold)', () {
+      final m = _mkMission(playerId: 1, subs: [
+        _mkSub('a', 100, progresso: 25),
+        _mkSub('b', 100, progresso: 25),
+        _mkSub('c', 100, progresso: 25),
+      ]);
+      expect(DailyMissionProgressService.previewStatus(m),
+          DailyMissionStatus.partial);
+    });
+  });
+
+  group('markFailed (utilitário)', () {
     test('marca status=failed sem reward', () async {
       await svc.markFailed(missionId: missionId, reason: 'manual');
       final m = await read(missionId);
@@ -267,37 +504,6 @@ void main() {
       final p = await readPlayer();
       expect(p.gold, 0);
       expect(p.xp, 0);
-    });
-  });
-
-  group('computeReward (cálculo puro)', () {
-    test('failed (0/3) = zero', () {
-      final r = DailyMissionProgressService.computeReward(
-        rank: 'B',
-        missionWithFinalProgress: _mkMission(
-            playerId: 1, subs: [_mkSub('a', 10), _mkSub('b', 10), _mkSub('c', 10)]),
-        partial: true,
-        subCompletas: 0,
-        dailyMissionsStreak: 0,
-      );
-      expect(r.xp, 0);
-      expect(r.gold, 0);
-    });
-
-    test('partial 2/3 = base × (2/3) × 0.5', () {
-      // Rank C base 28 XP / 20 gold. 2/3 × 0.5 = 0.333.
-      final r = DailyMissionProgressService.computeReward(
-        rank: 'C',
-        missionWithFinalProgress: _mkMission(
-            playerId: 1,
-            subs: [_mkSub('a', 1), _mkSub('b', 1), _mkSub('c', 1)]),
-        partial: true,
-        subCompletas: 2,
-        dailyMissionsStreak: 0,
-      );
-      // 28 × 0.333 = 9.33 → 9; 20 × 0.333 = 6.66 → 7.
-      expect(r.xp, 9);
-      expect(r.gold, 7);
     });
   });
 }

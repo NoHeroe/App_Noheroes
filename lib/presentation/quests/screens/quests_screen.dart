@@ -150,6 +150,8 @@ class _Body extends ConsumerWidget {
               delta: delta,
             );
           },
+          onConfirm: (missionId) =>
+              notifier.confirmDailyMission(missionId: missionId),
         ),
         if (state.classMissions.isNotEmpty)
           SectionAccordion(

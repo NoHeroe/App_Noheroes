@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../domain/enums/mission_category.dart';
+import '../../../domain/models/daily_mission_status.dart';
 
 /// Sprint 3.2 Etapa 1.3.A — visuais canônicos por pilar (cor + ícone).
 ///
@@ -23,6 +24,12 @@ class DailyPilarVisuals {
 
   /// Verde da missão concluída (border + check).
   static const Color completedColor = Color(0xFF2D8B3D);
+
+  /// Amarelo dourado da missão parcial (border + warning).
+  static const Color partialColor = Color(0xFFC9A14A);
+
+  /// Vermelho escuro da missão falhada (border + X).
+  static const Color failedColor = Color(0xFF8B2020);
 
   static Color colorOf(MissionCategory category) => switch (category) {
         MissionCategory.fisico => fisicoColor,
@@ -49,4 +56,48 @@ class DailyPilarVisuals {
       _ => cardColor,
     };
   }
+
+  /// Hotfix Etapa 1.3.A — visual canônico do card "fechado" por status.
+  ///
+  /// Retorna `null` pra `pending` (card mostra modos abertos/fechados
+  /// padrões usando cor do pilar).
+  static ClosedVisual? closedVisualOf(DailyMissionStatus status) {
+    return switch (status) {
+      DailyMissionStatus.completed => const ClosedVisual(
+          color: completedColor,
+          icon: Icons.check_circle,
+          label: 'CONCLUÍDA',
+          opacity: 0.7,
+        ),
+      DailyMissionStatus.partial => const ClosedVisual(
+          color: partialColor,
+          icon: Icons.warning_amber_rounded,
+          label: 'PARCIAL',
+          opacity: 0.7,
+        ),
+      DailyMissionStatus.failed => const ClosedVisual(
+          color: failedColor,
+          icon: Icons.cancel,
+          label: 'FALHA',
+          opacity: 0.6,
+        ),
+      DailyMissionStatus.pending => null,
+    };
+  }
+}
+
+/// Pacote visual pra renderizar uma missão fechada (completed/partial/
+/// failed). Mantém UI sincronizada com o status retornado pelo service.
+class ClosedVisual {
+  final Color color;
+  final IconData icon;
+  final String label;
+  final double opacity;
+
+  const ClosedVisual({
+    required this.color,
+    required this.icon,
+    required this.label,
+    required this.opacity,
+  });
 }

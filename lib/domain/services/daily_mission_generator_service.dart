@@ -84,6 +84,10 @@ class DailyMissionGeneratorService {
 
     // Garante sub-tarefas únicas cross-missions no dia.
     final usedKeys = <String>{};
+    // Hotfix Etapa 1.3.A — dedup de títulos cross-missions também.
+    // Antes: 3 missões podiam compartilhar título (ex: "O Peso da
+    // Sobrevivência" 2x). Agora cada missão tira do pool restante.
+    final usedTitulos = <String>{};
 
     final drafts = <DailyMission>[];
     for (final mod in modalidades) {
@@ -95,6 +99,7 @@ class DailyMissionGeneratorService {
               rank: rank,
               player: player,
               usedKeys: usedKeys,
+              usedTitulos: usedTitulos,
             )
           : _buildModalidadeMission(
               playerId: playerId,
@@ -104,6 +109,7 @@ class DailyMissionGeneratorService {
               rank: rank,
               player: player,
               usedKeys: usedKeys,
+              usedTitulos: usedTitulos,
             );
       drafts.add(draft);
     }
@@ -190,6 +196,7 @@ class DailyMissionGeneratorService {
     required String rank,
     required PlayersTableData player,
     required Set<String> usedKeys,
+    required Set<String> usedTitulos,
   }) {
     final pool = _pools.poolFor(modalidade) as DailyModalidadePool;
     final subCat = _pickSubcategoria(pool.pesosSubcategoria);
@@ -223,6 +230,7 @@ class DailyMissionGeneratorService {
             rank: rank,
             player: player,
             usedKeys: usedKeys,
+            usedTitulos: usedTitulos,
           );
         }
       }
@@ -242,6 +250,7 @@ class DailyMissionGeneratorService {
       rank: rank,
       player: player,
       usedKeys: usedKeys,
+      usedTitulos: usedTitulos,
     );
   }
 
@@ -256,6 +265,7 @@ class DailyMissionGeneratorService {
     required String rank,
     required PlayersTableData player,
     required Set<String> usedKeys,
+    required Set<String> usedTitulos,
   }) {
     final shuffled = List<DailySubTaskSpec>.from(candidatas)..shuffle(_random);
     final picked = shuffled.take(subTasksPerMission).toList();
@@ -273,8 +283,9 @@ class DailyMissionGeneratorService {
             ))
         .toList();
 
-    final titulos = pool.titulosPorSubcategoria[subCategoria]!;
-    final titulo = titulos[_random.nextInt(titulos.length)];
+    final titulo = _pickTitulo(
+        pool.titulosPorSubcategoria[subCategoria]!, usedTitulos);
+    usedTitulos.add(titulo);
     final quote = pool.quotes[_random.nextInt(pool.quotes.length)];
 
     return DailyMission(
@@ -303,6 +314,7 @@ class DailyMissionGeneratorService {
     required String rank,
     required PlayersTableData player,
     required Set<String> usedKeys,
+    required Set<String> usedTitulos,
   }) {
     final vitPool = _pools.vitalismoPool();
     final pesosPorPilar = vitPool.pesosSubcategoriaPorPilar;
@@ -330,7 +342,8 @@ class DailyMissionGeneratorService {
         usedKeys: usedKeys);
 
     final subInsts = [fis, men, esp];
-    final titulo = vitPool.titulos[_random.nextInt(vitPool.titulos.length)];
+    final titulo = _pickTitulo(vitPool.titulos, usedTitulos);
+    usedTitulos.add(titulo);
     final quote = vitPool.quotes[_random.nextInt(vitPool.quotes.length)];
 
     return DailyMission(
@@ -406,6 +419,18 @@ class DailyMissionGeneratorService {
   }
 
   // ─── helpers ────────────────────────────────────────────────────────
+
+  /// Sorteia um título do pool, evitando os já usados em outras missões
+  /// do mesmo dia. Pior caso (improvável dados os pools 8/sub-cat e 12
+  /// no Vitalismo): se 100% dos candidatos foram usados, cai pra
+  /// sorteio sobre o pool inteiro como fallback.
+  String _pickTitulo(List<String> pool, Set<String> usedTitulos) {
+    final candidatos = pool.where((t) => !usedTitulos.contains(t)).toList();
+    if (candidatos.isEmpty) {
+      return pool[_random.nextInt(pool.length)];
+    }
+    return candidatos[_random.nextInt(candidatos.length)];
+  }
 
   String _pickSubcategoria(Map<String, double> pesos) =>
       _pickSubcategoriaDouble(pesos);

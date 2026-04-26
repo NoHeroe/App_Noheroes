@@ -258,6 +258,31 @@ void main() {
       expect(hasLowScale, isTrue);
     });
   });
+
+  // Hotfix Etapa 1.3.A — dedup de títulos cross-missions.
+  group('dedup de títulos', () {
+    test('50 seeds: nenhuma roda tem título duplicado entre as 3 missões',
+        () async {
+      for (var i = 0; i < 50; i++) {
+        final pid =
+            await seedPlayer(primaryFocus: MissionCategory.fisico);
+        await db.delete(db.dailyMissionsTable).go();
+        final svc = DailyMissionGeneratorService(
+          pools: pools,
+          bodyMetrics: bodyMetrics,
+          prefs: prefs,
+          playerDao: playerDao,
+          missionsDao: missionsDao,
+          bus: bus,
+          random: Random(i + 7),
+        );
+        final missions = await svc.generateForToday(pid);
+        final titulos = missions.map((m) => m.tituloResolvido).toList();
+        expect(titulos.toSet().length, titulos.length,
+            reason: 'seed=$i: títulos duplicados $titulos');
+      }
+    });
+  });
 }
 
 /// Random determinístico que sempre retorna 0 — usado pra simular caso

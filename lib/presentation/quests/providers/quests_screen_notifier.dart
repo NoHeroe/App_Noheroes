@@ -11,6 +11,7 @@ import '../../../domain/enums/mission_tab_origin.dart';
 import '../../../domain/models/daily_mission.dart';
 import '../../../domain/models/extras_mission_spec.dart';
 import '../../../domain/models/mission_progress.dart';
+import '../../../domain/services/daily_mission_progress_service.dart';
 
 /// Sprint 3.2 Etapa 1.3.A — state da `/quests` adaptado.
 ///
@@ -210,6 +211,20 @@ class QuestsScreenNotifier
           subTaskKey: subTaskKey,
           delta: delta,
         );
+  }
+
+  /// Hotfix Etapa 1.3.A — encaminha confirmação manual (clique ✓).
+  /// Service decide status final (completed/partial/failed) e dispara
+  /// reward + evento. Idempotência: se já fechada, captura
+  /// [RewardAlreadyGrantedException] silenciosamente.
+  Future<void> confirmDailyMission({required int missionId}) async {
+    try {
+      await ref
+          .read(dailyMissionProgressServiceProvider)
+          .confirmCompletion(missionId: missionId);
+    } on RewardAlreadyGrantedException {
+      // Double-tap entre tap e refresh — UI já está atualizada.
+    }
   }
 }
 
