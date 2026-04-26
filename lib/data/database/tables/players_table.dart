@@ -78,4 +78,16 @@ class PlayersTable extends Table {
   // Null = jogador pré-3.2 que não passou pelo upgrade ainda.
   IntColumn get weightKg => integer().nullable()();
   IntColumn get heightCm => integer().nullable()();
+
+  // Sprint 3.2 Etapa 1.2 — boot-check do DailyMissionRolloverService
+  // (ms epoch). Independente de `lastDailyReset` (DailyResetService cuida
+  // do fluxo legacy de MissionProgress). Null = jogador novo, primeira
+  // chamada do rollover roda incondicional.
+  IntColumn get lastDailyMissionRollover => integer().nullable()();
+
+  // Streak SOMENTE de missões diárias (3/3 100%) — separada de
+  // `streakDays` (login streak). Resetada a 0 se qualquer dia tem
+  // missão failed/partial.
+  IntColumn get dailyMissionsStreak =>
+      integer().withDefault(const Constant(0))();
 }

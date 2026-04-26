@@ -17,7 +17,11 @@ import '../data/datasources/local/extras_catalog_service.dart';
 import '../data/datasources/local/mission_catalogs_service.dart';
 import '../domain/services/achievements_service.dart';
 import '../domain/services/body_metrics_service.dart';
+import '../domain/services/daily_mission_generator_service.dart';
+import '../domain/services/daily_mission_progress_service.dart';
+import '../domain/services/daily_mission_rollover_service.dart';
 import '../domain/services/daily_pool_service.dart';
+import '../data/database/daos/daily_missions_dao.dart';
 import '../domain/services/daily_reset_service.dart';
 import '../domain/services/faction_reputation_service.dart';
 import '../domain/services/mission_assignment_service.dart';
@@ -329,6 +333,46 @@ final dailyPoolServiceProvider = Provider<DailyPoolService>((ref) {
   // (StateError se chamarem antes de loadAll completar).
   service.loadAll();
   return service;
+});
+
+// Sprint 3.2 Etapa 1.2 — services das missões diárias (geração, progresso,
+// rollover). DAO compartilhado entre os 3 serviços.
+final dailyMissionsDaoProvider = Provider<DailyMissionsDao>((ref) {
+  return DailyMissionsDao(ref.watch(appDatabaseProvider));
+});
+
+final dailyMissionGeneratorServiceProvider =
+    Provider<DailyMissionGeneratorService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return DailyMissionGeneratorService(
+    pools: ref.watch(dailyPoolServiceProvider),
+    bodyMetrics: ref.watch(bodyMetricsServiceProvider),
+    prefs: ref.watch(missionPreferencesServiceProvider),
+    playerDao: PlayerDao(db),
+    missionsDao: ref.watch(dailyMissionsDaoProvider),
+    bus: ref.watch(appEventBusProvider),
+  );
+});
+
+final dailyMissionProgressServiceProvider =
+    Provider<DailyMissionProgressService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return DailyMissionProgressService(
+    db: db,
+    missionsDao: ref.watch(dailyMissionsDaoProvider),
+    playerDao: PlayerDao(db),
+    bus: ref.watch(appEventBusProvider),
+  );
+});
+
+final dailyMissionRolloverServiceProvider =
+    Provider<DailyMissionRolloverService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return DailyMissionRolloverService(
+    missionsDao: ref.watch(dailyMissionsDaoProvider),
+    playerDao: PlayerDao(db),
+    progress: ref.watch(dailyMissionProgressServiceProvider),
+  );
 });
 
 // Sprint 3.1 Bloco 9 — MissionPreferencesService (quiz de calibração).

@@ -172,6 +172,31 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
     ));
   }
 
+  /// Sprint 3.2 Etapa 1.2 — marca timestamp do último rollover de
+  /// missões diárias. Independente de `lastDailyReset`.
+  Future<void> markDailyMissionRollover(int id, DateTime at) async {
+    await (update(playersTable)..where((t) => t.id.equals(id))).write(
+        PlayersTableCompanion(
+            lastDailyMissionRollover: Value(at.millisecondsSinceEpoch)));
+  }
+
+  /// Incrementa streak de missões diárias 100%. Chamado pelo rollover
+  /// quando todas as 3 missões do dia anterior fecharam `completed`.
+  Future<void> incrementDailyMissionsStreak(int id) async {
+    final p = await findById(id);
+    if (p == null) return;
+    await (update(playersTable)..where((t) => t.id.equals(id))).write(
+        PlayersTableCompanion(
+            dailyMissionsStreak: Value(p.dailyMissionsStreak + 1)));
+  }
+
+  /// Reseta streak de missões diárias a 0. Qualquer falha ou parcial
+  /// quebra a sequência.
+  Future<void> resetDailyMissionsStreak(int id) async {
+    await (update(playersTable)..where((t) => t.id.equals(id)))
+        .write(const PlayersTableCompanion(dailyMissionsStreak: Value(0)));
+  }
+
   Future<void> addGold(int id, int amount) async {
     final player = await findById(id);
     if (player == null) return;

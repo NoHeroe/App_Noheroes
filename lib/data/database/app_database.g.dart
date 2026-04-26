@@ -314,6 +314,20 @@ class $PlayersTableTable extends PlayersTable
   late final GeneratedColumn<int> heightCm = GeneratedColumn<int>(
       'height_cm', aliasedName, true,
       type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _lastDailyMissionRolloverMeta =
+      const VerificationMeta('lastDailyMissionRollover');
+  @override
+  late final GeneratedColumn<int> lastDailyMissionRollover =
+      GeneratedColumn<int>('last_daily_mission_rollover', aliasedName, true,
+          type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _dailyMissionsStreakMeta =
+      const VerificationMeta('dailyMissionsStreak');
+  @override
+  late final GeneratedColumn<int> dailyMissionsStreak = GeneratedColumn<int>(
+      'daily_missions_streak', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -356,7 +370,9 @@ class $PlayersTableTable extends PlayersTable
         lastDailyReset,
         lastWeeklyReset,
         weightKg,
-        heightCm
+        heightCm,
+        lastDailyMissionRollover,
+        dailyMissionsStreak
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -570,6 +586,19 @@ class $PlayersTableTable extends PlayersTable
       context.handle(_heightCmMeta,
           heightCm.isAcceptableOrUnknown(data['height_cm']!, _heightCmMeta));
     }
+    if (data.containsKey('last_daily_mission_rollover')) {
+      context.handle(
+          _lastDailyMissionRolloverMeta,
+          lastDailyMissionRollover.isAcceptableOrUnknown(
+              data['last_daily_mission_rollover']!,
+              _lastDailyMissionRolloverMeta));
+    }
+    if (data.containsKey('daily_missions_streak')) {
+      context.handle(
+          _dailyMissionsStreakMeta,
+          dailyMissionsStreak.isAcceptableOrUnknown(
+              data['daily_missions_streak']!, _dailyMissionsStreakMeta));
+    }
     return context;
   }
 
@@ -661,6 +690,11 @@ class $PlayersTableTable extends PlayersTable
           .read(DriftSqlType.int, data['${effectivePrefix}weight_kg']),
       heightCm: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}height_cm']),
+      lastDailyMissionRollover: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}last_daily_mission_rollover']),
+      dailyMissionsStreak: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}daily_missions_streak'])!,
     );
   }
 
@@ -713,6 +747,8 @@ class PlayersTableData extends DataClass
   final int? lastWeeklyReset;
   final int? weightKg;
   final int? heightCm;
+  final int? lastDailyMissionRollover;
+  final int dailyMissionsStreak;
   const PlayersTableData(
       {required this.id,
       required this.email,
@@ -754,7 +790,9 @@ class PlayersTableData extends DataClass
       this.lastDailyReset,
       this.lastWeeklyReset,
       this.weightKg,
-      this.heightCm});
+      this.heightCm,
+      this.lastDailyMissionRollover,
+      required this.dailyMissionsStreak});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -813,6 +851,11 @@ class PlayersTableData extends DataClass
     if (!nullToAbsent || heightCm != null) {
       map['height_cm'] = Variable<int>(heightCm);
     }
+    if (!nullToAbsent || lastDailyMissionRollover != null) {
+      map['last_daily_mission_rollover'] =
+          Variable<int>(lastDailyMissionRollover);
+    }
+    map['daily_missions_streak'] = Variable<int>(dailyMissionsStreak);
     return map;
   }
 
@@ -873,6 +916,10 @@ class PlayersTableData extends DataClass
       heightCm: heightCm == null && nullToAbsent
           ? const Value.absent()
           : Value(heightCm),
+      lastDailyMissionRollover: lastDailyMissionRollover == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastDailyMissionRollover),
+      dailyMissionsStreak: Value(dailyMissionsStreak),
     );
   }
 
@@ -922,6 +969,10 @@ class PlayersTableData extends DataClass
       lastWeeklyReset: serializer.fromJson<int?>(json['lastWeeklyReset']),
       weightKg: serializer.fromJson<int?>(json['weightKg']),
       heightCm: serializer.fromJson<int?>(json['heightCm']),
+      lastDailyMissionRollover:
+          serializer.fromJson<int?>(json['lastDailyMissionRollover']),
+      dailyMissionsStreak:
+          serializer.fromJson<int>(json['dailyMissionsStreak']),
     );
   }
   @override
@@ -969,6 +1020,9 @@ class PlayersTableData extends DataClass
       'lastWeeklyReset': serializer.toJson<int?>(lastWeeklyReset),
       'weightKg': serializer.toJson<int?>(weightKg),
       'heightCm': serializer.toJson<int?>(heightCm),
+      'lastDailyMissionRollover':
+          serializer.toJson<int?>(lastDailyMissionRollover),
+      'dailyMissionsStreak': serializer.toJson<int>(dailyMissionsStreak),
     };
   }
 
@@ -1013,7 +1067,9 @@ class PlayersTableData extends DataClass
           Value<int?> lastDailyReset = const Value.absent(),
           Value<int?> lastWeeklyReset = const Value.absent(),
           Value<int?> weightKg = const Value.absent(),
-          Value<int?> heightCm = const Value.absent()}) =>
+          Value<int?> heightCm = const Value.absent(),
+          Value<int?> lastDailyMissionRollover = const Value.absent(),
+          int? dailyMissionsStreak}) =>
       PlayersTableData(
         id: id ?? this.id,
         email: email ?? this.email,
@@ -1060,6 +1116,10 @@ class PlayersTableData extends DataClass
             : this.lastWeeklyReset,
         weightKg: weightKg.present ? weightKg.value : this.weightKg,
         heightCm: heightCm.present ? heightCm.value : this.heightCm,
+        lastDailyMissionRollover: lastDailyMissionRollover.present
+            ? lastDailyMissionRollover.value
+            : this.lastDailyMissionRollover,
+        dailyMissionsStreak: dailyMissionsStreak ?? this.dailyMissionsStreak,
       );
   PlayersTableData copyWithCompanion(PlayersTableCompanion data) {
     return PlayersTableData(
@@ -1136,6 +1196,12 @@ class PlayersTableData extends DataClass
           : this.lastWeeklyReset,
       weightKg: data.weightKg.present ? data.weightKg.value : this.weightKg,
       heightCm: data.heightCm.present ? data.heightCm.value : this.heightCm,
+      lastDailyMissionRollover: data.lastDailyMissionRollover.present
+          ? data.lastDailyMissionRollover.value
+          : this.lastDailyMissionRollover,
+      dailyMissionsStreak: data.dailyMissionsStreak.present
+          ? data.dailyMissionsStreak.value
+          : this.dailyMissionsStreak,
     );
   }
 
@@ -1182,7 +1248,9 @@ class PlayersTableData extends DataClass
           ..write('lastDailyReset: $lastDailyReset, ')
           ..write('lastWeeklyReset: $lastWeeklyReset, ')
           ..write('weightKg: $weightKg, ')
-          ..write('heightCm: $heightCm')
+          ..write('heightCm: $heightCm, ')
+          ..write('lastDailyMissionRollover: $lastDailyMissionRollover, ')
+          ..write('dailyMissionsStreak: $dailyMissionsStreak')
           ..write(')'))
         .toString();
   }
@@ -1229,7 +1297,9 @@ class PlayersTableData extends DataClass
         lastDailyReset,
         lastWeeklyReset,
         weightKg,
-        heightCm
+        heightCm,
+        lastDailyMissionRollover,
+        dailyMissionsStreak
       ]);
   @override
   bool operator ==(Object other) =>
@@ -1275,7 +1345,9 @@ class PlayersTableData extends DataClass
           other.lastDailyReset == this.lastDailyReset &&
           other.lastWeeklyReset == this.lastWeeklyReset &&
           other.weightKg == this.weightKg &&
-          other.heightCm == this.heightCm);
+          other.heightCm == this.heightCm &&
+          other.lastDailyMissionRollover == this.lastDailyMissionRollover &&
+          other.dailyMissionsStreak == this.dailyMissionsStreak);
 }
 
 class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
@@ -1320,6 +1392,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
   final Value<int?> lastWeeklyReset;
   final Value<int?> weightKg;
   final Value<int?> heightCm;
+  final Value<int?> lastDailyMissionRollover;
+  final Value<int> dailyMissionsStreak;
   const PlayersTableCompanion({
     this.id = const Value.absent(),
     this.email = const Value.absent(),
@@ -1362,6 +1436,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.lastWeeklyReset = const Value.absent(),
     this.weightKg = const Value.absent(),
     this.heightCm = const Value.absent(),
+    this.lastDailyMissionRollover = const Value.absent(),
+    this.dailyMissionsStreak = const Value.absent(),
   });
   PlayersTableCompanion.insert({
     this.id = const Value.absent(),
@@ -1405,6 +1481,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.lastWeeklyReset = const Value.absent(),
     this.weightKg = const Value.absent(),
     this.heightCm = const Value.absent(),
+    this.lastDailyMissionRollover = const Value.absent(),
+    this.dailyMissionsStreak = const Value.absent(),
   })  : email = Value(email),
         passwordHash = Value(passwordHash);
   static Insertable<PlayersTableData> custom({
@@ -1449,6 +1527,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     Expression<int>? lastWeeklyReset,
     Expression<int>? weightKg,
     Expression<int>? heightCm,
+    Expression<int>? lastDailyMissionRollover,
+    Expression<int>? dailyMissionsStreak,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1493,6 +1573,10 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       if (lastWeeklyReset != null) 'last_weekly_reset': lastWeeklyReset,
       if (weightKg != null) 'weight_kg': weightKg,
       if (heightCm != null) 'height_cm': heightCm,
+      if (lastDailyMissionRollover != null)
+        'last_daily_mission_rollover': lastDailyMissionRollover,
+      if (dailyMissionsStreak != null)
+        'daily_missions_streak': dailyMissionsStreak,
     });
   }
 
@@ -1537,7 +1621,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       Value<int?>? lastDailyReset,
       Value<int?>? lastWeeklyReset,
       Value<int?>? weightKg,
-      Value<int?>? heightCm}) {
+      Value<int?>? heightCm,
+      Value<int?>? lastDailyMissionRollover,
+      Value<int>? dailyMissionsStreak}) {
     return PlayersTableCompanion(
       id: id ?? this.id,
       email: email ?? this.email,
@@ -1580,6 +1666,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       lastWeeklyReset: lastWeeklyReset ?? this.lastWeeklyReset,
       weightKg: weightKg ?? this.weightKg,
       heightCm: heightCm ?? this.heightCm,
+      lastDailyMissionRollover:
+          lastDailyMissionRollover ?? this.lastDailyMissionRollover,
+      dailyMissionsStreak: dailyMissionsStreak ?? this.dailyMissionsStreak,
     );
   }
 
@@ -1709,6 +1798,13 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     if (heightCm.present) {
       map['height_cm'] = Variable<int>(heightCm.value);
     }
+    if (lastDailyMissionRollover.present) {
+      map['last_daily_mission_rollover'] =
+          Variable<int>(lastDailyMissionRollover.value);
+    }
+    if (dailyMissionsStreak.present) {
+      map['daily_missions_streak'] = Variable<int>(dailyMissionsStreak.value);
+    }
     return map;
   }
 
@@ -1755,7 +1851,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
           ..write('lastDailyReset: $lastDailyReset, ')
           ..write('lastWeeklyReset: $lastWeeklyReset, ')
           ..write('weightKg: $weightKg, ')
-          ..write('heightCm: $heightCm')
+          ..write('heightCm: $heightCm, ')
+          ..write('lastDailyMissionRollover: $lastDailyMissionRollover, ')
+          ..write('dailyMissionsStreak: $dailyMissionsStreak')
           ..write(')'))
         .toString();
   }
@@ -12749,6 +12847,657 @@ class ActiveFactionQuestsTableCompanion
   }
 }
 
+class $DailyMissionsTableTable extends DailyMissionsTable
+    with TableInfo<$DailyMissionsTableTable, DailyMissionsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DailyMissionsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _dataMeta = const VerificationMeta('data');
+  @override
+  late final GeneratedColumn<String> data = GeneratedColumn<String>(
+      'data', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _modalidadeMeta =
+      const VerificationMeta('modalidade');
+  @override
+  late final GeneratedColumn<String> modalidade = GeneratedColumn<String>(
+      'modalidade', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _subCategoriaMeta =
+      const VerificationMeta('subCategoria');
+  @override
+  late final GeneratedColumn<String> subCategoria = GeneratedColumn<String>(
+      'sub_categoria', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _tituloKeyMeta =
+      const VerificationMeta('tituloKey');
+  @override
+  late final GeneratedColumn<String> tituloKey = GeneratedColumn<String>(
+      'titulo_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _tituloResolvidoMeta =
+      const VerificationMeta('tituloResolvido');
+  @override
+  late final GeneratedColumn<String> tituloResolvido = GeneratedColumn<String>(
+      'titulo_resolvido', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _quoteResolvidaMeta =
+      const VerificationMeta('quoteResolvida');
+  @override
+  late final GeneratedColumn<String> quoteResolvida = GeneratedColumn<String>(
+      'quote_resolvida', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _subTarefasJsonMeta =
+      const VerificationMeta('subTarefasJson');
+  @override
+  late final GeneratedColumn<String> subTarefasJson = GeneratedColumn<String>(
+      'sub_tarefas_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('pending'));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _completedAtMeta =
+      const VerificationMeta('completedAt');
+  @override
+  late final GeneratedColumn<int> completedAt = GeneratedColumn<int>(
+      'completed_at', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _rewardClaimedMeta =
+      const VerificationMeta('rewardClaimed');
+  @override
+  late final GeneratedColumn<bool> rewardClaimed = GeneratedColumn<bool>(
+      'reward_claimed', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("reward_claimed" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        playerId,
+        data,
+        modalidade,
+        subCategoria,
+        tituloKey,
+        tituloResolvido,
+        quoteResolvida,
+        subTarefasJson,
+        status,
+        createdAt,
+        completedAt,
+        rewardClaimed
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'daily_missions';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<DailyMissionsTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('data')) {
+      context.handle(
+          _dataMeta, this.data.isAcceptableOrUnknown(data['data']!, _dataMeta));
+    } else if (isInserting) {
+      context.missing(_dataMeta);
+    }
+    if (data.containsKey('modalidade')) {
+      context.handle(
+          _modalidadeMeta,
+          modalidade.isAcceptableOrUnknown(
+              data['modalidade']!, _modalidadeMeta));
+    } else if (isInserting) {
+      context.missing(_modalidadeMeta);
+    }
+    if (data.containsKey('sub_categoria')) {
+      context.handle(
+          _subCategoriaMeta,
+          subCategoria.isAcceptableOrUnknown(
+              data['sub_categoria']!, _subCategoriaMeta));
+    }
+    if (data.containsKey('titulo_key')) {
+      context.handle(_tituloKeyMeta,
+          tituloKey.isAcceptableOrUnknown(data['titulo_key']!, _tituloKeyMeta));
+    } else if (isInserting) {
+      context.missing(_tituloKeyMeta);
+    }
+    if (data.containsKey('titulo_resolvido')) {
+      context.handle(
+          _tituloResolvidoMeta,
+          tituloResolvido.isAcceptableOrUnknown(
+              data['titulo_resolvido']!, _tituloResolvidoMeta));
+    } else if (isInserting) {
+      context.missing(_tituloResolvidoMeta);
+    }
+    if (data.containsKey('quote_resolvida')) {
+      context.handle(
+          _quoteResolvidaMeta,
+          quoteResolvida.isAcceptableOrUnknown(
+              data['quote_resolvida']!, _quoteResolvidaMeta));
+    } else if (isInserting) {
+      context.missing(_quoteResolvidaMeta);
+    }
+    if (data.containsKey('sub_tarefas_json')) {
+      context.handle(
+          _subTarefasJsonMeta,
+          subTarefasJson.isAcceptableOrUnknown(
+              data['sub_tarefas_json']!, _subTarefasJsonMeta));
+    } else if (isInserting) {
+      context.missing(_subTarefasJsonMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+          _completedAtMeta,
+          completedAt.isAcceptableOrUnknown(
+              data['completed_at']!, _completedAtMeta));
+    }
+    if (data.containsKey('reward_claimed')) {
+      context.handle(
+          _rewardClaimedMeta,
+          rewardClaimed.isAcceptableOrUnknown(
+              data['reward_claimed']!, _rewardClaimedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DailyMissionsTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DailyMissionsTableData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      data: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}data'])!,
+      modalidade: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}modalidade'])!,
+      subCategoria: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sub_categoria']),
+      tituloKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}titulo_key'])!,
+      tituloResolvido: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}titulo_resolvido'])!,
+      quoteResolvida: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}quote_resolvida'])!,
+      subTarefasJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}sub_tarefas_json'])!,
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+      completedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}completed_at']),
+      rewardClaimed: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}reward_claimed'])!,
+    );
+  }
+
+  @override
+  $DailyMissionsTableTable createAlias(String alias) {
+    return $DailyMissionsTableTable(attachedDatabase, alias);
+  }
+}
+
+class DailyMissionsTableData extends DataClass
+    implements Insertable<DailyMissionsTableData> {
+  final int id;
+  final int playerId;
+  final String data;
+  final String modalidade;
+  final String? subCategoria;
+  final String tituloKey;
+  final String tituloResolvido;
+  final String quoteResolvida;
+  final String subTarefasJson;
+  final String status;
+  final int createdAt;
+  final int? completedAt;
+  final bool rewardClaimed;
+  const DailyMissionsTableData(
+      {required this.id,
+      required this.playerId,
+      required this.data,
+      required this.modalidade,
+      this.subCategoria,
+      required this.tituloKey,
+      required this.tituloResolvido,
+      required this.quoteResolvida,
+      required this.subTarefasJson,
+      required this.status,
+      required this.createdAt,
+      this.completedAt,
+      required this.rewardClaimed});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['data'] = Variable<String>(data);
+    map['modalidade'] = Variable<String>(modalidade);
+    if (!nullToAbsent || subCategoria != null) {
+      map['sub_categoria'] = Variable<String>(subCategoria);
+    }
+    map['titulo_key'] = Variable<String>(tituloKey);
+    map['titulo_resolvido'] = Variable<String>(tituloResolvido);
+    map['quote_resolvida'] = Variable<String>(quoteResolvida);
+    map['sub_tarefas_json'] = Variable<String>(subTarefasJson);
+    map['status'] = Variable<String>(status);
+    map['created_at'] = Variable<int>(createdAt);
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<int>(completedAt);
+    }
+    map['reward_claimed'] = Variable<bool>(rewardClaimed);
+    return map;
+  }
+
+  DailyMissionsTableCompanion toCompanion(bool nullToAbsent) {
+    return DailyMissionsTableCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      data: Value(data),
+      modalidade: Value(modalidade),
+      subCategoria: subCategoria == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subCategoria),
+      tituloKey: Value(tituloKey),
+      tituloResolvido: Value(tituloResolvido),
+      quoteResolvida: Value(quoteResolvida),
+      subTarefasJson: Value(subTarefasJson),
+      status: Value(status),
+      createdAt: Value(createdAt),
+      completedAt: completedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAt),
+      rewardClaimed: Value(rewardClaimed),
+    );
+  }
+
+  factory DailyMissionsTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DailyMissionsTableData(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      data: serializer.fromJson<String>(json['data']),
+      modalidade: serializer.fromJson<String>(json['modalidade']),
+      subCategoria: serializer.fromJson<String?>(json['subCategoria']),
+      tituloKey: serializer.fromJson<String>(json['tituloKey']),
+      tituloResolvido: serializer.fromJson<String>(json['tituloResolvido']),
+      quoteResolvida: serializer.fromJson<String>(json['quoteResolvida']),
+      subTarefasJson: serializer.fromJson<String>(json['subTarefasJson']),
+      status: serializer.fromJson<String>(json['status']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      completedAt: serializer.fromJson<int?>(json['completedAt']),
+      rewardClaimed: serializer.fromJson<bool>(json['rewardClaimed']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'data': serializer.toJson<String>(data),
+      'modalidade': serializer.toJson<String>(modalidade),
+      'subCategoria': serializer.toJson<String?>(subCategoria),
+      'tituloKey': serializer.toJson<String>(tituloKey),
+      'tituloResolvido': serializer.toJson<String>(tituloResolvido),
+      'quoteResolvida': serializer.toJson<String>(quoteResolvida),
+      'subTarefasJson': serializer.toJson<String>(subTarefasJson),
+      'status': serializer.toJson<String>(status),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'completedAt': serializer.toJson<int?>(completedAt),
+      'rewardClaimed': serializer.toJson<bool>(rewardClaimed),
+    };
+  }
+
+  DailyMissionsTableData copyWith(
+          {int? id,
+          int? playerId,
+          String? data,
+          String? modalidade,
+          Value<String?> subCategoria = const Value.absent(),
+          String? tituloKey,
+          String? tituloResolvido,
+          String? quoteResolvida,
+          String? subTarefasJson,
+          String? status,
+          int? createdAt,
+          Value<int?> completedAt = const Value.absent(),
+          bool? rewardClaimed}) =>
+      DailyMissionsTableData(
+        id: id ?? this.id,
+        playerId: playerId ?? this.playerId,
+        data: data ?? this.data,
+        modalidade: modalidade ?? this.modalidade,
+        subCategoria:
+            subCategoria.present ? subCategoria.value : this.subCategoria,
+        tituloKey: tituloKey ?? this.tituloKey,
+        tituloResolvido: tituloResolvido ?? this.tituloResolvido,
+        quoteResolvida: quoteResolvida ?? this.quoteResolvida,
+        subTarefasJson: subTarefasJson ?? this.subTarefasJson,
+        status: status ?? this.status,
+        createdAt: createdAt ?? this.createdAt,
+        completedAt: completedAt.present ? completedAt.value : this.completedAt,
+        rewardClaimed: rewardClaimed ?? this.rewardClaimed,
+      );
+  DailyMissionsTableData copyWithCompanion(DailyMissionsTableCompanion data) {
+    return DailyMissionsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      data: data.data.present ? data.data.value : this.data,
+      modalidade:
+          data.modalidade.present ? data.modalidade.value : this.modalidade,
+      subCategoria: data.subCategoria.present
+          ? data.subCategoria.value
+          : this.subCategoria,
+      tituloKey: data.tituloKey.present ? data.tituloKey.value : this.tituloKey,
+      tituloResolvido: data.tituloResolvido.present
+          ? data.tituloResolvido.value
+          : this.tituloResolvido,
+      quoteResolvida: data.quoteResolvida.present
+          ? data.quoteResolvida.value
+          : this.quoteResolvida,
+      subTarefasJson: data.subTarefasJson.present
+          ? data.subTarefasJson.value
+          : this.subTarefasJson,
+      status: data.status.present ? data.status.value : this.status,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      completedAt:
+          data.completedAt.present ? data.completedAt.value : this.completedAt,
+      rewardClaimed: data.rewardClaimed.present
+          ? data.rewardClaimed.value
+          : this.rewardClaimed,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyMissionsTableData(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('data: $data, ')
+          ..write('modalidade: $modalidade, ')
+          ..write('subCategoria: $subCategoria, ')
+          ..write('tituloKey: $tituloKey, ')
+          ..write('tituloResolvido: $tituloResolvido, ')
+          ..write('quoteResolvida: $quoteResolvida, ')
+          ..write('subTarefasJson: $subTarefasJson, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('rewardClaimed: $rewardClaimed')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      playerId,
+      data,
+      modalidade,
+      subCategoria,
+      tituloKey,
+      tituloResolvido,
+      quoteResolvida,
+      subTarefasJson,
+      status,
+      createdAt,
+      completedAt,
+      rewardClaimed);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DailyMissionsTableData &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.data == this.data &&
+          other.modalidade == this.modalidade &&
+          other.subCategoria == this.subCategoria &&
+          other.tituloKey == this.tituloKey &&
+          other.tituloResolvido == this.tituloResolvido &&
+          other.quoteResolvida == this.quoteResolvida &&
+          other.subTarefasJson == this.subTarefasJson &&
+          other.status == this.status &&
+          other.createdAt == this.createdAt &&
+          other.completedAt == this.completedAt &&
+          other.rewardClaimed == this.rewardClaimed);
+}
+
+class DailyMissionsTableCompanion
+    extends UpdateCompanion<DailyMissionsTableData> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> data;
+  final Value<String> modalidade;
+  final Value<String?> subCategoria;
+  final Value<String> tituloKey;
+  final Value<String> tituloResolvido;
+  final Value<String> quoteResolvida;
+  final Value<String> subTarefasJson;
+  final Value<String> status;
+  final Value<int> createdAt;
+  final Value<int?> completedAt;
+  final Value<bool> rewardClaimed;
+  const DailyMissionsTableCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.data = const Value.absent(),
+    this.modalidade = const Value.absent(),
+    this.subCategoria = const Value.absent(),
+    this.tituloKey = const Value.absent(),
+    this.tituloResolvido = const Value.absent(),
+    this.quoteResolvida = const Value.absent(),
+    this.subTarefasJson = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.rewardClaimed = const Value.absent(),
+  });
+  DailyMissionsTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String data,
+    required String modalidade,
+    this.subCategoria = const Value.absent(),
+    required String tituloKey,
+    required String tituloResolvido,
+    required String quoteResolvida,
+    required String subTarefasJson,
+    this.status = const Value.absent(),
+    required int createdAt,
+    this.completedAt = const Value.absent(),
+    this.rewardClaimed = const Value.absent(),
+  })  : playerId = Value(playerId),
+        data = Value(data),
+        modalidade = Value(modalidade),
+        tituloKey = Value(tituloKey),
+        tituloResolvido = Value(tituloResolvido),
+        quoteResolvida = Value(quoteResolvida),
+        subTarefasJson = Value(subTarefasJson),
+        createdAt = Value(createdAt);
+  static Insertable<DailyMissionsTableData> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? data,
+    Expression<String>? modalidade,
+    Expression<String>? subCategoria,
+    Expression<String>? tituloKey,
+    Expression<String>? tituloResolvido,
+    Expression<String>? quoteResolvida,
+    Expression<String>? subTarefasJson,
+    Expression<String>? status,
+    Expression<int>? createdAt,
+    Expression<int>? completedAt,
+    Expression<bool>? rewardClaimed,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (data != null) 'data': data,
+      if (modalidade != null) 'modalidade': modalidade,
+      if (subCategoria != null) 'sub_categoria': subCategoria,
+      if (tituloKey != null) 'titulo_key': tituloKey,
+      if (tituloResolvido != null) 'titulo_resolvido': tituloResolvido,
+      if (quoteResolvida != null) 'quote_resolvida': quoteResolvida,
+      if (subTarefasJson != null) 'sub_tarefas_json': subTarefasJson,
+      if (status != null) 'status': status,
+      if (createdAt != null) 'created_at': createdAt,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (rewardClaimed != null) 'reward_claimed': rewardClaimed,
+    });
+  }
+
+  DailyMissionsTableCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? playerId,
+      Value<String>? data,
+      Value<String>? modalidade,
+      Value<String?>? subCategoria,
+      Value<String>? tituloKey,
+      Value<String>? tituloResolvido,
+      Value<String>? quoteResolvida,
+      Value<String>? subTarefasJson,
+      Value<String>? status,
+      Value<int>? createdAt,
+      Value<int?>? completedAt,
+      Value<bool>? rewardClaimed}) {
+    return DailyMissionsTableCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      data: data ?? this.data,
+      modalidade: modalidade ?? this.modalidade,
+      subCategoria: subCategoria ?? this.subCategoria,
+      tituloKey: tituloKey ?? this.tituloKey,
+      tituloResolvido: tituloResolvido ?? this.tituloResolvido,
+      quoteResolvida: quoteResolvida ?? this.quoteResolvida,
+      subTarefasJson: subTarefasJson ?? this.subTarefasJson,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      completedAt: completedAt ?? this.completedAt,
+      rewardClaimed: rewardClaimed ?? this.rewardClaimed,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (data.present) {
+      map['data'] = Variable<String>(data.value);
+    }
+    if (modalidade.present) {
+      map['modalidade'] = Variable<String>(modalidade.value);
+    }
+    if (subCategoria.present) {
+      map['sub_categoria'] = Variable<String>(subCategoria.value);
+    }
+    if (tituloKey.present) {
+      map['titulo_key'] = Variable<String>(tituloKey.value);
+    }
+    if (tituloResolvido.present) {
+      map['titulo_resolvido'] = Variable<String>(tituloResolvido.value);
+    }
+    if (quoteResolvida.present) {
+      map['quote_resolvida'] = Variable<String>(quoteResolvida.value);
+    }
+    if (subTarefasJson.present) {
+      map['sub_tarefas_json'] = Variable<String>(subTarefasJson.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<int>(completedAt.value);
+    }
+    if (rewardClaimed.present) {
+      map['reward_claimed'] = Variable<bool>(rewardClaimed.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DailyMissionsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('data: $data, ')
+          ..write('modalidade: $modalidade, ')
+          ..write('subCategoria: $subCategoria, ')
+          ..write('tituloKey: $tituloKey, ')
+          ..write('tituloResolvido: $tituloResolvido, ')
+          ..write('quoteResolvida: $quoteResolvida, ')
+          ..write('subTarefasJson: $subTarefasJson, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('rewardClaimed: $rewardClaimed')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -12795,10 +13544,17 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $PlayerFactionReputationTableTable(this);
   late final $ActiveFactionQuestsTableTable activeFactionQuestsTable =
       $ActiveFactionQuestsTableTable(this);
+  late final $DailyMissionsTableTable dailyMissionsTable =
+      $DailyMissionsTableTable(this);
   late final Index uniquePlayerFactionWeek = Index('unique_player_faction_week',
       'CREATE UNIQUE INDEX unique_player_faction_week ON active_faction_quests (player_id, faction_id, week_start)');
+  late final Index idxDailyMissionsPlayerData = Index(
+      'idx_daily_missions_player_data',
+      'CREATE INDEX idx_daily_missions_player_data ON daily_missions (player_id, data)');
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
   late final GuildDao guildDao = GuildDao(this as AppDatabase);
+  late final DailyMissionsDao dailyMissionsDao =
+      DailyMissionsDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -12827,7 +13583,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         playerAchievementsCompletedTable,
         playerFactionReputationTable,
         activeFactionQuestsTable,
-        uniquePlayerFactionWeek
+        dailyMissionsTable,
+        uniquePlayerFactionWeek,
+        idxDailyMissionsPlayerData
       ];
 }
 
@@ -12874,6 +13632,8 @@ typedef $$PlayersTableTableCreateCompanionBuilder = PlayersTableCompanion
   Value<int?> lastWeeklyReset,
   Value<int?> weightKg,
   Value<int?> heightCm,
+  Value<int?> lastDailyMissionRollover,
+  Value<int> dailyMissionsStreak,
 });
 typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
     Function({
@@ -12918,6 +13678,8 @@ typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
   Value<int?> lastWeeklyReset,
   Value<int?> weightKg,
   Value<int?> heightCm,
+  Value<int?> lastDailyMissionRollover,
+  Value<int> dailyMissionsStreak,
 });
 
 class $$PlayersTableTableFilterComposer
@@ -13059,6 +13821,14 @@ class $$PlayersTableTableFilterComposer
 
   ColumnFilters<int> get heightCm => $composableBuilder(
       column: $table.heightCm, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get lastDailyMissionRollover => $composableBuilder(
+      column: $table.lastDailyMissionRollover,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get dailyMissionsStreak => $composableBuilder(
+      column: $table.dailyMissionsStreak,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$PlayersTableTableOrderingComposer
@@ -13205,6 +13975,14 @@ class $$PlayersTableTableOrderingComposer
 
   ColumnOrderings<int> get heightCm => $composableBuilder(
       column: $table.heightCm, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get lastDailyMissionRollover => $composableBuilder(
+      column: $table.lastDailyMissionRollover,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get dailyMissionsStreak => $composableBuilder(
+      column: $table.dailyMissionsStreak,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$PlayersTableTableAnnotationComposer
@@ -13338,6 +14116,12 @@ class $$PlayersTableTableAnnotationComposer
 
   GeneratedColumn<int> get heightCm =>
       $composableBuilder(column: $table.heightCm, builder: (column) => column);
+
+  GeneratedColumn<int> get lastDailyMissionRollover => $composableBuilder(
+      column: $table.lastDailyMissionRollover, builder: (column) => column);
+
+  GeneratedColumn<int> get dailyMissionsStreak => $composableBuilder(
+      column: $table.dailyMissionsStreak, builder: (column) => column);
 }
 
 class $$PlayersTableTableTableManager extends RootTableManager<
@@ -13407,6 +14191,8 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int?> lastWeeklyReset = const Value.absent(),
             Value<int?> weightKg = const Value.absent(),
             Value<int?> heightCm = const Value.absent(),
+            Value<int?> lastDailyMissionRollover = const Value.absent(),
+            Value<int> dailyMissionsStreak = const Value.absent(),
           }) =>
               PlayersTableCompanion(
             id: id,
@@ -13450,6 +14236,8 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             lastWeeklyReset: lastWeeklyReset,
             weightKg: weightKg,
             heightCm: heightCm,
+            lastDailyMissionRollover: lastDailyMissionRollover,
+            dailyMissionsStreak: dailyMissionsStreak,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -13493,6 +14281,8 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int?> lastWeeklyReset = const Value.absent(),
             Value<int?> weightKg = const Value.absent(),
             Value<int?> heightCm = const Value.absent(),
+            Value<int?> lastDailyMissionRollover = const Value.absent(),
+            Value<int> dailyMissionsStreak = const Value.absent(),
           }) =>
               PlayersTableCompanion.insert(
             id: id,
@@ -13536,6 +14326,8 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             lastWeeklyReset: lastWeeklyReset,
             weightKg: weightKg,
             heightCm: heightCm,
+            lastDailyMissionRollover: lastDailyMissionRollover,
+            dailyMissionsStreak: dailyMissionsStreak,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -18918,6 +19710,305 @@ typedef $$ActiveFactionQuestsTableTableProcessedTableManager
         ),
         ActiveFactionQuestData,
         PrefetchHooks Function()>;
+typedef $$DailyMissionsTableTableCreateCompanionBuilder
+    = DailyMissionsTableCompanion Function({
+  Value<int> id,
+  required int playerId,
+  required String data,
+  required String modalidade,
+  Value<String?> subCategoria,
+  required String tituloKey,
+  required String tituloResolvido,
+  required String quoteResolvida,
+  required String subTarefasJson,
+  Value<String> status,
+  required int createdAt,
+  Value<int?> completedAt,
+  Value<bool> rewardClaimed,
+});
+typedef $$DailyMissionsTableTableUpdateCompanionBuilder
+    = DailyMissionsTableCompanion Function({
+  Value<int> id,
+  Value<int> playerId,
+  Value<String> data,
+  Value<String> modalidade,
+  Value<String?> subCategoria,
+  Value<String> tituloKey,
+  Value<String> tituloResolvido,
+  Value<String> quoteResolvida,
+  Value<String> subTarefasJson,
+  Value<String> status,
+  Value<int> createdAt,
+  Value<int?> completedAt,
+  Value<bool> rewardClaimed,
+});
+
+class $$DailyMissionsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $DailyMissionsTableTable> {
+  $$DailyMissionsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get data => $composableBuilder(
+      column: $table.data, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get modalidade => $composableBuilder(
+      column: $table.modalidade, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get subCategoria => $composableBuilder(
+      column: $table.subCategoria, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get tituloKey => $composableBuilder(
+      column: $table.tituloKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get tituloResolvido => $composableBuilder(
+      column: $table.tituloResolvido,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get quoteResolvida => $composableBuilder(
+      column: $table.quoteResolvida,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get subTarefasJson => $composableBuilder(
+      column: $table.subTarefasJson,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get rewardClaimed => $composableBuilder(
+      column: $table.rewardClaimed, builder: (column) => ColumnFilters(column));
+}
+
+class $$DailyMissionsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $DailyMissionsTableTable> {
+  $$DailyMissionsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get data => $composableBuilder(
+      column: $table.data, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get modalidade => $composableBuilder(
+      column: $table.modalidade, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get subCategoria => $composableBuilder(
+      column: $table.subCategoria,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get tituloKey => $composableBuilder(
+      column: $table.tituloKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get tituloResolvido => $composableBuilder(
+      column: $table.tituloResolvido,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get quoteResolvida => $composableBuilder(
+      column: $table.quoteResolvida,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get subTarefasJson => $composableBuilder(
+      column: $table.subTarefasJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get rewardClaimed => $composableBuilder(
+      column: $table.rewardClaimed,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$DailyMissionsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DailyMissionsTableTable> {
+  $$DailyMissionsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get data =>
+      $composableBuilder(column: $table.data, builder: (column) => column);
+
+  GeneratedColumn<String> get modalidade => $composableBuilder(
+      column: $table.modalidade, builder: (column) => column);
+
+  GeneratedColumn<String> get subCategoria => $composableBuilder(
+      column: $table.subCategoria, builder: (column) => column);
+
+  GeneratedColumn<String> get tituloKey =>
+      $composableBuilder(column: $table.tituloKey, builder: (column) => column);
+
+  GeneratedColumn<String> get tituloResolvido => $composableBuilder(
+      column: $table.tituloResolvido, builder: (column) => column);
+
+  GeneratedColumn<String> get quoteResolvida => $composableBuilder(
+      column: $table.quoteResolvida, builder: (column) => column);
+
+  GeneratedColumn<String> get subTarefasJson => $composableBuilder(
+      column: $table.subTarefasJson, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get rewardClaimed => $composableBuilder(
+      column: $table.rewardClaimed, builder: (column) => column);
+}
+
+class $$DailyMissionsTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $DailyMissionsTableTable,
+    DailyMissionsTableData,
+    $$DailyMissionsTableTableFilterComposer,
+    $$DailyMissionsTableTableOrderingComposer,
+    $$DailyMissionsTableTableAnnotationComposer,
+    $$DailyMissionsTableTableCreateCompanionBuilder,
+    $$DailyMissionsTableTableUpdateCompanionBuilder,
+    (
+      DailyMissionsTableData,
+      BaseReferences<_$AppDatabase, $DailyMissionsTableTable,
+          DailyMissionsTableData>
+    ),
+    DailyMissionsTableData,
+    PrefetchHooks Function()> {
+  $$DailyMissionsTableTableTableManager(
+      _$AppDatabase db, $DailyMissionsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DailyMissionsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DailyMissionsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DailyMissionsTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> playerId = const Value.absent(),
+            Value<String> data = const Value.absent(),
+            Value<String> modalidade = const Value.absent(),
+            Value<String?> subCategoria = const Value.absent(),
+            Value<String> tituloKey = const Value.absent(),
+            Value<String> tituloResolvido = const Value.absent(),
+            Value<String> quoteResolvida = const Value.absent(),
+            Value<String> subTarefasJson = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<int> createdAt = const Value.absent(),
+            Value<int?> completedAt = const Value.absent(),
+            Value<bool> rewardClaimed = const Value.absent(),
+          }) =>
+              DailyMissionsTableCompanion(
+            id: id,
+            playerId: playerId,
+            data: data,
+            modalidade: modalidade,
+            subCategoria: subCategoria,
+            tituloKey: tituloKey,
+            tituloResolvido: tituloResolvido,
+            quoteResolvida: quoteResolvida,
+            subTarefasJson: subTarefasJson,
+            status: status,
+            createdAt: createdAt,
+            completedAt: completedAt,
+            rewardClaimed: rewardClaimed,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int playerId,
+            required String data,
+            required String modalidade,
+            Value<String?> subCategoria = const Value.absent(),
+            required String tituloKey,
+            required String tituloResolvido,
+            required String quoteResolvida,
+            required String subTarefasJson,
+            Value<String> status = const Value.absent(),
+            required int createdAt,
+            Value<int?> completedAt = const Value.absent(),
+            Value<bool> rewardClaimed = const Value.absent(),
+          }) =>
+              DailyMissionsTableCompanion.insert(
+            id: id,
+            playerId: playerId,
+            data: data,
+            modalidade: modalidade,
+            subCategoria: subCategoria,
+            tituloKey: tituloKey,
+            tituloResolvido: tituloResolvido,
+            quoteResolvida: quoteResolvida,
+            subTarefasJson: subTarefasJson,
+            status: status,
+            createdAt: createdAt,
+            completedAt: completedAt,
+            rewardClaimed: rewardClaimed,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$DailyMissionsTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $DailyMissionsTableTable,
+    DailyMissionsTableData,
+    $$DailyMissionsTableTableFilterComposer,
+    $$DailyMissionsTableTableOrderingComposer,
+    $$DailyMissionsTableTableAnnotationComposer,
+    $$DailyMissionsTableTableCreateCompanionBuilder,
+    $$DailyMissionsTableTableUpdateCompanionBuilder,
+    (
+      DailyMissionsTableData,
+      BaseReferences<_$AppDatabase, $DailyMissionsTableTable,
+          DailyMissionsTableData>
+    ),
+    DailyMissionsTableData,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -18987,4 +20078,6 @@ class $AppDatabaseManager {
   $$ActiveFactionQuestsTableTableTableManager get activeFactionQuestsTable =>
       $$ActiveFactionQuestsTableTableTableManager(
           _db, _db.activeFactionQuestsTable);
+  $$DailyMissionsTableTableTableManager get dailyMissionsTable =>
+      $$DailyMissionsTableTableTableManager(_db, _db.dailyMissionsTable);
 }

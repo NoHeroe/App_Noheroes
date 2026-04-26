@@ -11,6 +11,7 @@ import 'tables/inventory_table.dart';
 import 'tables/shop_items_table.dart';
 import 'daos/player_dao.dart';
 import 'daos/guild_dao.dart';
+import 'daos/daily_missions_dao.dart';
 import '../datasources/local/vitalism_catalog_seeder.dart';
 import '../datasources/local/items_catalog_seeder.dart';
 import '../datasources/local/recipes_catalog_seeder.dart';
@@ -35,6 +36,8 @@ import 'tables/player_individual_missions_table.dart';
 import 'tables/player_achievements_completed_table.dart';
 import 'tables/player_faction_reputation_table.dart';
 import 'tables/active_faction_quests_table.dart';
+// Sprint 3.2 Etapa 1.2 — missões diárias geradas dinamicamente.
+import 'tables/daily_missions_table.dart';
 
 part 'app_database.g.dart';
 
@@ -62,8 +65,10 @@ part 'app_database.g.dart';
     PlayerAchievementsCompletedTable,
     PlayerFactionReputationTable,
     ActiveFactionQuestsTable,
+    // Sprint 3.2 Etapa 1.2 — schema 27.
+    DailyMissionsTable,
   ],
-  daos: [PlayerDao, GuildDao],
+  daos: [PlayerDao, GuildDao, DailyMissionsDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
@@ -76,7 +81,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 26;
+  int get schemaVersion => 27;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -392,6 +397,28 @@ class AppDatabase extends _$AppDatabase {
         } catch (e) {
           // ignore: avoid_print
           print('[migration 25→26] addColumn failed: $e');
+        }
+      }
+      if (from < 27) {
+        // Sprint 3.2 Etapa 1.2 — missões diárias dinâmicas. Cria tabela
+        // daily_missions + 2 colunas auxiliares em players.
+        // Independentes de lastDailyReset/streakDays (que cobrem fluxos
+        // legacy de MissionProgress e login streak respectivamente).
+        try {
+          await m.createTable(dailyMissionsTable);
+          await m.createIndex(Index(
+            'idx_daily_missions_player_data',
+            'CREATE INDEX IF NOT EXISTS idx_daily_missions_player_data '
+                'ON daily_missions (player_id, data)',
+          ));
+          await m.addColumn(
+              playersTable, playersTable.lastDailyMissionRollover);
+          await m.addColumn(playersTable, playersTable.dailyMissionsStreak);
+          // ignore: avoid_print
+          print('[migration 26→27] created daily_missions + 2 player cols');
+        } catch (e) {
+          // ignore: avoid_print
+          print('[migration 26→27] failed: $e');
         }
       }
     },

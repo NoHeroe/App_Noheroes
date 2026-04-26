@@ -99,6 +99,7 @@ PlayersTableData _fakePlayer({int totalQuests = 0}) {
     streakDays: 0,
     caelumDay: 0,
     createdAt: DateTime.now(),
+    dailyMissionsStreak: 0,
   );
 }
 

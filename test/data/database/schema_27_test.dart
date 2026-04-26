@@ -1,16 +1,15 @@
-import 'package:drift/drift.dart' hide isNull;
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:noheroes_app/data/database/app_database.dart';
 
-/// Sprint 3.2 Etapa 1.0 — valida schema 26.
+/// Sprint 3.2 Etapa 1.2 — valida schema 27.
 ///
 /// Cobre:
-/// - Fresh install aplica schema 26 sem erro (players tem `weight_kg`
-///   + `height_cm` nullable).
-/// - Upgrade 25→26 adiciona as 2 colunas preservando rows existentes
-///   (pattern Bloco 7-preclean idêntico ao schema_25_test).
+/// - Fresh install aplica schema 27 (tabela daily_missions presente +
+///   2 colunas novas em players com defaults corretos).
+/// - Upgrade 26→27 cria tabela + 2 colunas preservando rows existentes.
 void main() {
   late AppDatabase db;
 
@@ -18,18 +17,14 @@ void main() {
     db = AppDatabase.forTesting(NativeDatabase.memory());
   });
 
-  tearDown(() async {
-    await db.close();
-  });
+  tearDown(() async => db.close());
 
-  // Pattern Bloco 7-preclean: simula schema 25 seedando tabela players
-  // schema-25 (sem as 2 colunas novas) + PRAGMA user_version=25. Drift
-  // detecta 25 < schemaVersion=26 e chama onUpgrade 25→26 (addColumn nullable).
-  group('Sprint 3.2 — upgrade 25→26 (2 columns nullable)', () {
+  group('Sprint 3.2 — upgrade 26→27', () {
     late AppDatabase legacyDb;
 
     setUp(() {
       legacyDb = AppDatabase.forTesting(NativeDatabase.memory(setup: (raw) {
+        // Schema 26 = schema 25 + weight_kg + height_cm.
         raw.execute('''
           CREATE TABLE players (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,7 +65,9 @@ void main() {
             caelum_day INTEGER NOT NULL DEFAULT 0,
             created_at INTEGER NOT NULL,
             last_daily_reset INTEGER,
-            last_weekly_reset INTEGER
+            last_weekly_reset INTEGER,
+            weight_kg INTEGER,
+            height_cm INTEGER
           );
         ''');
         raw.execute(
@@ -81,84 +78,101 @@ void main() {
             "vitalism_xp, last_login_at, created_at) "
             "VALUES ('legacy26@test', 'h', 'L', 5, 0, 100, 0, 0, 1, 1, 1, "
             "1, 1, 1, 0, 0, 0, 0, 0, 0);");
-        raw.execute('PRAGMA user_version = 25;');
+        raw.execute('PRAGMA user_version = 26;');
       }));
     });
 
     tearDown(() async => legacyDb.close());
 
-    test('onUpgrade 25→26 não lança', () async {
+    test('onUpgrade 26→27 não lança', () async {
       await expectLater(
         legacyDb.customSelect('SELECT 1 AS x').get(),
         completes,
       );
     });
 
-    test('player pré-migration preservado; colunas novas vêm null',
+    test('player pré-migration preservado; novas colunas vêm com defaults',
         () async {
       final rows = await legacyDb
           .customSelect('SELECT * FROM players WHERE email = ?',
               variables: [Variable.withString('legacy26@test')])
           .get();
       expect(rows.length, 1);
-      expect(rows.single.read<int?>('weight_kg'), isNull);
-      expect(rows.single.read<int?>('height_cm'), isNull);
+      expect(rows.single.read<int?>('last_daily_mission_rollover'), isNull);
+      expect(rows.single.read<int>('daily_missions_streak'), 0);
+    });
+
+    test('tabela daily_missions criada após upgrade', () async {
+      // Força open+migration.
+      await legacyDb.customSelect('SELECT 1').get();
+      final tables = await legacyDb
+          .customSelect("SELECT name FROM sqlite_master WHERE type='table' "
+              "AND name='daily_missions'")
+          .get();
+      expect(tables.length, 1);
+    });
+
+    test('índice daily_missions(player_id, data) existe', () async {
+      await legacyDb.customSelect('SELECT 1').get();
+      final idx = await legacyDb
+          .customSelect("SELECT name FROM sqlite_master WHERE type='index' "
+              "AND name='idx_daily_missions_player_data'")
+          .get();
+      expect(idx.length, 1);
     });
   });
 
-  group('Schema 26 fresh install', () {
-    test('schemaVersion >= 26 (Etapa 1.0 ou superior)', () {
-      // Sprint 3.2 Etapa 1.2 — schemaVersion bumpado pra 27. Teste passa
-      // a validar `>= 26` pra cobrir esta migração e qualquer futura.
-      expect(db.schemaVersion, greaterThanOrEqualTo(26));
+  group('Schema 27 fresh install', () {
+    test('schemaVersion >= 27', () {
+      expect(db.schemaVersion, greaterThanOrEqualTo(27));
     });
 
-    test('players tem weight_kg + height_cm nullable', () async {
+    test('insert + read em daily_missions', () async {
+      // Cria player + insere missão.
+      final pid = await db.customInsert(
+        "INSERT INTO players (email, password_hash, shadow_name, level, "
+        "xp, xp_to_next, gold, gems, strength, dexterity, intelligence, "
+        "constitution, spirit, charisma, attribute_points, "
+        "shadow_corruption, vitalism_level, vitalism_xp) "
+        "VALUES (?, 'h', 'S', 1, 0, 100, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0)",
+        variables: [Variable.withString('s27@t')],
+      );
+      final missionId = await db.into(db.dailyMissionsTable).insert(
+            DailyMissionsTableCompanion(
+              playerId: Value(pid),
+              data: const Value('2026-04-25'),
+              modalidade: const Value('fisico'),
+              subCategoria: const Value('treino'),
+              tituloKey: const Value('Forja do Caçador'),
+              tituloResolvido: const Value('Forja do Caçador'),
+              quoteResolvida: const Value('q'),
+              subTarefasJson: const Value('[]'),
+              createdAt: Value(DateTime.now().millisecondsSinceEpoch),
+            ),
+          );
+      final rows = await (db.select(db.dailyMissionsTable)
+            ..where((t) => t.id.equals(missionId)))
+          .get();
+      expect(rows.length, 1);
+      expect(rows.first.modalidade, 'fisico');
+      expect(rows.first.status, 'pending');
+      expect(rows.first.rewardClaimed, false);
+    });
+
+    test('players.daily_missions_streak default = 0', () async {
       final id = await db.customInsert(
         "INSERT INTO players (email, password_hash, shadow_name, level, "
         "xp, xp_to_next, gold, gems, strength, dexterity, intelligence, "
         "constitution, spirit, charisma, attribute_points, "
         "shadow_corruption, vitalism_level, vitalism_xp) "
-        "VALUES (?, ?, 'Sombra', 1, 0, 100, 0, 0, 1, 1, 1, 1, 1, 1, 0, "
-        "0, 0, 0)",
-        variables: [
-          Variable.withString('s26@t'),
-          Variable.withString('h'),
-        ],
+        "VALUES (?, 'h', 'S', 1, 0, 100, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0)",
+        variables: [Variable.withString('streak@t')],
       );
-      final row = await (db.select(db.playersTable)
+      final p = await (db.select(db.playersTable)
             ..where((t) => t.id.equals(id)))
           .getSingle();
-      expect(row.weightKg, isNull);
-      expect(row.heightCm, isNull);
-    });
-
-    test('UPDATE weight_kg + height_cm persiste', () async {
-      final id = await db.customInsert(
-        "INSERT INTO players (email, password_hash, shadow_name, level, "
-        "xp, xp_to_next, gold, gems, strength, dexterity, intelligence, "
-        "constitution, spirit, charisma, attribute_points, "
-        "shadow_corruption, vitalism_level, vitalism_xp) "
-        "VALUES (?, ?, 'S', 1, 0, 100, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0)",
-        variables: [
-          Variable.withString('u26@t'),
-          Variable.withString('h'),
-        ],
-      );
-      await db.customUpdate(
-        'UPDATE players SET weight_kg = ?, height_cm = ? WHERE id = ?',
-        variables: [
-          Variable.withInt(72),
-          Variable.withInt(178),
-          Variable.withInt(id),
-        ],
-        updates: {db.playersTable},
-      );
-      final row = await (db.select(db.playersTable)
-            ..where((t) => t.id.equals(id)))
-          .getSingle();
-      expect(row.weightKg, 72);
-      expect(row.heightCm, 178);
+      expect(p.dailyMissionsStreak, 0);
+      expect(p.lastDailyMissionRollover, isNull);
     });
   });
 }

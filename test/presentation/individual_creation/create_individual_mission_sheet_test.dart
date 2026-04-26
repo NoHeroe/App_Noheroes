@@ -70,6 +70,7 @@ PlayersTableData _player() {
     streakDays: 0,
     caelumDay: 0,
     createdAt: DateTime.now(),
+    dailyMissionsStreak: 0,
   );
 }
 

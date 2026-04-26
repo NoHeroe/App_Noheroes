@@ -50,6 +50,7 @@ PlayersTableData _player({int? weightKg, int? heightCm}) {
     createdAt: DateTime.now(),
     weightKg: weightKg,
     heightCm: heightCm,
+    dailyMissionsStreak: 0,
   );
 }
 

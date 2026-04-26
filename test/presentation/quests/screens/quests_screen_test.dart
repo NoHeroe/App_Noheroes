@@ -120,6 +120,7 @@ PlayersTableData _fakePlayer({int streak = 0, int level = 5}) {
     streakDays: streak,
     caelumDay: 0,
     createdAt: DateTime.now(),
+    dailyMissionsStreak: 0,
   );
 }
 
