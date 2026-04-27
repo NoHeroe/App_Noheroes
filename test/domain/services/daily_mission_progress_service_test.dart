@@ -162,6 +162,16 @@ void main() {
       expect(m.subTarefas.firstWhere((s) => s.subTaskKey == 'a').completed,
           isTrue);
     });
+
+    test('cap em escalaAlvo × 3 (excedência limitada a 300%)', () async {
+      // sub 'a' tem escalaAlvo=10 → cap em 30. Delta gigante satura.
+      await svc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'a', delta: 9999);
+      final m = await read(missionId);
+      expect(
+          m.subTarefas.firstWhere((s) => s.subTaskKey == 'a').progressoAtual,
+          30);
+    });
   });
 
   // ─── confirmCompletion: status decision + reward ──────────────────
@@ -188,21 +198,40 @@ void main() {
       expect(p.gold, 20);
     });
 
-    test('bônus excedência +20% quando todas ultrapassam', () async {
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'a', delta: 11);
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'b', delta: 21);
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'c', delta: 6);
+    test('3×200% (todas ultrapassam 100%) → factor 2.0 → mult 1.45', () async {
+      // Targets uniformes 10/10/10 pra factor exato 2.0.
+      await dao.updateMission((await read(missionId)).copyWith(
+        subTarefas: [
+          _mkSub('a', 10, progresso: 20),
+          _mkSub('b', 10, progresso: 20),
+          _mkSub('c', 10, progresso: 20),
+        ],
+      ));
       await svc.confirmCompletion(missionId: missionId);
       final p = await readPlayer();
-      // 28 × 1.2 = 33.6 → 34; 20 × 1.2 = 24
-      expect(p.xp, 34);
-      expect(p.gold, 24);
+      // factor = 2.0; mult = 1 + 0.45×1.0 = 1.45
+      // xp = floor(28×1.45) = floor(40.6) = 40; gold = floor(20×1.45) = 29
+      expect(p.xp, 40);
+      expect(p.gold, 29);
     });
 
-    test('streak ≥10 multiplica 1.5×', () async {
+    test('3×300% (cap por sub) → factor 3.0 → mult 1.90', () async {
+      await dao.updateMission((await read(missionId)).copyWith(
+        subTarefas: [
+          _mkSub('a', 10, progresso: 30),
+          _mkSub('b', 10, progresso: 30),
+          _mkSub('c', 10, progresso: 30),
+        ],
+      ));
+      await svc.confirmCompletion(missionId: missionId);
+      final p = await readPlayer();
+      // factor = 3.0; mult = 1 + 0.45×2.0 = 1.90
+      // xp = floor(28×1.90) = floor(53.2) = 53; gold = floor(20×1.90) = 38
+      expect(p.xp, 53);
+      expect(p.gold, 38);
+    });
+
+    test('streak ≥10 multiplica 1.5× em completed 3×100%', () async {
       await db.customUpdate(
         'UPDATE players SET daily_missions_streak = 10 WHERE id = ?',
         variables: [Variable.withInt(pid)],
@@ -216,9 +245,32 @@ void main() {
           missionId: missionId, subTaskKey: 'c', delta: 5);
       await svc.confirmCompletion(missionId: missionId);
       final p = await readPlayer();
-      // 28 × 1.5 = 42; 20 × 1.5 = 30
+      // factor = 1.0; mult = 1.0; streak = 1.5
+      // xp = floor(28×1.0×1.5) = 42; gold = floor(20×1.0×1.5) = 30
       expect(p.xp, 42);
       expect(p.gold, 30);
+    });
+
+    test('streak ≥10 + 3×300% → 79 XP / 57 gold', () async {
+      await db.customUpdate(
+        'UPDATE players SET daily_missions_streak = 12 WHERE id = ?',
+        variables: [Variable.withInt(pid)],
+        updates: {db.playersTable},
+      );
+      await dao.updateMission((await read(missionId)).copyWith(
+        subTarefas: [
+          _mkSub('a', 10, progresso: 30),
+          _mkSub('b', 10, progresso: 30),
+          _mkSub('c', 10, progresso: 30),
+        ],
+      ));
+      await svc.confirmCompletion(missionId: missionId);
+      final p = await readPlayer();
+      // factor = 3.0; mult = 1.90; streak = 1.5
+      // xp = floor(28×1.90×1.5) = floor(79.8) = 79
+      // gold = floor(20×1.90×1.5) = floor(57.0) = 57
+      expect(p.xp, 79);
+      expect(p.gold, 57);
     });
 
     test('rank S = 120 XP / 80 gold (level up rola)', () async {
@@ -242,89 +294,84 @@ void main() {
     });
   });
 
-  group('confirmCompletion: partial = factor proporcional (sem ×0.5)', () {
-    test('3 a 50% → partial, factor 0.5 → reward × 0.5', () async {
-      // Targets a=10, b=20, c=5 — preencher 50%: a=5, b=10, c=2 (com round)
-      // Com c=5 alvo, 50% = 2.5 → uso 3 pra ficar > 25%. Aliás 3/5=0.6.
-      // Vou reusar mock alvo padrão e mexer em valores.
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'a', delta: 5); // 5/10 = 0.5
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'b', delta: 10); // 10/20 = 0.5
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'c', delta: 3); // 3/5 = 0.6
+  group('confirmCompletion: partial = fórmula linear (sem ×0.5, com floor)',
+      () {
+    test('3×50% → factor 0.5 → mult 0.5 → 14 XP / 10 gold', () async {
+      await dao.updateMission((await read(missionId)).copyWith(
+        subTarefas: [
+          _mkSub('a', 10, progresso: 5),
+          _mkSub('b', 10, progresso: 5),
+          _mkSub('c', 10, progresso: 5),
+        ],
+      ));
       await svc.confirmCompletion(missionId: missionId);
       final m = await read(missionId);
       expect(m.status, DailyMissionStatus.partial);
-      // factor = (0.5 + 0.5 + 0.6) / 3 = 0.5333...
-      // 28 × 0.5333 = 14.93 → 15; 20 × 0.5333 = 10.67 → 11
       final p = await readPlayer();
-      expect(p.xp, 15);
-      expect(p.gold, 11);
+      // factor = 0.5; mult = 0.5
+      // xp = floor(28×0.5) = 14; gold = floor(20×0.5) = 10
+      expect(p.xp, 14);
+      expect(p.gold, 10);
     });
 
-    test('1 a 100% + 2 a 0% → partial, factor 0.33', () async {
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'a', delta: 10);
-      // b e c ficam em 0
+    test('1×100% + 2×0% → factor 0.333 → 9 XP / 6 gold', () async {
+      await dao.updateMission((await read(missionId)).copyWith(
+        subTarefas: [
+          _mkSub('a', 10, progresso: 10),
+          _mkSub('b', 10, progresso: 0),
+          _mkSub('c', 10, progresso: 0),
+        ],
+      ));
       await svc.confirmCompletion(missionId: missionId);
       final m = await read(missionId);
       expect(m.status, DailyMissionStatus.partial);
-      // factor = (1.0 + 0 + 0) / 3 = 0.333...
-      // 28 × 0.333 = 9.33 → 9; 20 × 0.333 = 6.67 → 7
       final p = await readPlayer();
+      // factor = (1+0+0)/3 = 0.333...; mult = 0.333
+      // xp = floor(28×0.333) = floor(9.33) = 9
+      // gold = floor(20×0.333) = floor(6.66) = 6
       expect(p.xp, 9);
-      expect(p.gold, 7);
+      expect(p.gold, 6);
     });
 
-    test('2 a 100% + 1 a 50% → partial, factor 0.83', () async {
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'a', delta: 10);
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'b', delta: 20);
-      await svc.incrementSubTask(
-          missionId: missionId, subTaskKey: 'c', delta: 3); // 3/5 = 0.6
-      // Hmm: 0.6 não é 0.5. Vou usar c=5/2, mas escalaAlvo é 5, então
-      // 50% = 2.5 não é inteiro. Usa b com alvo 20, progresso 10 (=0.5)
-      // e adapta:
-      // Re-cria missão com alvos 10/10/10 pra ficar exato.
+    test('1×100% + 2×50% → factor 0.666 → 18 XP / 13 gold', () async {
       await dao.updateMission((await read(missionId)).copyWith(
         subTarefas: [
-          _mkSub('a', 10, progresso: 10), // 1.0
-          _mkSub('b', 10, progresso: 10), // 1.0
-          _mkSub('c', 10, progresso: 5),  // 0.5
+          _mkSub('a', 10, progresso: 10),
+          _mkSub('b', 10, progresso: 5),
+          _mkSub('c', 10, progresso: 5),
         ],
       ));
       await svc.confirmCompletion(missionId: missionId);
       final m = await read(missionId);
       expect(m.status, DailyMissionStatus.partial);
-      // factor = (1.0 + 1.0 + 0.5) / 3 = 0.833...
-      // 28 × 0.833 = 23.33 → 23; 20 × 0.833 = 16.67 → 17
       final p = await readPlayer();
+      // factor = (1+0.5+0.5)/3 = 0.666...; mult = 0.666
+      // xp = floor(28×0.666) = floor(18.66) = 18
+      // gold = floor(20×0.666) = floor(13.33) = 13
+      expect(p.xp, 18);
+      expect(p.gold, 13);
+    });
+
+    test('2×100% + 1×50% → factor 0.833 → 23 XP / 16 gold', () async {
+      await dao.updateMission((await read(missionId)).copyWith(
+        subTarefas: [
+          _mkSub('a', 10, progresso: 10),
+          _mkSub('b', 10, progresso: 10),
+          _mkSub('c', 10, progresso: 5),
+        ],
+      ));
+      await svc.confirmCompletion(missionId: missionId);
+      final m = await read(missionId);
+      expect(m.status, DailyMissionStatus.partial);
+      final p = await readPlayer();
+      // factor = (1+1+0.5)/3 = 0.833...; mult = 0.833
+      // xp = floor(28×0.833) = floor(23.33) = 23
+      // gold = floor(20×0.833) = floor(16.66) = 16
       expect(p.xp, 23);
-      expect(p.gold, 17);
+      expect(p.gold, 16);
     });
 
-    test('1 a 100% + 2 a 30% → partial, factor 0.53', () async {
-      // Re-cria com alvos uniformes pra simplificar.
-      await dao.updateMission((await read(missionId)).copyWith(
-        subTarefas: [
-          _mkSub('a', 10, progresso: 10), // 1.0
-          _mkSub('b', 10, progresso: 3),  // 0.3
-          _mkSub('c', 10, progresso: 3),  // 0.3
-        ],
-      ));
-      await svc.confirmCompletion(missionId: missionId);
-      final m = await read(missionId);
-      expect(m.status, DailyMissionStatus.partial);
-      // factor = (1.0 + 0.3 + 0.3) / 3 = 0.533...
-      // 28 × 0.533 = 14.93 → 15; 20 × 0.533 = 10.67 → 11
-      final p = await readPlayer();
-      expect(p.xp, 15);
-      expect(p.gold, 11);
-    });
-
-    test('partial NÃO aplica streak nem excedência', () async {
+    test('partial NÃO aplica streak (streak só em completed)', () async {
       await db.customUpdate(
         'UPDATE players SET daily_missions_streak = 50 WHERE id = ?',
         variables: [Variable.withInt(pid)],
@@ -332,32 +379,58 @@ void main() {
       );
       await dao.updateMission((await read(missionId)).copyWith(
         subTarefas: [
-          _mkSub('a', 10, progresso: 5), // 0.5
-          _mkSub('b', 10, progresso: 5), // 0.5
-          _mkSub('c', 10, progresso: 5), // 0.5
+          _mkSub('a', 10, progresso: 5),
+          _mkSub('b', 10, progresso: 5),
+          _mkSub('c', 10, progresso: 5),
         ],
       ));
       await svc.confirmCompletion(missionId: missionId);
       final p = await readPlayer();
-      // factor = 0.5 × 28 = 14 (sem streak), gold 10.
+      // status=partial → streak não aplica → 28×0.5=14 / 20×0.5=10
       expect(p.xp, 14);
       expect(p.gold, 10);
     });
 
-    test('cap 100% por sub-tarefa: excedência não conta no partial',
+    test('partial COM excedência: factor pode passar de 1.0 (linear)',
         () async {
-      // Sub a com excedência forte, b e c bem abaixo: ainda partial.
+      // Sub a a 300%, b e c a 30% — ainda partial (b/c < 100%).
+      // missionFactor = (3.0 + 0.3 + 0.3) / 3 = 1.2
+      // mult = 1 + 0.45 × 0.2 = 1.09
+      // xp = floor(28×1.09) = floor(30.52) = 30
+      // gold = floor(20×1.09) = floor(21.8) = 21
       await dao.updateMission((await read(missionId)).copyWith(
         subTarefas: [
-          _mkSub('a', 10, progresso: 30), // cap 1.0
-          _mkSub('b', 10, progresso: 3),  // 0.3
-          _mkSub('c', 10, progresso: 3),  // 0.3
+          _mkSub('a', 10, progresso: 30),
+          _mkSub('b', 10, progresso: 3),
+          _mkSub('c', 10, progresso: 3),
         ],
       ));
       await svc.confirmCompletion(missionId: missionId);
+      final m = await read(missionId);
+      expect(m.status, DailyMissionStatus.partial);
       final p = await readPlayer();
-      // factor = (1.0 + 0.3 + 0.3) / 3 = 0.533 — excedência cap em 1.0.
-      expect(p.xp, 15);
+      expect(p.xp, 30);
+      expect(p.gold, 21);
+    });
+
+    test('partial 1×300% + 2×0% → factor 1.0 → mult 1.0 → 28 XP / 20 gold',
+        () async {
+      // Caso counterintuitivo intencional: factor médio bate em 1.0 mesmo
+      // com 2 subs zeradas, então paga base completo. Status segue partial
+      // porque _resolveStatus exige TODAS as 3 subs ≥ 100%.
+      await dao.updateMission((await read(missionId)).copyWith(
+        subTarefas: [
+          _mkSub('a', 10, progresso: 30),
+          _mkSub('b', 10, progresso: 0),
+          _mkSub('c', 10, progresso: 0),
+        ],
+      ));
+      await svc.confirmCompletion(missionId: missionId);
+      final m = await read(missionId);
+      expect(m.status, DailyMissionStatus.partial);
+      final p = await readPlayer();
+      expect(p.xp, 28);
+      expect(p.gold, 20);
     });
   });
 
@@ -492,6 +565,46 @@ void main() {
       ]);
       expect(DailyMissionProgressService.previewStatus(m),
           DailyMissionStatus.partial);
+    });
+  });
+
+  group('missionFactor (cap 3.0 por sub, usado em computeReward)', () {
+    test('3×100% → 1.0', () {
+      final m = _mkMission(playerId: 1, subs: [
+        _mkSub('a', 10, progresso: 10),
+        _mkSub('b', 10, progresso: 10),
+        _mkSub('c', 10, progresso: 10),
+      ]);
+      expect(DailyMissionProgressService.missionFactor(m), 1.0);
+    });
+
+    test('3×300% → 3.0 (cap)', () {
+      final m = _mkMission(playerId: 1, subs: [
+        _mkSub('a', 10, progresso: 30),
+        _mkSub('b', 10, progresso: 30),
+        _mkSub('c', 10, progresso: 30),
+      ]);
+      expect(DailyMissionProgressService.missionFactor(m), 3.0);
+    });
+
+    test('1×500% (cap a 3.0) + 2×0% → 1.0', () {
+      // Sem cap por sub, daria 5.0/3 = 1.666. Com cap 3.0 fica 3.0/3 = 1.0.
+      final m = _mkMission(playerId: 1, subs: [
+        _mkSub('a', 10, progresso: 50),
+        _mkSub('b', 10, progresso: 0),
+        _mkSub('c', 10, progresso: 0),
+      ]);
+      expect(DailyMissionProgressService.missionFactor(m), 1.0);
+    });
+
+    test('escalaAlvo=0 entra como 0 (defensivo)', () {
+      final m = _mkMission(playerId: 1, subs: [
+        _mkSub('a', 0, progresso: 5),
+        _mkSub('b', 10, progresso: 10),
+        _mkSub('c', 10, progresso: 10),
+      ]);
+      // (0 + 1 + 1) / 3 = 0.666
+      expect(DailyMissionProgressService.missionFactor(m), closeTo(0.666, 0.01));
     });
   });
 

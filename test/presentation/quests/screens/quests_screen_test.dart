@@ -94,8 +94,9 @@ class _FakeDailyGenerator implements DailyMissionGeneratorService {
   Future<List<DailyMission>> getTodayMissions(int playerId) async => missions;
 
   @override
-  Future<List<DailyMission>> generateForToday(int playerId, {DateTime? date})
-      async => missions;
+  Future<List<DailyMission>> generateForToday(int playerId,
+          {DateTime? date, bool force = false}) async =>
+      missions;
 
   @override
   Future<DailyMission?> getMissionById(int id) async => null;

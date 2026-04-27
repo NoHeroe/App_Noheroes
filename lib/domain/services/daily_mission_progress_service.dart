@@ -10,20 +10,23 @@ import '../models/daily_mission.dart';
 import '../models/daily_mission_status.dart';
 import '../models/daily_sub_task_instance.dart';
 
-/// Sprint 3.2 Etapa 1.2 + Hotfix 1.3.A — acumulador e fechamento manual.
+/// Sprint 3.2 Etapa 1.3.A Hotfix-2 — acumulador, cap individual, fechamento
+/// manual e fórmula linear de reward.
 ///
-/// **Mudou no hotfix:**
-/// - `incrementSubTask` NÃO fecha mais a missão automaticamente ao 3/3.
-///   Sub-tarefas marcam `completed=true` individuais; o status da missão
-///   só muda em [confirmCompletion] (clique manual no ✓) ou em rollover.
-/// - Novo método [confirmCompletion]: calcula status final + reward com
-///   `partial` proporcional ao progresso real da missão.
+/// **Reward (regra final, linear):**
+/// ```
+/// factor_sub_i = min(progresso_i / alvo_i, 3.0)         // cap 300% por sub
+/// factor       = (factor_sub_1 + factor_sub_2 + factor_sub_3) / 3
+/// mult         = factor                  if factor <= 1.0
+///              = 1 + 0.45 × (factor - 1) if factor >  1.0
+/// streak       = 1.5 se status==completed AND dailyMissionsStreak >= 10
+/// xp           = floor(base_xp × mult × streak)
+/// gold         = floor(base_gold × mult × streak)
+/// ```
+/// `failed` e `pending` retornam zero. Streak NÃO aplica em partial.
 ///
-/// **Reward partial (regra final):**
-/// `factor = soma(min(progresso_i, alvo_i) / alvo_i) / 3`
-///
-/// Excedência (+20%) e streak (×1.5) só se aplicam em `completed`.
-/// Partial é só o factor proporcional (sem ×0.5, sem bônus).
+/// **Cap individual (incrementSubTask):** progresso de uma sub-tarefa é
+/// limitado a `escalaAlvo × 3` (excedência permitida até 300%).
 class DailyMissionProgressService {
   final AppDatabase _db;
   final DailyMissionsDao _missionsDao;
@@ -51,8 +54,14 @@ class DailyMissionProgressService {
 
   static const int streakBonusThreshold = 10;
   static const double streakBonusFactor = 1.5;
-  static const double overshootBonusFactor = 1.2;
-  static const double rewardCapFactor = 3.0;
+
+  /// Cap individual de excedência por sub-tarefa: 3× o alvo. Aplica no
+  /// clamp de [incrementSubTask] e no [missionFactor] (cap por sub).
+  static const double subTaskMaxFactor = 3.0;
+
+  /// Inclinação da fórmula linear acima de 100%: cada 100% extra acima
+  /// do alvo médio adiciona 45% ao reward.
+  static const double overshootSlope = 0.45;
 
   /// Limite que separa `partial` de `failed`. Sub-tarefa abaixo de 25%
   /// do alvo conta como "abandonada"; se TODAS as 3 estão abaixo disso,
@@ -95,7 +104,11 @@ class DailyMissionProgressService {
       }
 
       final current = subs[idx];
-      final progresso = (current.progressoAtual + delta).clamp(0, 1 << 30);
+      final maxProgresso = current.escalaAlvo <= 0
+          ? 0
+          : (current.escalaAlvo * subTaskMaxFactor).floor();
+      final progresso =
+          (current.progressoAtual + delta).clamp(0, maxProgresso);
       final updatedSub = current.copyWith(
         progressoAtual: progresso,
         completed: progresso >= current.escalaAlvo,
@@ -231,12 +244,14 @@ class DailyMissionProgressService {
 
   // ─── reward calc ────────────────────────────────────────────────────
 
-  /// Cálculo público de reward por status.
+  /// Cálculo público de reward por status (fórmula linear hotfix-2).
   ///
-  /// - `completed`: base × (1.2 se [DailyMission.allExceeded]) × (1.5 se
-  ///   streak ≥ 10), cap 3.0.
-  /// - `partial`: base × `partialFactor(mission)` (sem bônus, sem cap).
-  /// - `failed` ou `pending`: zero.
+  /// - `failed` / `pending`: zero.
+  /// - `completed` / `partial`: usa [missionFactor] (cap 3.0 por sub).
+  ///   - `mult = factor` se `factor <= 1.0`.
+  ///   - `mult = 1 + 0.45 × (factor - 1)` se `factor > 1.0`.
+  ///   - Streak bonus (×1.5) só em `completed` com streak ≥ 10.
+  /// - Truncamento final via `floor()`.
   static DailyResolvedReward computeReward({
     required String rank,
     required DailyMission mission,
@@ -250,32 +265,42 @@ class DailyMissionProgressService {
       return const DailyResolvedReward(xp: 0, gold: 0);
     }
 
-    if (status == DailyMissionStatus.partial) {
-      final factor = partialFactor(mission);
-      return DailyResolvedReward(
-        xp: (base.xp * factor).round(),
-        gold: (base.gold * factor).round(),
-      );
-    }
-
-    // completed
-    double factor = 1.0;
-    if (mission.allExceeded) factor *= overshootBonusFactor;
-    if (dailyMissionsStreak >= streakBonusThreshold) {
-      factor *= streakBonusFactor;
-    }
-    if (factor > rewardCapFactor) factor = rewardCapFactor;
+    final factor = missionFactor(mission);
+    final mult = factor <= 1.0
+        ? factor
+        : 1.0 + overshootSlope * (factor - 1.0);
+    final streakBonus = (status == DailyMissionStatus.completed &&
+            dailyMissionsStreak >= streakBonusThreshold)
+        ? streakBonusFactor
+        : 1.0;
 
     return DailyResolvedReward(
-      xp: (base.xp * factor).round(),
-      gold: (base.gold * factor).round(),
+      xp: (base.xp * mult * streakBonus).floor(),
+      gold: (base.gold * mult * streakBonus).floor(),
     );
+  }
+
+  /// `factor = soma(min(progresso_i / alvo_i, 3.0)) / 3`
+  ///
+  /// Cap em 300% por sub-tarefa — excedência conta linearmente. Usado em
+  /// [computeReward]. Para preview de progresso na UI use [partialFactor]
+  /// (cap 100% por sub).
+  static double missionFactor(DailyMission mission) {
+    final subs = mission.subTarefas;
+    if (subs.isEmpty) return 0.0;
+    double sum = 0.0;
+    for (final s in subs) {
+      if (s.escalaAlvo <= 0) continue;
+      final ratio = s.progressoAtual / s.escalaAlvo;
+      sum += ratio.clamp(0.0, subTaskMaxFactor);
+    }
+    return sum / subs.length;
   }
 
   /// `factor = soma(min(progresso_i, alvo_i) / alvo_i) / 3`
   ///
-  /// Cap em 100% por sub-tarefa (excedência só vale em `completed`).
-  /// Sub-tarefas com `escalaAlvo == 0` (defensivo) entram como 0.
+  /// Cap em 100% por sub-tarefa. Usado pela UI pra mostrar % concluído da
+  /// missão (sem inflar com excedência). Reward usa [missionFactor].
   static double partialFactor(DailyMission mission) {
     final subs = mission.subTarefas;
     if (subs.isEmpty) return 0.0;

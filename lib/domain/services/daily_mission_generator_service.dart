@@ -59,14 +59,21 @@ class DailyMissionGeneratorService {
 
   /// Idempotente — se já existem missões do dia [date] (default hoje)
   /// pro [playerId], retorna elas sem gerar de novo.
+  ///
+  /// Se [force] for `true` e já existirem missões do dia, elas são
+  /// apagadas antes de gerar 3 novas. Usado pelo dev tool "Resetar
+  /// missões diárias de hoje" — não usar em prod path.
   Future<List<DailyMission>> generateForToday(int playerId,
-      {DateTime? date}) async {
+      {DateTime? date, bool force = false}) async {
     final now = date ?? DateTime.now();
     final dateStr = _dateStr(now);
 
     final existing =
         await _missionsDao.findByPlayerAndDate(playerId, dateStr);
-    if (existing.isNotEmpty) return existing;
+    if (existing.isNotEmpty) {
+      if (!force) return existing;
+      await _missionsDao.deleteByPlayerAndDate(playerId, dateStr);
+    }
 
     await _pools.loadAll();
 

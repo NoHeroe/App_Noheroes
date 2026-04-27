@@ -271,6 +271,12 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
             const SizedBox(height: 10),
             _actionBtn('Forçar fail primeira missão ativa',
                 AppColors.hp, _forceFailFirst),
+            const SizedBox(height: 10),
+            _actionBtn('Pular pra amanhã (simular passagem de dia)',
+                AppColors.shadowObsessive, _skipToTomorrow),
+            const SizedBox(height: 10),
+            _actionBtn('Resetar missões diárias de hoje',
+                AppColors.hp, _resetTodayDailyMissions),
             const SizedBox(height: 24),
 
             _section('CALIBRAÇÃO (Bloco 9)'),
@@ -760,6 +766,132 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
     if (!mounted) return;
     AppSnack.success(context, 'Falhou: ${first.missionKey}');
   }
+
+  // Hotfix-2 Etapa 1.3.A — dev tools de simulação de daily missions.
+
+  Future<void> _skipToTomorrow() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Pular pra amanhã?',
+            style: GoogleFonts.cinzelDecorative(
+                color: AppColors.shadowObsessive, fontSize: 14)),
+        content: Text(
+          'Vai simular passagem de dia. Missões pendentes de hoje viram '
+          'parcial/falha conforme progresso. Use uma vez por dia — se '
+          'já tem missões em ontem, use "Resetar" em vez disso.',
+          style: GoogleFonts.roboto(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(
+                foregroundColor: AppColors.shadowObsessive),
+            child: const Text('Pular dia'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+
+    final today = DateTime.now();
+    final yesterday = today.subtract(const Duration(days: 1));
+    final todayStr = _isoDate(today);
+    final yesterdayStr = _isoDate(yesterday);
+
+    final dao = ref.read(dailyMissionsDaoProvider);
+
+    // R3 guard: aborta se já existem missões em ontem (rollover já rodou
+    // hoje e duplicar incrementaria streak 2x).
+    final yesterdayExisting =
+        await dao.findByPlayerAndDate(player.id, yesterdayStr);
+    if (yesterdayExisting.isNotEmpty) {
+      if (!mounted) return;
+      AppSnack.error(context,
+          'Já tem missões em ontem ($yesterdayStr). Use "Resetar" em vez disso.');
+      return;
+    }
+
+    final todays = await dao.findByPlayerAndDate(player.id, todayStr);
+    for (final m in todays) {
+      await dao.updateMissionDate(m.id, yesterdayStr);
+    }
+
+    final db = ref.read(appDatabaseProvider);
+    final yesterday2359 = DateTime(
+        yesterday.year, yesterday.month, yesterday.day, 23, 59);
+    await db.customUpdate(
+      'UPDATE players SET last_daily_mission_rollover = ? WHERE id = ?',
+      variables: [
+        Variable.withInt(yesterday2359.millisecondsSinceEpoch),
+        Variable.withInt(player.id),
+      ],
+      updates: {db.playersTable},
+    );
+
+    await ref.read(dailyMissionRolloverServiceProvider)
+        .processRollover(player.id);
+    final generated = await ref.read(dailyMissionGeneratorServiceProvider)
+        .generateForToday(player.id);
+
+    final updated = await PlayerDao(db).findById(player.id);
+    if (!mounted) return;
+    ref.read(currentPlayerProvider.notifier).state = updated;
+    AppSnack.success(context,
+        'Pulou pra amanhã. ${todays.length} pendentes fechadas, '
+        '${generated.length} novas geradas.');
+  }
+
+  Future<void> _resetTodayDailyMissions() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Resetar missões diárias de hoje?',
+            style: GoogleFonts.cinzelDecorative(
+                color: AppColors.hp, fontSize: 14)),
+        content: Text(
+          'Vai apagar as 3 missões de hoje sem reward + gerar 3 novas. '
+          'Confirma?',
+          style: GoogleFonts.roboto(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.hp),
+            child: const Text('Resetar'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+
+    final generated = await ref.read(dailyMissionGeneratorServiceProvider)
+        .generateForToday(player.id, force: true);
+    if (!mounted) return;
+    AppSnack.success(context,
+        'Resetou. ${generated.length} novas missões geradas.');
+  }
+
+  String _isoDate(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-'
+      '${d.month.toString().padLeft(2, '0')}-'
+      '${d.day.toString().padLeft(2, '0')}';
 
   Future<void> _resetPreferences() async {
     final player = ref.read(currentPlayerProvider);

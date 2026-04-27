@@ -82,6 +82,22 @@ class DailyMissionsDao extends DatabaseAccessor<AppDatabase>
       int playerId, String dateStr) =>
       findByPlayerAndDate(playerId, dateStr);
 
+  /// Apaga missões de um dia inteiro pra um player. Usado por dev tools
+  /// (Resetar missões de hoje) e internamente por `generateForToday(force: true)`.
+  Future<void> deleteByPlayerAndDate(int playerId, String dateStr) async {
+    await (delete(dailyMissionsTable)
+          ..where((t) =>
+              t.playerId.equals(playerId) & t.data.equals(dateStr)))
+        .go();
+  }
+
+  /// Move uma missão pra outra data. Usado pelo dev tool "Pular pra amanhã"
+  /// pra deslocar pendentes de hoje pra ontem antes do rollover.
+  Future<void> updateMissionDate(int missionId, String dateStr) async {
+    await (update(dailyMissionsTable)..where((t) => t.id.equals(missionId)))
+        .write(DailyMissionsTableCompanion(data: Value(dateStr)));
+  }
+
   // ─── conversões ────────────────────────────────────────────────────
 
   DailyMission _fromRow(DailyMissionsTableData row) => DailyMission(

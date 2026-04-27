@@ -51,19 +51,32 @@ class DailySubTaskRow extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Nome + valor.
+          // Nome (verde + ✓ quando completed) + X/Y.
           Row(
             children: [
-              Expanded(
+              Flexible(
                 child: Text(
                   sub.nomeVisivel,
                   style: GoogleFonts.roboto(
                     fontSize: 13,
-                    color: AppColors.textPrimary,
+                    color: sub.completed
+                        ? DailyPilarVisuals.completedColor
+                        : AppColors.textPrimary,
+                    fontWeight:
+                        sub.completed ? FontWeight.w600 : FontWeight.w400,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              if (sub.completed) ...[
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.check_circle_outline,
+                  size: 16,
+                  color: DailyPilarVisuals.completedColor,
+                ),
+              ],
+              const Spacer(),
               const SizedBox(width: 8),
               Text(
                 isBool
@@ -80,16 +93,15 @@ class DailySubTaskRow extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          // Barra estática (1.3.B anima).
+          // Barra estática (1.3.B anima). Sempre na cor do pilar — visual
+          // de completude vai no nome+ícone, não na barra.
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
               backgroundColor: AppColors.surfaceAlt,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                sub.completed ? DailyPilarVisuals.completedColor : color,
-              ),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
           const SizedBox(height: 10),
@@ -112,24 +124,29 @@ class _NumericButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final disabled = sub.completed;
+    // Cap individual: progresso máximo = escalaAlvo × 3 (excedência 300%).
+    // (+) bloqueia no cap; (-) bloqueia em 0. Sub completa NÃO desabilita
+    // — botões seguem ativos pra permitir excedência ou correção.
+    final atCap = sub.escalaAlvo > 0 &&
+        sub.progressoAtual >= sub.escalaAlvo * 3;
+    final atZero = sub.progressoAtual <= 0;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _NumericBtn(
-            label: '−10', color: color, disabled: disabled,
+            label: '−10', color: color, disabled: atZero,
             onTap: () => onDelta(-10)),
         const SizedBox(width: 8),
         _NumericBtn(
-            label: '−1', color: color, disabled: disabled,
+            label: '−1', color: color, disabled: atZero,
             onTap: () => onDelta(-1)),
         const Spacer(),
         _NumericBtn(
-            label: '+1', color: color, disabled: disabled,
+            label: '+1', color: color, disabled: atCap,
             onTap: () => onDelta(1)),
         const SizedBox(width: 8),
         _NumericBtn(
-            label: '+10', color: color, disabled: disabled,
+            label: '+10', color: color, disabled: atCap,
             onTap: () => onDelta(10)),
       ],
     );
