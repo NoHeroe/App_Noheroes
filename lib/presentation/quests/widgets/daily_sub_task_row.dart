@@ -94,9 +94,15 @@ class DailySubTaskRow extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          // Barra animada (gradient + shimmer + tween). Sempre na cor do
-          // pilar — visual de completude vai no nome+ícone, não na barra.
-          AnimatedProgressBar(value: progress, color: color, height: 6),
+          // Barra animada (gradient + shimmer + tween + partículas). Cor
+          // sempre do pilar; completude vai no nome+ícone (hotfix-2). Glow
+          // pulsa quando sub atingiu alvo (1.3.C).
+          AnimatedProgressBar(
+            value: progress,
+            color: color,
+            height: 6,
+            showGlow: sub.completed,
+          ),
           const SizedBox(height: 10),
           // Botões: 4 numéricos OU 1 boolean.
           if (isBool) _BoolButton(sub: sub, color: color, onDelta: onDelta)

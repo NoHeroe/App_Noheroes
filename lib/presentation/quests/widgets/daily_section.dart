@@ -6,6 +6,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../domain/models/daily_mission.dart';
 import '../../../domain/models/daily_mission_status.dart';
 import 'daily_mission_card.dart';
+import 'daily_quests_header.dart';
 
 /// Sprint 3.2 Etapa 1.3.A — sanfona "MISSÕES DIÁRIAS" no topo do
 /// `/quests`. Default expandida.
@@ -28,6 +29,11 @@ class DailySection extends StatefulWidget {
   /// o [AnimatedRewardLine] (bônus 1.5× quando ≥10).
   final int dailyMissionsStreak;
 
+  /// Etapa 1.3.C — `GlobalKey` do counter Gold/XP no header. Propagado
+  /// pros cards pra que o `MissionCompletionPopup` saiba o destino das
+  /// partículas voadoras.
+  final GlobalKey<HeaderCounterState>? counterKey;
+
   final void Function(int missionId, String subTaskKey, int delta)
       onSubTaskDelta;
 
@@ -42,6 +48,7 @@ class DailySection extends StatefulWidget {
     required this.dailyMissionsStreak,
     required this.onSubTaskDelta,
     required this.onConfirm,
+    this.counterKey,
   });
 
   @override
@@ -50,6 +57,13 @@ class DailySection extends StatefulWidget {
 
 class _DailySectionState extends State<DailySection> {
   bool _expanded = true;
+
+  /// Etapa 1.3.C — cache de `GlobalKey` por `mission.id`, usadas como
+  /// origin do `MissionCompletionPopup`. Mantidas estáveis entre rebuilds.
+  final Map<int, GlobalKey> _cardKeys = {};
+
+  GlobalKey _keyFor(int missionId) =>
+      _cardKeys.putIfAbsent(missionId, () => GlobalKey());
 
   @override
   Widget build(BuildContext context) {
@@ -141,17 +155,19 @@ class _DailySectionState extends State<DailySection> {
                             0,
                         rankLabel: widget.rankLabel,
                         dailyMissionsStreak: widget.dailyMissionsStreak,
+                        cardKey: _keyFor(entry.value.id),
+                        counterKey: widget.counterKey,
                         onSubTaskDelta: (subKey, delta) => widget
                             .onSubTaskDelta(entry.value.id, subKey, delta),
                         onConfirm: () => widget.onConfirm(entry.value.id),
                       )
-                          .animate(delay: (entry.key * 50).ms)
+                          .animate(delay: (entry.key * 80).ms)
                           .fadeIn(
-                              duration: 350.ms, curve: Curves.easeOut)
+                              duration: 500.ms, curve: Curves.easeOut)
                           .slideY(
                               begin: 0.05,
                               end: 0.0,
-                              duration: 350.ms,
+                              duration: 500.ms,
                               curve: Curves.easeOut),
                 ],
               ),

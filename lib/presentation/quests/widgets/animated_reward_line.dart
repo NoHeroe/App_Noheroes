@@ -68,14 +68,14 @@ class _AnimatedRewardLineState extends State<AnimatedRewardLine> {
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0.0, end: 1.0),
       key: ValueKey('reward-${display.xp}-${display.gold}-${display.suffix}'),
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 700),
       curve: Curves.easeOut,
       builder: (_, t, __) {
         final xp = (fromXp + (display.xp - fromXp) * t).round();
         final gold = (fromGold + (display.gold - fromGold) * t).round();
         return TweenAnimationBuilder<Color?>(
           tween: ColorTween(begin: fromColor, end: display.color),
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 450),
           builder: (_, color, __) => Text(
             '+$xp XP  +$gold gold  ${display.suffix}',
             style: GoogleFonts.roboto(

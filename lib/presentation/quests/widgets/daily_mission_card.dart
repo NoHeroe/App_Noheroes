@@ -7,7 +7,9 @@ import '../../../domain/models/daily_mission_status.dart';
 import '../../../domain/services/daily_mission_progress_service.dart';
 import 'animated_reward_line.dart';
 import 'daily_pilar_visuals.dart';
+import 'daily_quests_header.dart';
 import 'daily_sub_task_row.dart';
+import 'mission_completion_popup.dart';
 
 /// Sprint 3.2 Etapa 1.3.A — card visual de uma missão diária.
 ///
@@ -38,6 +40,15 @@ class DailyMissionCard extends StatefulWidget {
   /// pra aplicar bônus 1.5× quando ≥10 e missão fecha como completed.
   final int dailyMissionsStreak;
 
+  /// Etapa 1.3.C — `GlobalKey` do Container externo desse card.
+  /// Usado pelo [MissionCompletionPopup] como ORIGEM das partículas
+  /// voadoras quando o jogador confirma a missão.
+  final GlobalKey cardKey;
+
+  /// Etapa 1.3.C — `GlobalKey` do counter Gold/XP no header.
+  /// Usado pelo [MissionCompletionPopup] como DESTINO das partículas.
+  final GlobalKey<HeaderCounterState>? counterKey;
+
   final void Function(String subTaskKey, int delta) onSubTaskDelta;
 
   /// Hotfix Etapa 1.3.A — chamado quando o jogador clica ✓ pra confirmar
@@ -51,6 +62,8 @@ class DailyMissionCard extends StatefulWidget {
     required this.rewardGold,
     required this.rankLabel,
     required this.dailyMissionsStreak,
+    required this.cardKey,
+    required this.counterKey,
     required this.onSubTaskDelta,
     required this.onConfirm,
   });
@@ -76,6 +89,7 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
     final borderColor = closed?.color ?? pilarColor;
 
     final card = Container(
+      key: widget.cardKey,
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: AppColors.surface.withValues(alpha: 0.85),
@@ -96,11 +110,13 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
               _buildHeader(pilarColor, closed),
               ClipRect(
                 child: AnimatedSize(
-                  duration: const Duration(milliseconds: 280),
-                  curve: Curves.easeInOut,
+                  duration: const Duration(milliseconds: 450),
+                  curve: Curves.easeInOutCubic,
                   alignment: Alignment.topCenter,
                   child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 280),
+                    duration: const Duration(milliseconds: 450),
+                    switchInCurve: Curves.easeInOutCubic,
+                    switchOutCurve: Curves.easeInOutCubic,
                     transitionBuilder: (child, anim) =>
                         FadeTransition(opacity: anim, child: child),
                     child: (_expanded && !_isClosed)
@@ -396,9 +412,34 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
 
   Future<void> _runConfirm() async {
     if (!mounted) return;
+
+    // Etapa 1.3.C — pre-computa preview ANTES da confirmação. Status e
+    // reward são determinísticos sobre as sub-tarefas in-memory; o que
+    // o service vai gravar bate com isso. Usado pra mostrar o popup
+    // imediatamente após o confirm com os valores corretos.
+    final previewStatus =
+        DailyMissionProgressService.previewStatus(widget.mission);
+    final previewReward = DailyMissionProgressService.computeReward(
+      rank: widget.rankLabel,
+      mission: widget.mission,
+      status: previewStatus,
+      dailyMissionsStreak: widget.dailyMissionsStreak,
+    );
+
     setState(() => _confirming = true);
     try {
       await widget.onConfirm();
+      if (!mounted) return;
+      MissionCompletionPopup.show(
+        context,
+        status: previewStatus,
+        rewardXp: previewReward.xp,
+        rewardGold: previewReward.gold,
+        originKey: widget.cardKey,
+        targetKey: widget.counterKey,
+      );
+    } on RewardAlreadyGrantedException {
+      // Silencia — UI já tá no estado correto.
     } finally {
       if (mounted) setState(() => _confirming = false);
     }

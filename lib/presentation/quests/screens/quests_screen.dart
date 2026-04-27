@@ -34,7 +34,7 @@ import '../widgets/section_accordion.dart';
 ///   6. MISSÕES INDIVIDUAIS
 ///
 /// Bottom nav adicionada (índice 1 — Missões).
-class QuestsScreen extends ConsumerWidget {
+class QuestsScreen extends ConsumerStatefulWidget {
   const QuestsScreen({super.key});
 
   // Reward base por rank das missões diárias (Etapa 1.2 — alinhado
@@ -50,7 +50,18 @@ class QuestsScreen extends ConsumerWidget {
   };
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<QuestsScreen> createState() => _QuestsScreenState();
+}
+
+class _QuestsScreenState extends ConsumerState<QuestsScreen> {
+  /// Etapa 1.3.C — key estável do `HeaderCounter` no `DailyQuestsHeader`.
+  /// Usada pelo `MissionCompletionPopup` como destino das partículas
+  /// voadoras + para acionar pulse quando chegam.
+  final GlobalKey<HeaderCounterState> _counterKey =
+      GlobalKey<HeaderCounterState>();
+
+  @override
+  Widget build(BuildContext context) {
     final player = ref.watch(currentPlayerProvider);
     if (player == null) {
       return const Scaffold(body: Center(child: Text('Sem jogador.')));
@@ -60,10 +71,13 @@ class QuestsScreen extends ConsumerWidget {
     final notifier =
         ref.read(questsScreenNotifierProvider(player.id).notifier);
 
-    final rankLabel = (player.guildRank == 'none' || player.guildRank.isEmpty)
-        ? 'E'
-        : player.guildRank.toUpperCase();
-    final reward = _rewardByRank[rankLabel] ?? _rewardByRank['E']!;
+    final rankLabel =
+        (player.guildRank == 'none' || player.guildRank.isEmpty)
+            ? 'E'
+            : player.guildRank.toUpperCase();
+    final reward =
+        QuestsScreen._rewardByRank[rankLabel] ??
+            QuestsScreen._rewardByRank['E']!;
 
     return Scaffold(
       backgroundColor: AppColors.black,
@@ -85,6 +99,9 @@ class QuestsScreen extends ConsumerWidget {
                     subTasksDone: state.dailySubTasksDone,
                     subTasksTotal: state.dailySubTasksTotal,
                     streak: player.dailyMissionsStreak,
+                    gold: player.gold,
+                    xp: player.xp,
+                    counterKey: _counterKey,
                   ),
                   Expanded(
                     child: RefreshIndicator(
@@ -96,6 +113,7 @@ class QuestsScreen extends ConsumerWidget {
                         rewardXp: reward.xp,
                         rewardGold: reward.gold,
                         dailyMissionsStreak: player.dailyMissionsStreak,
+                        counterKey: _counterKey,
                       ),
                     ),
                   ),
@@ -117,6 +135,7 @@ class _Body extends ConsumerWidget {
   final int rewardXp;
   final int rewardGold;
   final int dailyMissionsStreak;
+  final GlobalKey<HeaderCounterState> counterKey;
 
   const _Body({
     required this.state,
@@ -125,6 +144,7 @@ class _Body extends ConsumerWidget {
     required this.rewardXp,
     required this.rewardGold,
     required this.dailyMissionsStreak,
+    required this.counterKey,
   });
 
   @override
@@ -147,6 +167,7 @@ class _Body extends ConsumerWidget {
           rewardsByMissionId: rewardsByMissionId,
           rankLabel: rankLabel,
           dailyMissionsStreak: dailyMissionsStreak,
+          counterKey: counterKey,
           onSubTaskDelta: (missionId, subKey, delta) {
             notifier.incrementDailySubTask(
               missionId: missionId,
