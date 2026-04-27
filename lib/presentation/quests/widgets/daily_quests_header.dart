@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import 'animated_progress_bar.dart';
 
 /// Sprint 3.2 Etapa 1.3.A — header rico no topo de `/quests`.
 ///
 /// "MISSÕES" CinzelDecorative + 🔥 streak (`dailyMissionsStreak`) +
-/// barra geral de progresso das diárias do dia. Estática nessa
-/// sub-etapa (1.3.B anima a barra).
+/// barra geral de progresso das diárias do dia. Etapa 1.3.B trocou
+/// LinearProgressIndicator por [AnimatedProgressBar] (gradient + shimmer).
 class DailyQuestsHeader extends StatelessWidget {
   /// Sub-tarefas concluídas hoje (cross-missions).
   final int subTasksDone;
@@ -54,15 +55,10 @@ class DailyQuestsHeader extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 5,
-                    backgroundColor: AppColors.surfaceAlt,
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                        AppColors.purple),
-                  ),
+                child: AnimatedProgressBar(
+                  value: progress,
+                  color: AppColors.purple,
+                  height: 5,
                 ),
               ),
               const SizedBox(width: 10),

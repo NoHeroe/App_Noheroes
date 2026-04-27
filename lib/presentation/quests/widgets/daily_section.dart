@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -23,6 +24,10 @@ class DailySection extends StatefulWidget {
   /// Rank do jogador pra exibir no card (E/D/C/B/A/S).
   final String rankLabel;
 
+  /// Streak de daily missions do jogador — propagado pro card pra alimentar
+  /// o [AnimatedRewardLine] (bônus 1.5× quando ≥10).
+  final int dailyMissionsStreak;
+
   final void Function(int missionId, String subTaskKey, int delta)
       onSubTaskDelta;
 
@@ -34,6 +39,7 @@ class DailySection extends StatefulWidget {
     required this.missions,
     required this.rewardsByMissionId,
     required this.rankLabel,
+    required this.dailyMissionsStreak,
     required this.onSubTaskDelta,
     required this.onConfirm,
   });
@@ -123,18 +129,30 @@ class _DailySectionState extends State<DailySection> {
                       ),
                     )
                   else
-                    for (final m in widget.missions)
+                    for (final entry in widget.missions.asMap().entries)
                       DailyMissionCard(
-                        key: ValueKey('daily-mission-${m.id}'),
-                        mission: m,
-                        rewardXp: widget.rewardsByMissionId[m.id]?.xp ?? 0,
-                        rewardGold:
-                            widget.rewardsByMissionId[m.id]?.gold ?? 0,
+                        key: ValueKey('daily-mission-${entry.value.id}'),
+                        mission: entry.value,
+                        rewardXp: widget
+                                .rewardsByMissionId[entry.value.id]?.xp ??
+                            0,
+                        rewardGold: widget
+                                .rewardsByMissionId[entry.value.id]?.gold ??
+                            0,
                         rankLabel: widget.rankLabel,
-                        onSubTaskDelta: (subKey, delta) =>
-                            widget.onSubTaskDelta(m.id, subKey, delta),
-                        onConfirm: () => widget.onConfirm(m.id),
-                      ),
+                        dailyMissionsStreak: widget.dailyMissionsStreak,
+                        onSubTaskDelta: (subKey, delta) => widget
+                            .onSubTaskDelta(entry.value.id, subKey, delta),
+                        onConfirm: () => widget.onConfirm(entry.value.id),
+                      )
+                          .animate(delay: (entry.key * 50).ms)
+                          .fadeIn(
+                              duration: 350.ms, curve: Curves.easeOut)
+                          .slideY(
+                              begin: 0.05,
+                              end: 0.0,
+                              duration: 350.ms,
+                              curve: Curves.easeOut),
                 ],
               ),
             ),

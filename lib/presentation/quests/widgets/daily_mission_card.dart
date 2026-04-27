@@ -5,6 +5,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../domain/models/daily_mission.dart';
 import '../../../domain/models/daily_mission_status.dart';
 import '../../../domain/services/daily_mission_progress_service.dart';
+import 'animated_reward_line.dart';
 import 'daily_pilar_visuals.dart';
 import 'daily_sub_task_row.dart';
 
@@ -26,13 +27,16 @@ import 'daily_sub_task_row.dart';
 class DailyMissionCard extends StatefulWidget {
   final DailyMission mission;
 
-  /// Recompensa resolvida (XP/gold do rank). Vem do parent — evita o
-  /// card precisar de provider. Pra missões já fechadas é a base do
-  /// rank (efetiva pode ter sido reduzida por partial / amplificada por
-  /// excedência+streak; UI exibe só a base como referência).
+  /// Recompensa base (XP/gold do rank). Mostrada apenas em closed cards
+  /// como referência. Card aberto usa [AnimatedRewardLine] que recalcula
+  /// reward em tempo real conforme progresso.
   final int rewardXp;
   final int rewardGold;
   final String rankLabel;
+
+  /// Streak de daily missions do jogador — usado pelo [AnimatedRewardLine]
+  /// pra aplicar bônus 1.5× quando ≥10 e missão fecha como completed.
+  final int dailyMissionsStreak;
 
   final void Function(String subTaskKey, int delta) onSubTaskDelta;
 
@@ -46,6 +50,7 @@ class DailyMissionCard extends StatefulWidget {
     required this.rewardXp,
     required this.rewardGold,
     required this.rankLabel,
+    required this.dailyMissionsStreak,
     required this.onSubTaskDelta,
     required this.onConfirm,
   });
@@ -89,23 +94,21 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(pilarColor, closed),
-              if (!_isClosed && _expanded) ...[
-                const SizedBox(height: 16),
-                _buildQuote(),
-                const SizedBox(height: 16),
-                _buildRequisitosHeader(),
-                const SizedBox(height: 12),
-                ...widget.mission.subTarefas.map(
-                  (sub) => DailySubTaskRow(
-                    sub: sub,
-                    cardColor: pilarColor,
-                    onDelta: (delta) =>
-                        widget.onSubTaskDelta(sub.subTaskKey, delta),
+              ClipRect(
+                child: AnimatedSize(
+                  duration: const Duration(milliseconds: 280),
+                  curve: Curves.easeInOut,
+                  alignment: Alignment.topCenter,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 280),
+                    transitionBuilder: (child, anim) =>
+                        FadeTransition(opacity: anim, child: child),
+                    child: (_expanded && !_isClosed)
+                        ? _buildExpandedContent(pilarColor)
+                        : const SizedBox.shrink(),
                   ),
                 ),
-                const SizedBox(height: 4),
-                _buildFooter(),
-              ],
+              ),
             ],
           ),
         ),
@@ -114,6 +117,32 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
 
     if (closed != null) return Opacity(opacity: closed.opacity, child: card);
     return card;
+  }
+
+  // ─── expanded content (1.3.B AnimatedSize/Switcher) ────────────────
+
+  Widget _buildExpandedContent(Color pilarColor) {
+    return Column(
+      key: const ValueKey('daily-card-expanded'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        _buildQuote(),
+        const SizedBox(height: 16),
+        _buildRequisitosHeader(),
+        const SizedBox(height: 12),
+        ...widget.mission.subTarefas.map(
+          (sub) => DailySubTaskRow(
+            sub: sub,
+            cardColor: pilarColor,
+            onDelta: (delta) =>
+                widget.onSubTaskDelta(sub.subTaskKey, delta),
+          ),
+        ),
+        const SizedBox(height: 4),
+        _buildFooter(),
+      ],
+    );
   }
 
   // ─── header ─────────────────────────────────────────────────────────
@@ -148,12 +177,11 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
                   ),
                 )
               else
-                Text(
-                  '+${widget.rewardXp} XP  +${widget.rewardGold} gold  ·  Rank ${widget.rankLabel}',
-                  style: GoogleFonts.roboto(
-                    fontSize: 11,
-                    color: AppColors.textMuted,
-                  ),
+                AnimatedRewardLine(
+                  mission: widget.mission,
+                  rank: widget.rankLabel,
+                  rankLabel: widget.rankLabel,
+                  dailyMissionsStreak: widget.dailyMissionsStreak,
                 ),
             ],
           ),

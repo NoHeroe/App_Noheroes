@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../domain/enums/daily_unit_type.dart';
 import '../../../domain/models/daily_sub_task_instance.dart';
+import 'animated_progress_bar.dart';
 import 'daily_pilar_visuals.dart';
 
 /// Sprint 3.2 Etapa 1.3.A — uma linha por sub-tarefa dentro do card
@@ -93,17 +94,9 @@ class DailySubTaskRow extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          // Barra estática (1.3.B anima). Sempre na cor do pilar — visual
-          // de completude vai no nome+ícone, não na barra.
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 6,
-              backgroundColor: AppColors.surfaceAlt,
-              valueColor: AlwaysStoppedAnimation<Color>(color),
-            ),
-          ),
+          // Barra animada (gradient + shimmer + tween). Sempre na cor do
+          // pilar — visual de completude vai no nome+ícone, não na barra.
+          AnimatedProgressBar(value: progress, color: color, height: 6),
           const SizedBox(height: 10),
           // Botões: 4 numéricos OU 1 boolean.
           if (isBool) _BoolButton(sub: sub, color: color, onDelta: onDelta)

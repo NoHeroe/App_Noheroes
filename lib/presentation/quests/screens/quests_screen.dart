@@ -95,6 +95,7 @@ class QuestsScreen extends ConsumerWidget {
                         rankLabel: rankLabel,
                         rewardXp: reward.xp,
                         rewardGold: reward.gold,
+                        dailyMissionsStreak: player.dailyMissionsStreak,
                       ),
                     ),
                   ),
@@ -115,6 +116,7 @@ class _Body extends ConsumerWidget {
   final String rankLabel;
   final int rewardXp;
   final int rewardGold;
+  final int dailyMissionsStreak;
 
   const _Body({
     required this.state,
@@ -122,6 +124,7 @@ class _Body extends ConsumerWidget {
     required this.rankLabel,
     required this.rewardXp,
     required this.rewardGold,
+    required this.dailyMissionsStreak,
   });
 
   @override
@@ -143,6 +146,7 @@ class _Body extends ConsumerWidget {
           missions: state.dailyMissionsNew,
           rewardsByMissionId: rewardsByMissionId,
           rankLabel: rankLabel,
+          dailyMissionsStreak: dailyMissionsStreak,
           onSubTaskDelta: (missionId, subKey, delta) {
             notifier.incrementDailySubTask(
               missionId: missionId,
