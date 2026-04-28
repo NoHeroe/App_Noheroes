@@ -121,15 +121,26 @@ class _AnimatedProgressBarState extends State<AnimatedProgressBar>
         : null;
 
     // Etapa 1.3.C hotfix-3 — RepaintBoundary externo isola repaints do
-    // shimmer/pulse/partículas do widget pai. Sem isso, cada tick subia
-    // pela árvore até o próximo RepaintBoundary, repinta cards inteiros.
+    // shimmer/pulse/partículas do widget pai.
+    // Etapa 1.3.C hotfix-4 — SizedBox(height: widget.height) ao redor do
+    // Stack dá constraint vertical fechada. Antes, `Stack(fit: expand)`
+    // herdava altura unbounded do AnimatedSize→AnimatedSwitcher→Column
+    // durante expand/collapse, disparando "BoxConstraints forces an
+    // infinite height" e fazendo a subárvore inteira falhar layout
+    // silenciosamente em release. Positioned.fill mantém children
+    // ocupando todo o Stack agora que o Stack tem altura determinística.
     final stacked = RepaintBoundary(
       child: particles == null
           ? bar
-          : Stack(
-              fit: StackFit.expand,
-              clipBehavior: Clip.none,
-              children: [bar, particles],
+          : SizedBox(
+              height: widget.height,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned.fill(child: bar),
+                  Positioned.fill(child: particles),
+                ],
+              ),
             ),
     );
 
