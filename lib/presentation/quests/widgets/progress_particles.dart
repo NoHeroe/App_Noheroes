@@ -8,12 +8,16 @@ import 'package:flutter/material.dart';
 ///
 /// 2 modos:
 /// - **Contínuo**: 3-4 partículas/segundo flutuando da posição X = `value
-///   * width` (ponta da barra preenchida).
+///   * width` (ponta da barra preenchida). Só ocorre quando `value > 0.05`.
 /// - **Burst**: ~12-15 partículas extras quando [burstSignal] muda
 ///   (jogador clicou +1/+10 e a barra está animando).
 ///
-/// Pool reutilizável de 30 slots, sem alocação por partícula. CustomPainter
-/// pula repaint quando 0 partículas vivas.
+/// Hibernação (hotfix-3): quando todas as partículas morrem E não há demanda
+/// de spawn (value muito baixo + sem burst recente), o `AnimationController`
+/// faz `stop()` pra não consumir CPU. Reinicia automaticamente quando
+/// burstSignal muda ou value sobe acima de 0.05.
+///
+/// Pool reutilizável de 30 slots, sem alocação por partícula.
 class ProgressParticles extends StatefulWidget {
   /// Posição X (0..1) da ponta da barra preenchida — origem do spawn.
   final double value;
@@ -24,11 +28,17 @@ class ProgressParticles extends StatefulWidget {
   /// Disparar burst — incrementar pra emitir ~12-15 partículas extras.
   final ValueListenable<int>? burstSignal;
 
+  /// Habilita as partículas. Default true. Quando false, controller fica
+  /// stopped permanentemente — uso pra desabilitar via flag em testes ou
+  /// devices low-end.
+  final bool enabled;
+
   const ProgressParticles({
     super.key,
     required this.value,
     required this.color,
     this.burstSignal,
+    this.enabled = true,
   });
 
   @override
@@ -41,6 +51,7 @@ class _ProgressParticlesState extends State<ProgressParticles>
   static const double _spawnIntervalMs = 280; // ~3.5 partículas/seg
   static const int _burstCount = 13;
   static const double _lifetimeSec = 1.2;
+  static const double _minValueForSpawn = 0.05;
 
   late final AnimationController _ctl;
   final math.Random _rand = math.Random();
@@ -49,6 +60,7 @@ class _ProgressParticlesState extends State<ProgressParticles>
   Duration _lastTick = Duration.zero;
   double _spawnAccumMs = 0.0;
   int _lastBurstSignal = 0;
+  bool _running = false;
 
   @override
   void initState() {
@@ -59,11 +71,12 @@ class _ProgressParticlesState extends State<ProgressParticles>
     _ctl = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
-    )
-      ..addListener(_onTick)
-      ..repeat();
+    )..addListener(_onTick);
     widget.burstSignal?.addListener(_onBurstSignal);
     _lastBurstSignal = widget.burstSignal?.value ?? 0;
+    if (widget.enabled && widget.value > _minValueForSpawn) {
+      _start();
+    }
   }
 
   @override
@@ -74,13 +87,41 @@ class _ProgressParticlesState extends State<ProgressParticles>
       widget.burstSignal?.addListener(_onBurstSignal);
       _lastBurstSignal = widget.burstSignal?.value ?? 0;
     }
+    // Liga/desliga conforme demanda muda.
+    if (!widget.enabled) {
+      _stop();
+    } else if (widget.value > _minValueForSpawn && !_running) {
+      _start();
+    }
   }
 
   void _onBurstSignal() {
     final v = widget.burstSignal?.value ?? 0;
     if (v == _lastBurstSignal) return;
     _lastBurstSignal = v;
+    if (!widget.enabled) return;
     _spawnBurst();
+    _start();
+  }
+
+  void _start() {
+    if (_running || !widget.enabled) return;
+    _running = true;
+    _lastTick = Duration.zero;
+    _ctl.repeat();
+  }
+
+  void _stop() {
+    if (!_running) return;
+    _running = false;
+    _ctl.stop();
+  }
+
+  bool _anyAlive() {
+    for (final p in _pool) {
+      if (p.alive) return true;
+    }
+    return false;
   }
 
   @override
@@ -96,28 +137,39 @@ class _ProgressParticlesState extends State<ProgressParticles>
     _lastTick = now;
     final dtSec = (dtMs / 1000.0).clamp(0.0, 0.05); // cap 50ms (anti-stutter)
 
-    bool anyAlive = false;
+    bool changed = false;
+
+    // Atualiza partículas vivas.
     for (final p in _pool) {
       if (!p.alive) continue;
-      anyAlive = true;
       p.life -= dtSec;
       if (p.life <= 0) {
         p.alive = false;
+        changed = true;
         continue;
       }
       p.pos = Offset(p.pos.dx + p.vx * dtSec, p.pos.dy + p.vy * dtSec);
       p.alpha = (p.life / _lifetimeSec).clamp(0.0, 1.0) * 0.7;
+      changed = true;
     }
 
-    _spawnAccumMs += dtMs;
-    if (_spawnAccumMs >= _spawnIntervalMs) {
-      _spawnAccumMs = 0.0;
-      _spawnOne();
-      anyAlive = true;
+    // Spawn contínuo só se value > threshold.
+    if (widget.enabled && widget.value > _minValueForSpawn) {
+      _spawnAccumMs += dtMs;
+      if (_spawnAccumMs >= _spawnIntervalMs) {
+        _spawnAccumMs = 0.0;
+        _spawnOne();
+        changed = true;
+      }
     }
 
-    if (anyAlive || _pool.any((p) => p.alive)) {
-      setState(() {}); // só repaint enquanto há vivas (ou acabou de spawnar)
+    if (changed) {
+      setState(() {});
+    }
+
+    // Hibernação: todas mortas + sem demanda → stop.
+    if (!_anyAlive() && widget.value <= _minValueForSpawn) {
+      _stop();
     }
   }
 
@@ -127,9 +179,8 @@ class _ProgressParticlesState extends State<ProgressParticles>
     slot.life = _lifetimeSec;
     slot.alpha = 0.7;
     slot.radius = 1.5 + _rand.nextDouble() * 1.5;
-    // Offset relativo ao widget (resolvido em paint usando size).
     slot.relX = widget.value.clamp(0.0, 1.0);
-    slot.pos = Offset.zero; // será resolvido via relX
+    slot.pos = Offset.zero;
     slot.vx = (_rand.nextDouble() - 0.5) * 30; // ±15 px/s
     slot.vy = -(20 + _rand.nextDouble() * 30); // sobe 20-50 px/s
     slot.resolved = false;
@@ -164,7 +215,7 @@ class _Particle {
   double vy;
   double alpha;
   double life;
-  double relX; // posição inicial X relativa (0..1)
+  double relX;
   bool resolved;
   bool alive;
 
@@ -196,8 +247,6 @@ class _ParticlesPainter extends CustomPainter {
     final paint = Paint();
     for (final p in particles) {
       if (!p.alive) continue;
-      // Resolve posição inicial em coordenadas absolutas no primeiro paint
-      // após o spawn (size pode ainda não estar disponível no spawn).
       if (!p.resolved) {
         p.pos = Offset(p.relX * size.width, size.height / 2);
         p.resolved = true;
@@ -208,6 +257,5 @@ class _ParticlesPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_ParticlesPainter old) =>
-      true; // _onTick controla via setState; repaint sempre quando rebuilda.
+  bool shouldRepaint(_ParticlesPainter old) => true;
 }

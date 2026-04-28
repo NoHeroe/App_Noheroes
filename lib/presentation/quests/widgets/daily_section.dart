@@ -143,23 +143,29 @@ class _DailySectionState extends State<DailySection> {
                       ),
                     )
                   else
+                    // Etapa 1.3.C hotfix-3 — RepaintBoundary por card isola
+                    // repaints (shimmer, partículas, expand/collapse) entre
+                    // cards. Mudança em um não força repaint dos vizinhos.
                     for (final entry in widget.missions.asMap().entries)
-                      DailyMissionCard(
-                        key: ValueKey('daily-mission-${entry.value.id}'),
-                        mission: entry.value,
-                        rewardXp: widget
-                                .rewardsByMissionId[entry.value.id]?.xp ??
-                            0,
-                        rewardGold: widget
-                                .rewardsByMissionId[entry.value.id]?.gold ??
-                            0,
-                        rankLabel: widget.rankLabel,
-                        dailyMissionsStreak: widget.dailyMissionsStreak,
-                        cardKey: _keyFor(entry.value.id),
-                        counterKey: widget.counterKey,
-                        onSubTaskDelta: (subKey, delta) => widget
-                            .onSubTaskDelta(entry.value.id, subKey, delta),
-                        onConfirm: () => widget.onConfirm(entry.value.id),
+                      RepaintBoundary(
+                        child: DailyMissionCard(
+                          key:
+                              ValueKey('daily-mission-${entry.value.id}'),
+                          mission: entry.value,
+                          rewardXp: widget.rewardsByMissionId[entry.value.id]
+                                  ?.xp ??
+                              0,
+                          rewardGold: widget.rewardsByMissionId[entry.value.id]
+                                  ?.gold ??
+                              0,
+                          rankLabel: widget.rankLabel,
+                          dailyMissionsStreak: widget.dailyMissionsStreak,
+                          cardKey: _keyFor(entry.value.id),
+                          counterKey: widget.counterKey,
+                          onSubTaskDelta: (subKey, delta) => widget
+                              .onSubTaskDelta(entry.value.id, subKey, delta),
+                          onConfirm: () => widget.onConfirm(entry.value.id),
+                        ),
                       )
                           .animate(delay: (entry.key * 80).ms)
                           .fadeIn(

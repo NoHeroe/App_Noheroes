@@ -108,23 +108,29 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(pilarColor, closed),
-              // Etapa 1.3.C hotfix — AnimatedCrossFade resolve altura +
-              // fade num só widget. A combinação anterior (ClipRect +
-              // AnimatedSize + AnimatedSwitcher) tava deixando o conteúdo
-              // invisível mesmo com `_expanded=true`. AnimatedCrossFade é
-              // o pattern oficial pra esse caso (transição entre 2 estados
-              // com altura variável).
-              AnimatedCrossFade(
+              // Etapa 1.3.C hotfix-3 — volta pra AnimatedSize+AnimatedSwitcher
+              // (estrutura da 1.3.B). AnimatedCrossFade construía secondChild
+              // EAGERLY mesmo colapsado, ativando 9 AnimationControllers por
+              // card invisível → lag global. Com AnimatedSwitcher, o
+              // expanded content só monta quando _expanded=true.
+              AnimatedSize(
                 duration: const Duration(milliseconds: 450),
-                sizeCurve: Curves.easeInOutCubic,
-                firstCurve: Curves.easeInOutCubic,
-                secondCurve: Curves.easeInOutCubic,
+                curve: Curves.easeInOutCubic,
                 alignment: Alignment.topCenter,
-                firstChild: const SizedBox(width: double.infinity, height: 0),
-                secondChild: _buildExpandedContent(pilarColor),
-                crossFadeState: (_expanded && !_isClosed)
-                    ? CrossFadeState.showSecond
-                    : CrossFadeState.showFirst,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 450),
+                  switchInCurve: Curves.easeInOutCubic,
+                  switchOutCurve: Curves.easeInOutCubic,
+                  transitionBuilder: (child, anim) =>
+                      FadeTransition(opacity: anim, child: child),
+                  child: (_expanded && !_isClosed)
+                      ? _buildExpandedContent(pilarColor)
+                      : const SizedBox(
+                          key: ValueKey('daily-card-collapsed'),
+                          width: double.infinity,
+                          height: 0,
+                        ),
+                ),
               ),
             ],
           ),
@@ -139,26 +145,35 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
   // ─── expanded content (1.3.B AnimatedSize/Switcher) ────────────────
 
   Widget _buildExpandedContent(Color pilarColor) {
-    return Column(
-      key: const ValueKey('daily-card-expanded'),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 16),
-        _buildQuote(),
-        const SizedBox(height: 16),
-        _buildRequisitosHeader(),
-        const SizedBox(height: 12),
-        ...widget.mission.subTarefas.map(
-          (sub) => DailySubTaskRow(
-            sub: sub,
-            cardColor: pilarColor,
-            onDelta: (delta) =>
-                widget.onSubTaskDelta(sub.subTaskKey, delta),
+    // Etapa 1.3.C hotfix-3 — SizedBox(width: infinity) + Column.min garante
+    // que o conteúdo expanda horizontalmente até o limite do pai mas use
+    // altura intrínseca dos children. Sem isso, o Column default tenta
+    // mainAxisSize.max em constraint vertical unbounded e colapsa pra zero
+    // em release.
+    return SizedBox(
+      width: double.infinity,
+      child: Column(
+        key: const ValueKey('daily-card-expanded'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 16),
+          _buildQuote(),
+          const SizedBox(height: 16),
+          _buildRequisitosHeader(),
+          const SizedBox(height: 12),
+          ...widget.mission.subTarefas.map(
+            (sub) => DailySubTaskRow(
+              sub: sub,
+              cardColor: pilarColor,
+              onDelta: (delta) =>
+                  widget.onSubTaskDelta(sub.subTaskKey, delta),
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
-        _buildFooter(),
-      ],
+          const SizedBox(height: 4),
+          _buildFooter(),
+        ],
+      ),
     );
   }
 

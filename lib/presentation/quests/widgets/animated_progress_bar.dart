@@ -120,13 +120,18 @@ class _AnimatedProgressBarState extends State<AnimatedProgressBar>
           )
         : null;
 
-    final stacked = particles == null
-        ? bar
-        : Stack(
-            fit: StackFit.expand,
-            clipBehavior: Clip.none,
-            children: [bar, particles],
-          );
+    // Etapa 1.3.C hotfix-3 — RepaintBoundary externo isola repaints do
+    // shimmer/pulse/partículas do widget pai. Sem isso, cada tick subia
+    // pela árvore até o próximo RepaintBoundary, repinta cards inteiros.
+    final stacked = RepaintBoundary(
+      child: particles == null
+          ? bar
+          : Stack(
+              fit: StackFit.expand,
+              clipBehavior: Clip.none,
+              children: [bar, particles],
+            ),
+    );
 
     if (!widget.showGlow) return stacked;
 
