@@ -108,22 +108,23 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(pilarColor, closed),
-              ClipRect(
-                child: AnimatedSize(
-                  duration: const Duration(milliseconds: 450),
-                  curve: Curves.easeInOutCubic,
-                  alignment: Alignment.topCenter,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 450),
-                    switchInCurve: Curves.easeInOutCubic,
-                    switchOutCurve: Curves.easeInOutCubic,
-                    transitionBuilder: (child, anim) =>
-                        FadeTransition(opacity: anim, child: child),
-                    child: (_expanded && !_isClosed)
-                        ? _buildExpandedContent(pilarColor)
-                        : const SizedBox.shrink(),
-                  ),
-                ),
+              // Etapa 1.3.C hotfix — AnimatedCrossFade resolve altura +
+              // fade num só widget. A combinação anterior (ClipRect +
+              // AnimatedSize + AnimatedSwitcher) tava deixando o conteúdo
+              // invisível mesmo com `_expanded=true`. AnimatedCrossFade é
+              // o pattern oficial pra esse caso (transição entre 2 estados
+              // com altura variável).
+              AnimatedCrossFade(
+                duration: const Duration(milliseconds: 450),
+                sizeCurve: Curves.easeInOutCubic,
+                firstCurve: Curves.easeInOutCubic,
+                secondCurve: Curves.easeInOutCubic,
+                alignment: Alignment.topCenter,
+                firstChild: const SizedBox(width: double.infinity, height: 0),
+                secondChild: _buildExpandedContent(pilarColor),
+                crossFadeState: (_expanded && !_isClosed)
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
               ),
             ],
           ),
