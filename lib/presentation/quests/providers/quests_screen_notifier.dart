@@ -223,7 +223,18 @@ class QuestsScreenNotifier
           .read(dailyMissionProgressServiceProvider)
           .confirmCompletion(missionId: missionId);
     } on RewardAlreadyGrantedException {
-      // Double-tap entre tap e refresh — UI já está atualizada.
+      // Double-tap — segue pra sync mesmo assim.
+    }
+    // Etapa 1.3.C hotfix-5 — confirmCompletion grava XP/gold no banco mas
+    // currentPlayerProvider é StateProvider manual. Refetch + set garante
+    // que /quests header counter, /santuario topBar e /perfil reflitam o
+    // novo saldo. Padrão idêntico ao usado em profile_screen e dev_panel.
+    final db = ref.read(appDatabaseProvider);
+    final fresh = await (db.select(db.playersTable)
+          ..where((t) => t.id.equals(arg)))
+        .getSingleOrNull();
+    if (fresh != null) {
+      ref.read(currentPlayerProvider.notifier).state = fresh;
     }
   }
 }
