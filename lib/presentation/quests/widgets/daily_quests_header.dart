@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../shared/widgets/player_stats_counter.dart';
 import 'animated_progress_bar.dart';
 
 /// Sprint 3.2 Etapa 1.3.A — header rico no topo de `/quests`.
 ///
-/// "MISSÕES" CinzelDecorative + counter Gold/XP (target do popup de
+/// "MISSÕES" CinzelDecorative + counter Gold/XP/Gems (target do popup de
 /// completion via [counterKey]) + 🔥 streak + barra geral animada.
 /// Etapa 1.3.B trocou LinearProgressIndicator por [AnimatedProgressBar].
 /// Etapa 1.3.C adicionou o counter como destino das partículas voadoras.
+/// Sprint 3.3 Etapa 2.4 promoveu `HeaderCounter` pra
+/// [PlayerStatsCounter] compartilhado e adicionou Gems ao display.
 class DailyQuestsHeader extends StatelessWidget {
   /// Sub-tarefas concluídas hoje (cross-missions).
   final int subTasksDone;
@@ -26,10 +29,13 @@ class DailyQuestsHeader extends StatelessWidget {
   /// XP atual do jogador.
   final int xp;
 
+  /// Gems atual do jogador.
+  final int gems;
+
   /// Key do counter — passada pelo parent pra ser usada como destino do
   /// `MissionCompletionPopup` (partículas voam até essa coordenada e o
   /// counter pulsa quando chegam).
-  final GlobalKey<HeaderCounterState>? counterKey;
+  final GlobalKey<PlayerStatsCounterState>? counterKey;
 
   const DailyQuestsHeader({
     super.key,
@@ -38,6 +44,7 @@ class DailyQuestsHeader extends StatelessWidget {
     required this.streak,
     required this.gold,
     required this.xp,
+    required this.gems,
     this.counterKey,
   });
 
@@ -63,10 +70,11 @@ class DailyQuestsHeader extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              HeaderCounter(
+              PlayerStatsCounter(
                 key: counterKey,
                 gold: gold,
                 xp: xp,
+                gems: gems,
               ),
               const SizedBox(width: 8),
               _StreakBadge(streak: streak),
@@ -94,98 +102,6 @@ class DailyQuestsHeader extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Counter Gold + XP no header. Tem método público [pulse] disparado pelo
-/// `MissionCompletionPopup` quando as partículas chegam.
-class HeaderCounter extends StatefulWidget {
-  final int gold;
-  final int xp;
-
-  const HeaderCounter({
-    super.key,
-    required this.gold,
-    required this.xp,
-  });
-
-  @override
-  State<HeaderCounter> createState() => HeaderCounterState();
-}
-
-class HeaderCounterState extends State<HeaderCounter>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulseCtl;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseCtl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pulseCtl.dispose();
-    super.dispose();
-  }
-
-  /// Aciona pulse de scale 1.0 → 1.15 → 1.0 (200ms total). Chamado pelo
-  /// popup quando as partículas chegam.
-  void pulse() {
-    if (!mounted) return;
-    _pulseCtl.forward(from: 0).then((_) {
-      if (mounted) _pulseCtl.reverse();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _pulseCtl,
-      builder: (_, child) {
-        final scale = 1.0 + (_pulseCtl.value * 0.15);
-        return Transform.scale(scale: scale, child: child);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceAlt.withValues(alpha: 0.6),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.monetization_on,
-                size: 12, color: AppColors.gold),
-            const SizedBox(width: 3),
-            Text(
-              '${widget.gold}',
-              style: GoogleFonts.roboto(
-                fontSize: 11,
-                color: AppColors.gold,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(Icons.auto_awesome,
-                size: 12, color: AppColors.purple),
-            const SizedBox(width: 3),
-            Text(
-              '${widget.xp}',
-              style: GoogleFonts.roboto(
-                fontSize: 11,
-                color: AppColors.purple,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

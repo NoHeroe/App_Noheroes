@@ -13,6 +13,7 @@ import '../../../domain/models/player_snapshot.dart';
 import '../../../domain/models/shop_item_view.dart';
 import '../../../domain/models/shop_spec.dart';
 import '../../shared/widgets/level_locked_view.dart';
+import '../../shared/widgets/player_stats_counter.dart';
 
 // Tela /shop/:shopKey — loja individual. Lista itens filtrados, compra via
 // ShopsService.buyItem retornando BuyResult.
@@ -275,10 +276,12 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             builder: (_, ref, __) {
               final p = ref.watch(currentPlayerProvider);
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text('🪙 ${p?.gold ?? 0}',
-                    style: GoogleFonts.roboto(
-                        fontSize: 12, color: AppColors.gold)),
+                padding: const EdgeInsets.only(right: 4),
+                child: PlayerStatsCounter(
+                  gold: p?.gold ?? 0,
+                  xp: p?.xp ?? 0,
+                  gems: p?.gems ?? 0,
+                ),
               );
             },
           ),

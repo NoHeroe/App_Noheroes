@@ -5,14 +5,14 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../domain/models/daily_mission_status.dart';
+import '../../shared/widgets/player_stats_counter.dart';
 import 'daily_pilar_visuals.dart';
-import 'daily_quests_header.dart';
 
 /// Sprint 3.2 Etapa 1.3.C — popup overlay de conclusão de missão.
 ///
 /// 3 modos visuais:
 /// - **completed** (verde): "MISSÃO COMPLETA" + reward + 12 XP particles
-///   verdes + 6 gold dourados voando em arco bezier pro [HeaderCounter].
+///   verdes + 6 gold dourados voando em arco bezier pro [PlayerStatsCounter].
 /// - **partial** (amarelo): "PARCIAL" + reward proporcional + ~50% das
 ///   partículas, todas amarelas.
 /// - **failed** (vermelho): "FALHA" + ripple radial expandindo, sem
@@ -27,7 +27,7 @@ class MissionCompletionPopup {
     required int rewardXp,
     required int rewardGold,
     required GlobalKey originKey,
-    GlobalKey<HeaderCounterState>? targetKey,
+    GlobalKey<PlayerStatsCounterState>? targetKey,
   }) {
     final overlay = Overlay.of(context, rootOverlay: true);
     final mediaSize = MediaQuery.of(context).size;

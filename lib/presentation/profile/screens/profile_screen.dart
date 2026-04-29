@@ -10,6 +10,7 @@ import '../../../core/utils/guild_rank.dart';
 import '../../../core/widgets/animated_bg.dart';
 import '../../../data/database/app_database.dart';
 import '../../../domain/services/body_metrics_service.dart';
+import '../../shared/widgets/player_stats_counter.dart';
 
 /// Sprint 3.2 Etapa 1.0 — Perfil do jogador.
 ///
@@ -45,7 +46,7 @@ class ProfileScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
               children: [
-                _Header(),
+                const _Header(),
                 const SizedBox(height: 16),
                 _IdentityCard(player: player),
                 const SizedBox(height: 16),
@@ -61,9 +62,12 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-class _Header extends StatelessWidget {
+class _Header extends ConsumerWidget {
+  const _Header();
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final player = ref.watch(currentPlayerProvider);
     return Row(
       children: [
         GestureDetector(
@@ -86,6 +90,12 @@ class _Header extends StatelessWidget {
           'PERFIL',
           style: GoogleFonts.cinzelDecorative(
               fontSize: 16, color: AppColors.gold, letterSpacing: 2),
+        ),
+        const Spacer(),
+        PlayerStatsCounter(
+          gold: player?.gold ?? 0,
+          xp: player?.xp ?? 0,
+          gems: player?.gems ?? 0,
         ),
       ],
     );

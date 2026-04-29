@@ -5,8 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../domain/models/daily_mission.dart';
 import '../../../domain/models/daily_mission_status.dart';
+import '../../shared/widgets/player_stats_counter.dart';
 import 'daily_mission_card.dart';
-import 'daily_quests_header.dart';
 
 /// Sprint 3.2 Etapa 1.3.A — sanfona "MISSÕES DIÁRIAS" no topo do
 /// `/quests`. Default expandida.
@@ -32,7 +32,7 @@ class DailySection extends StatefulWidget {
   /// Etapa 1.3.C — `GlobalKey` do counter Gold/XP no header. Propagado
   /// pros cards pra que o `MissionCompletionPopup` saiba o destino das
   /// partículas voadoras.
-  final GlobalKey<HeaderCounterState>? counterKey;
+  final GlobalKey<PlayerStatsCounterState>? counterKey;
 
   final void Function(int missionId, String subTaskKey, int delta)
       onSubTaskDelta;

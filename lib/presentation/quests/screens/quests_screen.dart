@@ -9,6 +9,7 @@ import '../../../domain/enums/mission_modality.dart';
 import '../../../domain/models/mission_progress.dart';
 import '../../individual_creation/widgets/create_individual_mission_sheet.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
+import '../../shared/widgets/player_stats_counter.dart';
 import '../providers/quests_screen_notifier.dart';
 import '../widgets/daily_quests_header.dart';
 import '../widgets/daily_section.dart';
@@ -54,11 +55,11 @@ class QuestsScreen extends ConsumerStatefulWidget {
 }
 
 class _QuestsScreenState extends ConsumerState<QuestsScreen> {
-  /// Etapa 1.3.C — key estável do `HeaderCounter` no `DailyQuestsHeader`.
+  /// Etapa 1.3.C — key estável do `PlayerStatsCounter` no `DailyQuestsHeader`.
   /// Usada pelo `MissionCompletionPopup` como destino das partículas
   /// voadoras + para acionar pulse quando chegam.
-  final GlobalKey<HeaderCounterState> _counterKey =
-      GlobalKey<HeaderCounterState>();
+  final GlobalKey<PlayerStatsCounterState> _counterKey =
+      GlobalKey<PlayerStatsCounterState>();
 
   @override
   Widget build(BuildContext context) {
@@ -101,6 +102,7 @@ class _QuestsScreenState extends ConsumerState<QuestsScreen> {
                     streak: player.dailyMissionsStreak,
                     gold: player.gold,
                     xp: player.xp,
+                    gems: player.gems,
                     counterKey: _counterKey,
                   ),
                   Expanded(
@@ -135,7 +137,7 @@ class _Body extends ConsumerWidget {
   final int rewardXp;
   final int rewardGold;
   final int dailyMissionsStreak;
-  final GlobalKey<HeaderCounterState> counterKey;
+  final GlobalKey<PlayerStatsCounterState> counterKey;
 
   const _Body({
     required this.state,

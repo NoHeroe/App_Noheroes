@@ -12,6 +12,7 @@ import '../../../domain/models/enchant_spec.dart';
 import '../../../domain/models/inventory_entry_with_spec.dart';
 import '../../../domain/models/player_snapshot.dart';
 import '../../shared/widgets/feature_chip.dart';
+import '../../shared/widgets/player_stats_counter.dart';
 
 class InventoryScreen extends ConsumerStatefulWidget {
   const InventoryScreen({super.key});
@@ -74,10 +75,31 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
         child: Column(
           children: [
             _buildHeader(),
+            _buildStatsRow(),
             _buildTabs(),
             Expanded(child: _buildTabContent()),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Sprint 3.3 Etapa 2.4 — counter Gold/XP/Gems em row separada acima
+  /// das tabs. Não vai dentro do header pra evitar overflow histórico
+  /// (FORJA + ENCANT. + back + título já enchem o Row em telas pequenas).
+  Widget _buildStatsRow() {
+    final player = ref.watch(currentPlayerProvider);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      child: Row(
+        children: [
+          const Spacer(),
+          PlayerStatsCounter(
+            gold: player?.gold ?? 0,
+            xp: player?.xp ?? 0,
+            gems: player?.gems ?? 0,
+          ),
+        ],
       ),
     );
   }

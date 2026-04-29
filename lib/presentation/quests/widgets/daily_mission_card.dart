@@ -5,9 +5,9 @@ import '../../../core/constants/app_colors.dart';
 import '../../../domain/models/daily_mission.dart';
 import '../../../domain/models/daily_mission_status.dart';
 import '../../../domain/services/daily_mission_progress_service.dart';
+import '../../shared/widgets/player_stats_counter.dart';
 import 'animated_reward_line.dart';
 import 'daily_pilar_visuals.dart';
-import 'daily_quests_header.dart';
 import 'daily_sub_task_row.dart';
 import 'mission_completion_popup.dart';
 
@@ -47,7 +47,7 @@ class DailyMissionCard extends StatefulWidget {
 
   /// Etapa 1.3.C — `GlobalKey` do counter Gold/XP no header.
   /// Usado pelo [MissionCompletionPopup] como DESTINO das partículas.
-  final GlobalKey<HeaderCounterState>? counterKey;
+  final GlobalKey<PlayerStatsCounterState>? counterKey;
 
   final void Function(String subTaskKey, int delta) onSubTaskDelta;
 

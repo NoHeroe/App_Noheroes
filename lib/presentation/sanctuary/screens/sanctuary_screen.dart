@@ -14,6 +14,7 @@ import '../../../data/datasources/local/npc_reputation_service.dart';
 // Shadow futura. Hooks abaixo ficam como noop até lá.
 import '../../shared/widgets/milestone_popup.dart';
 import '../../shared/widgets/npc_dialog_overlay.dart';
+import '../../shared/widgets/player_stats_counter.dart';
 import '../../shared/widgets/app_snack.dart';
 import '../../shared/tutorial_manager.dart';
 import '../../../data/datasources/local/tutorial_service.dart';
@@ -289,7 +290,12 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
             SafeArea(
               child: Column(
                 children: [
-                  _buildTopBar(context, player?.gold ?? 0, player?.gems ?? 0),
+                  _buildTopBar(
+                    context,
+                    player?.gold ?? 0,
+                    player?.xp ?? 0,
+                    player?.gems ?? 0,
+                  ),
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
@@ -344,7 +350,7 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     );
   }
 
-  Widget _buildTopBar(BuildContext context, int gold, int gems) {
+  Widget _buildTopBar(BuildContext context, int gold, int xp, int gems) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -376,13 +382,7 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
                   )),
             ),
           ),
-          Row(
-            children: [
-              _currencyChip('🪙', '$gold', AppColors.gold),
-              const SizedBox(width: 6),
-              _currencyChip('💎', '$gems', AppColors.purple),
-            ],
-          ),
+          PlayerStatsCounter(gold: gold, xp: xp, gems: gems),
           const SizedBox(width: 8),
           GestureDetector(
             onTap: () => context.go('/notifications'),
@@ -403,23 +403,6 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       ),
     );
   }
-
-  Widget _currencyChip(String emoji, String value, Color color) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(8),
-          color: AppColors.surface,
-        ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Text(emoji, style: const TextStyle(fontSize: 12)),
-          const SizedBox(width: 4),
-          Text(value,
-              style: GoogleFonts.roboto(
-                  fontSize: 12, color: color,
-                  fontWeight: FontWeight.w600)),
-        ]),
-      );
 
   Widget _btn(IconData icon) => Container(
         width: 40, height: 40,

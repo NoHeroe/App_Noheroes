@@ -7,6 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/item_equip_policy.dart';
 import '../../../domain/models/player_snapshot.dart';
 import '../../../domain/models/shop_spec.dart';
+import '../../shared/widgets/player_stats_counter.dart';
 
 // Tela /shops — lista as lojas que o jogador pode acessar.
 class ShopsListScreen extends ConsumerStatefulWidget {
@@ -119,10 +120,12 @@ class _ShopsListScreenState extends ConsumerState<ShopsListScreen> {
             builder: (_, ref, __) {
               final p = ref.watch(currentPlayerProvider);
               return Padding(
-                padding: const EdgeInsets.only(right: 14),
-                child: Text('🪙 ${p?.gold ?? 0}',
-                    style: GoogleFonts.roboto(
-                        fontSize: 12, color: AppColors.gold)),
+                padding: const EdgeInsets.only(right: 8),
+                child: PlayerStatsCounter(
+                  gold: p?.gold ?? 0,
+                  xp: p?.xp ?? 0,
+                  gems: p?.gems ?? 0,
+                ),
               );
             },
           ),
