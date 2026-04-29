@@ -20,8 +20,11 @@ import '../domain/services/body_metrics_service.dart';
 import '../domain/services/daily_mission_generator_service.dart';
 import '../domain/services/daily_mission_progress_service.dart';
 import '../domain/services/daily_mission_rollover_service.dart';
+import '../domain/services/daily_mission_stats_service.dart';
 import '../domain/services/daily_pool_service.dart';
 import '../data/database/daos/daily_missions_dao.dart';
+import '../data/database/daos/player_daily_mission_stats_dao.dart';
+import '../data/database/daos/player_daily_subtask_volume_dao.dart';
 import '../domain/services/daily_reset_service.dart';
 import '../domain/services/faction_reputation_service.dart';
 import '../domain/services/mission_assignment_service.dart';
@@ -339,6 +342,39 @@ final dailyPoolServiceProvider = Provider<DailyPoolService>((ref) {
 // rollover). DAO compartilhado entre os 3 serviços.
 final dailyMissionsDaoProvider = Provider<DailyMissionsDao>((ref) {
   return DailyMissionsDao(ref.watch(appDatabaseProvider));
+});
+
+// Sprint 3.3 Etapa 2.1a — DAOs + service de stats agregadas.
+// Foundation pros triggers de conquista (Etapa 2.1b).
+final playerDailyMissionStatsDaoProvider =
+    Provider<PlayerDailyMissionStatsDao>((ref) {
+  return PlayerDailyMissionStatsDao(ref.watch(appDatabaseProvider));
+});
+
+final playerDailySubtaskVolumeDaoProvider =
+    Provider<PlayerDailySubtaskVolumeDao>((ref) {
+  return PlayerDailySubtaskVolumeDao(ref.watch(appDatabaseProvider));
+});
+
+/// Eager-init: bootstrap chama `ref.watch(...)` em `NoHeroesApp.build`
+/// pra forçar inicialização no boot da árvore Riverpod (sem isso o
+/// service só ouviria eventos depois que algo o lesse).
+final dailyMissionStatsServiceProvider =
+    Provider<DailyMissionStatsService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  final service = DailyMissionStatsService(
+    statsDao: ref.watch(playerDailyMissionStatsDaoProvider),
+    volumeDao: ref.watch(playerDailySubtaskVolumeDaoProvider),
+    playerDao: PlayerDao(db),
+    missionsDao: ref.watch(dailyMissionsDaoProvider),
+    bus: ref.watch(appEventBusProvider),
+  );
+  service.start();
+  ref.onDispose(() {
+    // Fire-and-forget — Riverpod onDispose é síncrono.
+    service.dispose();
+  });
+  return service;
 });
 
 final dailyMissionGeneratorServiceProvider =

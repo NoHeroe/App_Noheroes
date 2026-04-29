@@ -13498,6 +13498,1742 @@ class DailyMissionsTableCompanion
   }
 }
 
+class $PlayerDailyMissionStatsTableTable extends PlayerDailyMissionStatsTable
+    with TableInfo<$PlayerDailyMissionStatsTableTable, PlayerDailyMissionStat> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlayerDailyMissionStatsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _totalCompletedMeta =
+      const VerificationMeta('totalCompleted');
+  @override
+  late final GeneratedColumn<int> totalCompleted = GeneratedColumn<int>(
+      'total_completed', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _totalFailedMeta =
+      const VerificationMeta('totalFailed');
+  @override
+  late final GeneratedColumn<int> totalFailed = GeneratedColumn<int>(
+      'total_failed', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _totalPartialMeta =
+      const VerificationMeta('totalPartial');
+  @override
+  late final GeneratedColumn<int> totalPartial = GeneratedColumn<int>(
+      'total_partial', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _totalPerfectMeta =
+      const VerificationMeta('totalPerfect');
+  @override
+  late final GeneratedColumn<int> totalPerfect = GeneratedColumn<int>(
+      'total_perfect', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _totalSuperPerfectMeta =
+      const VerificationMeta('totalSuperPerfect');
+  @override
+  late final GeneratedColumn<int> totalSuperPerfect = GeneratedColumn<int>(
+      'total_super_perfect', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _totalGeneratedMeta =
+      const VerificationMeta('totalGenerated');
+  @override
+  late final GeneratedColumn<int> totalGenerated = GeneratedColumn<int>(
+      'total_generated', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _totalConfirmedMeta =
+      const VerificationMeta('totalConfirmed');
+  @override
+  late final GeneratedColumn<int> totalConfirmed = GeneratedColumn<int>(
+      'total_confirmed', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _bestStreakMeta =
+      const VerificationMeta('bestStreak');
+  @override
+  late final GeneratedColumn<int> bestStreak = GeneratedColumn<int>(
+      'best_streak', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _daysWithoutFailingMeta =
+      const VerificationMeta('daysWithoutFailing');
+  @override
+  late final GeneratedColumn<int> daysWithoutFailing = GeneratedColumn<int>(
+      'days_without_failing', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _bestDaysWithoutFailingMeta =
+      const VerificationMeta('bestDaysWithoutFailing');
+  @override
+  late final GeneratedColumn<int> bestDaysWithoutFailing = GeneratedColumn<int>(
+      'best_days_without_failing', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _consecutiveFailsCountMeta =
+      const VerificationMeta('consecutiveFailsCount');
+  @override
+  late final GeneratedColumn<int> consecutiveFailsCount = GeneratedColumn<int>(
+      'consecutive_fails_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _maxConsecutiveFailsMeta =
+      const VerificationMeta('maxConsecutiveFails');
+  @override
+  late final GeneratedColumn<int> maxConsecutiveFails = GeneratedColumn<int>(
+      'max_consecutive_fails', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _consecutiveActiveDaysMeta =
+      const VerificationMeta('consecutiveActiveDays');
+  @override
+  late final GeneratedColumn<int> consecutiveActiveDays = GeneratedColumn<int>(
+      'consecutive_active_days', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _bestConsecutiveActiveDaysMeta =
+      const VerificationMeta('bestConsecutiveActiveDays');
+  @override
+  late final GeneratedColumn<int> bestConsecutiveActiveDays =
+      GeneratedColumn<int>('best_consecutive_active_days', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0));
+  static const VerificationMeta _totalSubTasksCompletedMeta =
+      const VerificationMeta('totalSubTasksCompleted');
+  @override
+  late final GeneratedColumn<int> totalSubTasksCompleted = GeneratedColumn<int>(
+      'total_sub_tasks_completed', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _totalSubTasksOvershootMeta =
+      const VerificationMeta('totalSubTasksOvershoot');
+  @override
+  late final GeneratedColumn<int> totalSubTasksOvershoot = GeneratedColumn<int>(
+      'total_sub_tasks_overshoot', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _totalConfirmedBefore8AMMeta =
+      const VerificationMeta('totalConfirmedBefore8AM');
+  @override
+  late final GeneratedColumn<int> totalConfirmedBefore8AM =
+      GeneratedColumn<int>('total_confirmed_before_8am', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0));
+  static const VerificationMeta _totalConfirmedAfter10PMMeta =
+      const VerificationMeta('totalConfirmedAfter10PM');
+  @override
+  late final GeneratedColumn<int> totalConfirmedAfter10PM =
+      GeneratedColumn<int>('total_confirmed_after_10pm', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0));
+  static const VerificationMeta _totalConfirmedOnWeekendMeta =
+      const VerificationMeta('totalConfirmedOnWeekend');
+  @override
+  late final GeneratedColumn<int> totalConfirmedOnWeekend =
+      GeneratedColumn<int>('total_confirmed_on_weekend', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0));
+  static const VerificationMeta _daysOfWeekCompletedBitmaskMeta =
+      const VerificationMeta('daysOfWeekCompletedBitmask');
+  @override
+  late final GeneratedColumn<int> daysOfWeekCompletedBitmask =
+      GeneratedColumn<int>('days_of_week_completed_bitmask', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0));
+  static const VerificationMeta _totalZeroProgressConfirmsMeta =
+      const VerificationMeta('totalZeroProgressConfirms');
+  @override
+  late final GeneratedColumn<int> totalZeroProgressConfirms =
+      GeneratedColumn<int>('total_zero_progress_confirms', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0));
+  static const VerificationMeta _totalDaysAllPilarsMeta =
+      const VerificationMeta('totalDaysAllPilars');
+  @override
+  late final GeneratedColumn<int> totalDaysAllPilars = GeneratedColumn<int>(
+      'total_days_all_pilars', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _totalSpeedrunCompletionsMeta =
+      const VerificationMeta('totalSpeedrunCompletions');
+  @override
+  late final GeneratedColumn<int> totalSpeedrunCompletions =
+      GeneratedColumn<int>('total_speedrun_completions', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0));
+  static const VerificationMeta _firstCompletedAtMeta =
+      const VerificationMeta('firstCompletedAt');
+  @override
+  late final GeneratedColumn<int> firstCompletedAt = GeneratedColumn<int>(
+      'first_completed_at', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _lastCompletedAtMeta =
+      const VerificationMeta('lastCompletedAt');
+  @override
+  late final GeneratedColumn<int> lastCompletedAt = GeneratedColumn<int>(
+      'last_completed_at', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _lastPilarBalanceDayMeta =
+      const VerificationMeta('lastPilarBalanceDay');
+  @override
+  late final GeneratedColumn<String> lastPilarBalanceDay =
+      GeneratedColumn<String>('last_pilar_balance_day', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _lastActiveDayMeta =
+      const VerificationMeta('lastActiveDay');
+  @override
+  late final GeneratedColumn<String> lastActiveDay = GeneratedColumn<String>(
+      'last_active_day', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        playerId,
+        totalCompleted,
+        totalFailed,
+        totalPartial,
+        totalPerfect,
+        totalSuperPerfect,
+        totalGenerated,
+        totalConfirmed,
+        bestStreak,
+        daysWithoutFailing,
+        bestDaysWithoutFailing,
+        consecutiveFailsCount,
+        maxConsecutiveFails,
+        consecutiveActiveDays,
+        bestConsecutiveActiveDays,
+        totalSubTasksCompleted,
+        totalSubTasksOvershoot,
+        totalConfirmedBefore8AM,
+        totalConfirmedAfter10PM,
+        totalConfirmedOnWeekend,
+        daysOfWeekCompletedBitmask,
+        totalZeroProgressConfirms,
+        totalDaysAllPilars,
+        totalSpeedrunCompletions,
+        firstCompletedAt,
+        lastCompletedAt,
+        lastPilarBalanceDay,
+        lastActiveDay,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'player_daily_mission_stats';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<PlayerDailyMissionStat> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    }
+    if (data.containsKey('total_completed')) {
+      context.handle(
+          _totalCompletedMeta,
+          totalCompleted.isAcceptableOrUnknown(
+              data['total_completed']!, _totalCompletedMeta));
+    }
+    if (data.containsKey('total_failed')) {
+      context.handle(
+          _totalFailedMeta,
+          totalFailed.isAcceptableOrUnknown(
+              data['total_failed']!, _totalFailedMeta));
+    }
+    if (data.containsKey('total_partial')) {
+      context.handle(
+          _totalPartialMeta,
+          totalPartial.isAcceptableOrUnknown(
+              data['total_partial']!, _totalPartialMeta));
+    }
+    if (data.containsKey('total_perfect')) {
+      context.handle(
+          _totalPerfectMeta,
+          totalPerfect.isAcceptableOrUnknown(
+              data['total_perfect']!, _totalPerfectMeta));
+    }
+    if (data.containsKey('total_super_perfect')) {
+      context.handle(
+          _totalSuperPerfectMeta,
+          totalSuperPerfect.isAcceptableOrUnknown(
+              data['total_super_perfect']!, _totalSuperPerfectMeta));
+    }
+    if (data.containsKey('total_generated')) {
+      context.handle(
+          _totalGeneratedMeta,
+          totalGenerated.isAcceptableOrUnknown(
+              data['total_generated']!, _totalGeneratedMeta));
+    }
+    if (data.containsKey('total_confirmed')) {
+      context.handle(
+          _totalConfirmedMeta,
+          totalConfirmed.isAcceptableOrUnknown(
+              data['total_confirmed']!, _totalConfirmedMeta));
+    }
+    if (data.containsKey('best_streak')) {
+      context.handle(
+          _bestStreakMeta,
+          bestStreak.isAcceptableOrUnknown(
+              data['best_streak']!, _bestStreakMeta));
+    }
+    if (data.containsKey('days_without_failing')) {
+      context.handle(
+          _daysWithoutFailingMeta,
+          daysWithoutFailing.isAcceptableOrUnknown(
+              data['days_without_failing']!, _daysWithoutFailingMeta));
+    }
+    if (data.containsKey('best_days_without_failing')) {
+      context.handle(
+          _bestDaysWithoutFailingMeta,
+          bestDaysWithoutFailing.isAcceptableOrUnknown(
+              data['best_days_without_failing']!, _bestDaysWithoutFailingMeta));
+    }
+    if (data.containsKey('consecutive_fails_count')) {
+      context.handle(
+          _consecutiveFailsCountMeta,
+          consecutiveFailsCount.isAcceptableOrUnknown(
+              data['consecutive_fails_count']!, _consecutiveFailsCountMeta));
+    }
+    if (data.containsKey('max_consecutive_fails')) {
+      context.handle(
+          _maxConsecutiveFailsMeta,
+          maxConsecutiveFails.isAcceptableOrUnknown(
+              data['max_consecutive_fails']!, _maxConsecutiveFailsMeta));
+    }
+    if (data.containsKey('consecutive_active_days')) {
+      context.handle(
+          _consecutiveActiveDaysMeta,
+          consecutiveActiveDays.isAcceptableOrUnknown(
+              data['consecutive_active_days']!, _consecutiveActiveDaysMeta));
+    }
+    if (data.containsKey('best_consecutive_active_days')) {
+      context.handle(
+          _bestConsecutiveActiveDaysMeta,
+          bestConsecutiveActiveDays.isAcceptableOrUnknown(
+              data['best_consecutive_active_days']!,
+              _bestConsecutiveActiveDaysMeta));
+    }
+    if (data.containsKey('total_sub_tasks_completed')) {
+      context.handle(
+          _totalSubTasksCompletedMeta,
+          totalSubTasksCompleted.isAcceptableOrUnknown(
+              data['total_sub_tasks_completed']!, _totalSubTasksCompletedMeta));
+    }
+    if (data.containsKey('total_sub_tasks_overshoot')) {
+      context.handle(
+          _totalSubTasksOvershootMeta,
+          totalSubTasksOvershoot.isAcceptableOrUnknown(
+              data['total_sub_tasks_overshoot']!, _totalSubTasksOvershootMeta));
+    }
+    if (data.containsKey('total_confirmed_before_8am')) {
+      context.handle(
+          _totalConfirmedBefore8AMMeta,
+          totalConfirmedBefore8AM.isAcceptableOrUnknown(
+              data['total_confirmed_before_8am']!,
+              _totalConfirmedBefore8AMMeta));
+    }
+    if (data.containsKey('total_confirmed_after_10pm')) {
+      context.handle(
+          _totalConfirmedAfter10PMMeta,
+          totalConfirmedAfter10PM.isAcceptableOrUnknown(
+              data['total_confirmed_after_10pm']!,
+              _totalConfirmedAfter10PMMeta));
+    }
+    if (data.containsKey('total_confirmed_on_weekend')) {
+      context.handle(
+          _totalConfirmedOnWeekendMeta,
+          totalConfirmedOnWeekend.isAcceptableOrUnknown(
+              data['total_confirmed_on_weekend']!,
+              _totalConfirmedOnWeekendMeta));
+    }
+    if (data.containsKey('days_of_week_completed_bitmask')) {
+      context.handle(
+          _daysOfWeekCompletedBitmaskMeta,
+          daysOfWeekCompletedBitmask.isAcceptableOrUnknown(
+              data['days_of_week_completed_bitmask']!,
+              _daysOfWeekCompletedBitmaskMeta));
+    }
+    if (data.containsKey('total_zero_progress_confirms')) {
+      context.handle(
+          _totalZeroProgressConfirmsMeta,
+          totalZeroProgressConfirms.isAcceptableOrUnknown(
+              data['total_zero_progress_confirms']!,
+              _totalZeroProgressConfirmsMeta));
+    }
+    if (data.containsKey('total_days_all_pilars')) {
+      context.handle(
+          _totalDaysAllPilarsMeta,
+          totalDaysAllPilars.isAcceptableOrUnknown(
+              data['total_days_all_pilars']!, _totalDaysAllPilarsMeta));
+    }
+    if (data.containsKey('total_speedrun_completions')) {
+      context.handle(
+          _totalSpeedrunCompletionsMeta,
+          totalSpeedrunCompletions.isAcceptableOrUnknown(
+              data['total_speedrun_completions']!,
+              _totalSpeedrunCompletionsMeta));
+    }
+    if (data.containsKey('first_completed_at')) {
+      context.handle(
+          _firstCompletedAtMeta,
+          firstCompletedAt.isAcceptableOrUnknown(
+              data['first_completed_at']!, _firstCompletedAtMeta));
+    }
+    if (data.containsKey('last_completed_at')) {
+      context.handle(
+          _lastCompletedAtMeta,
+          lastCompletedAt.isAcceptableOrUnknown(
+              data['last_completed_at']!, _lastCompletedAtMeta));
+    }
+    if (data.containsKey('last_pilar_balance_day')) {
+      context.handle(
+          _lastPilarBalanceDayMeta,
+          lastPilarBalanceDay.isAcceptableOrUnknown(
+              data['last_pilar_balance_day']!, _lastPilarBalanceDayMeta));
+    }
+    if (data.containsKey('last_active_day')) {
+      context.handle(
+          _lastActiveDayMeta,
+          lastActiveDay.isAcceptableOrUnknown(
+              data['last_active_day']!, _lastActiveDayMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {playerId};
+  @override
+  PlayerDailyMissionStat map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlayerDailyMissionStat(
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      totalCompleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}total_completed'])!,
+      totalFailed: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}total_failed'])!,
+      totalPartial: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}total_partial'])!,
+      totalPerfect: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}total_perfect'])!,
+      totalSuperPerfect: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}total_super_perfect'])!,
+      totalGenerated: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}total_generated'])!,
+      totalConfirmed: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}total_confirmed'])!,
+      bestStreak: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}best_streak'])!,
+      daysWithoutFailing: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}days_without_failing'])!,
+      bestDaysWithoutFailing: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}best_days_without_failing'])!,
+      consecutiveFailsCount: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}consecutive_fails_count'])!,
+      maxConsecutiveFails: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}max_consecutive_fails'])!,
+      consecutiveActiveDays: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}consecutive_active_days'])!,
+      bestConsecutiveActiveDays: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}best_consecutive_active_days'])!,
+      totalSubTasksCompleted: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}total_sub_tasks_completed'])!,
+      totalSubTasksOvershoot: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}total_sub_tasks_overshoot'])!,
+      totalConfirmedBefore8AM: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}total_confirmed_before_8am'])!,
+      totalConfirmedAfter10PM: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}total_confirmed_after_10pm'])!,
+      totalConfirmedOnWeekend: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}total_confirmed_on_weekend'])!,
+      daysOfWeekCompletedBitmask: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}days_of_week_completed_bitmask'])!,
+      totalZeroProgressConfirms: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}total_zero_progress_confirms'])!,
+      totalDaysAllPilars: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}total_days_all_pilars'])!,
+      totalSpeedrunCompletions: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}total_speedrun_completions'])!,
+      firstCompletedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}first_completed_at']),
+      lastCompletedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}last_completed_at']),
+      lastPilarBalanceDay: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}last_pilar_balance_day']),
+      lastActiveDay: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}last_active_day']),
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $PlayerDailyMissionStatsTableTable createAlias(String alias) {
+    return $PlayerDailyMissionStatsTableTable(attachedDatabase, alias);
+  }
+}
+
+class PlayerDailyMissionStat extends DataClass
+    implements Insertable<PlayerDailyMissionStat> {
+  final int playerId;
+  final int totalCompleted;
+  final int totalFailed;
+  final int totalPartial;
+  final int totalPerfect;
+  final int totalSuperPerfect;
+  final int totalGenerated;
+  final int totalConfirmed;
+  final int bestStreak;
+  final int daysWithoutFailing;
+  final int bestDaysWithoutFailing;
+  final int consecutiveFailsCount;
+  final int maxConsecutiveFails;
+  final int consecutiveActiveDays;
+  final int bestConsecutiveActiveDays;
+  final int totalSubTasksCompleted;
+  final int totalSubTasksOvershoot;
+  final int totalConfirmedBefore8AM;
+  final int totalConfirmedAfter10PM;
+  final int totalConfirmedOnWeekend;
+  final int daysOfWeekCompletedBitmask;
+  final int totalZeroProgressConfirms;
+  final int totalDaysAllPilars;
+  final int totalSpeedrunCompletions;
+  final int? firstCompletedAt;
+  final int? lastCompletedAt;
+
+  /// Última data (YYYY-MM-DD) em que `totalDaysAllPilars` foi
+  /// incrementado — guard contra duplo-count no mesmo dia.
+  final String? lastPilarBalanceDay;
+
+  /// Última data (YYYY-MM-DD) em que houve atividade — usado pra
+  /// detectar gap em `consecutiveActiveDays`.
+  final String? lastActiveDay;
+  final int updatedAt;
+  const PlayerDailyMissionStat(
+      {required this.playerId,
+      required this.totalCompleted,
+      required this.totalFailed,
+      required this.totalPartial,
+      required this.totalPerfect,
+      required this.totalSuperPerfect,
+      required this.totalGenerated,
+      required this.totalConfirmed,
+      required this.bestStreak,
+      required this.daysWithoutFailing,
+      required this.bestDaysWithoutFailing,
+      required this.consecutiveFailsCount,
+      required this.maxConsecutiveFails,
+      required this.consecutiveActiveDays,
+      required this.bestConsecutiveActiveDays,
+      required this.totalSubTasksCompleted,
+      required this.totalSubTasksOvershoot,
+      required this.totalConfirmedBefore8AM,
+      required this.totalConfirmedAfter10PM,
+      required this.totalConfirmedOnWeekend,
+      required this.daysOfWeekCompletedBitmask,
+      required this.totalZeroProgressConfirms,
+      required this.totalDaysAllPilars,
+      required this.totalSpeedrunCompletions,
+      this.firstCompletedAt,
+      this.lastCompletedAt,
+      this.lastPilarBalanceDay,
+      this.lastActiveDay,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['player_id'] = Variable<int>(playerId);
+    map['total_completed'] = Variable<int>(totalCompleted);
+    map['total_failed'] = Variable<int>(totalFailed);
+    map['total_partial'] = Variable<int>(totalPartial);
+    map['total_perfect'] = Variable<int>(totalPerfect);
+    map['total_super_perfect'] = Variable<int>(totalSuperPerfect);
+    map['total_generated'] = Variable<int>(totalGenerated);
+    map['total_confirmed'] = Variable<int>(totalConfirmed);
+    map['best_streak'] = Variable<int>(bestStreak);
+    map['days_without_failing'] = Variable<int>(daysWithoutFailing);
+    map['best_days_without_failing'] = Variable<int>(bestDaysWithoutFailing);
+    map['consecutive_fails_count'] = Variable<int>(consecutiveFailsCount);
+    map['max_consecutive_fails'] = Variable<int>(maxConsecutiveFails);
+    map['consecutive_active_days'] = Variable<int>(consecutiveActiveDays);
+    map['best_consecutive_active_days'] =
+        Variable<int>(bestConsecutiveActiveDays);
+    map['total_sub_tasks_completed'] = Variable<int>(totalSubTasksCompleted);
+    map['total_sub_tasks_overshoot'] = Variable<int>(totalSubTasksOvershoot);
+    map['total_confirmed_before_8am'] = Variable<int>(totalConfirmedBefore8AM);
+    map['total_confirmed_after_10pm'] = Variable<int>(totalConfirmedAfter10PM);
+    map['total_confirmed_on_weekend'] = Variable<int>(totalConfirmedOnWeekend);
+    map['days_of_week_completed_bitmask'] =
+        Variable<int>(daysOfWeekCompletedBitmask);
+    map['total_zero_progress_confirms'] =
+        Variable<int>(totalZeroProgressConfirms);
+    map['total_days_all_pilars'] = Variable<int>(totalDaysAllPilars);
+    map['total_speedrun_completions'] = Variable<int>(totalSpeedrunCompletions);
+    if (!nullToAbsent || firstCompletedAt != null) {
+      map['first_completed_at'] = Variable<int>(firstCompletedAt);
+    }
+    if (!nullToAbsent || lastCompletedAt != null) {
+      map['last_completed_at'] = Variable<int>(lastCompletedAt);
+    }
+    if (!nullToAbsent || lastPilarBalanceDay != null) {
+      map['last_pilar_balance_day'] = Variable<String>(lastPilarBalanceDay);
+    }
+    if (!nullToAbsent || lastActiveDay != null) {
+      map['last_active_day'] = Variable<String>(lastActiveDay);
+    }
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  PlayerDailyMissionStatsTableCompanion toCompanion(bool nullToAbsent) {
+    return PlayerDailyMissionStatsTableCompanion(
+      playerId: Value(playerId),
+      totalCompleted: Value(totalCompleted),
+      totalFailed: Value(totalFailed),
+      totalPartial: Value(totalPartial),
+      totalPerfect: Value(totalPerfect),
+      totalSuperPerfect: Value(totalSuperPerfect),
+      totalGenerated: Value(totalGenerated),
+      totalConfirmed: Value(totalConfirmed),
+      bestStreak: Value(bestStreak),
+      daysWithoutFailing: Value(daysWithoutFailing),
+      bestDaysWithoutFailing: Value(bestDaysWithoutFailing),
+      consecutiveFailsCount: Value(consecutiveFailsCount),
+      maxConsecutiveFails: Value(maxConsecutiveFails),
+      consecutiveActiveDays: Value(consecutiveActiveDays),
+      bestConsecutiveActiveDays: Value(bestConsecutiveActiveDays),
+      totalSubTasksCompleted: Value(totalSubTasksCompleted),
+      totalSubTasksOvershoot: Value(totalSubTasksOvershoot),
+      totalConfirmedBefore8AM: Value(totalConfirmedBefore8AM),
+      totalConfirmedAfter10PM: Value(totalConfirmedAfter10PM),
+      totalConfirmedOnWeekend: Value(totalConfirmedOnWeekend),
+      daysOfWeekCompletedBitmask: Value(daysOfWeekCompletedBitmask),
+      totalZeroProgressConfirms: Value(totalZeroProgressConfirms),
+      totalDaysAllPilars: Value(totalDaysAllPilars),
+      totalSpeedrunCompletions: Value(totalSpeedrunCompletions),
+      firstCompletedAt: firstCompletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(firstCompletedAt),
+      lastCompletedAt: lastCompletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastCompletedAt),
+      lastPilarBalanceDay: lastPilarBalanceDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastPilarBalanceDay),
+      lastActiveDay: lastActiveDay == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastActiveDay),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory PlayerDailyMissionStat.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlayerDailyMissionStat(
+      playerId: serializer.fromJson<int>(json['playerId']),
+      totalCompleted: serializer.fromJson<int>(json['totalCompleted']),
+      totalFailed: serializer.fromJson<int>(json['totalFailed']),
+      totalPartial: serializer.fromJson<int>(json['totalPartial']),
+      totalPerfect: serializer.fromJson<int>(json['totalPerfect']),
+      totalSuperPerfect: serializer.fromJson<int>(json['totalSuperPerfect']),
+      totalGenerated: serializer.fromJson<int>(json['totalGenerated']),
+      totalConfirmed: serializer.fromJson<int>(json['totalConfirmed']),
+      bestStreak: serializer.fromJson<int>(json['bestStreak']),
+      daysWithoutFailing: serializer.fromJson<int>(json['daysWithoutFailing']),
+      bestDaysWithoutFailing:
+          serializer.fromJson<int>(json['bestDaysWithoutFailing']),
+      consecutiveFailsCount:
+          serializer.fromJson<int>(json['consecutiveFailsCount']),
+      maxConsecutiveFails:
+          serializer.fromJson<int>(json['maxConsecutiveFails']),
+      consecutiveActiveDays:
+          serializer.fromJson<int>(json['consecutiveActiveDays']),
+      bestConsecutiveActiveDays:
+          serializer.fromJson<int>(json['bestConsecutiveActiveDays']),
+      totalSubTasksCompleted:
+          serializer.fromJson<int>(json['totalSubTasksCompleted']),
+      totalSubTasksOvershoot:
+          serializer.fromJson<int>(json['totalSubTasksOvershoot']),
+      totalConfirmedBefore8AM:
+          serializer.fromJson<int>(json['totalConfirmedBefore8AM']),
+      totalConfirmedAfter10PM:
+          serializer.fromJson<int>(json['totalConfirmedAfter10PM']),
+      totalConfirmedOnWeekend:
+          serializer.fromJson<int>(json['totalConfirmedOnWeekend']),
+      daysOfWeekCompletedBitmask:
+          serializer.fromJson<int>(json['daysOfWeekCompletedBitmask']),
+      totalZeroProgressConfirms:
+          serializer.fromJson<int>(json['totalZeroProgressConfirms']),
+      totalDaysAllPilars: serializer.fromJson<int>(json['totalDaysAllPilars']),
+      totalSpeedrunCompletions:
+          serializer.fromJson<int>(json['totalSpeedrunCompletions']),
+      firstCompletedAt: serializer.fromJson<int?>(json['firstCompletedAt']),
+      lastCompletedAt: serializer.fromJson<int?>(json['lastCompletedAt']),
+      lastPilarBalanceDay:
+          serializer.fromJson<String?>(json['lastPilarBalanceDay']),
+      lastActiveDay: serializer.fromJson<String?>(json['lastActiveDay']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'playerId': serializer.toJson<int>(playerId),
+      'totalCompleted': serializer.toJson<int>(totalCompleted),
+      'totalFailed': serializer.toJson<int>(totalFailed),
+      'totalPartial': serializer.toJson<int>(totalPartial),
+      'totalPerfect': serializer.toJson<int>(totalPerfect),
+      'totalSuperPerfect': serializer.toJson<int>(totalSuperPerfect),
+      'totalGenerated': serializer.toJson<int>(totalGenerated),
+      'totalConfirmed': serializer.toJson<int>(totalConfirmed),
+      'bestStreak': serializer.toJson<int>(bestStreak),
+      'daysWithoutFailing': serializer.toJson<int>(daysWithoutFailing),
+      'bestDaysWithoutFailing': serializer.toJson<int>(bestDaysWithoutFailing),
+      'consecutiveFailsCount': serializer.toJson<int>(consecutiveFailsCount),
+      'maxConsecutiveFails': serializer.toJson<int>(maxConsecutiveFails),
+      'consecutiveActiveDays': serializer.toJson<int>(consecutiveActiveDays),
+      'bestConsecutiveActiveDays':
+          serializer.toJson<int>(bestConsecutiveActiveDays),
+      'totalSubTasksCompleted': serializer.toJson<int>(totalSubTasksCompleted),
+      'totalSubTasksOvershoot': serializer.toJson<int>(totalSubTasksOvershoot),
+      'totalConfirmedBefore8AM':
+          serializer.toJson<int>(totalConfirmedBefore8AM),
+      'totalConfirmedAfter10PM':
+          serializer.toJson<int>(totalConfirmedAfter10PM),
+      'totalConfirmedOnWeekend':
+          serializer.toJson<int>(totalConfirmedOnWeekend),
+      'daysOfWeekCompletedBitmask':
+          serializer.toJson<int>(daysOfWeekCompletedBitmask),
+      'totalZeroProgressConfirms':
+          serializer.toJson<int>(totalZeroProgressConfirms),
+      'totalDaysAllPilars': serializer.toJson<int>(totalDaysAllPilars),
+      'totalSpeedrunCompletions':
+          serializer.toJson<int>(totalSpeedrunCompletions),
+      'firstCompletedAt': serializer.toJson<int?>(firstCompletedAt),
+      'lastCompletedAt': serializer.toJson<int?>(lastCompletedAt),
+      'lastPilarBalanceDay': serializer.toJson<String?>(lastPilarBalanceDay),
+      'lastActiveDay': serializer.toJson<String?>(lastActiveDay),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  PlayerDailyMissionStat copyWith(
+          {int? playerId,
+          int? totalCompleted,
+          int? totalFailed,
+          int? totalPartial,
+          int? totalPerfect,
+          int? totalSuperPerfect,
+          int? totalGenerated,
+          int? totalConfirmed,
+          int? bestStreak,
+          int? daysWithoutFailing,
+          int? bestDaysWithoutFailing,
+          int? consecutiveFailsCount,
+          int? maxConsecutiveFails,
+          int? consecutiveActiveDays,
+          int? bestConsecutiveActiveDays,
+          int? totalSubTasksCompleted,
+          int? totalSubTasksOvershoot,
+          int? totalConfirmedBefore8AM,
+          int? totalConfirmedAfter10PM,
+          int? totalConfirmedOnWeekend,
+          int? daysOfWeekCompletedBitmask,
+          int? totalZeroProgressConfirms,
+          int? totalDaysAllPilars,
+          int? totalSpeedrunCompletions,
+          Value<int?> firstCompletedAt = const Value.absent(),
+          Value<int?> lastCompletedAt = const Value.absent(),
+          Value<String?> lastPilarBalanceDay = const Value.absent(),
+          Value<String?> lastActiveDay = const Value.absent(),
+          int? updatedAt}) =>
+      PlayerDailyMissionStat(
+        playerId: playerId ?? this.playerId,
+        totalCompleted: totalCompleted ?? this.totalCompleted,
+        totalFailed: totalFailed ?? this.totalFailed,
+        totalPartial: totalPartial ?? this.totalPartial,
+        totalPerfect: totalPerfect ?? this.totalPerfect,
+        totalSuperPerfect: totalSuperPerfect ?? this.totalSuperPerfect,
+        totalGenerated: totalGenerated ?? this.totalGenerated,
+        totalConfirmed: totalConfirmed ?? this.totalConfirmed,
+        bestStreak: bestStreak ?? this.bestStreak,
+        daysWithoutFailing: daysWithoutFailing ?? this.daysWithoutFailing,
+        bestDaysWithoutFailing:
+            bestDaysWithoutFailing ?? this.bestDaysWithoutFailing,
+        consecutiveFailsCount:
+            consecutiveFailsCount ?? this.consecutiveFailsCount,
+        maxConsecutiveFails: maxConsecutiveFails ?? this.maxConsecutiveFails,
+        consecutiveActiveDays:
+            consecutiveActiveDays ?? this.consecutiveActiveDays,
+        bestConsecutiveActiveDays:
+            bestConsecutiveActiveDays ?? this.bestConsecutiveActiveDays,
+        totalSubTasksCompleted:
+            totalSubTasksCompleted ?? this.totalSubTasksCompleted,
+        totalSubTasksOvershoot:
+            totalSubTasksOvershoot ?? this.totalSubTasksOvershoot,
+        totalConfirmedBefore8AM:
+            totalConfirmedBefore8AM ?? this.totalConfirmedBefore8AM,
+        totalConfirmedAfter10PM:
+            totalConfirmedAfter10PM ?? this.totalConfirmedAfter10PM,
+        totalConfirmedOnWeekend:
+            totalConfirmedOnWeekend ?? this.totalConfirmedOnWeekend,
+        daysOfWeekCompletedBitmask:
+            daysOfWeekCompletedBitmask ?? this.daysOfWeekCompletedBitmask,
+        totalZeroProgressConfirms:
+            totalZeroProgressConfirms ?? this.totalZeroProgressConfirms,
+        totalDaysAllPilars: totalDaysAllPilars ?? this.totalDaysAllPilars,
+        totalSpeedrunCompletions:
+            totalSpeedrunCompletions ?? this.totalSpeedrunCompletions,
+        firstCompletedAt: firstCompletedAt.present
+            ? firstCompletedAt.value
+            : this.firstCompletedAt,
+        lastCompletedAt: lastCompletedAt.present
+            ? lastCompletedAt.value
+            : this.lastCompletedAt,
+        lastPilarBalanceDay: lastPilarBalanceDay.present
+            ? lastPilarBalanceDay.value
+            : this.lastPilarBalanceDay,
+        lastActiveDay:
+            lastActiveDay.present ? lastActiveDay.value : this.lastActiveDay,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  PlayerDailyMissionStat copyWithCompanion(
+      PlayerDailyMissionStatsTableCompanion data) {
+    return PlayerDailyMissionStat(
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      totalCompleted: data.totalCompleted.present
+          ? data.totalCompleted.value
+          : this.totalCompleted,
+      totalFailed:
+          data.totalFailed.present ? data.totalFailed.value : this.totalFailed,
+      totalPartial: data.totalPartial.present
+          ? data.totalPartial.value
+          : this.totalPartial,
+      totalPerfect: data.totalPerfect.present
+          ? data.totalPerfect.value
+          : this.totalPerfect,
+      totalSuperPerfect: data.totalSuperPerfect.present
+          ? data.totalSuperPerfect.value
+          : this.totalSuperPerfect,
+      totalGenerated: data.totalGenerated.present
+          ? data.totalGenerated.value
+          : this.totalGenerated,
+      totalConfirmed: data.totalConfirmed.present
+          ? data.totalConfirmed.value
+          : this.totalConfirmed,
+      bestStreak:
+          data.bestStreak.present ? data.bestStreak.value : this.bestStreak,
+      daysWithoutFailing: data.daysWithoutFailing.present
+          ? data.daysWithoutFailing.value
+          : this.daysWithoutFailing,
+      bestDaysWithoutFailing: data.bestDaysWithoutFailing.present
+          ? data.bestDaysWithoutFailing.value
+          : this.bestDaysWithoutFailing,
+      consecutiveFailsCount: data.consecutiveFailsCount.present
+          ? data.consecutiveFailsCount.value
+          : this.consecutiveFailsCount,
+      maxConsecutiveFails: data.maxConsecutiveFails.present
+          ? data.maxConsecutiveFails.value
+          : this.maxConsecutiveFails,
+      consecutiveActiveDays: data.consecutiveActiveDays.present
+          ? data.consecutiveActiveDays.value
+          : this.consecutiveActiveDays,
+      bestConsecutiveActiveDays: data.bestConsecutiveActiveDays.present
+          ? data.bestConsecutiveActiveDays.value
+          : this.bestConsecutiveActiveDays,
+      totalSubTasksCompleted: data.totalSubTasksCompleted.present
+          ? data.totalSubTasksCompleted.value
+          : this.totalSubTasksCompleted,
+      totalSubTasksOvershoot: data.totalSubTasksOvershoot.present
+          ? data.totalSubTasksOvershoot.value
+          : this.totalSubTasksOvershoot,
+      totalConfirmedBefore8AM: data.totalConfirmedBefore8AM.present
+          ? data.totalConfirmedBefore8AM.value
+          : this.totalConfirmedBefore8AM,
+      totalConfirmedAfter10PM: data.totalConfirmedAfter10PM.present
+          ? data.totalConfirmedAfter10PM.value
+          : this.totalConfirmedAfter10PM,
+      totalConfirmedOnWeekend: data.totalConfirmedOnWeekend.present
+          ? data.totalConfirmedOnWeekend.value
+          : this.totalConfirmedOnWeekend,
+      daysOfWeekCompletedBitmask: data.daysOfWeekCompletedBitmask.present
+          ? data.daysOfWeekCompletedBitmask.value
+          : this.daysOfWeekCompletedBitmask,
+      totalZeroProgressConfirms: data.totalZeroProgressConfirms.present
+          ? data.totalZeroProgressConfirms.value
+          : this.totalZeroProgressConfirms,
+      totalDaysAllPilars: data.totalDaysAllPilars.present
+          ? data.totalDaysAllPilars.value
+          : this.totalDaysAllPilars,
+      totalSpeedrunCompletions: data.totalSpeedrunCompletions.present
+          ? data.totalSpeedrunCompletions.value
+          : this.totalSpeedrunCompletions,
+      firstCompletedAt: data.firstCompletedAt.present
+          ? data.firstCompletedAt.value
+          : this.firstCompletedAt,
+      lastCompletedAt: data.lastCompletedAt.present
+          ? data.lastCompletedAt.value
+          : this.lastCompletedAt,
+      lastPilarBalanceDay: data.lastPilarBalanceDay.present
+          ? data.lastPilarBalanceDay.value
+          : this.lastPilarBalanceDay,
+      lastActiveDay: data.lastActiveDay.present
+          ? data.lastActiveDay.value
+          : this.lastActiveDay,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerDailyMissionStat(')
+          ..write('playerId: $playerId, ')
+          ..write('totalCompleted: $totalCompleted, ')
+          ..write('totalFailed: $totalFailed, ')
+          ..write('totalPartial: $totalPartial, ')
+          ..write('totalPerfect: $totalPerfect, ')
+          ..write('totalSuperPerfect: $totalSuperPerfect, ')
+          ..write('totalGenerated: $totalGenerated, ')
+          ..write('totalConfirmed: $totalConfirmed, ')
+          ..write('bestStreak: $bestStreak, ')
+          ..write('daysWithoutFailing: $daysWithoutFailing, ')
+          ..write('bestDaysWithoutFailing: $bestDaysWithoutFailing, ')
+          ..write('consecutiveFailsCount: $consecutiveFailsCount, ')
+          ..write('maxConsecutiveFails: $maxConsecutiveFails, ')
+          ..write('consecutiveActiveDays: $consecutiveActiveDays, ')
+          ..write('bestConsecutiveActiveDays: $bestConsecutiveActiveDays, ')
+          ..write('totalSubTasksCompleted: $totalSubTasksCompleted, ')
+          ..write('totalSubTasksOvershoot: $totalSubTasksOvershoot, ')
+          ..write('totalConfirmedBefore8AM: $totalConfirmedBefore8AM, ')
+          ..write('totalConfirmedAfter10PM: $totalConfirmedAfter10PM, ')
+          ..write('totalConfirmedOnWeekend: $totalConfirmedOnWeekend, ')
+          ..write('daysOfWeekCompletedBitmask: $daysOfWeekCompletedBitmask, ')
+          ..write('totalZeroProgressConfirms: $totalZeroProgressConfirms, ')
+          ..write('totalDaysAllPilars: $totalDaysAllPilars, ')
+          ..write('totalSpeedrunCompletions: $totalSpeedrunCompletions, ')
+          ..write('firstCompletedAt: $firstCompletedAt, ')
+          ..write('lastCompletedAt: $lastCompletedAt, ')
+          ..write('lastPilarBalanceDay: $lastPilarBalanceDay, ')
+          ..write('lastActiveDay: $lastActiveDay, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+        playerId,
+        totalCompleted,
+        totalFailed,
+        totalPartial,
+        totalPerfect,
+        totalSuperPerfect,
+        totalGenerated,
+        totalConfirmed,
+        bestStreak,
+        daysWithoutFailing,
+        bestDaysWithoutFailing,
+        consecutiveFailsCount,
+        maxConsecutiveFails,
+        consecutiveActiveDays,
+        bestConsecutiveActiveDays,
+        totalSubTasksCompleted,
+        totalSubTasksOvershoot,
+        totalConfirmedBefore8AM,
+        totalConfirmedAfter10PM,
+        totalConfirmedOnWeekend,
+        daysOfWeekCompletedBitmask,
+        totalZeroProgressConfirms,
+        totalDaysAllPilars,
+        totalSpeedrunCompletions,
+        firstCompletedAt,
+        lastCompletedAt,
+        lastPilarBalanceDay,
+        lastActiveDay,
+        updatedAt
+      ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlayerDailyMissionStat &&
+          other.playerId == this.playerId &&
+          other.totalCompleted == this.totalCompleted &&
+          other.totalFailed == this.totalFailed &&
+          other.totalPartial == this.totalPartial &&
+          other.totalPerfect == this.totalPerfect &&
+          other.totalSuperPerfect == this.totalSuperPerfect &&
+          other.totalGenerated == this.totalGenerated &&
+          other.totalConfirmed == this.totalConfirmed &&
+          other.bestStreak == this.bestStreak &&
+          other.daysWithoutFailing == this.daysWithoutFailing &&
+          other.bestDaysWithoutFailing == this.bestDaysWithoutFailing &&
+          other.consecutiveFailsCount == this.consecutiveFailsCount &&
+          other.maxConsecutiveFails == this.maxConsecutiveFails &&
+          other.consecutiveActiveDays == this.consecutiveActiveDays &&
+          other.bestConsecutiveActiveDays == this.bestConsecutiveActiveDays &&
+          other.totalSubTasksCompleted == this.totalSubTasksCompleted &&
+          other.totalSubTasksOvershoot == this.totalSubTasksOvershoot &&
+          other.totalConfirmedBefore8AM == this.totalConfirmedBefore8AM &&
+          other.totalConfirmedAfter10PM == this.totalConfirmedAfter10PM &&
+          other.totalConfirmedOnWeekend == this.totalConfirmedOnWeekend &&
+          other.daysOfWeekCompletedBitmask == this.daysOfWeekCompletedBitmask &&
+          other.totalZeroProgressConfirms == this.totalZeroProgressConfirms &&
+          other.totalDaysAllPilars == this.totalDaysAllPilars &&
+          other.totalSpeedrunCompletions == this.totalSpeedrunCompletions &&
+          other.firstCompletedAt == this.firstCompletedAt &&
+          other.lastCompletedAt == this.lastCompletedAt &&
+          other.lastPilarBalanceDay == this.lastPilarBalanceDay &&
+          other.lastActiveDay == this.lastActiveDay &&
+          other.updatedAt == this.updatedAt);
+}
+
+class PlayerDailyMissionStatsTableCompanion
+    extends UpdateCompanion<PlayerDailyMissionStat> {
+  final Value<int> playerId;
+  final Value<int> totalCompleted;
+  final Value<int> totalFailed;
+  final Value<int> totalPartial;
+  final Value<int> totalPerfect;
+  final Value<int> totalSuperPerfect;
+  final Value<int> totalGenerated;
+  final Value<int> totalConfirmed;
+  final Value<int> bestStreak;
+  final Value<int> daysWithoutFailing;
+  final Value<int> bestDaysWithoutFailing;
+  final Value<int> consecutiveFailsCount;
+  final Value<int> maxConsecutiveFails;
+  final Value<int> consecutiveActiveDays;
+  final Value<int> bestConsecutiveActiveDays;
+  final Value<int> totalSubTasksCompleted;
+  final Value<int> totalSubTasksOvershoot;
+  final Value<int> totalConfirmedBefore8AM;
+  final Value<int> totalConfirmedAfter10PM;
+  final Value<int> totalConfirmedOnWeekend;
+  final Value<int> daysOfWeekCompletedBitmask;
+  final Value<int> totalZeroProgressConfirms;
+  final Value<int> totalDaysAllPilars;
+  final Value<int> totalSpeedrunCompletions;
+  final Value<int?> firstCompletedAt;
+  final Value<int?> lastCompletedAt;
+  final Value<String?> lastPilarBalanceDay;
+  final Value<String?> lastActiveDay;
+  final Value<int> updatedAt;
+  const PlayerDailyMissionStatsTableCompanion({
+    this.playerId = const Value.absent(),
+    this.totalCompleted = const Value.absent(),
+    this.totalFailed = const Value.absent(),
+    this.totalPartial = const Value.absent(),
+    this.totalPerfect = const Value.absent(),
+    this.totalSuperPerfect = const Value.absent(),
+    this.totalGenerated = const Value.absent(),
+    this.totalConfirmed = const Value.absent(),
+    this.bestStreak = const Value.absent(),
+    this.daysWithoutFailing = const Value.absent(),
+    this.bestDaysWithoutFailing = const Value.absent(),
+    this.consecutiveFailsCount = const Value.absent(),
+    this.maxConsecutiveFails = const Value.absent(),
+    this.consecutiveActiveDays = const Value.absent(),
+    this.bestConsecutiveActiveDays = const Value.absent(),
+    this.totalSubTasksCompleted = const Value.absent(),
+    this.totalSubTasksOvershoot = const Value.absent(),
+    this.totalConfirmedBefore8AM = const Value.absent(),
+    this.totalConfirmedAfter10PM = const Value.absent(),
+    this.totalConfirmedOnWeekend = const Value.absent(),
+    this.daysOfWeekCompletedBitmask = const Value.absent(),
+    this.totalZeroProgressConfirms = const Value.absent(),
+    this.totalDaysAllPilars = const Value.absent(),
+    this.totalSpeedrunCompletions = const Value.absent(),
+    this.firstCompletedAt = const Value.absent(),
+    this.lastCompletedAt = const Value.absent(),
+    this.lastPilarBalanceDay = const Value.absent(),
+    this.lastActiveDay = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  PlayerDailyMissionStatsTableCompanion.insert({
+    this.playerId = const Value.absent(),
+    this.totalCompleted = const Value.absent(),
+    this.totalFailed = const Value.absent(),
+    this.totalPartial = const Value.absent(),
+    this.totalPerfect = const Value.absent(),
+    this.totalSuperPerfect = const Value.absent(),
+    this.totalGenerated = const Value.absent(),
+    this.totalConfirmed = const Value.absent(),
+    this.bestStreak = const Value.absent(),
+    this.daysWithoutFailing = const Value.absent(),
+    this.bestDaysWithoutFailing = const Value.absent(),
+    this.consecutiveFailsCount = const Value.absent(),
+    this.maxConsecutiveFails = const Value.absent(),
+    this.consecutiveActiveDays = const Value.absent(),
+    this.bestConsecutiveActiveDays = const Value.absent(),
+    this.totalSubTasksCompleted = const Value.absent(),
+    this.totalSubTasksOvershoot = const Value.absent(),
+    this.totalConfirmedBefore8AM = const Value.absent(),
+    this.totalConfirmedAfter10PM = const Value.absent(),
+    this.totalConfirmedOnWeekend = const Value.absent(),
+    this.daysOfWeekCompletedBitmask = const Value.absent(),
+    this.totalZeroProgressConfirms = const Value.absent(),
+    this.totalDaysAllPilars = const Value.absent(),
+    this.totalSpeedrunCompletions = const Value.absent(),
+    this.firstCompletedAt = const Value.absent(),
+    this.lastCompletedAt = const Value.absent(),
+    this.lastPilarBalanceDay = const Value.absent(),
+    this.lastActiveDay = const Value.absent(),
+    required int updatedAt,
+  }) : updatedAt = Value(updatedAt);
+  static Insertable<PlayerDailyMissionStat> custom({
+    Expression<int>? playerId,
+    Expression<int>? totalCompleted,
+    Expression<int>? totalFailed,
+    Expression<int>? totalPartial,
+    Expression<int>? totalPerfect,
+    Expression<int>? totalSuperPerfect,
+    Expression<int>? totalGenerated,
+    Expression<int>? totalConfirmed,
+    Expression<int>? bestStreak,
+    Expression<int>? daysWithoutFailing,
+    Expression<int>? bestDaysWithoutFailing,
+    Expression<int>? consecutiveFailsCount,
+    Expression<int>? maxConsecutiveFails,
+    Expression<int>? consecutiveActiveDays,
+    Expression<int>? bestConsecutiveActiveDays,
+    Expression<int>? totalSubTasksCompleted,
+    Expression<int>? totalSubTasksOvershoot,
+    Expression<int>? totalConfirmedBefore8AM,
+    Expression<int>? totalConfirmedAfter10PM,
+    Expression<int>? totalConfirmedOnWeekend,
+    Expression<int>? daysOfWeekCompletedBitmask,
+    Expression<int>? totalZeroProgressConfirms,
+    Expression<int>? totalDaysAllPilars,
+    Expression<int>? totalSpeedrunCompletions,
+    Expression<int>? firstCompletedAt,
+    Expression<int>? lastCompletedAt,
+    Expression<String>? lastPilarBalanceDay,
+    Expression<String>? lastActiveDay,
+    Expression<int>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (playerId != null) 'player_id': playerId,
+      if (totalCompleted != null) 'total_completed': totalCompleted,
+      if (totalFailed != null) 'total_failed': totalFailed,
+      if (totalPartial != null) 'total_partial': totalPartial,
+      if (totalPerfect != null) 'total_perfect': totalPerfect,
+      if (totalSuperPerfect != null) 'total_super_perfect': totalSuperPerfect,
+      if (totalGenerated != null) 'total_generated': totalGenerated,
+      if (totalConfirmed != null) 'total_confirmed': totalConfirmed,
+      if (bestStreak != null) 'best_streak': bestStreak,
+      if (daysWithoutFailing != null)
+        'days_without_failing': daysWithoutFailing,
+      if (bestDaysWithoutFailing != null)
+        'best_days_without_failing': bestDaysWithoutFailing,
+      if (consecutiveFailsCount != null)
+        'consecutive_fails_count': consecutiveFailsCount,
+      if (maxConsecutiveFails != null)
+        'max_consecutive_fails': maxConsecutiveFails,
+      if (consecutiveActiveDays != null)
+        'consecutive_active_days': consecutiveActiveDays,
+      if (bestConsecutiveActiveDays != null)
+        'best_consecutive_active_days': bestConsecutiveActiveDays,
+      if (totalSubTasksCompleted != null)
+        'total_sub_tasks_completed': totalSubTasksCompleted,
+      if (totalSubTasksOvershoot != null)
+        'total_sub_tasks_overshoot': totalSubTasksOvershoot,
+      if (totalConfirmedBefore8AM != null)
+        'total_confirmed_before_8am': totalConfirmedBefore8AM,
+      if (totalConfirmedAfter10PM != null)
+        'total_confirmed_after_10pm': totalConfirmedAfter10PM,
+      if (totalConfirmedOnWeekend != null)
+        'total_confirmed_on_weekend': totalConfirmedOnWeekend,
+      if (daysOfWeekCompletedBitmask != null)
+        'days_of_week_completed_bitmask': daysOfWeekCompletedBitmask,
+      if (totalZeroProgressConfirms != null)
+        'total_zero_progress_confirms': totalZeroProgressConfirms,
+      if (totalDaysAllPilars != null)
+        'total_days_all_pilars': totalDaysAllPilars,
+      if (totalSpeedrunCompletions != null)
+        'total_speedrun_completions': totalSpeedrunCompletions,
+      if (firstCompletedAt != null) 'first_completed_at': firstCompletedAt,
+      if (lastCompletedAt != null) 'last_completed_at': lastCompletedAt,
+      if (lastPilarBalanceDay != null)
+        'last_pilar_balance_day': lastPilarBalanceDay,
+      if (lastActiveDay != null) 'last_active_day': lastActiveDay,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  PlayerDailyMissionStatsTableCompanion copyWith(
+      {Value<int>? playerId,
+      Value<int>? totalCompleted,
+      Value<int>? totalFailed,
+      Value<int>? totalPartial,
+      Value<int>? totalPerfect,
+      Value<int>? totalSuperPerfect,
+      Value<int>? totalGenerated,
+      Value<int>? totalConfirmed,
+      Value<int>? bestStreak,
+      Value<int>? daysWithoutFailing,
+      Value<int>? bestDaysWithoutFailing,
+      Value<int>? consecutiveFailsCount,
+      Value<int>? maxConsecutiveFails,
+      Value<int>? consecutiveActiveDays,
+      Value<int>? bestConsecutiveActiveDays,
+      Value<int>? totalSubTasksCompleted,
+      Value<int>? totalSubTasksOvershoot,
+      Value<int>? totalConfirmedBefore8AM,
+      Value<int>? totalConfirmedAfter10PM,
+      Value<int>? totalConfirmedOnWeekend,
+      Value<int>? daysOfWeekCompletedBitmask,
+      Value<int>? totalZeroProgressConfirms,
+      Value<int>? totalDaysAllPilars,
+      Value<int>? totalSpeedrunCompletions,
+      Value<int?>? firstCompletedAt,
+      Value<int?>? lastCompletedAt,
+      Value<String?>? lastPilarBalanceDay,
+      Value<String?>? lastActiveDay,
+      Value<int>? updatedAt}) {
+    return PlayerDailyMissionStatsTableCompanion(
+      playerId: playerId ?? this.playerId,
+      totalCompleted: totalCompleted ?? this.totalCompleted,
+      totalFailed: totalFailed ?? this.totalFailed,
+      totalPartial: totalPartial ?? this.totalPartial,
+      totalPerfect: totalPerfect ?? this.totalPerfect,
+      totalSuperPerfect: totalSuperPerfect ?? this.totalSuperPerfect,
+      totalGenerated: totalGenerated ?? this.totalGenerated,
+      totalConfirmed: totalConfirmed ?? this.totalConfirmed,
+      bestStreak: bestStreak ?? this.bestStreak,
+      daysWithoutFailing: daysWithoutFailing ?? this.daysWithoutFailing,
+      bestDaysWithoutFailing:
+          bestDaysWithoutFailing ?? this.bestDaysWithoutFailing,
+      consecutiveFailsCount:
+          consecutiveFailsCount ?? this.consecutiveFailsCount,
+      maxConsecutiveFails: maxConsecutiveFails ?? this.maxConsecutiveFails,
+      consecutiveActiveDays:
+          consecutiveActiveDays ?? this.consecutiveActiveDays,
+      bestConsecutiveActiveDays:
+          bestConsecutiveActiveDays ?? this.bestConsecutiveActiveDays,
+      totalSubTasksCompleted:
+          totalSubTasksCompleted ?? this.totalSubTasksCompleted,
+      totalSubTasksOvershoot:
+          totalSubTasksOvershoot ?? this.totalSubTasksOvershoot,
+      totalConfirmedBefore8AM:
+          totalConfirmedBefore8AM ?? this.totalConfirmedBefore8AM,
+      totalConfirmedAfter10PM:
+          totalConfirmedAfter10PM ?? this.totalConfirmedAfter10PM,
+      totalConfirmedOnWeekend:
+          totalConfirmedOnWeekend ?? this.totalConfirmedOnWeekend,
+      daysOfWeekCompletedBitmask:
+          daysOfWeekCompletedBitmask ?? this.daysOfWeekCompletedBitmask,
+      totalZeroProgressConfirms:
+          totalZeroProgressConfirms ?? this.totalZeroProgressConfirms,
+      totalDaysAllPilars: totalDaysAllPilars ?? this.totalDaysAllPilars,
+      totalSpeedrunCompletions:
+          totalSpeedrunCompletions ?? this.totalSpeedrunCompletions,
+      firstCompletedAt: firstCompletedAt ?? this.firstCompletedAt,
+      lastCompletedAt: lastCompletedAt ?? this.lastCompletedAt,
+      lastPilarBalanceDay: lastPilarBalanceDay ?? this.lastPilarBalanceDay,
+      lastActiveDay: lastActiveDay ?? this.lastActiveDay,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (totalCompleted.present) {
+      map['total_completed'] = Variable<int>(totalCompleted.value);
+    }
+    if (totalFailed.present) {
+      map['total_failed'] = Variable<int>(totalFailed.value);
+    }
+    if (totalPartial.present) {
+      map['total_partial'] = Variable<int>(totalPartial.value);
+    }
+    if (totalPerfect.present) {
+      map['total_perfect'] = Variable<int>(totalPerfect.value);
+    }
+    if (totalSuperPerfect.present) {
+      map['total_super_perfect'] = Variable<int>(totalSuperPerfect.value);
+    }
+    if (totalGenerated.present) {
+      map['total_generated'] = Variable<int>(totalGenerated.value);
+    }
+    if (totalConfirmed.present) {
+      map['total_confirmed'] = Variable<int>(totalConfirmed.value);
+    }
+    if (bestStreak.present) {
+      map['best_streak'] = Variable<int>(bestStreak.value);
+    }
+    if (daysWithoutFailing.present) {
+      map['days_without_failing'] = Variable<int>(daysWithoutFailing.value);
+    }
+    if (bestDaysWithoutFailing.present) {
+      map['best_days_without_failing'] =
+          Variable<int>(bestDaysWithoutFailing.value);
+    }
+    if (consecutiveFailsCount.present) {
+      map['consecutive_fails_count'] =
+          Variable<int>(consecutiveFailsCount.value);
+    }
+    if (maxConsecutiveFails.present) {
+      map['max_consecutive_fails'] = Variable<int>(maxConsecutiveFails.value);
+    }
+    if (consecutiveActiveDays.present) {
+      map['consecutive_active_days'] =
+          Variable<int>(consecutiveActiveDays.value);
+    }
+    if (bestConsecutiveActiveDays.present) {
+      map['best_consecutive_active_days'] =
+          Variable<int>(bestConsecutiveActiveDays.value);
+    }
+    if (totalSubTasksCompleted.present) {
+      map['total_sub_tasks_completed'] =
+          Variable<int>(totalSubTasksCompleted.value);
+    }
+    if (totalSubTasksOvershoot.present) {
+      map['total_sub_tasks_overshoot'] =
+          Variable<int>(totalSubTasksOvershoot.value);
+    }
+    if (totalConfirmedBefore8AM.present) {
+      map['total_confirmed_before_8am'] =
+          Variable<int>(totalConfirmedBefore8AM.value);
+    }
+    if (totalConfirmedAfter10PM.present) {
+      map['total_confirmed_after_10pm'] =
+          Variable<int>(totalConfirmedAfter10PM.value);
+    }
+    if (totalConfirmedOnWeekend.present) {
+      map['total_confirmed_on_weekend'] =
+          Variable<int>(totalConfirmedOnWeekend.value);
+    }
+    if (daysOfWeekCompletedBitmask.present) {
+      map['days_of_week_completed_bitmask'] =
+          Variable<int>(daysOfWeekCompletedBitmask.value);
+    }
+    if (totalZeroProgressConfirms.present) {
+      map['total_zero_progress_confirms'] =
+          Variable<int>(totalZeroProgressConfirms.value);
+    }
+    if (totalDaysAllPilars.present) {
+      map['total_days_all_pilars'] = Variable<int>(totalDaysAllPilars.value);
+    }
+    if (totalSpeedrunCompletions.present) {
+      map['total_speedrun_completions'] =
+          Variable<int>(totalSpeedrunCompletions.value);
+    }
+    if (firstCompletedAt.present) {
+      map['first_completed_at'] = Variable<int>(firstCompletedAt.value);
+    }
+    if (lastCompletedAt.present) {
+      map['last_completed_at'] = Variable<int>(lastCompletedAt.value);
+    }
+    if (lastPilarBalanceDay.present) {
+      map['last_pilar_balance_day'] =
+          Variable<String>(lastPilarBalanceDay.value);
+    }
+    if (lastActiveDay.present) {
+      map['last_active_day'] = Variable<String>(lastActiveDay.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerDailyMissionStatsTableCompanion(')
+          ..write('playerId: $playerId, ')
+          ..write('totalCompleted: $totalCompleted, ')
+          ..write('totalFailed: $totalFailed, ')
+          ..write('totalPartial: $totalPartial, ')
+          ..write('totalPerfect: $totalPerfect, ')
+          ..write('totalSuperPerfect: $totalSuperPerfect, ')
+          ..write('totalGenerated: $totalGenerated, ')
+          ..write('totalConfirmed: $totalConfirmed, ')
+          ..write('bestStreak: $bestStreak, ')
+          ..write('daysWithoutFailing: $daysWithoutFailing, ')
+          ..write('bestDaysWithoutFailing: $bestDaysWithoutFailing, ')
+          ..write('consecutiveFailsCount: $consecutiveFailsCount, ')
+          ..write('maxConsecutiveFails: $maxConsecutiveFails, ')
+          ..write('consecutiveActiveDays: $consecutiveActiveDays, ')
+          ..write('bestConsecutiveActiveDays: $bestConsecutiveActiveDays, ')
+          ..write('totalSubTasksCompleted: $totalSubTasksCompleted, ')
+          ..write('totalSubTasksOvershoot: $totalSubTasksOvershoot, ')
+          ..write('totalConfirmedBefore8AM: $totalConfirmedBefore8AM, ')
+          ..write('totalConfirmedAfter10PM: $totalConfirmedAfter10PM, ')
+          ..write('totalConfirmedOnWeekend: $totalConfirmedOnWeekend, ')
+          ..write('daysOfWeekCompletedBitmask: $daysOfWeekCompletedBitmask, ')
+          ..write('totalZeroProgressConfirms: $totalZeroProgressConfirms, ')
+          ..write('totalDaysAllPilars: $totalDaysAllPilars, ')
+          ..write('totalSpeedrunCompletions: $totalSpeedrunCompletions, ')
+          ..write('firstCompletedAt: $firstCompletedAt, ')
+          ..write('lastCompletedAt: $lastCompletedAt, ')
+          ..write('lastPilarBalanceDay: $lastPilarBalanceDay, ')
+          ..write('lastActiveDay: $lastActiveDay, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PlayerDailySubtaskVolumeTableTable extends PlayerDailySubtaskVolumeTable
+    with
+        TableInfo<$PlayerDailySubtaskVolumeTableTable,
+            PlayerDailySubtaskVolumeData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlayerDailySubtaskVolumeTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _subTaskKeyMeta =
+      const VerificationMeta('subTaskKey');
+  @override
+  late final GeneratedColumn<String> subTaskKey = GeneratedColumn<String>(
+      'sub_task_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _totalUnitsMeta =
+      const VerificationMeta('totalUnits');
+  @override
+  late final GeneratedColumn<int> totalUnits = GeneratedColumn<int>(
+      'total_units', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [playerId, subTaskKey, totalUnits, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'player_daily_subtask_volume';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<PlayerDailySubtaskVolumeData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('sub_task_key')) {
+      context.handle(
+          _subTaskKeyMeta,
+          subTaskKey.isAcceptableOrUnknown(
+              data['sub_task_key']!, _subTaskKeyMeta));
+    } else if (isInserting) {
+      context.missing(_subTaskKeyMeta);
+    }
+    if (data.containsKey('total_units')) {
+      context.handle(
+          _totalUnitsMeta,
+          totalUnits.isAcceptableOrUnknown(
+              data['total_units']!, _totalUnitsMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {playerId, subTaskKey};
+  @override
+  PlayerDailySubtaskVolumeData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlayerDailySubtaskVolumeData(
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      subTaskKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sub_task_key'])!,
+      totalUnits: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}total_units'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $PlayerDailySubtaskVolumeTableTable createAlias(String alias) {
+    return $PlayerDailySubtaskVolumeTableTable(attachedDatabase, alias);
+  }
+}
+
+class PlayerDailySubtaskVolumeData extends DataClass
+    implements Insertable<PlayerDailySubtaskVolumeData> {
+  final int playerId;
+
+  /// Chave canônica da sub-tarefa (ex: `flexao`, `abdominal`,
+  /// `meditacao`). Igual ao `subTaskKey` em `DailySubTaskInstance`.
+  final String subTaskKey;
+
+  /// Soma all-time de `progressoAtual` ao fechar missões. Unidade
+  /// depende da sub-tarefa (reps, minutos, km, …) — semantics ficam
+  /// com o caller que interpreta.
+  final int totalUnits;
+  final int updatedAt;
+  const PlayerDailySubtaskVolumeData(
+      {required this.playerId,
+      required this.subTaskKey,
+      required this.totalUnits,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['player_id'] = Variable<int>(playerId);
+    map['sub_task_key'] = Variable<String>(subTaskKey);
+    map['total_units'] = Variable<int>(totalUnits);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  PlayerDailySubtaskVolumeTableCompanion toCompanion(bool nullToAbsent) {
+    return PlayerDailySubtaskVolumeTableCompanion(
+      playerId: Value(playerId),
+      subTaskKey: Value(subTaskKey),
+      totalUnits: Value(totalUnits),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory PlayerDailySubtaskVolumeData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlayerDailySubtaskVolumeData(
+      playerId: serializer.fromJson<int>(json['playerId']),
+      subTaskKey: serializer.fromJson<String>(json['subTaskKey']),
+      totalUnits: serializer.fromJson<int>(json['totalUnits']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'playerId': serializer.toJson<int>(playerId),
+      'subTaskKey': serializer.toJson<String>(subTaskKey),
+      'totalUnits': serializer.toJson<int>(totalUnits),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  PlayerDailySubtaskVolumeData copyWith(
+          {int? playerId,
+          String? subTaskKey,
+          int? totalUnits,
+          int? updatedAt}) =>
+      PlayerDailySubtaskVolumeData(
+        playerId: playerId ?? this.playerId,
+        subTaskKey: subTaskKey ?? this.subTaskKey,
+        totalUnits: totalUnits ?? this.totalUnits,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  PlayerDailySubtaskVolumeData copyWithCompanion(
+      PlayerDailySubtaskVolumeTableCompanion data) {
+    return PlayerDailySubtaskVolumeData(
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      subTaskKey:
+          data.subTaskKey.present ? data.subTaskKey.value : this.subTaskKey,
+      totalUnits:
+          data.totalUnits.present ? data.totalUnits.value : this.totalUnits,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerDailySubtaskVolumeData(')
+          ..write('playerId: $playerId, ')
+          ..write('subTaskKey: $subTaskKey, ')
+          ..write('totalUnits: $totalUnits, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(playerId, subTaskKey, totalUnits, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlayerDailySubtaskVolumeData &&
+          other.playerId == this.playerId &&
+          other.subTaskKey == this.subTaskKey &&
+          other.totalUnits == this.totalUnits &&
+          other.updatedAt == this.updatedAt);
+}
+
+class PlayerDailySubtaskVolumeTableCompanion
+    extends UpdateCompanion<PlayerDailySubtaskVolumeData> {
+  final Value<int> playerId;
+  final Value<String> subTaskKey;
+  final Value<int> totalUnits;
+  final Value<int> updatedAt;
+  final Value<int> rowid;
+  const PlayerDailySubtaskVolumeTableCompanion({
+    this.playerId = const Value.absent(),
+    this.subTaskKey = const Value.absent(),
+    this.totalUnits = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlayerDailySubtaskVolumeTableCompanion.insert({
+    required int playerId,
+    required String subTaskKey,
+    this.totalUnits = const Value.absent(),
+    required int updatedAt,
+    this.rowid = const Value.absent(),
+  })  : playerId = Value(playerId),
+        subTaskKey = Value(subTaskKey),
+        updatedAt = Value(updatedAt);
+  static Insertable<PlayerDailySubtaskVolumeData> custom({
+    Expression<int>? playerId,
+    Expression<String>? subTaskKey,
+    Expression<int>? totalUnits,
+    Expression<int>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (playerId != null) 'player_id': playerId,
+      if (subTaskKey != null) 'sub_task_key': subTaskKey,
+      if (totalUnits != null) 'total_units': totalUnits,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlayerDailySubtaskVolumeTableCompanion copyWith(
+      {Value<int>? playerId,
+      Value<String>? subTaskKey,
+      Value<int>? totalUnits,
+      Value<int>? updatedAt,
+      Value<int>? rowid}) {
+    return PlayerDailySubtaskVolumeTableCompanion(
+      playerId: playerId ?? this.playerId,
+      subTaskKey: subTaskKey ?? this.subTaskKey,
+      totalUnits: totalUnits ?? this.totalUnits,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (subTaskKey.present) {
+      map['sub_task_key'] = Variable<String>(subTaskKey.value);
+    }
+    if (totalUnits.present) {
+      map['total_units'] = Variable<int>(totalUnits.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerDailySubtaskVolumeTableCompanion(')
+          ..write('playerId: $playerId, ')
+          ..write('subTaskKey: $subTaskKey, ')
+          ..write('totalUnits: $totalUnits, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -13546,6 +15282,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ActiveFactionQuestsTableTable(this);
   late final $DailyMissionsTableTable dailyMissionsTable =
       $DailyMissionsTableTable(this);
+  late final $PlayerDailyMissionStatsTableTable playerDailyMissionStatsTable =
+      $PlayerDailyMissionStatsTableTable(this);
+  late final $PlayerDailySubtaskVolumeTableTable playerDailySubtaskVolumeTable =
+      $PlayerDailySubtaskVolumeTableTable(this);
   late final Index uniquePlayerFactionWeek = Index('unique_player_faction_week',
       'CREATE UNIQUE INDEX unique_player_faction_week ON active_faction_quests (player_id, faction_id, week_start)');
   late final Index idxDailyMissionsPlayerData = Index(
@@ -13584,6 +15324,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         playerFactionReputationTable,
         activeFactionQuestsTable,
         dailyMissionsTable,
+        playerDailyMissionStatsTable,
+        playerDailySubtaskVolumeTable,
         uniquePlayerFactionWeek,
         idxDailyMissionsPlayerData
       ];
@@ -20009,6 +21751,752 @@ typedef $$DailyMissionsTableTableProcessedTableManager = ProcessedTableManager<
     ),
     DailyMissionsTableData,
     PrefetchHooks Function()>;
+typedef $$PlayerDailyMissionStatsTableTableCreateCompanionBuilder
+    = PlayerDailyMissionStatsTableCompanion Function({
+  Value<int> playerId,
+  Value<int> totalCompleted,
+  Value<int> totalFailed,
+  Value<int> totalPartial,
+  Value<int> totalPerfect,
+  Value<int> totalSuperPerfect,
+  Value<int> totalGenerated,
+  Value<int> totalConfirmed,
+  Value<int> bestStreak,
+  Value<int> daysWithoutFailing,
+  Value<int> bestDaysWithoutFailing,
+  Value<int> consecutiveFailsCount,
+  Value<int> maxConsecutiveFails,
+  Value<int> consecutiveActiveDays,
+  Value<int> bestConsecutiveActiveDays,
+  Value<int> totalSubTasksCompleted,
+  Value<int> totalSubTasksOvershoot,
+  Value<int> totalConfirmedBefore8AM,
+  Value<int> totalConfirmedAfter10PM,
+  Value<int> totalConfirmedOnWeekend,
+  Value<int> daysOfWeekCompletedBitmask,
+  Value<int> totalZeroProgressConfirms,
+  Value<int> totalDaysAllPilars,
+  Value<int> totalSpeedrunCompletions,
+  Value<int?> firstCompletedAt,
+  Value<int?> lastCompletedAt,
+  Value<String?> lastPilarBalanceDay,
+  Value<String?> lastActiveDay,
+  required int updatedAt,
+});
+typedef $$PlayerDailyMissionStatsTableTableUpdateCompanionBuilder
+    = PlayerDailyMissionStatsTableCompanion Function({
+  Value<int> playerId,
+  Value<int> totalCompleted,
+  Value<int> totalFailed,
+  Value<int> totalPartial,
+  Value<int> totalPerfect,
+  Value<int> totalSuperPerfect,
+  Value<int> totalGenerated,
+  Value<int> totalConfirmed,
+  Value<int> bestStreak,
+  Value<int> daysWithoutFailing,
+  Value<int> bestDaysWithoutFailing,
+  Value<int> consecutiveFailsCount,
+  Value<int> maxConsecutiveFails,
+  Value<int> consecutiveActiveDays,
+  Value<int> bestConsecutiveActiveDays,
+  Value<int> totalSubTasksCompleted,
+  Value<int> totalSubTasksOvershoot,
+  Value<int> totalConfirmedBefore8AM,
+  Value<int> totalConfirmedAfter10PM,
+  Value<int> totalConfirmedOnWeekend,
+  Value<int> daysOfWeekCompletedBitmask,
+  Value<int> totalZeroProgressConfirms,
+  Value<int> totalDaysAllPilars,
+  Value<int> totalSpeedrunCompletions,
+  Value<int?> firstCompletedAt,
+  Value<int?> lastCompletedAt,
+  Value<String?> lastPilarBalanceDay,
+  Value<String?> lastActiveDay,
+  Value<int> updatedAt,
+});
+
+class $$PlayerDailyMissionStatsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PlayerDailyMissionStatsTableTable> {
+  $$PlayerDailyMissionStatsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalCompleted => $composableBuilder(
+      column: $table.totalCompleted,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalFailed => $composableBuilder(
+      column: $table.totalFailed, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalPartial => $composableBuilder(
+      column: $table.totalPartial, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalPerfect => $composableBuilder(
+      column: $table.totalPerfect, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalSuperPerfect => $composableBuilder(
+      column: $table.totalSuperPerfect,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalGenerated => $composableBuilder(
+      column: $table.totalGenerated,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalConfirmed => $composableBuilder(
+      column: $table.totalConfirmed,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get bestStreak => $composableBuilder(
+      column: $table.bestStreak, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get daysWithoutFailing => $composableBuilder(
+      column: $table.daysWithoutFailing,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get bestDaysWithoutFailing => $composableBuilder(
+      column: $table.bestDaysWithoutFailing,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get consecutiveFailsCount => $composableBuilder(
+      column: $table.consecutiveFailsCount,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get maxConsecutiveFails => $composableBuilder(
+      column: $table.maxConsecutiveFails,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get consecutiveActiveDays => $composableBuilder(
+      column: $table.consecutiveActiveDays,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get bestConsecutiveActiveDays => $composableBuilder(
+      column: $table.bestConsecutiveActiveDays,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalSubTasksCompleted => $composableBuilder(
+      column: $table.totalSubTasksCompleted,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalSubTasksOvershoot => $composableBuilder(
+      column: $table.totalSubTasksOvershoot,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalConfirmedBefore8AM => $composableBuilder(
+      column: $table.totalConfirmedBefore8AM,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalConfirmedAfter10PM => $composableBuilder(
+      column: $table.totalConfirmedAfter10PM,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalConfirmedOnWeekend => $composableBuilder(
+      column: $table.totalConfirmedOnWeekend,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get daysOfWeekCompletedBitmask => $composableBuilder(
+      column: $table.daysOfWeekCompletedBitmask,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalZeroProgressConfirms => $composableBuilder(
+      column: $table.totalZeroProgressConfirms,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalDaysAllPilars => $composableBuilder(
+      column: $table.totalDaysAllPilars,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalSpeedrunCompletions => $composableBuilder(
+      column: $table.totalSpeedrunCompletions,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get firstCompletedAt => $composableBuilder(
+      column: $table.firstCompletedAt,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get lastCompletedAt => $composableBuilder(
+      column: $table.lastCompletedAt,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get lastPilarBalanceDay => $composableBuilder(
+      column: $table.lastPilarBalanceDay,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get lastActiveDay => $composableBuilder(
+      column: $table.lastActiveDay, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$PlayerDailyMissionStatsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlayerDailyMissionStatsTableTable> {
+  $$PlayerDailyMissionStatsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalCompleted => $composableBuilder(
+      column: $table.totalCompleted,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalFailed => $composableBuilder(
+      column: $table.totalFailed, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalPartial => $composableBuilder(
+      column: $table.totalPartial,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalPerfect => $composableBuilder(
+      column: $table.totalPerfect,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalSuperPerfect => $composableBuilder(
+      column: $table.totalSuperPerfect,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalGenerated => $composableBuilder(
+      column: $table.totalGenerated,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalConfirmed => $composableBuilder(
+      column: $table.totalConfirmed,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get bestStreak => $composableBuilder(
+      column: $table.bestStreak, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get daysWithoutFailing => $composableBuilder(
+      column: $table.daysWithoutFailing,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get bestDaysWithoutFailing => $composableBuilder(
+      column: $table.bestDaysWithoutFailing,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get consecutiveFailsCount => $composableBuilder(
+      column: $table.consecutiveFailsCount,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get maxConsecutiveFails => $composableBuilder(
+      column: $table.maxConsecutiveFails,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get consecutiveActiveDays => $composableBuilder(
+      column: $table.consecutiveActiveDays,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get bestConsecutiveActiveDays => $composableBuilder(
+      column: $table.bestConsecutiveActiveDays,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalSubTasksCompleted => $composableBuilder(
+      column: $table.totalSubTasksCompleted,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalSubTasksOvershoot => $composableBuilder(
+      column: $table.totalSubTasksOvershoot,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalConfirmedBefore8AM => $composableBuilder(
+      column: $table.totalConfirmedBefore8AM,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalConfirmedAfter10PM => $composableBuilder(
+      column: $table.totalConfirmedAfter10PM,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalConfirmedOnWeekend => $composableBuilder(
+      column: $table.totalConfirmedOnWeekend,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get daysOfWeekCompletedBitmask => $composableBuilder(
+      column: $table.daysOfWeekCompletedBitmask,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalZeroProgressConfirms => $composableBuilder(
+      column: $table.totalZeroProgressConfirms,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalDaysAllPilars => $composableBuilder(
+      column: $table.totalDaysAllPilars,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalSpeedrunCompletions => $composableBuilder(
+      column: $table.totalSpeedrunCompletions,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get firstCompletedAt => $composableBuilder(
+      column: $table.firstCompletedAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get lastCompletedAt => $composableBuilder(
+      column: $table.lastCompletedAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get lastPilarBalanceDay => $composableBuilder(
+      column: $table.lastPilarBalanceDay,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get lastActiveDay => $composableBuilder(
+      column: $table.lastActiveDay,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$PlayerDailyMissionStatsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlayerDailyMissionStatsTableTable> {
+  $$PlayerDailyMissionStatsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<int> get totalCompleted => $composableBuilder(
+      column: $table.totalCompleted, builder: (column) => column);
+
+  GeneratedColumn<int> get totalFailed => $composableBuilder(
+      column: $table.totalFailed, builder: (column) => column);
+
+  GeneratedColumn<int> get totalPartial => $composableBuilder(
+      column: $table.totalPartial, builder: (column) => column);
+
+  GeneratedColumn<int> get totalPerfect => $composableBuilder(
+      column: $table.totalPerfect, builder: (column) => column);
+
+  GeneratedColumn<int> get totalSuperPerfect => $composableBuilder(
+      column: $table.totalSuperPerfect, builder: (column) => column);
+
+  GeneratedColumn<int> get totalGenerated => $composableBuilder(
+      column: $table.totalGenerated, builder: (column) => column);
+
+  GeneratedColumn<int> get totalConfirmed => $composableBuilder(
+      column: $table.totalConfirmed, builder: (column) => column);
+
+  GeneratedColumn<int> get bestStreak => $composableBuilder(
+      column: $table.bestStreak, builder: (column) => column);
+
+  GeneratedColumn<int> get daysWithoutFailing => $composableBuilder(
+      column: $table.daysWithoutFailing, builder: (column) => column);
+
+  GeneratedColumn<int> get bestDaysWithoutFailing => $composableBuilder(
+      column: $table.bestDaysWithoutFailing, builder: (column) => column);
+
+  GeneratedColumn<int> get consecutiveFailsCount => $composableBuilder(
+      column: $table.consecutiveFailsCount, builder: (column) => column);
+
+  GeneratedColumn<int> get maxConsecutiveFails => $composableBuilder(
+      column: $table.maxConsecutiveFails, builder: (column) => column);
+
+  GeneratedColumn<int> get consecutiveActiveDays => $composableBuilder(
+      column: $table.consecutiveActiveDays, builder: (column) => column);
+
+  GeneratedColumn<int> get bestConsecutiveActiveDays => $composableBuilder(
+      column: $table.bestConsecutiveActiveDays, builder: (column) => column);
+
+  GeneratedColumn<int> get totalSubTasksCompleted => $composableBuilder(
+      column: $table.totalSubTasksCompleted, builder: (column) => column);
+
+  GeneratedColumn<int> get totalSubTasksOvershoot => $composableBuilder(
+      column: $table.totalSubTasksOvershoot, builder: (column) => column);
+
+  GeneratedColumn<int> get totalConfirmedBefore8AM => $composableBuilder(
+      column: $table.totalConfirmedBefore8AM, builder: (column) => column);
+
+  GeneratedColumn<int> get totalConfirmedAfter10PM => $composableBuilder(
+      column: $table.totalConfirmedAfter10PM, builder: (column) => column);
+
+  GeneratedColumn<int> get totalConfirmedOnWeekend => $composableBuilder(
+      column: $table.totalConfirmedOnWeekend, builder: (column) => column);
+
+  GeneratedColumn<int> get daysOfWeekCompletedBitmask => $composableBuilder(
+      column: $table.daysOfWeekCompletedBitmask, builder: (column) => column);
+
+  GeneratedColumn<int> get totalZeroProgressConfirms => $composableBuilder(
+      column: $table.totalZeroProgressConfirms, builder: (column) => column);
+
+  GeneratedColumn<int> get totalDaysAllPilars => $composableBuilder(
+      column: $table.totalDaysAllPilars, builder: (column) => column);
+
+  GeneratedColumn<int> get totalSpeedrunCompletions => $composableBuilder(
+      column: $table.totalSpeedrunCompletions, builder: (column) => column);
+
+  GeneratedColumn<int> get firstCompletedAt => $composableBuilder(
+      column: $table.firstCompletedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get lastCompletedAt => $composableBuilder(
+      column: $table.lastCompletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get lastPilarBalanceDay => $composableBuilder(
+      column: $table.lastPilarBalanceDay, builder: (column) => column);
+
+  GeneratedColumn<String> get lastActiveDay => $composableBuilder(
+      column: $table.lastActiveDay, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$PlayerDailyMissionStatsTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlayerDailyMissionStatsTableTable,
+    PlayerDailyMissionStat,
+    $$PlayerDailyMissionStatsTableTableFilterComposer,
+    $$PlayerDailyMissionStatsTableTableOrderingComposer,
+    $$PlayerDailyMissionStatsTableTableAnnotationComposer,
+    $$PlayerDailyMissionStatsTableTableCreateCompanionBuilder,
+    $$PlayerDailyMissionStatsTableTableUpdateCompanionBuilder,
+    (
+      PlayerDailyMissionStat,
+      BaseReferences<_$AppDatabase, $PlayerDailyMissionStatsTableTable,
+          PlayerDailyMissionStat>
+    ),
+    PlayerDailyMissionStat,
+    PrefetchHooks Function()> {
+  $$PlayerDailyMissionStatsTableTableTableManager(
+      _$AppDatabase db, $PlayerDailyMissionStatsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlayerDailyMissionStatsTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlayerDailyMissionStatsTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlayerDailyMissionStatsTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            Value<int> totalCompleted = const Value.absent(),
+            Value<int> totalFailed = const Value.absent(),
+            Value<int> totalPartial = const Value.absent(),
+            Value<int> totalPerfect = const Value.absent(),
+            Value<int> totalSuperPerfect = const Value.absent(),
+            Value<int> totalGenerated = const Value.absent(),
+            Value<int> totalConfirmed = const Value.absent(),
+            Value<int> bestStreak = const Value.absent(),
+            Value<int> daysWithoutFailing = const Value.absent(),
+            Value<int> bestDaysWithoutFailing = const Value.absent(),
+            Value<int> consecutiveFailsCount = const Value.absent(),
+            Value<int> maxConsecutiveFails = const Value.absent(),
+            Value<int> consecutiveActiveDays = const Value.absent(),
+            Value<int> bestConsecutiveActiveDays = const Value.absent(),
+            Value<int> totalSubTasksCompleted = const Value.absent(),
+            Value<int> totalSubTasksOvershoot = const Value.absent(),
+            Value<int> totalConfirmedBefore8AM = const Value.absent(),
+            Value<int> totalConfirmedAfter10PM = const Value.absent(),
+            Value<int> totalConfirmedOnWeekend = const Value.absent(),
+            Value<int> daysOfWeekCompletedBitmask = const Value.absent(),
+            Value<int> totalZeroProgressConfirms = const Value.absent(),
+            Value<int> totalDaysAllPilars = const Value.absent(),
+            Value<int> totalSpeedrunCompletions = const Value.absent(),
+            Value<int?> firstCompletedAt = const Value.absent(),
+            Value<int?> lastCompletedAt = const Value.absent(),
+            Value<String?> lastPilarBalanceDay = const Value.absent(),
+            Value<String?> lastActiveDay = const Value.absent(),
+            Value<int> updatedAt = const Value.absent(),
+          }) =>
+              PlayerDailyMissionStatsTableCompanion(
+            playerId: playerId,
+            totalCompleted: totalCompleted,
+            totalFailed: totalFailed,
+            totalPartial: totalPartial,
+            totalPerfect: totalPerfect,
+            totalSuperPerfect: totalSuperPerfect,
+            totalGenerated: totalGenerated,
+            totalConfirmed: totalConfirmed,
+            bestStreak: bestStreak,
+            daysWithoutFailing: daysWithoutFailing,
+            bestDaysWithoutFailing: bestDaysWithoutFailing,
+            consecutiveFailsCount: consecutiveFailsCount,
+            maxConsecutiveFails: maxConsecutiveFails,
+            consecutiveActiveDays: consecutiveActiveDays,
+            bestConsecutiveActiveDays: bestConsecutiveActiveDays,
+            totalSubTasksCompleted: totalSubTasksCompleted,
+            totalSubTasksOvershoot: totalSubTasksOvershoot,
+            totalConfirmedBefore8AM: totalConfirmedBefore8AM,
+            totalConfirmedAfter10PM: totalConfirmedAfter10PM,
+            totalConfirmedOnWeekend: totalConfirmedOnWeekend,
+            daysOfWeekCompletedBitmask: daysOfWeekCompletedBitmask,
+            totalZeroProgressConfirms: totalZeroProgressConfirms,
+            totalDaysAllPilars: totalDaysAllPilars,
+            totalSpeedrunCompletions: totalSpeedrunCompletions,
+            firstCompletedAt: firstCompletedAt,
+            lastCompletedAt: lastCompletedAt,
+            lastPilarBalanceDay: lastPilarBalanceDay,
+            lastActiveDay: lastActiveDay,
+            updatedAt: updatedAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            Value<int> totalCompleted = const Value.absent(),
+            Value<int> totalFailed = const Value.absent(),
+            Value<int> totalPartial = const Value.absent(),
+            Value<int> totalPerfect = const Value.absent(),
+            Value<int> totalSuperPerfect = const Value.absent(),
+            Value<int> totalGenerated = const Value.absent(),
+            Value<int> totalConfirmed = const Value.absent(),
+            Value<int> bestStreak = const Value.absent(),
+            Value<int> daysWithoutFailing = const Value.absent(),
+            Value<int> bestDaysWithoutFailing = const Value.absent(),
+            Value<int> consecutiveFailsCount = const Value.absent(),
+            Value<int> maxConsecutiveFails = const Value.absent(),
+            Value<int> consecutiveActiveDays = const Value.absent(),
+            Value<int> bestConsecutiveActiveDays = const Value.absent(),
+            Value<int> totalSubTasksCompleted = const Value.absent(),
+            Value<int> totalSubTasksOvershoot = const Value.absent(),
+            Value<int> totalConfirmedBefore8AM = const Value.absent(),
+            Value<int> totalConfirmedAfter10PM = const Value.absent(),
+            Value<int> totalConfirmedOnWeekend = const Value.absent(),
+            Value<int> daysOfWeekCompletedBitmask = const Value.absent(),
+            Value<int> totalZeroProgressConfirms = const Value.absent(),
+            Value<int> totalDaysAllPilars = const Value.absent(),
+            Value<int> totalSpeedrunCompletions = const Value.absent(),
+            Value<int?> firstCompletedAt = const Value.absent(),
+            Value<int?> lastCompletedAt = const Value.absent(),
+            Value<String?> lastPilarBalanceDay = const Value.absent(),
+            Value<String?> lastActiveDay = const Value.absent(),
+            required int updatedAt,
+          }) =>
+              PlayerDailyMissionStatsTableCompanion.insert(
+            playerId: playerId,
+            totalCompleted: totalCompleted,
+            totalFailed: totalFailed,
+            totalPartial: totalPartial,
+            totalPerfect: totalPerfect,
+            totalSuperPerfect: totalSuperPerfect,
+            totalGenerated: totalGenerated,
+            totalConfirmed: totalConfirmed,
+            bestStreak: bestStreak,
+            daysWithoutFailing: daysWithoutFailing,
+            bestDaysWithoutFailing: bestDaysWithoutFailing,
+            consecutiveFailsCount: consecutiveFailsCount,
+            maxConsecutiveFails: maxConsecutiveFails,
+            consecutiveActiveDays: consecutiveActiveDays,
+            bestConsecutiveActiveDays: bestConsecutiveActiveDays,
+            totalSubTasksCompleted: totalSubTasksCompleted,
+            totalSubTasksOvershoot: totalSubTasksOvershoot,
+            totalConfirmedBefore8AM: totalConfirmedBefore8AM,
+            totalConfirmedAfter10PM: totalConfirmedAfter10PM,
+            totalConfirmedOnWeekend: totalConfirmedOnWeekend,
+            daysOfWeekCompletedBitmask: daysOfWeekCompletedBitmask,
+            totalZeroProgressConfirms: totalZeroProgressConfirms,
+            totalDaysAllPilars: totalDaysAllPilars,
+            totalSpeedrunCompletions: totalSpeedrunCompletions,
+            firstCompletedAt: firstCompletedAt,
+            lastCompletedAt: lastCompletedAt,
+            lastPilarBalanceDay: lastPilarBalanceDay,
+            lastActiveDay: lastActiveDay,
+            updatedAt: updatedAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PlayerDailyMissionStatsTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $PlayerDailyMissionStatsTableTable,
+        PlayerDailyMissionStat,
+        $$PlayerDailyMissionStatsTableTableFilterComposer,
+        $$PlayerDailyMissionStatsTableTableOrderingComposer,
+        $$PlayerDailyMissionStatsTableTableAnnotationComposer,
+        $$PlayerDailyMissionStatsTableTableCreateCompanionBuilder,
+        $$PlayerDailyMissionStatsTableTableUpdateCompanionBuilder,
+        (
+          PlayerDailyMissionStat,
+          BaseReferences<_$AppDatabase, $PlayerDailyMissionStatsTableTable,
+              PlayerDailyMissionStat>
+        ),
+        PlayerDailyMissionStat,
+        PrefetchHooks Function()>;
+typedef $$PlayerDailySubtaskVolumeTableTableCreateCompanionBuilder
+    = PlayerDailySubtaskVolumeTableCompanion Function({
+  required int playerId,
+  required String subTaskKey,
+  Value<int> totalUnits,
+  required int updatedAt,
+  Value<int> rowid,
+});
+typedef $$PlayerDailySubtaskVolumeTableTableUpdateCompanionBuilder
+    = PlayerDailySubtaskVolumeTableCompanion Function({
+  Value<int> playerId,
+  Value<String> subTaskKey,
+  Value<int> totalUnits,
+  Value<int> updatedAt,
+  Value<int> rowid,
+});
+
+class $$PlayerDailySubtaskVolumeTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PlayerDailySubtaskVolumeTableTable> {
+  $$PlayerDailySubtaskVolumeTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get subTaskKey => $composableBuilder(
+      column: $table.subTaskKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalUnits => $composableBuilder(
+      column: $table.totalUnits, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$PlayerDailySubtaskVolumeTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlayerDailySubtaskVolumeTableTable> {
+  $$PlayerDailySubtaskVolumeTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get subTaskKey => $composableBuilder(
+      column: $table.subTaskKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalUnits => $composableBuilder(
+      column: $table.totalUnits, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$PlayerDailySubtaskVolumeTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlayerDailySubtaskVolumeTableTable> {
+  $$PlayerDailySubtaskVolumeTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get subTaskKey => $composableBuilder(
+      column: $table.subTaskKey, builder: (column) => column);
+
+  GeneratedColumn<int> get totalUnits => $composableBuilder(
+      column: $table.totalUnits, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$PlayerDailySubtaskVolumeTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlayerDailySubtaskVolumeTableTable,
+    PlayerDailySubtaskVolumeData,
+    $$PlayerDailySubtaskVolumeTableTableFilterComposer,
+    $$PlayerDailySubtaskVolumeTableTableOrderingComposer,
+    $$PlayerDailySubtaskVolumeTableTableAnnotationComposer,
+    $$PlayerDailySubtaskVolumeTableTableCreateCompanionBuilder,
+    $$PlayerDailySubtaskVolumeTableTableUpdateCompanionBuilder,
+    (
+      PlayerDailySubtaskVolumeData,
+      BaseReferences<_$AppDatabase, $PlayerDailySubtaskVolumeTableTable,
+          PlayerDailySubtaskVolumeData>
+    ),
+    PlayerDailySubtaskVolumeData,
+    PrefetchHooks Function()> {
+  $$PlayerDailySubtaskVolumeTableTableTableManager(
+      _$AppDatabase db, $PlayerDailySubtaskVolumeTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlayerDailySubtaskVolumeTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlayerDailySubtaskVolumeTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlayerDailySubtaskVolumeTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            Value<String> subTaskKey = const Value.absent(),
+            Value<int> totalUnits = const Value.absent(),
+            Value<int> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlayerDailySubtaskVolumeTableCompanion(
+            playerId: playerId,
+            subTaskKey: subTaskKey,
+            totalUnits: totalUnits,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required int playerId,
+            required String subTaskKey,
+            Value<int> totalUnits = const Value.absent(),
+            required int updatedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlayerDailySubtaskVolumeTableCompanion.insert(
+            playerId: playerId,
+            subTaskKey: subTaskKey,
+            totalUnits: totalUnits,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PlayerDailySubtaskVolumeTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $PlayerDailySubtaskVolumeTableTable,
+        PlayerDailySubtaskVolumeData,
+        $$PlayerDailySubtaskVolumeTableTableFilterComposer,
+        $$PlayerDailySubtaskVolumeTableTableOrderingComposer,
+        $$PlayerDailySubtaskVolumeTableTableAnnotationComposer,
+        $$PlayerDailySubtaskVolumeTableTableCreateCompanionBuilder,
+        $$PlayerDailySubtaskVolumeTableTableUpdateCompanionBuilder,
+        (
+          PlayerDailySubtaskVolumeData,
+          BaseReferences<_$AppDatabase, $PlayerDailySubtaskVolumeTableTable,
+              PlayerDailySubtaskVolumeData>
+        ),
+        PlayerDailySubtaskVolumeData,
+        PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -20080,4 +22568,12 @@ class $AppDatabaseManager {
           _db, _db.activeFactionQuestsTable);
   $$DailyMissionsTableTableTableManager get dailyMissionsTable =>
       $$DailyMissionsTableTableTableManager(_db, _db.dailyMissionsTable);
+  $$PlayerDailyMissionStatsTableTableTableManager
+      get playerDailyMissionStatsTable =>
+          $$PlayerDailyMissionStatsTableTableTableManager(
+              _db, _db.playerDailyMissionStatsTable);
+  $$PlayerDailySubtaskVolumeTableTableTableManager
+      get playerDailySubtaskVolumeTable =>
+          $$PlayerDailySubtaskVolumeTableTableTableManager(
+              _db, _db.playerDailySubtaskVolumeTable);
 }

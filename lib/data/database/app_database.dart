@@ -38,6 +38,10 @@ import 'tables/player_faction_reputation_table.dart';
 import 'tables/active_faction_quests_table.dart';
 // Sprint 3.2 Etapa 1.2 — missões diárias geradas dinamicamente.
 import 'tables/daily_missions_table.dart';
+// Sprint 3.3 Etapa 2.1a — stats agregadas + volume por sub-task.
+// Foundation pros triggers de conquista da Etapa 2.1b.
+import 'tables/player_daily_mission_stats_table.dart';
+import 'tables/player_daily_subtask_volume_table.dart';
 
 part 'app_database.g.dart';
 
@@ -67,6 +71,9 @@ part 'app_database.g.dart';
     ActiveFactionQuestsTable,
     // Sprint 3.2 Etapa 1.2 — schema 27.
     DailyMissionsTable,
+    // Sprint 3.3 Etapa 2.1a — schema 28.
+    PlayerDailyMissionStatsTable,
+    PlayerDailySubtaskVolumeTable,
   ],
   daos: [PlayerDao, GuildDao, DailyMissionsDao],
 )
@@ -81,7 +88,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 27;
+  int get schemaVersion => 28;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -419,6 +426,33 @@ class AppDatabase extends _$AppDatabase {
         } catch (e) {
           // ignore: avoid_print
           print('[migration 26→27] failed: $e');
+        }
+      }
+      if (from < 28) {
+        // Sprint 3.3 Etapa 2.1a — stats agregadas + volume por sub-task.
+        // Foundation pros triggers de conquista (Etapa 2.1b). Bulk insert
+        // auto-row pra players existentes; novos players recebem row via
+        // lazy `findOrCreate` no DAO.
+        try {
+          await m.createTable(playerDailyMissionStatsTable);
+          await m.createTable(playerDailySubtaskVolumeTable);
+          final now = DateTime.now().millisecondsSinceEpoch;
+          final players = await select(playersTable).get();
+          for (final p in players) {
+            await into(playerDailyMissionStatsTable).insert(
+              PlayerDailyMissionStatsTableCompanion(
+                playerId: Value(p.id),
+                updatedAt: Value(now),
+              ),
+              mode: InsertMode.insertOrIgnore,
+            );
+          }
+          // ignore: avoid_print
+          print('[migration 27→28] created stats tables + '
+              '${players.length} initial rows');
+        } catch (e) {
+          // ignore: avoid_print
+          print('[migration 27→28] failed: $e');
         }
       }
     },
