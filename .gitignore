@@ -46,5 +46,12 @@ app.*.map.json
 *.apk
 build/
 
-# Em C:\Dev\Projetos\App_Noheroes\.gitignore, adiciona linha:
+# Vault Obsidian — repo separado, acessado via junção/symlink
 .vault/
+
+# Claude Code — config de sessão local (não versionar) mas
+# versionar templates e workflow.
+.claude/*
+!.claude/templates/
+!.claude/templates/*
+!.claude/workflow.md
