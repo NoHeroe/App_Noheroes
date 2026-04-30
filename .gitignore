@@ -45,3 +45,6 @@ app.*.map.json
 /android/app/release
 *.apk
 build/
+
+# Em C:\Dev\Projetos\App_Noheroes\.gitignore, adiciona linha:
+.vault/

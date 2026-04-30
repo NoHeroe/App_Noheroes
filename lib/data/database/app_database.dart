@@ -88,7 +88,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 29;
+  int get schemaVersion => 30;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -498,11 +498,100 @@ class AppDatabase extends _$AppDatabase {
           print('[migration 28→29] backfill peak_level failed: $e');
         }
       }
+      if (from < 30) {
+        // Sprint 3.3 HOTFIX — corretiva da migration 27→28 que falhou
+        // silencioso. Ver
+        // `.vault/02_ADRs/ADR-0019-drift-migration-dataclass-pitfall.md`.
+        await _applyHotfix29To30();
+      }
     },
     beforeOpen: (details) async {
       await _selfHealCatalogs();
     },
   );
+
+  /// Sprint 3.3 HOTFIX — corretiva da migration 27→28 que falhou
+  /// silencioso em devices que upgradaram 27→29 sequencial. Ver
+  /// `.vault/02_ADRs/ADR-0019-drift-migration-dataclass-pitfall.md`
+  /// pro contexto completo.
+  ///
+  /// IDEMPOTENTE:
+  ///   - `CREATE TABLE IF NOT EXISTS` cobre devices fresh (no-op porque
+  ///     `onCreate.createAll()` já criou) E o edge case onde o
+  ///     `m.createTable` original também não rodou.
+  ///   - `customSelect('SELECT id FROM players')` evita o pitfall do
+  ///     data class (codegen reflete schema atual; `select(playersTable)`
+  ///     lança null check em colunas non-null não-existentes).
+  ///   - `insertOrIgnore` no bulk insert não duplica rows existentes.
+  Future<void> _applyHotfix29To30() async {
+    try {
+      await customStatement('''
+        CREATE TABLE IF NOT EXISTS player_daily_mission_stats (
+          player_id INTEGER NOT NULL,
+          total_completed INTEGER NOT NULL DEFAULT 0,
+          total_failed INTEGER NOT NULL DEFAULT 0,
+          total_partial INTEGER NOT NULL DEFAULT 0,
+          total_perfect INTEGER NOT NULL DEFAULT 0,
+          total_super_perfect INTEGER NOT NULL DEFAULT 0,
+          total_generated INTEGER NOT NULL DEFAULT 0,
+          total_confirmed INTEGER NOT NULL DEFAULT 0,
+          best_streak INTEGER NOT NULL DEFAULT 0,
+          days_without_failing INTEGER NOT NULL DEFAULT 0,
+          best_days_without_failing INTEGER NOT NULL DEFAULT 0,
+          consecutive_fails_count INTEGER NOT NULL DEFAULT 0,
+          max_consecutive_fails INTEGER NOT NULL DEFAULT 0,
+          consecutive_active_days INTEGER NOT NULL DEFAULT 0,
+          best_consecutive_active_days INTEGER NOT NULL DEFAULT 0,
+          total_sub_tasks_completed INTEGER NOT NULL DEFAULT 0,
+          total_sub_tasks_overshoot INTEGER NOT NULL DEFAULT 0,
+          total_confirmed_before_8am INTEGER NOT NULL DEFAULT 0,
+          total_confirmed_after_10pm INTEGER NOT NULL DEFAULT 0,
+          total_confirmed_on_weekend INTEGER NOT NULL DEFAULT 0,
+          days_of_week_completed_bitmask INTEGER NOT NULL DEFAULT 0,
+          total_zero_progress_confirms INTEGER NOT NULL DEFAULT 0,
+          total_days_all_pilars INTEGER NOT NULL DEFAULT 0,
+          total_speedrun_completions INTEGER NOT NULL DEFAULT 0,
+          first_completed_at INTEGER,
+          last_completed_at INTEGER,
+          last_pilar_balance_day TEXT,
+          last_active_day TEXT,
+          updated_at INTEGER NOT NULL,
+          PRIMARY KEY (player_id)
+        )
+      ''');
+      await customStatement('''
+        CREATE TABLE IF NOT EXISTS player_daily_subtask_volume (
+          player_id INTEGER NOT NULL,
+          sub_task_key TEXT NOT NULL,
+          total_units INTEGER NOT NULL DEFAULT 0,
+          updated_at INTEGER NOT NULL,
+          PRIMARY KEY (player_id, sub_task_key)
+        )
+      ''');
+
+      // customSelect lê só `id` — bypassa o pitfall do data class.
+      final result = await customSelect('SELECT id FROM players').get();
+      final now = DateTime.now().millisecondsSinceEpoch;
+      int processed = 0;
+      for (final row in result) {
+        final pid = row.read<int>('id');
+        await into(playerDailyMissionStatsTable).insert(
+          PlayerDailyMissionStatsTableCompanion(
+            playerId: Value(pid),
+            updatedAt: Value(now),
+          ),
+          mode: InsertMode.insertOrIgnore,
+        );
+        processed++;
+      }
+      // ignore: avoid_print
+      print('[migration 29→30] hotfix: reaplicada 27→28 (idempotente). '
+          'Players processados: $processed');
+    } catch (e) {
+      // ignore: avoid_print
+      print('[migration 29→30] hotfix failed: $e');
+    }
+  }
 
   // Rede de proteção contra seeds que falharam silenciosamente por asset
   // missing. Roda 1x por abertura do DB (uma query de contagem). Se detecta
