@@ -6,6 +6,7 @@ import 'package:flutter/services.dart' show AssetBundle, rootBundle;
 import '../../core/events/app_event_bus.dart';
 import '../../core/events/daily_mission_events.dart';
 import '../../core/events/faction_events.dart';
+import '../../core/events/navigation_events.dart';
 import '../../core/events/player_events.dart';
 import '../../core/events/reward_events.dart';
 import '../../data/database/app_database.dart';
@@ -20,6 +21,7 @@ import '../models/player_snapshot.dart';
 import '../models/reward_resolved.dart';
 import '../repositories/player_achievements_repository.dart';
 import 'achievement_trigger_types.dart';
+import 'player_screens_visited_service.dart';
 import 'reward_resolve_service.dart';
 
 /// Snapshot mínimo de atributos do jogador consumido pelos validators de
@@ -111,6 +113,12 @@ class AchievementsService {
   /// de testes legacy.
   final PlayerDao? _playerDao;
 
+  /// Sprint 3.3 Etapa 2.1c-γ — service opcional pro trigger
+  /// `event_screen_visited` (lê telas visitadas via CSV em
+  /// `players.screens_visited_keys`). Null → fail-safe degradado
+  /// (warn + return false).
+  final PlayerScreensVisitedService? _screensVisitedService;
+
   /// Path do catálogo — exposto como `static const` pra facilitar override
   /// em teste de load e pra caller inspecionar em debug.
   static const String catalogAssetPath = 'assets/data/achievements.json';
@@ -143,6 +151,7 @@ class AchievementsService {
     PlayerDailyMissionStatsDao? statsDao,
     PlayerDailySubtaskVolumeDao? volumeDao,
     PlayerDao? playerDao,
+    PlayerScreensVisitedService? screensVisitedService,
     AssetBundle? assetBundle,
   })  : _achievementsRepo = achievementsRepo,
         _rewardResolve = rewardResolve,
@@ -152,6 +161,7 @@ class AchievementsService {
         _statsDao = statsDao,
         _volumeDao = volumeDao,
         _playerDao = playerDao,
+        _screensVisitedService = screensVisitedService,
         _assetBundle = assetBundle ?? rootBundle;
 
   /// Lê o catálogo em memória (idempotente). Chamado explicitamente pelo
@@ -267,6 +277,11 @@ class AchievementsService {
       _bus.on<BodyMetricsUpdated>().listen(
           (e) => _checkEventTriggers(e.playerId, bodyMetricsEvent: e)),
       _bus.on<CurrencyStatsUpdated>().listen(
+          (e) => _checkEventTriggers(e.playerId)),
+      // Sprint 3.3 Etapa 2.1c-γ — escuta SEMPRE (isFirstVisit true OU
+      // false). Conquista pode ter sido adicionada após a 1ª visita;
+      // a 2ª visita é a primeira chance de unlock.
+      _bus.on<ScreenVisited>().listen(
           (e) => _checkEventTriggers(e.playerId)),
     ];
   }
@@ -684,6 +699,22 @@ class AchievementsService {
         final player = await playerDao.findById(playerId);
         if (player == null) return false;
         return player.totalGemsSpent >= trigger.target;
+
+      case AchievementTriggerTypes.eventScreenVisited:
+        final svc = _screensVisitedService;
+        if (svc == null) {
+          // ignore: avoid_print
+          print('[achievements] event_screen_visited em "${def.key}" '
+              'requer screensVisitedService — skip (modo degradado)');
+          return false;
+        }
+        final expectedKey = trigger.param<String>('screen_key');
+        if (expectedKey == null) {
+          // Sem param: target = N telas distintas visitadas.
+          return await svc.visitedCount(playerId) >= trigger.target;
+        }
+        // Com param: específica (one-shot, target geralmente 1).
+        return await svc.hasVisited(playerId, expectedKey);
 
       default:
         // Defesa contra extensão de constants sem update neste switch.

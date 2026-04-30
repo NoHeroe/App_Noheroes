@@ -111,4 +111,20 @@ class PlayersTable extends Table {
   // legacy preservado pra players existentes).
   BoolColumn get autoConfirmEnabled =>
       boolean().withDefault(const Constant(false))();
+
+  /// Sprint 3.3 Etapa 2.1c-γ — CSV de paths visitados (`/perfil,/quests,
+  /// /shops`). Single writer: `PlayerScreensVisitedService`. Read via
+  /// queries pra trigger `event_screen_visited`.
+  ///
+  /// Decisão arquitetural (CSV em TEXT vs bitmask INT):
+  /// - Set de telas é pequeno (~30 paths)
+  /// - Operação dominante é `contains` (exact match) e count distinto
+  /// - CSV é self-describing — bitmask exigiria mapeamento estático
+  ///   key→bit que rasga ao adicionar tela nova
+  /// - Paths excluídos do tracking: `/`, `/login`, `/register` (splash
+  ///   e auth boilerplate não são "visitas conscientes")
+  ///
+  /// Default `''` (vazio). Schema 32 adiciona via `m.addColumn`.
+  TextColumn get screensVisitedKeys =>
+      text().withDefault(const Constant(''))();
 }

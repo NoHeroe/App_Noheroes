@@ -23,6 +23,7 @@ import '../domain/services/daily_mission_rollover_service.dart';
 import '../domain/services/daily_mission_stats_service.dart';
 import '../domain/services/daily_pool_service.dart';
 import '../domain/services/player_currency_stats_service.dart';
+import '../domain/services/player_screens_visited_service.dart';
 import '../data/database/daos/daily_missions_dao.dart';
 import '../data/database/daos/player_daily_mission_stats_dao.dart';
 import '../data/database/daos/player_daily_subtask_volume_dao.dart';
@@ -298,6 +299,9 @@ final achievementsServiceProvider = Provider<AchievementsService>((ref) {
     volumeDao: ref.watch(playerDailySubtaskVolumeDaoProvider),
     // Sprint 3.3 Etapa 2.1c-α — PlayerDao pros 5 triggers event_*.
     playerDao: PlayerDao(db),
+    // Sprint 3.3 Etapa 2.1c-γ — service pro trigger event_screen_visited.
+    screensVisitedService:
+        ref.watch(playerScreensVisitedServiceProvider),
     resolvePlayerFacts: (playerId) async {
       final row = await (db.select(db.playersTable)
             ..where((t) => t.id.equals(playerId)))
@@ -354,6 +358,19 @@ final bodyMetricsServiceProvider = Provider<BodyMetricsService>((ref) {
   final db = ref.watch(appDatabaseProvider);
   return BodyMetricsService(
     dao: PlayerDao(db),
+    bus: ref.watch(appEventBusProvider),
+  );
+});
+
+// Sprint 3.3 Etapa 2.1c-γ — tracking de telas visitadas (CSV em
+// players.screens_visited_keys). Single writer chamado pelo router
+// listener em routerProvider. Sem bootstrap eager — writer-on-demand.
+final playerScreensVisitedServiceProvider =
+    Provider<PlayerScreensVisitedService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return PlayerScreensVisitedService(
+    db: db,
+    playerDao: PlayerDao(db),
     bus: ref.watch(appEventBusProvider),
   );
 });

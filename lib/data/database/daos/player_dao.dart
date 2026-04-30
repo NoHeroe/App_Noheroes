@@ -217,6 +217,16 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
         .write(PlayersTableCompanion(autoConfirmEnabled: Value(value)));
   }
 
+  /// Sprint 3.3 Etapa 2.1c-γ — persiste CSV de paths visitados.
+  ///
+  /// Chamado pelo `PlayerScreensVisitedService.recordVisit` dentro de
+  /// uma transação atômica (read-modify-write em CSV). Caller controla
+  /// formato; este método só persiste o valor recebido.
+  Future<void> setScreensVisitedKeys(int id, String csv) async {
+    await (update(playersTable)..where((t) => t.id.equals(id)))
+        .write(PlayersTableCompanion(screensVisitedKeys: Value(csv)));
+  }
+
   Future<void> addGold(int id, int amount) async {
     final player = await findById(id);
     if (player == null) return;

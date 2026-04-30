@@ -88,7 +88,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 31;
+  int get schemaVersion => 32;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -550,6 +550,21 @@ class AppDatabase extends _$AppDatabase {
           // ignore: avoid_print
           print('[migration 30→31] addColumn '
               'total_zero_progress_manual_confirms failed: $e\n$st');
+        }
+      }
+      if (from < 32) {
+        // Sprint 3.3 Etapa 2.1c-γ — tracking de telas visitadas via CSV.
+        // Aplicação do ADR-0019: só m.addColumn (default '' cobre players
+        // existentes; novos players já nascem com '').
+        try {
+          await m.addColumn(
+              playersTable, playersTable.screensVisitedKeys);
+          // ignore: avoid_print
+          print('[migration 31→32] added screens_visited_keys');
+        } catch (e, st) {
+          // ignore: avoid_print
+          print('[migration 31→32] addColumn screens_visited_keys '
+              'failed: $e\n$st');
         }
       }
     },

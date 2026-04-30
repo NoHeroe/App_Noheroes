@@ -72,6 +72,10 @@ abstract class AchievementTriggerTypes {
       'event_body_metrics_updated';
   static const String eventGemsSpentTotal = 'event_gems_spent_total';
 
+  /// Sprint 3.3 Etapa 2.1c-γ — visita a tela específica (com `params.
+  /// screen_key`) ou contagem de telas distintas (sem param).
+  static const String eventScreenVisited = 'event_screen_visited';
+
   /// Set imutável dos 17 daily — usado pelo parser pra detectar
   /// prefixo daily. (Sprint 3.3 Etapa 2.1c-β: +2 sub-types.)
   static const Set<String> allDaily = {
@@ -94,12 +98,14 @@ abstract class AchievementTriggerTypes {
     dailyZeroProgressManualCount,
   };
 
-  /// Set imutável dos 5 event-based — paralelo a [allDaily].
+  /// Set imutável dos 6 event-based — paralelo a [allDaily].
+  /// (Sprint 3.3 Etapa 2.1c-γ: +1 sub-type — `event_screen_visited`.)
   static const Set<String> allEvents = {
     eventClassSelected,
     eventFactionJoined,
     eventAttributePointSpent,
     eventBodyMetricsUpdated,
     eventGemsSpentTotal,
+    eventScreenVisited,
   };
 }

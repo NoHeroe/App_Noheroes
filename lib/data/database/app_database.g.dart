@@ -362,6 +362,14 @@ class $PlayersTableTable extends PlayersTable
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("auto_confirm_enabled" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _screensVisitedKeysMeta =
+      const VerificationMeta('screensVisitedKeys');
+  @override
+  late final GeneratedColumn<String> screensVisitedKeys =
+      GeneratedColumn<String>('screens_visited_keys', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(''));
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -410,7 +418,8 @@ class $PlayersTableTable extends PlayersTable
         totalGemsSpent,
         peakLevel,
         totalAttributePointsSpent,
-        autoConfirmEnabled
+        autoConfirmEnabled,
+        screensVisitedKeys
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -660,6 +669,12 @@ class $PlayersTableTable extends PlayersTable
           autoConfirmEnabled.isAcceptableOrUnknown(
               data['auto_confirm_enabled']!, _autoConfirmEnabledMeta));
     }
+    if (data.containsKey('screens_visited_keys')) {
+      context.handle(
+          _screensVisitedKeysMeta,
+          screensVisitedKeys.isAcceptableOrUnknown(
+              data['screens_visited_keys']!, _screensVisitedKeysMeta));
+    }
     return context;
   }
 
@@ -765,6 +780,8 @@ class $PlayersTableTable extends PlayersTable
           data['${effectivePrefix}total_attribute_points_spent'])!,
       autoConfirmEnabled: attachedDatabase.typeMapping.read(
           DriftSqlType.bool, data['${effectivePrefix}auto_confirm_enabled'])!,
+      screensVisitedKeys: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}screens_visited_keys'])!,
     );
   }
 
@@ -823,6 +840,21 @@ class PlayersTableData extends DataClass
   final int peakLevel;
   final int totalAttributePointsSpent;
   final bool autoConfirmEnabled;
+
+  /// Sprint 3.3 Etapa 2.1c-γ — CSV de paths visitados (`/perfil,/quests,
+  /// /shops`). Single writer: `PlayerScreensVisitedService`. Read via
+  /// queries pra trigger `event_screen_visited`.
+  ///
+  /// Decisão arquitetural (CSV em TEXT vs bitmask INT):
+  /// - Set de telas é pequeno (~30 paths)
+  /// - Operação dominante é `contains` (exact match) e count distinto
+  /// - CSV é self-describing — bitmask exigiria mapeamento estático
+  ///   key→bit que rasga ao adicionar tela nova
+  /// - Paths excluídos do tracking: `/`, `/login`, `/register` (splash
+  ///   e auth boilerplate não são "visitas conscientes")
+  ///
+  /// Default `''` (vazio). Schema 32 adiciona via `m.addColumn`.
+  final String screensVisitedKeys;
   const PlayersTableData(
       {required this.id,
       required this.email,
@@ -870,7 +902,8 @@ class PlayersTableData extends DataClass
       required this.totalGemsSpent,
       required this.peakLevel,
       required this.totalAttributePointsSpent,
-      required this.autoConfirmEnabled});
+      required this.autoConfirmEnabled,
+      required this.screensVisitedKeys});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -939,6 +972,7 @@ class PlayersTableData extends DataClass
     map['total_attribute_points_spent'] =
         Variable<int>(totalAttributePointsSpent);
     map['auto_confirm_enabled'] = Variable<bool>(autoConfirmEnabled);
+    map['screens_visited_keys'] = Variable<String>(screensVisitedKeys);
     return map;
   }
 
@@ -1007,6 +1041,7 @@ class PlayersTableData extends DataClass
       peakLevel: Value(peakLevel),
       totalAttributePointsSpent: Value(totalAttributePointsSpent),
       autoConfirmEnabled: Value(autoConfirmEnabled),
+      screensVisitedKeys: Value(screensVisitedKeys),
     );
   }
 
@@ -1065,6 +1100,8 @@ class PlayersTableData extends DataClass
       totalAttributePointsSpent:
           serializer.fromJson<int>(json['totalAttributePointsSpent']),
       autoConfirmEnabled: serializer.fromJson<bool>(json['autoConfirmEnabled']),
+      screensVisitedKeys:
+          serializer.fromJson<String>(json['screensVisitedKeys']),
     );
   }
   @override
@@ -1120,6 +1157,7 @@ class PlayersTableData extends DataClass
       'totalAttributePointsSpent':
           serializer.toJson<int>(totalAttributePointsSpent),
       'autoConfirmEnabled': serializer.toJson<bool>(autoConfirmEnabled),
+      'screensVisitedKeys': serializer.toJson<String>(screensVisitedKeys),
     };
   }
 
@@ -1170,7 +1208,8 @@ class PlayersTableData extends DataClass
           int? totalGemsSpent,
           int? peakLevel,
           int? totalAttributePointsSpent,
-          bool? autoConfirmEnabled}) =>
+          bool? autoConfirmEnabled,
+          String? screensVisitedKeys}) =>
       PlayersTableData(
         id: id ?? this.id,
         email: email ?? this.email,
@@ -1226,6 +1265,7 @@ class PlayersTableData extends DataClass
         totalAttributePointsSpent:
             totalAttributePointsSpent ?? this.totalAttributePointsSpent,
         autoConfirmEnabled: autoConfirmEnabled ?? this.autoConfirmEnabled,
+        screensVisitedKeys: screensVisitedKeys ?? this.screensVisitedKeys,
       );
   PlayersTableData copyWithCompanion(PlayersTableCompanion data) {
     return PlayersTableData(
@@ -1318,6 +1358,9 @@ class PlayersTableData extends DataClass
       autoConfirmEnabled: data.autoConfirmEnabled.present
           ? data.autoConfirmEnabled.value
           : this.autoConfirmEnabled,
+      screensVisitedKeys: data.screensVisitedKeys.present
+          ? data.screensVisitedKeys.value
+          : this.screensVisitedKeys,
     );
   }
 
@@ -1370,7 +1413,8 @@ class PlayersTableData extends DataClass
           ..write('totalGemsSpent: $totalGemsSpent, ')
           ..write('peakLevel: $peakLevel, ')
           ..write('totalAttributePointsSpent: $totalAttributePointsSpent, ')
-          ..write('autoConfirmEnabled: $autoConfirmEnabled')
+          ..write('autoConfirmEnabled: $autoConfirmEnabled, ')
+          ..write('screensVisitedKeys: $screensVisitedKeys')
           ..write(')'))
         .toString();
   }
@@ -1423,7 +1467,8 @@ class PlayersTableData extends DataClass
         totalGemsSpent,
         peakLevel,
         totalAttributePointsSpent,
-        autoConfirmEnabled
+        autoConfirmEnabled,
+        screensVisitedKeys
       ]);
   @override
   bool operator ==(Object other) =>
@@ -1475,7 +1520,8 @@ class PlayersTableData extends DataClass
           other.totalGemsSpent == this.totalGemsSpent &&
           other.peakLevel == this.peakLevel &&
           other.totalAttributePointsSpent == this.totalAttributePointsSpent &&
-          other.autoConfirmEnabled == this.autoConfirmEnabled);
+          other.autoConfirmEnabled == this.autoConfirmEnabled &&
+          other.screensVisitedKeys == this.screensVisitedKeys);
 }
 
 class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
@@ -1526,6 +1572,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
   final Value<int> peakLevel;
   final Value<int> totalAttributePointsSpent;
   final Value<bool> autoConfirmEnabled;
+  final Value<String> screensVisitedKeys;
   const PlayersTableCompanion({
     this.id = const Value.absent(),
     this.email = const Value.absent(),
@@ -1574,6 +1621,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.peakLevel = const Value.absent(),
     this.totalAttributePointsSpent = const Value.absent(),
     this.autoConfirmEnabled = const Value.absent(),
+    this.screensVisitedKeys = const Value.absent(),
   });
   PlayersTableCompanion.insert({
     this.id = const Value.absent(),
@@ -1623,6 +1671,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.peakLevel = const Value.absent(),
     this.totalAttributePointsSpent = const Value.absent(),
     this.autoConfirmEnabled = const Value.absent(),
+    this.screensVisitedKeys = const Value.absent(),
   })  : email = Value(email),
         passwordHash = Value(passwordHash);
   static Insertable<PlayersTableData> custom({
@@ -1673,6 +1722,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     Expression<int>? peakLevel,
     Expression<int>? totalAttributePointsSpent,
     Expression<bool>? autoConfirmEnabled,
+    Expression<String>? screensVisitedKeys,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1727,6 +1777,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
         'total_attribute_points_spent': totalAttributePointsSpent,
       if (autoConfirmEnabled != null)
         'auto_confirm_enabled': autoConfirmEnabled,
+      if (screensVisitedKeys != null)
+        'screens_visited_keys': screensVisitedKeys,
     });
   }
 
@@ -1777,7 +1829,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       Value<int>? totalGemsSpent,
       Value<int>? peakLevel,
       Value<int>? totalAttributePointsSpent,
-      Value<bool>? autoConfirmEnabled}) {
+      Value<bool>? autoConfirmEnabled,
+      Value<String>? screensVisitedKeys}) {
     return PlayersTableCompanion(
       id: id ?? this.id,
       email: email ?? this.email,
@@ -1828,6 +1881,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       totalAttributePointsSpent:
           totalAttributePointsSpent ?? this.totalAttributePointsSpent,
       autoConfirmEnabled: autoConfirmEnabled ?? this.autoConfirmEnabled,
+      screensVisitedKeys: screensVisitedKeys ?? this.screensVisitedKeys,
     );
   }
 
@@ -1977,6 +2031,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     if (autoConfirmEnabled.present) {
       map['auto_confirm_enabled'] = Variable<bool>(autoConfirmEnabled.value);
     }
+    if (screensVisitedKeys.present) {
+      map['screens_visited_keys'] = Variable<String>(screensVisitedKeys.value);
+    }
     return map;
   }
 
@@ -2029,7 +2086,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
           ..write('totalGemsSpent: $totalGemsSpent, ')
           ..write('peakLevel: $peakLevel, ')
           ..write('totalAttributePointsSpent: $totalAttributePointsSpent, ')
-          ..write('autoConfirmEnabled: $autoConfirmEnabled')
+          ..write('autoConfirmEnabled: $autoConfirmEnabled, ')
+          ..write('screensVisitedKeys: $screensVisitedKeys')
           ..write(')'))
         .toString();
   }
@@ -15733,6 +15791,7 @@ typedef $$PlayersTableTableCreateCompanionBuilder = PlayersTableCompanion
   Value<int> peakLevel,
   Value<int> totalAttributePointsSpent,
   Value<bool> autoConfirmEnabled,
+  Value<String> screensVisitedKeys,
 });
 typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
     Function({
@@ -15783,6 +15842,7 @@ typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
   Value<int> peakLevel,
   Value<int> totalAttributePointsSpent,
   Value<bool> autoConfirmEnabled,
+  Value<String> screensVisitedKeys,
 });
 
 class $$PlayersTableTableFilterComposer
@@ -15946,6 +16006,10 @@ class $$PlayersTableTableFilterComposer
 
   ColumnFilters<bool> get autoConfirmEnabled => $composableBuilder(
       column: $table.autoConfirmEnabled,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get screensVisitedKeys => $composableBuilder(
+      column: $table.screensVisitedKeys,
       builder: (column) => ColumnFilters(column));
 }
 
@@ -16116,6 +16180,10 @@ class $$PlayersTableTableOrderingComposer
   ColumnOrderings<bool> get autoConfirmEnabled => $composableBuilder(
       column: $table.autoConfirmEnabled,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get screensVisitedKeys => $composableBuilder(
+      column: $table.screensVisitedKeys,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$PlayersTableTableAnnotationComposer
@@ -16267,6 +16335,9 @@ class $$PlayersTableTableAnnotationComposer
 
   GeneratedColumn<bool> get autoConfirmEnabled => $composableBuilder(
       column: $table.autoConfirmEnabled, builder: (column) => column);
+
+  GeneratedColumn<String> get screensVisitedKeys => $composableBuilder(
+      column: $table.screensVisitedKeys, builder: (column) => column);
 }
 
 class $$PlayersTableTableTableManager extends RootTableManager<
@@ -16342,6 +16413,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> peakLevel = const Value.absent(),
             Value<int> totalAttributePointsSpent = const Value.absent(),
             Value<bool> autoConfirmEnabled = const Value.absent(),
+            Value<String> screensVisitedKeys = const Value.absent(),
           }) =>
               PlayersTableCompanion(
             id: id,
@@ -16391,6 +16463,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             peakLevel: peakLevel,
             totalAttributePointsSpent: totalAttributePointsSpent,
             autoConfirmEnabled: autoConfirmEnabled,
+            screensVisitedKeys: screensVisitedKeys,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -16440,6 +16513,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> peakLevel = const Value.absent(),
             Value<int> totalAttributePointsSpent = const Value.absent(),
             Value<bool> autoConfirmEnabled = const Value.absent(),
+            Value<String> screensVisitedKeys = const Value.absent(),
           }) =>
               PlayersTableCompanion.insert(
             id: id,
@@ -16489,6 +16563,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             peakLevel: peakLevel,
             totalAttributePointsSpent: totalAttributePointsSpent,
             autoConfirmEnabled: autoConfirmEnabled,
+            screensVisitedKeys: screensVisitedKeys,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

@@ -75,6 +75,7 @@ PlayersTableData _player() {
     peakLevel: 1,
     totalAttributePointsSpent: 0,
     autoConfirmEnabled: false,
+    screensVisitedKeys: '',
   );
 }
 

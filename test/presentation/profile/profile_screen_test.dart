@@ -56,6 +56,7 @@ PlayersTableData _player({int? weightKg, int? heightCm}) {
     peakLevel: 1,
     totalAttributePointsSpent: 0,
     autoConfirmEnabled: false,
+    screensVisitedKeys: '',
   );
 }
 

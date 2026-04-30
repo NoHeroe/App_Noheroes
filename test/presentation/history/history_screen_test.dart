@@ -104,6 +104,7 @@ PlayersTableData _fakePlayer({int totalQuests = 0}) {
     peakLevel: 1,
     totalAttributePointsSpent: 0,
     autoConfirmEnabled: false,
+    screensVisitedKeys: '',
   );
 }
 

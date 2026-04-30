@@ -156,6 +156,7 @@ PlayersTableData _fakePlayer({int dailyStreak = 0, String rank = 'E'}) {
     peakLevel: 1,
     totalAttributePointsSpent: 0,
     autoConfirmEnabled: false,
+    screensVisitedKeys: '',
   );
 }
 

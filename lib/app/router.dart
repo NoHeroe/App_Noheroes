@@ -40,7 +40,7 @@ import '../data/database/tables/players_table_ext.dart';
 import 'providers.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  return GoRouter(
+  final router = GoRouter(
     initialLocation: '/',
     routes: [
       GoRoute(path: '/',             builder: (c, s) => const SplashScreen()),
@@ -193,6 +193,39 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+
+  // Sprint 3.3 Etapa 2.1c-γ — listener de navegação pra
+  // PlayerScreensVisitedService.
+  //
+  // NavigatorObserver não funciona porque GoRoute não define `name` nas
+  // rotas do projeto → `route.settings.name` fica null. Usamos
+  // `routerDelegate.addListener` que reage a mudanças em
+  // `currentConfiguration.uri.path` (resolvido com path params).
+  //
+  // Cleanup explícito via `removeListener(callback)` no `ref.onDispose`
+  // — sem isso, hot reload acumula listeners e gera leak.
+  void onRouteChange() {
+    try {
+      final player = ref.read(currentPlayerProvider);
+      if (player == null) return;
+      final path = router.routerDelegate.currentConfiguration.uri.path;
+      if (path.isEmpty) return;
+      final service = ref.read(playerScreensVisitedServiceProvider);
+      // Fire-and-forget — listener não pode ser async. Erros internos
+      // ficam logados pelo service.
+      service.recordVisit(player.id, path);
+    } catch (e) {
+      // ignore: avoid_print
+      print('[router-listener] recordVisit falhou: $e');
+    }
+  }
+
+  router.routerDelegate.addListener(onRouteChange);
+  ref.onDispose(() {
+    router.routerDelegate.removeListener(onRouteChange);
+  });
+
+  return router;
 });
 
 /// Placeholder temporário pra rotas cujas telas foram dropadas no reset brutal
