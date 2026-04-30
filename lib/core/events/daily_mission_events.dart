@@ -99,3 +99,32 @@ class DailyMissionFailed extends AppEvent {
   String toString() =>
       'DailyMissionFailed(player=$playerId, mission=$missionId, $reason)';
 }
+
+/// Sprint 3.3 Etapa 2.1b — evento de coordenação interna entre
+/// `DailyMissionStatsService` (writer) e `AchievementsService` (reader)
+/// pra resolver race condition na escuta dos eventos terminais.
+///
+/// **Não é evento de domínio público** — não esperar mais consumidores
+/// fora desse pipeline. Stats publica APÓS persistir as mudanças no DB,
+/// garantindo que qualquer reader veja o estado novo.
+///
+/// Se outra feature precisar reagir a mudanças de stats no futuro, pode
+/// se subscrever sem refactor.
+class DailyStatsUpdated extends AppEvent {
+  @override
+  final int playerId;
+
+  /// `'completed'` | `'failed'` | `'generated'`. Usado pra log/debug; o
+  /// `AchievementsService` ignora o valor e itera todos os achievements
+  /// daily (mesmo evento dispara checks de qualquer trigger).
+  final String eventType;
+
+  DailyStatsUpdated({
+    required this.playerId,
+    required this.eventType,
+  });
+
+  @override
+  String toString() =>
+      'DailyStatsUpdated(player=$playerId, $eventType)';
+}

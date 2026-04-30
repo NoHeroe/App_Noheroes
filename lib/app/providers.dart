@@ -292,6 +292,9 @@ final achievementsServiceProvider = Provider<AchievementsService>((ref) {
     rewardResolve: ref.watch(rewardResolveServiceProvider),
     rewardGrant: ref.watch(rewardGrantServiceProvider),
     bus: ref.watch(appEventBusProvider),
+    // Sprint 3.3 Etapa 2.1b — DAOs novos pros 15 triggers daily.
+    statsDao: ref.watch(playerDailyMissionStatsDaoProvider),
+    volumeDao: ref.watch(playerDailySubtaskVolumeDaoProvider),
     resolvePlayerFacts: (playerId) async {
       final row = await (db.select(db.playersTable)
             ..where((t) => t.id.equals(playerId)))
@@ -302,6 +305,8 @@ final achievementsServiceProvider = Provider<AchievementsService>((ref) {
       return PlayerFacts(
         level: row.level,
         totalQuestsCompleted: row.totalQuestsCompleted,
+        // Sprint 3.3 Etapa 2.1b — alimenta trigger `daily_mission_streak`.
+        dailyMissionsStreak: row.dailyMissionsStreak,
         snapshot: PlayerSnapshot(
           level: row.level,
           rank: rank ?? GuildRank.e,
@@ -311,11 +316,20 @@ final achievementsServiceProvider = Provider<AchievementsService>((ref) {
       );
     },
   );
-  StreamSubscription<RewardGranted>? sub;
-  // fire-and-forget: carrega catálogo + registra listener em background.
-  service.attach().then((s) => sub = s);
+  StreamSubscription<RewardGranted>? rewardSub;
+  List<StreamSubscription>? dailySubs;
+  // fire-and-forget: carrega catálogo + registra listeners em background.
+  service.attach().then((s) => rewardSub = s);
+  service
+      .attachDailyListeners()
+      .then((subs) => dailySubs = subs);
   ref.onDispose(() {
-    sub?.cancel();
+    rewardSub?.cancel();
+    if (dailySubs != null) {
+      for (final s in dailySubs!) {
+        s.cancel();
+      }
+    }
   });
   return service;
 });

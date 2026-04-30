@@ -14,6 +14,11 @@ class NoHeroesApp extends ConsumerWidget {
     // registra listeners no AppEventBus em `start()`; sem este watch ele
     // só inicializaria quando algo o lesse explicitamente.
     ref.watch(dailyMissionStatsServiceProvider);
+    // Sprint 3.3 Etapa 2.1b — bootstrap eager do achievements service.
+    // Hoje só `/achievements` lia o provider, atrasando o registro do
+    // listener de DailyStatsUpdated. Eager garante que conquistas
+    // disparadas por daily missions unlockem desde o primeiro evento.
+    ref.watch(achievementsServiceProvider);
     return MaterialApp.router(
       title: 'NoHeroes',
       debugShowCheckedModeBanner: false,

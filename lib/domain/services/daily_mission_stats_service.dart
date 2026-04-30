@@ -83,6 +83,10 @@ class DailyMissionStatsService {
   Future<void> _onGenerated(DailyMissionGenerated evt) async {
     try {
       await _statsDao.incrementGenerated(evt.playerId);
+      // Sprint 3.3 Etapa 2.1b — coordenação com AchievementsService.
+      // Publish APÓS commit garante que readers vejam o estado novo.
+      _bus.publish(DailyStatsUpdated(
+          playerId: evt.playerId, eventType: 'generated'));
     } catch (e) {
       // ignore: avoid_print
       print('[stats] _onGenerated falhou pra player=${evt.playerId}: $e');
@@ -98,6 +102,9 @@ class DailyMissionStatsService {
       if (mission != null) {
         await _addVolumeFromMission(mission);
       }
+      // Sprint 3.3 Etapa 2.1b — coordenação com AchievementsService.
+      _bus.publish(DailyStatsUpdated(
+          playerId: evt.playerId, eventType: 'failed'));
     } catch (e) {
       // ignore: avoid_print
       print('[stats] _onFailed falhou pra player=${evt.playerId}: $e');
@@ -113,6 +120,9 @@ class DailyMissionStatsService {
         if (mission != null) {
           await _addVolumeFromMission(mission);
         }
+        // Sprint 3.3 Etapa 2.1b — coordenação com AchievementsService.
+        _bus.publish(DailyStatsUpdated(
+            playerId: evt.playerId, eventType: 'completed'));
         return;
       }
       // fullCompleted = true a partir daqui.
@@ -176,6 +186,10 @@ class DailyMissionStatsService {
       if (isPilarBalance) {
         await _statsDao.markPilarBalanceDay(evt.playerId, mission.data);
       }
+
+      // Sprint 3.3 Etapa 2.1b — coordenação com AchievementsService.
+      _bus.publish(DailyStatsUpdated(
+          playerId: evt.playerId, eventType: 'completed'));
     } catch (e) {
       // ignore: avoid_print
       print('[stats] _onCompleted falhou pra player=${evt.playerId}: $e');

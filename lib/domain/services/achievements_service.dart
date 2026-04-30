@@ -4,13 +4,18 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show AssetBundle, rootBundle;
 
 import '../../core/events/app_event_bus.dart';
+import '../../core/events/daily_mission_events.dart';
 import '../../core/events/reward_events.dart';
+import '../../data/database/daos/player_daily_mission_stats_dao.dart';
+import '../../data/database/daos/player_daily_subtask_volume_dao.dart';
 import '../../data/services/reward_grant_service.dart';
 import '../exceptions/reward_exceptions.dart';
 import '../models/achievement_definition.dart';
+import '../models/player_daily_mission_stats.dart';
 import '../models/player_snapshot.dart';
 import '../models/reward_resolved.dart';
 import '../repositories/player_achievements_repository.dart';
+import 'achievement_trigger_types.dart';
 import 'reward_resolve_service.dart';
 
 /// Snapshot mínimo de atributos do jogador consumido pelos validators de
@@ -21,11 +26,18 @@ import 'reward_resolve_service.dart';
 class PlayerFacts {
   final int level;
   final int totalQuestsCompleted;
+
+  /// Sprint 3.3 Etapa 2.1b — streak diário de missões. Lido de
+  /// `players.daily_missions_streak`. Usado pelo trigger
+  /// `daily_mission_streak`.
+  final int dailyMissionsStreak;
+
   final PlayerSnapshot snapshot;
   const PlayerFacts({
     required this.level,
     required this.totalQuestsCompleted,
     required this.snapshot,
+    this.dailyMissionsStreak = 0,
   });
 }
 
@@ -82,6 +94,13 @@ class AchievementsService {
   final PlayerFactsResolver _resolvePlayerFacts;
   final AssetBundle _assetBundle;
 
+  /// Sprint 3.3 Etapa 2.1b — DAOs opcionais pros 15 triggers daily.
+  /// Quando `null`, qualquer `DailyMissionTrigger` cai em fail-safe
+  /// (warn + return false) — preserva backwards-compat de testes que
+  /// não constroem o pipeline de stats.
+  final PlayerDailyMissionStatsDao? _statsDao;
+  final PlayerDailySubtaskVolumeDao? _volumeDao;
+
   /// Path do catálogo — exposto como `static const` pra facilitar override
   /// em teste de load e pra caller inspecionar em debug.
   static const String catalogAssetPath = 'assets/data/achievements.json';
@@ -92,6 +111,11 @@ class AchievementsService {
   static const int maxCascadeDepth = 3;
 
   final Map<String, AchievementDefinition> _catalog = {};
+
+  /// Cache pré-filtrado dos achievements com trigger daily — evita varrer
+  /// o catálogo inteiro a cada `DailyStatsUpdated`. Populado em `_doLoad`.
+  List<AchievementDefinition> _dailyAchievements = const [];
+
   bool _loaded = false;
   Future<void>? _loadingFuture;
 
@@ -101,12 +125,16 @@ class AchievementsService {
     required RewardGrantService rewardGrant,
     required AppEventBus bus,
     required PlayerFactsResolver resolvePlayerFacts,
+    PlayerDailyMissionStatsDao? statsDao,
+    PlayerDailySubtaskVolumeDao? volumeDao,
     AssetBundle? assetBundle,
   })  : _achievementsRepo = achievementsRepo,
         _rewardResolve = rewardResolve,
         _rewardGrant = rewardGrant,
         _bus = bus,
         _resolvePlayerFacts = resolvePlayerFacts,
+        _statsDao = statsDao,
+        _volumeDao = volumeDao,
         _assetBundle = assetBundle ?? rootBundle;
 
   /// Lê o catálogo em memória (idempotente). Chamado explicitamente pelo
@@ -166,6 +194,10 @@ class AchievementsService {
       }
       _catalog[def.key] = def;
     }
+    // Sprint 3.3 Etapa 2.1b — cache pré-filtrado de daily triggers.
+    _dailyAchievements = _catalog.values
+        .where((d) => d.trigger is DailyMissionTrigger)
+        .toList(growable: false);
     _loaded = true;
   }
 
@@ -177,11 +209,34 @@ class AchievementsService {
     return _bus.on<RewardGranted>().listen(_handleRewardGranted);
   }
 
+  /// Sprint 3.3 Etapa 2.1b — assina o listener de `DailyStatsUpdated`,
+  /// evento publicado pelo `DailyMissionStatsService` APÓS commit das
+  /// stats. Retorna lista de subscriptions — caller deve cancelar todas
+  /// em dispose. Hoje há só 1 (o evento agrega completed/failed/generated)
+  /// mas devolve lista pra facilitar adição futura sem mudar contrato.
+  Future<List<StreamSubscription>> attachDailyListeners() async {
+    await ensureLoaded();
+    return [
+      _bus.on<DailyStatsUpdated>().listen(_onDailyStatsUpdated),
+    ];
+  }
+
   /// Acessor pra inspeção em testes / debug. Não mutável.
   Map<String, AchievementDefinition> get catalog =>
       Map.unmodifiable(_catalog);
 
   // ─── handler + cascata ─────────────────────────────────────────────
+
+  /// Sprint 3.3 Etapa 2.1b — handler de [DailyStatsUpdated]. Itera o
+  /// cache pré-filtrado e tenta unlock de cada achievement daily. Stats
+  /// já está commitado quando este handler roda (publish é pós-commit).
+  Future<void> _onDailyStatsUpdated(DailyStatsUpdated evt) async {
+    await ensureLoaded();
+    if (_dailyAchievements.isEmpty) return;
+    for (final def in _dailyAchievements) {
+      await _tryUnlock(evt.playerId, def.key, depth: 0);
+    }
+  }
 
   Future<void> _handleRewardGranted(RewardGranted evt) async {
     // Eventos gerados pelo próprio `grantAchievement` não entram no
@@ -315,11 +370,160 @@ class AchievementsService {
       case MetaTrigger(targetCount: final n):
         final current = await _achievementsRepo.countCompleted(playerId);
         return current >= n;
+      case DailyMissionTrigger():
+        return _validateDailyTrigger(playerId, def, trigger);
       case UnknownAchievementTrigger(rawType: final t):
         // ignore: avoid_print
         print('[achievements] trigger type "$t" não reconhecido em '
             '"${def.key}" — skip (Bloco 14 expande)');
         return false;
     }
+  }
+
+  // ─── validators de daily trigger (Sprint 3.3 Etapa 2.1b) ───────────
+
+  /// Resolve um [DailyMissionTrigger] contra a foundation da Etapa 2.1a
+  /// (`PlayerDailyMissionStatsDao` + `PlayerDailySubtaskVolumeDao` +
+  /// `players.daily_missions_streak`).
+  ///
+  /// Sub-types com `params` malformado (ex: window faltando) caem em
+  /// fail-safe (warn + return false). Idem se DAOs forem `null` (modo
+  /// degradado de testes legacy).
+  Future<bool> _validateDailyTrigger(
+    int playerId,
+    AchievementDefinition def,
+    DailyMissionTrigger trigger,
+  ) async {
+    final statsDao = _statsDao;
+    if (statsDao == null && trigger.subType != AchievementTriggerTypes.dailyMissionStreak) {
+      // Triggers que dependem de stats precisam do DAO. Streak é único
+      // que lê de PlayerFacts (players.daily_missions_streak).
+      // ignore: avoid_print
+      print('[achievements] daily trigger "${trigger.subType}" em '
+          '"${def.key}" requer statsDao — skip (modo degradado)');
+      return false;
+    }
+
+    switch (trigger.subType) {
+      case AchievementTriggerTypes.dailyMissionCount:
+        final stats = await statsDao!.findOrCreate(playerId);
+        return stats.totalCompleted >= trigger.target;
+
+      case AchievementTriggerTypes.dailyMissionFailedCount:
+        final stats = await statsDao!.findOrCreate(playerId);
+        return stats.totalFailed >= trigger.target;
+
+      case AchievementTriggerTypes.dailyMissionPartialCount:
+        final stats = await statsDao!.findOrCreate(playerId);
+        return stats.totalPartial >= trigger.target;
+
+      case AchievementTriggerTypes.dailyMissionStreak:
+        final facts = await _resolvePlayerFacts(playerId);
+        return facts.dailyMissionsStreak >= trigger.target;
+
+      case AchievementTriggerTypes.dailyMissionBestStreak:
+        final stats = await statsDao!.findOrCreate(playerId);
+        return stats.bestStreak >= trigger.target;
+
+      case AchievementTriggerTypes.dailyMissionPerfectCount:
+        final stats = await statsDao!.findOrCreate(playerId);
+        return stats.totalPerfect >= trigger.target;
+
+      case AchievementTriggerTypes.dailyMissionSuperPerfectCount:
+        final stats = await statsDao!.findOrCreate(playerId);
+        return stats.totalSuperPerfect >= trigger.target;
+
+      case AchievementTriggerTypes.dailyNoFailStreak:
+        final stats = await statsDao!.findOrCreate(playerId);
+        final useBest = trigger.params?['use_best'] == true;
+        final value = useBest
+            ? stats.bestDaysWithoutFailing
+            : stats.daysWithoutFailing;
+        return value >= trigger.target;
+
+      case AchievementTriggerTypes.dailySubtaskVolume:
+        final volumeDao = _volumeDao;
+        if (volumeDao == null) {
+          // ignore: avoid_print
+          print('[achievements] daily_subtask_volume em "${def.key}" '
+              'requer volumeDao — skip');
+          return false;
+        }
+        final key = trigger.params?['sub_task_key'];
+        if (key is! String || key.isEmpty) {
+          // ignore: avoid_print
+          print('[achievements] daily_subtask_volume em "${def.key}" '
+              'sem params.sub_task_key — fail-safe');
+          return false;
+        }
+        final volume = await volumeDao.getVolume(playerId, key);
+        return volume >= trigger.target;
+
+      case AchievementTriggerTypes.dailySubtaskTotalVolume:
+        final volumeDao = _volumeDao;
+        if (volumeDao == null) {
+          // ignore: avoid_print
+          print('[achievements] daily_subtask_total_volume em "${def.key}" '
+              'requer volumeDao — skip');
+          return false;
+        }
+        final total = await volumeDao.getTotalVolume(playerId);
+        return total >= trigger.target;
+
+      case AchievementTriggerTypes.dailyConfirmedTimeWindow:
+        final stats = await statsDao!.findOrCreate(playerId);
+        final window = trigger.params?['window'];
+        switch (window) {
+          case 'before_8am':
+            return stats.totalConfirmedBefore8AM >= trigger.target;
+          case 'after_10pm':
+            return stats.totalConfirmedAfter10PM >= trigger.target;
+          default:
+            // ignore: avoid_print
+            print('[achievements] daily_confirmed_time_window em '
+                '"${def.key}" com window inválido ($window) — fail-safe');
+            return false;
+        }
+
+      case AchievementTriggerTypes.dailyConfirmedOnWeekend:
+        final stats = await statsDao!.findOrCreate(playerId);
+        return stats.totalConfirmedOnWeekend >= trigger.target;
+
+      case AchievementTriggerTypes.dailyPilarBalance:
+        final stats = await statsDao!.findOrCreate(playerId);
+        return stats.totalDaysAllPilars >= trigger.target;
+
+      case AchievementTriggerTypes.dailyConsecutiveDaysActive:
+        final stats = await statsDao!.findOrCreate(playerId);
+        final useBest = trigger.params?['use_best'] == true;
+        final value = useBest
+            ? stats.bestConsecutiveActiveDays
+            : stats.consecutiveActiveDays;
+        return value >= trigger.target;
+
+      case AchievementTriggerTypes.dailySpeedrun:
+        final stats = await statsDao!.findOrCreate(playerId);
+        return stats.totalSpeedrunCompletions >= trigger.target;
+
+      default:
+        // Não deveria acontecer — o parser só cria DailyMissionTrigger
+        // pra subtypes em AchievementTriggerTypes.all. Defesa pra caso
+        // alguém estenda a constants list sem atualizar este switch.
+        // ignore: avoid_print
+        print('[achievements] daily subType "${trigger.subType}" em '
+            '"${def.key}" sem mapeamento — fail-safe');
+        return false;
+    }
+  }
+
+  /// Read-only acessor pro cache pré-filtrado — facilita inspeção em
+  /// testes pra verificar que o load detectou os daily triggers corretos.
+  List<AchievementDefinition> get dailyAchievements =>
+      List.unmodifiable(_dailyAchievements);
+
+  /// Read-only — utilizado por testes pra forçar leitura sob estado
+  /// arbitrário sem precisar publicar evento.
+  Future<PlayerDailyMissionStats?> debugReadStats(int playerId) async {
+    return _statsDao?.findByPlayerId(playerId);
   }
 }

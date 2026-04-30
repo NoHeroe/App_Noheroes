@@ -1,3 +1,4 @@
+import '../services/achievement_trigger_types.dart';
 import 'reward_declared.dart';
 
 /// Sprint 3.1 Bloco 8 — entrada declarativa de uma conquista no catálogo
@@ -112,6 +113,27 @@ sealed class AchievementTrigger {
       throw FormatException(
           "AchievementTrigger.type ausente em '$achievementKey'");
     }
+    // Sprint 3.3 Etapa 2.1b — qualquer tipo `daily_*` reconhecido vira
+    // `DailyMissionTrigger`. Schema unificado: `target` (int>0) + `params`
+    // opcional pra subtypes que precisam (sub_task_key, window, use_best).
+    if (AchievementTriggerTypes.all.contains(type)) {
+      final target = json['target'];
+      if (target is! int || target <= 0) {
+        throw FormatException(
+            "$type.target inválido ($target) em '$achievementKey'");
+      }
+      final paramsRaw = json['params'];
+      Map<String, dynamic>? params;
+      if (paramsRaw != null) {
+        if (paramsRaw is! Map<String, dynamic>) {
+          throw FormatException(
+              "$type.params deve ser objeto em '$achievementKey'");
+        }
+        params = paramsRaw;
+      }
+      return DailyMissionTrigger(
+          subType: type, target: target, params: params);
+    }
     switch (type) {
       case 'event_count':
         final event = json['event'];
@@ -190,6 +212,40 @@ class MetaTrigger extends AchievementTrigger {
   @override
   Map<String, dynamic> toJson() =>
       {'type': 'meta', 'target_count': targetCount};
+}
+
+/// Sprint 3.3 Etapa 2.1b — captura todos os 15 tipos `daily_*` num
+/// schema unificado. Preserva `subType` (uma das constants em
+/// [AchievementTriggerTypes]) pra discriminação interna do
+/// `AchievementsService._validateDailyTrigger`.
+///
+/// `params` opcional carrega configuração extra:
+///   - `sub_task_key` (String) — usado por `daily_subtask_volume`
+///   - `window` (`'before_8am'` | `'after_10pm'`) — usado por
+///     `daily_confirmed_time_window`
+///   - `use_best` (bool) — usado por `daily_no_fail_streak` e
+///     `daily_consecutive_days_active` pra alternar entre contador
+///     atual e recorde all-time
+///
+/// Triggers daily com schema malformado (ex: window faltando) caem em
+/// fail-safe (warn + return false) — não lançam.
+class DailyMissionTrigger extends AchievementTrigger {
+  final String subType;
+  final int target;
+  final Map<String, dynamic>? params;
+
+  const DailyMissionTrigger({
+    required this.subType,
+    required this.target,
+    this.params,
+  });
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'type': subType,
+        'target': target,
+        if (params != null) 'params': params,
+      };
 }
 
 /// Trigger de tipo não reconhecido. Preserva o `rawType` pra log/debug. O
