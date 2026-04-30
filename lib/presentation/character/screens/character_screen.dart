@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:drift/drift.dart' show Variable;
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../data/database/daos/player_dao.dart';
 import '../../../core/utils/guild_rank.dart';
 import '../../../core/utils/item_equip_policy.dart';
 import '../../../domain/enums/equipment_slot.dart';
@@ -736,27 +736,31 @@ class CharacterScreen extends ConsumerWidget {
     );
   }
 
+  /// Sprint 3.3 Etapa 2.1c-α — delega ao
+  /// `PlayerDao.distributePointWithEvent` (incrementa atributo +
+  /// `total_attribute_points_spent` numa única operação) e publica
+  /// `AttributePointSpent` no AppEventBus pra alimentar trigger
+  /// `event_attribute_point_spent`.
+  ///
+  /// Substituiu o `customUpdate` direto que bypassava contador all-time.
   Future<void> _addPoint(
       BuildContext context, WidgetRef ref, int playerId, String attr) async {
     final db = ref.read(appDatabaseProvider);
     final player = ref.read(currentPlayerProvider);
     if (player == null || player.attributePoints <= 0) return;
 
-    final colMap = {
-      'strength':     player.strength + 1,
-      'dexterity':    player.dexterity + 1,
-      'intelligence': player.intelligence + 1,
-      'constitution': player.constitution + 1,
-      'spirit':       player.spirit + 1,
-    };
-    final newVal = colMap[attr];
-    if (newVal == null) return;
+    final result = await PlayerDao(db).distributePointWithEvent(playerId, attr);
+    if (!result.isOk) {
+      if (context.mounted) {
+        AppSnack.success(context, result.error ?? 'Erro ao distribuir ponto');
+      }
+      return;
+    }
 
-    await db.customUpdate(
-      'UPDATE players SET $attr = ?, attribute_points = attribute_points - 1 WHERE id = ?',
-      variables: [Variable.withInt(newVal), Variable.withInt(playerId)],
-      updates: {db.playersTable},
-    );
+    // Sprint 3.3 Etapa 2.1c-α — caller publica evento (PlayerDao
+    // mantém-se desacoplado do AppEventBus por ADR 0016).
+    ref.read(appEventBusProvider).publish(result.event!);
+
     final updated = await ref.read(authDsProvider).currentSession();
     ref.read(currentPlayerProvider.notifier).state = updated;
     if (context.mounted) AppSnack.success(context, '+1 $attr');

@@ -5,7 +5,11 @@ import 'package:flutter/services.dart' show AssetBundle, rootBundle;
 
 import '../../core/events/app_event_bus.dart';
 import '../../core/events/daily_mission_events.dart';
+import '../../core/events/faction_events.dart';
+import '../../core/events/player_events.dart';
 import '../../core/events/reward_events.dart';
+import '../../data/database/app_database.dart';
+import '../../data/database/daos/player_dao.dart';
 import '../../data/database/daos/player_daily_mission_stats_dao.dart';
 import '../../data/database/daos/player_daily_subtask_volume_dao.dart';
 import '../../data/services/reward_grant_service.dart';
@@ -101,6 +105,12 @@ class AchievementsService {
   final PlayerDailyMissionStatsDao? _statsDao;
   final PlayerDailySubtaskVolumeDao? _volumeDao;
 
+  /// Sprint 3.3 Etapa 2.1c-α — PlayerDao opcional pra triggers
+  /// `event_*` que precisam ler players (class_type, faction_type,
+  /// peak_level, total_gems_spent, etc.). Null em modo degradado
+  /// de testes legacy.
+  final PlayerDao? _playerDao;
+
   /// Path do catálogo — exposto como `static const` pra facilitar override
   /// em teste de load e pra caller inspecionar em debug.
   static const String catalogAssetPath = 'assets/data/achievements.json';
@@ -114,7 +124,12 @@ class AchievementsService {
 
   /// Cache pré-filtrado dos achievements com trigger daily — evita varrer
   /// o catálogo inteiro a cada `DailyStatsUpdated`. Populado em `_doLoad`.
+  /// Filtra `disabled=true` (Sprint 3.3 Etapa 2.1c-α).
   List<AchievementDefinition> _dailyAchievements = const [];
+
+  /// Sprint 3.3 Etapa 2.1c-α — cache pré-filtrado dos achievements com
+  /// trigger event_* (não-daily). Filtra `disabled=true`.
+  List<AchievementDefinition> _eventAchievements = const [];
 
   bool _loaded = false;
   Future<void>? _loadingFuture;
@@ -127,6 +142,7 @@ class AchievementsService {
     required PlayerFactsResolver resolvePlayerFacts,
     PlayerDailyMissionStatsDao? statsDao,
     PlayerDailySubtaskVolumeDao? volumeDao,
+    PlayerDao? playerDao,
     AssetBundle? assetBundle,
   })  : _achievementsRepo = achievementsRepo,
         _rewardResolve = rewardResolve,
@@ -135,6 +151,7 @@ class AchievementsService {
         _resolvePlayerFacts = resolvePlayerFacts,
         _statsDao = statsDao,
         _volumeDao = volumeDao,
+        _playerDao = playerDao,
         _assetBundle = assetBundle ?? rootBundle;
 
   /// Lê o catálogo em memória (idempotente). Chamado explicitamente pelo
@@ -195,8 +212,13 @@ class AchievementsService {
       _catalog[def.key] = def;
     }
     // Sprint 3.3 Etapa 2.1b — cache pré-filtrado de daily triggers.
+    // Sprint 3.3 Etapa 2.1c-α — também filtra `disabled=true`.
     _dailyAchievements = _catalog.values
-        .where((d) => d.trigger is DailyMissionTrigger)
+        .where((d) => d.trigger is DailyMissionTrigger && !d.disabled)
+        .toList(growable: false);
+    // Sprint 3.3 Etapa 2.1c-α — cache pré-filtrado de event_* triggers.
+    _eventAchievements = _catalog.values
+        .where((d) => d.trigger is EventTrigger && !d.disabled)
         .toList(growable: false);
     _loaded = true;
   }
@@ -221,6 +243,34 @@ class AchievementsService {
     ];
   }
 
+  /// Sprint 3.3 Etapa 2.1c-α — assina os 5 listeners pros triggers
+  /// `event_*`:
+  ///   - [ClassSelected] → `event_class_selected`
+  ///   - [FactionJoined] → `event_faction_joined`
+  ///   - [AttributePointSpent] → `event_attribute_point_spent`
+  ///   - [BodyMetricsUpdated] → `event_body_metrics_updated`
+  ///   - [CurrencyStatsUpdated] → `event_gems_spent_total` (escuta o
+  ///     evento de coordenação publicado pelo `PlayerCurrencyStatsService`
+  ///     pós-commit, NÃO o `GemsSpent` cru — evita race condition)
+  ///
+  /// Cada handler delega ao mesmo método interno [_checkEventTriggers]
+  /// que itera o cache `_eventAchievements` e tenta unlock.
+  Future<List<StreamSubscription>> attachEventListeners() async {
+    await ensureLoaded();
+    return [
+      _bus.on<ClassSelected>().listen(
+          (e) => _checkEventTriggers(e.playerId)),
+      _bus.on<FactionJoined>().listen(
+          (e) => _checkEventTriggers(e.playerId)),
+      _bus.on<AttributePointSpent>().listen(
+          (e) => _checkEventTriggers(e.playerId)),
+      _bus.on<BodyMetricsUpdated>().listen(
+          (e) => _checkEventTriggers(e.playerId, bodyMetricsEvent: e)),
+      _bus.on<CurrencyStatsUpdated>().listen(
+          (e) => _checkEventTriggers(e.playerId)),
+    ];
+  }
+
   /// Acessor pra inspeção em testes / debug. Não mutável.
   Map<String, AchievementDefinition> get catalog =>
       Map.unmodifiable(_catalog);
@@ -235,6 +285,22 @@ class AchievementsService {
     if (_dailyAchievements.isEmpty) return;
     for (final def in _dailyAchievements) {
       await _tryUnlock(evt.playerId, def.key, depth: 0);
+    }
+  }
+
+  /// Sprint 3.3 Etapa 2.1c-α — handler unificado pros 5 listeners de
+  /// event_*. Itera `_eventAchievements`. [bodyMetricsEvent] é
+  /// passado adiante pra `_validateEventTrigger` quando o evento fonte
+  /// é `BodyMetricsUpdated` (precisa do `isFirstTime` no validador).
+  Future<void> _checkEventTriggers(
+    int playerId, {
+    BodyMetricsUpdated? bodyMetricsEvent,
+  }) async {
+    await ensureLoaded();
+    if (_eventAchievements.isEmpty) return;
+    for (final def in _eventAchievements) {
+      await _tryUnlock(playerId, def.key,
+          depth: 0, bodyMetricsEvent: bodyMetricsEvent);
     }
   }
 
@@ -267,10 +333,15 @@ class AchievementsService {
   /// Exposto como `@visibleForTesting` implícito (não tem decoração por
   /// enquanto — adicionar se testes começarem a exigir) pra permitir
   /// testes unitários sem passar pelo bus.
+  ///
+  /// Sprint 3.3 Etapa 2.1c-α — [bodyMetricsEvent] passado adiante pra
+  /// `_validateEventTrigger` quando trigger é `event_body_metrics_updated`
+  /// com `must_be_first_time=true`.
   Future<void> _tryUnlock(
     int playerId,
     String key, {
     required int depth,
+    BodyMetricsUpdated? bodyMetricsEvent,
   }) async {
     if (depth >= maxCascadeDepth) {
       // ignore: avoid_print
@@ -288,7 +359,14 @@ class AchievementsService {
           'achievements_to_check não existe no catálogo — skip');
       return;
     }
-    if (!await _validateTrigger(playerId, def)) {
+    // Sprint 3.3 Etapa 2.1c-α — shell achievements (mecânica subjacente
+    // ainda não pronta) ficam carregadas mas nunca unlock. Cobre também
+    // referências em cascata via `achievements_to_check`.
+    if (def.disabled) {
+      return;
+    }
+    if (!await _validateTrigger(playerId, def,
+        bodyMetricsEvent: bodyMetricsEvent)) {
       return;
     }
 
@@ -339,7 +417,10 @@ class AchievementsService {
   // ─── validators de trigger ─────────────────────────────────────────
 
   Future<bool> _validateTrigger(
-      int playerId, AchievementDefinition def) async {
+    int playerId,
+    AchievementDefinition def, {
+    BodyMetricsUpdated? bodyMetricsEvent,
+  }) async {
     final trigger = def.trigger;
     switch (trigger) {
       case EventCountTrigger(eventName: final name, count: final c):
@@ -372,6 +453,9 @@ class AchievementsService {
         return current >= n;
       case DailyMissionTrigger():
         return _validateDailyTrigger(playerId, def, trigger);
+      case EventTrigger():
+        return _validateEventTrigger(
+            playerId, def, trigger, bodyMetricsEvent);
       case UnknownAchievementTrigger(rawType: final t):
         // ignore: avoid_print
         print('[achievements] trigger type "$t" não reconhecido em '
@@ -507,10 +591,96 @@ class AchievementsService {
 
       default:
         // Não deveria acontecer — o parser só cria DailyMissionTrigger
-        // pra subtypes em AchievementTriggerTypes.all. Defesa pra caso
-        // alguém estenda a constants list sem atualizar este switch.
+        // pra subtypes em AchievementTriggerTypes.allDaily. Defesa pra
+        // caso alguém estenda a constants list sem atualizar este switch.
         // ignore: avoid_print
         print('[achievements] daily subType "${trigger.subType}" em '
+            '"${def.key}" sem mapeamento — fail-safe');
+        return false;
+    }
+  }
+
+  // ─── validators de event trigger (Sprint 3.3 Etapa 2.1c-α) ─────────
+
+  /// Resolve um [EventTrigger] contra players + total_gems_spent +
+  /// PlayerFacts (streak/level). Sub-types com schema malformado caem
+  /// em fail-safe (warn + return false).
+  ///
+  /// [bodyMetricsEvent] é passado quando o evento fonte é
+  /// [BodyMetricsUpdated] — usado por `event_body_metrics_updated`
+  /// com `params.must_be_first_time=true` pra distinguir 1ª calibração
+  /// de edição posterior.
+  Future<bool> _validateEventTrigger(
+    int playerId,
+    AchievementDefinition def,
+    EventTrigger trigger,
+    BodyMetricsUpdated? bodyMetricsEvent,
+  ) async {
+    final playerDao = _playerDao;
+    if (playerDao == null) {
+      // ignore: avoid_print
+      print('[achievements] event trigger "${trigger.subType}" em '
+          '"${def.key}" requer playerDao — skip (modo degradado)');
+      return false;
+    }
+
+    switch (trigger.subType) {
+      case AchievementTriggerTypes.eventClassSelected:
+        final expectedClass = trigger.param<String>('class_key');
+        final player = await playerDao.findById(playerId);
+        if (player == null) return false;
+        if (expectedClass == null) {
+          // Sem param: qualquer classe selecionada conta.
+          return player.classType != null && player.classType!.isNotEmpty;
+        }
+        return player.classType == expectedClass;
+
+      case AchievementTriggerTypes.eventFactionJoined:
+        final expectedFaction = trigger.param<String>('faction_id');
+        final player = await playerDao.findById(playerId);
+        if (player == null) return false;
+        final ft = player.factionType;
+        if (ft == null || ft.isEmpty || ft.startsWith('pending:')) {
+          // Pending = ainda em admissão; não conta como joined.
+          return false;
+        }
+        if (expectedFaction == null) {
+          // Sem param: qualquer facção final conta.
+          return true;
+        }
+        return ft == expectedFaction;
+
+      case AchievementTriggerTypes.eventAttributePointSpent:
+        final player = await playerDao.findById(playerId);
+        if (player == null) return false;
+        return player.totalAttributePointsSpent >= trigger.target;
+
+      case AchievementTriggerTypes.eventBodyMetricsUpdated:
+        final player = await playerDao.findById(playerId);
+        if (player == null) return false;
+        final calibrated =
+            player.weightKg != null && player.heightCm != null;
+        if (!calibrated) return false;
+        final mustBeFirstTime =
+            trigger.param<bool>('must_be_first_time') ?? false;
+        if (mustBeFirstTime) {
+          // Só unlock quando o evento que disparou este check carrega
+          // `isFirstTime=true`. Cascata via `achievements_to_check` ou
+          // disparo por outro trigger não satisfaz.
+          return bodyMetricsEvent?.isFirstTime ?? false;
+        }
+        // Default: qualquer save (1ª ou edição) conta.
+        return true;
+
+      case AchievementTriggerTypes.eventGemsSpentTotal:
+        final player = await playerDao.findById(playerId);
+        if (player == null) return false;
+        return player.totalGemsSpent >= trigger.target;
+
+      default:
+        // Defesa contra extensão de constants sem update neste switch.
+        // ignore: avoid_print
+        print('[achievements] event subType "${trigger.subType}" em '
             '"${def.key}" sem mapeamento — fail-safe');
         return false;
     }
@@ -520,6 +690,11 @@ class AchievementsService {
   /// testes pra verificar que o load detectou os daily triggers corretos.
   List<AchievementDefinition> get dailyAchievements =>
       List.unmodifiable(_dailyAchievements);
+
+  /// Sprint 3.3 Etapa 2.1c-α — read-only acessor pro cache pré-filtrado
+  /// dos event_* triggers. Útil pra introspection em testes e UI.
+  List<AchievementDefinition> get eventAchievements =>
+      List.unmodifiable(_eventAchievements);
 
   /// Read-only — utilizado por testes pra forçar leitura sob estado
   /// arbitrário sem precisar publicar evento.

@@ -22,6 +22,7 @@ import '../domain/services/daily_mission_progress_service.dart';
 import '../domain/services/daily_mission_rollover_service.dart';
 import '../domain/services/daily_mission_stats_service.dart';
 import '../domain/services/daily_pool_service.dart';
+import '../domain/services/player_currency_stats_service.dart';
 import '../data/database/daos/daily_missions_dao.dart';
 import '../data/database/daos/player_daily_mission_stats_dao.dart';
 import '../data/database/daos/player_daily_subtask_volume_dao.dart';
@@ -295,6 +296,8 @@ final achievementsServiceProvider = Provider<AchievementsService>((ref) {
     // Sprint 3.3 Etapa 2.1b — DAOs novos pros 15 triggers daily.
     statsDao: ref.watch(playerDailyMissionStatsDaoProvider),
     volumeDao: ref.watch(playerDailySubtaskVolumeDaoProvider),
+    // Sprint 3.3 Etapa 2.1c-α — PlayerDao pros 5 triggers event_*.
+    playerDao: PlayerDao(db),
     resolvePlayerFacts: (playerId) async {
       final row = await (db.select(db.playersTable)
             ..where((t) => t.id.equals(playerId)))
@@ -318,15 +321,25 @@ final achievementsServiceProvider = Provider<AchievementsService>((ref) {
   );
   StreamSubscription<RewardGranted>? rewardSub;
   List<StreamSubscription>? dailySubs;
+  List<StreamSubscription>? eventSubs;
   // fire-and-forget: carrega catálogo + registra listeners em background.
   service.attach().then((s) => rewardSub = s);
   service
       .attachDailyListeners()
       .then((subs) => dailySubs = subs);
+  // Sprint 3.3 Etapa 2.1c-α — listeners dos 5 triggers event_*.
+  service
+      .attachEventListeners()
+      .then((subs) => eventSubs = subs);
   ref.onDispose(() {
     rewardSub?.cancel();
     if (dailySubs != null) {
       for (final s in dailySubs!) {
+        s.cancel();
+      }
+    }
+    if (eventSubs != null) {
+      for (final s in eventSubs!) {
         s.cancel();
       }
     }
@@ -336,9 +349,30 @@ final achievementsServiceProvider = Provider<AchievementsService>((ref) {
 
 // Sprint 3.2 Etapa 1.0 — BodyMetricsService (IMC + recomendações diárias).
 // Lê/escreve weight_kg + height_cm em players via PlayerDao.
+// Sprint 3.3 Etapa 2.1c-α — bus injetado pra publicar BodyMetricsUpdated.
 final bodyMetricsServiceProvider = Provider<BodyMetricsService>((ref) {
   final db = ref.watch(appDatabaseProvider);
-  return BodyMetricsService(dao: PlayerDao(db));
+  return BodyMetricsService(
+    dao: PlayerDao(db),
+    bus: ref.watch(appEventBusProvider),
+  );
+});
+
+// Sprint 3.3 Etapa 2.1c-α — agregador all-time de moedas gastas.
+// Listener GemsSpent → players.total_gems_spent → publica
+// CurrencyStatsUpdated. AchievementsService escuta esse evento pra
+// resolver `event_gems_spent_total` sem race.
+final playerCurrencyStatsServiceProvider =
+    Provider<PlayerCurrencyStatsService>((ref) {
+  final service = PlayerCurrencyStatsService(
+    db: ref.watch(appDatabaseProvider),
+    bus: ref.watch(appEventBusProvider),
+  );
+  service.start();
+  ref.onDispose(() {
+    service.dispose();
+  });
+  return service;
 });
 
 // Sprint 3.2 Etapa 1.1 — DailyPoolService (pools de missões diárias).

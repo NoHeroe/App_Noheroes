@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:noheroes_app/app/providers.dart';
+import 'package:noheroes_app/core/events/app_event_bus.dart';
 import 'package:noheroes_app/data/database/app_database.dart';
 import 'package:noheroes_app/data/database/daos/player_dao.dart';
 import 'package:noheroes_app/domain/services/body_metrics_service.dart';
@@ -51,6 +52,9 @@ PlayersTableData _player({int? weightKg, int? heightCm}) {
     weightKg: weightKg,
     heightCm: heightCm,
     dailyMissionsStreak: 0,
+    totalGemsSpent: 0,
+    peakLevel: 1,
+    totalAttributePointsSpent: 0,
   );
 }
 
@@ -69,8 +73,8 @@ Widget _harness(PlayersTableData player) {
     overrides: [
       appDatabaseProvider.overrideWithValue(db),
       currentPlayerProvider.overrideWith((_) => player),
-      bodyMetricsServiceProvider
-          .overrideWithValue(BodyMetricsService(dao: PlayerDao(db))),
+      bodyMetricsServiceProvider.overrideWithValue(BodyMetricsService(
+          dao: PlayerDao(db), bus: AppEventBus())),
     ],
     child: MaterialApp.router(routerConfig: router),
   );

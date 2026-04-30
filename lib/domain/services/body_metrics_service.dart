@@ -1,3 +1,5 @@
+import '../../core/events/app_event_bus.dart';
+import '../../core/events/player_events.dart';
 import '../../data/database/app_database.dart';
 import '../../data/database/daos/player_dao.dart';
 
@@ -19,8 +21,15 @@ import '../../data/database/daos/player_dao.dart';
 /// - altura: 100–250 cm
 class BodyMetricsService {
   final PlayerDao _dao;
+  final AppEventBus _bus;
 
-  BodyMetricsService({required PlayerDao dao}) : _dao = dao;
+  /// Sprint 3.3 Etapa 2.1c-α — bus injetado pra publicar
+  /// [BodyMetricsUpdated] após save bem-sucedido. `isFirstTime` é
+  /// detectado lendo player ANTES do save: ambos `weightKg` e
+  /// `heightCm` null = primeira calibração.
+  BodyMetricsService({required PlayerDao dao, required AppEventBus bus})
+      : _dao = dao,
+        _bus = bus;
 
   static const int minWeightKg = 20;
   static const int maxWeightKg = 300;
@@ -73,6 +82,10 @@ class BodyMetricsService {
 
   /// Persiste peso/altura. Lança ArgumentError se algum valor estiver
   /// fora do range — UI valida antes mas defesa em profundidade.
+  ///
+  /// Sprint 3.3 Etapa 2.1c-α — publica [BodyMetricsUpdated] pós-save.
+  /// `isFirstTime=true` quando ambos os campos estavam null antes
+  /// (primeira calibração — onboarding); `false` em edições.
   Future<void> save({
     required int playerId,
     int? weightKg,
@@ -86,7 +99,16 @@ class BodyMetricsService {
       throw ArgumentError(
           'heightCm fora do range ($minHeightCm-$maxHeightCm): $heightCm');
     }
+    final before = await _dao.findById(playerId);
+    final isFirstTime =
+        before != null && before.weightKg == null && before.heightCm == null;
+
     await _dao.updateBodyMetrics(playerId,
         weightKg: weightKg, heightCm: heightCm);
+
+    _bus.publish(BodyMetricsUpdated(
+      playerId: playerId,
+      isFirstTime: isFirstTime,
+    ));
   }
 }

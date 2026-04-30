@@ -8981,6 +8981,50 @@
       "icon": "chest_shadow"
     },
     {
+      "key": "CHEST_SECRET",
+      "name": "Baú Secreto",
+      "description": "Um baú selado com runas antigas. Sua chave ainda não foi forjada.",
+      "lore": "Diz-se que cada Baú Secreto contém um fragmento do que poderia ter sido. Aguarde o destino revelar sua trava.",
+      "type": "chest",
+      "subtype": null,
+      "slot": null,
+      "rank": "C",
+      "rarity": "epic",
+      "is_secret": true,
+      "is_unique": false,
+      "is_dark_item": false,
+      "is_evolving": false,
+      "required_level": 1,
+      "required_rank": "E",
+      "allowed_classes": [],
+      "allowed_factions": [],
+      "stats": {},
+      "effects": {},
+      "sources": [
+        {
+          "type": "achievement"
+        }
+      ],
+      "shop_price_coins": null,
+      "shop_price_gems": null,
+      "stack_max": 99,
+      "durability_max": null,
+      "durability_breaks_to": null,
+      "is_stackable": true,
+      "is_consumable": false,
+      "is_equippable": false,
+      "is_tradable": false,
+      "is_sellable": false,
+      "bind_on_pickup": true,
+      "craft_recipe_id": null,
+      "forge_recipe_id": null,
+      "enchant_allowed": false,
+      "sombrio_content_id": null,
+      "evolution_stages": null,
+      "image": "default.png",
+      "icon": "chest_secret"
+    },
+    {
       "key": "KEY_RUINS",
       "name": "Chave das Ruínas",
       "description": "Abre passagens ocultas nas Ruínas Exteriores.",
@@ -12043,6 +12087,6 @@
       ]
     }
   ],
-  "version": "v0.28.1-sprint2.2-bloco2",
-  "count": 193
+  "version": "v0.29.0-sprint3.3-etapa2.1c-alpha",
+  "count": 194
 }

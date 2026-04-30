@@ -54,8 +54,19 @@ abstract class AchievementTriggerTypes {
       'daily_consecutive_days_active';
   static const String dailySpeedrun = 'daily_speedrun';
 
-  /// Set imutável dos 15 — usado pelo parser pra detectar prefixo daily.
-  static const Set<String> all = {
+  /// Sprint 3.3 Etapa 2.1c-α — sub-tipos `event_*` resolvidos em
+  /// `AchievementsService._validateEventTrigger`.
+  static const String eventClassSelected = 'event_class_selected';
+  static const String eventFactionJoined = 'event_faction_joined';
+  static const String eventAttributePointSpent =
+      'event_attribute_point_spent';
+  static const String eventBodyMetricsUpdated =
+      'event_body_metrics_updated';
+  static const String eventGemsSpentTotal = 'event_gems_spent_total';
+
+  /// Set imutável dos 15 daily — usado pelo parser pra detectar
+  /// prefixo daily.
+  static const Set<String> allDaily = {
     dailyMissionCount,
     dailyMissionFailedCount,
     dailyMissionPartialCount,
@@ -71,5 +82,14 @@ abstract class AchievementTriggerTypes {
     dailyPilarBalance,
     dailyConsecutiveDaysActive,
     dailySpeedrun,
+  };
+
+  /// Set imutável dos 5 event-based — paralelo a [allDaily].
+  static const Set<String> allEvents = {
+    eventClassSelected,
+    eventFactionJoined,
+    eventAttributePointSpent,
+    eventBodyMetricsUpdated,
+    eventGemsSpentTotal,
   };
 }

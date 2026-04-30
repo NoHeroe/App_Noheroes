@@ -12,8 +12,9 @@ void main() {
       items = (data['items'] as List).cast<Map<String, dynamic>>();
     });
 
-    test('tem exatamente 241 entries', () {
-      expect(items.length, 241);
+    test('tem exatamente 242 entries', () {
+      // Sprint 3.3 Etapa 2.1c-α — adicionado CHEST_SECRET (chest secreto).
+      expect(items.length, 242);
     });
 
     test('todas as keys são únicas', () {
@@ -51,7 +52,8 @@ void main() {
         'accessory':  18,
         'relic':      18,
         'cosmetic':    6,
-        'chest':       3,
+        // Sprint 3.3 Etapa 2.1c-α — chest 3→4 (CHEST_SECRET).
+        'chest':       4,
         'key':         2,
         'title':       2,
         'lore':        2,
@@ -73,7 +75,8 @@ void main() {
       expect(byRank, {
         'E':       101, // 90 - 2 (removidos) + 13 (novas runas E)
         'D':        72, // 59 + 13 (novas runas D)
-        'C':        19, // 7 + 12 (novas runas C)
+        // Sprint 3.3 Etapa 2.1c-α — C 19→20 (CHEST_SECRET é rank C).
+        'C':        20,
         'B':        16, // 4 + 12 (novas runas B)
         'A':         7,
         'S':        24,
@@ -118,9 +121,10 @@ void main() {
           reason: 'ADR 0010 violada em: $violations');
     });
 
-    test('21 itens com is_secret=true', () {
+    test('22 itens com is_secret=true', () {
+      // Sprint 3.3 Etapa 2.1c-α — 21+1 (CHEST_SECRET).
       final secrets = items.where((e) => e['is_secret'] == true).toList();
-      expect(secrets.length, 21);
+      expect(secrets.length, 22);
     });
 
     test('pelo menos 1 item com is_unique=true (Colar da Guilda)', () {

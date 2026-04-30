@@ -74,7 +74,7 @@ void main() {
     db = AppDatabase.forTesting(NativeDatabase.memory());
     pools = DailyPoolService();
     await pools.loadAll();
-    bodyMetrics = BodyMetricsService(dao: PlayerDao(db));
+    bodyMetrics = BodyMetricsService(dao: PlayerDao(db), bus: AppEventBus());
     prefsRepo = _FakePrefsRepo();
     bus = AppEventBus();
     prefs = MissionPreferencesService(repo: prefsRepo, bus: bus, db: db);

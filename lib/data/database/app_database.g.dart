@@ -328,6 +328,30 @@ class $PlayersTableTable extends PlayersTable
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
+  static const VerificationMeta _totalGemsSpentMeta =
+      const VerificationMeta('totalGemsSpent');
+  @override
+  late final GeneratedColumn<int> totalGemsSpent = GeneratedColumn<int>(
+      'total_gems_spent', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _peakLevelMeta =
+      const VerificationMeta('peakLevel');
+  @override
+  late final GeneratedColumn<int> peakLevel = GeneratedColumn<int>(
+      'peak_level', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1));
+  static const VerificationMeta _totalAttributePointsSpentMeta =
+      const VerificationMeta('totalAttributePointsSpent');
+  @override
+  late final GeneratedColumn<int> totalAttributePointsSpent =
+      GeneratedColumn<int>('total_attribute_points_spent', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0));
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -372,7 +396,10 @@ class $PlayersTableTable extends PlayersTable
         weightKg,
         heightCm,
         lastDailyMissionRollover,
-        dailyMissionsStreak
+        dailyMissionsStreak,
+        totalGemsSpent,
+        peakLevel,
+        totalAttributePointsSpent
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -599,6 +626,23 @@ class $PlayersTableTable extends PlayersTable
           dailyMissionsStreak.isAcceptableOrUnknown(
               data['daily_missions_streak']!, _dailyMissionsStreakMeta));
     }
+    if (data.containsKey('total_gems_spent')) {
+      context.handle(
+          _totalGemsSpentMeta,
+          totalGemsSpent.isAcceptableOrUnknown(
+              data['total_gems_spent']!, _totalGemsSpentMeta));
+    }
+    if (data.containsKey('peak_level')) {
+      context.handle(_peakLevelMeta,
+          peakLevel.isAcceptableOrUnknown(data['peak_level']!, _peakLevelMeta));
+    }
+    if (data.containsKey('total_attribute_points_spent')) {
+      context.handle(
+          _totalAttributePointsSpentMeta,
+          totalAttributePointsSpent.isAcceptableOrUnknown(
+              data['total_attribute_points_spent']!,
+              _totalAttributePointsSpentMeta));
+    }
     return context;
   }
 
@@ -695,6 +739,13 @@ class $PlayersTableTable extends PlayersTable
           data['${effectivePrefix}last_daily_mission_rollover']),
       dailyMissionsStreak: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}daily_missions_streak'])!,
+      totalGemsSpent: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}total_gems_spent'])!,
+      peakLevel: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}peak_level'])!,
+      totalAttributePointsSpent: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}total_attribute_points_spent'])!,
     );
   }
 
@@ -749,6 +800,9 @@ class PlayersTableData extends DataClass
   final int? heightCm;
   final int? lastDailyMissionRollover;
   final int dailyMissionsStreak;
+  final int totalGemsSpent;
+  final int peakLevel;
+  final int totalAttributePointsSpent;
   const PlayersTableData(
       {required this.id,
       required this.email,
@@ -792,7 +846,10 @@ class PlayersTableData extends DataClass
       this.weightKg,
       this.heightCm,
       this.lastDailyMissionRollover,
-      required this.dailyMissionsStreak});
+      required this.dailyMissionsStreak,
+      required this.totalGemsSpent,
+      required this.peakLevel,
+      required this.totalAttributePointsSpent});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -856,6 +913,10 @@ class PlayersTableData extends DataClass
           Variable<int>(lastDailyMissionRollover);
     }
     map['daily_missions_streak'] = Variable<int>(dailyMissionsStreak);
+    map['total_gems_spent'] = Variable<int>(totalGemsSpent);
+    map['peak_level'] = Variable<int>(peakLevel);
+    map['total_attribute_points_spent'] =
+        Variable<int>(totalAttributePointsSpent);
     return map;
   }
 
@@ -920,6 +981,9 @@ class PlayersTableData extends DataClass
           ? const Value.absent()
           : Value(lastDailyMissionRollover),
       dailyMissionsStreak: Value(dailyMissionsStreak),
+      totalGemsSpent: Value(totalGemsSpent),
+      peakLevel: Value(peakLevel),
+      totalAttributePointsSpent: Value(totalAttributePointsSpent),
     );
   }
 
@@ -973,6 +1037,10 @@ class PlayersTableData extends DataClass
           serializer.fromJson<int?>(json['lastDailyMissionRollover']),
       dailyMissionsStreak:
           serializer.fromJson<int>(json['dailyMissionsStreak']),
+      totalGemsSpent: serializer.fromJson<int>(json['totalGemsSpent']),
+      peakLevel: serializer.fromJson<int>(json['peakLevel']),
+      totalAttributePointsSpent:
+          serializer.fromJson<int>(json['totalAttributePointsSpent']),
     );
   }
   @override
@@ -1023,6 +1091,10 @@ class PlayersTableData extends DataClass
       'lastDailyMissionRollover':
           serializer.toJson<int?>(lastDailyMissionRollover),
       'dailyMissionsStreak': serializer.toJson<int>(dailyMissionsStreak),
+      'totalGemsSpent': serializer.toJson<int>(totalGemsSpent),
+      'peakLevel': serializer.toJson<int>(peakLevel),
+      'totalAttributePointsSpent':
+          serializer.toJson<int>(totalAttributePointsSpent),
     };
   }
 
@@ -1069,7 +1141,10 @@ class PlayersTableData extends DataClass
           Value<int?> weightKg = const Value.absent(),
           Value<int?> heightCm = const Value.absent(),
           Value<int?> lastDailyMissionRollover = const Value.absent(),
-          int? dailyMissionsStreak}) =>
+          int? dailyMissionsStreak,
+          int? totalGemsSpent,
+          int? peakLevel,
+          int? totalAttributePointsSpent}) =>
       PlayersTableData(
         id: id ?? this.id,
         email: email ?? this.email,
@@ -1120,6 +1195,10 @@ class PlayersTableData extends DataClass
             ? lastDailyMissionRollover.value
             : this.lastDailyMissionRollover,
         dailyMissionsStreak: dailyMissionsStreak ?? this.dailyMissionsStreak,
+        totalGemsSpent: totalGemsSpent ?? this.totalGemsSpent,
+        peakLevel: peakLevel ?? this.peakLevel,
+        totalAttributePointsSpent:
+            totalAttributePointsSpent ?? this.totalAttributePointsSpent,
       );
   PlayersTableData copyWithCompanion(PlayersTableCompanion data) {
     return PlayersTableData(
@@ -1202,6 +1281,13 @@ class PlayersTableData extends DataClass
       dailyMissionsStreak: data.dailyMissionsStreak.present
           ? data.dailyMissionsStreak.value
           : this.dailyMissionsStreak,
+      totalGemsSpent: data.totalGemsSpent.present
+          ? data.totalGemsSpent.value
+          : this.totalGemsSpent,
+      peakLevel: data.peakLevel.present ? data.peakLevel.value : this.peakLevel,
+      totalAttributePointsSpent: data.totalAttributePointsSpent.present
+          ? data.totalAttributePointsSpent.value
+          : this.totalAttributePointsSpent,
     );
   }
 
@@ -1250,7 +1336,10 @@ class PlayersTableData extends DataClass
           ..write('weightKg: $weightKg, ')
           ..write('heightCm: $heightCm, ')
           ..write('lastDailyMissionRollover: $lastDailyMissionRollover, ')
-          ..write('dailyMissionsStreak: $dailyMissionsStreak')
+          ..write('dailyMissionsStreak: $dailyMissionsStreak, ')
+          ..write('totalGemsSpent: $totalGemsSpent, ')
+          ..write('peakLevel: $peakLevel, ')
+          ..write('totalAttributePointsSpent: $totalAttributePointsSpent')
           ..write(')'))
         .toString();
   }
@@ -1299,7 +1388,10 @@ class PlayersTableData extends DataClass
         weightKg,
         heightCm,
         lastDailyMissionRollover,
-        dailyMissionsStreak
+        dailyMissionsStreak,
+        totalGemsSpent,
+        peakLevel,
+        totalAttributePointsSpent
       ]);
   @override
   bool operator ==(Object other) =>
@@ -1347,7 +1439,10 @@ class PlayersTableData extends DataClass
           other.weightKg == this.weightKg &&
           other.heightCm == this.heightCm &&
           other.lastDailyMissionRollover == this.lastDailyMissionRollover &&
-          other.dailyMissionsStreak == this.dailyMissionsStreak);
+          other.dailyMissionsStreak == this.dailyMissionsStreak &&
+          other.totalGemsSpent == this.totalGemsSpent &&
+          other.peakLevel == this.peakLevel &&
+          other.totalAttributePointsSpent == this.totalAttributePointsSpent);
 }
 
 class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
@@ -1394,6 +1489,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
   final Value<int?> heightCm;
   final Value<int?> lastDailyMissionRollover;
   final Value<int> dailyMissionsStreak;
+  final Value<int> totalGemsSpent;
+  final Value<int> peakLevel;
+  final Value<int> totalAttributePointsSpent;
   const PlayersTableCompanion({
     this.id = const Value.absent(),
     this.email = const Value.absent(),
@@ -1438,6 +1536,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.heightCm = const Value.absent(),
     this.lastDailyMissionRollover = const Value.absent(),
     this.dailyMissionsStreak = const Value.absent(),
+    this.totalGemsSpent = const Value.absent(),
+    this.peakLevel = const Value.absent(),
+    this.totalAttributePointsSpent = const Value.absent(),
   });
   PlayersTableCompanion.insert({
     this.id = const Value.absent(),
@@ -1483,6 +1584,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.heightCm = const Value.absent(),
     this.lastDailyMissionRollover = const Value.absent(),
     this.dailyMissionsStreak = const Value.absent(),
+    this.totalGemsSpent = const Value.absent(),
+    this.peakLevel = const Value.absent(),
+    this.totalAttributePointsSpent = const Value.absent(),
   })  : email = Value(email),
         passwordHash = Value(passwordHash);
   static Insertable<PlayersTableData> custom({
@@ -1529,6 +1633,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     Expression<int>? heightCm,
     Expression<int>? lastDailyMissionRollover,
     Expression<int>? dailyMissionsStreak,
+    Expression<int>? totalGemsSpent,
+    Expression<int>? peakLevel,
+    Expression<int>? totalAttributePointsSpent,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1577,6 +1684,10 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
         'last_daily_mission_rollover': lastDailyMissionRollover,
       if (dailyMissionsStreak != null)
         'daily_missions_streak': dailyMissionsStreak,
+      if (totalGemsSpent != null) 'total_gems_spent': totalGemsSpent,
+      if (peakLevel != null) 'peak_level': peakLevel,
+      if (totalAttributePointsSpent != null)
+        'total_attribute_points_spent': totalAttributePointsSpent,
     });
   }
 
@@ -1623,7 +1734,10 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       Value<int?>? weightKg,
       Value<int?>? heightCm,
       Value<int?>? lastDailyMissionRollover,
-      Value<int>? dailyMissionsStreak}) {
+      Value<int>? dailyMissionsStreak,
+      Value<int>? totalGemsSpent,
+      Value<int>? peakLevel,
+      Value<int>? totalAttributePointsSpent}) {
     return PlayersTableCompanion(
       id: id ?? this.id,
       email: email ?? this.email,
@@ -1669,6 +1783,10 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       lastDailyMissionRollover:
           lastDailyMissionRollover ?? this.lastDailyMissionRollover,
       dailyMissionsStreak: dailyMissionsStreak ?? this.dailyMissionsStreak,
+      totalGemsSpent: totalGemsSpent ?? this.totalGemsSpent,
+      peakLevel: peakLevel ?? this.peakLevel,
+      totalAttributePointsSpent:
+          totalAttributePointsSpent ?? this.totalAttributePointsSpent,
     );
   }
 
@@ -1805,6 +1923,16 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     if (dailyMissionsStreak.present) {
       map['daily_missions_streak'] = Variable<int>(dailyMissionsStreak.value);
     }
+    if (totalGemsSpent.present) {
+      map['total_gems_spent'] = Variable<int>(totalGemsSpent.value);
+    }
+    if (peakLevel.present) {
+      map['peak_level'] = Variable<int>(peakLevel.value);
+    }
+    if (totalAttributePointsSpent.present) {
+      map['total_attribute_points_spent'] =
+          Variable<int>(totalAttributePointsSpent.value);
+    }
     return map;
   }
 
@@ -1853,7 +1981,10 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
           ..write('weightKg: $weightKg, ')
           ..write('heightCm: $heightCm, ')
           ..write('lastDailyMissionRollover: $lastDailyMissionRollover, ')
-          ..write('dailyMissionsStreak: $dailyMissionsStreak')
+          ..write('dailyMissionsStreak: $dailyMissionsStreak, ')
+          ..write('totalGemsSpent: $totalGemsSpent, ')
+          ..write('peakLevel: $peakLevel, ')
+          ..write('totalAttributePointsSpent: $totalAttributePointsSpent')
           ..write(')'))
         .toString();
   }
@@ -15376,6 +15507,9 @@ typedef $$PlayersTableTableCreateCompanionBuilder = PlayersTableCompanion
   Value<int?> heightCm,
   Value<int?> lastDailyMissionRollover,
   Value<int> dailyMissionsStreak,
+  Value<int> totalGemsSpent,
+  Value<int> peakLevel,
+  Value<int> totalAttributePointsSpent,
 });
 typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
     Function({
@@ -15422,6 +15556,9 @@ typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
   Value<int?> heightCm,
   Value<int?> lastDailyMissionRollover,
   Value<int> dailyMissionsStreak,
+  Value<int> totalGemsSpent,
+  Value<int> peakLevel,
+  Value<int> totalAttributePointsSpent,
 });
 
 class $$PlayersTableTableFilterComposer
@@ -15570,6 +15707,17 @@ class $$PlayersTableTableFilterComposer
 
   ColumnFilters<int> get dailyMissionsStreak => $composableBuilder(
       column: $table.dailyMissionsStreak,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalGemsSpent => $composableBuilder(
+      column: $table.totalGemsSpent,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get peakLevel => $composableBuilder(
+      column: $table.peakLevel, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalAttributePointsSpent => $composableBuilder(
+      column: $table.totalAttributePointsSpent,
       builder: (column) => ColumnFilters(column));
 }
 
@@ -15725,6 +15873,17 @@ class $$PlayersTableTableOrderingComposer
   ColumnOrderings<int> get dailyMissionsStreak => $composableBuilder(
       column: $table.dailyMissionsStreak,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalGemsSpent => $composableBuilder(
+      column: $table.totalGemsSpent,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get peakLevel => $composableBuilder(
+      column: $table.peakLevel, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalAttributePointsSpent => $composableBuilder(
+      column: $table.totalAttributePointsSpent,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$PlayersTableTableAnnotationComposer
@@ -15864,6 +16023,15 @@ class $$PlayersTableTableAnnotationComposer
 
   GeneratedColumn<int> get dailyMissionsStreak => $composableBuilder(
       column: $table.dailyMissionsStreak, builder: (column) => column);
+
+  GeneratedColumn<int> get totalGemsSpent => $composableBuilder(
+      column: $table.totalGemsSpent, builder: (column) => column);
+
+  GeneratedColumn<int> get peakLevel =>
+      $composableBuilder(column: $table.peakLevel, builder: (column) => column);
+
+  GeneratedColumn<int> get totalAttributePointsSpent => $composableBuilder(
+      column: $table.totalAttributePointsSpent, builder: (column) => column);
 }
 
 class $$PlayersTableTableTableManager extends RootTableManager<
@@ -15935,6 +16103,9 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int?> heightCm = const Value.absent(),
             Value<int?> lastDailyMissionRollover = const Value.absent(),
             Value<int> dailyMissionsStreak = const Value.absent(),
+            Value<int> totalGemsSpent = const Value.absent(),
+            Value<int> peakLevel = const Value.absent(),
+            Value<int> totalAttributePointsSpent = const Value.absent(),
           }) =>
               PlayersTableCompanion(
             id: id,
@@ -15980,6 +16151,9 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             heightCm: heightCm,
             lastDailyMissionRollover: lastDailyMissionRollover,
             dailyMissionsStreak: dailyMissionsStreak,
+            totalGemsSpent: totalGemsSpent,
+            peakLevel: peakLevel,
+            totalAttributePointsSpent: totalAttributePointsSpent,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -16025,6 +16199,9 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int?> heightCm = const Value.absent(),
             Value<int?> lastDailyMissionRollover = const Value.absent(),
             Value<int> dailyMissionsStreak = const Value.absent(),
+            Value<int> totalGemsSpent = const Value.absent(),
+            Value<int> peakLevel = const Value.absent(),
+            Value<int> totalAttributePointsSpent = const Value.absent(),
           }) =>
               PlayersTableCompanion.insert(
             id: id,
@@ -16070,6 +16247,9 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             heightCm: heightCm,
             lastDailyMissionRollover: lastDailyMissionRollover,
             dailyMissionsStreak: dailyMissionsStreak,
+            totalGemsSpent: totalGemsSpent,
+            peakLevel: peakLevel,
+            totalAttributePointsSpent: totalAttributePointsSpent,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

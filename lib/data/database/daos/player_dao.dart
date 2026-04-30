@@ -111,6 +111,13 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
     final newMaxHp = XpCalculator.calcMaxHp(player.constitution, newLevel);
     final newMaxMp = XpCalculator.calcMaxMp(player.spirit, player.constitution, newLevel);
 
+    // Sprint 3.3 Etapa 2.1c-α — peak_level all-time. Foundation pra
+    // shell #4 (Queda do Vidente) detectar retorno de level superior.
+    // Só sobe; nunca decresce mesmo que sistema futuro reduza level.
+    final newPeakLevel = newLevel > player.peakLevel
+        ? newLevel
+        : player.peakLevel;
+
     await (update(playersTable)..where((t) => t.id.equals(id)))
         .write(PlayersTableCompanion(
       xp: Value(newXp),
@@ -119,6 +126,7 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
       attributePoints: Value(newAttrPoints),
       maxHp: Value(newMaxHp),
       maxMp: Value(newMaxMp),
+      peakLevel: Value(newPeakLevel),
     ));
 
     // Sprint 3.1 Bloco 7a — retorna LevelUp quando level mudou.
@@ -216,32 +224,69 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
     ));
   }
 
+  /// Distribui 1 ponto de atributo. Retorna `null` em sucesso ou string
+  /// de erro em falha.
+  ///
+  /// **OBRIGAÇÃO DO CALLER (Sprint 3.3 Etapa 2.1c-α):** após receber
+  /// resultado `null` (sucesso), publicar `AttributePointSpent` no
+  /// AppEventBus. Veja [distributePointWithEvent] que retorna o evento
+  /// pronto pra publicar — preferir esse helper em código novo. Esta
+  /// função é mantida pra callers legacy.
+  ///
+  /// PlayerDao não conhece AppEventBus por contrato (ADR 0016 — camada
+  /// data desacoplada de events). Mesmo padrão do `addXp` retornando
+  /// `LevelUp?`.
   Future<String?> distributePoint(int id, String attribute) async {
+    final result = await distributePointWithEvent(id, attribute);
+    return result.error;
+  }
+
+  /// Sprint 3.3 Etapa 2.1c-α — variante que retorna o `AttributePointSpent`
+  /// pré-construído pra caller publicar. Em sucesso, `error == null` e
+  /// `event != null`. Em falha, vice-versa.
+  ///
+  /// Incrementa `total_attribute_points_spent` atomicamente junto com
+  /// o write — alimenta o trigger `event_attribute_point_spent`.
+  Future<DistributePointResult> distributePointWithEvent(
+      int id, String attribute) async {
     final player = await findById(id);
-    if (player == null) return 'Jogador não encontrado';
-    if (player.attributePoints <= 0) return 'Sem pontos disponíveis';
+    if (player == null) {
+      return const DistributePointResult.error('Jogador não encontrado');
+    }
+    if (player.attributePoints <= 0) {
+      return const DistributePointResult.error('Sem pontos disponíveis');
+    }
 
     final pts = player.attributePoints - 1;
+    final newTotalSpent = player.totalAttributePointsSpent + 1;
     PlayersTableCompanion data;
+    int newValue;
 
     switch (attribute) {
       case 'strength':
+        newValue = player.strength + 1;
         data = PlayersTableCompanion(
-            strength: Value(player.strength + 1),
-            attributePoints: Value(pts));
+            strength: Value(newValue),
+            attributePoints: Value(pts),
+            totalAttributePointsSpent: Value(newTotalSpent));
         break;
       case 'dexterity':
+        newValue = player.dexterity + 1;
         data = PlayersTableCompanion(
-            dexterity: Value(player.dexterity + 1),
-            attributePoints: Value(pts));
+            dexterity: Value(newValue),
+            attributePoints: Value(pts),
+            totalAttributePointsSpent: Value(newTotalSpent));
         break;
       case 'intelligence':
+        newValue = player.intelligence + 1;
         data = PlayersTableCompanion(
-            intelligence: Value(player.intelligence + 1),
-            attributePoints: Value(pts));
+            intelligence: Value(newValue),
+            attributePoints: Value(pts),
+            totalAttributePointsSpent: Value(newTotalSpent));
         break;
       case 'constitution':
         final newCon = player.constitution + 1;
+        newValue = newCon;
         final newMaxHp = XpCalculator.calcMaxHp(newCon, player.level);
         final newMaxMp = XpCalculator.calcMaxMp(player.spirit, newCon, player.level);
         data = PlayersTableCompanion(
@@ -249,27 +294,36 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
             maxHp: Value(newMaxHp),
             maxMp: Value(newMaxMp),
             hp: Value(newMaxHp),
-            attributePoints: Value(pts));
+            attributePoints: Value(pts),
+            totalAttributePointsSpent: Value(newTotalSpent));
         break;
       case 'spirit':
         final newSpi = player.spirit + 1;
+        newValue = newSpi;
         final newMaxMp = XpCalculator.calcMaxMp(newSpi, player.constitution, player.level);
         data = PlayersTableCompanion(
             spirit: Value(newSpi),
             maxMp: Value(newMaxMp),
-            attributePoints: Value(pts));
+            attributePoints: Value(pts),
+            totalAttributePointsSpent: Value(newTotalSpent));
         break;
       case 'charisma':
+        newValue = player.charisma + 1;
         data = PlayersTableCompanion(
-            charisma: Value(player.charisma + 1),
-            attributePoints: Value(pts));
+            charisma: Value(newValue),
+            attributePoints: Value(pts),
+            totalAttributePointsSpent: Value(newTotalSpent));
         break;
       default:
-        return 'Atributo inválido';
+        return const DistributePointResult.error('Atributo inválido');
     }
 
     await (db.update(db.playersTable)..where((t) => t.id.equals(id))).write(data);
-    return null;
+    return DistributePointResult.ok(AttributePointSpent(
+      playerId: id,
+      attributeKey: attribute,
+      newValue: newValue,
+    ));
   }
 
   Future<void> resetLevelAttributes(int id, int level, int goldCost) async {
@@ -288,4 +342,18 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
       gold:            Value(player.gold - goldCost),
     ));
   }
+}
+
+/// Sprint 3.3 Etapa 2.1c-α — resultado imutável de
+/// [PlayerDao.distributePointWithEvent]. Em sucesso, [event] é non-null
+/// e [error] é null. Em falha, vice-versa.
+class DistributePointResult {
+  final AttributePointSpent? event;
+  final String? error;
+
+  const DistributePointResult.ok(AttributePointSpent this.event)
+      : error = null;
+  const DistributePointResult.error(String this.error) : event = null;
+
+  bool get isOk => event != null;
 }

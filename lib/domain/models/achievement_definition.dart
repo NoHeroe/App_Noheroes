@@ -35,6 +35,14 @@ class AchievementDefinition {
   /// runtime neste bloco.
   final bool isSecret;
 
+  /// Sprint 3.3 Etapa 2.1c-α — shell achievement: definição existe no
+  /// catálogo mas mecânica subjacente ainda não está pronta. Service:
+  ///   - Filtra fora dos caches `_dailyAchievements` / `_eventAchievements`
+  ///   - Early-return em `_tryUnlock` (cobre cascata via
+  ///     `achievementsToCheck`)
+  /// UI (Etapa 2.5) pode renderizar como "?????" / "EM BREVE".
+  final bool disabled;
+
   const AchievementDefinition({
     required this.key,
     required this.name,
@@ -43,6 +51,7 @@ class AchievementDefinition {
     required this.trigger,
     this.reward,
     this.isSecret = false,
+    this.disabled = false,
   });
 
   factory AchievementDefinition.fromJson(Map<String, dynamic> json) {
@@ -81,6 +90,7 @@ class AchievementDefinition {
       trigger: AchievementTrigger.fromJson(triggerJson, achievementKey: key),
       reward: reward,
       isSecret: (json['is_secret'] as bool?) ?? false,
+      disabled: (json['disabled'] as bool?) ?? false,
     );
   }
 
@@ -92,6 +102,7 @@ class AchievementDefinition {
         'trigger': trigger.toJson(),
         if (reward != null) 'reward': reward!.toJson(),
         'is_secret': isSecret,
+        if (disabled) 'disabled': disabled,
       };
 }
 
@@ -116,7 +127,7 @@ sealed class AchievementTrigger {
     // Sprint 3.3 Etapa 2.1b — qualquer tipo `daily_*` reconhecido vira
     // `DailyMissionTrigger`. Schema unificado: `target` (int>0) + `params`
     // opcional pra subtypes que precisam (sub_task_key, window, use_best).
-    if (AchievementTriggerTypes.all.contains(type)) {
+    if (AchievementTriggerTypes.allDaily.contains(type)) {
       final target = json['target'];
       if (target is! int || target <= 0) {
         throw FormatException(
@@ -132,6 +143,28 @@ sealed class AchievementTrigger {
         params = paramsRaw;
       }
       return DailyMissionTrigger(
+          subType: type, target: target, params: params);
+    }
+    // Sprint 3.3 Etapa 2.1c-α — tipos `event_*` (não-daily) viram
+    // `EventTrigger`. Schema idêntico ao DailyMissionTrigger pra reuso
+    // de parser/UI. `params` carrega `class_key`, `faction_id`,
+    // `must_be_first_time`, etc. dependendo do subType.
+    if (AchievementTriggerTypes.allEvents.contains(type)) {
+      final target = json['target'];
+      if (target is! int || target <= 0) {
+        throw FormatException(
+            "$type.target inválido ($target) em '$achievementKey'");
+      }
+      final paramsRaw = json['params'];
+      Map<String, dynamic>? params;
+      if (paramsRaw != null) {
+        if (paramsRaw is! Map<String, dynamic>) {
+          throw FormatException(
+              "$type.params deve ser objeto em '$achievementKey'");
+        }
+        params = paramsRaw;
+      }
+      return EventTrigger(
           subType: type, target: target, params: params);
     }
     switch (type) {
@@ -239,6 +272,49 @@ class DailyMissionTrigger extends AchievementTrigger {
     required this.target,
     this.params,
   });
+
+  /// Helper pra acesso null-safe.
+  T? param<T>(String key) {
+    final v = params?[key];
+    return v is T ? v : null;
+  }
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'type': subType,
+        'target': target,
+        if (params != null) 'params': params,
+      };
+}
+
+/// Sprint 3.3 Etapa 2.1c-α — captura os 5 tipos `event_*` num schema
+/// unificado paralelo a [DailyMissionTrigger]. Discriminação interna do
+/// `AchievementsService._validateEventTrigger` via `subType`.
+///
+/// `params` opcional carrega configuração extra:
+///   - `class_key` (String) — usado por `event_class_selected`
+///   - `faction_id` (String) — usado por `event_faction_joined`
+///   - `must_be_first_time` (bool) — usado por
+///     `event_body_metrics_updated` pra distinguir 1ª calibração de
+///     edição posterior
+///
+/// Triggers com schema malformado caem em fail-safe (warn + false).
+class EventTrigger extends AchievementTrigger {
+  final String subType;
+  final int target;
+  final Map<String, dynamic>? params;
+
+  const EventTrigger({
+    required this.subType,
+    required this.target,
+    this.params,
+  });
+
+  /// Helper pra acesso null-safe.
+  T? param<T>(String key) {
+    final v = params?[key];
+    return v is T ? v : null;
+  }
 
   @override
   Map<String, dynamic> toJson() => {

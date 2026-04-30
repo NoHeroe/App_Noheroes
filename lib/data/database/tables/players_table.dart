@@ -90,4 +90,17 @@ class PlayersTable extends Table {
   // missão failed/partial.
   IntColumn get dailyMissionsStreak =>
       integer().withDefault(const Constant(0))();
+
+  // Sprint 3.3 Etapa 2.1c-α — contadores all-time pra triggers de
+  // conquista. Não-daily; populados por:
+  //   - total_gems_spent: PlayerCurrencyStatsService (listener GemsSpent)
+  //   - peak_level: PlayerDao.addXp quando newLevel > peak_level.
+  //                 Migration 28→29 backfilla peak_level = level.
+  //   - total_attribute_points_spent: PlayerDao.distributePoint
+  IntColumn get totalGemsSpent =>
+      integer().withDefault(const Constant(0))();
+  IntColumn get peakLevel =>
+      integer().withDefault(const Constant(1))();
+  IntColumn get totalAttributePointsSpent =>
+      integer().withDefault(const Constant(0))();
 }

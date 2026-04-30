@@ -88,7 +88,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 28;
+  int get schemaVersion => 29;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -453,6 +453,49 @@ class AppDatabase extends _$AppDatabase {
         } catch (e) {
           // ignore: avoid_print
           print('[migration 27→28] failed: $e');
+        }
+      }
+      if (from < 29) {
+        // Sprint 3.3 Etapa 2.1c-α — contadores all-time pra triggers
+        // não-daily. 3 colunas em players. Backfill `peak_level = level`
+        // pra players existentes (refletem realidade — não nascem em 1
+        // com level 5).
+        try {
+          await m.addColumn(playersTable, playersTable.totalGemsSpent);
+          // ignore: avoid_print
+          print('[migration 28→29] added total_gems_spent');
+        } catch (e) {
+          // ignore: avoid_print
+          print('[migration 28→29] addColumn total_gems_spent failed: $e');
+        }
+        try {
+          await m.addColumn(playersTable, playersTable.peakLevel);
+          // ignore: avoid_print
+          print('[migration 28→29] added peak_level');
+        } catch (e) {
+          // ignore: avoid_print
+          print('[migration 28→29] addColumn peak_level failed: $e');
+        }
+        try {
+          await m.addColumn(
+              playersTable, playersTable.totalAttributePointsSpent);
+          // ignore: avoid_print
+          print('[migration 28→29] added total_attribute_points_spent');
+        } catch (e) {
+          // ignore: avoid_print
+          print('[migration 28→29] addColumn '
+              'total_attribute_points_spent failed: $e');
+        }
+        try {
+          // Backfill: players acima do level 1 já têm peak igual ao
+          // level atual. Players novos (level=1) ficam com default=1.
+          await customStatement(
+              'UPDATE players SET peak_level = level WHERE level > 1');
+          // ignore: avoid_print
+          print('[migration 28→29] backfilled peak_level = level');
+        } catch (e) {
+          // ignore: avoid_print
+          print('[migration 28→29] backfill peak_level failed: $e');
         }
       }
     },

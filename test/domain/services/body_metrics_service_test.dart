@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:noheroes_app/core/events/app_event_bus.dart';
 import 'package:noheroes_app/data/database/app_database.dart';
 import 'package:noheroes_app/data/database/daos/player_dao.dart';
 import 'package:noheroes_app/domain/services/body_metrics_service.dart';
@@ -15,7 +16,7 @@ void main() {
 
   setUp(() async {
     db = AppDatabase.forTesting(NativeDatabase.memory());
-    service = BodyMetricsService(dao: PlayerDao(db));
+    service = BodyMetricsService(dao: PlayerDao(db), bus: AppEventBus());
     playerId = await db.into(db.playersTable).insert(const PlayersTableCompanion(
           email: Value('bm@test'),
           passwordHash: Value('h'),

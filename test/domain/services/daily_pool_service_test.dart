@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:noheroes_app/core/events/app_event_bus.dart';
 import 'package:noheroes_app/data/database/app_database.dart';
 import 'package:noheroes_app/data/database/daos/player_dao.dart';
 import 'package:noheroes_app/domain/enums/mission_category.dart';
@@ -194,7 +195,7 @@ void main() {
 
     setUp(() async {
       db = AppDatabase.forTesting(NativeDatabase.memory());
-      bodyMetrics = BodyMetricsService(dao: PlayerDao(db));
+      bodyMetrics = BodyMetricsService(dao: PlayerDao(db), bus: AppEventBus());
       playerId = await db.into(db.playersTable).insert(
             const PlayersTableCompanion(
               email: Value('rs@t'),

@@ -152,6 +152,9 @@ PlayersTableData _fakePlayer({int dailyStreak = 0, String rank = 'E'}) {
     caelumDay: 0,
     createdAt: DateTime.now(),
     dailyMissionsStreak: dailyStreak,
+    totalGemsSpent: 0,
+    peakLevel: 1,
+    totalAttributePointsSpent: 0,
   );
 }
 

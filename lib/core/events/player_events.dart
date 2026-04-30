@@ -85,3 +85,82 @@ class GemsSpent extends AppEvent {
   String toString() =>
       'GemsSpent(player=$playerId, amount=$amount, source=$source)';
 }
+
+/// Sprint 3.3 Etapa 2.1c-α — jogador gastou 1 ponto de atributo.
+///
+/// Emitido pelo caller do [PlayerDao.distributePoint] (UI da tela de
+/// atributos / dev panel). PlayerDao mantém-se desacoplado do EventBus
+/// (ADR 0016) — retorna o evento como dado, caller publica.
+class AttributePointSpent extends AppEvent {
+  @override
+  final int playerId;
+
+  /// Atributo escolhido — string EN: `'strength'`, `'dexterity'`,
+  /// `'intelligence'`, `'constitution'`, `'spirit'`, `'charisma'`.
+  /// Mesma string aceita por `PlayerDao.distributePoint`.
+  final String attributeKey;
+
+  /// Valor do atributo APÓS o spend.
+  final int newValue;
+
+  AttributePointSpent({
+    required this.playerId,
+    required this.attributeKey,
+    required this.newValue,
+    super.at,
+  });
+
+  @override
+  String toString() =>
+      'AttributePointSpent(player=$playerId, $attributeKey=$newValue)';
+}
+
+/// Sprint 3.3 Etapa 2.1c-α — métricas corporais (peso/altura) salvas.
+///
+/// Emitido pelo `BodyMetricsService.save` APÓS persistir.
+/// [isFirstTime] = `true` quando ambos `weightKg` e `heightCm` estavam
+/// `null` antes da save (primeira calibração — onboarding); `false` em
+/// edições subsequentes via /perfil.
+class BodyMetricsUpdated extends AppEvent {
+  @override
+  final int playerId;
+  final bool isFirstTime;
+
+  BodyMetricsUpdated({
+    required this.playerId,
+    required this.isFirstTime,
+    super.at,
+  });
+
+  @override
+  String toString() =>
+      'BodyMetricsUpdated(player=$playerId, firstTime=$isFirstTime)';
+}
+
+/// Sprint 3.3 Etapa 2.1c-α — evento de coordenação interna entre
+/// `PlayerCurrencyStatsService` (writer de `players.total_gems_spent`)
+/// e `AchievementsService` (reader). Mesmo pattern do
+/// `DailyStatsUpdated` (Etapa 2.1b).
+///
+/// **Não é evento público de domínio**. Stats publica APÓS commit;
+/// achievements escuta pra checar trigger `event_gems_spent_total`.
+/// Outros consumidores não devem assinar este evento sem revisar a
+/// arquitetura.
+class CurrencyStatsUpdated extends AppEvent {
+  @override
+  final int playerId;
+
+  /// `'gems_spent'` no MVP — strings adicionais quando expandirmos
+  /// (ex: `'gold_spent'` se shell #5 entrar).
+  final String currencyKind;
+
+  CurrencyStatsUpdated({
+    required this.playerId,
+    required this.currencyKind,
+    super.at,
+  });
+
+  @override
+  String toString() =>
+      'CurrencyStatsUpdated(player=$playerId, $currencyKind)';
+}

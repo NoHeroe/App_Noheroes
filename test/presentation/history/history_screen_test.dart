@@ -100,6 +100,9 @@ PlayersTableData _fakePlayer({int totalQuests = 0}) {
     caelumDay: 0,
     createdAt: DateTime.now(),
     dailyMissionsStreak: 0,
+    totalGemsSpent: 0,
+    peakLevel: 1,
+    totalAttributePointsSpent: 0,
   );
 }
 

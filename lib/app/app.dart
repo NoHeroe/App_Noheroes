@@ -19,6 +19,10 @@ class NoHeroesApp extends ConsumerWidget {
     // listener de DailyStatsUpdated. Eager garante que conquistas
     // disparadas por daily missions unlockem desde o primeiro evento.
     ref.watch(achievementsServiceProvider);
+    // Sprint 3.3 Etapa 2.1c-α — agregador de moedas gastas. Single
+    // writer de players.total_gems_spent. Sem este watch, GemsSpent
+    // não atualizaria o contador até alguém ler o provider.
+    ref.watch(playerCurrencyStatsServiceProvider);
     return MaterialApp.router(
       title: 'NoHeroes',
       debugShowCheckedModeBanner: false,
