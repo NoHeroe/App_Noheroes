@@ -88,7 +88,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 30;
+  int get schemaVersion => 31;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -503,6 +503,54 @@ class AppDatabase extends _$AppDatabase {
         // silencioso. Ver
         // `.vault/02_ADRs/ADR-0019-drift-migration-dataclass-pitfall.md`.
         await _applyHotfix29To30();
+      }
+      if (from < 31) {
+        // Sprint 3.3 Etapa 2.1c-β — modo automático de daily missions.
+        // 4 colunas novas (1 em players + 1 em daily_missions + 2 em
+        // player_daily_mission_stats). Aplicação do ADR-0019: usamos
+        // só m.addColumn (não chama select(table).get() em data class).
+        try {
+          await m.addColumn(playersTable, playersTable.autoConfirmEnabled);
+          // ignore: avoid_print
+          print('[migration 30→31] added auto_confirm_enabled');
+        } catch (e, st) {
+          // ignore: avoid_print
+          print('[migration 30→31] addColumn auto_confirm_enabled '
+              'failed: $e\n$st');
+        }
+        try {
+          await m.addColumn(
+              dailyMissionsTable, dailyMissionsTable.wasAutoConfirmed);
+          // ignore: avoid_print
+          print('[migration 30→31] added was_auto_confirmed');
+        } catch (e, st) {
+          // ignore: avoid_print
+          print('[migration 30→31] addColumn was_auto_confirmed '
+              'failed: $e\n$st');
+        }
+        try {
+          await m.addColumn(playerDailyMissionStatsTable,
+              playerDailyMissionStatsTable.totalAutoConfirmCompletions);
+          // ignore: avoid_print
+          print('[migration 30→31] added total_auto_confirm_completions');
+        } catch (e, st) {
+          // ignore: avoid_print
+          print('[migration 30→31] addColumn '
+              'total_auto_confirm_completions failed: $e\n$st');
+        }
+        try {
+          await m.addColumn(
+              playerDailyMissionStatsTable,
+              playerDailyMissionStatsTable
+                  .totalZeroProgressManualConfirms);
+          // ignore: avoid_print
+          print('[migration 30→31] added '
+              'total_zero_progress_manual_confirms');
+        } catch (e, st) {
+          // ignore: avoid_print
+          print('[migration 30→31] addColumn '
+              'total_zero_progress_manual_confirms failed: $e\n$st');
+        }
       }
     },
     beforeOpen: (details) async {

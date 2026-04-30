@@ -589,6 +589,14 @@ class AchievementsService {
         final stats = await statsDao!.findOrCreate(playerId);
         return stats.totalSpeedrunCompletions >= trigger.target;
 
+      case AchievementTriggerTypes.dailyAutoConfirmCount:
+        final stats = await statsDao!.findOrCreate(playerId);
+        return stats.totalAutoConfirmCompletions >= trigger.target;
+
+      case AchievementTriggerTypes.dailyZeroProgressManualCount:
+        final stats = await statsDao!.findOrCreate(playerId);
+        return stats.totalZeroProgressManualConfirms >= trigger.target;
+
       default:
         // Não deveria acontecer — o parser só cria DailyMissionTrigger
         // pra subtypes em AchievementTriggerTypes.allDaily. Defesa pra

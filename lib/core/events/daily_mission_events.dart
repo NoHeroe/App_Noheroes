@@ -67,18 +67,27 @@ class DailyMissionCompleted extends AppEvent {
   /// (reward × (subs/3) × 0.5).
   final bool partial;
 
+  /// Sprint 3.3 Etapa 2.1c-β — `true` quando o rollover detectou modo
+  /// automático ativo + 100% em todas as sub-tarefas e fechou via
+  /// `applyAutoCompleted`. Confirmações manuais e parciais sempre
+  /// `false`. Default `false` (backwards-compat com 4 emissores
+  /// existentes em progress + rollover services).
+  final bool wasAutoConfirmed;
+
   DailyMissionCompleted({
     required this.playerId,
     required this.missionId,
     required this.modalidade,
     required this.fullCompleted,
     required this.partial,
+    this.wasAutoConfirmed = false,
   });
 
   @override
   String toString() =>
       'DailyMissionCompleted(player=$playerId, mission=$missionId, '
-      '${modalidade.storage}, full=$fullCompleted, partial=$partial)';
+      '${modalidade.storage}, full=$fullCompleted, partial=$partial, '
+      'auto=$wasAutoConfirmed)';
 }
 
 /// Emitido pelo rollover quando a missão fecha com 0 sub-tarefas — sem

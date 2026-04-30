@@ -205,6 +205,18 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
         .write(const PlayersTableCompanion(dailyMissionsStreak: Value(0)));
   }
 
+  /// Sprint 3.3 Etapa 2.1c-β — toggle de modo automático.
+  ///
+  /// Persiste preferência do jogador. Quando `true`,
+  /// `DailyMissionRolloverService` auto-completa missões com 100% em
+  /// todas as sub-tarefas no rollover diário sem exigir clique manual.
+  /// Caller deve atualizar `currentPlayerProvider` após chamar este
+  /// método pra UI reagir imediatamente.
+  Future<void> setAutoConfirmEnabled(int id, bool value) async {
+    await (update(playersTable)..where((t) => t.id.equals(id)))
+        .write(PlayersTableCompanion(autoConfirmEnabled: Value(value)));
+  }
+
   Future<void> addGold(int id, int amount) async {
     final player = await findById(id);
     if (player == null) return;

@@ -26,6 +26,12 @@ class DailyMission {
   final DateTime? completedAt;
   final bool rewardClaimed;
 
+  /// Sprint 3.3 Etapa 2.1c-β — `true` quando o rollover detectou modo
+  /// automático ativo + 100% em todas as sub-tarefas e fechou via
+  /// `applyAutoCompleted`. Confirmações manuais (`confirmCompletion`)
+  /// ou parciais (`applyPartialReward`) sempre `false`.
+  final bool wasAutoConfirmed;
+
   const DailyMission({
     required this.id,
     required this.playerId,
@@ -40,6 +46,7 @@ class DailyMission {
     required this.createdAt,
     required this.completedAt,
     required this.rewardClaimed,
+    this.wasAutoConfirmed = false,
   });
 
   DailyMission copyWith({
@@ -47,6 +54,7 @@ class DailyMission {
     DailyMissionStatus? status,
     DateTime? completedAt,
     bool? rewardClaimed,
+    bool? wasAutoConfirmed,
   }) =>
       DailyMission(
         id: id,
@@ -62,7 +70,18 @@ class DailyMission {
         createdAt: createdAt,
         completedAt: completedAt ?? this.completedAt,
         rewardClaimed: rewardClaimed ?? this.rewardClaimed,
+        wasAutoConfirmed: wasAutoConfirmed ?? this.wasAutoConfirmed,
       );
+
+  /// `true` quando todas as sub-tarefas atingiram a meta (`progressoAtual
+  /// >= escalaAlvo`). Usado pelo `DailyMissionRolloverService` pra
+  /// decidir auto-confirm. Mais robusto que `completedSubCount` —
+  /// independe do flag `completed` (que pode estar dessincronizado em
+  /// caminhos legacy).
+  bool get allSubsAtTarget =>
+      subTarefas.isNotEmpty &&
+      subTarefas.every((s) =>
+          s.escalaAlvo > 0 && s.progressoAtual >= s.escalaAlvo);
 
   /// Serializa só as sub-tarefas (campo TEXT no schema).
   String encodeSubTarefas() =>

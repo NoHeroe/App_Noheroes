@@ -31,6 +31,13 @@ class PlayerDailyMissionStats {
   final int totalZeroProgressConfirms;
   final int totalDaysAllPilars;
   final int totalSpeedrunCompletions;
+
+  /// Sprint 3.3 Etapa 2.1c-β — confirmações via auto-confirm.
+  final int totalAutoConfirmCompletions;
+
+  /// Sprint 3.3 Etapa 2.1c-β — anti-cheese de zero progress (só manual).
+  final int totalZeroProgressManualConfirms;
+
   final DateTime? firstCompletedAt;
   final DateTime? lastCompletedAt;
   final String? lastPilarBalanceDay;
@@ -62,6 +69,8 @@ class PlayerDailyMissionStats {
     required this.totalZeroProgressConfirms,
     required this.totalDaysAllPilars,
     required this.totalSpeedrunCompletions,
+    required this.totalAutoConfirmCompletions,
+    required this.totalZeroProgressManualConfirms,
     required this.firstCompletedAt,
     required this.lastCompletedAt,
     required this.lastPilarBalanceDay,
@@ -96,6 +105,8 @@ class PlayerDailyMissionStats {
       totalZeroProgressConfirms: row.totalZeroProgressConfirms,
       totalDaysAllPilars: row.totalDaysAllPilars,
       totalSpeedrunCompletions: row.totalSpeedrunCompletions,
+      totalAutoConfirmCompletions: row.totalAutoConfirmCompletions,
+      totalZeroProgressManualConfirms: row.totalZeroProgressManualConfirms,
       firstCompletedAt: row.firstCompletedAt == null
           ? null
           : DateTime.fromMillisecondsSinceEpoch(row.firstCompletedAt!),

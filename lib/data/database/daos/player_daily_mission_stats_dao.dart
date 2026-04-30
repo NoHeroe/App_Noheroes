@@ -128,6 +128,13 @@ class PlayerDailyMissionStatsDao
   /// `daysWithoutFailing` e `consecutiveActiveDays` ficam em métodos
   /// separados (transição diária) chamados pelo service quando detecta
   /// virada de dia.
+  ///
+  /// Sprint 3.3 Etapa 2.1c-β:
+  /// - [wasAutoConfirmed] = true → bumps `total_auto_confirm_completions`
+  /// - [wasAutoConfirmed] = false E [zeroProgress] = true → bumps
+  ///   `total_zero_progress_manual_confirms` (anti-cheese)
+  /// - `total_zero_progress_confirms` (legacy) bumps em qualquer zero,
+  ///   manual ou auto.
   Future<void> incrementOnCompleted(
     int playerId, {
     required bool isPerfect,
@@ -141,10 +148,12 @@ class PlayerDailyMissionStatsDao
     required bool isWeekend,
     required bool isSpeedrun,
     required bool zeroProgress,
+    bool wasAutoConfirmed = false,
   }) async {
     await findOrCreate(playerId);
     final ms = confirmedAt.millisecondsSinceEpoch;
     final dowMask = 1 << dayOfWeek;
+    final manualZero = zeroProgress && !wasAutoConfirmed;
     await customUpdate(
       'UPDATE player_daily_mission_stats SET '
       'total_completed = total_completed + 1, '
@@ -159,7 +168,11 @@ class PlayerDailyMissionStatsDao
       'days_of_week_completed_bitmask = days_of_week_completed_bitmask | ?, '
       'consecutive_fails_count = 0, '
       'total_zero_progress_confirms = total_zero_progress_confirms + ?, '
+      'total_zero_progress_manual_confirms = '
+      '    total_zero_progress_manual_confirms + ?, '
       'total_speedrun_completions = total_speedrun_completions + ?, '
+      'total_auto_confirm_completions = '
+      '    total_auto_confirm_completions + ?, '
       'first_completed_at = COALESCE(first_completed_at, ?), '
       'last_completed_at = ?, '
       'updated_at = ? '
@@ -174,7 +187,9 @@ class PlayerDailyMissionStatsDao
         Variable.withInt(isWeekend ? 1 : 0),
         Variable.withInt(dowMask),
         Variable.withInt(zeroProgress ? 1 : 0),
+        Variable.withInt(manualZero ? 1 : 0),
         Variable.withInt(isSpeedrun ? 1 : 0),
+        Variable.withInt(wasAutoConfirmed ? 1 : 0),
         Variable.withInt(ms),
         Variable.withInt(ms),
         Variable.withInt(ms),

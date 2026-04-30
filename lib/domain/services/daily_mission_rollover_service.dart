@@ -10,14 +10,19 @@ import 'daily_mission_progress_service.dart';
 /// Idempotente: usa `lastDailyMissionRollover` (player) pra detectar
 /// "primeira abertura do dia". Re-chamadas no mesmo dia são noop.
 ///
-/// Critério de fechamento por missão:
+/// Critério de fechamento por missão (Sprint 3.3 Etapa 2.1c-β atualizado):
 /// - 100% (status=completed) — já fechou normal, ignora.
-/// - Sub-tarefas completas ≥ 1: marca **partial** + dispara reward
-///   parcial via [DailyMissionProgressService.applyPartialReward].
+/// - **`auto_confirm_enabled=true` E todas subs em 100%+**: marca
+///   **completed** via `applyAutoCompleted` + flag `was_auto_confirmed=true`.
+/// - Sub-tarefas completas ≥ 1 (não cobre o caso acima): marca
+///   **partial** via `applyPartialReward`.
 /// - Sub-tarefas completas = 0: marca **failed**, sem reward.
 ///
 /// Streak (`dailyMissionsStreak`):
-/// - Todas as missões do dia anterior fecharam `completed`: +1.
+/// - Todas as missões do dia anterior fecharam `completed` (manual ou
+///   auto-confirm): +1. Auto-confirm CONTA pra streak (decisão
+///   consciente — jogador completou 100% das sub-tarefas, clicar ✓ é
+///   só burocracia que o modo automático tira).
 /// - Qualquer `partial`/`failed` no dia anterior: reseta a 0.
 /// - Sem missões no dia anterior (jogador novo, app fechado): noop
 ///   sobre streak (não incrementa nem zera).
@@ -48,9 +53,17 @@ class DailyMissionRolloverService {
 
     // 1) Fecha pendentes/parciais com data < hoje (não só ontem — pode
     //    ter dia pulado se app ficou fechado).
+    //
+    // Sprint 3.3 Etapa 2.1c-β: branch nova de auto-confirm ANTES do
+    // partial/failed. Critério estrito: toggle ativo + TODAS as subs
+    // em 100%+. Caso contrário cai no fluxo legacy.
     final pending =
         await _missionsDao.findPendingBefore(playerId, todayStr);
     for (final m in pending) {
+      if (player.autoConfirmEnabled && m.allSubsAtTarget) {
+        await _progress.applyAutoCompleted(mission: m);
+        continue;
+      }
       final completas = m.completedSubCount;
       if (completas >= 1) {
         await _progress.applyPartialReward(

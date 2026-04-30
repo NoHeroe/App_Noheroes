@@ -48,6 +48,7 @@ class DailyMissionsDao extends DatabaseAccessor<AppDatabase>
   }
 
   /// Atualiza progresso (subTarefas), status, completedAt, rewardClaimed.
+  /// Sprint 3.3 Etapa 2.1c-β também persiste `wasAutoConfirmed`.
   /// Não toca em campos imutáveis (modalidade, titulos, etc.).
   Future<void> updateMission(DailyMission mission) async {
     await (update(dailyMissionsTable)
@@ -57,6 +58,7 @@ class DailyMissionsDao extends DatabaseAccessor<AppDatabase>
       status: Value(mission.status.storage),
       completedAt: Value(mission.completedAt?.millisecondsSinceEpoch),
       rewardClaimed: Value(mission.rewardClaimed),
+      wasAutoConfirmed: Value(mission.wasAutoConfirmed),
     ));
   }
 
@@ -116,6 +118,7 @@ class DailyMissionsDao extends DatabaseAccessor<AppDatabase>
             ? null
             : DateTime.fromMillisecondsSinceEpoch(row.completedAt!),
         rewardClaimed: row.rewardClaimed,
+        wasAutoConfirmed: row.wasAutoConfirmed,
       );
 
   DailyMissionsTableCompanion _toCompanion(DailyMission m) =>
@@ -136,6 +139,7 @@ class DailyMissionsDao extends DatabaseAccessor<AppDatabase>
             ? const Value.absent()
             : Value(m.completedAt!.millisecondsSinceEpoch),
         rewardClaimed: Value(m.rewardClaimed),
+        wasAutoConfirmed: Value(m.wasAutoConfirmed),
       );
 
   DailyMission _withId(DailyMission m, int id) => DailyMission(
@@ -152,5 +156,6 @@ class DailyMissionsDao extends DatabaseAccessor<AppDatabase>
         createdAt: m.createdAt,
         completedAt: m.completedAt,
         rewardClaimed: m.rewardClaimed,
+        wasAutoConfirmed: m.wasAutoConfirmed,
       );
 }

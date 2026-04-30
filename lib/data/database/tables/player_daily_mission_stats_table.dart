@@ -78,11 +78,32 @@ class PlayerDailyMissionStatsTable extends Table {
   // ─── Easter eggs / triggers exóticos (foundation pra secret) ───────
   IntColumn get daysOfWeekCompletedBitmask =>
       integer().withDefault(const Constant(0))();
+
+  /// Conta confirmações com `avgFactor < 0.05` em **qualquer modo**
+  /// (manual OU auto). Métrica geral de "confirmações sem progresso".
+  /// **Não usar pra triggers anti-cheese** — usar
+  /// [totalZeroProgressManualConfirms] em vez (Sprint 3.3 Etapa 2.1c-β).
   IntColumn get totalZeroProgressConfirms =>
       integer().withDefault(const Constant(0))();
   IntColumn get totalDaysAllPilars =>
       integer().withDefault(const Constant(0))();
   IntColumn get totalSpeedrunCompletions =>
+      integer().withDefault(const Constant(0))();
+
+  // ─── Sprint 3.3 Etapa 2.1c-β — modo automático ─────────────────────
+
+  /// Conta confirmações pelo `applyAutoCompleted` (rollover + toggle
+  /// ativo + 100% em todas as subs). Manual confirms NÃO contam.
+  /// Alimenta trigger `daily_auto_confirm_count`.
+  IntColumn get totalAutoConfirmCompletions =>
+      integer().withDefault(const Constant(0))();
+
+  /// Conta confirmações com `avgFactor < 0.05` **somente quando manual**
+  /// (`wasAutoConfirmed=false`). Anti-cheese pra conquistas tipo "O Olho
+  /// que Não Pisca" — auto-confirm com zero progress não conta porque
+  /// não envolve ato consciente do jogador.
+  /// Alimenta trigger `daily_zero_progress_manual_count`.
+  IntColumn get totalZeroProgressManualConfirms =>
       integer().withDefault(const Constant(0))();
 
   // ─── Markers ───────────────────────────────────────────────────────

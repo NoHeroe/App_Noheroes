@@ -100,6 +100,7 @@ PlayersTableData _player() {
     totalGemsSpent: 0,
     peakLevel: 1,
     totalAttributePointsSpent: 0,
+    autoConfirmEnabled: false,
   );
 }
 

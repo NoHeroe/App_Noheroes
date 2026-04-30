@@ -352,6 +352,16 @@ class $PlayersTableTable extends PlayersTable
           type: DriftSqlType.int,
           requiredDuringInsert: false,
           defaultValue: const Constant(0));
+  static const VerificationMeta _autoConfirmEnabledMeta =
+      const VerificationMeta('autoConfirmEnabled');
+  @override
+  late final GeneratedColumn<bool> autoConfirmEnabled = GeneratedColumn<bool>(
+      'auto_confirm_enabled', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("auto_confirm_enabled" IN (0, 1))'),
+      defaultValue: const Constant(false));
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -399,7 +409,8 @@ class $PlayersTableTable extends PlayersTable
         dailyMissionsStreak,
         totalGemsSpent,
         peakLevel,
-        totalAttributePointsSpent
+        totalAttributePointsSpent,
+        autoConfirmEnabled
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -643,6 +654,12 @@ class $PlayersTableTable extends PlayersTable
               data['total_attribute_points_spent']!,
               _totalAttributePointsSpentMeta));
     }
+    if (data.containsKey('auto_confirm_enabled')) {
+      context.handle(
+          _autoConfirmEnabledMeta,
+          autoConfirmEnabled.isAcceptableOrUnknown(
+              data['auto_confirm_enabled']!, _autoConfirmEnabledMeta));
+    }
     return context;
   }
 
@@ -746,6 +763,8 @@ class $PlayersTableTable extends PlayersTable
       totalAttributePointsSpent: attachedDatabase.typeMapping.read(
           DriftSqlType.int,
           data['${effectivePrefix}total_attribute_points_spent'])!,
+      autoConfirmEnabled: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}auto_confirm_enabled'])!,
     );
   }
 
@@ -803,6 +822,7 @@ class PlayersTableData extends DataClass
   final int totalGemsSpent;
   final int peakLevel;
   final int totalAttributePointsSpent;
+  final bool autoConfirmEnabled;
   const PlayersTableData(
       {required this.id,
       required this.email,
@@ -849,7 +869,8 @@ class PlayersTableData extends DataClass
       required this.dailyMissionsStreak,
       required this.totalGemsSpent,
       required this.peakLevel,
-      required this.totalAttributePointsSpent});
+      required this.totalAttributePointsSpent,
+      required this.autoConfirmEnabled});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -917,6 +938,7 @@ class PlayersTableData extends DataClass
     map['peak_level'] = Variable<int>(peakLevel);
     map['total_attribute_points_spent'] =
         Variable<int>(totalAttributePointsSpent);
+    map['auto_confirm_enabled'] = Variable<bool>(autoConfirmEnabled);
     return map;
   }
 
@@ -984,6 +1006,7 @@ class PlayersTableData extends DataClass
       totalGemsSpent: Value(totalGemsSpent),
       peakLevel: Value(peakLevel),
       totalAttributePointsSpent: Value(totalAttributePointsSpent),
+      autoConfirmEnabled: Value(autoConfirmEnabled),
     );
   }
 
@@ -1041,6 +1064,7 @@ class PlayersTableData extends DataClass
       peakLevel: serializer.fromJson<int>(json['peakLevel']),
       totalAttributePointsSpent:
           serializer.fromJson<int>(json['totalAttributePointsSpent']),
+      autoConfirmEnabled: serializer.fromJson<bool>(json['autoConfirmEnabled']),
     );
   }
   @override
@@ -1095,6 +1119,7 @@ class PlayersTableData extends DataClass
       'peakLevel': serializer.toJson<int>(peakLevel),
       'totalAttributePointsSpent':
           serializer.toJson<int>(totalAttributePointsSpent),
+      'autoConfirmEnabled': serializer.toJson<bool>(autoConfirmEnabled),
     };
   }
 
@@ -1144,7 +1169,8 @@ class PlayersTableData extends DataClass
           int? dailyMissionsStreak,
           int? totalGemsSpent,
           int? peakLevel,
-          int? totalAttributePointsSpent}) =>
+          int? totalAttributePointsSpent,
+          bool? autoConfirmEnabled}) =>
       PlayersTableData(
         id: id ?? this.id,
         email: email ?? this.email,
@@ -1199,6 +1225,7 @@ class PlayersTableData extends DataClass
         peakLevel: peakLevel ?? this.peakLevel,
         totalAttributePointsSpent:
             totalAttributePointsSpent ?? this.totalAttributePointsSpent,
+        autoConfirmEnabled: autoConfirmEnabled ?? this.autoConfirmEnabled,
       );
   PlayersTableData copyWithCompanion(PlayersTableCompanion data) {
     return PlayersTableData(
@@ -1288,6 +1315,9 @@ class PlayersTableData extends DataClass
       totalAttributePointsSpent: data.totalAttributePointsSpent.present
           ? data.totalAttributePointsSpent.value
           : this.totalAttributePointsSpent,
+      autoConfirmEnabled: data.autoConfirmEnabled.present
+          ? data.autoConfirmEnabled.value
+          : this.autoConfirmEnabled,
     );
   }
 
@@ -1339,7 +1369,8 @@ class PlayersTableData extends DataClass
           ..write('dailyMissionsStreak: $dailyMissionsStreak, ')
           ..write('totalGemsSpent: $totalGemsSpent, ')
           ..write('peakLevel: $peakLevel, ')
-          ..write('totalAttributePointsSpent: $totalAttributePointsSpent')
+          ..write('totalAttributePointsSpent: $totalAttributePointsSpent, ')
+          ..write('autoConfirmEnabled: $autoConfirmEnabled')
           ..write(')'))
         .toString();
   }
@@ -1391,7 +1422,8 @@ class PlayersTableData extends DataClass
         dailyMissionsStreak,
         totalGemsSpent,
         peakLevel,
-        totalAttributePointsSpent
+        totalAttributePointsSpent,
+        autoConfirmEnabled
       ]);
   @override
   bool operator ==(Object other) =>
@@ -1442,7 +1474,8 @@ class PlayersTableData extends DataClass
           other.dailyMissionsStreak == this.dailyMissionsStreak &&
           other.totalGemsSpent == this.totalGemsSpent &&
           other.peakLevel == this.peakLevel &&
-          other.totalAttributePointsSpent == this.totalAttributePointsSpent);
+          other.totalAttributePointsSpent == this.totalAttributePointsSpent &&
+          other.autoConfirmEnabled == this.autoConfirmEnabled);
 }
 
 class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
@@ -1492,6 +1525,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
   final Value<int> totalGemsSpent;
   final Value<int> peakLevel;
   final Value<int> totalAttributePointsSpent;
+  final Value<bool> autoConfirmEnabled;
   const PlayersTableCompanion({
     this.id = const Value.absent(),
     this.email = const Value.absent(),
@@ -1539,6 +1573,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.totalGemsSpent = const Value.absent(),
     this.peakLevel = const Value.absent(),
     this.totalAttributePointsSpent = const Value.absent(),
+    this.autoConfirmEnabled = const Value.absent(),
   });
   PlayersTableCompanion.insert({
     this.id = const Value.absent(),
@@ -1587,6 +1622,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.totalGemsSpent = const Value.absent(),
     this.peakLevel = const Value.absent(),
     this.totalAttributePointsSpent = const Value.absent(),
+    this.autoConfirmEnabled = const Value.absent(),
   })  : email = Value(email),
         passwordHash = Value(passwordHash);
   static Insertable<PlayersTableData> custom({
@@ -1636,6 +1672,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     Expression<int>? totalGemsSpent,
     Expression<int>? peakLevel,
     Expression<int>? totalAttributePointsSpent,
+    Expression<bool>? autoConfirmEnabled,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1688,6 +1725,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       if (peakLevel != null) 'peak_level': peakLevel,
       if (totalAttributePointsSpent != null)
         'total_attribute_points_spent': totalAttributePointsSpent,
+      if (autoConfirmEnabled != null)
+        'auto_confirm_enabled': autoConfirmEnabled,
     });
   }
 
@@ -1737,7 +1776,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       Value<int>? dailyMissionsStreak,
       Value<int>? totalGemsSpent,
       Value<int>? peakLevel,
-      Value<int>? totalAttributePointsSpent}) {
+      Value<int>? totalAttributePointsSpent,
+      Value<bool>? autoConfirmEnabled}) {
     return PlayersTableCompanion(
       id: id ?? this.id,
       email: email ?? this.email,
@@ -1787,6 +1827,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       peakLevel: peakLevel ?? this.peakLevel,
       totalAttributePointsSpent:
           totalAttributePointsSpent ?? this.totalAttributePointsSpent,
+      autoConfirmEnabled: autoConfirmEnabled ?? this.autoConfirmEnabled,
     );
   }
 
@@ -1933,6 +1974,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       map['total_attribute_points_spent'] =
           Variable<int>(totalAttributePointsSpent.value);
     }
+    if (autoConfirmEnabled.present) {
+      map['auto_confirm_enabled'] = Variable<bool>(autoConfirmEnabled.value);
+    }
     return map;
   }
 
@@ -1984,7 +2028,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
           ..write('dailyMissionsStreak: $dailyMissionsStreak, ')
           ..write('totalGemsSpent: $totalGemsSpent, ')
           ..write('peakLevel: $peakLevel, ')
-          ..write('totalAttributePointsSpent: $totalAttributePointsSpent')
+          ..write('totalAttributePointsSpent: $totalAttributePointsSpent, ')
+          ..write('autoConfirmEnabled: $autoConfirmEnabled')
           ..write(')'))
         .toString();
   }
@@ -13069,6 +13114,16 @@ class $DailyMissionsTableTable extends DailyMissionsTable
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("reward_claimed" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _wasAutoConfirmedMeta =
+      const VerificationMeta('wasAutoConfirmed');
+  @override
+  late final GeneratedColumn<bool> wasAutoConfirmed = GeneratedColumn<bool>(
+      'was_auto_confirmed', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("was_auto_confirmed" IN (0, 1))'),
+      defaultValue: const Constant(false));
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -13083,7 +13138,8 @@ class $DailyMissionsTableTable extends DailyMissionsTable
         status,
         createdAt,
         completedAt,
-        rewardClaimed
+        rewardClaimed,
+        wasAutoConfirmed
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -13177,6 +13233,12 @@ class $DailyMissionsTableTable extends DailyMissionsTable
           rewardClaimed.isAcceptableOrUnknown(
               data['reward_claimed']!, _rewardClaimedMeta));
     }
+    if (data.containsKey('was_auto_confirmed')) {
+      context.handle(
+          _wasAutoConfirmedMeta,
+          wasAutoConfirmed.isAcceptableOrUnknown(
+              data['was_auto_confirmed']!, _wasAutoConfirmedMeta));
+    }
     return context;
   }
 
@@ -13212,6 +13274,8 @@ class $DailyMissionsTableTable extends DailyMissionsTable
           .read(DriftSqlType.int, data['${effectivePrefix}completed_at']),
       rewardClaimed: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}reward_claimed'])!,
+      wasAutoConfirmed: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool, data['${effectivePrefix}was_auto_confirmed'])!,
     );
   }
 
@@ -13236,6 +13300,17 @@ class DailyMissionsTableData extends DataClass
   final int createdAt;
   final int? completedAt;
   final bool rewardClaimed;
+
+  /// Sprint 3.3 Etapa 2.1c-β — flag setada quando o rollover detecta
+  /// `players.auto_confirm_enabled=true` E todas as sub-tarefas em 100%
+  /// → `applyAutoCompleted` marca missão como `completed` sem exigir
+  /// clique manual. Propagado via `DailyMissionCompleted.wasAutoConfirmed`
+  /// pro listener de stats (alimenta trigger `daily_auto_confirm_count`
+  /// + anti-cheese de `total_zero_progress_manual_confirms`).
+  ///
+  /// Default false. Confirmações manuais via `confirmCompletion` mantêm
+  /// false. Migrações 27→30 deixaram coluna ausente → schema 31 adiciona.
+  final bool wasAutoConfirmed;
   const DailyMissionsTableData(
       {required this.id,
       required this.playerId,
@@ -13249,7 +13324,8 @@ class DailyMissionsTableData extends DataClass
       required this.status,
       required this.createdAt,
       this.completedAt,
-      required this.rewardClaimed});
+      required this.rewardClaimed,
+      required this.wasAutoConfirmed});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -13270,6 +13346,7 @@ class DailyMissionsTableData extends DataClass
       map['completed_at'] = Variable<int>(completedAt);
     }
     map['reward_claimed'] = Variable<bool>(rewardClaimed);
+    map['was_auto_confirmed'] = Variable<bool>(wasAutoConfirmed);
     return map;
   }
 
@@ -13292,6 +13369,7 @@ class DailyMissionsTableData extends DataClass
           ? const Value.absent()
           : Value(completedAt),
       rewardClaimed: Value(rewardClaimed),
+      wasAutoConfirmed: Value(wasAutoConfirmed),
     );
   }
 
@@ -13312,6 +13390,7 @@ class DailyMissionsTableData extends DataClass
       createdAt: serializer.fromJson<int>(json['createdAt']),
       completedAt: serializer.fromJson<int?>(json['completedAt']),
       rewardClaimed: serializer.fromJson<bool>(json['rewardClaimed']),
+      wasAutoConfirmed: serializer.fromJson<bool>(json['wasAutoConfirmed']),
     );
   }
   @override
@@ -13331,6 +13410,7 @@ class DailyMissionsTableData extends DataClass
       'createdAt': serializer.toJson<int>(createdAt),
       'completedAt': serializer.toJson<int?>(completedAt),
       'rewardClaimed': serializer.toJson<bool>(rewardClaimed),
+      'wasAutoConfirmed': serializer.toJson<bool>(wasAutoConfirmed),
     };
   }
 
@@ -13347,7 +13427,8 @@ class DailyMissionsTableData extends DataClass
           String? status,
           int? createdAt,
           Value<int?> completedAt = const Value.absent(),
-          bool? rewardClaimed}) =>
+          bool? rewardClaimed,
+          bool? wasAutoConfirmed}) =>
       DailyMissionsTableData(
         id: id ?? this.id,
         playerId: playerId ?? this.playerId,
@@ -13363,6 +13444,7 @@ class DailyMissionsTableData extends DataClass
         createdAt: createdAt ?? this.createdAt,
         completedAt: completedAt.present ? completedAt.value : this.completedAt,
         rewardClaimed: rewardClaimed ?? this.rewardClaimed,
+        wasAutoConfirmed: wasAutoConfirmed ?? this.wasAutoConfirmed,
       );
   DailyMissionsTableData copyWithCompanion(DailyMissionsTableCompanion data) {
     return DailyMissionsTableData(
@@ -13391,6 +13473,9 @@ class DailyMissionsTableData extends DataClass
       rewardClaimed: data.rewardClaimed.present
           ? data.rewardClaimed.value
           : this.rewardClaimed,
+      wasAutoConfirmed: data.wasAutoConfirmed.present
+          ? data.wasAutoConfirmed.value
+          : this.wasAutoConfirmed,
     );
   }
 
@@ -13409,7 +13494,8 @@ class DailyMissionsTableData extends DataClass
           ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
           ..write('completedAt: $completedAt, ')
-          ..write('rewardClaimed: $rewardClaimed')
+          ..write('rewardClaimed: $rewardClaimed, ')
+          ..write('wasAutoConfirmed: $wasAutoConfirmed')
           ..write(')'))
         .toString();
   }
@@ -13428,7 +13514,8 @@ class DailyMissionsTableData extends DataClass
       status,
       createdAt,
       completedAt,
-      rewardClaimed);
+      rewardClaimed,
+      wasAutoConfirmed);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -13445,7 +13532,8 @@ class DailyMissionsTableData extends DataClass
           other.status == this.status &&
           other.createdAt == this.createdAt &&
           other.completedAt == this.completedAt &&
-          other.rewardClaimed == this.rewardClaimed);
+          other.rewardClaimed == this.rewardClaimed &&
+          other.wasAutoConfirmed == this.wasAutoConfirmed);
 }
 
 class DailyMissionsTableCompanion
@@ -13463,6 +13551,7 @@ class DailyMissionsTableCompanion
   final Value<int> createdAt;
   final Value<int?> completedAt;
   final Value<bool> rewardClaimed;
+  final Value<bool> wasAutoConfirmed;
   const DailyMissionsTableCompanion({
     this.id = const Value.absent(),
     this.playerId = const Value.absent(),
@@ -13477,6 +13566,7 @@ class DailyMissionsTableCompanion
     this.createdAt = const Value.absent(),
     this.completedAt = const Value.absent(),
     this.rewardClaimed = const Value.absent(),
+    this.wasAutoConfirmed = const Value.absent(),
   });
   DailyMissionsTableCompanion.insert({
     this.id = const Value.absent(),
@@ -13492,6 +13582,7 @@ class DailyMissionsTableCompanion
     required int createdAt,
     this.completedAt = const Value.absent(),
     this.rewardClaimed = const Value.absent(),
+    this.wasAutoConfirmed = const Value.absent(),
   })  : playerId = Value(playerId),
         data = Value(data),
         modalidade = Value(modalidade),
@@ -13514,6 +13605,7 @@ class DailyMissionsTableCompanion
     Expression<int>? createdAt,
     Expression<int>? completedAt,
     Expression<bool>? rewardClaimed,
+    Expression<bool>? wasAutoConfirmed,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -13529,6 +13621,7 @@ class DailyMissionsTableCompanion
       if (createdAt != null) 'created_at': createdAt,
       if (completedAt != null) 'completed_at': completedAt,
       if (rewardClaimed != null) 'reward_claimed': rewardClaimed,
+      if (wasAutoConfirmed != null) 'was_auto_confirmed': wasAutoConfirmed,
     });
   }
 
@@ -13545,7 +13638,8 @@ class DailyMissionsTableCompanion
       Value<String>? status,
       Value<int>? createdAt,
       Value<int?>? completedAt,
-      Value<bool>? rewardClaimed}) {
+      Value<bool>? rewardClaimed,
+      Value<bool>? wasAutoConfirmed}) {
     return DailyMissionsTableCompanion(
       id: id ?? this.id,
       playerId: playerId ?? this.playerId,
@@ -13560,6 +13654,7 @@ class DailyMissionsTableCompanion
       createdAt: createdAt ?? this.createdAt,
       completedAt: completedAt ?? this.completedAt,
       rewardClaimed: rewardClaimed ?? this.rewardClaimed,
+      wasAutoConfirmed: wasAutoConfirmed ?? this.wasAutoConfirmed,
     );
   }
 
@@ -13605,6 +13700,9 @@ class DailyMissionsTableCompanion
     if (rewardClaimed.present) {
       map['reward_claimed'] = Variable<bool>(rewardClaimed.value);
     }
+    if (wasAutoConfirmed.present) {
+      map['was_auto_confirmed'] = Variable<bool>(wasAutoConfirmed.value);
+    }
     return map;
   }
 
@@ -13623,7 +13721,8 @@ class DailyMissionsTableCompanion
           ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
           ..write('completedAt: $completedAt, ')
-          ..write('rewardClaimed: $rewardClaimed')
+          ..write('rewardClaimed: $rewardClaimed, ')
+          ..write('wasAutoConfirmed: $wasAutoConfirmed')
           ..write(')'))
         .toString();
   }
@@ -13825,6 +13924,23 @@ class $PlayerDailyMissionStatsTableTable extends PlayerDailyMissionStatsTable
           type: DriftSqlType.int,
           requiredDuringInsert: false,
           defaultValue: const Constant(0));
+  static const VerificationMeta _totalAutoConfirmCompletionsMeta =
+      const VerificationMeta('totalAutoConfirmCompletions');
+  @override
+  late final GeneratedColumn<int> totalAutoConfirmCompletions =
+      GeneratedColumn<int>('total_auto_confirm_completions', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0));
+  static const VerificationMeta _totalZeroProgressManualConfirmsMeta =
+      const VerificationMeta('totalZeroProgressManualConfirms');
+  @override
+  late final GeneratedColumn<int> totalZeroProgressManualConfirms =
+      GeneratedColumn<int>(
+          'total_zero_progress_manual_confirms', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0));
   static const VerificationMeta _firstCompletedAtMeta =
       const VerificationMeta('firstCompletedAt');
   @override
@@ -13881,6 +13997,8 @@ class $PlayerDailyMissionStatsTableTable extends PlayerDailyMissionStatsTable
         totalZeroProgressConfirms,
         totalDaysAllPilars,
         totalSpeedrunCompletions,
+        totalAutoConfirmCompletions,
+        totalZeroProgressManualConfirms,
         firstCompletedAt,
         lastCompletedAt,
         lastPilarBalanceDay,
@@ -14047,6 +14165,20 @@ class $PlayerDailyMissionStatsTableTable extends PlayerDailyMissionStatsTable
               data['total_speedrun_completions']!,
               _totalSpeedrunCompletionsMeta));
     }
+    if (data.containsKey('total_auto_confirm_completions')) {
+      context.handle(
+          _totalAutoConfirmCompletionsMeta,
+          totalAutoConfirmCompletions.isAcceptableOrUnknown(
+              data['total_auto_confirm_completions']!,
+              _totalAutoConfirmCompletionsMeta));
+    }
+    if (data.containsKey('total_zero_progress_manual_confirms')) {
+      context.handle(
+          _totalZeroProgressManualConfirmsMeta,
+          totalZeroProgressManualConfirms.isAcceptableOrUnknown(
+              data['total_zero_progress_manual_confirms']!,
+              _totalZeroProgressManualConfirmsMeta));
+    }
     if (data.containsKey('first_completed_at')) {
       context.handle(
           _firstCompletedAtMeta,
@@ -14144,6 +14276,12 @@ class $PlayerDailyMissionStatsTableTable extends PlayerDailyMissionStatsTable
       totalSpeedrunCompletions: attachedDatabase.typeMapping.read(
           DriftSqlType.int,
           data['${effectivePrefix}total_speedrun_completions'])!,
+      totalAutoConfirmCompletions: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}total_auto_confirm_completions'])!,
+      totalZeroProgressManualConfirms: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}total_zero_progress_manual_confirms'])!,
       firstCompletedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}first_completed_at']),
       lastCompletedAt: attachedDatabase.typeMapping
@@ -14187,9 +14325,26 @@ class PlayerDailyMissionStat extends DataClass
   final int totalConfirmedAfter10PM;
   final int totalConfirmedOnWeekend;
   final int daysOfWeekCompletedBitmask;
+
+  /// Conta confirmações com `avgFactor < 0.05` em **qualquer modo**
+  /// (manual OU auto). Métrica geral de "confirmações sem progresso".
+  /// **Não usar pra triggers anti-cheese** — usar
+  /// [totalZeroProgressManualConfirms] em vez (Sprint 3.3 Etapa 2.1c-β).
   final int totalZeroProgressConfirms;
   final int totalDaysAllPilars;
   final int totalSpeedrunCompletions;
+
+  /// Conta confirmações pelo `applyAutoCompleted` (rollover + toggle
+  /// ativo + 100% em todas as subs). Manual confirms NÃO contam.
+  /// Alimenta trigger `daily_auto_confirm_count`.
+  final int totalAutoConfirmCompletions;
+
+  /// Conta confirmações com `avgFactor < 0.05` **somente quando manual**
+  /// (`wasAutoConfirmed=false`). Anti-cheese pra conquistas tipo "O Olho
+  /// que Não Pisca" — auto-confirm com zero progress não conta porque
+  /// não envolve ato consciente do jogador.
+  /// Alimenta trigger `daily_zero_progress_manual_count`.
+  final int totalZeroProgressManualConfirms;
   final int? firstCompletedAt;
   final int? lastCompletedAt;
 
@@ -14226,6 +14381,8 @@ class PlayerDailyMissionStat extends DataClass
       required this.totalZeroProgressConfirms,
       required this.totalDaysAllPilars,
       required this.totalSpeedrunCompletions,
+      required this.totalAutoConfirmCompletions,
+      required this.totalZeroProgressManualConfirms,
       this.firstCompletedAt,
       this.lastCompletedAt,
       this.lastPilarBalanceDay,
@@ -14261,6 +14418,10 @@ class PlayerDailyMissionStat extends DataClass
         Variable<int>(totalZeroProgressConfirms);
     map['total_days_all_pilars'] = Variable<int>(totalDaysAllPilars);
     map['total_speedrun_completions'] = Variable<int>(totalSpeedrunCompletions);
+    map['total_auto_confirm_completions'] =
+        Variable<int>(totalAutoConfirmCompletions);
+    map['total_zero_progress_manual_confirms'] =
+        Variable<int>(totalZeroProgressManualConfirms);
     if (!nullToAbsent || firstCompletedAt != null) {
       map['first_completed_at'] = Variable<int>(firstCompletedAt);
     }
@@ -14303,6 +14464,8 @@ class PlayerDailyMissionStat extends DataClass
       totalZeroProgressConfirms: Value(totalZeroProgressConfirms),
       totalDaysAllPilars: Value(totalDaysAllPilars),
       totalSpeedrunCompletions: Value(totalSpeedrunCompletions),
+      totalAutoConfirmCompletions: Value(totalAutoConfirmCompletions),
+      totalZeroProgressManualConfirms: Value(totalZeroProgressManualConfirms),
       firstCompletedAt: firstCompletedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(firstCompletedAt),
@@ -14360,6 +14523,10 @@ class PlayerDailyMissionStat extends DataClass
       totalDaysAllPilars: serializer.fromJson<int>(json['totalDaysAllPilars']),
       totalSpeedrunCompletions:
           serializer.fromJson<int>(json['totalSpeedrunCompletions']),
+      totalAutoConfirmCompletions:
+          serializer.fromJson<int>(json['totalAutoConfirmCompletions']),
+      totalZeroProgressManualConfirms:
+          serializer.fromJson<int>(json['totalZeroProgressManualConfirms']),
       firstCompletedAt: serializer.fromJson<int?>(json['firstCompletedAt']),
       lastCompletedAt: serializer.fromJson<int?>(json['lastCompletedAt']),
       lastPilarBalanceDay:
@@ -14403,6 +14570,10 @@ class PlayerDailyMissionStat extends DataClass
       'totalDaysAllPilars': serializer.toJson<int>(totalDaysAllPilars),
       'totalSpeedrunCompletions':
           serializer.toJson<int>(totalSpeedrunCompletions),
+      'totalAutoConfirmCompletions':
+          serializer.toJson<int>(totalAutoConfirmCompletions),
+      'totalZeroProgressManualConfirms':
+          serializer.toJson<int>(totalZeroProgressManualConfirms),
       'firstCompletedAt': serializer.toJson<int?>(firstCompletedAt),
       'lastCompletedAt': serializer.toJson<int?>(lastCompletedAt),
       'lastPilarBalanceDay': serializer.toJson<String?>(lastPilarBalanceDay),
@@ -14436,6 +14607,8 @@ class PlayerDailyMissionStat extends DataClass
           int? totalZeroProgressConfirms,
           int? totalDaysAllPilars,
           int? totalSpeedrunCompletions,
+          int? totalAutoConfirmCompletions,
+          int? totalZeroProgressManualConfirms,
           Value<int?> firstCompletedAt = const Value.absent(),
           Value<int?> lastCompletedAt = const Value.absent(),
           Value<String?> lastPilarBalanceDay = const Value.absent(),
@@ -14478,6 +14651,10 @@ class PlayerDailyMissionStat extends DataClass
         totalDaysAllPilars: totalDaysAllPilars ?? this.totalDaysAllPilars,
         totalSpeedrunCompletions:
             totalSpeedrunCompletions ?? this.totalSpeedrunCompletions,
+        totalAutoConfirmCompletions:
+            totalAutoConfirmCompletions ?? this.totalAutoConfirmCompletions,
+        totalZeroProgressManualConfirms: totalZeroProgressManualConfirms ??
+            this.totalZeroProgressManualConfirms,
         firstCompletedAt: firstCompletedAt.present
             ? firstCompletedAt.value
             : this.firstCompletedAt,
@@ -14562,6 +14739,13 @@ class PlayerDailyMissionStat extends DataClass
       totalSpeedrunCompletions: data.totalSpeedrunCompletions.present
           ? data.totalSpeedrunCompletions.value
           : this.totalSpeedrunCompletions,
+      totalAutoConfirmCompletions: data.totalAutoConfirmCompletions.present
+          ? data.totalAutoConfirmCompletions.value
+          : this.totalAutoConfirmCompletions,
+      totalZeroProgressManualConfirms:
+          data.totalZeroProgressManualConfirms.present
+              ? data.totalZeroProgressManualConfirms.value
+              : this.totalZeroProgressManualConfirms,
       firstCompletedAt: data.firstCompletedAt.present
           ? data.firstCompletedAt.value
           : this.firstCompletedAt,
@@ -14605,6 +14789,9 @@ class PlayerDailyMissionStat extends DataClass
           ..write('totalZeroProgressConfirms: $totalZeroProgressConfirms, ')
           ..write('totalDaysAllPilars: $totalDaysAllPilars, ')
           ..write('totalSpeedrunCompletions: $totalSpeedrunCompletions, ')
+          ..write('totalAutoConfirmCompletions: $totalAutoConfirmCompletions, ')
+          ..write(
+              'totalZeroProgressManualConfirms: $totalZeroProgressManualConfirms, ')
           ..write('firstCompletedAt: $firstCompletedAt, ')
           ..write('lastCompletedAt: $lastCompletedAt, ')
           ..write('lastPilarBalanceDay: $lastPilarBalanceDay, ')
@@ -14640,6 +14827,8 @@ class PlayerDailyMissionStat extends DataClass
         totalZeroProgressConfirms,
         totalDaysAllPilars,
         totalSpeedrunCompletions,
+        totalAutoConfirmCompletions,
+        totalZeroProgressManualConfirms,
         firstCompletedAt,
         lastCompletedAt,
         lastPilarBalanceDay,
@@ -14674,6 +14863,10 @@ class PlayerDailyMissionStat extends DataClass
           other.totalZeroProgressConfirms == this.totalZeroProgressConfirms &&
           other.totalDaysAllPilars == this.totalDaysAllPilars &&
           other.totalSpeedrunCompletions == this.totalSpeedrunCompletions &&
+          other.totalAutoConfirmCompletions ==
+              this.totalAutoConfirmCompletions &&
+          other.totalZeroProgressManualConfirms ==
+              this.totalZeroProgressManualConfirms &&
           other.firstCompletedAt == this.firstCompletedAt &&
           other.lastCompletedAt == this.lastCompletedAt &&
           other.lastPilarBalanceDay == this.lastPilarBalanceDay &&
@@ -14707,6 +14900,8 @@ class PlayerDailyMissionStatsTableCompanion
   final Value<int> totalZeroProgressConfirms;
   final Value<int> totalDaysAllPilars;
   final Value<int> totalSpeedrunCompletions;
+  final Value<int> totalAutoConfirmCompletions;
+  final Value<int> totalZeroProgressManualConfirms;
   final Value<int?> firstCompletedAt;
   final Value<int?> lastCompletedAt;
   final Value<String?> lastPilarBalanceDay;
@@ -14737,6 +14932,8 @@ class PlayerDailyMissionStatsTableCompanion
     this.totalZeroProgressConfirms = const Value.absent(),
     this.totalDaysAllPilars = const Value.absent(),
     this.totalSpeedrunCompletions = const Value.absent(),
+    this.totalAutoConfirmCompletions = const Value.absent(),
+    this.totalZeroProgressManualConfirms = const Value.absent(),
     this.firstCompletedAt = const Value.absent(),
     this.lastCompletedAt = const Value.absent(),
     this.lastPilarBalanceDay = const Value.absent(),
@@ -14768,6 +14965,8 @@ class PlayerDailyMissionStatsTableCompanion
     this.totalZeroProgressConfirms = const Value.absent(),
     this.totalDaysAllPilars = const Value.absent(),
     this.totalSpeedrunCompletions = const Value.absent(),
+    this.totalAutoConfirmCompletions = const Value.absent(),
+    this.totalZeroProgressManualConfirms = const Value.absent(),
     this.firstCompletedAt = const Value.absent(),
     this.lastCompletedAt = const Value.absent(),
     this.lastPilarBalanceDay = const Value.absent(),
@@ -14799,6 +14998,8 @@ class PlayerDailyMissionStatsTableCompanion
     Expression<int>? totalZeroProgressConfirms,
     Expression<int>? totalDaysAllPilars,
     Expression<int>? totalSpeedrunCompletions,
+    Expression<int>? totalAutoConfirmCompletions,
+    Expression<int>? totalZeroProgressManualConfirms,
     Expression<int>? firstCompletedAt,
     Expression<int>? lastCompletedAt,
     Expression<String>? lastPilarBalanceDay,
@@ -14845,6 +15046,10 @@ class PlayerDailyMissionStatsTableCompanion
         'total_days_all_pilars': totalDaysAllPilars,
       if (totalSpeedrunCompletions != null)
         'total_speedrun_completions': totalSpeedrunCompletions,
+      if (totalAutoConfirmCompletions != null)
+        'total_auto_confirm_completions': totalAutoConfirmCompletions,
+      if (totalZeroProgressManualConfirms != null)
+        'total_zero_progress_manual_confirms': totalZeroProgressManualConfirms,
       if (firstCompletedAt != null) 'first_completed_at': firstCompletedAt,
       if (lastCompletedAt != null) 'last_completed_at': lastCompletedAt,
       if (lastPilarBalanceDay != null)
@@ -14879,6 +15084,8 @@ class PlayerDailyMissionStatsTableCompanion
       Value<int>? totalZeroProgressConfirms,
       Value<int>? totalDaysAllPilars,
       Value<int>? totalSpeedrunCompletions,
+      Value<int>? totalAutoConfirmCompletions,
+      Value<int>? totalZeroProgressManualConfirms,
       Value<int?>? firstCompletedAt,
       Value<int?>? lastCompletedAt,
       Value<String?>? lastPilarBalanceDay,
@@ -14921,6 +15128,10 @@ class PlayerDailyMissionStatsTableCompanion
       totalDaysAllPilars: totalDaysAllPilars ?? this.totalDaysAllPilars,
       totalSpeedrunCompletions:
           totalSpeedrunCompletions ?? this.totalSpeedrunCompletions,
+      totalAutoConfirmCompletions:
+          totalAutoConfirmCompletions ?? this.totalAutoConfirmCompletions,
+      totalZeroProgressManualConfirms: totalZeroProgressManualConfirms ??
+          this.totalZeroProgressManualConfirms,
       firstCompletedAt: firstCompletedAt ?? this.firstCompletedAt,
       lastCompletedAt: lastCompletedAt ?? this.lastCompletedAt,
       lastPilarBalanceDay: lastPilarBalanceDay ?? this.lastPilarBalanceDay,
@@ -15016,6 +15227,14 @@ class PlayerDailyMissionStatsTableCompanion
       map['total_speedrun_completions'] =
           Variable<int>(totalSpeedrunCompletions.value);
     }
+    if (totalAutoConfirmCompletions.present) {
+      map['total_auto_confirm_completions'] =
+          Variable<int>(totalAutoConfirmCompletions.value);
+    }
+    if (totalZeroProgressManualConfirms.present) {
+      map['total_zero_progress_manual_confirms'] =
+          Variable<int>(totalZeroProgressManualConfirms.value);
+    }
     if (firstCompletedAt.present) {
       map['first_completed_at'] = Variable<int>(firstCompletedAt.value);
     }
@@ -15062,6 +15281,9 @@ class PlayerDailyMissionStatsTableCompanion
           ..write('totalZeroProgressConfirms: $totalZeroProgressConfirms, ')
           ..write('totalDaysAllPilars: $totalDaysAllPilars, ')
           ..write('totalSpeedrunCompletions: $totalSpeedrunCompletions, ')
+          ..write('totalAutoConfirmCompletions: $totalAutoConfirmCompletions, ')
+          ..write(
+              'totalZeroProgressManualConfirms: $totalZeroProgressManualConfirms, ')
           ..write('firstCompletedAt: $firstCompletedAt, ')
           ..write('lastCompletedAt: $lastCompletedAt, ')
           ..write('lastPilarBalanceDay: $lastPilarBalanceDay, ')
@@ -15510,6 +15732,7 @@ typedef $$PlayersTableTableCreateCompanionBuilder = PlayersTableCompanion
   Value<int> totalGemsSpent,
   Value<int> peakLevel,
   Value<int> totalAttributePointsSpent,
+  Value<bool> autoConfirmEnabled,
 });
 typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
     Function({
@@ -15559,6 +15782,7 @@ typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
   Value<int> totalGemsSpent,
   Value<int> peakLevel,
   Value<int> totalAttributePointsSpent,
+  Value<bool> autoConfirmEnabled,
 });
 
 class $$PlayersTableTableFilterComposer
@@ -15718,6 +15942,10 @@ class $$PlayersTableTableFilterComposer
 
   ColumnFilters<int> get totalAttributePointsSpent => $composableBuilder(
       column: $table.totalAttributePointsSpent,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get autoConfirmEnabled => $composableBuilder(
+      column: $table.autoConfirmEnabled,
       builder: (column) => ColumnFilters(column));
 }
 
@@ -15884,6 +16112,10 @@ class $$PlayersTableTableOrderingComposer
   ColumnOrderings<int> get totalAttributePointsSpent => $composableBuilder(
       column: $table.totalAttributePointsSpent,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get autoConfirmEnabled => $composableBuilder(
+      column: $table.autoConfirmEnabled,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$PlayersTableTableAnnotationComposer
@@ -16032,6 +16264,9 @@ class $$PlayersTableTableAnnotationComposer
 
   GeneratedColumn<int> get totalAttributePointsSpent => $composableBuilder(
       column: $table.totalAttributePointsSpent, builder: (column) => column);
+
+  GeneratedColumn<bool> get autoConfirmEnabled => $composableBuilder(
+      column: $table.autoConfirmEnabled, builder: (column) => column);
 }
 
 class $$PlayersTableTableTableManager extends RootTableManager<
@@ -16106,6 +16341,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> totalGemsSpent = const Value.absent(),
             Value<int> peakLevel = const Value.absent(),
             Value<int> totalAttributePointsSpent = const Value.absent(),
+            Value<bool> autoConfirmEnabled = const Value.absent(),
           }) =>
               PlayersTableCompanion(
             id: id,
@@ -16154,6 +16390,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             totalGemsSpent: totalGemsSpent,
             peakLevel: peakLevel,
             totalAttributePointsSpent: totalAttributePointsSpent,
+            autoConfirmEnabled: autoConfirmEnabled,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -16202,6 +16439,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> totalGemsSpent = const Value.absent(),
             Value<int> peakLevel = const Value.absent(),
             Value<int> totalAttributePointsSpent = const Value.absent(),
+            Value<bool> autoConfirmEnabled = const Value.absent(),
           }) =>
               PlayersTableCompanion.insert(
             id: id,
@@ -16250,6 +16488,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             totalGemsSpent: totalGemsSpent,
             peakLevel: peakLevel,
             totalAttributePointsSpent: totalAttributePointsSpent,
+            autoConfirmEnabled: autoConfirmEnabled,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -21647,6 +21886,7 @@ typedef $$DailyMissionsTableTableCreateCompanionBuilder
   required int createdAt,
   Value<int?> completedAt,
   Value<bool> rewardClaimed,
+  Value<bool> wasAutoConfirmed,
 });
 typedef $$DailyMissionsTableTableUpdateCompanionBuilder
     = DailyMissionsTableCompanion Function({
@@ -21663,6 +21903,7 @@ typedef $$DailyMissionsTableTableUpdateCompanionBuilder
   Value<int> createdAt,
   Value<int?> completedAt,
   Value<bool> rewardClaimed,
+  Value<bool> wasAutoConfirmed,
 });
 
 class $$DailyMissionsTableTableFilterComposer
@@ -21715,6 +21956,10 @@ class $$DailyMissionsTableTableFilterComposer
 
   ColumnFilters<bool> get rewardClaimed => $composableBuilder(
       column: $table.rewardClaimed, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get wasAutoConfirmed => $composableBuilder(
+      column: $table.wasAutoConfirmed,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$DailyMissionsTableTableOrderingComposer
@@ -21769,6 +22014,10 @@ class $$DailyMissionsTableTableOrderingComposer
   ColumnOrderings<bool> get rewardClaimed => $composableBuilder(
       column: $table.rewardClaimed,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get wasAutoConfirmed => $composableBuilder(
+      column: $table.wasAutoConfirmed,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$DailyMissionsTableTableAnnotationComposer
@@ -21818,6 +22067,9 @@ class $$DailyMissionsTableTableAnnotationComposer
 
   GeneratedColumn<bool> get rewardClaimed => $composableBuilder(
       column: $table.rewardClaimed, builder: (column) => column);
+
+  GeneratedColumn<bool> get wasAutoConfirmed => $composableBuilder(
+      column: $table.wasAutoConfirmed, builder: (column) => column);
 }
 
 class $$DailyMissionsTableTableTableManager extends RootTableManager<
@@ -21862,6 +22114,7 @@ class $$DailyMissionsTableTableTableManager extends RootTableManager<
             Value<int> createdAt = const Value.absent(),
             Value<int?> completedAt = const Value.absent(),
             Value<bool> rewardClaimed = const Value.absent(),
+            Value<bool> wasAutoConfirmed = const Value.absent(),
           }) =>
               DailyMissionsTableCompanion(
             id: id,
@@ -21877,6 +22130,7 @@ class $$DailyMissionsTableTableTableManager extends RootTableManager<
             createdAt: createdAt,
             completedAt: completedAt,
             rewardClaimed: rewardClaimed,
+            wasAutoConfirmed: wasAutoConfirmed,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -21892,6 +22146,7 @@ class $$DailyMissionsTableTableTableManager extends RootTableManager<
             required int createdAt,
             Value<int?> completedAt = const Value.absent(),
             Value<bool> rewardClaimed = const Value.absent(),
+            Value<bool> wasAutoConfirmed = const Value.absent(),
           }) =>
               DailyMissionsTableCompanion.insert(
             id: id,
@@ -21907,6 +22162,7 @@ class $$DailyMissionsTableTableTableManager extends RootTableManager<
             createdAt: createdAt,
             completedAt: completedAt,
             rewardClaimed: rewardClaimed,
+            wasAutoConfirmed: wasAutoConfirmed,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -21957,6 +22213,8 @@ typedef $$PlayerDailyMissionStatsTableTableCreateCompanionBuilder
   Value<int> totalZeroProgressConfirms,
   Value<int> totalDaysAllPilars,
   Value<int> totalSpeedrunCompletions,
+  Value<int> totalAutoConfirmCompletions,
+  Value<int> totalZeroProgressManualConfirms,
   Value<int?> firstCompletedAt,
   Value<int?> lastCompletedAt,
   Value<String?> lastPilarBalanceDay,
@@ -21989,6 +22247,8 @@ typedef $$PlayerDailyMissionStatsTableTableUpdateCompanionBuilder
   Value<int> totalZeroProgressConfirms,
   Value<int> totalDaysAllPilars,
   Value<int> totalSpeedrunCompletions,
+  Value<int> totalAutoConfirmCompletions,
+  Value<int> totalZeroProgressManualConfirms,
   Value<int?> firstCompletedAt,
   Value<int?> lastCompletedAt,
   Value<String?> lastPilarBalanceDay,
@@ -22094,6 +22354,14 @@ class $$PlayerDailyMissionStatsTableTableFilterComposer
 
   ColumnFilters<int> get totalSpeedrunCompletions => $composableBuilder(
       column: $table.totalSpeedrunCompletions,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalAutoConfirmCompletions => $composableBuilder(
+      column: $table.totalAutoConfirmCompletions,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalZeroProgressManualConfirms => $composableBuilder(
+      column: $table.totalZeroProgressManualConfirms,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get firstCompletedAt => $composableBuilder(
@@ -22217,6 +22485,15 @@ class $$PlayerDailyMissionStatsTableTableOrderingComposer
       column: $table.totalSpeedrunCompletions,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get totalAutoConfirmCompletions => $composableBuilder(
+      column: $table.totalAutoConfirmCompletions,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalZeroProgressManualConfirms =>
+      $composableBuilder(
+          column: $table.totalZeroProgressManualConfirms,
+          builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get firstCompletedAt => $composableBuilder(
       column: $table.firstCompletedAt,
       builder: (column) => ColumnOrderings(column));
@@ -22318,6 +22595,14 @@ class $$PlayerDailyMissionStatsTableTableAnnotationComposer
   GeneratedColumn<int> get totalSpeedrunCompletions => $composableBuilder(
       column: $table.totalSpeedrunCompletions, builder: (column) => column);
 
+  GeneratedColumn<int> get totalAutoConfirmCompletions => $composableBuilder(
+      column: $table.totalAutoConfirmCompletions, builder: (column) => column);
+
+  GeneratedColumn<int> get totalZeroProgressManualConfirms =>
+      $composableBuilder(
+          column: $table.totalZeroProgressManualConfirms,
+          builder: (column) => column);
+
   GeneratedColumn<int> get firstCompletedAt => $composableBuilder(
       column: $table.firstCompletedAt, builder: (column) => column);
 
@@ -22389,6 +22674,8 @@ class $$PlayerDailyMissionStatsTableTableTableManager extends RootTableManager<
             Value<int> totalZeroProgressConfirms = const Value.absent(),
             Value<int> totalDaysAllPilars = const Value.absent(),
             Value<int> totalSpeedrunCompletions = const Value.absent(),
+            Value<int> totalAutoConfirmCompletions = const Value.absent(),
+            Value<int> totalZeroProgressManualConfirms = const Value.absent(),
             Value<int?> firstCompletedAt = const Value.absent(),
             Value<int?> lastCompletedAt = const Value.absent(),
             Value<String?> lastPilarBalanceDay = const Value.absent(),
@@ -22420,6 +22707,8 @@ class $$PlayerDailyMissionStatsTableTableTableManager extends RootTableManager<
             totalZeroProgressConfirms: totalZeroProgressConfirms,
             totalDaysAllPilars: totalDaysAllPilars,
             totalSpeedrunCompletions: totalSpeedrunCompletions,
+            totalAutoConfirmCompletions: totalAutoConfirmCompletions,
+            totalZeroProgressManualConfirms: totalZeroProgressManualConfirms,
             firstCompletedAt: firstCompletedAt,
             lastCompletedAt: lastCompletedAt,
             lastPilarBalanceDay: lastPilarBalanceDay,
@@ -22451,6 +22740,8 @@ class $$PlayerDailyMissionStatsTableTableTableManager extends RootTableManager<
             Value<int> totalZeroProgressConfirms = const Value.absent(),
             Value<int> totalDaysAllPilars = const Value.absent(),
             Value<int> totalSpeedrunCompletions = const Value.absent(),
+            Value<int> totalAutoConfirmCompletions = const Value.absent(),
+            Value<int> totalZeroProgressManualConfirms = const Value.absent(),
             Value<int?> firstCompletedAt = const Value.absent(),
             Value<int?> lastCompletedAt = const Value.absent(),
             Value<String?> lastPilarBalanceDay = const Value.absent(),
@@ -22482,6 +22773,8 @@ class $$PlayerDailyMissionStatsTableTableTableManager extends RootTableManager<
             totalZeroProgressConfirms: totalZeroProgressConfirms,
             totalDaysAllPilars: totalDaysAllPilars,
             totalSpeedrunCompletions: totalSpeedrunCompletions,
+            totalAutoConfirmCompletions: totalAutoConfirmCompletions,
+            totalZeroProgressManualConfirms: totalZeroProgressManualConfirms,
             firstCompletedAt: firstCompletedAt,
             lastCompletedAt: lastCompletedAt,
             lastPilarBalanceDay: lastPilarBalanceDay,

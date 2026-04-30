@@ -149,6 +149,10 @@ class DailyMissionStatsService {
         isWeekend: isWeekend(confirmedAt),
         isSpeedrun: isSpeedrun,
         zeroProgress: perf.zeroProgress,
+        // Sprint 3.3 Etapa 2.1c-β — propagado do evento. Auto-confirm
+        // bumpa total_auto_confirm_completions; manual+zero bumpa
+        // total_zero_progress_manual_confirms (anti-cheese).
+        wasAutoConfirmed: evt.wasAutoConfirmed,
       );
 
       // Volume — soma após increments principais.

@@ -394,6 +394,65 @@ class DailyMissionProgressService {
     if (levelUp != null) _bus.publish(levelUp);
   }
 
+  /// Sprint 3.3 Etapa 2.1c-β — fecha missão como `completed` com flag
+  /// `was_auto_confirmed=true`, sem exigir clique manual no ✓.
+  ///
+  /// Chamado pelo `DailyMissionRolloverService` quando detecta:
+  ///   1. `players.auto_confirm_enabled = true`
+  ///   2. `mission.allSubsAtTarget == true` (todas as 3 subs em 100%+)
+  ///
+  /// Espelho de [applyPartialReward] mas com status `completed`. Reward
+  /// calc inclui streak bonus (×1.5 se `dailyMissionsStreak >= 10`) —
+  /// auto-confirm CONTA pra streak (decisão consciente: jogador
+  /// completou 100% das sub-tarefas; clicar ✓ é só burocracia).
+  ///
+  /// Idempotente: noop se `mission.rewardClaimed == true`.
+  Future<void> applyAutoCompleted({required DailyMission mission}) async {
+    if (mission.rewardClaimed) return;
+    final player = await _playerDao.findById(mission.playerId);
+    if (player == null) return;
+
+    final reward = computeReward(
+      rank: _normalizeRank(player.guildRank),
+      mission: mission,
+      status: DailyMissionStatus.completed,
+      dailyMissionsStreak: player.dailyMissionsStreak,
+    );
+
+    LevelUp? levelUp;
+    if (reward.xp > 0) {
+      levelUp = await _playerDao.addXp(mission.playerId, reward.xp);
+    }
+    if (reward.gold > 0) {
+      await _db.customUpdate(
+        'UPDATE players SET gold = gold + ? WHERE id = ?',
+        variables: [
+          Variable.withInt(reward.gold),
+          Variable.withInt(mission.playerId),
+        ],
+        updates: {_db.playersTable},
+      );
+    }
+
+    final updated = mission.copyWith(
+      status: DailyMissionStatus.completed,
+      completedAt: DateTime.now(),
+      rewardClaimed: true,
+      wasAutoConfirmed: true,
+    );
+    await _missionsDao.updateMission(updated);
+
+    _bus.publish(DailyMissionCompleted(
+      playerId: mission.playerId,
+      missionId: mission.id,
+      modalidade: mission.modalidade,
+      fullCompleted: true,
+      partial: false,
+      wasAutoConfirmed: true,
+    ));
+    if (levelUp != null) _bus.publish(levelUp);
+  }
+
   String _normalizeRank(String raw) {
     if (raw == 'none' || raw.isEmpty) return 'E';
     return raw.toUpperCase();

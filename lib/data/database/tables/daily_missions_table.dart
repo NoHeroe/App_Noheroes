@@ -32,4 +32,16 @@ class DailyMissionsTable extends Table {
   IntColumn get createdAt => integer()();
   IntColumn get completedAt => integer().nullable()();
   BoolColumn get rewardClaimed => boolean().withDefault(const Constant(false))();
+
+  /// Sprint 3.3 Etapa 2.1c-β — flag setada quando o rollover detecta
+  /// `players.auto_confirm_enabled=true` E todas as sub-tarefas em 100%
+  /// → `applyAutoCompleted` marca missão como `completed` sem exigir
+  /// clique manual. Propagado via `DailyMissionCompleted.wasAutoConfirmed`
+  /// pro listener de stats (alimenta trigger `daily_auto_confirm_count`
+  /// + anti-cheese de `total_zero_progress_manual_confirms`).
+  ///
+  /// Default false. Confirmações manuais via `confirmCompletion` mantêm
+  /// false. Migrações 27→30 deixaram coluna ausente → schema 31 adiciona.
+  BoolColumn get wasAutoConfirmed =>
+      boolean().withDefault(const Constant(false))();
 }

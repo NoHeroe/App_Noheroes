@@ -9,6 +9,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/guild_rank.dart';
 import '../../../core/widgets/animated_bg.dart';
 import '../../../data/database/app_database.dart';
+import '../../../data/database/daos/player_dao.dart';
 import '../../../domain/services/body_metrics_service.dart';
 import '../../shared/widgets/player_stats_counter.dart';
 
@@ -53,6 +54,8 @@ class ProfileScreen extends ConsumerWidget {
                 _BodyMetricsCard(player: player, service: service),
                 const SizedBox(height: 16),
                 _RecommendationsCard(player: player, service: service),
+                const SizedBox(height: 16),
+                _PreferencesCard(player: player),
               ],
             ),
           ),
@@ -300,6 +303,49 @@ class _RecommendationsCard extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Sprint 3.3 Etapa 2.1c-β — toggle de modo automático de daily missions.
+///
+/// Quando ativo, missões com 100% em todas as sub-tarefas são
+/// auto-completadas no rollover diário (sem exigir clique manual no ✓).
+/// Default: false. Persistência via [PlayerDao.setAutoConfirmEnabled].
+class _PreferencesCard extends ConsumerWidget {
+  final PlayersTableData player;
+  const _PreferencesCard({required this.player});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return _Card(
+      title: 'PREFERÊNCIAS',
+      child: SwitchListTile(
+        key: const ValueKey('profile-toggle-auto-confirm'),
+        contentPadding: EdgeInsets.zero,
+        title: Text(
+          'Modo automático de missões diárias',
+          style: GoogleFonts.roboto(
+              fontSize: 13, color: AppColors.textPrimary),
+        ),
+        subtitle: Text(
+          'Missões com 100% em todas as sub-tarefas serão completadas '
+          'automaticamente no rollover.',
+          style: GoogleFonts.roboto(
+              fontSize: 11, color: AppColors.textMuted, height: 1.4),
+        ),
+        activeColor: AppColors.gold,
+        value: player.autoConfirmEnabled,
+        onChanged: (value) async {
+          final db = ref.read(appDatabaseProvider);
+          await PlayerDao(db).setAutoConfirmEnabled(player.id, value);
+          // Refresca currentPlayerProvider pra UI reagir.
+          final fresh = await PlayerDao(db).findById(player.id);
+          if (fresh != null) {
+            ref.read(currentPlayerProvider.notifier).state = fresh;
+          }
+        },
       ),
     );
   }

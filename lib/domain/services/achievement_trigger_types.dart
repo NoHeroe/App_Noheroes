@@ -54,6 +54,14 @@ abstract class AchievementTriggerTypes {
       'daily_consecutive_days_active';
   static const String dailySpeedrun = 'daily_speedrun';
 
+  /// Sprint 3.3 Etapa 2.1c-β — confirmações via auto-confirm.
+  static const String dailyAutoConfirmCount = 'daily_auto_confirm_count';
+
+  /// Sprint 3.3 Etapa 2.1c-β — anti-cheese. Conta zero-progress
+  /// **só quando manual** (auto-confirm não conta).
+  static const String dailyZeroProgressManualCount =
+      'daily_zero_progress_manual_count';
+
   /// Sprint 3.3 Etapa 2.1c-α — sub-tipos `event_*` resolvidos em
   /// `AchievementsService._validateEventTrigger`.
   static const String eventClassSelected = 'event_class_selected';
@@ -64,8 +72,8 @@ abstract class AchievementTriggerTypes {
       'event_body_metrics_updated';
   static const String eventGemsSpentTotal = 'event_gems_spent_total';
 
-  /// Set imutável dos 15 daily — usado pelo parser pra detectar
-  /// prefixo daily.
+  /// Set imutável dos 17 daily — usado pelo parser pra detectar
+  /// prefixo daily. (Sprint 3.3 Etapa 2.1c-β: +2 sub-types.)
   static const Set<String> allDaily = {
     dailyMissionCount,
     dailyMissionFailedCount,
@@ -82,6 +90,8 @@ abstract class AchievementTriggerTypes {
     dailyPilarBalance,
     dailyConsecutiveDaysActive,
     dailySpeedrun,
+    dailyAutoConfirmCount,
+    dailyZeroProgressManualCount,
   };
 
   /// Set imutável dos 5 event-based — paralelo a [allDaily].

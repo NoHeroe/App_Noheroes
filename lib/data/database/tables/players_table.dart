@@ -103,4 +103,12 @@ class PlayersTable extends Table {
       integer().withDefault(const Constant(1))();
   IntColumn get totalAttributePointsSpent =>
       integer().withDefault(const Constant(0))();
+
+  // Sprint 3.3 Etapa 2.1c-β — modo automático de daily missions.
+  // Toggle exposto em /perfil. Quando true, missões com 100% em todas
+  // as sub-tarefas são auto-completed no rollover diário (madrugada),
+  // sem exigir clique manual no ✓. Default false (manual = comportamento
+  // legacy preservado pra players existentes).
+  BoolColumn get autoConfirmEnabled =>
+      boolean().withDefault(const Constant(false))();
 }
