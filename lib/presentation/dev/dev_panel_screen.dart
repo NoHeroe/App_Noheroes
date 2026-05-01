@@ -507,19 +507,33 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
             const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
-              height: 40,
               child: ElevatedButton(
                 onPressed: _saving ? null : _apply,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.purple,
+                  // Hotfix visual — mesmo pattern do _actionBtn.
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 14, horizontal: 16),
+                  minimumSize: const Size.fromHeight(48),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8)),
                 ),
                 child: _saving
-                    ? const CircularProgressIndicator(color: Colors.white)
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2))
+                    // Cinzel renderizava estranho em algumas devices ("APlICAR")
+                    // — troca pra Roboto bold com letter-spacing pra manter o
+                    // look de botão de ação principal.
                     : Text('APLICAR',
-                        style: GoogleFonts.cinzelDecorative(
-                            color: Colors.white, fontSize: 12)),
+                        style: GoogleFonts.roboto(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
+                        )),
               ),
             ),
             const SizedBox(height: 16),
@@ -591,7 +605,7 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
                 decoration: InputDecoration(
                   isDense: true,
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 8),
+                      horizontal: 10, vertical: 12),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(6)),
                 ),
@@ -618,7 +632,7 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
                   isDense: true,
                   hintText: '±delta',
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 8),
+                      horizontal: 10, vertical: 12),
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(6)),
                 ),
@@ -632,13 +646,17 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.gold,
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 12),
+                    horizontal: 14, vertical: 14),
+                minimumSize: const Size(64, 44),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(6)),
               ),
-              child: Text('APLY',
+              child: Text('APLICAR',
                   style: GoogleFonts.roboto(
-                      fontSize: 11, color: Colors.white)),
+                    fontSize: 11,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  )),
             ),
           ],
         ),
@@ -727,7 +745,7 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
           labelText: label,
           hintText: hint,
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(6)),
         ),
@@ -738,17 +756,26 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
   Widget _actionBtn(String label, Color color, VoidCallback onTap) =>
       SizedBox(
         width: double.infinity,
-        height: 36,
         child: ElevatedButton(
           onPressed: onTap,
           style: ElevatedButton.styleFrom(
             backgroundColor: color,
+            // Hotfix visual — sem height fixo. Padding vertical + minimumSize
+            // garantem altura adequada pro texto não cortar (Roboto fontSize
+            // 12 + line-height 1.2 ≈ 17px, soma com padding 12+12 = 41px).
+            // Antes: SizedBox(height: 36) cortava ascenders/descenders.
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            minimumSize: const Size.fromHeight(44),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(6)),
           ),
           child: Text(label,
+              textAlign: TextAlign.center,
               style: GoogleFonts.roboto(
-                  fontSize: 11, color: Colors.white)),
+                fontSize: 12,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              )),
         ),
       );
 }
