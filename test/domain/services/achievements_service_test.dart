@@ -266,7 +266,9 @@ void main() {
       await sub.cancel();
     });
 
-    test('event_count MissionCompleted satisfeito — unlock + emit + grant',
+    test(
+        'event_count MissionCompleted satisfeito — unlock + emit '
+        '(grant SÓ após claimReward — Sprint 3.3 Etapa Final-A)',
         () async {
       await _setTotalQuests(db, playerId, 10);
       final service = _newService(db, bus, {
@@ -298,15 +300,32 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
       final repo = PlayerAchievementsRepositoryDrift(db);
+      // Pós-Etapa Final-A: unlock só marca completed; grant só após claim.
       expect(await repo.isCompleted(playerId, 'ACH_TEN'), isTrue);
-      expect(await repo.isRewardClaimed(playerId, 'ACH_TEN'), isTrue);
+      expect(await repo.isRewardClaimed(playerId, 'ACH_TEN'), isFalse,
+          reason: 'rewardClaimed só vira true após claimReward()');
       expect(unlocked.map((e) => e.achievementKey), contains('ACH_TEN'));
 
+      // Gold ainda em 0 — coleta não rolou.
+      var row = await (db.select(db.playersTable)
+            ..where((t) => t.id.equals(playerId)))
+          .getSingle();
+      expect(row.gold, 0);
+
+      // Coleta manual.
+      final claimed = await service.claimReward(playerId, 'ACH_TEN');
+      expect(claimed, isTrue);
+      expect(await repo.isRewardClaimed(playerId, 'ACH_TEN'), isTrue);
+
       // Gold creditado com SOULSLIKE 0.35 → 100 * 0.35 = 35
-      final row = await (db.select(db.playersTable)
+      row = await (db.select(db.playersTable)
             ..where((t) => t.id.equals(playerId)))
           .getSingle();
       expect(row.gold, 35);
+
+      // 2ª claim em conquista já coletada → false (idempotência).
+      final claimedAgain = await service.claimReward(playerId, 'ACH_TEN');
+      expect(claimedAgain, isFalse);
 
       await sub.cancel();
       await evSub.cancel();
@@ -480,10 +499,16 @@ void main() {
   });
 
   group('AchievementsService — cascata', () {
-    test('cascata profundidade 3 OK (A→B→C via achievementsToCheck)',
+    test(
+        'cascata A→B→C agora flui via attachMetaLikeListeners (Sprint 3.3 '
+        'Etapa Final-A)',
         () async {
-      // Setup: A trigger meta 0-ish (seed prévio), reward de A aponta pra B,
-      // B aponta pra C. Usamos meta/countCompleted crescente.
+      // Pós-Etapa Final-A: cascata explícita via reward.achievementsToCheck
+      // continua existindo em _handleRewardGranted (legacy), MAS a cascata
+      // entre achievement unlocks agora flui via metaLike listener (escuta
+      // AchievementUnlocked direto). Esse teste agora exercita o caminho
+      // novo — que é o que o JSON de produção (Etapa 2.2) usa, já que
+      // _resolveTier não preserva achievements_to_check.
       final playerId = await _seedPlayer(db);
       await PlayerAchievementsRepositoryDrift(db).markCompleted(
         playerId,
@@ -493,25 +518,25 @@ void main() {
 
       final service = _newService(db, bus, {
         AchievementsService.catalogAssetPath: _catalogJson([
-          // A: meta target 1 (já satisfeito por ACH_SEED)
+          // A: meta target 1 (já satisfeito por ACH_SEED).
           {
             'key': 'ACH_A',
             'name': 'A',
             'description': '',
             'category': 'c',
             'trigger': {'type': 'meta', 'target_count': 1},
-            'reward': {'gold': 10, 'achievements_to_check': ['ACH_B']},
+            'reward': {'gold': 10},
           },
-          // B: meta target 2 (A recém-completado → count=2)
+          // B: meta target 2 (A recém-completado → count=2).
           {
             'key': 'ACH_B',
             'name': 'B',
             'description': '',
             'category': 'c',
             'trigger': {'type': 'meta', 'target_count': 2},
-            'reward': {'gold': 20, 'achievements_to_check': ['ACH_C']},
+            'reward': {'gold': 20},
           },
-          // C: meta target 3 (B → count=3)
+          // C: meta target 3 (B → count=3).
           {
             'key': 'ACH_C',
             'name': 'C',
@@ -522,6 +547,8 @@ void main() {
         ]),
       });
       final sub = await service.attach();
+      // Cascata via metaLike (caminho real em produção).
+      final metaLikeSubs = await service.attachMetaLikeListeners();
       final unlocked = <AchievementUnlocked>[];
       final evSub = bus.on<AchievementUnlocked>().listen(unlocked.add);
 
@@ -531,15 +558,27 @@ void main() {
                 achievementsToCheck: ['ACH_A'])
             .toJsonString(),
       ));
-      await Future<void>.delayed(const Duration(milliseconds: 80));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
 
       final keys = unlocked.map((e) => e.achievementKey).toSet();
       expect(keys, containsAll(['ACH_A', 'ACH_B', 'ACH_C']));
       await sub.cancel();
+      for (final s in metaLikeSubs) {
+        await s.cancel();
+      }
       await evSub.cancel();
     });
 
-    test('cascata depth limit — 4º nível NÃO desbloqueia', () async {
+    // Sprint 3.3 Etapa Final-A — depth limit do _tryUnlock recursivo
+    // (cascata síncrona via reward.achievementsToCheck) não é mais
+    // exercitado pelo pipeline real. Cascata agora flui via eventos
+    // (metaLike listener escuta AchievementUnlocked), com idempotência
+    // via isCompleted prevenindo loop. Sem recursão direta = sem depth
+    // limit relevante. Teste mantido como skip pra preservar histórico.
+    test('cascata depth limit — 4º nível NÃO desbloqueia',
+        skip: 'Sprint 3.3 Etapa Final-A — cascata síncrona com depth '
+            'limit foi removida do _tryUnlock; cascata agora via '
+            'eventos (metaLike) sem recursão direta', () async {
       final playerId = await _seedPlayer(db);
       // Seeda 0 prévias. Cada unlock eleva o count.
       final service = _newService(db, bus, {
@@ -646,6 +685,236 @@ void main() {
       expect(await repo.isCompleted(playerId, 'K1'), isTrue);
       expect(await repo.isCompleted(playerId, 'K5'), isTrue);
       await sub.cancel();
+    });
+  });
+
+  // ─── Sprint 3.3 Etapa Final-A — claimReward + listPendingClaims ──
+
+  group('claimReward (coleta manual)', () {
+    test(
+        'positive: conquista pendente → grant + markClaimed + RewardGranted',
+        () async {
+      final playerId = await _seedPlayer(db);
+      final repo = PlayerAchievementsRepositoryDrift(db);
+      // Pré: conquista marcada como completed mas não claimed.
+      await repo.markCompleted(playerId, 'K_COIN', at: DateTime.now());
+
+      final service = _newService(db, bus, {
+        AchievementsService.catalogAssetPath: _catalogJson([
+          {
+            'key': 'K_COIN',
+            'name': 'n',
+            'description': 'd',
+            'category': 'c',
+            'trigger': {'type': 'meta', 'target_count': 1},
+            'reward': {'gold': 100},
+          },
+        ]),
+      });
+
+      final granted = <RewardGranted>[];
+      final sub = bus.on<RewardGranted>().listen(granted.add);
+
+      final ok = await service.claimReward(playerId, 'K_COIN');
+      expect(ok, isTrue);
+      expect(await repo.isRewardClaimed(playerId, 'K_COIN'), isTrue);
+
+      // Gold creditado via SOULSLIKE 0.35: 100 * 0.35 = 35
+      final row = await (db.select(db.playersTable)
+            ..where((t) => t.id.equals(playerId)))
+          .getSingle();
+      expect(row.gold, 35);
+
+      // Aguarda micro-task pra evento.
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(granted, hasLength(1));
+      expect(granted.first.fromAchievementCascade, isTrue);
+
+      await sub.cancel();
+    });
+
+    test('idempotência: claimReward em conquista já coletada → false',
+        () async {
+      final playerId = await _seedPlayer(db);
+      final repo = PlayerAchievementsRepositoryDrift(db);
+      await repo.markCompleted(playerId, 'K', at: DateTime.now());
+      await repo.markRewardClaimed(playerId, 'K');
+
+      final service = _newService(db, bus, {
+        AchievementsService.catalogAssetPath: _catalogJson([
+          {
+            'key': 'K',
+            'name': 'n',
+            'description': 'd',
+            'category': 'c',
+            'trigger': {'type': 'meta', 'target_count': 1},
+            'reward': {'gold': 50},
+          },
+        ]),
+      });
+
+      final ok = await service.claimReward(playerId, 'K');
+      expect(ok, isFalse);
+      // Gold não foi creditado de novo.
+      final row = await (db.select(db.playersTable)
+            ..where((t) => t.id.equals(playerId)))
+          .getSingle();
+      expect(row.gold, 0);
+    });
+
+    test('claimReward em conquista não desbloqueada → false', () async {
+      final playerId = await _seedPlayer(db);
+      // SEM markCompleted prévio.
+
+      final service = _newService(db, bus, {
+        AchievementsService.catalogAssetPath: _catalogJson([
+          {
+            'key': 'K',
+            'name': 'n',
+            'description': 'd',
+            'category': 'c',
+            'trigger': {'type': 'meta', 'target_count': 1},
+            'reward': {'gold': 50},
+          },
+        ]),
+      });
+
+      final ok = await service.claimReward(playerId, 'K');
+      expect(ok, isFalse);
+    });
+
+    test('claimReward em conquista inexistente no catálogo → false',
+        () async {
+      final playerId = await _seedPlayer(db);
+      final service = _newService(db, bus, {
+        AchievementsService.catalogAssetPath: _catalogJson(const []),
+      });
+      final ok = await service.claimReward(playerId, 'NEXISTE');
+      expect(ok, isFalse);
+    });
+
+    test('claimReward em conquista disabled (shell) → false', () async {
+      final playerId = await _seedPlayer(db);
+      final repo = PlayerAchievementsRepositoryDrift(db);
+      await repo.markCompleted(playerId, 'K_SHELL', at: DateTime.now());
+
+      final service = _newService(db, bus, {
+        AchievementsService.catalogAssetPath: _catalogJson([
+          {
+            'key': 'K_SHELL',
+            'name': 'n',
+            'description': 'd',
+            'category': 'c',
+            'trigger': {'type': 'meta', 'target_count': 1},
+            'reward': {'gold': 100},
+            'disabled': true,
+          },
+        ]),
+      });
+
+      final ok = await service.claimReward(playerId, 'K_SHELL');
+      expect(ok, isFalse,
+          reason: 'shell achievements não devem grantar reward mesmo '
+              'que estejam marcadas completed');
+    });
+
+    test(
+        'claimReward em conquista com reward=null → marca claimed sem grant',
+        () async {
+      final playerId = await _seedPlayer(db);
+      final repo = PlayerAchievementsRepositoryDrift(db);
+      await repo.markCompleted(playerId, 'K_NOREWARD', at: DateTime.now());
+
+      final service = _newService(db, bus, {
+        AchievementsService.catalogAssetPath: _catalogJson([
+          {
+            'key': 'K_NOREWARD',
+            'name': 'n',
+            'description': 'd',
+            'category': 'c',
+            'trigger': {'type': 'meta', 'target_count': 1},
+            // sem reward
+          },
+        ]),
+      });
+
+      final granted = <RewardGranted>[];
+      final sub = bus.on<RewardGranted>().listen(granted.add);
+
+      final ok = await service.claimReward(playerId, 'K_NOREWARD');
+      expect(ok, isTrue);
+      expect(await repo.isRewardClaimed(playerId, 'K_NOREWARD'), isTrue);
+
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      expect(granted, isEmpty,
+          reason: 'sem reward declarada → sem RewardGranted publicado');
+
+      await sub.cancel();
+    });
+
+    test('claimReward emite evento que NÃO re-dispara cascata via handler',
+        () async {
+      // RewardGranted com fromAchievementCascade=true não deve ser
+      // processado pelo _handleRewardGranted (early return).
+      final playerId = await _seedPlayer(db);
+      final repo = PlayerAchievementsRepositoryDrift(db);
+      await repo.markCompleted(playerId, 'K', at: DateTime.now());
+
+      final service = _newService(db, bus, {
+        AchievementsService.catalogAssetPath: _catalogJson([
+          {
+            'key': 'K',
+            'name': 'n',
+            'description': 'd',
+            'category': 'c',
+            'trigger': {'type': 'meta', 'target_count': 1},
+            'reward': {'gold': 50, 'achievements_to_check': ['OTHER']},
+          },
+          {
+            'key': 'OTHER',
+            'name': 'o',
+            'description': 'd',
+            'category': 'c',
+            'trigger': {'type': 'meta', 'target_count': 100},
+          },
+        ]),
+      });
+      final sub = await service.attach();
+
+      final ok = await service.claimReward(playerId, 'K');
+      expect(ok, isTrue);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      // OTHER não deve ter unlocked (handler ignorou cascata pq
+      // fromAchievementCascade=true).
+      expect(await repo.isCompleted(playerId, 'OTHER'), isFalse);
+
+      await sub.cancel();
+    });
+  });
+
+  group('listPendingClaims', () {
+    test('retorna vazio quando não há pendentes', () async {
+      final playerId = await _seedPlayer(db);
+      final repo = PlayerAchievementsRepositoryDrift(db);
+      final pending = await repo.listPendingClaims(playerId);
+      expect(pending, isEmpty);
+    });
+
+    test(
+        'retorna apenas keys com completed=true && reward_claimed=false, '
+        'ordenadas por completed_at desc', () async {
+      final playerId = await _seedPlayer(db);
+      final repo = PlayerAchievementsRepositoryDrift(db);
+      // 3 conquistas: A coletada, B pendente (mais antiga), C pendente (mais nova).
+      await repo.markCompleted(playerId, 'A', at: DateTime(2026, 1, 1));
+      await repo.markRewardClaimed(playerId, 'A');
+      await repo.markCompleted(playerId, 'B', at: DateTime(2026, 2, 1));
+      await repo.markCompleted(playerId, 'C', at: DateTime(2026, 3, 1));
+
+      final pending = await repo.listPendingClaims(playerId);
+      expect(pending, ['C', 'B'],
+          reason: 'A está claimed (não vem); C mais recente vem antes de B');
     });
   });
 }

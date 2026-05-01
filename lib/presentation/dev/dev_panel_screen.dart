@@ -425,6 +425,90 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
     );
   }
 
+  // ─── COLETA MANUAL (Sprint 3.3 Etapa Final-A) ─────────────────────
+
+  Future<void> _claimAllPending() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final repo = ref.read(playerAchievementsRepositoryProvider);
+    final svc = ref.read(achievementsServiceProvider);
+
+    final pending = await repo.listPendingClaims(player.id);
+    if (pending.isEmpty) {
+      if (!mounted) return;
+      AppSnack.info(context, 'Nenhuma conquista pendente de coleta.');
+      return;
+    }
+
+    var claimed = 0;
+    var failed = 0;
+    for (final key in pending) {
+      final ok = await svc.claimReward(player.id, key);
+      if (ok) {
+        claimed++;
+      } else {
+        failed++;
+      }
+    }
+
+    final updated = await PlayerDao(ref.read(appDatabaseProvider))
+        .findById(player.id);
+    if (!mounted) return;
+    ref.read(currentPlayerProvider.notifier).state = updated;
+    _invalidateAll(player.id);
+    AppSnack.success(
+      context,
+      'Coletadas: $claimed${failed > 0 ? ' (falhas: $failed)' : ''}.',
+    );
+  }
+
+  Future<void> _listPendingClaims() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final repo = ref.read(playerAchievementsRepositoryProvider);
+    final pending = await repo.listPendingClaims(player.id);
+    if (!mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Pendentes de coleta (${pending.length})',
+            style: GoogleFonts.cinzelDecorative(
+                color: AppColors.purpleLight, fontSize: 14)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: pending.isEmpty
+              ? Text('Nenhuma conquista pendente.',
+                  style: GoogleFonts.roboto(
+                      color: AppColors.textSecondary))
+              : SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final k in pending)
+                        Padding(
+                          padding:
+                              const EdgeInsets.symmetric(vertical: 2),
+                          child: Text(k,
+                              style: GoogleFonts.robotoMono(
+                                  fontSize: 11,
+                                  color: AppColors.textPrimary)),
+                        ),
+                    ],
+                  ),
+                ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ─── REPUTAÇÃO COMPACTA ───────────────────────────────────────────
 
   Future<void> _applyRepDelta() async {
@@ -576,6 +660,14 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
             const SizedBox(height: 6),
             _actionBtn('Listar conquistas atuais', AppColors.gold,
                 _listAchievements),
+            const SizedBox(height: 6),
+            // Sprint 3.3 Etapa Final-A — coleta manual: helpers do dev
+            // panel pra validar pipeline sem precisar da UI da Sub B.
+            _actionBtn('Coletar TODAS pendentes',
+                AppColors.shadowAscending, _claimAllPending),
+            const SizedBox(height: 6),
+            _actionBtn('Listar pendentes de coleta',
+                AppColors.purpleLight, _listPendingClaims),
             const SizedBox(height: 16),
 
             // 6. REPUTAÇÃO FACÇÕES (compacto)

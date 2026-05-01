@@ -33,4 +33,13 @@ abstract class PlayerAchievementsRepository {
   /// Total de conquistas desbloqueadas — consumido por conquistas
   /// meta (`trigger: meta`, completar N outras — Bloco 8).
   Future<int> countCompleted(int playerId);
+
+  /// Sprint 3.3 Etapa Final-A — keys de conquistas desbloqueadas mas
+  /// com reward AINDA NÃO coletada (`completed=true && reward_claimed=false`).
+  /// Consumido pela tela `/achievements` no filtro "Pendentes coleta" e
+  /// pelo botão "Coletar TODAS pendentes" do dev panel.
+  ///
+  /// Ordenação: por `completed_at` desc (mais recente primeiro). Coerente
+  /// com [listCompletedKeys] pra UI mostrar unlocks recentes no topo.
+  Future<List<String>> listPendingClaims(int playerId);
 }

@@ -539,47 +539,71 @@ class AchievementsService {
       return;
     }
 
-    // Marca ANTES do grant. Garante que o re-entry do listener
-    // (grantAchievement → RewardGranted → handler) cai em `isCompleted`
-    // true e vira noop.
+    // Sprint 3.3 Etapa Final-A — coleta manual: unlock só marca completed
+    // e publica AchievementUnlocked. Grant da reward é responsabilidade
+    // de [claimReward] (chamado quando jogador clica "RECEBER RECOMPENSA"
+    // na tela). Cascata via meta/threshold/event_count continua funcionando
+    // automaticamente porque `attachMetaLikeListeners` escuta
+    // AchievementUnlocked direto — não depende de RewardGranted nem de
+    // achievements_to_check declarado em reward.
+    //
+    // Ver ADR-0020-coleta-manual-recompensas-conquistas.
     await _achievementsRepo.markCompleted(
       playerId,
       key,
       at: DateTime.now(),
     );
+    _bus.publish(
+        AchievementUnlocked(playerId: playerId, achievementKey: key));
+  }
 
-    // Grant da reward da conquista, se declarada. D5 do plano: evento
-    // AchievementUnlocked emite APÓS grant — consistência com pattern
-    // commit-then-publish do RewardGrantService.
-    RewardResolved? resolvedReward;
-    if (def.reward != null) {
-      final facts = await _resolvePlayerFacts(playerId);
-      resolvedReward = await _rewardResolve.resolve(
-        def.reward!,
-        facts.snapshot,
-      );
-      try {
-        await _rewardGrant.grantAchievement(
-          playerId: playerId,
-          achievementKey: key,
-          resolved: resolvedReward,
-        );
-      } on AchievementRewardAlreadyGrantedException {
-        // Race improvável (concorrência entre cascade e re-entry do
-        // listener grantando a mesma chave). Idempotência natural.
-        // ignore: avoid_print
-        print('[achievements] grant já aplicado em "$key" — skip');
-      }
+  /// Sprint 3.3 Etapa Final-A — coleta manual de recompensa de conquista.
+  ///
+  /// Pré-condições (todas verificadas antes do grant):
+  ///   - `key` existe no catálogo
+  ///   - conquista NÃO está `disabled` (shell)
+  ///   - conquista está marcada como completed (unlock prévio)
+  ///   - rewardClaimed ainda é false
+  ///
+  /// Comportamento:
+  ///   - Se `def.reward == null`: marca rewardClaimed=true direto (estado
+  ///     "vista" pra UI parar de mostrar como pendente). Retorna true.
+  ///   - Se `def.reward != null`: resolve reward via SOULSLIKE multipliers
+  ///     (ADR 0013) e grant via [RewardGrantService.grantAchievement]
+  ///     (que internamente marca rewardClaimed=true + publica
+  ///     RewardGranted com fromAchievementCascade=true).
+  ///
+  /// Race condition tolerada: 2 calls concorrentes na mesma key — o 2º
+  /// recebe [AchievementRewardAlreadyGrantedException] do grant service e
+  /// retorna false silenciosamente.
+  Future<bool> claimReward(int playerId, String key) async {
+    await ensureLoaded();
+    final def = _catalog[key];
+    if (def == null) return false;
+    if (def.disabled) return false;
+    if (!await _achievementsRepo.isCompleted(playerId, key)) return false;
+    if (await _achievementsRepo.isRewardClaimed(playerId, key)) {
+      return false;
     }
-
-    _bus.publish(AchievementUnlocked(playerId: playerId, achievementKey: key));
-
-    // Cascata síncrona. depth+1 protege contra loops; re-entry via bus
-    // cai em isCompleted check.
-    if (resolvedReward != null) {
-      for (final nested in resolvedReward.achievementsToCheck) {
-        await _tryUnlock(playerId, nested, depth: depth + 1);
-      }
+    if (def.reward == null) {
+      // Sem reward declarada — marca claimed direto pra UI tirar do
+      // estado "pendente". Não publica RewardGranted (não há reward).
+      await _achievementsRepo.markRewardClaimed(playerId, key);
+      return true;
+    }
+    final facts = await _resolvePlayerFacts(playerId);
+    final resolved =
+        await _rewardResolve.resolve(def.reward!, facts.snapshot);
+    try {
+      await _rewardGrant.grantAchievement(
+        playerId: playerId,
+        achievementKey: key,
+        resolved: resolved,
+      );
+      return true;
+    } on AchievementRewardAlreadyGrantedException {
+      // Race entre 2 claimReward simultâneos — 2º perde, sem efeito.
+      return false;
     }
   }
 

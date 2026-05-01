@@ -75,4 +75,14 @@ class PlayerAchievementsRepositoryDrift
     final row = await query.getSingle();
     return row.read(count) ?? 0;
   }
+
+  @override
+  Future<List<String>> listPendingClaims(int playerId) async {
+    final query = _db.select(_db.playerAchievementsCompletedTable)
+      ..where((t) =>
+          t.playerId.equals(playerId) & t.rewardClaimed.equals(false))
+      ..orderBy([(t) => OrderingTerm.desc(t.completedAt)]);
+    final rows = await query.get();
+    return rows.map((r) => r.achievementKey).toList(growable: false);
+  }
 }
