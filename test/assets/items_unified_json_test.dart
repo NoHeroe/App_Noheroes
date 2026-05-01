@@ -12,9 +12,11 @@ void main() {
       items = (data['items'] as List).cast<Map<String, dynamic>>();
     });
 
-    test('tem exatamente 242 entries', () {
+    test('tem exatamente 243 entries', () {
       // Sprint 3.3 Etapa 2.1c-α — adicionado CHEST_SECRET (chest secreto).
-      expect(items.length, 242);
+      // Sprint 3.3 Etapa 2.2 — adicionado CHEST_DEFEATED (Baú do Derrotado,
+      // reward dos tiers *_falha).
+      expect(items.length, 243);
     });
 
     test('todas as keys são únicas', () {
@@ -53,7 +55,8 @@ void main() {
         'relic':      18,
         'cosmetic':    6,
         // Sprint 3.3 Etapa 2.1c-α — chest 3→4 (CHEST_SECRET).
-        'chest':       4,
+        // Sprint 3.3 Etapa 2.2 — chest 4→5 (CHEST_DEFEATED).
+        'chest':       5,
         'key':         2,
         'title':       2,
         'lore':        2,
@@ -73,7 +76,8 @@ void main() {
       // Sprint 2.3 — remove RUNE_MIND/SPIRIT (rank E), adiciona 50 runas
       // (E=13, D=13, C=12, B=12).
       expect(byRank, {
-        'E':       101, // 90 - 2 (removidos) + 13 (novas runas E)
+        // Sprint 3.3 Etapa 2.2 — E 101→102 (CHEST_DEFEATED é rank E).
+        'E':       102, // 90 - 2 (removidos) + 13 (novas runas E) + CHEST_DEFEATED
         'D':        72, // 59 + 13 (novas runas D)
         // Sprint 3.3 Etapa 2.1c-α — C 19→20 (CHEST_SECRET é rank C).
         'C':        20,

@@ -205,6 +205,20 @@ class AchievementsService {
       throw const FormatException(
           "achievements.json: raiz não é objeto");
     }
+    // Sprint 3.3 Etapa 2.2 — `tier_definitions` opcional no root permite
+    // referência via `reward_tier: "comum"` em cada entry. Resolução é
+    // pre-processamento aqui (mantém AchievementDefinition.fromJson puro).
+    // Compat: catálogos sem tier_definitions continuam funcionando com
+    // `reward` inline tradicional.
+    final tierDefsRaw = decoded['tier_definitions'];
+    final Map<String, Map<String, dynamic>> tierDefs = {};
+    if (tierDefsRaw is Map<String, dynamic>) {
+      for (final e in tierDefsRaw.entries) {
+        if (e.value is Map<String, dynamic>) {
+          tierDefs[e.key] = e.value as Map<String, dynamic>;
+        }
+      }
+    }
     final list = decoded['achievements'];
     if (list is! List) {
       throw const FormatException(
@@ -215,7 +229,8 @@ class AchievementsService {
         throw const FormatException(
             "achievements.json: entrada da lista não é objeto");
       }
-      final def = AchievementDefinition.fromJson(entry);
+      final processed = _resolveTier(entry, tierDefs);
+      final def = AchievementDefinition.fromJson(processed);
       if (_catalog.containsKey(def.key)) {
         throw FormatException(
             "achievements.json: key duplicada '${def.key}'");
@@ -232,6 +247,81 @@ class AchievementsService {
         .where((d) => d.trigger is EventTrigger && !d.disabled)
         .toList(growable: false);
     _loaded = true;
+  }
+
+  /// Sprint 3.3 Etapa 2.2 — converte um entry do catálogo no formato com
+  /// `reward_tier` (string ref) ou `reward_tier_custom` (inline com schema
+  /// `xp/gold/gems/baus_*`) pra estrutura `reward` que `RewardDeclared`
+  /// entende. Idempotente: entries com `reward` inline tradicional passam
+  /// direto sem mudança.
+  ///
+  /// Conversões aplicadas:
+  /// - `reward_tier: "comum"` → lookup em [tierDefs], extrai xp/gold/gems
+  /// - `reward_tier_custom: {...}` → usa direto como tier
+  /// - `baus_secretos: N` (N>0) → adiciona ao items array como
+  ///   `{key: 'CHEST_SECRET', quantity: N, chance_pct: 100}`
+  /// - `baus_derrotado: N` (N>0) → idem com `CHEST_DEFEATED`
+  ///
+  /// Tier ref inexistente → lança FormatException (catálogo malformado
+  /// é fatal — diferente de trigger desconhecido que cai em fail-safe).
+  Map<String, dynamic> _resolveTier(
+    Map<String, dynamic> entry,
+    Map<String, Map<String, dynamic>> tierDefs,
+  ) {
+    // Já tem `reward` inline → passa direto.
+    if (entry.containsKey('reward')) return entry;
+    // Lookup ou custom inline.
+    Map<String, dynamic>? tierMap;
+    if (entry.containsKey('reward_tier_custom')) {
+      final raw = entry['reward_tier_custom'];
+      if (raw is! Map<String, dynamic>) {
+        throw FormatException(
+            "reward_tier_custom deve ser objeto em '${entry['key']}'");
+      }
+      tierMap = raw;
+    } else if (entry.containsKey('reward_tier')) {
+      final tierName = entry['reward_tier'];
+      if (tierName is! String) {
+        throw FormatException(
+            "reward_tier deve ser string em '${entry['key']}'");
+      }
+      tierMap = tierDefs[tierName];
+      if (tierMap == null) {
+        throw FormatException(
+            "reward_tier '$tierName' não encontrado em tier_definitions "
+            "(em '${entry['key']}')");
+      }
+    }
+    if (tierMap == null) return entry; // Conquista sem reward — válido.
+
+    // Constrói reward a partir do tier.
+    final items = <Map<String, dynamic>>[];
+    final bausSecretos = (tierMap['baus_secretos'] as int?) ?? 0;
+    if (bausSecretos > 0) {
+      items.add({
+        'key': 'CHEST_SECRET',
+        'quantity': bausSecretos,
+        'chance_pct': 100,
+      });
+    }
+    final bausDerrotado = (tierMap['baus_derrotado'] as int?) ?? 0;
+    if (bausDerrotado > 0) {
+      items.add({
+        'key': 'CHEST_DEFEATED',
+        'quantity': bausDerrotado,
+        'chance_pct': 100,
+      });
+    }
+    final reward = <String, dynamic>{
+      'xp': (tierMap['xp'] as int?) ?? 0,
+      'gold': (tierMap['gold'] as int?) ?? 0,
+      'gems': (tierMap['gems'] as int?) ?? 0,
+      if (items.isNotEmpty) 'items': items,
+    };
+
+    // Retorna shallow-copy do entry com `reward` adicionado (não muta
+    // o original — defesa contra parser ser chamado em loop).
+    return {...entry, 'reward': reward};
   }
 
   /// Carrega catálogo e assina o listener de `RewardGranted`. Retorna a

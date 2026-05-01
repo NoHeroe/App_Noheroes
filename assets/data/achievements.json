@@ -1,81 +1,802 @@
 {
+  "version": "2.2",
+  "schema_version": 33,
+  "tier_definitions": {
+    "trivial":            { "xp": 20,   "gold": 25,   "gems": 0  },
+    "comum":              { "xp": 60,   "gold": 75,   "gems": 1  },
+    "notavel":            { "xp": 150,  "gold": 200,  "gems": 3  },
+    "epica":              { "xp": 400,  "gold": 500,  "gems": 10 },
+    "lendaria":           { "xp": 1200, "gold": 1500, "gems": 50 },
+    "lendaria_boost_5":   { "xp": 1260, "gold": 1575, "gems": 52 },
+    "lendaria_boost_10":  { "xp": 1320, "gold": 1650, "gems": 55 },
+    "trivial_falha":      { "xp": 20,   "gold": 0,    "gems": 0, "baus_derrotado": 0 },
+    "comum_falha":        { "xp": 60,   "gold": 0,    "gems": 0, "baus_derrotado": 1 },
+    "notavel_falha":      { "xp": 150,  "gold": 0,    "gems": 0, "baus_derrotado": 1 },
+    "epica_falha":        { "xp": 400,  "gold": 0,    "gems": 0, "baus_derrotado": 2 }
+  },
   "achievements": [
     {
-      "key": "ACH_FIRST_QUEST",
-      "name": "Primeira Missão",
-      "description": "Complete sua primeira missão.",
-      "category": "progression",
-      "trigger": {
-        "type": "event_count",
-        "event": "MissionCompleted",
-        "count": 1
-      },
-      "reward": {
-        "xp": 100,
-        "gold": 50
-      },
+      "key": "INIT_DESPERTAR_VAZIO",
+      "name": "Despertar do Vazio",
+      "description": "Confirmou sua primeira missão diária.\n\nO primeiro silêncio é sempre o mais alto. O Vazio reconhece quem ousa começar.",
+      "category": "iniciais",
+      "trigger": { "type": "daily_mission_count", "target": 1 },
+      "reward_tier": "trivial",
       "is_secret": false
     },
     {
-      "key": "ACH_LEVEL_5",
-      "name": "Despertar",
-      "description": "Atinja nível 5.",
-      "category": "progression",
-      "trigger": {
-        "type": "threshold_stat",
-        "stat": "level",
-        "value": 5
-      },
-      "reward": {
-        "gems": 5,
-        "achievements_to_check": ["ACH_META_TWO"]
-      },
+      "key": "INIT_TRIADE_INICIANTE",
+      "name": "Tríade do Iniciante",
+      "description": "Completou três missões diárias no mesmo dia.\n\nOs três pilares se ergueram. O caminho começa a tomar forma.",
+      "category": "iniciais",
+      "trigger": { "type": "daily_today_count", "target": 3 },
+      "reward_tier": "comum",
       "is_secret": false
     },
     {
-      "key": "ACH_META_TWO",
-      "name": "Dobra",
-      "description": "Desbloqueie 2 conquistas.",
-      "category": "meta",
-      "trigger": {
-        "type": "meta",
-        "target_count": 2
-      },
-      "reward": {
-        "gold": 200
-      },
+      "key": "INIT_PRIMEIRA_QUEDA",
+      "name": "Primeira Queda",
+      "description": "Falhou em uma missão diária pela primeira vez.\n\nCair é parte do despertar. Os Voidrins celebram cada hesitação — você lhes deu pouco hoje.",
+      "category": "iniciais",
+      "trigger": { "type": "daily_mission_failed_count", "target": 1 },
+      "reward_tier": "trivial_falha",
       "is_secret": false
     },
     {
-      "key": "ACH_TEN_QUESTS",
-      "name": "Calejado",
-      "description": "Complete 10 missões.",
-      "category": "progression",
-      "trigger": {
-        "type": "event_count",
-        "event": "MissionCompleted",
-        "count": 10
-      },
-      "reward": {
-        "gems": 10,
-        "items": [
-          {"key": "RUNE_RANDOM_E", "quantity": 1, "chance_pct": 100}
-        ]
-      },
+      "key": "INIT_PRIMEIRO_ATRIBUTO",
+      "name": "Primeiro Atributo Forjado",
+      "description": "Distribuiu seu primeiro ponto de atributo.\n\nA carne aceita a primeira mudança. O corpo deixa de ser apenas memória.",
+      "category": "iniciais",
+      "trigger": { "type": "event_attribute_point_spent", "target": 1 },
+      "reward_tier": "trivial",
       "is_secret": false
     },
     {
-      "key": "ACH_SECRET_FIRST_UNLOCK",
-      "name": "Arqueiro das Sombras",
-      "description": "Uma conquista secreta aparece depois de desbloquear a primeira.",
-      "category": "meta",
-      "trigger": {
-        "type": "meta",
-        "target_count": 1
-      },
-      "reward": {
-        "seivas": 1
-      },
+      "key": "INIT_CINCO_CONQUISTAS",
+      "name": "Cinco Conquistas",
+      "description": "Desbloqueou cinco conquistas.\n\nCinco selos quebrados. O que vem depois muda quem você é.",
+      "category": "iniciais",
+      "trigger": { "type": "meta", "target_count": 5 },
+      "reward_tier": "comum",
+      "is_secret": false
+    },
+    {
+      "key": "INIT_NIVEL_5",
+      "name": "Nível 5: Primeira Forma",
+      "description": "Atingiu o nível 5.\n\nA forma rudimentar do Andante toma corpo. Lunaris ainda não sabe seu nome.",
+      "category": "iniciais",
+      "trigger": { "type": "threshold_stat", "stat": "level", "value": 5 },
+      "reward_tier": "comum",
+      "is_secret": false
+    },
+    {
+      "key": "INIT_INICIADO_GUILDA",
+      "name": "Iniciado da Guilda",
+      "description": "Atingiu o nível 7 e jurou lealdade a uma facção.\n\nSete passos. O primeiro juramento. As Runas começam a observar — e algumas já sussurram seu nome.",
+      "category": "iniciais",
+      "trigger": { "type": "event_faction_joined", "target": 1 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "INIT_VISITA_CONQUISTAS",
+      "name": "Visitante do Salão das Conquistas",
+      "description": "Visitou a tela de Conquistas pela primeira vez.\n\nQuem olha para os próprios feitos descobre o tamanho real da própria sombra.",
+      "category": "iniciais",
+      "trigger": { "type": "event_screen_visited", "target": 1, "params": { "screen_key": "/achievements" } },
+      "reward_tier": "trivial",
+      "is_secret": false
+    },
+    {
+      "key": "INIT_CARNE_CATALOGADA",
+      "name": "Carne Catalogada",
+      "description": "Configurou peso e altura no perfil pela primeira vez.\n\nO Vazio só consome o que pode medir. Você se tornou mensurável.",
+      "category": "iniciais",
+      "trigger": { "type": "event_body_metrics_updated", "target": 1, "params": { "must_be_first_time": true } },
+      "reward_tier": "comum",
+      "is_secret": false
+    },
+    {
+      "key": "INIT_CINCO_PERFEITOS",
+      "name": "Cinco Vezes Perfeito",
+      "description": "Completou cinco missões diárias com 100% em todas as sub-tarefas.\n\nCinco dias sem falhas. A disciplina começa a falar mais alto que a vontade.",
+      "category": "iniciais",
+      "trigger": { "type": "daily_mission_perfect_count", "target": 5 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+
+    {
+      "key": "VOL_ECO_DESPERTAR",
+      "name": "Eco do Despertar",
+      "description": "Completou 15 missões diárias no total.\n\nCinco dias de constância. O Vazio começa a registrar seu nome — em letras pequenas, mas registra.",
+      "category": "volume",
+      "trigger": { "type": "daily_mission_count", "target": 15 },
+      "reward_tier": "trivial",
+      "is_secret": false
+    },
+    {
+      "key": "VOL_DISCIPLINA_INICIAL",
+      "name": "Disciplina Inicial",
+      "description": "Completou 50 missões diárias no total.\n\nCinquenta gestos contra a inércia. Os Voidrins recuam um passo.",
+      "category": "volume",
+      "trigger": { "type": "daily_mission_count", "target": 50 },
+      "reward_tier": "comum",
+      "is_secret": false
+    },
+    {
+      "key": "VOL_CAMINHANTE_CAELUM",
+      "name": "Caminhante de Caelum",
+      "description": "Completou 150 missões diárias no total.\n\nCento e cinquenta passos no continente quebrado. Lunaris ouve seus passos pela primeira vez.",
+      "category": "volume",
+      "trigger": { "type": "daily_mission_count", "target": 150 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "VOL_FORJADO_CONSTANCIA",
+      "name": "Forjado pela Constância",
+      "description": "Completou 300 missões diárias no total.\n\nTrezentas missões cumpridas. A carne já não é a mesma — e o Vazio sabe.",
+      "category": "volume",
+      "trigger": { "type": "daily_mission_count", "target": 300 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "VOL_VETERANO_FLORESTA",
+      "name": "Veterano da Floresta Negra",
+      "description": "Completou 600 missões diárias no total.\n\nSeiscentas batalhas silenciosas contra si mesmo. As árvores pretas registram seu peso.",
+      "category": "volume",
+      "trigger": { "type": "daily_mission_count", "target": 600 },
+      "reward_tier": "epica",
+      "is_secret": false
+    },
+    {
+      "key": "VOL_SENHOR_SOMBRA",
+      "name": "Senhor da Própria Sombra",
+      "description": "Completou 900 missões diárias no total.\n\nNovecentas provas. A sombra obedece. O Andante torna-se nome reconhecido nos corredores de Lunaris.",
+      "category": "volume",
+      "trigger": { "type": "daily_mission_count", "target": 900 },
+      "reward_tier": "epica",
+      "is_secret": false
+    },
+    {
+      "key": "VOL_ANDANTE_MIL_BATALHAS",
+      "name": "Andante das Mil Batalhas",
+      "description": "Completou 1500 missões diárias no total.\n\nMil e quinhentas vezes você venceu o silêncio. Caelum se curva à sua disciplina.",
+      "category": "volume",
+      "trigger": { "type": "daily_mission_count", "target": 1500 },
+      "reward_tier": "lendaria",
+      "is_secret": false
+    },
+    {
+      "key": "VOL_MITO_DISCIPLINA",
+      "name": "Mito da Disciplina",
+      "description": "Completou 5000 missões diárias no total.\n\nCinco mil missões. O Vazio recua. Você se tornou lenda viva — e os Voidrins agora temem o seu sono.",
+      "category": "volume",
+      "trigger": { "type": "daily_mission_count", "target": 5000 },
+      "reward_tier": "lendaria_boost_10",
+      "is_secret": false
+    },
+
+    {
+      "key": "STREAK_BRASA_ACESA",
+      "name": "Brasa Acesa",
+      "description": "Manteve um streak de 3 dias consecutivos perfeitos.\n\nA primeira faísca recusou-se a apagar. O Vazio observa, ainda em silêncio.",
+      "category": "streak",
+      "trigger": { "type": "daily_mission_streak", "target": 3 },
+      "reward_tier": "trivial",
+      "is_secret": false
+    },
+    {
+      "key": "STREAK_CHAMA_PEQUENA",
+      "name": "Chama Pequena",
+      "description": "Manteve um streak de 7 dias consecutivos perfeitos.\n\nSete dias sem soltar a corda. A primeira semana sem trair a si mesmo.",
+      "category": "streak",
+      "trigger": { "type": "daily_mission_streak", "target": 7 },
+      "reward_tier": "comum",
+      "is_secret": false
+    },
+    {
+      "key": "STREAK_DISCIPLINA_ARDENTE",
+      "name": "Disciplina Ardente",
+      "description": "Manteve um streak de 14 dias consecutivos perfeitos.\n\nDuas semanas. O ritual virou pele. Quem te conhecia antes não te reconhece mais.",
+      "category": "streak",
+      "trigger": { "type": "daily_mission_streak", "target": 14 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "STREAK_FOGO_PERMANENTE",
+      "name": "Fogo Permanente",
+      "description": "Manteve um streak de 30 dias consecutivos perfeitos.\n\nUm mês inteiro sem interrupção. As Runas começam a sussurrar seu nome em pé.",
+      "category": "streak",
+      "trigger": { "type": "daily_mission_streak", "target": 30 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "STREAK_FORNALHA_INQUEBRAVEL",
+      "name": "Fornalha Inquebrável",
+      "description": "Manteve um streak de 100 dias consecutivos perfeitos.\n\nCem dias. Três luas inteiras e dez. O Andante torna-se nome em outras línguas — e os Voidrins evitam sua sombra.",
+      "category": "streak",
+      "trigger": { "type": "daily_mission_streak", "target": 100 },
+      "reward_tier": "epica",
+      "is_secret": false
+    },
+    {
+      "key": "STREAK_SOL_NEGRO",
+      "name": "Sol Negro",
+      "description": "Manteve um streak de 200 dias consecutivos perfeitos.\n\nDuzentos dias sem cair uma única vez. A constância tornou-se astro — Caelum gira em torno do seu compromisso.",
+      "category": "streak",
+      "trigger": { "type": "daily_mission_streak", "target": 200 },
+      "reward_tier": "lendaria_boost_10",
+      "is_secret": false
+    },
+
+    {
+      "key": "BEST_MEMORIA_BRASA",
+      "name": "Memória de uma Brasa",
+      "description": "Atingiu, em algum momento, um streak de 7 dias consecutivos perfeitos.\n\nMesmo se a corrente caiu depois, esse pico ficou cravado. O Vazio não apaga o que já aconteceu.",
+      "category": "best_streak",
+      "trigger": { "type": "daily_mission_best_streak", "target": 7 },
+      "reward_tier": "comum",
+      "is_secret": false
+    },
+    {
+      "key": "BEST_MEMORIA_CHAMA",
+      "name": "Memória de uma Chama",
+      "description": "Atingiu, em algum momento, um streak de 21 dias consecutivos perfeitos.\n\nVinte e um dias de constância. A queda veio, mas o pico permanece — gravado como cicatriz luminosa.",
+      "category": "best_streak",
+      "trigger": { "type": "daily_mission_best_streak", "target": 21 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "BEST_LEMBRANCA_FORNALHA",
+      "name": "Lembrança da Fornalha",
+      "description": "Atingiu, em algum momento, um streak de 60 dias consecutivos perfeitos.\n\nSessenta dias de pico. Outros podem ter quebrado depois de você — mas esse mês duplo é seu pra sempre.",
+      "category": "best_streak",
+      "trigger": { "type": "daily_mission_best_streak", "target": 60 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "BEST_CICATRIZ_INQUEBRAVEL",
+      "name": "Cicatriz Inquebrável",
+      "description": "Atingiu, em algum momento, um streak de 120 dias consecutivos perfeitos.\n\nQuatro luas de domínio total. Se a sequência caiu, foi por escolha — não por incapacidade. As Runas ainda registram.",
+      "category": "best_streak",
+      "trigger": { "type": "daily_mission_best_streak", "target": 120 },
+      "reward_tier": "epica",
+      "is_secret": false
+    },
+    {
+      "key": "BEST_ECO_SOL_NEGRO",
+      "name": "Eco do Sol Negro",
+      "description": "Atingiu, em algum momento, um streak de 250 dias consecutivos perfeitos.\n\nDuzentos e cinquenta dias seguidos de pico. Quase um ano. Lendas se constroem assim — quebrar agora não apaga o feito, apenas marca o intervalo entre prodígios.",
+      "category": "best_streak",
+      "trigger": { "type": "daily_mission_best_streak", "target": 250 },
+      "reward_tier": "lendaria_boost_10",
+      "is_secret": false
+    },
+
+    {
+      "key": "PERF_PRIMEIRO_DOMINIO",
+      "name": "Primeiro Domínio",
+      "description": "Completou 5 dias com todas as 3 missões em 100%.\n\nCinco vezes você fechou o ciclo inteiro. O Vazio começa a notar — em silêncio, mas nota.",
+      "category": "perfect",
+      "trigger": { "type": "daily_mission_perfect_count", "target": 5 },
+      "reward_tier": "trivial",
+      "is_secret": false
+    },
+    {
+      "key": "PERF_SINTONIA_TRINDADE",
+      "name": "Sintonia da Trindade",
+      "description": "Completou 10 dias com todas as 3 missões em 100%.\n\nDez ciclos completos. As três pernas do banco encontraram o mesmo chão.",
+      "category": "perfect",
+      "trigger": { "type": "daily_mission_perfect_count", "target": 10 },
+      "reward_tier": "comum",
+      "is_secret": false
+    },
+    {
+      "key": "PERF_RITMO_ENCONTRADO",
+      "name": "Ritmo Encontrado",
+      "description": "Completou 20 dias com todas as 3 missões em 100%.\n\nVinte vezes em harmonia tripla. O ritmo virou idioma — não é mais esforço, é frase pronta.",
+      "category": "perfect",
+      "trigger": { "type": "daily_mission_perfect_count", "target": 20 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "PERF_MESTRE_TRES_PILARES",
+      "name": "Mestre dos Três Pilares",
+      "description": "Completou 50 dias com todas as 3 missões em 100%.\n\nCinquenta vezes você dominou o tridente. Os Magos de Lunaris reconhecem o padrão.",
+      "category": "perfect",
+      "trigger": { "type": "daily_mission_perfect_count", "target": 50 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "PERF_TRIPLICE_DOMINIO",
+      "name": "Tríplice Domínio",
+      "description": "Completou 80 dias com todas as 3 missões em 100%.\n\nOitenta dias de tridente domado. A repetição virou sopro — você inspira ordem, expira disciplina.",
+      "category": "perfect",
+      "trigger": { "type": "daily_mission_perfect_count", "target": 80 },
+      "reward_tier": "epica",
+      "is_secret": false
+    },
+    {
+      "key": "PERF_SENHOR_TRIPLICE_FORMA",
+      "name": "Senhor da Tríplice Forma",
+      "description": "Completou 150 dias com todas as 3 missões em 100%.\n\nCento e cinquenta dias. Cinco luas inteiras de geometria interna construída pedra sobre pedra.",
+      "category": "perfect",
+      "trigger": { "type": "daily_mission_perfect_count", "target": 150 },
+      "reward_tier": "epica",
+      "is_secret": false
+    },
+    {
+      "key": "PERF_TRIDENTE_INQUEBRAVEL",
+      "name": "Tridente Inquebrável",
+      "description": "Completou 365 dias com todas as 3 missões em 100%.\n\nTrezentos e sessenta e cinco dias completos — uma volta inteira da estrela. As Runas inscrevem seu nome no pilar central.",
+      "category": "perfect",
+      "trigger": { "type": "daily_mission_perfect_count", "target": 365 },
+      "reward_tier": "lendaria",
+      "is_secret": false
+    },
+    {
+      "key": "PERF_GEOMETRIA_SAGRADA",
+      "name": "Geometria Sagrada",
+      "description": "Completou 700 dias com todas as 3 missões em 100%.\n\nSetecentos dias de ordem inflexível. Quase dois anos de tridente em harmonia. A Tríade tornou-se constante cósmica — Caelum mede o tempo pelas suas missões.",
+      "category": "perfect",
+      "trigger": { "type": "daily_mission_perfect_count", "target": 700 },
+      "reward_tier": "lendaria_boost_10",
+      "is_secret": false
+    },
+
+    {
+      "key": "SUPERPERF_PRIMEIRA_TRANSBORDADA",
+      "name": "Primeira Transbordada",
+      "description": "Completou 1 dia com overshoot em todas as 9 sub-tarefas das 3 missões.\n\nA primeira vez que o copo extravasou. Você fez mais — não por exigência, mas por instinto.",
+      "category": "super_perfect",
+      "trigger": { "type": "daily_mission_super_perfect_count", "target": 1 },
+      "reward_tier": "trivial",
+      "is_secret": false
+    },
+    {
+      "key": "SUPERPERF_EXCESSO_DISCIPLINADO",
+      "name": "Excesso Disciplinado",
+      "description": "Completou 5 dias com overshoot em todas as sub-tarefas.\n\nCinco dias de excedente voluntário. O que o Vazio pediu, você devolveu em dobro.",
+      "category": "super_perfect",
+      "trigger": { "type": "daily_mission_super_perfect_count", "target": 5 },
+      "reward_tier": "comum",
+      "is_secret": false
+    },
+    {
+      "key": "SUPERPERF_SANGUE_GENEROSO",
+      "name": "Sangue Generoso",
+      "description": "Completou 15 dias com overshoot em todas as sub-tarefas.\n\nQuinze vezes você sangrou além do necessário. A medida foi superada como rotina, não como heroísmo.",
+      "category": "super_perfect",
+      "trigger": { "type": "daily_mission_super_perfect_count", "target": 15 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "SUPERPERF_FILHO_EXCESSO",
+      "name": "Filho do Excesso",
+      "description": "Completou 40 dias com overshoot em todas as sub-tarefas.\n\nQuarenta dias em que cumprir foi insuficiente. A meta tornou-se piso — nunca teto.",
+      "category": "super_perfect",
+      "trigger": { "type": "daily_mission_super_perfect_count", "target": 40 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "SUPERPERF_DEVORADOR_LIMITES",
+      "name": "Devorador de Limites",
+      "description": "Completou 100 dias com overshoot em todas as sub-tarefas.\n\nCem dias mastigando os próprios limites. O Andante entendeu: a régua existe pra ser quebrada com elegância.",
+      "category": "super_perfect",
+      "trigger": { "type": "daily_mission_super_perfect_count", "target": 100 },
+      "reward_tier": "epica",
+      "is_secret": false
+    },
+    {
+      "key": "SUPERPERF_EXCEDENTE_ETERNO",
+      "name": "Excedente Eterno",
+      "description": "Completou 300 dias com overshoot em todas as sub-tarefas.\n\nTrezentos dias de transbordamento absoluto. Você não cumpre — você inunda. Os Voidrins admitem: subestimaram a sua fome.",
+      "category": "super_perfect",
+      "trigger": { "type": "daily_mission_super_perfect_count", "target": 300 },
+      "reward_tier": "lendaria_boost_10",
+      "is_secret": false
+    },
+
+    {
+      "key": "FAIL_PRIMEIRO_TROPECO",
+      "name": "Primeiro Tropeço",
+      "description": "Falhou em 5 missões diárias no total.\n\nCinco quedas. O Vazio sorri. Cair é prova de que você ousou começar — quem nunca tenta, nunca cai.",
+      "category": "falhas",
+      "trigger": { "type": "daily_mission_failed_count", "target": 5 },
+      "reward_tier": "trivial_falha",
+      "is_secret": false
+    },
+    {
+      "key": "FAIL_FAMILIARIZADO_QUEDA",
+      "name": "Familiarizado com a Queda",
+      "description": "Falhou em 25 missões diárias no total.\n\nVinte e cinco vezes o chão te recebeu. Você já não estranha o impacto — virou ritual.",
+      "category": "falhas",
+      "trigger": { "type": "daily_mission_failed_count", "target": 25 },
+      "reward_tier": "comum_falha",
+      "is_secret": false
+    },
+    {
+      "key": "FAIL_VETERANO_QUEDAS",
+      "name": "Veterano das Quedas",
+      "description": "Falhou em 75 missões diárias no total.\n\nSetenta e cinco tropeços documentados. A cada queda, o Andante se levanta um pouco mais lento — e um pouco mais sábio.",
+      "category": "falhas",
+      "trigger": { "type": "daily_mission_failed_count", "target": 75 },
+      "reward_tier": "notavel_falha",
+      "is_secret": false
+    },
+    {
+      "key": "FAIL_SENHOR_CINZAS",
+      "name": "Senhor das Cinzas",
+      "description": "Falhou em 250 missões diárias no total.\n\nDuzentas e cinquenta brasas apagadas. Mas você ainda está aqui — e isso é mais do que muitos fariam. Os Voidrins não te respeitam, mas te conhecem pelo nome.",
+      "category": "falhas",
+      "trigger": { "type": "daily_mission_failed_count", "target": 250 },
+      "reward_tier": "epica_falha",
+      "is_secret": false
+    },
+    {
+      "key": "FAIL_CAMINHO_INTERROMPIDO",
+      "name": "Caminho Interrompido",
+      "description": "Fechou 10 missões diárias no estado parcial.\n\nDez vezes você começou e não terminou. Mas começar já foi mais do que ficar parado — o caminho conta cada passo.",
+      "category": "falhas",
+      "trigger": { "type": "daily_mission_partial_count", "target": 10 },
+      "reward_tier": "trivial_falha",
+      "is_secret": false
+    },
+    {
+      "key": "FAIL_COSTUME_METADE",
+      "name": "Costume da Metade",
+      "description": "Fechou 75 missões diárias no estado parcial.\n\nSetenta e cinco vezes a meta escapou pelas frestas. Mas frestas são inevitáveis — quem nunca falhou, nunca tentou direito.",
+      "category": "falhas",
+      "trigger": { "type": "daily_mission_partial_count", "target": 75 },
+      "reward_tier": "comum_falha",
+      "is_secret": false
+    },
+
+    {
+      "key": "NOFAIL_COMPARECIMENTO",
+      "name": "Comparecimento Honesto",
+      "description": "Manteve um streak de 5 dias consecutivos sem falhar nenhuma missão.\n\nCinco dias presentes. Você não cumpriu sempre — mas nunca deu as costas. O Vazio prefere quem aparece imperfeito a quem desaparece perfeito.",
+      "category": "no_fail_streak",
+      "trigger": { "type": "daily_no_fail_streak", "target": 5 },
+      "reward_tier": "trivial",
+      "is_secret": false
+    },
+    {
+      "key": "NOFAIL_PRESENTE_SEMPRE",
+      "name": "Presente, Sempre",
+      "description": "Manteve um streak de 10 dias consecutivos sem falhar nenhuma missão.\n\nDez dias sem virar as costas. Mesmo nos piores momentos, você apareceu — e isso conta mais do que se imagina.",
+      "category": "no_fail_streak",
+      "trigger": { "type": "daily_no_fail_streak", "target": 10 },
+      "reward_tier": "comum",
+      "is_secret": false
+    },
+    {
+      "key": "NOFAIL_VINCULO_INQUEBRADO",
+      "name": "Vínculo Inquebrado",
+      "description": "Manteve um streak de 21 dias consecutivos sem falhar nenhuma missão.\n\nTrês semanas sem soltar a corda. Pode ter cambaleado, mas não largou. As Runas registram lealdade antes de virtude.",
+      "category": "no_fail_streak",
+      "trigger": { "type": "daily_no_fail_streak", "target": 21 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "NOFAIL_CONSTANCIA_CARNE",
+      "name": "Constância da Carne",
+      "description": "Manteve um streak de 50 dias consecutivos sem falhar nenhuma missão.\n\nCinquenta dias de presença ininterrupta. O corpo entendeu antes da mente — disciplina é estar ali, não estar perfeito.",
+      "category": "no_fail_streak",
+      "trigger": { "type": "daily_no_fail_streak", "target": 50 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "NOFAIL_LEALDADE_PROFUNDA",
+      "name": "Lealdade Profunda",
+      "description": "Manteve um streak de 150 dias consecutivos sem falhar nenhuma missão.\n\nCento e cinquenta dias de comparecimento sagrado. Outros teriam abandonado. Você só baixou a cabeça e continuou — virtude maior que perfeição.",
+      "category": "no_fail_streak",
+      "trigger": { "type": "daily_no_fail_streak", "target": 150 },
+      "reward_tier": "epica",
+      "is_secret": false
+    },
+    {
+      "key": "NOFAIL_PACTO_ETERNO",
+      "name": "Pacto Eterno",
+      "description": "Manteve um streak de 365 dias consecutivos sem falhar nenhuma missão.\n\nUm ano inteiro sem desistir de nada. Não é sobre perfeição — é sobre presença. E você esteve presente em todos os 365 — Caelum se inclina.",
+      "category": "no_fail_streak",
+      "trigger": { "type": "daily_no_fail_streak", "target": 365 },
+      "reward_tier": "lendaria_boost_10",
+      "is_secret": false
+    },
+
+    {
+      "key": "SUBVOL_FIS_CARNE_LAPIDADA",
+      "name": "Carne Lapidada",
+      "description": "Acumulou 500 flexões no total.\n\nQuinhentas repetições de músculo contra resistência. O corpo aprendeu antes da mente.",
+      "category": "subtask_volume_indiv",
+      "trigger": { "type": "daily_subtask_volume", "target": 500, "params": { "sub_task_key": "flexoes" } },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "SUBVOL_FIS_FORJA_ENCARNADA",
+      "name": "Forja Encarnada",
+      "description": "Acumulou 3000 agachamentos no total.\n\nTrês mil agachamentos cravados no tecido. O Andante sabe: a carne é a primeira ferramenta — e a última fortaleza.",
+      "category": "subtask_volume_indiv",
+      "trigger": { "type": "daily_subtask_volume", "target": 3000, "params": { "sub_task_key": "agachamentos" } },
+      "reward_tier": "epica",
+      "is_secret": false
+    },
+    {
+      "key": "SUBVOL_MEN_MENTE_AFIADA",
+      "name": "Mente Afiada",
+      "description": "Acumulou 1000 páginas lidas no total.\n\nMil páginas atravessadas. Cada uma um gume mais fino contra o ruído de Caelum.",
+      "category": "subtask_volume_indiv",
+      "trigger": { "type": "daily_subtask_volume", "target": 1000, "params": { "sub_task_key": "leitura_paginas" } },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "SUBVOL_MEN_PENSAMENTO_CRISTALINO",
+      "name": "Pensamento Cristalino",
+      "description": "Acumulou 1000 sessões de pomodoro no total.\n\nMil sessões de foco profundo. Outros pensam, você arquiteta — pedaço por pedaço, em blocos de 25 minutos.",
+      "category": "subtask_volume_indiv",
+      "trigger": { "type": "daily_subtask_volume", "target": 1000, "params": { "sub_task_key": "pomodoro" } },
+      "reward_tier": "epica",
+      "is_secret": false
+    },
+    {
+      "key": "SUBVOL_ESP_CENTRO_ENCONTRADO",
+      "name": "Centro Encontrado",
+      "description": "Acumulou 500 minutos de meditação respiratória.\n\nQuinhentos minutos retornando ao próprio eixo. Quem se encontra tantas vezes nunca mais se perde de vez.",
+      "category": "subtask_volume_indiv",
+      "trigger": { "type": "daily_subtask_volume", "target": 500, "params": { "sub_task_key": "meditacao_respiratoria" } },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "SUBVOL_ESP_RAIZ_PROFUNDA",
+      "name": "Raiz Profunda",
+      "description": "Acumulou 3000 minutos de meditação silenciosa.\n\nTrês mil minutos de mergulho além da superfície. O silêncio interno virou companhia — não fuga.",
+      "category": "subtask_volume_indiv",
+      "trigger": { "type": "daily_subtask_volume", "target": 3000, "params": { "sub_task_key": "meditacao_silenciosa" } },
+      "reward_tier": "epica",
+      "is_secret": false
+    },
+
+    {
+      "key": "TOTSUB_TEAR_EXISTENCIA",
+      "name": "Tear da Existência",
+      "description": "Completou 3000 sub-tarefas no total (somando todas as modalidades).\n\nTrês mil fios tecidos. A vida deixa de ser eventos isolados — vira tapeçaria.",
+      "category": "total_subtask",
+      "trigger": { "type": "daily_subtask_total_volume", "target": 3000 },
+      "reward_tier": "epica",
+      "is_secret": false
+    },
+    {
+      "key": "TOTSUB_ARQUITETO_PROPRIO_SER",
+      "name": "Arquiteto do Próprio Ser",
+      "description": "Completou 10000 sub-tarefas no total (somando todas as modalidades).\n\nDez mil tijolos colocados pelas próprias mãos. Você não vive uma vida — você a constrói, sub-tarefa por sub-tarefa.",
+      "category": "total_subtask",
+      "trigger": { "type": "daily_subtask_total_volume", "target": 10000 },
+      "reward_tier": "lendaria_boost_5",
+      "is_secret": false
+    },
+
+    {
+      "key": "TIME_AURORA_DISCIPLINADA",
+      "name": "Aurora Disciplinada",
+      "description": "Completou 10 missões diárias antes das 8h da manhã.\n\nDez vezes acordado antes do sol. O Vazio respeita quem se levanta — e respeita ainda mais quem se levanta com propósito.",
+      "category": "janelas_temporais",
+      "trigger": { "type": "daily_confirmed_time_window", "target": 10, "params": { "window": "before_8am" } },
+      "reward_tier": "comum",
+      "is_secret": false
+    },
+    {
+      "key": "TIME_SENHOR_AURORA",
+      "name": "Senhor da Aurora",
+      "description": "Completou 50 missões diárias antes das 8h da manhã.\n\nCinquenta amanheceres trabalhados. Você descobriu o que poucos sabem: as melhores horas são as que ninguém disputa.",
+      "category": "janelas_temporais",
+      "trigger": { "type": "daily_confirmed_time_window", "target": 50, "params": { "window": "before_8am" } },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "TIME_FILHO_SOL_NASCENTE",
+      "name": "Filho do Sol Nascente",
+      "description": "Completou 200 missões diárias antes das 8h da manhã.\n\nDuzentos amanheceres. Sua presença antes do mundo virou ritual — você não acorda mais cedo, você simplesmente nunca fica para depois.",
+      "category": "janelas_temporais",
+      "trigger": { "type": "daily_confirmed_time_window", "target": 200, "params": { "window": "before_8am" } },
+      "reward_tier": "epica",
+      "is_secret": false
+    },
+    {
+      "key": "TIME_COMPANHIA_LUA",
+      "name": "Companhia da Lua",
+      "description": "Completou 10 missões diárias após as 22h.\n\nDez vezes em silêncio noturno cumprindo o pacto consigo. Quando os outros dormem, você ainda escolhe ser fiel.",
+      "category": "janelas_temporais",
+      "trigger": { "type": "daily_confirmed_time_window", "target": 10, "params": { "window": "after_10pm" } },
+      "reward_tier": "comum",
+      "is_secret": false
+    },
+    {
+      "key": "TIME_VIGIA_HORAS_MORTAS",
+      "name": "Vigia das Horas Mortas",
+      "description": "Completou 75 missões diárias após as 22h.\n\nSetenta e cinco noites trabalhadas no escuro. Você não evita o silêncio — você o utiliza.",
+      "category": "janelas_temporais",
+      "trigger": { "type": "daily_confirmed_time_window", "target": 75, "params": { "window": "after_10pm" } },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+
+    {
+      "key": "WEEKEND_SABADO_INQUEBRADO",
+      "name": "Sábado Inquebrado",
+      "description": "Completou 20 missões diárias em sábados/domingos.\n\nVinte fins de semana cumpridos. O calendário não decide sua disciplina — você decide.",
+      "category": "fim_de_semana",
+      "trigger": { "type": "daily_confirmed_on_weekend", "target": 20 },
+      "reward_tier": "comum",
+      "is_secret": false
+    },
+    {
+      "key": "WEEKEND_GUERREIRO_DOMINGO",
+      "name": "Guerreiro de Domingo",
+      "description": "Completou 80 missões diárias em sábados/domingos.\n\nOitenta vezes recusando descansar enquanto outros descansam. A constância tornou-se distinção.",
+      "category": "fim_de_semana",
+      "trigger": { "type": "daily_confirmed_on_weekend", "target": 80 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "WEEKEND_SEM_CALENDARIO_SEM_TREGUA",
+      "name": "Sem Calendário, Sem Trégua",
+      "description": "Completou 250 missões diárias em sábados/domingos.\n\nDuzentas e cinquenta horas de fim de semana investidas em si mesmo. O conceito de descanso deixou de ser desculpa — virou ferramenta.",
+      "category": "fim_de_semana",
+      "trigger": { "type": "daily_confirmed_on_weekend", "target": 250 },
+      "reward_tier": "epica",
+      "is_secret": false
+    },
+
+    {
+      "key": "PILAR_TRIDENTE_EQUILIBRADO",
+      "name": "Tridente Equilibrado",
+      "description": "Completou pelo menos 1 missão de cada pilar (físico, mental, espiritual) em 10 dias diferentes.\n\nDez dias de equilíbrio entre as três pernas do banco. Ninguém é forte de um lado só.",
+      "category": "pilar_balance",
+      "trigger": { "type": "daily_pilar_balance", "target": 10 },
+      "reward_tier": "comum",
+      "is_secret": false
+    },
+    {
+      "key": "PILAR_HARMONIA_PERSISTENTE",
+      "name": "Harmonia Persistente",
+      "description": "Manteve equilíbrio entre os três pilares em 50 dias diferentes.\n\nCinquenta dias de tridente em harmonia. A integralidade tornou-se hábito — você não favorece, você integra.",
+      "category": "pilar_balance",
+      "trigger": { "type": "daily_pilar_balance", "target": 50 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "PILAR_GEOMETRIA_INTERNA",
+      "name": "Geometria Interna",
+      "description": "Manteve equilíbrio entre os três pilares em 200 dias diferentes.\n\nDuzentos dias com os três pilares vivos. Você não é apenas forte, lúcido ou centrado — você é os três simultaneamente, e isso é raro.",
+      "category": "pilar_balance",
+      "trigger": { "type": "daily_pilar_balance", "target": 200 },
+      "reward_tier": "epica",
+      "is_secret": false
+    },
+
+    {
+      "key": "ACTIVE_PRESENCA_ININTERRUPTA",
+      "name": "Presença Ininterrupta",
+      "description": "Apareceu e fez algo por 100 dias consecutivos.\n\nCem dias seguidos sem desaparecer. Pode ter feito pouco, mas nunca ficou ausente. Aparição é a forma mais pura de fidelidade.",
+      "category": "active_days",
+      "trigger": { "type": "daily_consecutive_days_active", "target": 100 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+
+    {
+      "key": "SPEED_VELOCIDADE_RITUALISTICA",
+      "name": "Velocidade Ritualística",
+      "description": "Completou 25 missões em modo speedrun (fechadas rápido após geração).\n\nVinte e cinco vezes o tempo entre intenção e execução foi desprezível. Você não titubeia — age.",
+      "category": "speedrun",
+      "trigger": { "type": "daily_speedrun", "target": 25 },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "SPEED_REFLEXO_FORJADO",
+      "name": "Reflexo Forjado",
+      "description": "Completou 100 missões em modo speedrun.\n\nCem vezes pulando direto da intenção pra obra. A pausa entre pensar e fazer simplesmente desapareceu.",
+      "category": "speedrun",
+      "trigger": { "type": "daily_speedrun", "target": 100 },
+      "reward_tier": "epica",
+      "is_secret": false
+    },
+
+    {
+      "key": "SECRET_LOBO_SOLITARIO",
+      "name": "Caminho do Lobo Solitário",
+      "description": "Você escolheu trilhar sozinho.\n\nSolidão escolhida não é solidão — é nitidez. O Vazio respeita quem não pede companhia pra atravessar.",
+      "category": "secret",
+      "trigger": { "type": "event_class_selected", "target": 1, "params": { "class_key": "lobo_solitario" } },
+      "reward_tier_custom": { "xp": 500, "gold": 1000, "gems": 30, "baus_secretos": 1 },
+      "is_secret": true,
+      "disabled": true,
+      "shell_reason": "classe lobo_solitario ainda não existe em classes.json — habilitar quando for adicionada"
+    },
+    {
+      "key": "SECRET_VETERANO_MIL_VOLTAS",
+      "name": "Veterano de Mil Voltas",
+      "description": "Manteve um streak perfeito de 365 dias consecutivos.\n\nMil voltas da estrela sem cair uma vez. Lendas se contam em sussurros — a sua já corre o continente.",
+      "category": "secret",
+      "trigger": { "type": "daily_mission_streak", "target": 365 },
+      "reward_tier_custom": { "xp": 1200, "gold": 3000, "gems": 100, "baus_secretos": 2 },
+      "is_secret": true
+    },
+    {
+      "key": "SECRET_FACCAO_ERROR",
+      "name": "Facção Error desbloqueada",
+      "description": "Você encontrou o caminho que não deveria existir.\n\nNinguém te apresentou. Ninguém te indicou. E ainda assim — você está aqui.",
+      "category": "secret",
+      "trigger": { "type": "event_faction_joined", "target": 1, "params": { "faction_id": "error" } },
+      "reward_tier_custom": { "xp": 1000, "gold": 1500, "gems": 50, "baus_secretos": 1 },
+      "is_secret": true
+    },
+    {
+      "key": "SECRET_QUEDA_DO_VIDENTE",
+      "name": "Queda do Vidente",
+      "description": "Reservada — destrava em sprint futura.\n\nAquele que viu tudo pode prever a própria queda — mas não pode evitá-la.",
+      "category": "secret",
+      "trigger": { "type": "level_returned_after_higher", "target": 1 },
+      "reward_tier_custom": { "xp": 1500, "gold": 2000, "gems": 60, "baus_secretos": 2 },
+      "is_secret": true,
+      "disabled": true,
+      "shell_reason": "trigger level_returned_after_higher será implementado na Sprint 3.8"
+    },
+    {
+      "key": "SECRET_AUTOMATO_DISCIPLINADO",
+      "name": "Autômato Disciplinado",
+      "description": "Completou 100 missões em modo automático.\n\nCem vezes a engrenagem girou sem sua presença consciente. A disciplina virou mecanismo — Caelum reconhece a poesia.",
+      "category": "secret",
+      "trigger": { "type": "daily_auto_confirm_count", "target": 100 },
+      "reward_tier_custom": { "xp": 1500, "gold": 1500, "gems": 50, "baus_secretos": 2 },
+      "is_secret": true
+    },
+    {
+      "key": "SECRET_PRODIGO_LUNARIS",
+      "name": "Pródigo de Lunaris",
+      "description": "Gastou 1000 gemas no total.\n\nMil gemas dispersas. Lunaris não esquece quem alimenta seus mercados — nem quem se esvazia em troca de brilho.",
+      "category": "secret",
+      "trigger": { "type": "event_gems_spent_total", "target": 1000 },
+      "reward_tier_custom": { "xp": 1200, "gold": 0, "gems": 80, "baus_secretos": 2 },
+      "is_secret": true
+    },
+    {
+      "key": "SECRET_OLHO_NAO_PISCA",
+      "name": "O Olho que Não Pisca",
+      "description": "Confirmou 10 missões diárias com 0% de progresso real (manualmente).\n\nDez vezes você mentiu para o sistema — mas o sistema sempre soube. O Vazio observa todas as confirmações vazias.",
+      "category": "secret",
+      "trigger": { "type": "daily_zero_progress_manual_count", "target": 10 },
+      "reward_tier_custom": { "xp": 600, "gold": 800, "gems": 30, "baus_secretos": 1 },
+      "is_secret": true
+    },
+    {
+      "key": "SECRET_RESILIENTE_FLORESTA_NEGRA",
+      "name": "Resiliente da Floresta Negra",
+      "description": "Falhou em 100 missões diárias e ainda assim continuou.\n\nCem quedas dentro da Floresta Negra. A maioria nunca volta — você voltou cem vezes. As árvores agora se inclinam à sua passagem.",
+      "category": "secret",
+      "trigger": { "type": "daily_mission_failed_count", "target": 100 },
+      "reward_tier_custom": { "xp": 1500, "gold": 2000, "gems": 60, "baus_secretos": 2 },
       "is_secret": true
     }
   ]
