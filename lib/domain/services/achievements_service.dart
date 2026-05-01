@@ -140,6 +140,20 @@ class AchievementsService {
   /// trigger event_* (não-daily). Filtra `disabled=true`.
   List<AchievementDefinition> _eventAchievements = const [];
 
+  /// Sprint 3.3 Etapa 2.2 hotfix — cache pré-filtrado dos achievements
+  /// com trigger MetaTrigger / ThresholdStatTrigger / EventCountTrigger
+  /// (3 tipos legacy não cobertos pelos caches `_dailyAchievements` e
+  /// `_eventAchievements`). Filtra `disabled=true`.
+  ///
+  /// Re-checados via [attachMetaLikeListeners] em resposta a
+  /// `AchievementUnlocked` (cobre meta + event_count) e `LevelUp`
+  /// (cobre threshold_stat com `stat='level'`). Sem este cache, conquistas
+  /// como `INIT_NIVEL_5` (threshold) e `INIT_CINCO_CONQUISTAS` (meta)
+  /// ficavam UNREACHABLE no formato JSON da Etapa 2.2 — `_resolveTier`
+  /// não preserva `achievements_to_check` (cascata explícita) que era o
+  /// único caminho legacy de re-checagem desses triggers.
+  List<AchievementDefinition> _metaLikeAchievements = const [];
+
   bool _loaded = false;
   Future<void>? _loadingFuture;
 
@@ -246,6 +260,15 @@ class AchievementsService {
     _eventAchievements = _catalog.values
         .where((d) => d.trigger is EventTrigger && !d.disabled)
         .toList(growable: false);
+    // Sprint 3.3 Etapa 2.2 hotfix — cache de meta-like (3 trigger types
+    // legacy: MetaTrigger, ThresholdStatTrigger, EventCountTrigger).
+    _metaLikeAchievements = _catalog.values
+        .where((d) =>
+            !d.disabled &&
+            (d.trigger is MetaTrigger ||
+                d.trigger is ThresholdStatTrigger ||
+                d.trigger is EventCountTrigger))
+        .toList(growable: false);
     _loaded = true;
   }
 
@@ -344,6 +367,33 @@ class AchievementsService {
     ];
   }
 
+  /// Sprint 3.3 Etapa 2.2 hotfix — assina 2 listeners pros 3 trigger
+  /// types legacy não cobertos pelos caches daily/event:
+  ///   - [AchievementUnlocked] → re-checa todos os
+  ///     `_metaLikeAchievements` (cobre [MetaTrigger.targetCount] que
+  ///     conta total de unlocks E [EventCountTrigger] com event=
+  ///     `AchievementUnlocked`)
+  ///   - [LevelUp] → re-checa todos os `_metaLikeAchievements` (cobre
+  ///     [ThresholdStatTrigger] com `stat='level'`)
+  ///
+  /// Idempotência via `isCompleted` previne loop:
+  ///   AchievementUnlocked → re-check → unlock outro → AchievementUnlocked
+  ///   → re-check → todos isCompleted → noop.
+  ///
+  /// Listener escuta `AchievementUnlocked` SEMPRE (independente de
+  /// fromAchievementCascade do RewardGranted) — ao contrário do
+  /// [_handleRewardGranted] que ignora cascata, este listener QUER
+  /// re-disparar pra propagar meta unlocks.
+  Future<List<StreamSubscription>> attachMetaLikeListeners() async {
+    await ensureLoaded();
+    return [
+      _bus.on<AchievementUnlocked>().listen(
+          (e) => _checkMetaLikeTriggers(e.playerId)),
+      _bus.on<LevelUp>().listen(
+          (e) => _checkMetaLikeTriggers(e.playerId)),
+    ];
+  }
+
   /// Sprint 3.3 Etapa 2.1c-α — assina os 5 listeners pros triggers
   /// `event_*`:
   ///   - [ClassSelected] → `event_class_selected`
@@ -391,6 +441,19 @@ class AchievementsService {
     if (_dailyAchievements.isEmpty) return;
     for (final def in _dailyAchievements) {
       await _tryUnlock(evt.playerId, def.key, depth: 0);
+    }
+  }
+
+  /// Sprint 3.3 Etapa 2.2 hotfix — handler de `AchievementUnlocked` /
+  /// `LevelUp` que re-checa o cache `_metaLikeAchievements`. Para meta-
+  /// triggers, idempotência via `isCompleted` é o que evita loop infinito
+  /// (cada unlock dispara o evento, listener re-itera, mas conquistas já
+  /// completadas caem em early-return em `_tryUnlock`).
+  Future<void> _checkMetaLikeTriggers(int playerId) async {
+    await ensureLoaded();
+    if (_metaLikeAchievements.isEmpty) return;
+    for (final def in _metaLikeAchievements) {
+      await _tryUnlock(playerId, def.key, depth: 0);
     }
   }
 
@@ -841,6 +904,11 @@ class AchievementsService {
   /// dos event_* triggers. Útil pra introspection em testes e UI.
   List<AchievementDefinition> get eventAchievements =>
       List.unmodifiable(_eventAchievements);
+
+  /// Sprint 3.3 Etapa 2.2 hotfix — read-only acessor pro cache de
+  /// triggers meta/threshold_stat/event_count.
+  List<AchievementDefinition> get metaLikeAchievements =>
+      List.unmodifiable(_metaLikeAchievements);
 
   /// Read-only — utilizado por testes pra forçar leitura sob estado
   /// arbitrário sem precisar publicar evento.

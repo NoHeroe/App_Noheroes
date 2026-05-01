@@ -326,6 +326,7 @@ final achievementsServiceProvider = Provider<AchievementsService>((ref) {
   StreamSubscription<RewardGranted>? rewardSub;
   List<StreamSubscription>? dailySubs;
   List<StreamSubscription>? eventSubs;
+  List<StreamSubscription>? metaLikeSubs;
   // fire-and-forget: carrega catálogo + registra listeners em background.
   service.attach().then((s) => rewardSub = s);
   service
@@ -335,6 +336,12 @@ final achievementsServiceProvider = Provider<AchievementsService>((ref) {
   service
       .attachEventListeners()
       .then((subs) => eventSubs = subs);
+  // Sprint 3.3 Etapa 2.2 hotfix — listeners pros 3 trigger types legacy
+  // (Meta / ThresholdStat / EventCount) que ficavam unreachable no
+  // formato JSON novo. Cobre INIT_NIVEL_5 e INIT_CINCO_CONQUISTAS.
+  service
+      .attachMetaLikeListeners()
+      .then((subs) => metaLikeSubs = subs);
   ref.onDispose(() {
     rewardSub?.cancel();
     if (dailySubs != null) {
@@ -344,6 +351,11 @@ final achievementsServiceProvider = Provider<AchievementsService>((ref) {
     }
     if (eventSubs != null) {
       for (final s in eventSubs!) {
+        s.cancel();
+      }
+    }
+    if (metaLikeSubs != null) {
+      for (final s in metaLikeSubs!) {
         s.cancel();
       }
     }

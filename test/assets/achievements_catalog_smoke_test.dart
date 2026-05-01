@@ -251,4 +251,96 @@ void main() {
           reason: '${s['key']}: secret usa tier ref em vez de custom');
     }
   });
+
+  // ─── Sprint 3.3 Etapa 2.2 hotfix — preventivos ──────────────────────
+
+  test(
+      'cada conquista com trigger não-daily/não-event-prefix está '
+      'coberta por cache _metaLikeAchievements (preventivo do bug que '
+      'INIT_NIVEL_5 + INIT_CINCO_CONQUISTAS UNREACHABLE)', () {
+    // Trigger types cobertos pelos caches dedicados.
+    final dailyPrefix = 'daily_';
+    final eventPrefix = 'event_';
+    // Triggers legacy que precisam de cache metaLike.
+    final metaLikeTypes = {'meta', 'threshold_stat', 'event_count'};
+
+    for (final e in entries) {
+      final disabled = (e['disabled'] as bool?) ?? false;
+      if (disabled) continue; // shell achievements ficam fora.
+      final type = (e['trigger'] as Map)['type'] as String;
+      // Daily/event_* já são cobertos.
+      if (type.startsWith(dailyPrefix) || type.startsWith(eventPrefix)) {
+        continue;
+      }
+      // Outros: têm que estar em metaLikeTypes pra que o listener
+      // attachMetaLikeListeners pegue.
+      expect(metaLikeTypes.contains(type), isTrue,
+          reason:
+              '${e['key']}: trigger "$type" não está em daily_*, '
+              'event_*, nem metaLikeTypes. Conquista UNREACHABLE — '
+              'adicionar suporte ou marcar disabled+shell_reason.');
+    }
+  });
+
+  test(
+      'todos os item keys referenciados em rewards (resolvidos) existem '
+      'em items_unified.json (preventivo do bug onde CHEST_DEFEATED não '
+      'seria entregue se o seed falhasse)', () {
+    // Carrega catálogo de items.
+    final itemsFile = File('assets/data/items_unified.json');
+    expect(itemsFile.existsSync(), isTrue);
+    final itemsRoot =
+        jsonDecode(itemsFile.readAsStringSync()) as Map<String, dynamic>;
+    final allItemKeys = (itemsRoot['items'] as List)
+        .map((i) => (i as Map<String, dynamic>)['key'] as String)
+        .toSet();
+
+    // Coleta items referenciados por rewards (resolvidos via tier).
+    final referencedKeys = <String>{};
+
+    for (final e in entries) {
+      // Direto: reward.items (formato legacy inline).
+      final rewardRaw = e['reward'];
+      if (rewardRaw is Map<String, dynamic>) {
+        final items = rewardRaw['items'];
+        if (items is List) {
+          for (final it in items) {
+            if (it is Map && it['key'] is String) {
+              referencedKeys.add(it['key'] as String);
+            }
+          }
+        }
+      }
+
+      // Resolvido via tier ref → CHEST_SECRET / CHEST_DEFEATED implícitos.
+      Map<String, dynamic>? tierMap;
+      if (e['reward_tier_custom'] is Map<String, dynamic>) {
+        tierMap = e['reward_tier_custom'] as Map<String, dynamic>;
+      } else if (e['reward_tier'] is String) {
+        tierMap = tierDefs[e['reward_tier'] as String];
+      }
+      if (tierMap != null) {
+        if (((tierMap['baus_secretos'] as int?) ?? 0) > 0) {
+          referencedKeys.add('CHEST_SECRET');
+        }
+        if (((tierMap['baus_derrotado'] as int?) ?? 0) > 0) {
+          referencedKeys.add('CHEST_DEFEATED');
+        }
+      }
+    }
+
+    // RANDOM keys ({TYPE}_RANDOM_{RANK}) são resolvidas em runtime e
+    // não esperadas no items_unified — filtra antes.
+    final randomKeyPattern = RegExp(r'_RANDOM_[EDCBAS]$');
+    final literalKeys = referencedKeys
+        .where((k) => !randomKeyPattern.hasMatch(k))
+        .toSet();
+
+    final missing = literalKeys.difference(allItemKeys);
+    expect(missing, isEmpty,
+        reason:
+            'item keys referenciadas em rewards mas ausentes em '
+            'items_unified.json: $missing — runtime addItem retornaria '
+            '-1 silenciosamente sem o log defensivo do hotfix 2.2.');
+  });
 }

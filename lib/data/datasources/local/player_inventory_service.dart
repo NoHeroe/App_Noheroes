@@ -42,7 +42,19 @@ class PlayerInventoryService {
   }) async {
     if (quantity <= 0) return -1;
     final spec = await _catalog.findByKey(itemKey);
-    if (spec == null) return -1;
+    if (spec == null) {
+      // Sprint 3.3 Etapa 2.2 hotfix — log explícito ao invés de falhar
+      // silencioso. Causa típica: catálogo desatualizado (item novo no
+      // JSON mas self-heal não rodou ou falhou). Conquistas com items
+      // (ex: CHEST_DEFEATED em tiers *_falha) caem aqui se o seed do
+      // items_unified.json não cobriu este item.
+      // ignore: avoid_print
+      print('[inventory] addItem: item key "$itemKey" não existe no '
+          'items_catalog (player=$playerId, qty=$quantity, '
+          'via=${acquiredVia.name}). Verificar self-heal de '
+          'items_unified.json.');
+      return -1;
+    }
 
     final now = DateTime.now().millisecondsSinceEpoch;
     var remaining = quantity;
