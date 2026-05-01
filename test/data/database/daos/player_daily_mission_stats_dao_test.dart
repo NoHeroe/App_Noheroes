@@ -1,8 +1,10 @@
+import 'package:drift/drift.dart' show Variable;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:noheroes_app/data/database/app_database.dart';
 import 'package:noheroes_app/data/database/daos/player_daily_mission_stats_dao.dart';
+import 'package:noheroes_app/data/database/daos/player_dao.dart';
 
 /// Sprint 3.3 Etapa 2.1a — DAO de stats agregadas.
 void main() {
@@ -212,5 +214,66 @@ void main() {
     await dao.incrementGenerated(playerId);
     await dao.incrementGenerated(playerId);
     expect((await dao.findByPlayerId(playerId))!.totalGenerated, 3);
+  });
+
+  // ─── Sprint 3.3 Etapa 2.1c-δ — daily_today_count ────────────────────
+
+  test(
+      'caelum_day intocado: 3 logins (em dias distintos) via PlayerDao '
+      'não afetam dailyTodayCount nem lastTodayCountDate', () async {
+    // `touchLastLogin` tem guard de "mesmo dia" — só incrementa 1× por
+    // dia civil. Pra simular 3 logins em dias distintos, voltamos
+    // `last_login_at` no tempo entre chamadas (forçando lastLoginDay !=
+    // today) — equivalente a "jogador abriu o app em D, D+1 e D+2".
+    final pid = await db.customInsert(
+      "INSERT INTO players (email, password_hash, shadow_name, "
+      "last_login_at, created_at) VALUES (?, ?, ?, 0, 0)",
+      variables: [
+        Variable.withString('caelum@t'),
+        Variable.withString('h'),
+        Variable.withString('Sombra'),
+      ],
+    );
+    final playerDao = PlayerDao(db);
+
+    var player = await playerDao.findById(pid);
+    expect(player!.caelumDay, 1, reason: 'default = 1');
+    await dao.findOrCreate(pid);
+    var stats = await dao.findByPlayerId(pid);
+    expect(stats!.dailyTodayCount, 0);
+    expect(stats.lastTodayCountDate, isNull);
+
+    // Helper: força lastLoginAt pra ontem-no-tempo, depois chama
+    // touchLastLogin pra incrementar caelum_day.
+    Future<void> simulateNewDayLogin() async {
+      // -2 dias garante que lastLoginDay != today (e tolera fusos
+      // horários que mudam o início do dia).
+      final twoDaysAgo = DateTime.now().subtract(const Duration(days: 2));
+      await db.customUpdate(
+        'UPDATE players SET last_login_at = ? WHERE id = ?',
+        variables: [
+          Variable.withInt(twoDaysAgo.millisecondsSinceEpoch),
+          Variable.withInt(pid),
+        ],
+      );
+      await playerDao.touchLastLogin(pid);
+    }
+
+    // 3 logins em "dias diferentes" → caelum_day deveria virar 4.
+    await simulateNewDayLogin();
+    await simulateNewDayLogin();
+    await simulateNewDayLogin();
+    player = await playerDao.findById(pid);
+    expect(player!.caelumDay, 4,
+        reason: 'caelum_day deve incrementar 1× por dia distinto — '
+            'sistema de lore narrativa, intocado pela Etapa 2.1c-δ');
+
+    // E o today_count NÃO foi tocado por touchLastLogin.
+    stats = await dao.findByPlayerId(pid);
+    expect(stats!.dailyTodayCount, 0,
+        reason: 'incrementos em players.caelum_day não devem afetar '
+            'player_daily_mission_stats.daily_today_count (sistemas '
+            'paralelos por design)');
+    expect(stats.lastTodayCountDate, isNull);
   });
 }

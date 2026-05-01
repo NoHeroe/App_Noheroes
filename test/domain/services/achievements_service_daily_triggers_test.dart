@@ -969,4 +969,124 @@ void main() {
           isTrue);
     });
   });
+
+  // ─── Sprint 3.3 Etapa 2.1c-δ — daily_today_count ──────────────────────
+
+  /// Helper: simula estado de `player_daily_mission_stats` setando
+  /// `daily_today_count` e `last_today_count_date` direto via SQL (sem
+  /// ir pelo service). Permite isolar o validador.
+  Future<void> seedTodayCount(
+    AppDatabase db,
+    int pid, {
+    required int count,
+    required String? date,
+  }) async {
+    final dao = PlayerDailyMissionStatsDao(db);
+    await dao.findOrCreate(pid);
+    await db.customUpdate(
+      'UPDATE player_daily_mission_stats SET '
+      'daily_today_count = ?, '
+      'last_today_count_date = ?, '
+      'updated_at = ? '
+      'WHERE player_id = ?',
+      variables: [
+        Variable.withInt(count),
+        if (date == null) const Variable<String>(null) else Variable.withString(date),
+        Variable.withInt(DateTime.now().millisecondsSinceEpoch),
+        Variable.withInt(pid),
+      ],
+    );
+  }
+
+  String todayLocalStr() {
+    final now = DateTime.now();
+    final y = now.year.toString().padLeft(4, '0');
+    final m = now.month.toString().padLeft(2, '0');
+    final d = now.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
+  }
+
+  group('daily_today_count', () {
+    test('positive: count >= target + date=hoje → unlock (Tríade)',
+        () async {
+      await seedTodayCount(db, playerId, count: 3, date: todayLocalStr());
+      final entries = [
+        dailyAch('TRIADE', AchievementTriggerTypes.dailyTodayCount, 3),
+      ];
+      final svc = newService(db, bus, {
+        AchievementsService.catalogAssetPath: catalogJson(entries),
+      });
+      await svc.attachDailyListeners();
+      bus.publish(
+          DailyStatsUpdated(playerId: playerId, eventType: 'completed'));
+      await Future.delayed(const Duration(milliseconds: 50));
+      expect(
+          await PlayerAchievementsRepositoryDrift(db)
+              .isCompleted(playerId, 'TRIADE'),
+          isTrue);
+    });
+
+    test('negative: count=2 + date=hoje → no unlock (target=3)',
+        () async {
+      await seedTodayCount(db, playerId, count: 2, date: todayLocalStr());
+      final entries = [
+        dailyAch('NEG', AchievementTriggerTypes.dailyTodayCount, 3),
+      ];
+      final svc = newService(db, bus, {
+        AchievementsService.catalogAssetPath: catalogJson(entries),
+      });
+      await svc.attachDailyListeners();
+      bus.publish(
+          DailyStatsUpdated(playerId: playerId, eventType: 'completed'));
+      await Future.delayed(const Duration(milliseconds: 50));
+      expect(
+          await PlayerAchievementsRepositoryDrift(db)
+              .isCompleted(playerId, 'NEG'),
+          isFalse);
+    });
+
+    test(
+        'STALE GUARD: count=3 + date=ontem → no unlock (mesmo com count '
+        '>= target)', () async {
+      // Data fixa muito anterior pra garantir != hoje em qualquer fuso.
+      await seedTodayCount(db, playerId, count: 3, date: '2020-01-01');
+      final entries = [
+        dailyAch('STALE', AchievementTriggerTypes.dailyTodayCount, 3),
+      ];
+      final svc = newService(db, bus, {
+        AchievementsService.catalogAssetPath: catalogJson(entries),
+      });
+      await svc.attachDailyListeners();
+      bus.publish(
+          DailyStatsUpdated(playerId: playerId, eventType: 'completed'));
+      await Future.delayed(const Duration(milliseconds: 50));
+      expect(
+          await PlayerAchievementsRepositoryDrift(db)
+              .isCompleted(playerId, 'STALE'),
+          isFalse,
+          reason:
+              'stale guard: contador de ontem não vale pra trigger hoje');
+    });
+
+    test('jogador novo (date=null) → no unlock', () async {
+      // Não chama seedTodayCount; findOrCreate via validator vai criar
+      // row zerada com lastTodayCountDate=null.
+      final entries = [
+        dailyAch('NEW', AchievementTriggerTypes.dailyTodayCount, 1),
+      ];
+      final svc = newService(db, bus, {
+        AchievementsService.catalogAssetPath: catalogJson(entries),
+      });
+      await svc.attachDailyListeners();
+      bus.publish(
+          DailyStatsUpdated(playerId: playerId, eventType: 'completed'));
+      await Future.delayed(const Duration(milliseconds: 50));
+      expect(
+          await PlayerAchievementsRepositoryDrift(db)
+              .isCompleted(playerId, 'NEW'),
+          isFalse,
+          reason:
+              'lastTodayCountDate=null cai no stale guard (date != hoje)');
+    });
+  });
 }

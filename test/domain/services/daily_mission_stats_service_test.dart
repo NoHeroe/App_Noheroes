@@ -358,5 +358,243 @@ void main() {
       expect(stats.totalCompleted, 0);
       expect(await volumeDao.getVolume(playerId, 'meditacao'), 5);
     });
+
+    // ─── Sprint 3.3 Etapa 2.1c-δ — daily_today_count ───────────────────
+
+    /// Helper: insere mission com escalaAlvo=10 e progressoAtual dado em
+    /// cada sub. Retorna missionId. Permite controlar perfectness (e
+    /// portanto zeroProgress) via [progressoPerSub].
+    Future<int> insertMissionWithProgress({
+      required DateTime completedAt,
+      required List<int> progressoPerSub,
+      required bool partial,
+    }) async {
+      final subs = [
+        for (var i = 0; i < progressoPerSub.length; i++)
+          DailySubTaskInstance(
+            subTaskKey: 'sub_$i',
+            nomeVisivel: 'Sub $i',
+            escalaAlvo: 10,
+            unidade: 'x',
+            tipoUnidade: DailyUnitType.contagem,
+            progressoAtual: progressoPerSub[i],
+            completed: progressoPerSub[i] >= 10,
+          ),
+      ];
+      final mission = DailyMission(
+        id: 0,
+        playerId: playerId,
+        data:
+            '${completedAt.year.toString().padLeft(4, '0')}-${completedAt.month.toString().padLeft(2, '0')}-${completedAt.day.toString().padLeft(2, '0')}',
+        modalidade: MissionCategory.fisico,
+        subCategoria: 'forca',
+        tituloKey: 'k',
+        tituloResolvido: 't',
+        quoteResolvida: 'q',
+        subTarefas: subs,
+        status: partial
+            ? DailyMissionStatus.partial
+            : DailyMissionStatus.completed,
+        createdAt: completedAt.subtract(const Duration(hours: 2)),
+        completedAt: completedAt,
+        rewardClaimed: true,
+      );
+      final inserted = await missionsDao.insertAll([mission]);
+      return inserted.first.id;
+    }
+
+    Future<void> firePublishAndDrain({
+      required int missionId,
+      required bool fullCompleted,
+      required bool partial,
+    }) async {
+      bus.publish(DailyMissionCompleted(
+        playerId: playerId,
+        missionId: missionId,
+        modalidade: MissionCategory.fisico,
+        fullCompleted: fullCompleted,
+        partial: partial,
+      ));
+      await Future.delayed(Duration.zero);
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
+
+    test('daily_today_count: 1ª completion no dia → count=1 + date=hoje',
+        () async {
+      final missionId = await insertMissionWithProgress(
+        completedAt: DateTime(2026, 4, 29, 10),
+        progressoPerSub: [10, 10, 10],
+        partial: false,
+      );
+      await firePublishAndDrain(
+          missionId: missionId, fullCompleted: true, partial: false);
+
+      final stats = await statsDao.findByPlayerId(playerId);
+      expect(stats!.dailyTodayCount, 1);
+      expect(stats.lastTodayCountDate, '2026-04-29');
+    });
+
+    test('daily_today_count: 2ª e 3ª completions no mesmo dia → count=2 e 3',
+        () async {
+      // 1ª
+      final m1 = await insertMissionWithProgress(
+        completedAt: DateTime(2026, 4, 29, 9),
+        progressoPerSub: [10, 10, 10],
+        partial: false,
+      );
+      await firePublishAndDrain(
+          missionId: m1, fullCompleted: true, partial: false);
+      var stats = await statsDao.findByPlayerId(playerId);
+      expect(stats!.dailyTodayCount, 1);
+
+      // 2ª
+      final m2 = await insertMissionWithProgress(
+        completedAt: DateTime(2026, 4, 29, 12),
+        progressoPerSub: [10, 10, 10],
+        partial: false,
+      );
+      await firePublishAndDrain(
+          missionId: m2, fullCompleted: true, partial: false);
+      stats = await statsDao.findByPlayerId(playerId);
+      expect(stats!.dailyTodayCount, 2);
+
+      // 3ª — Tríade.
+      final m3 = await insertMissionWithProgress(
+        completedAt: DateTime(2026, 4, 29, 18),
+        progressoPerSub: [10, 10, 10],
+        partial: false,
+      );
+      await firePublishAndDrain(
+          missionId: m3, fullCompleted: true, partial: false);
+      stats = await statsDao.findByPlayerId(playerId);
+      expect(stats!.dailyTodayCount, 3);
+      expect(stats.lastTodayCountDate, '2026-04-29');
+    });
+
+    test(
+        'daily_today_count: completion no dia seguinte → reset → count=1',
+        () async {
+      // Hoje (2026-04-29): 2 completions
+      final m1 = await insertMissionWithProgress(
+        completedAt: DateTime(2026, 4, 29, 10),
+        progressoPerSub: [10, 10, 10],
+        partial: false,
+      );
+      await firePublishAndDrain(
+          missionId: m1, fullCompleted: true, partial: false);
+      final m2 = await insertMissionWithProgress(
+        completedAt: DateTime(2026, 4, 29, 16),
+        progressoPerSub: [10, 10, 10],
+        partial: false,
+      );
+      await firePublishAndDrain(
+          missionId: m2, fullCompleted: true, partial: false);
+      var stats = await statsDao.findByPlayerId(playerId);
+      expect(stats!.dailyTodayCount, 2);
+      expect(stats.lastTodayCountDate, '2026-04-29');
+
+      // Amanhã (2026-04-30): 1 completion → conta vira 1, não 3.
+      final m3 = await insertMissionWithProgress(
+        completedAt: DateTime(2026, 4, 30, 9),
+        progressoPerSub: [10, 10, 10],
+        partial: false,
+      );
+      await firePublishAndDrain(
+          missionId: m3, fullCompleted: true, partial: false);
+      stats = await statsDao.findByPlayerId(playerId);
+      expect(stats!.dailyTodayCount, 1,
+          reason: 'reset lazy: virada de dia zera antes de incrementar');
+      expect(stats.lastTodayCountDate, '2026-04-30');
+    });
+
+    test(
+        'daily_today_count: completion após 3 dias offline → reset → count=1',
+        () async {
+      // 2026-04-29: 1 completion
+      final m1 = await insertMissionWithProgress(
+        completedAt: DateTime(2026, 4, 29, 10),
+        progressoPerSub: [10, 10, 10],
+        partial: false,
+      );
+      await firePublishAndDrain(
+          missionId: m1, fullCompleted: true, partial: false);
+      var stats = await statsDao.findByPlayerId(playerId);
+      expect(stats!.dailyTodayCount, 1);
+
+      // 2026-05-02 (3 dias depois): 1 completion → count=1.
+      final m2 = await insertMissionWithProgress(
+        completedAt: DateTime(2026, 5, 2, 14),
+        progressoPerSub: [10, 10, 10],
+        partial: false,
+      );
+      await firePublishAndDrain(
+          missionId: m2, fullCompleted: true, partial: false);
+      stats = await statsDao.findByPlayerId(playerId);
+      expect(stats!.dailyTodayCount, 1);
+      expect(stats.lastTodayCountDate, '2026-05-02');
+    });
+
+    test(
+        'daily_today_count: partial NÃO-zero conta (1 sub completada → '
+        'count=1)', () async {
+      // 1 sub com progresso 10 (factor=1.0) + 2 com 0 → avg≈0.33 > 0.05
+      // → !zeroProgress → conta.
+      final missionId = await insertMissionWithProgress(
+        completedAt: DateTime(2026, 4, 29, 23),
+        progressoPerSub: [10, 0, 0],
+        partial: true,
+      );
+      await firePublishAndDrain(
+          missionId: missionId, fullCompleted: false, partial: true);
+
+      final stats = await statsDao.findByPlayerId(playerId);
+      expect(stats!.dailyTodayCount, 1);
+      expect(stats.totalPartial, 1);
+    });
+
+    test(
+        'daily_today_count: partial zero (avg<0.05) NÃO conta → count=0',
+        () async {
+      // 3 subs todas com progresso 0 → avg=0 → zeroProgress=true → skip.
+      final missionId = await insertMissionWithProgress(
+        completedAt: DateTime(2026, 4, 29, 23),
+        progressoPerSub: [0, 0, 0],
+        partial: true,
+      );
+      await firePublishAndDrain(
+          missionId: missionId, fullCompleted: false, partial: true);
+
+      final stats = await statsDao.findByPlayerId(playerId);
+      expect(stats!.dailyTodayCount, 0,
+          reason: 'partial com zeroProgress não conta (anti-cheese)');
+      // Sanity: incrementPartial roda mesmo assim (semântica do contador
+      // partial existente é ortogonal ao today_count).
+      expect(stats.totalPartial, 1);
+    });
+
+    test(
+        'daily_today_count: fullCompleted com cheese (✓ com 0%) NÃO '
+        'conta → count=0', () async {
+      // Confirmação ✓ sem fazer nada — fullCompleted=true mas todas as
+      // subs em 0%. avgFactor=0 → zeroProgress=true → skip today_count.
+      final missionId = await insertMissionWithProgress(
+        completedAt: DateTime(2026, 4, 29, 22),
+        progressoPerSub: [0, 0, 0],
+        partial: false,
+      );
+      await firePublishAndDrain(
+          missionId: missionId, fullCompleted: true, partial: false);
+
+      final stats = await statsDao.findByPlayerId(playerId);
+      expect(stats!.dailyTodayCount, 0,
+          reason:
+              'fullCompleted com zeroProgress não conta (anti-cheese)');
+      // Mas totalCompleted SIM (incrementOnCompleted continua rodando —
+      // anti-cheese é só pro today_count, outros contadores têm
+      // semântica diferente — ex: totalZeroProgressManualConfirms já
+      // captura este caso especificamente).
+      expect(stats.totalCompleted, 1);
+      expect(stats.totalZeroProgressConfirms, 1);
+    });
   });
 }

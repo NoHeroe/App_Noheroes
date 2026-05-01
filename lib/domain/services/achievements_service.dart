@@ -9,6 +9,7 @@ import '../../core/events/faction_events.dart';
 import '../../core/events/navigation_events.dart';
 import '../../core/events/player_events.dart';
 import '../../core/events/reward_events.dart';
+import '../../core/utils/day_format.dart';
 import '../../data/database/app_database.dart';
 import '../../data/database/daos/player_dao.dart';
 import '../../data/database/daos/player_daily_mission_stats_dao.dart';
@@ -611,6 +612,22 @@ class AchievementsService {
       case AchievementTriggerTypes.dailyZeroProgressManualCount:
         final stats = await statsDao!.findOrCreate(playerId);
         return stats.totalZeroProgressManualConfirms >= trigger.target;
+
+      case AchievementTriggerTypes.dailyTodayCount:
+        // Sprint 3.3 Etapa 2.1c-δ. STALE GUARD: contador é tocado pelo
+        // listener `_onCompleted` no `DailyMissionStatsService`. Se o
+        // jogador completou X missões ontem e ainda não completou
+        // nenhuma hoje, `dailyTodayCount` continua no valor de ontem
+        // até a próxima `incrementTodayCount` zerar (via reset lazy).
+        // Sem este guard, validador acharia que conta de ontem é de
+        // hoje. Comparação YYYY-MM-DD device local — sistema PARALELO
+        // ao caelum_day (intocado).
+        final stats = await statsDao!.findOrCreate(playerId);
+        final today = formatDay(DateTime.now());
+        if (stats.lastTodayCountDate != today) {
+          return false;
+        }
+        return stats.dailyTodayCount >= trigger.target;
 
       default:
         // Não deveria acontecer — o parser só cria DailyMissionTrigger

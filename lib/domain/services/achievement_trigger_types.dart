@@ -62,6 +62,18 @@ abstract class AchievementTriggerTypes {
   static const String dailyZeroProgressManualCount =
       'daily_zero_progress_manual_count';
 
+  /// Sprint 3.3 Etapa 2.1c-δ — missões diárias completadas no dia
+  /// calendário atual (device local YYYY-MM-DD). Validador checa stale
+  /// guard: se `lastTodayCountDate != formatDay(now)`, retorna false
+  /// direto (contador de ontem não vale pra hoje).
+  ///
+  /// Conta tanto fullCompleted quanto partial. Anti-cheese aplicado:
+  /// confirmações com `avgFactor < 0.05` (zeroProgress) NÃO incrementam.
+  /// Sistema PARALELO ao caelum_day (lore) — caelum_day não é tocado.
+  ///
+  /// Alimenta a conquista "Primeira Tríade" (target=3).
+  static const String dailyTodayCount = 'daily_today_count';
+
   /// Sprint 3.3 Etapa 2.1c-α — sub-tipos `event_*` resolvidos em
   /// `AchievementsService._validateEventTrigger`.
   static const String eventClassSelected = 'event_class_selected';
@@ -76,8 +88,8 @@ abstract class AchievementTriggerTypes {
   /// screen_key`) ou contagem de telas distintas (sem param).
   static const String eventScreenVisited = 'event_screen_visited';
 
-  /// Set imutável dos 17 daily — usado pelo parser pra detectar
-  /// prefixo daily. (Sprint 3.3 Etapa 2.1c-β: +2 sub-types.)
+  /// Set imutável dos 18 daily — usado pelo parser pra detectar
+  /// prefixo daily. (Sprint 3.3 Etapa 2.1c-β: +2; Etapa 2.1c-δ: +1.)
   static const Set<String> allDaily = {
     dailyMissionCount,
     dailyMissionFailedCount,
@@ -96,6 +108,7 @@ abstract class AchievementTriggerTypes {
     dailySpeedrun,
     dailyAutoConfirmCount,
     dailyZeroProgressManualCount,
+    dailyTodayCount,
   };
 
   /// Set imutável dos 6 event-based — paralelo a [allDaily].

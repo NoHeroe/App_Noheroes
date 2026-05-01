@@ -38,6 +38,14 @@ class PlayerDailyMissionStats {
   /// Sprint 3.3 Etapa 2.1c-β — anti-cheese de zero progress (só manual).
   final int totalZeroProgressManualConfirms;
 
+  /// Sprint 3.3 Etapa 2.1c-δ — missões completadas no dia atual.
+  final int dailyTodayCount;
+
+  /// Sprint 3.3 Etapa 2.1c-δ — última data (YYYY-MM-DD device local) em
+  /// que [dailyTodayCount] foi tocado. Validador do trigger compara
+  /// com `formatDay(now)` pra rejeitar valores stale.
+  final String? lastTodayCountDate;
+
   final DateTime? firstCompletedAt;
   final DateTime? lastCompletedAt;
   final String? lastPilarBalanceDay;
@@ -71,6 +79,8 @@ class PlayerDailyMissionStats {
     required this.totalSpeedrunCompletions,
     required this.totalAutoConfirmCompletions,
     required this.totalZeroProgressManualConfirms,
+    required this.dailyTodayCount,
+    required this.lastTodayCountDate,
     required this.firstCompletedAt,
     required this.lastCompletedAt,
     required this.lastPilarBalanceDay,
@@ -107,6 +117,8 @@ class PlayerDailyMissionStats {
       totalSpeedrunCompletions: row.totalSpeedrunCompletions,
       totalAutoConfirmCompletions: row.totalAutoConfirmCompletions,
       totalZeroProgressManualConfirms: row.totalZeroProgressManualConfirms,
+      dailyTodayCount: row.dailyTodayCount,
+      lastTodayCountDate: row.lastTodayCountDate,
       firstCompletedAt: row.firstCompletedAt == null
           ? null
           : DateTime.fromMillisecondsSinceEpoch(row.firstCompletedAt!),

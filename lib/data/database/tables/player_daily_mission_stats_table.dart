@@ -118,6 +118,32 @@ class PlayerDailyMissionStatsTable extends Table {
   /// detectar gap em `consecutiveActiveDays`.
   TextColumn get lastActiveDay => text().nullable()();
 
+  // ─── Sprint 3.3 Etapa 2.1c-δ — contador "missões hoje" ──────────────
+
+  /// Conta missões diárias completadas no dia calendário atual (device
+  /// local, formato YYYY-MM-DD). Reset lazy: cada incremento detecta
+  /// mudança em [lastTodayCountDate] vs `formatDay(now)` e zera antes
+  /// de incrementar. Padrão consistente com `lastActiveDay` /
+  /// `lastPilarBalanceDay` que já existem nesta tabela.
+  ///
+  /// Anti-cheese: incrementa apenas quando `!perf.zeroProgress` —
+  /// confirmação ✓ com 0% em todas as subs (`avgFactor < 0.05`) NÃO
+  /// conta. Conta tanto fullCompleted quanto partial (semântica: "se
+  /// engajou com a missão hoje", não "fechou perfeitamente").
+  ///
+  /// Sistema PARALELO ao `caelum_day` (lore narrativa em `players`) —
+  /// caelum_day continua intacto, conta logins de sessão como sempre.
+  ///
+  /// Alimenta trigger `daily_today_count`.
+  IntColumn get dailyTodayCount =>
+      integer().withDefault(const Constant(0))();
+
+  /// Última data (YYYY-MM-DD) em que [dailyTodayCount] foi incrementado.
+  /// Listener compara com `formatDay(now)` antes de incrementar — se
+  /// diferente, zera + incrementa pra 1. Validador do trigger compara
+  /// também (stale guard: contador de ontem não vale pra hoje).
+  TextColumn get lastTodayCountDate => text().nullable()();
+
   IntColumn get updatedAt => integer()();
 
   @override

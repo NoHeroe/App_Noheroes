@@ -317,4 +317,53 @@ class PlayerDailyMissionStatsDao
       updates: {playerDailyMissionStatsTable},
     );
   }
+
+  /// Sprint 3.3 Etapa 2.1c-δ — incrementa `daily_today_count` com reset
+  /// lazy YYYY-MM-DD. Caller (service) computa [resetTo1IfDayChanged]
+  /// comparando `stats.lastTodayCountDate` com `formatDay(now)` antes
+  /// de chamar.
+  ///
+  /// - [resetTo1IfDayChanged] = true → SET count=1 + last_date=today
+  ///   (zera + incrementa atomicamente — virada de dia)
+  /// - false → SET count=count+1 + last_date=today (mesmo dia)
+  ///
+  /// Sempre escreve `last_today_count_date` pra cobrir o edge case de
+  /// 1ª chamada (era NULL → vira `todayDate`).
+  Future<void> incrementTodayCount(
+    int playerId, {
+    required bool resetTo1IfDayChanged,
+    required String todayDate,
+  }) async {
+    await findOrCreate(playerId);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (resetTo1IfDayChanged) {
+      await customUpdate(
+        'UPDATE player_daily_mission_stats SET '
+        'daily_today_count = 1, '
+        'last_today_count_date = ?, '
+        'updated_at = ? '
+        'WHERE player_id = ?',
+        variables: [
+          Variable.withString(todayDate),
+          Variable.withInt(now),
+          Variable.withInt(playerId),
+        ],
+        updates: {playerDailyMissionStatsTable},
+      );
+    } else {
+      await customUpdate(
+        'UPDATE player_daily_mission_stats SET '
+        'daily_today_count = daily_today_count + 1, '
+        'last_today_count_date = ?, '
+        'updated_at = ? '
+        'WHERE player_id = ?',
+        variables: [
+          Variable.withString(todayDate),
+          Variable.withInt(now),
+          Variable.withInt(playerId),
+        ],
+        updates: {playerDailyMissionStatsTable},
+      );
+    }
+  }
 }

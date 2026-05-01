@@ -14023,6 +14023,20 @@ class $PlayerDailyMissionStatsTableTable extends PlayerDailyMissionStatsTable
   late final GeneratedColumn<String> lastActiveDay = GeneratedColumn<String>(
       'last_active_day', aliasedName, true,
       type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _dailyTodayCountMeta =
+      const VerificationMeta('dailyTodayCount');
+  @override
+  late final GeneratedColumn<int> dailyTodayCount = GeneratedColumn<int>(
+      'daily_today_count', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _lastTodayCountDateMeta =
+      const VerificationMeta('lastTodayCountDate');
+  @override
+  late final GeneratedColumn<String> lastTodayCountDate =
+      GeneratedColumn<String>('last_today_count_date', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _updatedAtMeta =
       const VerificationMeta('updatedAt');
   @override
@@ -14061,6 +14075,8 @@ class $PlayerDailyMissionStatsTableTable extends PlayerDailyMissionStatsTable
         lastCompletedAt,
         lastPilarBalanceDay,
         lastActiveDay,
+        dailyTodayCount,
+        lastTodayCountDate,
         updatedAt
       ];
   @override
@@ -14261,6 +14277,18 @@ class $PlayerDailyMissionStatsTableTable extends PlayerDailyMissionStatsTable
           lastActiveDay.isAcceptableOrUnknown(
               data['last_active_day']!, _lastActiveDayMeta));
     }
+    if (data.containsKey('daily_today_count')) {
+      context.handle(
+          _dailyTodayCountMeta,
+          dailyTodayCount.isAcceptableOrUnknown(
+              data['daily_today_count']!, _dailyTodayCountMeta));
+    }
+    if (data.containsKey('last_today_count_date')) {
+      context.handle(
+          _lastTodayCountDateMeta,
+          lastTodayCountDate.isAcceptableOrUnknown(
+              data['last_today_count_date']!, _lastTodayCountDateMeta));
+    }
     if (data.containsKey('updated_at')) {
       context.handle(_updatedAtMeta,
           updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
@@ -14349,6 +14377,10 @@ class $PlayerDailyMissionStatsTableTable extends PlayerDailyMissionStatsTable
           data['${effectivePrefix}last_pilar_balance_day']),
       lastActiveDay: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}last_active_day']),
+      dailyTodayCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}daily_today_count'])!,
+      lastTodayCountDate: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}last_today_count_date']),
       updatedAt: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}updated_at'])!,
     );
@@ -14413,6 +14445,29 @@ class PlayerDailyMissionStat extends DataClass
   /// Última data (YYYY-MM-DD) em que houve atividade — usado pra
   /// detectar gap em `consecutiveActiveDays`.
   final String? lastActiveDay;
+
+  /// Conta missões diárias completadas no dia calendário atual (device
+  /// local, formato YYYY-MM-DD). Reset lazy: cada incremento detecta
+  /// mudança em [lastTodayCountDate] vs `formatDay(now)` e zera antes
+  /// de incrementar. Padrão consistente com `lastActiveDay` /
+  /// `lastPilarBalanceDay` que já existem nesta tabela.
+  ///
+  /// Anti-cheese: incrementa apenas quando `!perf.zeroProgress` —
+  /// confirmação ✓ com 0% em todas as subs (`avgFactor < 0.05`) NÃO
+  /// conta. Conta tanto fullCompleted quanto partial (semântica: "se
+  /// engajou com a missão hoje", não "fechou perfeitamente").
+  ///
+  /// Sistema PARALELO ao `caelum_day` (lore narrativa em `players`) —
+  /// caelum_day continua intacto, conta logins de sessão como sempre.
+  ///
+  /// Alimenta trigger `daily_today_count`.
+  final int dailyTodayCount;
+
+  /// Última data (YYYY-MM-DD) em que [dailyTodayCount] foi incrementado.
+  /// Listener compara com `formatDay(now)` antes de incrementar — se
+  /// diferente, zera + incrementa pra 1. Validador do trigger compara
+  /// também (stale guard: contador de ontem não vale pra hoje).
+  final String? lastTodayCountDate;
   final int updatedAt;
   const PlayerDailyMissionStat(
       {required this.playerId,
@@ -14445,6 +14500,8 @@ class PlayerDailyMissionStat extends DataClass
       this.lastCompletedAt,
       this.lastPilarBalanceDay,
       this.lastActiveDay,
+      required this.dailyTodayCount,
+      this.lastTodayCountDate,
       required this.updatedAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -14492,6 +14549,10 @@ class PlayerDailyMissionStat extends DataClass
     if (!nullToAbsent || lastActiveDay != null) {
       map['last_active_day'] = Variable<String>(lastActiveDay);
     }
+    map['daily_today_count'] = Variable<int>(dailyTodayCount);
+    if (!nullToAbsent || lastTodayCountDate != null) {
+      map['last_today_count_date'] = Variable<String>(lastTodayCountDate);
+    }
     map['updated_at'] = Variable<int>(updatedAt);
     return map;
   }
@@ -14536,6 +14597,10 @@ class PlayerDailyMissionStat extends DataClass
       lastActiveDay: lastActiveDay == null && nullToAbsent
           ? const Value.absent()
           : Value(lastActiveDay),
+      dailyTodayCount: Value(dailyTodayCount),
+      lastTodayCountDate: lastTodayCountDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastTodayCountDate),
       updatedAt: Value(updatedAt),
     );
   }
@@ -14590,6 +14655,9 @@ class PlayerDailyMissionStat extends DataClass
       lastPilarBalanceDay:
           serializer.fromJson<String?>(json['lastPilarBalanceDay']),
       lastActiveDay: serializer.fromJson<String?>(json['lastActiveDay']),
+      dailyTodayCount: serializer.fromJson<int>(json['dailyTodayCount']),
+      lastTodayCountDate:
+          serializer.fromJson<String?>(json['lastTodayCountDate']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
     );
   }
@@ -14636,6 +14704,8 @@ class PlayerDailyMissionStat extends DataClass
       'lastCompletedAt': serializer.toJson<int?>(lastCompletedAt),
       'lastPilarBalanceDay': serializer.toJson<String?>(lastPilarBalanceDay),
       'lastActiveDay': serializer.toJson<String?>(lastActiveDay),
+      'dailyTodayCount': serializer.toJson<int>(dailyTodayCount),
+      'lastTodayCountDate': serializer.toJson<String?>(lastTodayCountDate),
       'updatedAt': serializer.toJson<int>(updatedAt),
     };
   }
@@ -14671,6 +14741,8 @@ class PlayerDailyMissionStat extends DataClass
           Value<int?> lastCompletedAt = const Value.absent(),
           Value<String?> lastPilarBalanceDay = const Value.absent(),
           Value<String?> lastActiveDay = const Value.absent(),
+          int? dailyTodayCount,
+          Value<String?> lastTodayCountDate = const Value.absent(),
           int? updatedAt}) =>
       PlayerDailyMissionStat(
         playerId: playerId ?? this.playerId,
@@ -14724,6 +14796,10 @@ class PlayerDailyMissionStat extends DataClass
             : this.lastPilarBalanceDay,
         lastActiveDay:
             lastActiveDay.present ? lastActiveDay.value : this.lastActiveDay,
+        dailyTodayCount: dailyTodayCount ?? this.dailyTodayCount,
+        lastTodayCountDate: lastTodayCountDate.present
+            ? lastTodayCountDate.value
+            : this.lastTodayCountDate,
         updatedAt: updatedAt ?? this.updatedAt,
       );
   PlayerDailyMissionStat copyWithCompanion(
@@ -14816,6 +14892,12 @@ class PlayerDailyMissionStat extends DataClass
       lastActiveDay: data.lastActiveDay.present
           ? data.lastActiveDay.value
           : this.lastActiveDay,
+      dailyTodayCount: data.dailyTodayCount.present
+          ? data.dailyTodayCount.value
+          : this.dailyTodayCount,
+      lastTodayCountDate: data.lastTodayCountDate.present
+          ? data.lastTodayCountDate.value
+          : this.lastTodayCountDate,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -14854,6 +14936,8 @@ class PlayerDailyMissionStat extends DataClass
           ..write('lastCompletedAt: $lastCompletedAt, ')
           ..write('lastPilarBalanceDay: $lastPilarBalanceDay, ')
           ..write('lastActiveDay: $lastActiveDay, ')
+          ..write('dailyTodayCount: $dailyTodayCount, ')
+          ..write('lastTodayCountDate: $lastTodayCountDate, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -14891,6 +14975,8 @@ class PlayerDailyMissionStat extends DataClass
         lastCompletedAt,
         lastPilarBalanceDay,
         lastActiveDay,
+        dailyTodayCount,
+        lastTodayCountDate,
         updatedAt
       ]);
   @override
@@ -14929,6 +15015,8 @@ class PlayerDailyMissionStat extends DataClass
           other.lastCompletedAt == this.lastCompletedAt &&
           other.lastPilarBalanceDay == this.lastPilarBalanceDay &&
           other.lastActiveDay == this.lastActiveDay &&
+          other.dailyTodayCount == this.dailyTodayCount &&
+          other.lastTodayCountDate == this.lastTodayCountDate &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -14964,6 +15052,8 @@ class PlayerDailyMissionStatsTableCompanion
   final Value<int?> lastCompletedAt;
   final Value<String?> lastPilarBalanceDay;
   final Value<String?> lastActiveDay;
+  final Value<int> dailyTodayCount;
+  final Value<String?> lastTodayCountDate;
   final Value<int> updatedAt;
   const PlayerDailyMissionStatsTableCompanion({
     this.playerId = const Value.absent(),
@@ -14996,6 +15086,8 @@ class PlayerDailyMissionStatsTableCompanion
     this.lastCompletedAt = const Value.absent(),
     this.lastPilarBalanceDay = const Value.absent(),
     this.lastActiveDay = const Value.absent(),
+    this.dailyTodayCount = const Value.absent(),
+    this.lastTodayCountDate = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
   PlayerDailyMissionStatsTableCompanion.insert({
@@ -15029,6 +15121,8 @@ class PlayerDailyMissionStatsTableCompanion
     this.lastCompletedAt = const Value.absent(),
     this.lastPilarBalanceDay = const Value.absent(),
     this.lastActiveDay = const Value.absent(),
+    this.dailyTodayCount = const Value.absent(),
+    this.lastTodayCountDate = const Value.absent(),
     required int updatedAt,
   }) : updatedAt = Value(updatedAt);
   static Insertable<PlayerDailyMissionStat> custom({
@@ -15062,6 +15156,8 @@ class PlayerDailyMissionStatsTableCompanion
     Expression<int>? lastCompletedAt,
     Expression<String>? lastPilarBalanceDay,
     Expression<String>? lastActiveDay,
+    Expression<int>? dailyTodayCount,
+    Expression<String>? lastTodayCountDate,
     Expression<int>? updatedAt,
   }) {
     return RawValuesInsertable({
@@ -15113,6 +15209,9 @@ class PlayerDailyMissionStatsTableCompanion
       if (lastPilarBalanceDay != null)
         'last_pilar_balance_day': lastPilarBalanceDay,
       if (lastActiveDay != null) 'last_active_day': lastActiveDay,
+      if (dailyTodayCount != null) 'daily_today_count': dailyTodayCount,
+      if (lastTodayCountDate != null)
+        'last_today_count_date': lastTodayCountDate,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
@@ -15148,6 +15247,8 @@ class PlayerDailyMissionStatsTableCompanion
       Value<int?>? lastCompletedAt,
       Value<String?>? lastPilarBalanceDay,
       Value<String?>? lastActiveDay,
+      Value<int>? dailyTodayCount,
+      Value<String?>? lastTodayCountDate,
       Value<int>? updatedAt}) {
     return PlayerDailyMissionStatsTableCompanion(
       playerId: playerId ?? this.playerId,
@@ -15194,6 +15295,8 @@ class PlayerDailyMissionStatsTableCompanion
       lastCompletedAt: lastCompletedAt ?? this.lastCompletedAt,
       lastPilarBalanceDay: lastPilarBalanceDay ?? this.lastPilarBalanceDay,
       lastActiveDay: lastActiveDay ?? this.lastActiveDay,
+      dailyTodayCount: dailyTodayCount ?? this.dailyTodayCount,
+      lastTodayCountDate: lastTodayCountDate ?? this.lastTodayCountDate,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
@@ -15306,6 +15409,12 @@ class PlayerDailyMissionStatsTableCompanion
     if (lastActiveDay.present) {
       map['last_active_day'] = Variable<String>(lastActiveDay.value);
     }
+    if (dailyTodayCount.present) {
+      map['daily_today_count'] = Variable<int>(dailyTodayCount.value);
+    }
+    if (lastTodayCountDate.present) {
+      map['last_today_count_date'] = Variable<String>(lastTodayCountDate.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<int>(updatedAt.value);
     }
@@ -15346,6 +15455,8 @@ class PlayerDailyMissionStatsTableCompanion
           ..write('lastCompletedAt: $lastCompletedAt, ')
           ..write('lastPilarBalanceDay: $lastPilarBalanceDay, ')
           ..write('lastActiveDay: $lastActiveDay, ')
+          ..write('dailyTodayCount: $dailyTodayCount, ')
+          ..write('lastTodayCountDate: $lastTodayCountDate, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -22294,6 +22405,8 @@ typedef $$PlayerDailyMissionStatsTableTableCreateCompanionBuilder
   Value<int?> lastCompletedAt,
   Value<String?> lastPilarBalanceDay,
   Value<String?> lastActiveDay,
+  Value<int> dailyTodayCount,
+  Value<String?> lastTodayCountDate,
   required int updatedAt,
 });
 typedef $$PlayerDailyMissionStatsTableTableUpdateCompanionBuilder
@@ -22328,6 +22441,8 @@ typedef $$PlayerDailyMissionStatsTableTableUpdateCompanionBuilder
   Value<int?> lastCompletedAt,
   Value<String?> lastPilarBalanceDay,
   Value<String?> lastActiveDay,
+  Value<int> dailyTodayCount,
+  Value<String?> lastTodayCountDate,
   Value<int> updatedAt,
 });
 
@@ -22453,6 +22568,14 @@ class $$PlayerDailyMissionStatsTableTableFilterComposer
 
   ColumnFilters<String> get lastActiveDay => $composableBuilder(
       column: $table.lastActiveDay, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get dailyTodayCount => $composableBuilder(
+      column: $table.dailyTodayCount,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get lastTodayCountDate => $composableBuilder(
+      column: $table.lastTodayCountDate,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnFilters(column));
@@ -22585,6 +22708,14 @@ class $$PlayerDailyMissionStatsTableTableOrderingComposer
       column: $table.lastActiveDay,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get dailyTodayCount => $composableBuilder(
+      column: $table.dailyTodayCount,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get lastTodayCountDate => $composableBuilder(
+      column: $table.lastTodayCountDate,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get updatedAt => $composableBuilder(
       column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 }
@@ -22690,6 +22821,12 @@ class $$PlayerDailyMissionStatsTableTableAnnotationComposer
   GeneratedColumn<String> get lastActiveDay => $composableBuilder(
       column: $table.lastActiveDay, builder: (column) => column);
 
+  GeneratedColumn<int> get dailyTodayCount => $composableBuilder(
+      column: $table.dailyTodayCount, builder: (column) => column);
+
+  GeneratedColumn<String> get lastTodayCountDate => $composableBuilder(
+      column: $table.lastTodayCountDate, builder: (column) => column);
+
   GeneratedColumn<int> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
@@ -22755,6 +22892,8 @@ class $$PlayerDailyMissionStatsTableTableTableManager extends RootTableManager<
             Value<int?> lastCompletedAt = const Value.absent(),
             Value<String?> lastPilarBalanceDay = const Value.absent(),
             Value<String?> lastActiveDay = const Value.absent(),
+            Value<int> dailyTodayCount = const Value.absent(),
+            Value<String?> lastTodayCountDate = const Value.absent(),
             Value<int> updatedAt = const Value.absent(),
           }) =>
               PlayerDailyMissionStatsTableCompanion(
@@ -22788,6 +22927,8 @@ class $$PlayerDailyMissionStatsTableTableTableManager extends RootTableManager<
             lastCompletedAt: lastCompletedAt,
             lastPilarBalanceDay: lastPilarBalanceDay,
             lastActiveDay: lastActiveDay,
+            dailyTodayCount: dailyTodayCount,
+            lastTodayCountDate: lastTodayCountDate,
             updatedAt: updatedAt,
           ),
           createCompanionCallback: ({
@@ -22821,6 +22962,8 @@ class $$PlayerDailyMissionStatsTableTableTableManager extends RootTableManager<
             Value<int?> lastCompletedAt = const Value.absent(),
             Value<String?> lastPilarBalanceDay = const Value.absent(),
             Value<String?> lastActiveDay = const Value.absent(),
+            Value<int> dailyTodayCount = const Value.absent(),
+            Value<String?> lastTodayCountDate = const Value.absent(),
             required int updatedAt,
           }) =>
               PlayerDailyMissionStatsTableCompanion.insert(
@@ -22854,6 +22997,8 @@ class $$PlayerDailyMissionStatsTableTableTableManager extends RootTableManager<
             lastCompletedAt: lastCompletedAt,
             lastPilarBalanceDay: lastPilarBalanceDay,
             lastActiveDay: lastActiveDay,
+            dailyTodayCount: dailyTodayCount,
+            lastTodayCountDate: lastTodayCountDate,
             updatedAt: updatedAt,
           ),
           withReferenceMapper: (p0) => p0

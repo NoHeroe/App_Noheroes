@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../../core/events/app_event_bus.dart';
 import '../../core/events/daily_mission_events.dart';
+import '../../core/utils/day_format.dart';
 import '../../data/database/daos/daily_missions_dao.dart';
 import '../../data/database/daos/player_daily_mission_stats_dao.dart';
 import '../../data/database/daos/player_daily_subtask_volume_dao.dart';
@@ -113,10 +114,35 @@ class DailyMissionStatsService {
 
   Future<void> _onCompleted(DailyMissionCompleted evt) async {
     try {
+      // Sprint 3.3 Etapa 2.1c-δ — fetch mission UMA vez no topo pra
+      // calcular `zeroProgress` antes do anti-cheese guard. Substitui
+      // os 2 fetches separados (um em partial branch, outro em
+      // fullCompleted) — net win + necessário pro novo guard.
+      final mission = await _missionsDao.findById(evt.missionId);
+      final perf =
+          mission == null ? null : calculatePerfectness(mission);
+      final confirmedAt = mission?.completedAt ?? _clock();
+      final today = formatDay(confirmedAt);
+
+      // Sprint 3.3 Etapa 2.1c-δ — incrementa `daily_today_count` com
+      // reset lazy YYYY-MM-DD. ANTI-CHEESE: confirmação ✓ com 0%
+      // (`avgFactor < 0.05`) NÃO conta. Conta tanto fullCompleted
+      // quanto partial — semântica é "engajou com a missão hoje", não
+      // "fechou perfeitamente". Mission ausente → skip silencioso (sem
+      // perf, não dá pra avaliar zeroProgress).
+      if (perf != null && !perf.zeroProgress) {
+        final preStats = await _statsDao.findOrCreate(evt.playerId);
+        final shouldResetToday = preStats.lastTodayCountDate != today;
+        await _statsDao.incrementTodayCount(
+          evt.playerId,
+          resetTo1IfDayChanged: shouldResetToday,
+          todayDate: today,
+        );
+      }
+
       // Partial e fullCompleted vêm pelo mesmo evento — discrimina aqui.
       if (evt.partial) {
         await _statsDao.incrementPartial(evt.playerId);
-        final mission = await _missionsDao.findById(evt.missionId);
         if (mission != null) {
           await _addVolumeFromMission(mission);
         }
@@ -126,29 +152,28 @@ class DailyMissionStatsService {
         return;
       }
       // fullCompleted = true a partir daqui.
-      final mission = await _missionsDao.findById(evt.missionId);
       if (mission == null) return;
+      // `perf` deriva de `mission` via ternário no topo — quando mission
+      // é non-null, perf também é. Assert local pra Dart inferir.
+      final perfNN = perf!;
 
-      final perf = calculatePerfectness(mission);
-      final confirmedAt = mission.completedAt ?? _clock();
-      final today = _formatDay(confirmedAt);
       final isPilarBalance =
           await _detectPilarBalanceDay(evt.playerId, mission.data);
       final isSpeedrun = _isSpeedrun(mission);
 
       await _statsDao.incrementOnCompleted(
         evt.playerId,
-        isPerfect: perf.isPerfect,
-        isSuperPerfect: perf.isSuperPerfect,
-        subTasksCompleted: perf.subsCompleted,
-        subTasksOvershoot: perf.subsOvershoot,
+        isPerfect: perfNN.isPerfect,
+        isSuperPerfect: perfNN.isSuperPerfect,
+        subTasksCompleted: perfNN.subsCompleted,
+        subTasksOvershoot: perfNN.subsOvershoot,
         confirmedAt: confirmedAt,
         dayOfWeek: _dayOfWeekZeroIndexed(confirmedAt),
         isBefore8AM: isBefore8AM(confirmedAt),
         isAfter10PM: isAfter10PM(confirmedAt),
         isWeekend: isWeekend(confirmedAt),
         isSpeedrun: isSpeedrun,
-        zeroProgress: perf.zeroProgress,
+        zeroProgress: perfNN.zeroProgress,
         // Sprint 3.3 Etapa 2.1c-β — propagado do evento. Auto-confirm
         // bumpa total_auto_confirm_completions; manual+zero bumpa
         // total_zero_progress_manual_confirms (anti-cheese).
@@ -291,13 +316,6 @@ class DailyMissionStatsService {
   /// retorna 1=mon..7=sun, então convertemos.
   static int _dayOfWeekZeroIndexed(DateTime ts) {
     return ts.weekday == DateTime.sunday ? 0 : ts.weekday;
-  }
-
-  static String _formatDay(DateTime ts) {
-    final y = ts.year.toString().padLeft(4, '0');
-    final m = ts.month.toString().padLeft(2, '0');
-    final d = ts.day.toString().padLeft(2, '0');
-    return '$y-$m-$d';
   }
 
   /// `prev` é o dia imediatamente anterior a `today`? Compara só o dia

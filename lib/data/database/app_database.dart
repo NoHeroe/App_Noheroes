@@ -88,7 +88,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 32;
+  int get schemaVersion => 33;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -564,6 +564,32 @@ class AppDatabase extends _$AppDatabase {
         } catch (e, st) {
           // ignore: avoid_print
           print('[migration 31→32] addColumn screens_visited_keys '
+              'failed: $e\n$st');
+        }
+      }
+      if (from < 33) {
+        // Sprint 3.3 Etapa 2.1c-δ — trigger `daily_today_count` (contador
+        // de missões completadas no dia calendário atual). Aplicação
+        // ADR-0019: só m.addColumn em player_daily_mission_stats. ZERO
+        // mudança em players.caelum_day (sistema de lore intocado).
+        try {
+          await m.addColumn(playerDailyMissionStatsTable,
+              playerDailyMissionStatsTable.dailyTodayCount);
+          // ignore: avoid_print
+          print('[migration 32→33] added daily_today_count');
+        } catch (e, st) {
+          // ignore: avoid_print
+          print('[migration 32→33] addColumn daily_today_count '
+              'failed: $e\n$st');
+        }
+        try {
+          await m.addColumn(playerDailyMissionStatsTable,
+              playerDailyMissionStatsTable.lastTodayCountDate);
+          // ignore: avoid_print
+          print('[migration 32→33] added last_today_count_date');
+        } catch (e, st) {
+          // ignore: avoid_print
+          print('[migration 32→33] addColumn last_today_count_date '
               'failed: $e\n$st');
         }
       }
