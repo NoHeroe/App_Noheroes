@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:drift/drift.dart' show Value, Variable;
 import 'package:flutter/material.dart';
@@ -10,8 +11,10 @@ import '../../app/providers.dart';
 import '../../core/config/faction_alliances.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/events/app_event.dart';
+import '../../core/events/reward_events.dart';
 import '../../data/database/app_database.dart';
 import '../../data/database/daos/player_dao.dart';
+import '../../domain/models/achievement_definition.dart';
 import '../../presentation/quests/providers/quests_screen_notifier.dart';
 import '../shared/widgets/app_snack.dart';
 
@@ -425,6 +428,60 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
     );
   }
 
+  // ─── DISPARO MANUAL DE TOAST (Sprint 3.3 Etapa Final-B hotfix) ────
+  //
+  // Bypass total do trigger: marca completed direto + publica
+  // AchievementUnlocked. Usado pra validar pipeline do popup gourmet
+  // sem ter que satisfazer condições reais. Conquista vai pra estado
+  // pendente de coleta (rewardClaimed=false).
+
+  Future<AchievementDefinition?> _pickEligibleAchievement({
+    required bool secret,
+  }) async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return null;
+    final svc = ref.read(achievementsServiceProvider);
+    await svc.ensureLoaded();
+    final repo = ref.read(playerAchievementsRepositoryProvider);
+    final completed =
+        (await repo.listCompletedKeys(player.id)).toSet();
+
+    final eligible = svc.catalog.values
+        .where((d) => !d.disabled)
+        .where((d) => d.isSecret == secret)
+        .where((d) => !completed.contains(d.key))
+        .toList();
+    if (eligible.isEmpty) return null;
+    eligible.shuffle(math.Random());
+    return eligible.first;
+  }
+
+  Future<void> _triggerAchievement({required bool secret}) async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final pick = await _pickEligibleAchievement(secret: secret);
+    if (pick == null) {
+      if (!mounted) return;
+      AppSnack.info(
+          context,
+          secret
+              ? 'Sem secretas elegíveis (todas já desbloqueadas?)'
+              : 'Sem conquistas elegíveis (todas já desbloqueadas?)');
+      return;
+    }
+
+    final repo = ref.read(playerAchievementsRepositoryProvider);
+    final bus = ref.read(appEventBusProvider);
+    await repo.markCompleted(player.id, pick.key, at: DateTime.now());
+    bus.publish(
+        AchievementUnlocked(playerId: player.id, achievementKey: pick.key));
+
+    if (!mounted) return;
+    _invalidateAll(player.id);
+    AppSnack.success(
+        context, '${secret ? "Disparada secreta" : "Disparada"}: ${pick.key}');
+  }
+
   // ─── COLETA MANUAL (Sprint 3.3 Etapa Final-A) ─────────────────────
 
   Future<void> _claimAllPending() async {
@@ -660,6 +717,15 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
             const SizedBox(height: 6),
             _actionBtn('Listar conquistas atuais', AppColors.gold,
                 _listAchievements),
+            const SizedBox(height: 6),
+            // Sprint 3.3 Etapa Final-B hotfix — disparo manual pra validar
+            // popup gourmet sem precisar satisfazer trigger real.
+            _actionBtn('Disparar conquista aleatória', AppColors.purple,
+                () => _triggerAchievement(secret: false)),
+            const SizedBox(height: 6),
+            _actionBtn('Disparar conquista SECRETA aleatória',
+                AppColors.shadowObsessive,
+                () => _triggerAchievement(secret: true)),
             const SizedBox(height: 6),
             // Sprint 3.3 Etapa Final-A — coleta manual: helpers do dev
             // panel pra validar pipeline sem precisar da UI da Sub B.

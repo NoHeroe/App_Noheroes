@@ -7,20 +7,34 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../core/events/reward_events.dart';
 import '../../../domain/models/achievement_definition.dart';
-import '../../../domain/services/achievements_service.dart';
 import 'achievement_unlocked_toast.dart';
 
 /// Sprint 3.3 Etapa Final-B — wrapper que escuta `AchievementUnlocked`
-/// no app event bus e exibe `AchievementUnlockedToast` em sequência via
-/// `OverlayEntry`. Mount global em `MaterialApp.builder` garante toast
-/// em qualquer rota.
+/// no app event bus e exibe `AchievementUnlockedToast` em sequência.
+/// Mount global em `MaterialApp.builder` garante toast em qualquer rota.
 ///
-/// Fila interna (`Queue<_PendingToast>`) processa um toast por vez —
-/// cenário de cascata metaLike pode disparar 2-3 unlocks em sequência
-/// rápida; sem fila viraria pilha visual confusa. Próximo toast aparece
-/// quando o anterior dismiss (auto-timer 4s OU tap manual).
+/// Fila interna (`Queue<AchievementDefinition>`) processa um toast por
+/// vez — cenário de cascata metaLike pode disparar 2-3 unlocks em
+/// sequência rápida; sem fila viraria pilha visual confusa. Próximo
+/// toast aparece quando o anterior dismiss (auto-timer 4s OU tap manual).
 ///
 /// Disabled achievements (shell) NÃO geram toast.
+///
+/// ## Por que `Overlay` próprio com `GlobalKey<OverlayState>`?
+///
+/// Hotfix Sprint 3.3 Etapa Final-B (2026-05-02). Mount via
+/// `MaterialApp.builder` deixa esse widget como **ancestor** do Navigator
+/// criado pelo router. O `Overlay` do Navigator vive ABAIXO dele.
+/// `Overlay.of(context)` sobe a árvore — não acha overlay ancestor e
+/// retorna null em produção.
+///
+/// Solução: criamos nossa própria `Overlay` aqui (tornando-se ancestor
+/// do Navigator que continua dentro de `widget.child`) e acessamos o
+/// `OverlayState` via `GlobalKey`, sem depender do contexto.
+///
+/// O teste novo monta o listener via `MaterialApp.builder` pra refletir
+/// a configuração real e prevenir regressão. Ver lição
+/// `2026-05-02-overlay-emitter-acima-do-navigator.md`.
 class AchievementToastListener extends ConsumerStatefulWidget {
   final Widget child;
   const AchievementToastListener({super.key, required this.child});
@@ -32,6 +46,7 @@ class AchievementToastListener extends ConsumerStatefulWidget {
 
 class _AchievementToastListenerState
     extends ConsumerState<AchievementToastListener> {
+  final GlobalKey<OverlayState> _overlayKey = GlobalKey<OverlayState>();
   StreamSubscription<AchievementUnlocked>? _sub;
   final Queue<AchievementDefinition> _queue = Queue();
   OverlayEntry? _active;
@@ -76,15 +91,14 @@ class _AchievementToastListenerState
       _active = null;
       return;
     }
-    final def = _queue.removeFirst();
-    final overlay = Overlay.maybeOf(context, rootOverlay: true);
+    final overlay = _overlayKey.currentState;
     if (overlay == null) {
-      // Sem overlay disponível (boot inicial ou teardown) — descarta o
-      // resto da fila pra evitar fugas.
+      // Boot inicial / teardown — descarta fila pra evitar fugas.
       _queue.clear();
       _active = null;
       return;
     }
+    final def = _queue.removeFirst();
 
     late OverlayEntry entry;
     void dismiss() {
@@ -120,5 +134,12 @@ class _AchievementToastListenerState
   }
 
   @override
-  Widget build(BuildContext context) => widget.child;
+  Widget build(BuildContext context) {
+    return Overlay(
+      key: _overlayKey,
+      initialEntries: [
+        OverlayEntry(builder: (_) => widget.child),
+      ],
+    );
+  }
 }

@@ -63,6 +63,11 @@ AchievementDefinition _def(String key,
       disabled: disabled,
     );
 
+/// Harness reflete o mounting de produção: listener via
+/// `MaterialApp.builder`, NÃO em `home`. Sem isso o teste mente — em
+/// `home`, o listener vive abaixo do Navigator e `Overlay.of(context)`
+/// funcionaria mesmo que a implementação estivesse quebrada. Hotfix
+/// Etapa Final-B documentou esse pattern (lição 2026-05-02).
 Widget _harness({
   required AppEventBus bus,
   required Map<String, AchievementDefinition> catalog,
@@ -74,9 +79,9 @@ Widget _harness({
           .overrideWithValue(_FakeAchievementsService(catalog)),
     ],
     child: MaterialApp(
-      home: AchievementToastListener(
-        child: const Scaffold(body: Text('app')),
-      ),
+      builder: (ctx, child) =>
+          AchievementToastListener(child: child ?? const SizedBox()),
+      home: const Scaffold(body: Text('app')),
     ),
   );
 }
