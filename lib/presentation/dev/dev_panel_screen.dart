@@ -809,19 +809,26 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
       );
 
   Widget _infoRow(String label, String value) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
+        padding: const EdgeInsets.symmetric(vertical: 3),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
-              width: 60,
+              width: 54,
               child: Text(label,
                   style: GoogleFonts.roboto(
                       fontSize: 11, color: AppColors.textMuted)),
             ),
             Expanded(
+              // Sprint 3.3 hotfix visual — softWrap + maxLines pra textos
+              // longos como "Sombra: stable · Dia 12 em Caelum" não
+              // sumirem em telas pequenas.
               child: Text(value,
                   style: GoogleFonts.roboto(
-                      fontSize: 12, color: AppColors.textPrimary)),
+                      fontSize: 12, color: AppColors.textPrimary),
+                  softWrap: true,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis),
             ),
           ],
         ),

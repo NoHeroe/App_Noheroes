@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/app_theme.dart';
+import '../presentation/achievements/widgets/achievement_toast_listener.dart';
 import 'providers.dart';
 import 'router.dart';
 
@@ -28,6 +29,11 @@ class NoHeroesApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
       routerConfig: router,
+      // Sprint 3.3 Etapa Final-B — wrapper global que escuta
+      // AchievementUnlocked no bus e exibe toast em qualquer rota.
+      // Mount via builder mantém listener vivo enquanto app vivo.
+      builder: (context, child) =>
+          AchievementToastListener(child: child ?? const SizedBox()),
     );
   }
 }

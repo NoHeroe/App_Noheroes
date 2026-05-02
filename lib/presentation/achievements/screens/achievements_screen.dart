@@ -5,33 +5,27 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../data/database/daos/player_dao.dart';
 import '../../../domain/models/achievement_definition.dart';
+import '../../../domain/models/player_daily_mission_stats.dart';
+import '../../shared/widgets/app_snack.dart';
+import '../utils/achievement_progress.dart';
+import '../utils/reward_display_helper.dart';
+import '../widgets/achievement_card.dart';
+import '../widgets/achievement_filters.dart';
+import '../widgets/achievement_stats_header.dart';
 
-/// Sprint 3.1 Bloco 14.6b — restauração da tela de Conquistas
-/// (port v0.28.2 adaptado ao Bloco 8 JSON-driven).
+/// Sprint 3.3 Etapa Final-B — tela `/achievements` redesenhada.
 ///
-/// ## Fontes de dados
-///
-///   - **Catálogo in-memory**: `AchievementsService.catalog`
-///     (carregado de `assets/data/achievements.json`)
-///   - **Keys desbloqueadas do jogador**:
-///     `PlayerAchievementsRepository.listCompletedKeys(playerId)`
-///
-/// ## Diferença vs v0.28.2
-///
-/// v0.28.2 tinha 2 estados: **pending** (unlocked mas não coletado) +
-/// **collected** (após botão "Coletar"). Bloco 8 refez o pipeline — o
-/// grant é **automático e atômico** junto com o markCompleted. Não há
-/// mais "Coletar" manual. A UI aqui tem 2 estados:
-///
-///   - **unlocked** (colorido + "DESBLOQUEADO" em CinzelDecorative +
-///     XP/gold/gem badges da reward declarada)
-///   - **locked** (cinza + ícone outlined)
-///
-/// Conquistas `isSecret` que ainda estão locked renderizam um card
-/// genérico (`_SecretCard`) sem expor nome ou descrição.
-///
-/// Sem schema change, sem mudança em service. Só consumer novo.
+/// Funcionalidades:
+///   - 5 estados de card (locked/pending/claimed/secretLocked/secretUnlocked)
+///   - Coleta manual via [AchievementsService.claimReward]
+///   - Filtros (Todas/Pendentes/Desbloqueadas/Bloqueadas + Por categoria)
+///   - Stats topo (X/Y, %, pendentes, shells "em breve")
+///   - Progresso por trigger numérico (barra) ou ocultada em binários
+///   - Display pós-multiplier SOULSLIKE
+///   - Ordenação: pendentes topo → lendárias → outras desbloqueadas →
+///     bloqueadas → secretas D fundo
 class AchievementsScreen extends ConsumerStatefulWidget {
   const AchievementsScreen({super.key});
 
@@ -42,6 +36,8 @@ class AchievementsScreen extends ConsumerStatefulWidget {
 
 class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
   late Future<_AchievementsViewData> _future;
+  AchievementFilter _filter = AchievementFilter.todas;
+  String? _category;
 
   @override
   void initState() {
@@ -52,16 +48,64 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
   Future<_AchievementsViewData> _load() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) {
-      return const _AchievementsViewData(catalog: [], unlockedKeys: {});
+      return const _AchievementsViewData(
+        catalog: [],
+        unlockedKeys: {},
+        pendingKeys: {},
+        progressContext: null,
+      );
     }
     final service = ref.read(achievementsServiceProvider);
     await service.ensureLoaded();
     final repo = ref.read(playerAchievementsRepositoryProvider);
-    final keys = await repo.listCompletedKeys(player.id);
+    final unlocked = (await repo.listCompletedKeys(player.id)).toSet();
+    final pending = (await repo.listPendingClaims(player.id)).toSet();
+
+    // Snapshot pra calcular progress sem N queries por card.
+    final db = ref.read(appDatabaseProvider);
+    final freshPlayer = await PlayerDao(db).findById(player.id) ?? player;
+    final statsDao = ref.read(playerDailyMissionStatsDaoProvider);
+    final PlayerDailyMissionStats? stats =
+        await statsDao.findByPlayerId(player.id);
+    final totalCompleted = await repo.countCompleted(player.id);
+
     return _AchievementsViewData(
       catalog: service.catalog.values.toList(growable: false),
-      unlockedKeys: keys.toSet(),
+      unlockedKeys: unlocked,
+      pendingKeys: pending,
+      progressContext: AchievementProgressContext(
+        player: freshPlayer,
+        stats: stats,
+        totalCompletedAchievements: totalCompleted,
+      ),
     );
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _future = _load();
+    });
+    await _future;
+  }
+
+  Future<void> _claim(String key) async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final svc = ref.read(achievementsServiceProvider);
+    final ok = await svc.claimReward(player.id, key);
+
+    // Refresh player no provider (XP/gold/gems podem ter subido).
+    final db = ref.read(appDatabaseProvider);
+    final updated = await PlayerDao(db).findById(player.id);
+    if (!mounted) return;
+    if (updated != null) {
+      ref.read(currentPlayerProvider.notifier).state = updated;
+    }
+
+    if (!ok) {
+      AppSnack.info(context, 'Conquista já coletada.');
+    }
+    await _refresh();
   }
 
   @override
@@ -69,91 +113,237 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
     return Scaffold(
       backgroundColor: AppColors.black,
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: FutureBuilder<_AchievementsViewData>(
-                future: _future,
-                builder: (ctx, snap) {
-                  if (snap.connectionState != ConnectionState.done) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                          color: AppColors.purple),
-                    );
-                  }
-                  if (snap.hasError) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          'Erro ao carregar conquistas:\n${snap.error}',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.roboto(
-                              color: AppColors.hp, fontSize: 12),
-                        ),
-                      ),
-                    );
-                  }
-                  final data = snap.data!;
-                  if (data.catalog.isEmpty) {
-                    return _buildEmpty();
-                  }
-                  return _buildList(data);
-                },
-              ),
-            ),
-          ],
+        child: FutureBuilder<_AchievementsViewData>(
+          future: _future,
+          builder: (ctx, snap) {
+            final loading =
+                snap.connectionState != ConnectionState.done;
+            final data = snap.data;
+            return Column(
+              children: [
+                _buildHeader(),
+                if (data != null && !loading) ...[
+                  AchievementStatsHeader(
+                    unlocked: data.unlockedKeys.length,
+                    total: data.catalog.length,
+                    shellCount:
+                        data.catalog.where((d) => d.disabled).length,
+                    pendingClaims: data.pendingKeys.length,
+                  ),
+                  AchievementFilters(
+                    active: _filter,
+                    activeCategory: _category,
+                    categories: _categoriesOf(data.catalog),
+                    pendingCount: data.pendingKeys.length,
+                    onFilterChange: (f) => setState(() {
+                      _filter = f;
+                      _category = null;
+                    }),
+                    onCategoryChange: (c) => setState(() {
+                      _category = c;
+                    }),
+                  ),
+                ],
+                Expanded(
+                  child: loading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                              color: AppColors.purple),
+                        )
+                      : snap.hasError
+                          ? _buildError(snap.error)
+                          : _buildList(data!),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
   Widget _buildHeader() {
-    return FutureBuilder<_AchievementsViewData>(
-      future: _future,
-      builder: (_, snap) {
-        final total = snap.data?.catalog.length ?? 0;
-        final unlocked = snap.data?.unlockedKeys.length ?? 0;
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-          child: Row(
-            children: [
-              GestureDetector(
-                key: const ValueKey('achievements-back'),
-                onTap: () => context.go('/sanctuary'),
-                child: const Icon(Icons.arrow_back_ios,
-                    color: AppColors.textSecondary, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Text('CONQUISTAS',
-                  style: GoogleFonts.cinzelDecorative(
-                      fontSize: 16,
-                      color: AppColors.gold,
-                      letterSpacing: 2)),
-              const Spacer(),
-              if (snap.connectionState == ConnectionState.done &&
-                  !snap.hasError)
-                Text('$unlocked/$total',
-                    style: GoogleFonts.roboto(
-                        fontSize: 12, color: AppColors.textMuted)),
-            ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+      child: Row(
+        children: [
+          GestureDetector(
+            key: const ValueKey('achievements-back'),
+            onTap: () => context.go('/sanctuary'),
+            child: const Icon(Icons.arrow_back_ios,
+                color: AppColors.textSecondary, size: 20),
           ),
-        );
+          const SizedBox(width: 12),
+          Text('CONQUISTAS',
+              style: GoogleFonts.cinzelDecorative(
+                  fontSize: 16,
+                  color: AppColors.gold,
+                  letterSpacing: 2)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildError(Object? err) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Text(
+          'Erro ao carregar conquistas:\n$err',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.roboto(color: AppColors.hp, fontSize: 12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildList(_AchievementsViewData data) {
+    if (data.catalog.isEmpty) {
+      return _emptyState(
+        icon: Icons.emoji_events_outlined,
+        text: 'Nenhuma conquista no catálogo.',
+        keyValue: 'achievements-empty',
+      );
+    }
+    final filtered = _applyFilters(data);
+    if (filtered.isEmpty) {
+      return _emptyState(
+        icon: _filter == AchievementFilter.pendentes
+            ? Icons.check_circle_outline
+            : Icons.search_off,
+        text: _emptyMessageForFilter(),
+        keyValue: 'achievements-empty-filter',
+      );
+    }
+
+    final ordered = _sortDisplay(filtered, data);
+
+    return ListView.builder(
+      key: const ValueKey('achievements-list'),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 40),
+      itemCount: ordered.length,
+      itemBuilder: (_, i) {
+        final def = ordered[i];
+        return _buildCard(def, data);
       },
     );
   }
 
-  Widget _buildEmpty() {
+  Widget _buildCard(
+      AchievementDefinition def, _AchievementsViewData data) {
+    final unlocked = data.unlockedKeys.contains(def.key);
+    final pending = data.pendingKeys.contains(def.key);
+
+    // Estado D — secreta bloqueada
+    if (def.isSecret && !unlocked) {
+      return const AchievementSecretCard();
+    }
+
+    // Estado E — secreta desbloqueada (rainbow border permanente)
+    final isSecretUnlocked = def.isSecret && unlocked;
+
+    final state = isSecretUnlocked
+        ? AchievementCardState.secretUnlocked
+        : (unlocked && pending
+            ? AchievementCardState.pending
+            : (unlocked
+                ? AchievementCardState.claimed
+                : AchievementCardState.locked));
+
+    AchievementProgress? progress;
+    if (state == AchievementCardState.locked &&
+        data.progressContext != null) {
+      progress = AchievementProgressCalculator.compute(
+          def, data.progressContext!);
+    }
+
+    final reward = def.reward == null
+        ? null
+        : RewardDisplay.fromDeclared(def.reward!);
+
+    // Estado E pendente também precisa do botão.
+    final canClaim = pending && !def.disabled;
+
+    return AchievementCard(
+      def: def,
+      state: state == AchievementCardState.secretUnlocked && pending
+          ? AchievementCardState.secretUnlocked
+          : state,
+      progress: progress,
+      reward: reward,
+      onClaim: canClaim ? () => _claim(def.key) : null,
+    );
+  }
+
+  List<AchievementDefinition> _applyFilters(_AchievementsViewData data) {
+    var list = data.catalog.where((d) {
+      if (_category != null && d.category != _category) return false;
+      final unlocked = data.unlockedKeys.contains(d.key);
+      final pending = data.pendingKeys.contains(d.key);
+
+      switch (_filter) {
+        case AchievementFilter.todas:
+          return true;
+        case AchievementFilter.pendentes:
+          return unlocked && pending;
+        case AchievementFilter.desbloqueadas:
+          return unlocked;
+        case AchievementFilter.bloqueadas:
+          // Preserva surpresa: bloqueadas NÃO mostra secretas.
+          return !unlocked && !d.isSecret;
+      }
+    }).toList(growable: false);
+    return list;
+  }
+
+  /// Ordenação dentro do filtro:
+  /// 1. Pendentes (estado B / E pendente) — usuário precisa interagir
+  /// 2. Lendárias topo desbloqueadas
+  /// 3. Outras desbloqueadas
+  /// 4. Bloqueadas em progresso (não-secretas)
+  /// 5. Secretas não desbloqueadas (estado D) no fundo
+  List<AchievementDefinition> _sortDisplay(
+    List<AchievementDefinition> list,
+    _AchievementsViewData data,
+  ) {
+    int rank(AchievementDefinition d) {
+      final unlocked = data.unlockedKeys.contains(d.key);
+      final pending = data.pendingKeys.contains(d.key);
+      if (unlocked && pending) return 0;
+      if (unlocked &&
+          kLegendaryTopAchievementKeys.contains(d.key)) {
+        return 1;
+      }
+      if (unlocked) return 2;
+      if (!unlocked && !d.isSecret) return 3;
+      return 4; // secret não desbloqueada
+    }
+
+    final out = [...list];
+    out.sort((a, b) {
+      final ra = rank(a);
+      final rb = rank(b);
+      if (ra != rb) return ra.compareTo(rb);
+      return a.key.compareTo(b.key);
+    });
+    return out;
+  }
+
+  Widget _emptyState({
+    required IconData icon,
+    required String text,
+    required String keyValue,
+  }) {
     return Center(
-      key: const ValueKey('achievements-empty'),
+      key: ValueKey(keyValue),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.emoji_events_outlined,
-              color: AppColors.textMuted.withValues(alpha: 0.3), size: 48),
+          Icon(icon,
+              color: AppColors.textMuted.withValues(alpha: 0.3),
+              size: 48),
           const SizedBox(height: 12),
-          Text('Nenhuma conquista no catálogo.',
+          Text(text,
               style: GoogleFonts.roboto(
                   color: AppColors.textMuted, fontSize: 13)),
         ],
@@ -161,187 +351,34 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
     );
   }
 
-  Widget _buildList(_AchievementsViewData data) {
-    return ListView.builder(
-      key: const ValueKey('achievements-list'),
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
-      itemCount: data.catalog.length,
-      itemBuilder: (_, i) {
-        final def = data.catalog[i];
-        final unlocked = data.unlockedKeys.contains(def.key);
-        if (def.isSecret && !unlocked) {
-          return const _SecretCard();
-        }
-        return _AchievementCard(def: def, unlocked: unlocked);
-      },
-    );
+  String _emptyMessageForFilter() {
+    return switch (_filter) {
+      AchievementFilter.pendentes => 'Nenhuma conquista pendente.',
+      AchievementFilter.desbloqueadas =>
+        'Você ainda não desbloqueou conquistas.',
+      AchievementFilter.bloqueadas =>
+        'Todas as conquistas conhecidas já foram desbloqueadas.',
+      AchievementFilter.todas =>
+        'Nenhuma conquista no catálogo pra esta categoria.',
+    };
+  }
+
+  List<String> _categoriesOf(List<AchievementDefinition> catalog) {
+    final set = <String>{for (final d in catalog) d.category};
+    final list = set.toList()..sort();
+    return list;
   }
 }
 
-/// View-model interno da tela — evita múltiplas leituras do service no
-/// rebuild.
 class _AchievementsViewData {
   final List<AchievementDefinition> catalog;
   final Set<String> unlockedKeys;
+  final Set<String> pendingKeys;
+  final AchievementProgressContext? progressContext;
   const _AchievementsViewData({
     required this.catalog,
     required this.unlockedKeys,
+    required this.pendingKeys,
+    required this.progressContext,
   });
-}
-
-class _AchievementCard extends StatelessWidget {
-  final AchievementDefinition def;
-  final bool unlocked;
-
-  const _AchievementCard({required this.def, required this.unlocked});
-
-  Color get _catColor => switch (def.category) {
-        'progression' => AppColors.xp,
-        'missions' => AppColors.shadowStable,
-        'habits' => AppColors.shadowStable,
-        'shadow' => AppColors.shadowChaotic,
-        'exploration' => AppColors.gold,
-        'social' => AppColors.mp,
-        'meta' => AppColors.purpleLight,
-        _ => AppColors.purple,
-      };
-
-  @override
-  Widget build(BuildContext context) {
-    final reward = def.reward;
-    return Container(
-      key: ValueKey('achievement-card-${def.key}'),
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: unlocked
-              ? _catColor.withValues(alpha: 0.5)
-              : AppColors.border,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: unlocked
-                  ? _catColor.withValues(alpha: 0.15)
-                  : AppColors.surfaceAlt,
-              border: Border.all(
-                color: unlocked
-                    ? _catColor.withValues(alpha: 0.5)
-                    : AppColors.border,
-              ),
-            ),
-            child: Icon(
-              unlocked ? Icons.emoji_events : Icons.emoji_events_outlined,
-              color: unlocked ? _catColor : AppColors.textMuted,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(def.name,
-                    style: GoogleFonts.cinzelDecorative(
-                        fontSize: 13,
-                        color: unlocked
-                            ? AppColors.textPrimary
-                            : AppColors.textMuted)),
-                const SizedBox(height: 3),
-                Text(def.description,
-                    style: GoogleFonts.roboto(
-                        fontSize: 11, color: AppColors.textMuted)),
-                if (unlocked) ...[
-                  const SizedBox(height: 6),
-                  Text('DESBLOQUEADO',
-                      style: GoogleFonts.cinzelDecorative(
-                          fontSize: 9,
-                          color: _catColor,
-                          letterSpacing: 2)),
-                  if (reward != null) ...[
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 2,
-                      children: [
-                        if (reward.xp > 0)
-                          Text('+${reward.xp} XP',
-                              style: GoogleFonts.roboto(
-                                  fontSize: 10, color: AppColors.xp)),
-                        if (reward.gold > 0)
-                          Text('+${reward.gold} ouro',
-                              style: GoogleFonts.roboto(
-                                  fontSize: 10, color: AppColors.gold)),
-                        if (reward.gems > 0)
-                          Text('+${reward.gems} gemas',
-                              style: GoogleFonts.roboto(
-                                  fontSize: 10, color: AppColors.mp)),
-                      ],
-                    ),
-                  ],
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SecretCard extends StatelessWidget {
-  const _SecretCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      key: const ValueKey('achievement-card-secret'),
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.surfaceAlt,
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const Icon(Icons.lock_outline,
-                color: AppColors.textMuted, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Conquista Secreta',
-                    style: GoogleFonts.cinzelDecorative(
-                        fontSize: 13, color: AppColors.textMuted)),
-                const SizedBox(height: 3),
-                Text('Continue tua jornada pra revelar.',
-                    style: GoogleFonts.roboto(
-                        fontSize: 11, color: AppColors.textMuted)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
