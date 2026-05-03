@@ -89,3 +89,38 @@ const Set<String> kKnownFactions = {
   'renegades',
   'error',
 };
+
+/// Sprint 3.4 hotfix P2 — gate de visibilidade pra facções secretas
+/// (`isSecret=true` em factions.json).
+///
+/// `FactionSelectionScreen._loadFactions` consulta este mapa pra
+/// decidir se uma facção secreta deve aparecer na lista de seleção. O
+/// player só vê uma facção secreta na lista após **desbloquear a
+/// conquista mapeada** aqui.
+///
+/// ## Default conservador
+///
+/// Facções com `isSecret=true` que **não têm entry** neste mapa ficam
+/// **escondidas pra todo mundo**. Pra liberar uma secreta nova, é
+/// obrigatório adicionar entry aqui — caso contrário ninguém vê.
+///
+/// ## Estado atual (Sprint 3.4 hotfix P2)
+///
+/// - `error` → `SECRET_LOBO_SOLITARIO`. Conquista está hoje com
+///   `disabled=true` no catálogo (shell — trigger real "atinge lvl 7
+///   sem facção" é ativado na Etapa F). Resultado pré-Etapa F:
+///   `error` invisível pra todos os players via flow normal — fecha
+///   leak de mistério reportado pelo CEO. Dev panel oferece
+///   "Forçar unlock SECRET_LOBO_SOLITARIO" pra teste manual.
+///
+/// ## Histórico do débito
+///
+/// `FactionSelectionScreen._loadFactions` mostrava TODAS as facções
+/// (incluindo `error`) desde Sprint 3.1. Comentário existente no
+/// código já reconhecia o gap: "FactionsService (com filtro de
+/// secretas por achievement) não é reimplementado no Bloco 7".
+/// Bloco 7 não foi feito; débito atravessou Sprints 3.1, 3.2, 3.3 e
+/// foi pego em validação manual de gameplay na Sprint 3.4 hotfix P2.
+const Map<String, String> kSecretFactionUnlockKey = {
+  'error': 'SECRET_LOBO_SOLITARIO',
+};

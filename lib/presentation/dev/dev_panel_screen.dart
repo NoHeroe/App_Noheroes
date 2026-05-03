@@ -154,6 +154,94 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
     AppSnack.success(context, 'Classe e facção resetadas');
   }
 
+  // ─── PROGRESSO (Sprint 3.4 Etapa A hotfix P2) ─────────────────────
+  //
+  // Atalhos pra exercitar o caminho REAL do `PlayerDao.addXp` +
+  // `LevelUp` listener global (`PlayerStateSyncService` em
+  // `app/app_listeners.dart`). Validação manual do CEO no flow de
+  // level up ficava bloqueada sem um meio rápido de injetar XP.
+  //
+  // ⚠️ TODOS via `addXp` — NÃO setamos `level` direto. Subir level via
+  // `PlayersTableCompanion(level: Value(N))` bypassaria o caminho que
+  // está sendo testado.
+
+  Future<void> _addXpRaw(int amount) async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final db = ref.read(appDatabaseProvider);
+    final dao = PlayerDao(db);
+    final levelUp = await dao.addXp(player.id, amount);
+    if (levelUp != null) {
+      // Publica no bus pra exercitar `PlayerStateSyncService` E os
+      // outros listeners (achievementsService.attachMetaLikeListeners
+      // escuta LevelUp pra trigger de meta achievements).
+      ref.read(appEventBusProvider).publish(levelUp);
+    }
+    // Mesmo sem level up, atualizamos `currentPlayerProvider` aqui pra
+    // refresh imediato de XP bar quando NÃO cruzou threshold (sem
+    // LevelUp emit, sync service não dispara).
+    final fresh = await dao.findById(player.id);
+    if (!mounted) return;
+    if (fresh != null) {
+      ref.read(currentPlayerProvider.notifier).state = fresh;
+    }
+    _invalidateAll(player.id);
+    AppSnack.success(
+        context,
+        levelUp != null
+            ? '+$amount XP → Lv${levelUp.previousLevel} → Lv${levelUp.newLevel}.'
+            : '+$amount XP aplicado (sem level up).');
+  }
+
+  Future<void> _addXp200() => _addXpRaw(200);
+
+  Future<void> _addXp1000() => _addXpRaw(1000);
+
+  /// Sobe exatamente 1 nível via `addXp` real (caminho do listener).
+  /// Calcula `(player.xpToNext - player.xp + 1)` pra cruzar o threshold
+  /// por 1 ponto. Se já estava em xp ≥ xpToNext (estado inválido), o
+  /// `+1` ainda funciona (o while em `addXp` consome de novo).
+  Future<void> _levelUpOnce() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final db = ref.read(appDatabaseProvider);
+    final fresh = await PlayerDao(db).findById(player.id);
+    if (fresh == null) return;
+    final needed = (fresh.xpToNext - fresh.xp + 1).clamp(1, 1 << 30);
+    await _addXpRaw(needed);
+  }
+
+  /// Sprint 3.4 hotfix P2 — força unlock da `SECRET_LOBO_SOLITARIO`
+  /// pra teste do filtro de visibilidade da ERROR em
+  /// `FactionSelectionScreen`. Conquista é shell (`disabled=true` no
+  /// catálogo), normalmente nem o cache `_eventAchievements` carrega
+  /// — mas o repository de unlock direto persiste row em
+  /// `player_achievements_completed` por PK composta sem ligar pro
+  /// flag `disabled`. Bypass intencional pra dev panel.
+  Future<void> _forceUnlockLoboSolitario() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final repo = ref.read(playerAchievementsRepositoryProvider);
+    const key = 'SECRET_LOBO_SOLITARIO';
+    final already = await repo.isCompleted(player.id, key);
+    if (already) {
+      if (!mounted) return;
+      AppSnack.info(context, 'SECRET_LOBO_SOLITARIO já desbloqueada.');
+      return;
+    }
+    await repo.markCompleted(player.id, key, at: DateTime.now());
+    // Publica AchievementUnlocked pra disparar popup gourmet (se
+    // listener tá montado) e cascata metaLike — todo o pipeline real.
+    ref.read(appEventBusProvider).publish(
+        AchievementUnlocked(playerId: player.id, achievementKey: key));
+    if (!mounted) return;
+    _invalidateAll(player.id);
+    AppSnack.success(
+        context,
+        'SECRET_LOBO_SOLITARIO desbloqueada. ERROR agora visível em '
+        '/faction-selection.');
+  }
+
   // ─── FACÇÕES (Sprint 3.4 Etapa A) ─────────────────────────────────
 
   /// Trigger manual do flow de admissão. Útil pra debug em devices que
@@ -854,6 +942,19 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
             _actionBtn('Ir para seleção de facção',
                 AppColors.shadowStable,
                 () => context.go('/faction-selection')),
+            const SizedBox(height: 16),
+
+            // 3.4. PROGRESSO (Sprint 3.4 Etapa A hotfix P2)
+            _section('PROGRESSO'),
+            _actionBtn('Adicionar 200 XP', AppColors.purple, _addXp200),
+            const SizedBox(height: 6),
+            _actionBtn('Adicionar 1000 XP', AppColors.purple, _addXp1000),
+            const SizedBox(height: 6),
+            _actionBtn('Subir 1 nível (via addXp real)',
+                AppColors.shadowAscending, _levelUpOnce),
+            const SizedBox(height: 6),
+            _actionBtn('Forçar unlock SECRET_LOBO_SOLITARIO',
+                AppColors.gold, _forceUnlockLoboSolitario),
             const SizedBox(height: 16),
 
             // 3.5. FACÇÕES (Sprint 3.4 Etapa A — debug do flow de admissão)

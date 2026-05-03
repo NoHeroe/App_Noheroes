@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
+import '../../../core/config/faction_alliances.dart' show kSecretFactionUnlockKey;
 import '../../../core/constants/app_colors.dart';
 import '../../../data/datasources/local/class_bonus_service.dart';
 // Sprint 3.1 Bloco 1 — QuestAdmissionService e factionsServiceProvider
@@ -36,15 +37,37 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
   Future<void> _loadFactions() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
-    // Sprint 3.1 Bloco 1 — leitura direta do JSON como fallback mínimo
-    // enquanto FactionsService (com filtro de secretas por achievement)
-    // não é reimplementado no Bloco 7.
     try {
       final raw = await rootBundle.loadString('assets/data/factions.json');
       final data = json.decode(raw) as Map<String, dynamic>;
-      final list = (data['factions'] as List).cast<Map<String, dynamic>>();
+      final all = (data['factions'] as List).cast<Map<String, dynamic>>();
+
+      // Sprint 3.4 hotfix P2 — filtra facções secretas cujo gate
+      // achievement não está desbloqueado pelo player. Fecha leak
+      // histórico (débito do Bloco 7 da Sprint 3.1: comentário antigo
+      // reconhecia que `FactionsService com filtro de secretas por
+      // achievement` não foi reimplementado). Default conservador:
+      // facção `isSecret=true` sem mapeamento em
+      // `kSecretFactionUnlockKey` fica escondida pra todo mundo.
+      final repo = ref.read(playerAchievementsRepositoryProvider);
+      final completed =
+          (await repo.listCompletedKeys(player.id)).toSet();
+      final filtered = <Map<String, dynamic>>[];
+      for (final f in all) {
+        if (f['isSecret'] != true) {
+          filtered.add(f);
+          continue;
+        }
+        final unlockKey = kSecretFactionUnlockKey[f['id']];
+        if (unlockKey != null && completed.contains(unlockKey)) {
+          filtered.add(f);
+        }
+        // Caso default: secret sem gate mapeado OU gate não
+        // desbloqueado → escondida.
+      }
+
       if (!mounted) return;
-      setState(() => _factions = list);
+      setState(() => _factions = filtered);
     } catch (_) {
       if (!mounted) return;
       setState(() => _factions = []);
