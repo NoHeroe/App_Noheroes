@@ -56,6 +56,7 @@ PlayersTableData _player({
       totalAttributePointsSpent: totalAttributePointsSpent,
       autoConfirmEnabled: false,
       screensVisitedKeys: '',
+      totalGoldEarnedViaQuests: 0,
     );
 
 PlayerDailyMissionStats _stats({

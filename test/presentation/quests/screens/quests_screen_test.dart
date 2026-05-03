@@ -157,6 +157,7 @@ PlayersTableData _fakePlayer({int dailyStreak = 0, String rank = 'E'}) {
     totalAttributePointsSpent: 0,
     autoConfirmEnabled: false,
     screensVisitedKeys: '',
+    totalGoldEarnedViaQuests: 0,
   );
 }
 

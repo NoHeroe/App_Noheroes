@@ -103,7 +103,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 34;
+  int get schemaVersion => 35;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -725,6 +725,26 @@ class AppDatabase extends _$AppDatabase {
         } catch (e, st) {
           // ignore: avoid_print
           print('[migration 33→34] guild_status migration failed: $e\n$st');
+        }
+      }
+      if (from < 35) {
+        // Sprint 3.4 Etapa B (Sub-Etapa B.1) — adiciona contador all-time
+        // `players.total_gold_earned_via_quests`. Foundation pro sub-type
+        // `admission_gold_earned_via_quests_window` do
+        // FactionAdmissionValidator (snapshot baseline no unlock + delta
+        // na janela de 48h).
+        //
+        // Aplica pattern preventivo ADR-0019: usa `m.addColumn` (não
+        // chama `select(table).get()` em data class durante migration).
+        // Default 0 cobre players legacy; novos já nascem com 0.
+        try {
+          await m.addColumn(
+              playersTable, playersTable.totalGoldEarnedViaQuests);
+          // ignore: avoid_print
+          print('[migration 34→35] added total_gold_earned_via_quests');
+        } catch (e, st) {
+          // ignore: avoid_print
+          print('[migration 34→35] addColumn failed: $e\n$st');
         }
       }
     },

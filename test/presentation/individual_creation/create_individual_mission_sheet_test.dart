@@ -76,6 +76,7 @@ PlayersTableData _player() {
     totalAttributePointsSpent: 0,
     autoConfirmEnabled: false,
     screensVisitedKeys: '',
+    totalGoldEarnedViaQuests: 0,
   );
 }
 

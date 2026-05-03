@@ -370,6 +370,14 @@ class $PlayersTableTable extends PlayersTable
           type: DriftSqlType.string,
           requiredDuringInsert: false,
           defaultValue: const Constant(''));
+  static const VerificationMeta _totalGoldEarnedViaQuestsMeta =
+      const VerificationMeta('totalGoldEarnedViaQuests');
+  @override
+  late final GeneratedColumn<int> totalGoldEarnedViaQuests =
+      GeneratedColumn<int>('total_gold_earned_via_quests', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0));
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -419,7 +427,8 @@ class $PlayersTableTable extends PlayersTable
         peakLevel,
         totalAttributePointsSpent,
         autoConfirmEnabled,
-        screensVisitedKeys
+        screensVisitedKeys,
+        totalGoldEarnedViaQuests
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -675,6 +684,13 @@ class $PlayersTableTable extends PlayersTable
           screensVisitedKeys.isAcceptableOrUnknown(
               data['screens_visited_keys']!, _screensVisitedKeysMeta));
     }
+    if (data.containsKey('total_gold_earned_via_quests')) {
+      context.handle(
+          _totalGoldEarnedViaQuestsMeta,
+          totalGoldEarnedViaQuests.isAcceptableOrUnknown(
+              data['total_gold_earned_via_quests']!,
+              _totalGoldEarnedViaQuestsMeta));
+    }
     return context;
   }
 
@@ -782,6 +798,9 @@ class $PlayersTableTable extends PlayersTable
           DriftSqlType.bool, data['${effectivePrefix}auto_confirm_enabled'])!,
       screensVisitedKeys: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}screens_visited_keys'])!,
+      totalGoldEarnedViaQuests: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}total_gold_earned_via_quests'])!,
     );
   }
 
@@ -855,6 +874,20 @@ class PlayersTableData extends DataClass
   ///
   /// Default `''` (vazio). Schema 32 adiciona via `m.addColumn`.
   final String screensVisitedKeys;
+
+  /// Sprint 3.4 Etapa B (Sub-Etapa B.1) — contador all-time de ouro
+  /// recebido como reward de quest (qualquer modalidade: daily/class/
+  /// faction/individual/admission). NÃO inclui gold de outras fontes
+  /// (loot, gift, gold_admin, etc).
+  ///
+  /// Foundation pro sub-type `admission_gold_earned_via_quests_window`
+  /// do `FactionAdmissionValidator`: validator captura snapshot deste
+  /// contador no momento de unlock da missão de admissão e compara
+  /// `current - baseline >= target`.
+  ///
+  /// Single writer: `QuestRewardStatsService` (listener de `RewardGranted`
+  /// + `DailyMissionCompleted`). Schema 35 adiciona via `m.addColumn`.
+  final int totalGoldEarnedViaQuests;
   const PlayersTableData(
       {required this.id,
       required this.email,
@@ -903,7 +936,8 @@ class PlayersTableData extends DataClass
       required this.peakLevel,
       required this.totalAttributePointsSpent,
       required this.autoConfirmEnabled,
-      required this.screensVisitedKeys});
+      required this.screensVisitedKeys,
+      required this.totalGoldEarnedViaQuests});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -973,6 +1007,8 @@ class PlayersTableData extends DataClass
         Variable<int>(totalAttributePointsSpent);
     map['auto_confirm_enabled'] = Variable<bool>(autoConfirmEnabled);
     map['screens_visited_keys'] = Variable<String>(screensVisitedKeys);
+    map['total_gold_earned_via_quests'] =
+        Variable<int>(totalGoldEarnedViaQuests);
     return map;
   }
 
@@ -1042,6 +1078,7 @@ class PlayersTableData extends DataClass
       totalAttributePointsSpent: Value(totalAttributePointsSpent),
       autoConfirmEnabled: Value(autoConfirmEnabled),
       screensVisitedKeys: Value(screensVisitedKeys),
+      totalGoldEarnedViaQuests: Value(totalGoldEarnedViaQuests),
     );
   }
 
@@ -1102,6 +1139,8 @@ class PlayersTableData extends DataClass
       autoConfirmEnabled: serializer.fromJson<bool>(json['autoConfirmEnabled']),
       screensVisitedKeys:
           serializer.fromJson<String>(json['screensVisitedKeys']),
+      totalGoldEarnedViaQuests:
+          serializer.fromJson<int>(json['totalGoldEarnedViaQuests']),
     );
   }
   @override
@@ -1158,6 +1197,8 @@ class PlayersTableData extends DataClass
           serializer.toJson<int>(totalAttributePointsSpent),
       'autoConfirmEnabled': serializer.toJson<bool>(autoConfirmEnabled),
       'screensVisitedKeys': serializer.toJson<String>(screensVisitedKeys),
+      'totalGoldEarnedViaQuests':
+          serializer.toJson<int>(totalGoldEarnedViaQuests),
     };
   }
 
@@ -1209,7 +1250,8 @@ class PlayersTableData extends DataClass
           int? peakLevel,
           int? totalAttributePointsSpent,
           bool? autoConfirmEnabled,
-          String? screensVisitedKeys}) =>
+          String? screensVisitedKeys,
+          int? totalGoldEarnedViaQuests}) =>
       PlayersTableData(
         id: id ?? this.id,
         email: email ?? this.email,
@@ -1266,6 +1308,8 @@ class PlayersTableData extends DataClass
             totalAttributePointsSpent ?? this.totalAttributePointsSpent,
         autoConfirmEnabled: autoConfirmEnabled ?? this.autoConfirmEnabled,
         screensVisitedKeys: screensVisitedKeys ?? this.screensVisitedKeys,
+        totalGoldEarnedViaQuests:
+            totalGoldEarnedViaQuests ?? this.totalGoldEarnedViaQuests,
       );
   PlayersTableData copyWithCompanion(PlayersTableCompanion data) {
     return PlayersTableData(
@@ -1361,6 +1405,9 @@ class PlayersTableData extends DataClass
       screensVisitedKeys: data.screensVisitedKeys.present
           ? data.screensVisitedKeys.value
           : this.screensVisitedKeys,
+      totalGoldEarnedViaQuests: data.totalGoldEarnedViaQuests.present
+          ? data.totalGoldEarnedViaQuests.value
+          : this.totalGoldEarnedViaQuests,
     );
   }
 
@@ -1414,7 +1461,8 @@ class PlayersTableData extends DataClass
           ..write('peakLevel: $peakLevel, ')
           ..write('totalAttributePointsSpent: $totalAttributePointsSpent, ')
           ..write('autoConfirmEnabled: $autoConfirmEnabled, ')
-          ..write('screensVisitedKeys: $screensVisitedKeys')
+          ..write('screensVisitedKeys: $screensVisitedKeys, ')
+          ..write('totalGoldEarnedViaQuests: $totalGoldEarnedViaQuests')
           ..write(')'))
         .toString();
   }
@@ -1468,7 +1516,8 @@ class PlayersTableData extends DataClass
         peakLevel,
         totalAttributePointsSpent,
         autoConfirmEnabled,
-        screensVisitedKeys
+        screensVisitedKeys,
+        totalGoldEarnedViaQuests
       ]);
   @override
   bool operator ==(Object other) =>
@@ -1521,7 +1570,8 @@ class PlayersTableData extends DataClass
           other.peakLevel == this.peakLevel &&
           other.totalAttributePointsSpent == this.totalAttributePointsSpent &&
           other.autoConfirmEnabled == this.autoConfirmEnabled &&
-          other.screensVisitedKeys == this.screensVisitedKeys);
+          other.screensVisitedKeys == this.screensVisitedKeys &&
+          other.totalGoldEarnedViaQuests == this.totalGoldEarnedViaQuests);
 }
 
 class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
@@ -1573,6 +1623,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
   final Value<int> totalAttributePointsSpent;
   final Value<bool> autoConfirmEnabled;
   final Value<String> screensVisitedKeys;
+  final Value<int> totalGoldEarnedViaQuests;
   const PlayersTableCompanion({
     this.id = const Value.absent(),
     this.email = const Value.absent(),
@@ -1622,6 +1673,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.totalAttributePointsSpent = const Value.absent(),
     this.autoConfirmEnabled = const Value.absent(),
     this.screensVisitedKeys = const Value.absent(),
+    this.totalGoldEarnedViaQuests = const Value.absent(),
   });
   PlayersTableCompanion.insert({
     this.id = const Value.absent(),
@@ -1672,6 +1724,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.totalAttributePointsSpent = const Value.absent(),
     this.autoConfirmEnabled = const Value.absent(),
     this.screensVisitedKeys = const Value.absent(),
+    this.totalGoldEarnedViaQuests = const Value.absent(),
   })  : email = Value(email),
         passwordHash = Value(passwordHash);
   static Insertable<PlayersTableData> custom({
@@ -1723,6 +1776,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     Expression<int>? totalAttributePointsSpent,
     Expression<bool>? autoConfirmEnabled,
     Expression<String>? screensVisitedKeys,
+    Expression<int>? totalGoldEarnedViaQuests,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1779,6 +1833,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
         'auto_confirm_enabled': autoConfirmEnabled,
       if (screensVisitedKeys != null)
         'screens_visited_keys': screensVisitedKeys,
+      if (totalGoldEarnedViaQuests != null)
+        'total_gold_earned_via_quests': totalGoldEarnedViaQuests,
     });
   }
 
@@ -1830,7 +1886,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       Value<int>? peakLevel,
       Value<int>? totalAttributePointsSpent,
       Value<bool>? autoConfirmEnabled,
-      Value<String>? screensVisitedKeys}) {
+      Value<String>? screensVisitedKeys,
+      Value<int>? totalGoldEarnedViaQuests}) {
     return PlayersTableCompanion(
       id: id ?? this.id,
       email: email ?? this.email,
@@ -1882,6 +1939,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
           totalAttributePointsSpent ?? this.totalAttributePointsSpent,
       autoConfirmEnabled: autoConfirmEnabled ?? this.autoConfirmEnabled,
       screensVisitedKeys: screensVisitedKeys ?? this.screensVisitedKeys,
+      totalGoldEarnedViaQuests:
+          totalGoldEarnedViaQuests ?? this.totalGoldEarnedViaQuests,
     );
   }
 
@@ -2034,6 +2093,10 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     if (screensVisitedKeys.present) {
       map['screens_visited_keys'] = Variable<String>(screensVisitedKeys.value);
     }
+    if (totalGoldEarnedViaQuests.present) {
+      map['total_gold_earned_via_quests'] =
+          Variable<int>(totalGoldEarnedViaQuests.value);
+    }
     return map;
   }
 
@@ -2087,7 +2150,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
           ..write('peakLevel: $peakLevel, ')
           ..write('totalAttributePointsSpent: $totalAttributePointsSpent, ')
           ..write('autoConfirmEnabled: $autoConfirmEnabled, ')
-          ..write('screensVisitedKeys: $screensVisitedKeys')
+          ..write('screensVisitedKeys: $screensVisitedKeys, ')
+          ..write('totalGoldEarnedViaQuests: $totalGoldEarnedViaQuests')
           ..write(')'))
         .toString();
   }
@@ -16230,6 +16294,7 @@ typedef $$PlayersTableTableCreateCompanionBuilder = PlayersTableCompanion
   Value<int> totalAttributePointsSpent,
   Value<bool> autoConfirmEnabled,
   Value<String> screensVisitedKeys,
+  Value<int> totalGoldEarnedViaQuests,
 });
 typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
     Function({
@@ -16281,6 +16346,7 @@ typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
   Value<int> totalAttributePointsSpent,
   Value<bool> autoConfirmEnabled,
   Value<String> screensVisitedKeys,
+  Value<int> totalGoldEarnedViaQuests,
 });
 
 class $$PlayersTableTableFilterComposer
@@ -16448,6 +16514,10 @@ class $$PlayersTableTableFilterComposer
 
   ColumnFilters<String> get screensVisitedKeys => $composableBuilder(
       column: $table.screensVisitedKeys,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalGoldEarnedViaQuests => $composableBuilder(
+      column: $table.totalGoldEarnedViaQuests,
       builder: (column) => ColumnFilters(column));
 }
 
@@ -16622,6 +16692,10 @@ class $$PlayersTableTableOrderingComposer
   ColumnOrderings<String> get screensVisitedKeys => $composableBuilder(
       column: $table.screensVisitedKeys,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalGoldEarnedViaQuests => $composableBuilder(
+      column: $table.totalGoldEarnedViaQuests,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$PlayersTableTableAnnotationComposer
@@ -16776,6 +16850,9 @@ class $$PlayersTableTableAnnotationComposer
 
   GeneratedColumn<String> get screensVisitedKeys => $composableBuilder(
       column: $table.screensVisitedKeys, builder: (column) => column);
+
+  GeneratedColumn<int> get totalGoldEarnedViaQuests => $composableBuilder(
+      column: $table.totalGoldEarnedViaQuests, builder: (column) => column);
 }
 
 class $$PlayersTableTableTableManager extends RootTableManager<
@@ -16852,6 +16929,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> totalAttributePointsSpent = const Value.absent(),
             Value<bool> autoConfirmEnabled = const Value.absent(),
             Value<String> screensVisitedKeys = const Value.absent(),
+            Value<int> totalGoldEarnedViaQuests = const Value.absent(),
           }) =>
               PlayersTableCompanion(
             id: id,
@@ -16902,6 +16980,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             totalAttributePointsSpent: totalAttributePointsSpent,
             autoConfirmEnabled: autoConfirmEnabled,
             screensVisitedKeys: screensVisitedKeys,
+            totalGoldEarnedViaQuests: totalGoldEarnedViaQuests,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -16952,6 +17031,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> totalAttributePointsSpent = const Value.absent(),
             Value<bool> autoConfirmEnabled = const Value.absent(),
             Value<String> screensVisitedKeys = const Value.absent(),
+            Value<int> totalGoldEarnedViaQuests = const Value.absent(),
           }) =>
               PlayersTableCompanion.insert(
             id: id,
@@ -17002,6 +17082,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             totalAttributePointsSpent: totalAttributePointsSpent,
             autoConfirmEnabled: autoConfirmEnabled,
             screensVisitedKeys: screensVisitedKeys,
+            totalGoldEarnedViaQuests: totalGoldEarnedViaQuests,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

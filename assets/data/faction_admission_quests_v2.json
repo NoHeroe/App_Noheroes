@@ -1,0 +1,314 @@
+{
+  "_doc": "Sprint 3.4 Etapa B (Sub-Etapa B.1) — catálogo de admissão eliminatória v2. Substitui faction_admission_quests.json (legacy formato simples). Estrutura: cada facção tem N missões sequenciais; cada missão tem M sub_tasks com sub_type canônico (FactionAdmissionSubTaskTypes.all). Sub-tasks são automáticas — sistema observa via FactionAdmissionValidator. Janela de 48h por missão (escalonada por reputação) começa quando a missão é desbloqueada (Sub-Etapa B.2 implementa).",
+
+  "guild": [
+    {
+      "id": "ADM_GUILD_1",
+      "title": "Primeiro Passo do Aventureiro",
+      "description": "Todos começam aqui. Ninguém termina sozinho.",
+      "rank": "E",
+      "sub_tasks": [
+        {"sub_type": "admission_daily_count_window", "target": 5, "label": "Completar 5 dailies em 48h"},
+        {"sub_type": "admission_individual_completed_window", "target": 1, "label": "1 missão individual criada e completada"}
+      ]
+    },
+    {
+      "id": "ADM_GUILD_2",
+      "title": "Compromisso com Caelum",
+      "description": "O Colar pesa. Mas é o peso que sustenta.",
+      "rank": "E",
+      "sub_tasks": [
+        {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 48h"},
+        {"sub_type": "admission_streak_minimum", "target": 2, "label": "Streak de 2 dias mantido"}
+      ]
+    }
+  ],
+
+  "moon_clan": [
+    {
+      "id": "ADM_MOON_1",
+      "title": "O Primeiro Silêncio",
+      "description": "A Lua escuta quem sabe ouvir-se primeiro.",
+      "rank": "E",
+      "sub_tasks": [
+        {"sub_type": "admission_daily_count_window", "target": 5, "params": {"modalidade": "mental"}, "label": "5 missões mentais em 48h"},
+        {"sub_type": "admission_diary_entry_window", "target": 1, "label": "1 entrada de diário escrita"}
+      ]
+    },
+    {
+      "id": "ADM_MOON_2",
+      "title": "Lâmina Invisível",
+      "description": "Quem ataca sem aviso ataca duas vezes — em silêncio e em precisão.",
+      "rank": "D",
+      "sub_tasks": [
+        {"sub_type": "admission_daily_count_window", "target": 5, "params": {"modalidade": "fisico", "respect_snapshot_rank": true}, "label": "5 missões físicas em 48h (rank D+)"},
+        {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 48h"},
+        {"sub_type": "admission_streak_minimum", "target": 2, "label": "Streak de 2 dias"}
+      ]
+    },
+    {
+      "id": "ADM_MOON_3",
+      "title": "Honra Lunar",
+      "description": "Disciplina não dá ordens — ela existe. E a Lua reconhece.",
+      "rank": "D",
+      "sub_tasks": [
+        {"sub_type": "admission_full_perfect_day_window", "target": 1, "label": "100% das dailies em 1 dia"},
+        {"sub_type": "admission_daily_count_window", "target": 10, "label": "10 dailies quaisquer em 48h"}
+      ]
+    }
+  ],
+
+  "sun_clan": [
+    {
+      "id": "ADM_SUN_1",
+      "title": "Despertar Solar",
+      "description": "O sol não pede permissão pra nascer. Você também não.",
+      "rank": "E",
+      "sub_tasks": [
+        {"sub_type": "admission_daily_count_window", "target": 5, "params": {"modalidade": "fisico"}, "label": "5 missões físicas em 48h"},
+        {"sub_type": "admission_streak_minimum", "target": 1, "label": "Streak de 1 dia"}
+      ]
+    },
+    {
+      "id": "ADM_SUN_2",
+      "title": "Disciplina do Treino",
+      "description": "Calor sustentado é mais raro que explosão. Prove durabilidade.",
+      "rank": "D",
+      "sub_tasks": [
+        {"sub_type": "admission_daily_count_window", "target": 5, "params": {"modalidade": "fisico", "respect_snapshot_rank": true}, "label": "5 missões físicas em 48h (rank D+)"},
+        {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 48h"}
+      ]
+    },
+    {
+      "id": "ADM_SUN_3",
+      "title": "Glória Visível",
+      "description": "Glória é o que sobra depois que a vontade se traduz em ato.",
+      "rank": "D",
+      "sub_tasks": [
+        {"sub_type": "admission_full_perfect_day_window", "target": 1, "label": "100% das dailies em 1 dia"},
+        {"sub_type": "admission_gold_earned_via_quests_window", "target": 80, "label": "80+ ouro acumulado via quests"},
+        {"sub_type": "admission_streak_minimum", "target": 3, "label": "Streak de 3 dias"}
+      ]
+    }
+  ],
+
+  "renegades": [
+    {
+      "id": "ADM_RENEGADES_1",
+      "title": "Bolsa Vazia, Mente Cheia",
+      "description": "Liberdade custa. Mostre que sabe pagar o próprio caminho.",
+      "rank": "E",
+      "sub_tasks": [
+        {"sub_type": "admission_gold_earned_via_quests_window", "target": 50, "label": "Acumular 50+ ouro via quests em 48h"},
+        {"sub_type": "admission_individual_completed_window", "target": 1, "label": "1 missão individual completada"}
+      ]
+    },
+    {
+      "id": "ADM_RENEGADES_2",
+      "title": "Caminho Próprio",
+      "description": "Não menos. Não mais. Disciplina é saber parar.",
+      "rank": "D",
+      "sub_tasks": [
+        {"sub_type": "admission_exact_daily_count_window", "target": 4, "label": "EXATAMENTE 4 dailies em 48h (5+ falha)"},
+        {"sub_type": "admission_streak_minimum", "target": 1, "label": "Streak de 1 dia"}
+      ]
+    },
+    {
+      "id": "ADM_RENEGADES_3",
+      "title": "Negócio Fechado",
+      "description": "Reservas são leis privadas. Quem tem cofre tem voz.",
+      "rank": "D",
+      "sub_tasks": [
+        {"sub_type": "admission_gold_balance_threshold", "target": 100, "label": "100+ gold no inventário em algum momento da janela"},
+        {"sub_type": "admission_full_perfect_day_window", "target": 1, "label": "100% das dailies em 1 dia"},
+        {"sub_type": "admission_individual_completed_window", "target": 2, "label": "2 missões individuais completadas"}
+      ]
+    }
+  ],
+
+  "new_order": [
+    {
+      "id": "ADM_ORDER_1",
+      "title": "Caminho Iluminado",
+      "description": "Resistência começa em ler o que ninguém quer escrever.",
+      "rank": "D",
+      "sub_tasks": [
+        {"sub_type": "admission_daily_count_window", "target": 8, "params": {"modalidade": "mental"}, "label": "8 missões mentais em 48h"},
+        {"sub_type": "admission_diary_entry_window", "target": 2, "label": "2 entradas de diário"},
+        {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 48h"}
+      ]
+    },
+    {
+      "id": "ADM_ORDER_2",
+      "title": "Reflexão Profunda",
+      "description": "Cada dia perfeito é um manifesto contra o caos.",
+      "rank": "D",
+      "sub_tasks": [
+        {"sub_type": "admission_daily_count_window", "target": 10, "params": {"modalidade": "mental", "respect_snapshot_rank": true}, "label": "10 missões mentais em 48h (rank D+)"},
+        {"sub_type": "admission_full_perfect_day_window", "target": 1, "label": "100% das dailies em 1 dia"},
+        {"sub_type": "admission_streak_minimum", "target": 3, "label": "Streak de 3 dias"}
+      ]
+    },
+    {
+      "id": "ADM_ORDER_3",
+      "title": "Reforma Interna",
+      "description": "Mudar é raro. Mudar mantendo padrão é Nova Ordem.",
+      "rank": "C",
+      "sub_tasks": [
+        {"sub_type": "admission_no_partial_day_window", "target": 2, "label": "2 dias sem partials"},
+        {"sub_type": "admission_daily_count_window", "target": 15, "params": {"respect_snapshot_rank": true}, "label": "15 dailies quaisquer (rank C+)"},
+        {"sub_type": "admission_individual_completed_window", "target": 2, "label": "2 missões individuais"}
+      ]
+    }
+  ],
+
+  "black_legion": [
+    {
+      "id": "ADM_LEGION_1",
+      "title": "Ordem da Legião",
+      "description": "Não há lugar pra hesitação na Legião. Aja.",
+      "rank": "D",
+      "sub_tasks": [
+        {"sub_type": "admission_daily_count_window", "target": 10, "params": {"modalidade": "fisico"}, "label": "10 missões físicas em 48h"},
+        {"sub_type": "admission_streak_minimum", "target": 3, "label": "Streak de 3 dias"},
+        {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 48h"}
+      ]
+    },
+    {
+      "id": "ADM_LEGION_2",
+      "title": "Disciplina de Ferro",
+      "description": "Volume sem cair. Esse é o ferro da Legião.",
+      "rank": "D",
+      "sub_tasks": [
+        {"sub_type": "admission_daily_count_window", "target": 15, "params": {"respect_snapshot_rank": true}, "label": "15 dailies em 48h (rank D+)"},
+        {"sub_type": "admission_no_partial_day_window", "target": 2, "label": "2 dias sem partial completion"}
+      ]
+    },
+    {
+      "id": "ADM_LEGION_3",
+      "title": "Juramento de Yuna",
+      "description": "Yuna não admite meio-termo. E nem nós.",
+      "rank": "C",
+      "sub_tasks": [
+        {"sub_type": "admission_no_partial_day_window", "target": 3, "label": "3 dias sem partial"},
+        {"sub_type": "admission_full_perfect_day_window", "target": 2, "label": "2 dias 100%"},
+        {"sub_type": "admission_daily_count_window", "target": 12, "params": {"modalidade": "fisico"}, "label": "12 missões físicas"}
+      ]
+    },
+    {
+      "id": "ADM_LEGION_4",
+      "title": "Lealdade Total",
+      "description": "A Legião é o último teste. E o primeiro destino.",
+      "rank": "C",
+      "sub_tasks": [
+        {"sub_type": "admission_daily_count_window", "target": 20, "params": {"respect_snapshot_rank": true}, "label": "20 dailies em 48h (rank C+)"},
+        {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 48h"},
+        {"sub_type": "admission_streak_minimum", "target": 5, "label": "Streak de 5 dias"},
+        {"sub_type": "admission_individual_completed_window", "target": 2, "label": "2 missões individuais"}
+      ]
+    }
+  ],
+
+  "trinity": [
+    {
+      "id": "ADM_TRINITY_1",
+      "title": "Os Três Aspectos",
+      "description": "Corpo, Mente, Espírito. Os três têm que cantar juntos.",
+      "rank": "D",
+      "sub_tasks": [
+        {"sub_type": "admission_daily_count_window", "target": 3, "params": {"modalidade": "fisico"}, "label": "3 missões físicas em 48h"},
+        {"sub_type": "admission_daily_count_window", "target": 3, "params": {"modalidade": "mental"}, "label": "3 missões mentais em 48h"},
+        {"sub_type": "admission_daily_count_window", "target": 3, "params": {"modalidade": "espiritual"}, "label": "3 missões espirituais em 48h"}
+      ]
+    },
+    {
+      "id": "ADM_TRINITY_2",
+      "title": "Espelho da Sombra",
+      "description": "O Vazio se revela em quem se observa primeiro.",
+      "rank": "D",
+      "sub_tasks": [
+        {"sub_type": "admission_diary_entry_window", "target": 2, "label": "2 entradas de diário"},
+        {"sub_type": "admission_daily_count_window", "target": 5, "params": {"modalidade": "espiritual"}, "label": "5 missões espirituais"},
+        {"sub_type": "admission_streak_minimum", "target": 2, "label": "Streak de 2 dias"}
+      ]
+    },
+    {
+      "id": "ADM_TRINITY_3",
+      "title": "Jejum do Conhecimento",
+      "description": "Saber demais cega. Por 48h, abandone o intelecto.",
+      "rank": "C",
+      "sub_tasks": [
+        {"sub_type": "admission_zero_category_window", "target": 0, "params": {"modalidade": "mental"}, "label": "0 missões mentais completadas (jejum)"},
+        {"sub_type": "admission_daily_count_window", "target": 8, "params": {"modalidade": "espiritual"}, "label": "8 missões espirituais"}
+      ]
+    },
+    {
+      "id": "ADM_TRINITY_4",
+      "title": "Ritual da Trindade",
+      "description": "O acólito não age. Ele se torna canal.",
+      "rank": "C",
+      "sub_tasks": [
+        {"sub_type": "admission_full_perfect_day_window", "target": 2, "label": "2 dias 100%"},
+        {"sub_type": "admission_daily_count_window", "target": 12, "params": {"respect_snapshot_rank": true}, "label": "12 dailies (rank C+)"},
+        {"sub_type": "admission_streak_minimum", "target": 5, "label": "Streak de 5 dias"}
+      ]
+    }
+  ],
+
+  "error": [
+    {
+      "id": "ADM_ERROR_1",
+      "title": "Anomalia Detectada",
+      "description": "ERROR não convoca. ERROR seleciona quem se nota.",
+      "rank": "C",
+      "sub_tasks": [
+        {"sub_type": "admission_daily_count_window", "target": 15, "label": "15 dailies em 48h"},
+        {"sub_type": "admission_diary_entry_window", "target": 3, "label": "3 entradas de diário"},
+        {"sub_type": "admission_streak_minimum", "target": 5, "label": "Streak de 5 dias"}
+      ]
+    },
+    {
+      "id": "ADM_ERROR_2",
+      "title": "Disciplina do Operador",
+      "description": "Operadores não erram. Por isso operam.",
+      "rank": "C",
+      "sub_tasks": [
+        {"sub_type": "admission_no_partial_day_window", "target": 3, "label": "3 dias sem partial"},
+        {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 48h"},
+        {"sub_type": "admission_individual_completed_window", "target": 3, "label": "3 missões individuais"}
+      ]
+    },
+    {
+      "id": "ADM_ERROR_3",
+      "title": "Atravessar Dimensões",
+      "description": "Os três aspectos. Em rank de elite. Sem desculpa.",
+      "rank": "B",
+      "sub_tasks": [
+        {"sub_type": "admission_daily_count_window", "target": 3, "params": {"modalidade": "fisico", "respect_snapshot_rank": true}, "label": "3 físicas em 48h (rank B+)"},
+        {"sub_type": "admission_daily_count_window", "target": 3, "params": {"modalidade": "mental", "respect_snapshot_rank": true}, "label": "3 mentais em 48h (rank B+)"},
+        {"sub_type": "admission_daily_count_window", "target": 3, "params": {"modalidade": "espiritual", "respect_snapshot_rank": true}, "label": "3 espirituais em 48h (rank B+)"}
+      ]
+    },
+    {
+      "id": "ADM_ERROR_4",
+      "title": "Operação Silenciosa",
+      "description": "Não se queixe. Não pare. Não falhe.",
+      "rank": "B",
+      "sub_tasks": [
+        {"sub_type": "admission_no_partial_day_window", "target": 5, "label": "5 dias sem partial"},
+        {"sub_type": "admission_daily_count_window", "target": 20, "params": {"respect_snapshot_rank": true}, "label": "20 dailies (rank B+)"}
+      ]
+    },
+    {
+      "id": "ADM_ERROR_5",
+      "title": "ERROR CONFIRMADO",
+      "description": "O sistema te aceita. Você foi sempre invisível.",
+      "rank": "B",
+      "sub_tasks": [
+        {"sub_type": "admission_full_perfect_day_window", "target": 3, "label": "3 dias 100%"},
+        {"sub_type": "admission_streak_minimum", "target": 10, "label": "Streak de 10 dias"},
+        {"sub_type": "admission_daily_count_window", "target": 30, "params": {"respect_snapshot_rank": true}, "label": "30 dailies (rank B+)"}
+      ]
+    }
+  ]
+}

@@ -33,6 +33,13 @@ class NoHeroesApp extends ConsumerWidget {
     // visual mostrava XP resetando mas level antigo persistente.
     // Pattern espelha AchievementToastListener (Sprint 3.3 Final-B).
     ref.watch(playerStateSyncServiceProvider);
+    // Sprint 3.4 Etapa B (Sub-Etapa B.1) — single writer de
+    // `players.total_gold_earned_via_quests`. Listener escuta
+    // `RewardGranted` (não-cascade) + `DailyMissionCompleted`
+    // (campo `goldEarned`). Foundation pro sub-type
+    // `admission_gold_earned_via_quests_window` do
+    // `FactionAdmissionValidator`.
+    ref.watch(questRewardStatsServiceProvider);
     return MaterialApp.router(
       title: 'NoHeroes',
       debugShowCheckedModeBanner: false,

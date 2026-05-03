@@ -74,6 +74,17 @@ class DailyMissionCompleted extends AppEvent {
   /// existentes em progress + rollover services).
   final bool wasAutoConfirmed;
 
+  /// Sprint 3.4 Etapa B (Sub-Etapa B.1) — gold creditado por esta
+  /// daily, **após** SOULSLIKE multipliers + categoria + streak bonus.
+  /// Default `0` pra backwards-compat com listeners pré-3.4.
+  ///
+  /// Consumido pelo `QuestRewardStatsService` pra incrementar
+  /// `players.total_gold_earned_via_quests`. Daily missions atualizam
+  /// `players.gold` via SQL direto sem disparar `RewardGranted` —
+  /// carregar gold no evento foi a forma mais cirúrgica de cobrir
+  /// dailies sem refatorar o flow inteiro.
+  final int goldEarned;
+
   DailyMissionCompleted({
     required this.playerId,
     required this.missionId,
@@ -81,13 +92,14 @@ class DailyMissionCompleted extends AppEvent {
     required this.fullCompleted,
     required this.partial,
     this.wasAutoConfirmed = false,
+    this.goldEarned = 0,
   });
 
   @override
   String toString() =>
       'DailyMissionCompleted(player=$playerId, mission=$missionId, '
       '${modalidade.storage}, full=$fullCompleted, partial=$partial, '
-      'auto=$wasAutoConfirmed)';
+      'auto=$wasAutoConfirmed, gold=$goldEarned)';
 }
 
 /// Emitido pelo rollover quando a missão fecha com 0 sub-tarefas — sem

@@ -57,6 +57,7 @@ PlayersTableData _player({int? weightKg, int? heightCm}) {
     totalAttributePointsSpent: 0,
     autoConfirmEnabled: false,
     screensVisitedKeys: '',
+    totalGoldEarnedViaQuests: 0,
   );
 }
 

@@ -59,6 +59,7 @@ flutter:
     - assets/data/class_quests.json
     - assets/data/class_quests_daily.json
     - assets/data/faction_admission_quests.json
+    - assets/data/faction_admission_quests_v2.json
     - assets/data/faction_quests_weekly.json
     - assets/data/quest_templates.json
     - assets/data/achievements.json

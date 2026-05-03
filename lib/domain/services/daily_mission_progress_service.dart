@@ -147,6 +147,7 @@ class DailyMissionProgressService {
   Future<void> confirmCompletion({required int missionId}) async {
     LevelUp? levelUp;
     DailyMission? closedMission;
+    int goldEarned = 0;
 
     await _db.transaction(() async {
       final mission = await _missionsDao.findById(missionId);
@@ -170,6 +171,7 @@ class DailyMissionProgressService {
         status: status,
         dailyMissionsStreak: player.dailyMissionsStreak,
       );
+      goldEarned = reward.gold;
 
       if (reward.xp > 0) {
         levelUp = await _playerDao.addXp(mission.playerId, reward.xp);
@@ -209,6 +211,7 @@ class DailyMissionProgressService {
           modalidade: m.modalidade,
           fullCompleted: m.status == DailyMissionStatus.completed,
           partial: m.status == DailyMissionStatus.partial,
+          goldEarned: goldEarned,
         ));
       }
     }
@@ -390,6 +393,7 @@ class DailyMissionProgressService {
       modalidade: mission.modalidade,
       fullCompleted: false,
       partial: true,
+      goldEarned: reward.gold,
     ));
     if (levelUp != null) _bus.publish(levelUp);
   }
@@ -449,6 +453,7 @@ class DailyMissionProgressService {
       fullCompleted: true,
       partial: false,
       wasAutoConfirmed: true,
+      goldEarned: reward.gold,
     ));
     if (levelUp != null) _bus.publish(levelUp);
   }

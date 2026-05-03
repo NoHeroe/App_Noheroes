@@ -105,6 +105,7 @@ PlayersTableData _fakePlayer({int totalQuests = 0}) {
     totalAttributePointsSpent: 0,
     autoConfirmEnabled: false,
     screensVisitedKeys: '',
+    totalGoldEarnedViaQuests: 0,
   );
 }
 

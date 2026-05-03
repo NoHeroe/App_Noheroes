@@ -23,6 +23,8 @@ import '../domain/services/daily_mission_rollover_service.dart';
 import '../domain/services/daily_mission_stats_service.dart';
 import '../domain/services/daily_pool_service.dart';
 import '../domain/services/player_currency_stats_service.dart';
+import '../data/datasources/local/quest_reward_stats_service.dart';
+import '../domain/services/faction_admission_validator.dart';
 import '../domain/services/player_screens_visited_service.dart';
 import '../data/database/daos/daily_missions_dao.dart';
 import '../data/database/daos/player_daily_mission_stats_dao.dart';
@@ -452,6 +454,31 @@ final dailyMissionStatsServiceProvider =
     service.dispose();
   });
   return service;
+});
+
+/// Sprint 3.4 Etapa B (Sub-Etapa B.1) — single writer de
+/// `players.total_gold_earned_via_quests`. Foundation pro sub-type
+/// `admission_gold_earned_via_quests_window` do
+/// `FactionAdmissionValidator`. Eager bootstrap em
+/// `NoHeroesApp.build` — sem isso, listener só ativaria no primeiro
+/// consumo do provider.
+final questRewardStatsServiceProvider =
+    Provider<QuestRewardStatsService>((ref) {
+  final service = QuestRewardStatsService(
+    db: ref.watch(appDatabaseProvider),
+    bus: ref.watch(appEventBusProvider),
+  );
+  service.start();
+  ref.onDispose(service.stop);
+  return service;
+});
+
+/// Sprint 3.4 Etapa B (Sub-Etapa B.1) — validador de sub-tasks de
+/// admissão. Stateless — caller (Sub-Etapa B.2) consulta `evaluate`
+/// pra cada sub-task ativa em listeners de eventos terminais.
+final factionAdmissionValidatorProvider =
+    Provider<FactionAdmissionValidator>((ref) {
+  return FactionAdmissionValidator(ref.watch(appDatabaseProvider));
 });
 
 final dailyMissionGeneratorServiceProvider =

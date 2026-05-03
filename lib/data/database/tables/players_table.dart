@@ -127,4 +127,19 @@ class PlayersTable extends Table {
   /// Default `''` (vazio). Schema 32 adiciona via `m.addColumn`.
   TextColumn get screensVisitedKeys =>
       text().withDefault(const Constant(''))();
+
+  /// Sprint 3.4 Etapa B (Sub-Etapa B.1) — contador all-time de ouro
+  /// recebido como reward de quest (qualquer modalidade: daily/class/
+  /// faction/individual/admission). NÃO inclui gold de outras fontes
+  /// (loot, gift, gold_admin, etc).
+  ///
+  /// Foundation pro sub-type `admission_gold_earned_via_quests_window`
+  /// do `FactionAdmissionValidator`: validator captura snapshot deste
+  /// contador no momento de unlock da missão de admissão e compara
+  /// `current - baseline >= target`.
+  ///
+  /// Single writer: `QuestRewardStatsService` (listener de `RewardGranted`
+  /// + `DailyMissionCompleted`). Schema 35 adiciona via `m.addColumn`.
+  IntColumn get totalGoldEarnedViaQuests =>
+      integer().withDefault(const Constant(0))();
 }
