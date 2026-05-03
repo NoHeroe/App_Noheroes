@@ -171,6 +171,24 @@ void main() {
     expect(dailyCount['target'], 6);
   });
 
+  // Sprint 3.4 hotfix B.2 — label do catálogo persiste em metaJson.
+  test('label do catálogo persiste em metaJson das sub-tasks',
+      () async {
+    final created =
+        await service.startFactionAdmission(playerId, 'moon_clan');
+    final firstMeta =
+        jsonDecode(created.first.metaJson) as Map<String, dynamic>;
+    final subs = (firstMeta['sub_tasks'] as List).cast<Map>();
+    for (final s in subs) {
+      expect(s['label'], isA<String>(),
+          reason: 'sub-task deveria ter label persistido');
+      expect((s['label'] as String).isNotEmpty, isTrue);
+    }
+    // Verifica conteúdo do 1º label (vem do catálogo v2:
+    // ADM_MOON_1 sub-task 1 = "5 missões mentais em 48h").
+    expect(subs.first['label'], contains('5 missões mentais'));
+  });
+
   test('zero_failed_window NÃO sofre scaling (target=0 sempre)',
       () async {
     // reputação alta — mas zero_failed deve continuar 0.

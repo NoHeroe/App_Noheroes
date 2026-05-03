@@ -532,6 +532,34 @@ void main() {
         throwsFormatException,
       );
     });
+
+    // Sprint 3.4 hotfix B.2 — label persistido em metaJson via toJson;
+    // fromJson lê pra back-fill. UI usa pra renderizar texto legível
+    // em vez de sub_type cru.
+    test('label roundtrip: toJson inclui label se não-null', () {
+      const original = FactionAdmissionSubTask(
+        subType: FactionAdmissionSubTaskTypes.dailyCountWindow,
+        target: 5,
+        windowStartMs: 1000,
+        label: 'Completar 5 missões mentais em 48h',
+      );
+      final json = original.toJson();
+      expect(json['label'], 'Completar 5 missões mentais em 48h');
+      final restored = FactionAdmissionSubTask.fromJson(json);
+      expect(restored.label, 'Completar 5 missões mentais em 48h');
+    });
+
+    test('label roundtrip: toJson omite label quando null', () {
+      const original = FactionAdmissionSubTask(
+        subType: FactionAdmissionSubTaskTypes.streakMinimum,
+        target: 3,
+        windowStartMs: 1000,
+      );
+      final json = original.toJson();
+      expect(json.containsKey('label'), isFalse);
+      final restored = FactionAdmissionSubTask.fromJson(json);
+      expect(restored.label, isNull);
+    });
   });
 
   // ─── Sanity check: PlayerDao read ──────────────────────────────

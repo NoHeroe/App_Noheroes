@@ -55,9 +55,9 @@ class _AdmissionMissionCardState
     super.dispose();
   }
 
-  Map<String, dynamic>? _decodeMeta() {
+  Map<String, dynamic>? _decodeMetaFrom(String metaJson) {
     try {
-      final raw = jsonDecode(widget.mission.metaJson);
+      final raw = jsonDecode(metaJson);
       if (raw is Map<String, dynamic>) return raw;
     } catch (_) {}
     return null;
@@ -65,7 +65,17 @@ class _AdmissionMissionCardState
 
   @override
   Widget build(BuildContext context) {
-    final meta = _decodeMeta();
+    // Sprint 3.4 hotfix B.2 — escuta stream do DB pra reagir
+    // imediatamente a mudanças no metaJson (sub-task completed pelo
+    // listener; window_start_ms shifted pelo dev panel; is_unlocked
+    // promovido por sequenciamento). Fallback pro metaJson original
+    // do widget enquanto stream não emitiu (1ª frame).
+    final streamRow = ref
+        .watch(missionProgressStreamProvider(widget.mission.id))
+        .valueOrNull;
+    final liveMetaJson = streamRow?.metaJson ?? widget.mission.metaJson;
+
+    final meta = _decodeMetaFrom(liveMetaJson);
     if (meta == null) return const SizedBox.shrink();
 
     final isUnlocked = meta['is_unlocked'] == true;
@@ -207,8 +217,14 @@ class _SubTaskRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final completed = data['completed'] == true;
-    final label = (data['label'] as String?) ??
-        (data['sub_type'] as String? ?? '?');
+    // Sprint 3.4 Sub-Etapa B.2 hotfix — label do catálogo (vem via
+    // metaJson após Fix 1). Fallback com prefixo `[bug:]` torna
+    // visível qualquer caso onde label não foi persistido (legacy
+    // metaJson criado pré-hotfix, ou sub-task construída em teste
+    // sem label). Diagnóstico imediato em produção.
+    final rawLabel = data['label'] as String?;
+    final label = rawLabel ??
+        '[bug:] ${data['sub_type'] as String? ?? '?'}';
 
     if (completed) {
       return Padding(

@@ -295,6 +295,10 @@ class QuestAdmissionService {
           windowStartMs: windowStartMs,
           snapshotRank: snapshotRank,
           params: (s['params'] as Map?)?.cast<String, dynamic>(),
+          // Sprint 3.4 Sub-Etapa B.2 hotfix — label do catálogo
+          // persiste em metaJson via toJson; UI lê pra renderizar
+          // texto legível em vez do sub_type cru.
+          label: s['label'] as String?,
         ),
     ];
   }

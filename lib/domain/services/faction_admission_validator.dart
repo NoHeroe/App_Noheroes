@@ -40,6 +40,14 @@ class FactionAdmissionSubTask {
   /// validator é stateless).
   final bool completed;
 
+  /// Sprint 3.4 Sub-Etapa B.2 hotfix — texto legível pra UI
+  /// (ex: "Completar 5 missões mentais em 48h"). Vem do catálogo
+  /// `faction_admission_quests_v2.json` campo `label`. Nullable pra
+  /// compatibilidade com testes/legacy que constroem sub-tasks
+  /// programaticamente sem label. UI usa fallback `subType` cru com
+  /// prefixo `[bug:]` quando label é null.
+  final String? label;
+
   const FactionAdmissionSubTask({
     required this.subType,
     required this.target,
@@ -47,6 +55,7 @@ class FactionAdmissionSubTask {
     this.snapshotRank,
     this.params,
     this.completed = false,
+    this.label,
   });
 
   Map<String, dynamic> toJson() => {
@@ -56,6 +65,7 @@ class FactionAdmissionSubTask {
         if (snapshotRank != null) 'snapshot_rank': snapshotRank,
         if (params != null) 'params': params,
         if (completed) 'completed': true,
+        if (label != null) 'label': label,
       };
 
   factory FactionAdmissionSubTask.fromJson(Map<String, dynamic> json) {
@@ -81,6 +91,7 @@ class FactionAdmissionSubTask {
       snapshotRank: json['snapshot_rank'] as String?,
       params: (json['params'] as Map?)?.cast<String, dynamic>(),
       completed: json['completed'] == true,
+      label: json['label'] as String?,
     );
   }
 }

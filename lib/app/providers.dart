@@ -186,6 +186,20 @@ final playerStreamProvider = StreamProvider<PlayersTableData?>((ref) {
       .watchSingleOrNull();
 });
 
+/// Sprint 3.4 Sub-Etapa B.2 hotfix — stream reativo de uma row de
+/// `player_mission_progress` por id. Foundation pro `AdmissionMission
+/// Card` reagir imediatamente a mudanças de metaJson (sub-task
+/// completada pelo listener, window_start_ms shifted pelo dev panel,
+/// is_unlocked promovido por sequenciamento). Sem isso, card só
+/// rebuilda quando o widget é remontado — UI fica stale.
+final missionProgressStreamProvider =
+    StreamProvider.family<PlayerMissionProgressData?, int>((ref, missionId) {
+  final db = ref.watch(appDatabaseProvider);
+  return (db.select(db.playerMissionProgressTable)
+        ..where((t) => t.id.equals(missionId)))
+      .watchSingleOrNull();
+});
+
 // Sprint 3.1 Bloco 7b — quest services reescritos (Class, Faction,
 // QuestAdmission). Todos usam Repository + EventBus; nenhum toca tabelas
 // legacy (habits/class_quests/faction_quests foram dropadas na migration

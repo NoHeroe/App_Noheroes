@@ -103,6 +103,15 @@ class FactionAdmissionProgressService {
     _subs.add(_bus.on<RewardGranted>().listen(_onAnyEvent));
     _subs.add(
         _bus.on<FactionAdmissionRejected>().listen(_handleRejection));
+    // Sprint 3.4 hotfix B.2 — handler externo de
+    // FactionAdmissionApproved. No flow normal, `_approveAdmission`
+    // (chamado por `_completeMissionAndPromoteNext`) já faz a
+    // promoção INTERNAMENTE antes de emitir o evento — handler aqui
+    // é idempotente (no-op se já promovido). No flow do dev panel
+    // (`_forceCompleteAdmission` reescrito), o evento é emitido
+    // externamente sem `_approveAdmission` rodar — handler aqui
+    // detecta e promove.
+    _subs.add(_bus.on<FactionAdmissionApproved>().listen(_handleApproved));
   }
 
   Future<void> stop() async {
@@ -136,88 +145,121 @@ class FactionAdmissionProgressService {
 
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     for (final mission in active) {
-      Map<String, dynamic> meta;
+      // Sprint 3.4 hotfix B.2 — try/catch envolvendo TODA a iteração
+      // de UMA missão. Se uma missão tem metaJson corrompido, sub-task
+      // com sub_type desconhecido, ou validator lança, isolamos o
+      // erro pra esta missão (continua processando as próximas).
+      // Mitigação Bug 4 (independente da causa raiz que provavelmente
+      // foi corrigida pelo Fix 2 — RewardGranted no-op não dispara
+      // mais reentrada problemática).
       try {
-        meta = jsonDecode(mission.metaJson) as Map<String, dynamic>;
-      } catch (_) {
+        await _processMission(mission, playerId, nowMs);
+      } catch (e, st) {
+        // ignore: avoid_print
+        print('[admission-progress] missão ${mission.id} falhou: '
+            '$e\n$st');
         continue;
       }
-      // Defesa em profundidade — Guilda não tem admissão eliminatória.
-      if (meta['faction_id'] == 'guild') continue;
-      // Só avalia se a missão está desbloqueada.
-      if (meta['is_unlocked'] != true) continue;
+    }
+  }
 
-      final factionId = meta['faction_id'] as String?;
-      if (factionId == null) continue;
+  /// Processa UMA missão isoladamente — separar permite try/catch
+  /// granular em [_evaluatePlayer]. Retorna early sem persistir nada
+  /// quando metaJson é inválido / missão não aplicável.
+  Future<void> _processMission(
+      MissionProgress mission, int playerId, int nowMs) async {
+    Map<String, dynamic> meta;
+    try {
+      meta = jsonDecode(mission.metaJson) as Map<String, dynamic>;
+    } catch (_) {
+      return;
+    }
+    // Defesa em profundidade — Guilda não tem admissão eliminatória.
+    if (meta['faction_id'] == 'guild') return;
+    // Só avalia se a missão está desbloqueada.
+    if (meta['is_unlocked'] != true) return;
 
-      // Janela expirada?
-      final windowStartMs = (meta['window_start_ms'] as int?) ?? 0;
-      final windowDurationMs =
-          (meta['window_duration_ms'] as int?) ?? (48 * 60 * 60 * 1000);
-      if (windowStartMs > 0 &&
-          nowMs > windowStartMs + windowDurationMs) {
+    final factionId = meta['faction_id'] as String?;
+    if (factionId == null) return;
+
+    // Janela expirada?
+    final windowStartMs = (meta['window_start_ms'] as int?) ?? 0;
+    final windowDurationMs =
+        (meta['window_duration_ms'] as int?) ?? (48 * 60 * 60 * 1000);
+    if (windowStartMs > 0 &&
+        nowMs > windowStartMs + windowDurationMs) {
+      await _rejectAdmission(
+        playerId: playerId,
+        factionId: factionId,
+        missionId: meta['mission_id'] as String? ?? mission.missionKey,
+        reason:
+            'window_expired:${meta['mission_id'] ?? mission.missionKey}',
+      );
+      return; // admissão inteira foi resetada
+    }
+
+    // Re-avalia sub-tasks.
+    final rawSubs = (meta['sub_tasks'] as List?) ?? const [];
+    final subs = <Map<String, dynamic>>[];
+    var anyChanged = false;
+    var allCompleted = true;
+
+    for (final raw in rawSubs) {
+      final m = (raw as Map).cast<String, dynamic>();
+      if (m['completed'] == true) {
+        subs.add(m);
+        continue;
+      }
+      // Constrói FactionAdmissionSubTask pra avaliação.
+      // Try/catch interno protege contra sub_type inválido em
+      // metaJson legacy (pré-hotfix Fix 1).
+      FactionAdmissionSubTask subTask;
+      try {
+        subTask = FactionAdmissionSubTask.fromJson(m);
+      } catch (e) {
+        // ignore: avoid_print
+        print('[admission-progress] sub-task inválida: $e — pulando');
+        subs.add(m);
+        allCompleted = false;
+        continue;
+      }
+      final eval = await _validator.evaluate(
+          playerId: playerId, subTask: subTask);
+
+      if (eval.failed) {
         await _rejectAdmission(
           playerId: playerId,
           factionId: factionId,
-          missionId: meta['mission_id'] as String? ?? mission.missionKey,
-          reason:
-              'window_expired:${meta['mission_id'] ?? mission.missionKey}',
+          missionId:
+              meta['mission_id'] as String? ?? mission.missionKey,
+          reason: subTask.subType ==
+                  FactionAdmissionSubTaskTypes.exactDailyCountWindow
+              ? 'exact_count_overshoot:${meta['mission_id']}'
+              : 'sub_task_failed:${subTask.subType}',
         );
-        return; // sai — admissão inteira foi resetada
+        return;
       }
-
-      // Re-avalia sub-tasks.
-      final rawSubs = (meta['sub_tasks'] as List?) ?? const [];
-      final subs = <Map<String, dynamic>>[];
-      var anyChanged = false;
-      var allCompleted = true;
-
-      for (final raw in rawSubs) {
-        final m = (raw as Map).cast<String, dynamic>();
-        if (m['completed'] == true) {
-          subs.add(m);
-          continue;
-        }
-        // Constrói FactionAdmissionSubTask pra avaliação.
-        final subTask = FactionAdmissionSubTask.fromJson(m);
-        final eval = await _validator.evaluate(
-            playerId: playerId, subTask: subTask);
-
-        if (eval.failed) {
-          await _rejectAdmission(
-            playerId: playerId,
-            factionId: factionId,
-            missionId:
-                meta['mission_id'] as String? ?? mission.missionKey,
-            reason: subTask.subType ==
-                    FactionAdmissionSubTaskTypes.exactDailyCountWindow
-                ? 'exact_count_overshoot:${meta['mission_id']}'
-                : 'sub_task_failed:${subTask.subType}',
-          );
-          return;
-        }
-        if (eval.achieved) {
-          m['completed'] = true;
-          anyChanged = true;
-        } else {
-          allCompleted = false;
-        }
-        subs.add(m);
+      if (eval.achieved) {
+        m['completed'] = true;
+        anyChanged = true;
+      } else {
+        allCompleted = false;
       }
+      subs.add(m);
+    }
 
-      if (anyChanged) {
-        // Persiste estado atualizado em metaJson.
-        meta['sub_tasks'] = subs;
-        await _persistMeta(mission.id, meta);
-      }
+    if (anyChanged) {
+      // Persiste estado atualizado em metaJson.
+      meta['sub_tasks'] = subs;
+      await _persistMeta(mission.id, meta);
+    }
 
-      if (allCompleted && rawSubs.isNotEmpty) {
-        await _completeMissionAndPromoteNext(
-            mission: mission, meta: meta, playerId: playerId);
-        // Re-avalia depois pra cobrir cascata (próxima missão pode
-        // ter sub-task achievable já no estado atual — raro mas
-        // possível com snapshot_rank).
-      }
+    if (allCompleted && rawSubs.isNotEmpty) {
+      await _completeMissionAndPromoteNext(
+          mission: mission, meta: meta, playerId: playerId);
+      // Re-avalia depois pra cobrir cascata (próxima missão pode
+      // ter sub-task achievable já no estado atual — raro mas
+      // possível com snapshot_rank).
     }
   }
 
@@ -387,6 +429,56 @@ class FactionAdmissionProgressService {
       reason: reason,
       missionId: missionId,
     ));
+  }
+
+  /// Sprint 3.4 hotfix B.2 — handler idempotente de
+  /// `FactionAdmissionApproved`. Cobre o caso onde o evento é emitido
+  /// externamente (ex: dev panel `_forceCompleteAdmission`) sem
+  /// `_approveAdmission` ter rodado internamente.
+  ///
+  /// Idempotente: se `players.faction_type` já está em `factionId`
+  /// (promovido pelo flow normal), no-op. Se está em `pending:X` ou
+  /// outro valor, promove agora + emite `FactionJoined` cascateado.
+  Future<void> _handleApproved(FactionAdmissionApproved evt) async {
+    try {
+      final rows = await _db.customSelect(
+        'SELECT faction_type FROM players WHERE id = ? LIMIT 1',
+        variables: [Variable.withInt(evt.playerId)],
+      ).get();
+      if (rows.isEmpty) return;
+      final current = rows.first.read<String?>('faction_type');
+      // Já promovido pelo flow normal (_approveAdmission rodou).
+      if (current == evt.factionId) return;
+
+      // Promove agora (cobre flow externo do dev panel).
+      await _db.customUpdate(
+        'UPDATE players SET faction_type = ? WHERE id = ?',
+        variables: [
+          Variable.withString(evt.factionId),
+          Variable.withInt(evt.playerId),
+        ],
+        updates: {_db.playersTable},
+      );
+      final nowMs = DateTime.now().millisecondsSinceEpoch;
+      await _db.customStatement(
+        'INSERT OR IGNORE INTO player_faction_membership '
+        '(player_id, faction_id, joined_at, left_at, locked_until, '
+        ' debuff_until, admission_attempts) '
+        'VALUES (?, ?, ?, NULL, NULL, NULL, 0)',
+        [evt.playerId, evt.factionId, nowMs],
+      );
+      await _db.customStatement(
+        'UPDATE player_faction_membership SET joined_at = ? '
+        'WHERE player_id = ? AND faction_id = ? AND joined_at IS NULL',
+        [nowMs, evt.playerId, evt.factionId],
+      );
+
+      _bus.publish(
+          FactionJoined(playerId: evt.playerId, factionId: evt.factionId));
+    } catch (e, st) {
+      // ignore: avoid_print
+      print('[admission-progress] _handleApproved falhou: $e\n$st');
+    }
   }
 
   Future<void> _handleRejection(FactionAdmissionRejected evt) async {

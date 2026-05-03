@@ -488,25 +488,41 @@ class _FactionCardState extends State<_FactionCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Sprint 3.4 Sub-Etapa B.2 hotfix — Wrap em vez
+                      // de Row pra evitar overflow horizontal quando
+                      // múltiplos badges acumulam (Guilda tinha
+                      // RECOMENDADA + ENTRADA DIRETA, estourava 60px).
+                      // Filtro: RECOMENDADA escondida quando há badge
+                      // mais específico (guild=ENTRADA DIRETA,
+                      // secret=SECRETA).
                       Row(
                         children: [
-                          Text(data['name'] as String,
-                              style: GoogleFonts.cinzelDecorative(
-                                  fontSize: 13, color: AppColors.textPrimary)),
-                          const SizedBox(width: 8),
-                          if (isRecommended)
-                            _badge('RECOMENDADA', AppColors.gold),
-                          if (isSecret)
-                            _badge('SECRETA', AppColors.hp),
-                          // Sprint 3.4 Sub-Etapa B.2 — distingue
-                          // visualmente Guilda (entrada direta) das
-                          // outras 7 facções (admissão eliminatória).
-                          if (data['id'] == 'guild')
-                            _badge('ENTRADA DIRETA',
-                                AppColors.shadowAscending)
-                          else if (data['id'] != 'error')
-                            _badge('ADMISSÃO ELIMINATÓRIA',
-                                AppColors.shadowObsessive),
+                          Expanded(
+                            child: Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              crossAxisAlignment:
+                                  WrapCrossAlignment.center,
+                              children: [
+                                Text(data['name'] as String,
+                                    style: GoogleFonts.cinzelDecorative(
+                                        fontSize: 13,
+                                        color: AppColors.textPrimary)),
+                                if (isRecommended &&
+                                    data['id'] != 'guild' &&
+                                    !isSecret)
+                                  _badge('RECOMENDADA', AppColors.gold),
+                                if (isSecret)
+                                  _badge('SECRETA', AppColors.hp),
+                                if (data['id'] == 'guild')
+                                  _badge('ENTRADA DIRETA',
+                                      AppColors.shadowAscending)
+                                else if (data['id'] != 'error')
+                                  _badge('ADMISSÃO ELIMINATÓRIA',
+                                      AppColors.shadowObsessive),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 2),

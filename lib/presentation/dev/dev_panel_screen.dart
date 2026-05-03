@@ -345,15 +345,15 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
 
   // ─── Sub-Etapa B.2 — atalhos pra testar admissão eliminatória ─
 
-  /// Completa todas as sub-tasks da admissão pendente do player atual.
-  /// Marca `completed=true` em cada sub-task de cada missão ativa
-  /// (tabOrigin=admission, faction matches `players.faction_type`
-  /// stripped de `pending:`). O listener regular (`FactionAdmission
-  /// ProgressService`) detecta no próximo evento e cascateia
-  /// `FactionAdmissionQuestCompleted` + promoção de próxima missão +
-  /// eventualmente `FactionAdmissionApproved`. Pra forçar essa cadeia
-  /// IMEDIATAMENTE, emitimos um `RewardGranted` no-op (qualquer evento
-  /// terminal serve — o listener escuta vários).
+  /// Sprint 3.4 hotfix B.2 — reescrita: simula a cascata real (chama
+  /// `MissionRepository.markCompleted` em cada missão da admissão +
+  /// emite os eventos do lifecycle diretamente). Antes marcava
+  /// `completed=true` em metaJson + emitia `RewardGranted` no-op pro
+  /// listener processar — abordagem frágil porque o validator
+  /// re-checava DB e o flow ficava preso entre missões da sequência
+  /// (1 missão por evento). Agora completa TODAS direto + emite
+  /// `FactionAdmissionApproved` que dispara handler do listener
+  /// promovendo `players.faction_type` pending:X → X.
   Future<void> _forceCompleteAdmission() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
@@ -367,51 +367,93 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
         ? raw.substring('pending:'.length)
         : raw;
 
-    final db = ref.read(appDatabaseProvider);
     final missionRepo = ref.read(missionRepositoryProvider);
-    final all = await missionRepo.findByTab(
-        player.id, MissionTabOrigin.admission);
-    var modified = 0;
-    for (final m in all) {
-      if (m.completedAt != null || m.failedAt != null) continue;
-      Map<String, dynamic> meta;
-      try {
-        meta = jsonDecode(m.metaJson) as Map<String, dynamic>;
-      } catch (_) {
-        continue;
-      }
-      if (meta['faction_id'] != factionId) continue;
-      final subs = (meta['sub_tasks'] as List?) ?? const [];
-      final updated = subs
-          .map((s) {
-            final mp = (s as Map).cast<String, dynamic>();
-            mp['completed'] = true;
-            return mp;
-          })
-          .toList();
-      meta['sub_tasks'] = updated;
-      meta['is_unlocked'] = true; // garante que progress detecta
-      await db.customUpdate(
-        'UPDATE player_mission_progress SET meta_json = ? WHERE id = ?',
-        variables: [
-          Variable.withString(jsonEncode(meta)),
-          Variable.withInt(m.id),
-        ],
-        updates: {db.playerMissionProgressTable},
-      );
-      modified++;
+    final bus = ref.read(appEventBusProvider);
+
+    final all =
+        await missionRepo.findByTab(player.id, MissionTabOrigin.admission);
+    final forFaction = all
+        .where((m) =>
+            m.completedAt == null &&
+            m.failedAt == null &&
+            _metaFactionOf(m.metaJson) == factionId)
+        .toList();
+
+    if (forFaction.isEmpty) {
+      if (!mounted) return;
+      AppSnack.error(
+          context, 'Nenhuma missão ativa pra "$factionId".');
+      return;
     }
-    // Trigger no-op pra o listener processar.
-    ref.read(appEventBusProvider).publish(RewardGranted(
+
+    final total = forFaction.length;
+    for (var i = 0; i < forFaction.length; i++) {
+      final m = forFaction[i];
+      await missionRepo.markCompleted(
+        m.id,
+        at: DateTime.now(),
+        rewardClaimed: true,
+      );
+      bus.publish(FactionAdmissionQuestCompleted(
         playerId: player.id,
-        rewardResolvedJson:
-            '{"xp":0,"gold":0,"gems":0,"seivas":0,"items":[],'
-            '"achievements_to_check":[],"recipes_to_unlock":[]}'));
+        factionId: factionId,
+        questIndex: i + 1,
+        totalQuests: total,
+        missionId: _metaMissionIdOf(m.metaJson) ?? m.missionKey,
+      ));
+    }
+
+    // Última missão completa = admissão aprovada. Handler externo do
+    // listener (`_handleApproved`) detecta e promove faction_type.
+    bus.publish(FactionAdmissionApproved(
+      playerId: player.id,
+      factionId: factionId,
+      attemptCount: 1,
+    ));
+
+    // Pequeno delay pro handler processar antes de invalidate.
+    await Future<void>.delayed(const Duration(milliseconds: 50));
     if (!mounted) return;
+
+    // Refresh do currentPlayerProvider pra UI refletir faction_type
+    // novo imediatamente.
+    final db = ref.read(appDatabaseProvider);
+    final fresh = await PlayerDao(db).findById(player.id);
+    if (!mounted) return;
+    if (fresh != null) {
+      ref.read(currentPlayerProvider.notifier).state = fresh;
+    }
     _invalidateAll(player.id);
+
+    if (!context.mounted) return;
     AppSnack.success(
         context,
-        '$modified missões de admissão preenchidas. Aguarde cascata.');
+        '$total missões completadas + admissão aprovada. '
+        'faction_type → "$factionId".');
+  }
+
+  /// Helper: extrai faction_id do metaJson (null se inválido).
+  String? _metaFactionOf(String metaJson) {
+    if (metaJson.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(metaJson);
+      if (decoded is! Map) return null;
+      return decoded['faction_id'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Helper: extrai mission_id do metaJson (null se inválido).
+  String? _metaMissionIdOf(String metaJson) {
+    if (metaJson.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(metaJson);
+      if (decoded is! Map) return null;
+      return decoded['mission_id'] as String?;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Dispara `FactionAdmissionRejected` manualmente
