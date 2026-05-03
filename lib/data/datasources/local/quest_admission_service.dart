@@ -110,8 +110,14 @@ class QuestAdmissionService {
         ),
         startedAt: now,
         rewardClaimed: false,
+        // Sprint 3.4 Etapa A hotfix — persiste `title` + `description`
+        // no metaJson pro `MissionCardBase._displayTitle` ler na UI.
+        // Antes esses campos do JSON eram descartados e o card mostrava
+        // a `missionKey` crua (`ADMISSION_MOON_CLAN_1`).
         metaJson: jsonEncode({
           'faction_id': factionId,
+          if (q['title'] is String) 'title': q['title'],
+          if (q['description'] is String) 'description': q['description'],
           if (q['check_type'] != null)
             'legacy_check_type': q['check_type'],
         }),

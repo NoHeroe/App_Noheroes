@@ -234,12 +234,15 @@ class GuildScreen extends ConsumerWidget {
 
   Widget _buildAdmissionCard(BuildContext context, WidgetRef ref,
       dynamic player, GuildMembershipSnapshot? status) {
-    // Sprint 2.2 Bloco 6 — gate mudou de "50 ouro gasto" pra "25 quests
-    // concluídas". Contador vive em players.totalQuestsCompleted (migration
-    // 20→21, incrementado nos 3 services de quest). Jogadores v0.28.0
-    // começam em 0 após upgrade — intencional, não retroage.
+    // Sprint 2.2 Bloco 6 — gate mudou de "50 ouro gasto" pra "N quests
+    // concluídas". Contador vive em players.totalQuestsCompleted
+    // (migration 20→21, incrementado nos 3 services de quest).
+    // Jogadores v0.28.0 começam em 0 após upgrade — intencional.
+    //
+    // Sprint 3.4 Etapa A hotfix — gate reduzido de 25 → 15 pra
+    // facilitar testes e onboarding. Decisão de balanceamento do CEO.
     final completed = (player?.totalQuestsCompleted as int?) ?? 0;
-    const needed = 25;
+    const needed = 15;
     final progress = (completed / needed).clamp(0.0, 1.0);
     final canAdmit = completed >= needed;
     final missing = (needed - completed).clamp(0, needed);
@@ -269,7 +272,7 @@ class GuildScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Para carregar o Colar da Guilda, você precisa completar 25 missões e demonstrar comprometimento com Caelum.',
+            'Para carregar o Colar da Guilda, você precisa completar $needed missões e demonstrar comprometimento com Caelum.',
             style: GoogleFonts.roboto(
                 fontSize: 12,
                 color: AppColors.textSecondary,
@@ -277,7 +280,7 @@ class GuildScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
-          // Requisito: concluir 25 missões
+          // Requisito: concluir N missões
           Row(
             children: [
               Icon(

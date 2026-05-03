@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../app/app_listeners.dart' show applyXpToNextBackfill;
+import '../../../core/utils/xp_calculator.dart';
 import '../../database/app_database.dart';
 import '../../database/daos/player_dao.dart';
 import 'recipes_catalog_seeder.dart';
@@ -26,10 +28,16 @@ class AuthLocalDs {
     final existing = await _dao.findByEmail(email.toLowerCase().trim());
     if (existing != null) return null;
 
+    // Sprint 3.4 Etapa A hotfix — `xpToNext` explícito alinhado com
+    // `XpCalculator.xpToNextLevel(1)`. Schema default era 100 (legacy);
+    // formula soulslike retorna 200. Mismatch causava XP bar visualmente
+    // "max=100" no early game até primeiro level up. Players legacy
+    // recebem fix via `applyXpToNextBackfill` em `currentSession()`.
     final id = await _dao.createPlayer(
       PlayersTableCompanion(
         email: Value(email.toLowerCase().trim()),
         passwordHash: Value(_hashPassword(password)),
+        xpToNext: Value(XpCalculator.xpToNextLevel(1)),
       ),
     );
 
@@ -62,7 +70,19 @@ class AuthLocalDs {
     if (id == null) return null;
 
     await _dao.touchLastLogin(id);
-    final player = await _dao.findById(id);
+    var player = await _dao.findById(id);
+
+    // Sprint 3.4 Etapa A hotfix — backfill defensivo do `xpToNext`
+    // legacy. Idempotente: só atua quando level=1 && xpToNext=100.
+    // Players novos pós-fix já nascem com 200; players existentes com
+    // valor errado pegam o fix no primeiro `currentSession` pós-update.
+    if (player != null) {
+      await applyXpToNextBackfill(_dao, player);
+      // Re-read se backfill atuou.
+      if (player.level == 1 && player.xpToNext == 100) {
+        player = await _dao.findById(id);
+      }
+    }
 
     // Defensive guard: usuários antigos com `guildRank='e'` que NÃO
     // entraram na Guilda (bug histórico pré-Sprint 2.1).

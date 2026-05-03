@@ -1,8 +1,33 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../domain/models/mission_progress.dart';
 import 'mission_status_badge.dart';
+
+/// Sprint 3.4 Etapa A hotfix — extrai um título legível do `metaJson`
+/// quando o produtor da missão registrou esse campo (ex.:
+/// `QuestAdmissionService.startFactionAdmission` agora persiste
+/// `{title, description, faction_id}` em metaJson).
+///
+/// Fallback: `missionKey`. Mantém compatibilidade com mission types que
+/// ainda não populam `title` no metaJson (class quests, faction weekly
+/// `FAC_X_Y`, individuals) — esses continuam mostrando key crua até
+/// sprint que normalize o catálogo.
+String displayTitleOf(MissionProgress mission) {
+  if (mission.metaJson.isEmpty) return mission.missionKey;
+  try {
+    final decoded = jsonDecode(mission.metaJson);
+    if (decoded is Map && decoded['title'] is String) {
+      final title = decoded['title'] as String;
+      if (title.isNotEmpty) return title;
+    }
+  } catch (_) {
+    // metaJson malformado — fallback silencioso.
+  }
+  return mission.missionKey;
+}
 
 /// Sprint 3.1 Bloco 10a.1 — shell comum dos MissionCards.
 ///
@@ -49,7 +74,7 @@ class MissionCardBase extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      mission.missionKey,
+                      displayTitleOf(mission),
                       style: theme.textTheme.titleMedium,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

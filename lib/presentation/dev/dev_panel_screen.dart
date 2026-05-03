@@ -12,8 +12,10 @@ import '../../core/config/faction_alliances.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/events/app_event.dart';
 import '../../core/events/reward_events.dart';
+import '../../core/utils/guild_rank.dart';
 import '../../data/database/app_database.dart';
 import '../../data/database/daos/player_dao.dart';
+import '../../domain/enums/mission_tab_origin.dart';
 import '../../domain/models/achievement_definition.dart';
 import '../../presentation/quests/providers/quests_screen_notifier.dart';
 import '../shared/widgets/app_snack.dart';
@@ -182,6 +184,73 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
         created.isEmpty
             ? 'Pool vazio pra "$factionId" (verifique JSON).'
             : '${created.length} missões de admissão criadas pra "$factionId".');
+  }
+
+  /// Sprint 3.4 Etapa A hotfix — atalho pra testes: libera Guilda
+  /// instantaneamente sem precisar passar pelo gate de N missões.
+  /// Marca rank canônico='e' em `players.guild_rank` + insere row em
+  /// `player_faction_membership` (factionId='guild', joinedAt=now) +
+  /// fecha quaisquer quests pending de admissão da Guilda.
+  /// Idempotente: se já é membro, AppSnack info e retorna.
+  Future<void> _unlockGuildInstantly() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final db = ref.read(appDatabaseProvider);
+
+    if (player.guildRank != 'none' && player.guildRank.isNotEmpty) {
+      if (!mounted) return;
+      AppSnack.info(context,
+          'Já é membro da Guilda (rank=${player.guildRank}).');
+      return;
+    }
+
+    // 1. Rank canônico via service (ADR-0009).
+    final rankService = ref.read(playerRankServiceProvider);
+    await rankService.setRank(player.id, GuildRank.e);
+
+    // 2. Membership row pra factionId='guild'. Idempotente via
+    //    INSERT OR IGNORE; se já existia (ex: pending), promovemos
+    //    `joined_at` se ainda for null.
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    await db.customStatement(
+      'INSERT OR IGNORE INTO player_faction_membership '
+      '(player_id, faction_id, joined_at, left_at, locked_until, '
+      ' debuff_until, admission_attempts) '
+      'VALUES (?, ?, ?, NULL, NULL, NULL, 0)',
+      [player.id, 'guild', nowMs],
+    );
+    await db.customStatement(
+      'UPDATE player_faction_membership SET joined_at = ? '
+      "WHERE player_id = ? AND faction_id = 'guild' "
+      'AND joined_at IS NULL',
+      [nowMs, player.id],
+    );
+
+    // 3. Fecha quests admissão pendentes da Guilda (markCompleted),
+    //    pra remover ruído visual de cards "ADMISSION_GUILD_*" parados.
+    final missionRepo = ref.read(missionRepositoryProvider);
+    final admissions = await missionRepo
+        .findByTab(player.id, MissionTabOrigin.admission);
+    var closed = 0;
+    for (final m in admissions) {
+      if (m.completedAt != null || m.failedAt != null) continue;
+      // Filtra por factionId no metaJson (ou pela própria missionKey).
+      final isGuild = m.metaJson.contains('"faction_id":"guild"') ||
+          m.missionKey.startsWith('ADMISSION_GUILD');
+      if (!isGuild) continue;
+      await missionRepo.markCompleted(m.id,
+          at: DateTime.now(), rewardClaimed: true);
+      closed++;
+    }
+
+    final updated = await PlayerDao(db).findById(player.id);
+    if (!mounted) return;
+    if (updated != null) {
+      ref.read(currentPlayerProvider.notifier).state = updated;
+    }
+    _invalidateAll(player.id);
+    AppSnack.success(context,
+        'Guilda liberada (rank=E + membership + $closed quests fechadas).');
   }
 
   /// Lista rows de `player_faction_membership` + `player_faction_reputation`
@@ -794,6 +863,10 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
             const SizedBox(height: 6),
             _actionBtn('Listar membership atual',
                 AppColors.purpleLight, _listMembership),
+            const SizedBox(height: 6),
+            // Sprint 3.4 Etapa A hotfix — atalho pra testes da Guilda.
+            _actionBtn('Liberar guilda (instantâneo)',
+                AppColors.gold, _unlockGuildInstantly),
             const SizedBox(height: 16),
 
             // 4. MISSÕES DIÁRIAS

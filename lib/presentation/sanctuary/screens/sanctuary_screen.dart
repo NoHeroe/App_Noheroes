@@ -258,16 +258,31 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
   Widget build(BuildContext context) {
     final player = ref.watch(currentPlayerProvider);
 
-    // Listener REATIVO: usa playerStreamProvider (stream do banco) que emite
-    // automaticamente quando o nivel muda em qualquer tela (igual v0.22.1).
+    // Listener REATIVO: usa playerStreamProvider (stream do banco) que
+    // emite automaticamente quando o nível muda em qualquer tela.
+    //
+    // Sprint 3.4 Etapa A hotfix — guard `prevLevel > 0` removida.
+    // Antes bloqueava a primeira detecção (quando `prev` era null no
+    // mount inicial), criando janelas em que `currentPlayerProvider`
+    // ficava stale. Sincronização global agora vive em
+    // `playerStateSyncServiceProvider` (app_listeners.dart) — este
+    // listener fica responsável apenas pelo popup de level-up
+    // (MilestonePopup) + checagem de unlocks, que ainda exigem level
+    // diverging strictly upward.
     ref.listen<AsyncValue<dynamic>>(playerStreamProvider, (prev, next) async {
       final prevLevel = prev?.value?.level ?? 0;
       final nextLevel = next.value?.level ?? 0;
-      if (nextLevel > prevLevel && prevLevel > 0 && mounted) {
-        // Atualiza o currentPlayerProvider tambem para manter consistencia
+      if (nextLevel > prevLevel && mounted) {
+        // Sync defensivo (idempotente — sync global já cobre via
+        // playerStateSyncServiceProvider, mas garantimos consistência
+        // local pra esta tela observar `currentPlayerProvider` rebuild
+        // imediato).
         ref.read(currentPlayerProvider.notifier).state = next.value;
-        await _checkLevelUp(nextLevel);
-        if (mounted) await _checkLevelTriggers();
+        // Popup só dispara se não é a 1ª emissão (prevLevel > 0).
+        if (prevLevel > 0) {
+          await _checkLevelUp(nextLevel);
+          if (mounted) await _checkLevelTriggers();
+        }
       }
     });
 

@@ -155,6 +155,16 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
   // Pontos de atributo extras nos marcos de nível por classe
 
 
+  /// Sprint 3.4 Etapa A hotfix — setter direto pra `xpToNext`. Usado
+  /// pelo backfill defensivo `applyXpToNextBackfill` (em `app_listeners.
+  /// dart`) que corrige players legacy criados com `xpToNext=100` (DB
+  /// default antigo) pra `200` (`XpCalculator.xpToNextLevel(1)`).
+  /// Idempotente — caller checa condição antes de chamar.
+  Future<void> setXpToNext(int id, int value) async {
+    await (update(playersTable)..where((t) => t.id.equals(id)))
+        .write(PlayersTableCompanion(xpToNext: Value(value)));
+  }
+
   /// Sprint 3.1 Bloco 13b — marca timestamp do último daily reset.
   /// `DailyResetService` chama dentro da transação de reset.
   Future<void> markDailyReset(int id, DateTime at) async {
