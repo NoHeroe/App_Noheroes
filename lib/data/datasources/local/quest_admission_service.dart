@@ -167,14 +167,19 @@ class QuestAdmissionService {
 
   Future<List<Map<String, dynamic>>> _loadAdmissionPool(
       String factionId) async {
+    // Sprint 3.4 Etapa A — fix path bug. O arquivo
+    // `assets/data/faction_admission_quests.json` é keyado DIRETAMENTE
+    // pela faction id (`{"guild": [...], "moon_clan": [...]}`), sem
+    // wrapper `faction_admission_quests`. A leitura legacy usava
+    // `json['faction_admission_quests']` que retornava sempre null,
+    // pool vazio → admissão silenciosamente noop. Bug detectado
+    // durante investigação Sprint 3.4 plan-first.
     try {
       final raw = await rootBundle
           .loadString('assets/data/faction_admission_quests.json');
       final json = jsonDecode(raw) as Map<String, dynamic>;
-      final poolMap =
-          json['faction_admission_quests'] as Map<String, dynamic>?;
       final pool =
-          (poolMap?[factionId] as List?)?.cast<Map<String, dynamic>>() ??
+          (json[factionId] as List?)?.cast<Map<String, dynamic>>() ??
               const [];
       return List<Map<String, dynamic>>.from(pool);
     } catch (_) {

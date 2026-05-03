@@ -10,12 +10,17 @@ import 'tables/items_table.dart';
 import 'tables/inventory_table.dart';
 import 'tables/shop_items_table.dart';
 import 'daos/player_dao.dart';
-import 'daos/guild_dao.dart';
 import 'daos/daily_missions_dao.dart';
 import '../datasources/local/vitalism_catalog_seeder.dart';
 import '../datasources/local/items_catalog_seeder.dart';
 import '../datasources/local/recipes_catalog_seeder.dart';
-import 'tables/guild_status_table.dart';
+// Sprint 3.4 Etapa A — guild_status_table.dart e guild_dao.dart foram
+// REMOVIDOS. Tabela guild_status é DROPPED na migration 33→34;
+// `joined_at` migra pra `player_faction_membership` (factionId='guild')
+// e `guild_reputation` consolida em `player_faction_reputation`. Resto
+// (collar_level, total_gold_spent, ascension_cooldown) é dead-drop —
+// não eram usados em runtime crítico, só display cosmético em
+// guild_screen.dart linha 352 (simplificado pra mostrar só rank).
 import 'tables/guild_ascension_table.dart';
 import 'tables/npc_reputation_table.dart';
 import 'tables/diary_entries_table.dart';
@@ -42,6 +47,10 @@ import 'tables/daily_missions_table.dart';
 // Foundation pros triggers de conquista da Etapa 2.1b.
 import 'tables/player_daily_mission_stats_table.dart';
 import 'tables/player_daily_subtask_volume_table.dart';
+// Sprint 3.4 Etapa A — membership lifecycle (substitui parcialmente a
+// guild_status legacy) + log cronológico de eventos por facção.
+import 'tables/player_faction_membership_table.dart';
+import 'tables/faction_event_log_table.dart';
 
 part 'app_database.g.dart';
 
@@ -49,7 +58,9 @@ part 'app_database.g.dart';
   tables: [
     PlayersTable,
     ItemsTable, InventoryTable, ShopItemsTable,
-    GuildStatusTable,
+    // Sprint 3.4 Etapa A — GuildStatusTable removida do schema atual.
+    // Tabela é DROPPED na migration 33→34 (dados migram pra
+    // player_faction_membership + player_faction_reputation).
     NpcReputationTable,
     DiaryEntriesTable,
     GuildAscensionTable,
@@ -74,8 +85,12 @@ part 'app_database.g.dart';
     // Sprint 3.3 Etapa 2.1a — schema 28.
     PlayerDailyMissionStatsTable,
     PlayerDailySubtaskVolumeTable,
+    // Sprint 3.4 Etapa A — schema 34. Substitui parcialmente
+    // GuildStatusTable que é DROPPED na migration 33→34.
+    PlayerFactionMembershipTable,
+    FactionEventLogTable,
   ],
-  daos: [PlayerDao, GuildDao, DailyMissionsDao],
+  daos: [PlayerDao, DailyMissionsDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
@@ -88,7 +103,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 33;
+  int get schemaVersion => 34;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -155,8 +170,24 @@ class AppDatabase extends _$AppDatabase {
         } catch (_) {}
       }
       if (from < 10) {
+        // Sprint 3.4 Etapa A — guild_status_table.dart foi DELETADO (a
+        // tabela é DROPPED em from<34). Raw SQL aqui pra criar a tabela
+        // legacy sem depender do schema atual do Drift codegen.
+        // Players vindos de schema <10 criam guild_status aqui e depois
+        // têm os dados migrados+dropados pela migration 33→34.
         try {
-          await m.createTable(guildStatusTable);
+          await customStatement('''
+            CREATE TABLE IF NOT EXISTS guild_status (
+              id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+              player_id INTEGER NOT NULL UNIQUE,
+              guild_rank TEXT NOT NULL DEFAULT 'none',
+              guild_reputation INTEGER NOT NULL DEFAULT 0,
+              collar_level INTEGER NOT NULL DEFAULT 0,
+              total_gold_spent INTEGER NOT NULL DEFAULT 0,
+              joined_at INTEGER,
+              ascension_cooldown INTEGER
+            )
+          ''');
         } catch (_) {}
       }
       if (from < 11) {
@@ -591,6 +622,109 @@ class AppDatabase extends _$AppDatabase {
           // ignore: avoid_print
           print('[migration 32→33] addColumn last_today_count_date '
               'failed: $e\n$st');
+        }
+      }
+      if (from < 34) {
+        // Sprint 3.4 Etapa A — Sistema de Facções foundation:
+        //   - NEW player_faction_membership (PK composta playerId+factionId,
+        //     joinedAt, leftAt, lockedUntil, debuffUntil, admissionAttempts).
+        //     Substitui PARCIALMENTE guild_status (lifecycle membership
+        //     genérico, não específico Guilda).
+        //   - NEW faction_event_log (id, playerId, factionId, eventType,
+        //     payload, createdAt). Histórico cronológico pra `/faction/<id>`.
+        //   - DROP guild_status (legacy). Migra:
+        //       * joined_at → player_faction_membership (factionId='guild')
+        //       * guild_reputation → player_faction_reputation (factionId='guild')
+        //         se ainda não existir lá ou se valor da legacy > existente.
+        //       * collar_level / total_gold_spent / ascension_cooldown →
+        //         dead-drop (não eram usados em runtime crítico).
+        //
+        // Aplicação ADR-0019: usa `customSelect` puro pra ler guild_status
+        // (Drift codegen não enxerga mais a tabela porque ela saiu do
+        // @DriftDatabase tables list — leitura via SQL bruto contorna o
+        // pitfall de data class).
+        try {
+          await m.createTable(playerFactionMembershipTable);
+          await m.createTable(factionEventLogTable);
+          // ignore: avoid_print
+          print('[migration 33→34] created player_faction_membership + '
+              'faction_event_log');
+        } catch (e, st) {
+          // ignore: avoid_print
+          print('[migration 33→34] createTable failed: $e\n$st');
+        }
+        try {
+          // Detecta se guild_status existia (player veio do schema 10+).
+          // sqlite_master.type='table' lista todas as tables presentes.
+          final exists = await customSelect(
+            "SELECT name FROM sqlite_master "
+            "WHERE type='table' AND name='guild_status'",
+          ).get();
+          if (exists.isNotEmpty) {
+            // Lê todas as rows via customSelect — evita data class pitfall.
+            final rows = await customSelect(
+              'SELECT player_id, guild_reputation, joined_at FROM guild_status',
+            ).get();
+            final nowMs = DateTime.now().millisecondsSinceEpoch;
+            int migrated = 0;
+            for (final row in rows) {
+              final pid = row.read<int>('player_id');
+              // joined_at em SQLite pode estar como TEXT (ISO) ou INT (ms);
+              // GuildStatusTable declarava DateTimeColumn, que Drift por
+              // default armazena como UNIX seconds (INT). Try INT primeiro.
+              int? joinedMs;
+              try {
+                final raw = row.data['joined_at'];
+                if (raw is int) {
+                  // Drift DateTimeColumn legacy = unix seconds. Converte.
+                  joinedMs = raw * 1000;
+                } else if (raw is String && raw.isNotEmpty) {
+                  joinedMs = DateTime.parse(raw).millisecondsSinceEpoch;
+                }
+              } catch (_) {
+                joinedMs = null;
+              }
+              // Insere membership pra factionId='guild' se já tiver
+              // joinedAt (era admitido). insertOrIgnore evita conflito
+              // se row já existir por algum motivo.
+              if (joinedMs != null) {
+                await customStatement(
+                  'INSERT OR IGNORE INTO player_faction_membership '
+                  '(player_id, faction_id, joined_at, left_at, '
+                  ' locked_until, debuff_until, admission_attempts) '
+                  'VALUES (?, ?, ?, NULL, NULL, NULL, 0)',
+                  [pid, 'guild', joinedMs],
+                );
+              }
+              // Consolida guild_reputation em player_faction_reputation
+              // (factionId='guild'). Estratégia MAX: preserva valor maior
+              // entre legacy e (se existir) row já presente em
+              // player_faction_reputation.
+              final repValue = row.read<int>('guild_reputation');
+              if (repValue > 0) {
+                await customStatement(
+                  'INSERT INTO player_faction_reputation '
+                  '(player_id, faction_id, reputation, updated_at) '
+                  'VALUES (?, ?, ?, ?) '
+                  'ON CONFLICT(player_id, faction_id) DO UPDATE SET '
+                  '  reputation = MAX(reputation, excluded.reputation), '
+                  '  updated_at = excluded.updated_at',
+                  [pid, 'guild', repValue, nowMs],
+                );
+              }
+              migrated++;
+            }
+            // ignore: avoid_print
+            print('[migration 33→34] migrated $migrated guild_status rows '
+                '→ player_faction_membership + player_faction_reputation');
+          }
+          // DROP a tabela legacy. Idempotente via IF EXISTS.
+          await customStatement('DROP TABLE IF EXISTS guild_status');
+          // ignore: avoid_print
+          print('[migration 33→34] dropped guild_status');
+        } catch (e, st) {
+          // ignore: avoid_print
+          print('[migration 33→34] guild_status migration failed: $e\n$st');
         }
       }
     },

@@ -118,16 +118,12 @@ class GuildAscensionService {
     if (idx < 0 || idx >= _rankOrder.length - 1) return null;
     final newRank = _rankOrder[idx + 1];
 
-    // Atualiza rank no player e guild_status
+    // Sprint 3.4 Etapa A — `players.guild_rank` é canônico (ADR-0009).
+    // `guild_status` foi DROPPED — escrita dupla anterior era redundante.
     await _db.customUpdate(
       'UPDATE players SET guild_rank = ? WHERE id = ?',
       variables: [Variable.withString(newRank), Variable.withInt(playerId)],
       updates: {_db.playersTable},
-    );
-    await _db.customUpdate(
-      'UPDATE guild_status SET guild_rank = ? WHERE player_id = ?',
-      variables: [Variable.withString(newRank), Variable.withInt(playerId)],
-      updates: {_db.guildStatusTable},
     );
     return newRank;
   }

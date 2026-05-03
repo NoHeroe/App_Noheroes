@@ -152,6 +152,101 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
     AppSnack.success(context, 'Classe e facção resetadas');
   }
 
+  // ─── FACÇÕES (Sprint 3.4 Etapa A) ─────────────────────────────────
+
+  /// Trigger manual do flow de admissão. Útil pra debug em devices que
+  /// já tinham `faction_type='X'` antes do bug-fix da Sprint 3.4 (ou
+  /// que selecionaram facção antes do `QuestAdmissionService` ser
+  /// religado em `FactionSelectionScreen`). Lê `players.faction_type`,
+  /// strip do prefixo `pending:` se houver, dispara
+  /// `startFactionAdmission`, mostra resultado.
+  Future<void> _triggerAdmission() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final raw = player.factionType ?? '';
+    if (raw.isEmpty || raw == 'none') {
+      if (!mounted) return;
+      AppSnack.error(context,
+          'Nenhuma facção selecionada (faction_type vazio/none).');
+      return;
+    }
+    final factionId = raw.startsWith('pending:')
+        ? raw.substring('pending:'.length)
+        : raw;
+    final svc = ref.read(questAdmissionServiceProvider);
+    final created = await svc.startFactionAdmission(player.id, factionId);
+    if (!mounted) return;
+    _invalidateAll(player.id);
+    AppSnack.success(
+        context,
+        created.isEmpty
+            ? 'Pool vazio pra "$factionId" (verifique JSON).'
+            : '${created.length} missões de admissão criadas pra "$factionId".');
+  }
+
+  /// Lista rows de `player_faction_membership` + `player_faction_reputation`
+  /// pra debug. Mostra timestamps em ISO local pra leitura.
+  Future<void> _listMembership() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final db = ref.read(appDatabaseProvider);
+    final memRows = await db.customSelect(
+      'SELECT faction_id, joined_at, left_at, locked_until, debuff_until, '
+      ' admission_attempts FROM player_faction_membership '
+      'WHERE player_id = ? ORDER BY faction_id',
+      variables: [Variable.withInt(player.id)],
+    ).get();
+    final repRows = await db.customSelect(
+      'SELECT faction_id, reputation FROM player_faction_reputation '
+      'WHERE player_id = ? ORDER BY faction_id',
+      variables: [Variable.withInt(player.id)],
+    ).get();
+    if (!mounted) return;
+    String fmtMs(int? ms) =>
+        ms == null ? '-' : DateTime.fromMillisecondsSinceEpoch(ms)
+            .toIso8601String()
+            .substring(0, 16);
+    final lines = <String>[
+      'faction_type atual: ${player.factionType ?? "(null)"}',
+      '',
+      'MEMBERSHIPS (${memRows.length}):',
+      ...memRows.map((r) =>
+          '  ${r.read<String>('faction_id')} '
+          'joined=${fmtMs(r.data['joined_at'] as int?)} '
+          'left=${fmtMs(r.data['left_at'] as int?)} '
+          'lock=${fmtMs(r.data['locked_until'] as int?)} '
+          'debuff=${fmtMs(r.data['debuff_until'] as int?)} '
+          'attempts=${r.read<int>('admission_attempts')}'),
+      '',
+      'REPUTATIONS (${repRows.length}):',
+      ...repRows.map((r) =>
+          '  ${r.read<String>('faction_id')} = ${r.read<int>('reputation')}'),
+    ];
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Facção: dados do jogador',
+            style: GoogleFonts.cinzelDecorative(
+                color: AppColors.purpleLight, fontSize: 14)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Text(lines.join('\n'),
+                style: GoogleFonts.robotoMono(
+                    fontSize: 10, color: AppColors.textPrimary)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ─── MISSÕES DIÁRIAS ──────────────────────────────────────────────
 
   Future<void> _forceDailyReset() async {
@@ -690,6 +785,15 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
             _actionBtn('Ir para seleção de facção',
                 AppColors.shadowStable,
                 () => context.go('/faction-selection')),
+            const SizedBox(height: 16),
+
+            // 3.5. FACÇÕES (Sprint 3.4 Etapa A — debug do flow de admissão)
+            _section('FACÇÕES'),
+            _actionBtn('Trigger admission (facção atual)',
+                AppColors.shadowStable, _triggerAdmission),
+            const SizedBox(height: 6),
+            _actionBtn('Listar membership atual',
+                AppColors.purpleLight, _listMembership),
             const SizedBox(height: 16),
 
             // 4. MISSÕES DIÁRIAS

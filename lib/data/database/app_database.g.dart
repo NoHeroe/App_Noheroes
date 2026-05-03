@@ -3631,445 +3631,6 @@ class ShopItemsTableCompanion extends UpdateCompanion<ShopItemsTableData> {
   }
 }
 
-class $GuildStatusTableTable extends GuildStatusTable
-    with TableInfo<$GuildStatusTableTable, GuildStatusTableData> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $GuildStatusTableTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _playerIdMeta =
-      const VerificationMeta('playerId');
-  @override
-  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
-      'player_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
-  static const VerificationMeta _guildRankMeta =
-      const VerificationMeta('guildRank');
-  @override
-  late final GeneratedColumn<String> guildRank = GeneratedColumn<String>(
-      'guild_rank', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('none'));
-  static const VerificationMeta _guildReputationMeta =
-      const VerificationMeta('guildReputation');
-  @override
-  late final GeneratedColumn<int> guildReputation = GeneratedColumn<int>(
-      'guild_reputation', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _collarLevelMeta =
-      const VerificationMeta('collarLevel');
-  @override
-  late final GeneratedColumn<int> collarLevel = GeneratedColumn<int>(
-      'collar_level', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _totalGoldSpentMeta =
-      const VerificationMeta('totalGoldSpent');
-  @override
-  late final GeneratedColumn<int> totalGoldSpent = GeneratedColumn<int>(
-      'total_gold_spent', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _joinedAtMeta =
-      const VerificationMeta('joinedAt');
-  @override
-  late final GeneratedColumn<DateTime> joinedAt = GeneratedColumn<DateTime>(
-      'joined_at', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _ascensionCooldownMeta =
-      const VerificationMeta('ascensionCooldown');
-  @override
-  late final GeneratedColumn<DateTime> ascensionCooldown =
-      GeneratedColumn<DateTime>('ascension_cooldown', aliasedName, true,
-          type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  @override
-  List<GeneratedColumn> get $columns => [
-        id,
-        playerId,
-        guildRank,
-        guildReputation,
-        collarLevel,
-        totalGoldSpent,
-        joinedAt,
-        ascensionCooldown
-      ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'guild_status';
-  @override
-  VerificationContext validateIntegrity(
-      Insertable<GuildStatusTableData> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('player_id')) {
-      context.handle(_playerIdMeta,
-          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
-    } else if (isInserting) {
-      context.missing(_playerIdMeta);
-    }
-    if (data.containsKey('guild_rank')) {
-      context.handle(_guildRankMeta,
-          guildRank.isAcceptableOrUnknown(data['guild_rank']!, _guildRankMeta));
-    }
-    if (data.containsKey('guild_reputation')) {
-      context.handle(
-          _guildReputationMeta,
-          guildReputation.isAcceptableOrUnknown(
-              data['guild_reputation']!, _guildReputationMeta));
-    }
-    if (data.containsKey('collar_level')) {
-      context.handle(
-          _collarLevelMeta,
-          collarLevel.isAcceptableOrUnknown(
-              data['collar_level']!, _collarLevelMeta));
-    }
-    if (data.containsKey('total_gold_spent')) {
-      context.handle(
-          _totalGoldSpentMeta,
-          totalGoldSpent.isAcceptableOrUnknown(
-              data['total_gold_spent']!, _totalGoldSpentMeta));
-    }
-    if (data.containsKey('joined_at')) {
-      context.handle(_joinedAtMeta,
-          joinedAt.isAcceptableOrUnknown(data['joined_at']!, _joinedAtMeta));
-    }
-    if (data.containsKey('ascension_cooldown')) {
-      context.handle(
-          _ascensionCooldownMeta,
-          ascensionCooldown.isAcceptableOrUnknown(
-              data['ascension_cooldown']!, _ascensionCooldownMeta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  GuildStatusTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return GuildStatusTableData(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      playerId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
-      guildRank: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}guild_rank'])!,
-      guildReputation: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}guild_reputation'])!,
-      collarLevel: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}collar_level'])!,
-      totalGoldSpent: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}total_gold_spent'])!,
-      joinedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}joined_at']),
-      ascensionCooldown: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime, data['${effectivePrefix}ascension_cooldown']),
-    );
-  }
-
-  @override
-  $GuildStatusTableTable createAlias(String alias) {
-    return $GuildStatusTableTable(attachedDatabase, alias);
-  }
-}
-
-class GuildStatusTableData extends DataClass
-    implements Insertable<GuildStatusTableData> {
-  final int id;
-  final int playerId;
-  final String guildRank;
-  final int guildReputation;
-  final int collarLevel;
-  final int totalGoldSpent;
-  final DateTime? joinedAt;
-  final DateTime? ascensionCooldown;
-  const GuildStatusTableData(
-      {required this.id,
-      required this.playerId,
-      required this.guildRank,
-      required this.guildReputation,
-      required this.collarLevel,
-      required this.totalGoldSpent,
-      this.joinedAt,
-      this.ascensionCooldown});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['player_id'] = Variable<int>(playerId);
-    map['guild_rank'] = Variable<String>(guildRank);
-    map['guild_reputation'] = Variable<int>(guildReputation);
-    map['collar_level'] = Variable<int>(collarLevel);
-    map['total_gold_spent'] = Variable<int>(totalGoldSpent);
-    if (!nullToAbsent || joinedAt != null) {
-      map['joined_at'] = Variable<DateTime>(joinedAt);
-    }
-    if (!nullToAbsent || ascensionCooldown != null) {
-      map['ascension_cooldown'] = Variable<DateTime>(ascensionCooldown);
-    }
-    return map;
-  }
-
-  GuildStatusTableCompanion toCompanion(bool nullToAbsent) {
-    return GuildStatusTableCompanion(
-      id: Value(id),
-      playerId: Value(playerId),
-      guildRank: Value(guildRank),
-      guildReputation: Value(guildReputation),
-      collarLevel: Value(collarLevel),
-      totalGoldSpent: Value(totalGoldSpent),
-      joinedAt: joinedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(joinedAt),
-      ascensionCooldown: ascensionCooldown == null && nullToAbsent
-          ? const Value.absent()
-          : Value(ascensionCooldown),
-    );
-  }
-
-  factory GuildStatusTableData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return GuildStatusTableData(
-      id: serializer.fromJson<int>(json['id']),
-      playerId: serializer.fromJson<int>(json['playerId']),
-      guildRank: serializer.fromJson<String>(json['guildRank']),
-      guildReputation: serializer.fromJson<int>(json['guildReputation']),
-      collarLevel: serializer.fromJson<int>(json['collarLevel']),
-      totalGoldSpent: serializer.fromJson<int>(json['totalGoldSpent']),
-      joinedAt: serializer.fromJson<DateTime?>(json['joinedAt']),
-      ascensionCooldown:
-          serializer.fromJson<DateTime?>(json['ascensionCooldown']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'playerId': serializer.toJson<int>(playerId),
-      'guildRank': serializer.toJson<String>(guildRank),
-      'guildReputation': serializer.toJson<int>(guildReputation),
-      'collarLevel': serializer.toJson<int>(collarLevel),
-      'totalGoldSpent': serializer.toJson<int>(totalGoldSpent),
-      'joinedAt': serializer.toJson<DateTime?>(joinedAt),
-      'ascensionCooldown': serializer.toJson<DateTime?>(ascensionCooldown),
-    };
-  }
-
-  GuildStatusTableData copyWith(
-          {int? id,
-          int? playerId,
-          String? guildRank,
-          int? guildReputation,
-          int? collarLevel,
-          int? totalGoldSpent,
-          Value<DateTime?> joinedAt = const Value.absent(),
-          Value<DateTime?> ascensionCooldown = const Value.absent()}) =>
-      GuildStatusTableData(
-        id: id ?? this.id,
-        playerId: playerId ?? this.playerId,
-        guildRank: guildRank ?? this.guildRank,
-        guildReputation: guildReputation ?? this.guildReputation,
-        collarLevel: collarLevel ?? this.collarLevel,
-        totalGoldSpent: totalGoldSpent ?? this.totalGoldSpent,
-        joinedAt: joinedAt.present ? joinedAt.value : this.joinedAt,
-        ascensionCooldown: ascensionCooldown.present
-            ? ascensionCooldown.value
-            : this.ascensionCooldown,
-      );
-  GuildStatusTableData copyWithCompanion(GuildStatusTableCompanion data) {
-    return GuildStatusTableData(
-      id: data.id.present ? data.id.value : this.id,
-      playerId: data.playerId.present ? data.playerId.value : this.playerId,
-      guildRank: data.guildRank.present ? data.guildRank.value : this.guildRank,
-      guildReputation: data.guildReputation.present
-          ? data.guildReputation.value
-          : this.guildReputation,
-      collarLevel:
-          data.collarLevel.present ? data.collarLevel.value : this.collarLevel,
-      totalGoldSpent: data.totalGoldSpent.present
-          ? data.totalGoldSpent.value
-          : this.totalGoldSpent,
-      joinedAt: data.joinedAt.present ? data.joinedAt.value : this.joinedAt,
-      ascensionCooldown: data.ascensionCooldown.present
-          ? data.ascensionCooldown.value
-          : this.ascensionCooldown,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('GuildStatusTableData(')
-          ..write('id: $id, ')
-          ..write('playerId: $playerId, ')
-          ..write('guildRank: $guildRank, ')
-          ..write('guildReputation: $guildReputation, ')
-          ..write('collarLevel: $collarLevel, ')
-          ..write('totalGoldSpent: $totalGoldSpent, ')
-          ..write('joinedAt: $joinedAt, ')
-          ..write('ascensionCooldown: $ascensionCooldown')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(id, playerId, guildRank, guildReputation,
-      collarLevel, totalGoldSpent, joinedAt, ascensionCooldown);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is GuildStatusTableData &&
-          other.id == this.id &&
-          other.playerId == this.playerId &&
-          other.guildRank == this.guildRank &&
-          other.guildReputation == this.guildReputation &&
-          other.collarLevel == this.collarLevel &&
-          other.totalGoldSpent == this.totalGoldSpent &&
-          other.joinedAt == this.joinedAt &&
-          other.ascensionCooldown == this.ascensionCooldown);
-}
-
-class GuildStatusTableCompanion extends UpdateCompanion<GuildStatusTableData> {
-  final Value<int> id;
-  final Value<int> playerId;
-  final Value<String> guildRank;
-  final Value<int> guildReputation;
-  final Value<int> collarLevel;
-  final Value<int> totalGoldSpent;
-  final Value<DateTime?> joinedAt;
-  final Value<DateTime?> ascensionCooldown;
-  const GuildStatusTableCompanion({
-    this.id = const Value.absent(),
-    this.playerId = const Value.absent(),
-    this.guildRank = const Value.absent(),
-    this.guildReputation = const Value.absent(),
-    this.collarLevel = const Value.absent(),
-    this.totalGoldSpent = const Value.absent(),
-    this.joinedAt = const Value.absent(),
-    this.ascensionCooldown = const Value.absent(),
-  });
-  GuildStatusTableCompanion.insert({
-    this.id = const Value.absent(),
-    required int playerId,
-    this.guildRank = const Value.absent(),
-    this.guildReputation = const Value.absent(),
-    this.collarLevel = const Value.absent(),
-    this.totalGoldSpent = const Value.absent(),
-    this.joinedAt = const Value.absent(),
-    this.ascensionCooldown = const Value.absent(),
-  }) : playerId = Value(playerId);
-  static Insertable<GuildStatusTableData> custom({
-    Expression<int>? id,
-    Expression<int>? playerId,
-    Expression<String>? guildRank,
-    Expression<int>? guildReputation,
-    Expression<int>? collarLevel,
-    Expression<int>? totalGoldSpent,
-    Expression<DateTime>? joinedAt,
-    Expression<DateTime>? ascensionCooldown,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (playerId != null) 'player_id': playerId,
-      if (guildRank != null) 'guild_rank': guildRank,
-      if (guildReputation != null) 'guild_reputation': guildReputation,
-      if (collarLevel != null) 'collar_level': collarLevel,
-      if (totalGoldSpent != null) 'total_gold_spent': totalGoldSpent,
-      if (joinedAt != null) 'joined_at': joinedAt,
-      if (ascensionCooldown != null) 'ascension_cooldown': ascensionCooldown,
-    });
-  }
-
-  GuildStatusTableCompanion copyWith(
-      {Value<int>? id,
-      Value<int>? playerId,
-      Value<String>? guildRank,
-      Value<int>? guildReputation,
-      Value<int>? collarLevel,
-      Value<int>? totalGoldSpent,
-      Value<DateTime?>? joinedAt,
-      Value<DateTime?>? ascensionCooldown}) {
-    return GuildStatusTableCompanion(
-      id: id ?? this.id,
-      playerId: playerId ?? this.playerId,
-      guildRank: guildRank ?? this.guildRank,
-      guildReputation: guildReputation ?? this.guildReputation,
-      collarLevel: collarLevel ?? this.collarLevel,
-      totalGoldSpent: totalGoldSpent ?? this.totalGoldSpent,
-      joinedAt: joinedAt ?? this.joinedAt,
-      ascensionCooldown: ascensionCooldown ?? this.ascensionCooldown,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (playerId.present) {
-      map['player_id'] = Variable<int>(playerId.value);
-    }
-    if (guildRank.present) {
-      map['guild_rank'] = Variable<String>(guildRank.value);
-    }
-    if (guildReputation.present) {
-      map['guild_reputation'] = Variable<int>(guildReputation.value);
-    }
-    if (collarLevel.present) {
-      map['collar_level'] = Variable<int>(collarLevel.value);
-    }
-    if (totalGoldSpent.present) {
-      map['total_gold_spent'] = Variable<int>(totalGoldSpent.value);
-    }
-    if (joinedAt.present) {
-      map['joined_at'] = Variable<DateTime>(joinedAt.value);
-    }
-    if (ascensionCooldown.present) {
-      map['ascension_cooldown'] = Variable<DateTime>(ascensionCooldown.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('GuildStatusTableCompanion(')
-          ..write('id: $id, ')
-          ..write('playerId: $playerId, ')
-          ..write('guildRank: $guildRank, ')
-          ..write('guildReputation: $guildReputation, ')
-          ..write('collarLevel: $collarLevel, ')
-          ..write('totalGoldSpent: $totalGoldSpent, ')
-          ..write('joinedAt: $joinedAt, ')
-          ..write('ascensionCooldown: $ascensionCooldown')
-          ..write(')'))
-        .toString();
-  }
-}
-
 class $NpcReputationTableTable extends NpcReputationTable
     with TableInfo<$NpcReputationTableTable, NpcReputationTableData> {
   @override
@@ -15756,6 +15317,770 @@ class PlayerDailySubtaskVolumeTableCompanion
   }
 }
 
+class $PlayerFactionMembershipTableTable extends PlayerFactionMembershipTable
+    with
+        TableInfo<$PlayerFactionMembershipTableTable,
+            PlayerFactionMembershipData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlayerFactionMembershipTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _factionIdMeta =
+      const VerificationMeta('factionId');
+  @override
+  late final GeneratedColumn<String> factionId = GeneratedColumn<String>(
+      'faction_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _joinedAtMeta =
+      const VerificationMeta('joinedAt');
+  @override
+  late final GeneratedColumn<int> joinedAt = GeneratedColumn<int>(
+      'joined_at', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _leftAtMeta = const VerificationMeta('leftAt');
+  @override
+  late final GeneratedColumn<int> leftAt = GeneratedColumn<int>(
+      'left_at', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _lockedUntilMeta =
+      const VerificationMeta('lockedUntil');
+  @override
+  late final GeneratedColumn<int> lockedUntil = GeneratedColumn<int>(
+      'locked_until', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _debuffUntilMeta =
+      const VerificationMeta('debuffUntil');
+  @override
+  late final GeneratedColumn<int> debuffUntil = GeneratedColumn<int>(
+      'debuff_until', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _admissionAttemptsMeta =
+      const VerificationMeta('admissionAttempts');
+  @override
+  late final GeneratedColumn<int> admissionAttempts = GeneratedColumn<int>(
+      'admission_attempts', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  @override
+  List<GeneratedColumn> get $columns => [
+        playerId,
+        factionId,
+        joinedAt,
+        leftAt,
+        lockedUntil,
+        debuffUntil,
+        admissionAttempts
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'player_faction_membership';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<PlayerFactionMembershipData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('faction_id')) {
+      context.handle(_factionIdMeta,
+          factionId.isAcceptableOrUnknown(data['faction_id']!, _factionIdMeta));
+    } else if (isInserting) {
+      context.missing(_factionIdMeta);
+    }
+    if (data.containsKey('joined_at')) {
+      context.handle(_joinedAtMeta,
+          joinedAt.isAcceptableOrUnknown(data['joined_at']!, _joinedAtMeta));
+    }
+    if (data.containsKey('left_at')) {
+      context.handle(_leftAtMeta,
+          leftAt.isAcceptableOrUnknown(data['left_at']!, _leftAtMeta));
+    }
+    if (data.containsKey('locked_until')) {
+      context.handle(
+          _lockedUntilMeta,
+          lockedUntil.isAcceptableOrUnknown(
+              data['locked_until']!, _lockedUntilMeta));
+    }
+    if (data.containsKey('debuff_until')) {
+      context.handle(
+          _debuffUntilMeta,
+          debuffUntil.isAcceptableOrUnknown(
+              data['debuff_until']!, _debuffUntilMeta));
+    }
+    if (data.containsKey('admission_attempts')) {
+      context.handle(
+          _admissionAttemptsMeta,
+          admissionAttempts.isAcceptableOrUnknown(
+              data['admission_attempts']!, _admissionAttemptsMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {playerId, factionId};
+  @override
+  PlayerFactionMembershipData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlayerFactionMembershipData(
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      factionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}faction_id'])!,
+      joinedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}joined_at']),
+      leftAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}left_at']),
+      lockedUntil: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}locked_until']),
+      debuffUntil: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}debuff_until']),
+      admissionAttempts: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}admission_attempts'])!,
+    );
+  }
+
+  @override
+  $PlayerFactionMembershipTableTable createAlias(String alias) {
+    return $PlayerFactionMembershipTableTable(attachedDatabase, alias);
+  }
+}
+
+class PlayerFactionMembershipData extends DataClass
+    implements Insertable<PlayerFactionMembershipData> {
+  final int playerId;
+  final String factionId;
+
+  /// ms epoch. Null = ainda não entrou (pendente ou rejeitado).
+  final int? joinedAt;
+
+  /// ms epoch. Null = nunca saiu (member ativo OU pendente).
+  final int? leftAt;
+
+  /// ms epoch. Se `> now`, lock ativo.
+  final int? lockedUntil;
+
+  /// ms epoch. Se `> now`, debuff ativo.
+  final int? debuffUntil;
+  final int admissionAttempts;
+  const PlayerFactionMembershipData(
+      {required this.playerId,
+      required this.factionId,
+      this.joinedAt,
+      this.leftAt,
+      this.lockedUntil,
+      this.debuffUntil,
+      required this.admissionAttempts});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['player_id'] = Variable<int>(playerId);
+    map['faction_id'] = Variable<String>(factionId);
+    if (!nullToAbsent || joinedAt != null) {
+      map['joined_at'] = Variable<int>(joinedAt);
+    }
+    if (!nullToAbsent || leftAt != null) {
+      map['left_at'] = Variable<int>(leftAt);
+    }
+    if (!nullToAbsent || lockedUntil != null) {
+      map['locked_until'] = Variable<int>(lockedUntil);
+    }
+    if (!nullToAbsent || debuffUntil != null) {
+      map['debuff_until'] = Variable<int>(debuffUntil);
+    }
+    map['admission_attempts'] = Variable<int>(admissionAttempts);
+    return map;
+  }
+
+  PlayerFactionMembershipTableCompanion toCompanion(bool nullToAbsent) {
+    return PlayerFactionMembershipTableCompanion(
+      playerId: Value(playerId),
+      factionId: Value(factionId),
+      joinedAt: joinedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(joinedAt),
+      leftAt:
+          leftAt == null && nullToAbsent ? const Value.absent() : Value(leftAt),
+      lockedUntil: lockedUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lockedUntil),
+      debuffUntil: debuffUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(debuffUntil),
+      admissionAttempts: Value(admissionAttempts),
+    );
+  }
+
+  factory PlayerFactionMembershipData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlayerFactionMembershipData(
+      playerId: serializer.fromJson<int>(json['playerId']),
+      factionId: serializer.fromJson<String>(json['factionId']),
+      joinedAt: serializer.fromJson<int?>(json['joinedAt']),
+      leftAt: serializer.fromJson<int?>(json['leftAt']),
+      lockedUntil: serializer.fromJson<int?>(json['lockedUntil']),
+      debuffUntil: serializer.fromJson<int?>(json['debuffUntil']),
+      admissionAttempts: serializer.fromJson<int>(json['admissionAttempts']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'playerId': serializer.toJson<int>(playerId),
+      'factionId': serializer.toJson<String>(factionId),
+      'joinedAt': serializer.toJson<int?>(joinedAt),
+      'leftAt': serializer.toJson<int?>(leftAt),
+      'lockedUntil': serializer.toJson<int?>(lockedUntil),
+      'debuffUntil': serializer.toJson<int?>(debuffUntil),
+      'admissionAttempts': serializer.toJson<int>(admissionAttempts),
+    };
+  }
+
+  PlayerFactionMembershipData copyWith(
+          {int? playerId,
+          String? factionId,
+          Value<int?> joinedAt = const Value.absent(),
+          Value<int?> leftAt = const Value.absent(),
+          Value<int?> lockedUntil = const Value.absent(),
+          Value<int?> debuffUntil = const Value.absent(),
+          int? admissionAttempts}) =>
+      PlayerFactionMembershipData(
+        playerId: playerId ?? this.playerId,
+        factionId: factionId ?? this.factionId,
+        joinedAt: joinedAt.present ? joinedAt.value : this.joinedAt,
+        leftAt: leftAt.present ? leftAt.value : this.leftAt,
+        lockedUntil: lockedUntil.present ? lockedUntil.value : this.lockedUntil,
+        debuffUntil: debuffUntil.present ? debuffUntil.value : this.debuffUntil,
+        admissionAttempts: admissionAttempts ?? this.admissionAttempts,
+      );
+  PlayerFactionMembershipData copyWithCompanion(
+      PlayerFactionMembershipTableCompanion data) {
+    return PlayerFactionMembershipData(
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      factionId: data.factionId.present ? data.factionId.value : this.factionId,
+      joinedAt: data.joinedAt.present ? data.joinedAt.value : this.joinedAt,
+      leftAt: data.leftAt.present ? data.leftAt.value : this.leftAt,
+      lockedUntil:
+          data.lockedUntil.present ? data.lockedUntil.value : this.lockedUntil,
+      debuffUntil:
+          data.debuffUntil.present ? data.debuffUntil.value : this.debuffUntil,
+      admissionAttempts: data.admissionAttempts.present
+          ? data.admissionAttempts.value
+          : this.admissionAttempts,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerFactionMembershipData(')
+          ..write('playerId: $playerId, ')
+          ..write('factionId: $factionId, ')
+          ..write('joinedAt: $joinedAt, ')
+          ..write('leftAt: $leftAt, ')
+          ..write('lockedUntil: $lockedUntil, ')
+          ..write('debuffUntil: $debuffUntil, ')
+          ..write('admissionAttempts: $admissionAttempts')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(playerId, factionId, joinedAt, leftAt,
+      lockedUntil, debuffUntil, admissionAttempts);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlayerFactionMembershipData &&
+          other.playerId == this.playerId &&
+          other.factionId == this.factionId &&
+          other.joinedAt == this.joinedAt &&
+          other.leftAt == this.leftAt &&
+          other.lockedUntil == this.lockedUntil &&
+          other.debuffUntil == this.debuffUntil &&
+          other.admissionAttempts == this.admissionAttempts);
+}
+
+class PlayerFactionMembershipTableCompanion
+    extends UpdateCompanion<PlayerFactionMembershipData> {
+  final Value<int> playerId;
+  final Value<String> factionId;
+  final Value<int?> joinedAt;
+  final Value<int?> leftAt;
+  final Value<int?> lockedUntil;
+  final Value<int?> debuffUntil;
+  final Value<int> admissionAttempts;
+  final Value<int> rowid;
+  const PlayerFactionMembershipTableCompanion({
+    this.playerId = const Value.absent(),
+    this.factionId = const Value.absent(),
+    this.joinedAt = const Value.absent(),
+    this.leftAt = const Value.absent(),
+    this.lockedUntil = const Value.absent(),
+    this.debuffUntil = const Value.absent(),
+    this.admissionAttempts = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlayerFactionMembershipTableCompanion.insert({
+    required int playerId,
+    required String factionId,
+    this.joinedAt = const Value.absent(),
+    this.leftAt = const Value.absent(),
+    this.lockedUntil = const Value.absent(),
+    this.debuffUntil = const Value.absent(),
+    this.admissionAttempts = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : playerId = Value(playerId),
+        factionId = Value(factionId);
+  static Insertable<PlayerFactionMembershipData> custom({
+    Expression<int>? playerId,
+    Expression<String>? factionId,
+    Expression<int>? joinedAt,
+    Expression<int>? leftAt,
+    Expression<int>? lockedUntil,
+    Expression<int>? debuffUntil,
+    Expression<int>? admissionAttempts,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (playerId != null) 'player_id': playerId,
+      if (factionId != null) 'faction_id': factionId,
+      if (joinedAt != null) 'joined_at': joinedAt,
+      if (leftAt != null) 'left_at': leftAt,
+      if (lockedUntil != null) 'locked_until': lockedUntil,
+      if (debuffUntil != null) 'debuff_until': debuffUntil,
+      if (admissionAttempts != null) 'admission_attempts': admissionAttempts,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlayerFactionMembershipTableCompanion copyWith(
+      {Value<int>? playerId,
+      Value<String>? factionId,
+      Value<int?>? joinedAt,
+      Value<int?>? leftAt,
+      Value<int?>? lockedUntil,
+      Value<int?>? debuffUntil,
+      Value<int>? admissionAttempts,
+      Value<int>? rowid}) {
+    return PlayerFactionMembershipTableCompanion(
+      playerId: playerId ?? this.playerId,
+      factionId: factionId ?? this.factionId,
+      joinedAt: joinedAt ?? this.joinedAt,
+      leftAt: leftAt ?? this.leftAt,
+      lockedUntil: lockedUntil ?? this.lockedUntil,
+      debuffUntil: debuffUntil ?? this.debuffUntil,
+      admissionAttempts: admissionAttempts ?? this.admissionAttempts,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (factionId.present) {
+      map['faction_id'] = Variable<String>(factionId.value);
+    }
+    if (joinedAt.present) {
+      map['joined_at'] = Variable<int>(joinedAt.value);
+    }
+    if (leftAt.present) {
+      map['left_at'] = Variable<int>(leftAt.value);
+    }
+    if (lockedUntil.present) {
+      map['locked_until'] = Variable<int>(lockedUntil.value);
+    }
+    if (debuffUntil.present) {
+      map['debuff_until'] = Variable<int>(debuffUntil.value);
+    }
+    if (admissionAttempts.present) {
+      map['admission_attempts'] = Variable<int>(admissionAttempts.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayerFactionMembershipTableCompanion(')
+          ..write('playerId: $playerId, ')
+          ..write('factionId: $factionId, ')
+          ..write('joinedAt: $joinedAt, ')
+          ..write('leftAt: $leftAt, ')
+          ..write('lockedUntil: $lockedUntil, ')
+          ..write('debuffUntil: $debuffUntil, ')
+          ..write('admissionAttempts: $admissionAttempts, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FactionEventLogTableTable extends FactionEventLogTable
+    with TableInfo<$FactionEventLogTableTable, FactionEventLogData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FactionEventLogTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _factionIdMeta =
+      const VerificationMeta('factionId');
+  @override
+  late final GeneratedColumn<String> factionId = GeneratedColumn<String>(
+      'faction_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _eventTypeMeta =
+      const VerificationMeta('eventType');
+  @override
+  late final GeneratedColumn<String> eventType = GeneratedColumn<String>(
+      'event_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _payloadMeta =
+      const VerificationMeta('payload');
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+      'payload', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, playerId, factionId, eventType, payload, createdAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'faction_event_log';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<FactionEventLogData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('faction_id')) {
+      context.handle(_factionIdMeta,
+          factionId.isAcceptableOrUnknown(data['faction_id']!, _factionIdMeta));
+    } else if (isInserting) {
+      context.missing(_factionIdMeta);
+    }
+    if (data.containsKey('event_type')) {
+      context.handle(_eventTypeMeta,
+          eventType.isAcceptableOrUnknown(data['event_type']!, _eventTypeMeta));
+    } else if (isInserting) {
+      context.missing(_eventTypeMeta);
+    }
+    if (data.containsKey('payload')) {
+      context.handle(_payloadMeta,
+          payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FactionEventLogData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FactionEventLogData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      factionId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}faction_id'])!,
+      eventType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}event_type'])!,
+      payload: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}payload']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $FactionEventLogTableTable createAlias(String alias) {
+    return $FactionEventLogTableTable(attachedDatabase, alias);
+  }
+}
+
+class FactionEventLogData extends DataClass
+    implements Insertable<FactionEventLogData> {
+  final int id;
+  final int playerId;
+  final String factionId;
+  final String eventType;
+
+  /// JSON serializado (string). Null se evento não carrega payload extra.
+  final String? payload;
+
+  /// ms epoch. Default = now no insert (caller passa `DateTime.now()`).
+  final int createdAt;
+  const FactionEventLogData(
+      {required this.id,
+      required this.playerId,
+      required this.factionId,
+      required this.eventType,
+      this.payload,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['player_id'] = Variable<int>(playerId);
+    map['faction_id'] = Variable<String>(factionId);
+    map['event_type'] = Variable<String>(eventType);
+    if (!nullToAbsent || payload != null) {
+      map['payload'] = Variable<String>(payload);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    return map;
+  }
+
+  FactionEventLogTableCompanion toCompanion(bool nullToAbsent) {
+    return FactionEventLogTableCompanion(
+      id: Value(id),
+      playerId: Value(playerId),
+      factionId: Value(factionId),
+      eventType: Value(eventType),
+      payload: payload == null && nullToAbsent
+          ? const Value.absent()
+          : Value(payload),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory FactionEventLogData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FactionEventLogData(
+      id: serializer.fromJson<int>(json['id']),
+      playerId: serializer.fromJson<int>(json['playerId']),
+      factionId: serializer.fromJson<String>(json['factionId']),
+      eventType: serializer.fromJson<String>(json['eventType']),
+      payload: serializer.fromJson<String?>(json['payload']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'playerId': serializer.toJson<int>(playerId),
+      'factionId': serializer.toJson<String>(factionId),
+      'eventType': serializer.toJson<String>(eventType),
+      'payload': serializer.toJson<String?>(payload),
+      'createdAt': serializer.toJson<int>(createdAt),
+    };
+  }
+
+  FactionEventLogData copyWith(
+          {int? id,
+          int? playerId,
+          String? factionId,
+          String? eventType,
+          Value<String?> payload = const Value.absent(),
+          int? createdAt}) =>
+      FactionEventLogData(
+        id: id ?? this.id,
+        playerId: playerId ?? this.playerId,
+        factionId: factionId ?? this.factionId,
+        eventType: eventType ?? this.eventType,
+        payload: payload.present ? payload.value : this.payload,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  FactionEventLogData copyWithCompanion(FactionEventLogTableCompanion data) {
+    return FactionEventLogData(
+      id: data.id.present ? data.id.value : this.id,
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      factionId: data.factionId.present ? data.factionId.value : this.factionId,
+      eventType: data.eventType.present ? data.eventType.value : this.eventType,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FactionEventLogData(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('factionId: $factionId, ')
+          ..write('eventType: $eventType, ')
+          ..write('payload: $payload, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, playerId, factionId, eventType, payload, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FactionEventLogData &&
+          other.id == this.id &&
+          other.playerId == this.playerId &&
+          other.factionId == this.factionId &&
+          other.eventType == this.eventType &&
+          other.payload == this.payload &&
+          other.createdAt == this.createdAt);
+}
+
+class FactionEventLogTableCompanion
+    extends UpdateCompanion<FactionEventLogData> {
+  final Value<int> id;
+  final Value<int> playerId;
+  final Value<String> factionId;
+  final Value<String> eventType;
+  final Value<String?> payload;
+  final Value<int> createdAt;
+  const FactionEventLogTableCompanion({
+    this.id = const Value.absent(),
+    this.playerId = const Value.absent(),
+    this.factionId = const Value.absent(),
+    this.eventType = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  FactionEventLogTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int playerId,
+    required String factionId,
+    required String eventType,
+    this.payload = const Value.absent(),
+    required int createdAt,
+  })  : playerId = Value(playerId),
+        factionId = Value(factionId),
+        eventType = Value(eventType),
+        createdAt = Value(createdAt);
+  static Insertable<FactionEventLogData> custom({
+    Expression<int>? id,
+    Expression<int>? playerId,
+    Expression<String>? factionId,
+    Expression<String>? eventType,
+    Expression<String>? payload,
+    Expression<int>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (playerId != null) 'player_id': playerId,
+      if (factionId != null) 'faction_id': factionId,
+      if (eventType != null) 'event_type': eventType,
+      if (payload != null) 'payload': payload,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  FactionEventLogTableCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? playerId,
+      Value<String>? factionId,
+      Value<String>? eventType,
+      Value<String?>? payload,
+      Value<int>? createdAt}) {
+    return FactionEventLogTableCompanion(
+      id: id ?? this.id,
+      playerId: playerId ?? this.playerId,
+      factionId: factionId ?? this.factionId,
+      eventType: eventType ?? this.eventType,
+      payload: payload ?? this.payload,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (factionId.present) {
+      map['faction_id'] = Variable<String>(factionId.value);
+    }
+    if (eventType.present) {
+      map['event_type'] = Variable<String>(eventType.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FactionEventLogTableCompanion(')
+          ..write('id: $id, ')
+          ..write('playerId: $playerId, ')
+          ..write('factionId: $factionId, ')
+          ..write('eventType: $eventType, ')
+          ..write('payload: $payload, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -15763,8 +16088,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ItemsTableTable itemsTable = $ItemsTableTable(this);
   late final $InventoryTableTable inventoryTable = $InventoryTableTable(this);
   late final $ShopItemsTableTable shopItemsTable = $ShopItemsTableTable(this);
-  late final $GuildStatusTableTable guildStatusTable =
-      $GuildStatusTableTable(this);
   late final $NpcReputationTableTable npcReputationTable =
       $NpcReputationTableTable(this);
   late final $DiaryEntriesTableTable diaryEntriesTable =
@@ -15808,13 +16131,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $PlayerDailyMissionStatsTableTable(this);
   late final $PlayerDailySubtaskVolumeTableTable playerDailySubtaskVolumeTable =
       $PlayerDailySubtaskVolumeTableTable(this);
+  late final $PlayerFactionMembershipTableTable playerFactionMembershipTable =
+      $PlayerFactionMembershipTableTable(this);
+  late final $FactionEventLogTableTable factionEventLogTable =
+      $FactionEventLogTableTable(this);
   late final Index uniquePlayerFactionWeek = Index('unique_player_faction_week',
       'CREATE UNIQUE INDEX unique_player_faction_week ON active_faction_quests (player_id, faction_id, week_start)');
   late final Index idxDailyMissionsPlayerData = Index(
       'idx_daily_missions_player_data',
       'CREATE INDEX idx_daily_missions_player_data ON daily_missions (player_id, data)');
   late final PlayerDao playerDao = PlayerDao(this as AppDatabase);
-  late final GuildDao guildDao = GuildDao(this as AppDatabase);
   late final DailyMissionsDao dailyMissionsDao =
       DailyMissionsDao(this as AppDatabase);
   @override
@@ -15826,7 +16152,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         itemsTable,
         inventoryTable,
         shopItemsTable,
-        guildStatusTable,
         npcReputationTable,
         diaryEntriesTable,
         guildAscensionTable,
@@ -15848,6 +16173,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         dailyMissionsTable,
         playerDailyMissionStatsTable,
         playerDailySubtaskVolumeTable,
+        playerFactionMembershipTable,
+        factionEventLogTable,
         uniquePlayerFactionWeek,
         idxDailyMissionsPlayerData
       ];
@@ -17441,227 +17768,6 @@ typedef $$ShopItemsTableTableProcessedTableManager = ProcessedTableManager<
       BaseReferences<_$AppDatabase, $ShopItemsTableTable, ShopItemsTableData>
     ),
     ShopItemsTableData,
-    PrefetchHooks Function()>;
-typedef $$GuildStatusTableTableCreateCompanionBuilder
-    = GuildStatusTableCompanion Function({
-  Value<int> id,
-  required int playerId,
-  Value<String> guildRank,
-  Value<int> guildReputation,
-  Value<int> collarLevel,
-  Value<int> totalGoldSpent,
-  Value<DateTime?> joinedAt,
-  Value<DateTime?> ascensionCooldown,
-});
-typedef $$GuildStatusTableTableUpdateCompanionBuilder
-    = GuildStatusTableCompanion Function({
-  Value<int> id,
-  Value<int> playerId,
-  Value<String> guildRank,
-  Value<int> guildReputation,
-  Value<int> collarLevel,
-  Value<int> totalGoldSpent,
-  Value<DateTime?> joinedAt,
-  Value<DateTime?> ascensionCooldown,
-});
-
-class $$GuildStatusTableTableFilterComposer
-    extends Composer<_$AppDatabase, $GuildStatusTableTable> {
-  $$GuildStatusTableTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get playerId => $composableBuilder(
-      column: $table.playerId, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get guildRank => $composableBuilder(
-      column: $table.guildRank, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get guildReputation => $composableBuilder(
-      column: $table.guildReputation,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get collarLevel => $composableBuilder(
-      column: $table.collarLevel, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<int> get totalGoldSpent => $composableBuilder(
-      column: $table.totalGoldSpent,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get joinedAt => $composableBuilder(
-      column: $table.joinedAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get ascensionCooldown => $composableBuilder(
-      column: $table.ascensionCooldown,
-      builder: (column) => ColumnFilters(column));
-}
-
-class $$GuildStatusTableTableOrderingComposer
-    extends Composer<_$AppDatabase, $GuildStatusTableTable> {
-  $$GuildStatusTableTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get playerId => $composableBuilder(
-      column: $table.playerId, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get guildRank => $composableBuilder(
-      column: $table.guildRank, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get guildReputation => $composableBuilder(
-      column: $table.guildReputation,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get collarLevel => $composableBuilder(
-      column: $table.collarLevel, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<int> get totalGoldSpent => $composableBuilder(
-      column: $table.totalGoldSpent,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get joinedAt => $composableBuilder(
-      column: $table.joinedAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get ascensionCooldown => $composableBuilder(
-      column: $table.ascensionCooldown,
-      builder: (column) => ColumnOrderings(column));
-}
-
-class $$GuildStatusTableTableAnnotationComposer
-    extends Composer<_$AppDatabase, $GuildStatusTableTable> {
-  $$GuildStatusTableTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<int> get playerId =>
-      $composableBuilder(column: $table.playerId, builder: (column) => column);
-
-  GeneratedColumn<String> get guildRank =>
-      $composableBuilder(column: $table.guildRank, builder: (column) => column);
-
-  GeneratedColumn<int> get guildReputation => $composableBuilder(
-      column: $table.guildReputation, builder: (column) => column);
-
-  GeneratedColumn<int> get collarLevel => $composableBuilder(
-      column: $table.collarLevel, builder: (column) => column);
-
-  GeneratedColumn<int> get totalGoldSpent => $composableBuilder(
-      column: $table.totalGoldSpent, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get joinedAt =>
-      $composableBuilder(column: $table.joinedAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get ascensionCooldown => $composableBuilder(
-      column: $table.ascensionCooldown, builder: (column) => column);
-}
-
-class $$GuildStatusTableTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $GuildStatusTableTable,
-    GuildStatusTableData,
-    $$GuildStatusTableTableFilterComposer,
-    $$GuildStatusTableTableOrderingComposer,
-    $$GuildStatusTableTableAnnotationComposer,
-    $$GuildStatusTableTableCreateCompanionBuilder,
-    $$GuildStatusTableTableUpdateCompanionBuilder,
-    (
-      GuildStatusTableData,
-      BaseReferences<_$AppDatabase, $GuildStatusTableTable,
-          GuildStatusTableData>
-    ),
-    GuildStatusTableData,
-    PrefetchHooks Function()> {
-  $$GuildStatusTableTableTableManager(
-      _$AppDatabase db, $GuildStatusTableTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$GuildStatusTableTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$GuildStatusTableTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$GuildStatusTableTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<int> playerId = const Value.absent(),
-            Value<String> guildRank = const Value.absent(),
-            Value<int> guildReputation = const Value.absent(),
-            Value<int> collarLevel = const Value.absent(),
-            Value<int> totalGoldSpent = const Value.absent(),
-            Value<DateTime?> joinedAt = const Value.absent(),
-            Value<DateTime?> ascensionCooldown = const Value.absent(),
-          }) =>
-              GuildStatusTableCompanion(
-            id: id,
-            playerId: playerId,
-            guildRank: guildRank,
-            guildReputation: guildReputation,
-            collarLevel: collarLevel,
-            totalGoldSpent: totalGoldSpent,
-            joinedAt: joinedAt,
-            ascensionCooldown: ascensionCooldown,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required int playerId,
-            Value<String> guildRank = const Value.absent(),
-            Value<int> guildReputation = const Value.absent(),
-            Value<int> collarLevel = const Value.absent(),
-            Value<int> totalGoldSpent = const Value.absent(),
-            Value<DateTime?> joinedAt = const Value.absent(),
-            Value<DateTime?> ascensionCooldown = const Value.absent(),
-          }) =>
-              GuildStatusTableCompanion.insert(
-            id: id,
-            playerId: playerId,
-            guildRank: guildRank,
-            guildReputation: guildReputation,
-            collarLevel: collarLevel,
-            totalGoldSpent: totalGoldSpent,
-            joinedAt: joinedAt,
-            ascensionCooldown: ascensionCooldown,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ));
-}
-
-typedef $$GuildStatusTableTableProcessedTableManager = ProcessedTableManager<
-    _$AppDatabase,
-    $GuildStatusTableTable,
-    GuildStatusTableData,
-    $$GuildStatusTableTableFilterComposer,
-    $$GuildStatusTableTableOrderingComposer,
-    $$GuildStatusTableTableAnnotationComposer,
-    $$GuildStatusTableTableCreateCompanionBuilder,
-    $$GuildStatusTableTableUpdateCompanionBuilder,
-    (
-      GuildStatusTableData,
-      BaseReferences<_$AppDatabase, $GuildStatusTableTable,
-          GuildStatusTableData>
-    ),
-    GuildStatusTableData,
     PrefetchHooks Function()>;
 typedef $$NpcReputationTableTableCreateCompanionBuilder
     = NpcReputationTableCompanion Function({
@@ -23190,6 +23296,406 @@ typedef $$PlayerDailySubtaskVolumeTableTableProcessedTableManager
         ),
         PlayerDailySubtaskVolumeData,
         PrefetchHooks Function()>;
+typedef $$PlayerFactionMembershipTableTableCreateCompanionBuilder
+    = PlayerFactionMembershipTableCompanion Function({
+  required int playerId,
+  required String factionId,
+  Value<int?> joinedAt,
+  Value<int?> leftAt,
+  Value<int?> lockedUntil,
+  Value<int?> debuffUntil,
+  Value<int> admissionAttempts,
+  Value<int> rowid,
+});
+typedef $$PlayerFactionMembershipTableTableUpdateCompanionBuilder
+    = PlayerFactionMembershipTableCompanion Function({
+  Value<int> playerId,
+  Value<String> factionId,
+  Value<int?> joinedAt,
+  Value<int?> leftAt,
+  Value<int?> lockedUntil,
+  Value<int?> debuffUntil,
+  Value<int> admissionAttempts,
+  Value<int> rowid,
+});
+
+class $$PlayerFactionMembershipTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PlayerFactionMembershipTableTable> {
+  $$PlayerFactionMembershipTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get factionId => $composableBuilder(
+      column: $table.factionId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get joinedAt => $composableBuilder(
+      column: $table.joinedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get leftAt => $composableBuilder(
+      column: $table.leftAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get lockedUntil => $composableBuilder(
+      column: $table.lockedUntil, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get debuffUntil => $composableBuilder(
+      column: $table.debuffUntil, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get admissionAttempts => $composableBuilder(
+      column: $table.admissionAttempts,
+      builder: (column) => ColumnFilters(column));
+}
+
+class $$PlayerFactionMembershipTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlayerFactionMembershipTableTable> {
+  $$PlayerFactionMembershipTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get factionId => $composableBuilder(
+      column: $table.factionId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get joinedAt => $composableBuilder(
+      column: $table.joinedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get leftAt => $composableBuilder(
+      column: $table.leftAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get lockedUntil => $composableBuilder(
+      column: $table.lockedUntil, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get debuffUntil => $composableBuilder(
+      column: $table.debuffUntil, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get admissionAttempts => $composableBuilder(
+      column: $table.admissionAttempts,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$PlayerFactionMembershipTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlayerFactionMembershipTableTable> {
+  $$PlayerFactionMembershipTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get factionId =>
+      $composableBuilder(column: $table.factionId, builder: (column) => column);
+
+  GeneratedColumn<int> get joinedAt =>
+      $composableBuilder(column: $table.joinedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get leftAt =>
+      $composableBuilder(column: $table.leftAt, builder: (column) => column);
+
+  GeneratedColumn<int> get lockedUntil => $composableBuilder(
+      column: $table.lockedUntil, builder: (column) => column);
+
+  GeneratedColumn<int> get debuffUntil => $composableBuilder(
+      column: $table.debuffUntil, builder: (column) => column);
+
+  GeneratedColumn<int> get admissionAttempts => $composableBuilder(
+      column: $table.admissionAttempts, builder: (column) => column);
+}
+
+class $$PlayerFactionMembershipTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $PlayerFactionMembershipTableTable,
+    PlayerFactionMembershipData,
+    $$PlayerFactionMembershipTableTableFilterComposer,
+    $$PlayerFactionMembershipTableTableOrderingComposer,
+    $$PlayerFactionMembershipTableTableAnnotationComposer,
+    $$PlayerFactionMembershipTableTableCreateCompanionBuilder,
+    $$PlayerFactionMembershipTableTableUpdateCompanionBuilder,
+    (
+      PlayerFactionMembershipData,
+      BaseReferences<_$AppDatabase, $PlayerFactionMembershipTableTable,
+          PlayerFactionMembershipData>
+    ),
+    PlayerFactionMembershipData,
+    PrefetchHooks Function()> {
+  $$PlayerFactionMembershipTableTableTableManager(
+      _$AppDatabase db, $PlayerFactionMembershipTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlayerFactionMembershipTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlayerFactionMembershipTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlayerFactionMembershipTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            Value<String> factionId = const Value.absent(),
+            Value<int?> joinedAt = const Value.absent(),
+            Value<int?> leftAt = const Value.absent(),
+            Value<int?> lockedUntil = const Value.absent(),
+            Value<int?> debuffUntil = const Value.absent(),
+            Value<int> admissionAttempts = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlayerFactionMembershipTableCompanion(
+            playerId: playerId,
+            factionId: factionId,
+            joinedAt: joinedAt,
+            leftAt: leftAt,
+            lockedUntil: lockedUntil,
+            debuffUntil: debuffUntil,
+            admissionAttempts: admissionAttempts,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required int playerId,
+            required String factionId,
+            Value<int?> joinedAt = const Value.absent(),
+            Value<int?> leftAt = const Value.absent(),
+            Value<int?> lockedUntil = const Value.absent(),
+            Value<int?> debuffUntil = const Value.absent(),
+            Value<int> admissionAttempts = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              PlayerFactionMembershipTableCompanion.insert(
+            playerId: playerId,
+            factionId: factionId,
+            joinedAt: joinedAt,
+            leftAt: leftAt,
+            lockedUntil: lockedUntil,
+            debuffUntil: debuffUntil,
+            admissionAttempts: admissionAttempts,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$PlayerFactionMembershipTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $PlayerFactionMembershipTableTable,
+        PlayerFactionMembershipData,
+        $$PlayerFactionMembershipTableTableFilterComposer,
+        $$PlayerFactionMembershipTableTableOrderingComposer,
+        $$PlayerFactionMembershipTableTableAnnotationComposer,
+        $$PlayerFactionMembershipTableTableCreateCompanionBuilder,
+        $$PlayerFactionMembershipTableTableUpdateCompanionBuilder,
+        (
+          PlayerFactionMembershipData,
+          BaseReferences<_$AppDatabase, $PlayerFactionMembershipTableTable,
+              PlayerFactionMembershipData>
+        ),
+        PlayerFactionMembershipData,
+        PrefetchHooks Function()>;
+typedef $$FactionEventLogTableTableCreateCompanionBuilder
+    = FactionEventLogTableCompanion Function({
+  Value<int> id,
+  required int playerId,
+  required String factionId,
+  required String eventType,
+  Value<String?> payload,
+  required int createdAt,
+});
+typedef $$FactionEventLogTableTableUpdateCompanionBuilder
+    = FactionEventLogTableCompanion Function({
+  Value<int> id,
+  Value<int> playerId,
+  Value<String> factionId,
+  Value<String> eventType,
+  Value<String?> payload,
+  Value<int> createdAt,
+});
+
+class $$FactionEventLogTableTableFilterComposer
+    extends Composer<_$AppDatabase, $FactionEventLogTableTable> {
+  $$FactionEventLogTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get factionId => $composableBuilder(
+      column: $table.factionId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get eventType => $composableBuilder(
+      column: $table.eventType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get payload => $composableBuilder(
+      column: $table.payload, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$FactionEventLogTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $FactionEventLogTableTable> {
+  $$FactionEventLogTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get factionId => $composableBuilder(
+      column: $table.factionId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get eventType => $composableBuilder(
+      column: $table.eventType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+      column: $table.payload, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$FactionEventLogTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FactionEventLogTableTable> {
+  $$FactionEventLogTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get factionId =>
+      $composableBuilder(column: $table.factionId, builder: (column) => column);
+
+  GeneratedColumn<String> get eventType =>
+      $composableBuilder(column: $table.eventType, builder: (column) => column);
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$FactionEventLogTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $FactionEventLogTableTable,
+    FactionEventLogData,
+    $$FactionEventLogTableTableFilterComposer,
+    $$FactionEventLogTableTableOrderingComposer,
+    $$FactionEventLogTableTableAnnotationComposer,
+    $$FactionEventLogTableTableCreateCompanionBuilder,
+    $$FactionEventLogTableTableUpdateCompanionBuilder,
+    (
+      FactionEventLogData,
+      BaseReferences<_$AppDatabase, $FactionEventLogTableTable,
+          FactionEventLogData>
+    ),
+    FactionEventLogData,
+    PrefetchHooks Function()> {
+  $$FactionEventLogTableTableTableManager(
+      _$AppDatabase db, $FactionEventLogTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FactionEventLogTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FactionEventLogTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FactionEventLogTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> playerId = const Value.absent(),
+            Value<String> factionId = const Value.absent(),
+            Value<String> eventType = const Value.absent(),
+            Value<String?> payload = const Value.absent(),
+            Value<int> createdAt = const Value.absent(),
+          }) =>
+              FactionEventLogTableCompanion(
+            id: id,
+            playerId: playerId,
+            factionId: factionId,
+            eventType: eventType,
+            payload: payload,
+            createdAt: createdAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int playerId,
+            required String factionId,
+            required String eventType,
+            Value<String?> payload = const Value.absent(),
+            required int createdAt,
+          }) =>
+              FactionEventLogTableCompanion.insert(
+            id: id,
+            playerId: playerId,
+            factionId: factionId,
+            eventType: eventType,
+            payload: payload,
+            createdAt: createdAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$FactionEventLogTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $FactionEventLogTableTable,
+        FactionEventLogData,
+        $$FactionEventLogTableTableFilterComposer,
+        $$FactionEventLogTableTableOrderingComposer,
+        $$FactionEventLogTableTableAnnotationComposer,
+        $$FactionEventLogTableTableCreateCompanionBuilder,
+        $$FactionEventLogTableTableUpdateCompanionBuilder,
+        (
+          FactionEventLogData,
+          BaseReferences<_$AppDatabase, $FactionEventLogTableTable,
+              FactionEventLogData>
+        ),
+        FactionEventLogData,
+        PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -23202,8 +23708,6 @@ class $AppDatabaseManager {
       $$InventoryTableTableTableManager(_db, _db.inventoryTable);
   $$ShopItemsTableTableTableManager get shopItemsTable =>
       $$ShopItemsTableTableTableManager(_db, _db.shopItemsTable);
-  $$GuildStatusTableTableTableManager get guildStatusTable =>
-      $$GuildStatusTableTableTableManager(_db, _db.guildStatusTable);
   $$NpcReputationTableTableTableManager get npcReputationTable =>
       $$NpcReputationTableTableTableManager(_db, _db.npcReputationTable);
   $$DiaryEntriesTableTableTableManager get diaryEntriesTable =>
@@ -23269,4 +23773,10 @@ class $AppDatabaseManager {
       get playerDailySubtaskVolumeTable =>
           $$PlayerDailySubtaskVolumeTableTableTableManager(
               _db, _db.playerDailySubtaskVolumeTable);
+  $$PlayerFactionMembershipTableTableTableManager
+      get playerFactionMembershipTable =>
+          $$PlayerFactionMembershipTableTableTableManager(
+              _db, _db.playerFactionMembershipTable);
+  $$FactionEventLogTableTableTableManager get factionEventLogTable =>
+      $$FactionEventLogTableTableTableManager(_db, _db.factionEventLogTable);
 }

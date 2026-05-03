@@ -3,7 +3,6 @@ import 'package:crypto/crypto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../database/app_database.dart';
 import '../../database/daos/player_dao.dart';
-import '../../database/tables/players_table.dart';
 import 'recipes_catalog_seeder.dart';
 import 'package:drift/drift.dart';
 
@@ -65,15 +64,23 @@ class AuthLocalDs {
     await _dao.touchLastLogin(id);
     final player = await _dao.findById(id);
 
-    // Migration: usuários antigos com guildRank='e' que NÃO entraram na Guilda
-    // Só reseta se guild_status confirma que não foi admitido
+    // Defensive guard: usuários antigos com `guildRank='e'` que NÃO
+    // entraram na Guilda (bug histórico pré-Sprint 2.1).
+    //
+    // Sprint 3.4 Etapa A — `guild_status` foi DROPPED. Source-of-truth
+    // de membership é `player_faction_membership`. Se NÃO existe row
+    // pra (player, factionId='guild') com `joined_at != null`, o
+    // jogador nunca foi admitido — reset rank pra 'none'.
     if (player != null && player.guildRank == 'e') {
-      final guildStatus = await (_db.select(_db.guildStatusTable)
-            ..where((t) => t.playerId.equals(id)))
-          .getSingleOrNull();
-      // Se guild_status existe e tem rank != 'none', o jogador está na guilda — mantém 'e'
-      final admittedInGuildStatus = guildStatus != null && guildStatus.guildRank != 'none';
-      if (!admittedInGuildStatus) {
+      final rows = await _db.customSelect(
+        "SELECT joined_at FROM player_faction_membership "
+        "WHERE player_id = ? AND faction_id = 'guild' "
+        "  AND joined_at IS NOT NULL "
+        "LIMIT 1",
+        variables: [Variable.withInt(id)],
+      ).get();
+      final isMember = rows.isNotEmpty;
+      if (!isMember) {
         await (_db.update(_db.playersTable)
               ..where((t) => t.id.equals(id)))
             .write(const PlayersTableCompanion(

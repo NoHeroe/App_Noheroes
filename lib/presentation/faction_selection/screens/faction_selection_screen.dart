@@ -109,13 +109,29 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
     setState(() => _loading = true);
     final db = ref.read(appDatabaseProvider);
     final factionId = faction['id'] as String;
-    // Sprint 3.1 Bloco 1 — QuestAdmissionService .bakado. Marca a facção como
-    // `pending:<id>` em players; as missões de admissão serão criadas pelo
-    // service refatorado no Bloco 7.
+
+    // Sprint 3.4 Etapa A — bug histórico corrigido. Antes:
+    //   - players.faction_type = 'pending:X' era setado direto via SQL
+    //   - QuestAdmissionService NÃO era chamado (foi `.bakado` na 3.1
+    //     Bloco 1 e nunca religado)
+    //   - Resultado: jogador ficava `pending:X` pra sempre, nunca via
+    //     missões de admissão.
+    //
+    // Agora: setamos `pending:X` E chamamos `startFactionAdmission`
+    // que cria 3 quests em `player_mission_progress` (tabOrigin=admission).
+    // Etapa B vai estender pra "3 quests × 3 sub-tasks automáticas".
     await db.customStatement(
       "UPDATE players SET faction_type = ? WHERE id = ?",
       ['pending:$factionId', player.id],
     );
+
+    // Cria as 3 quests de admissão (foundation). Bug do path JSON
+    // também corrigido na Etapa A — `_loadAdmissionPool` lê direto
+    // `json[factionId]` sem wrapper.
+    final admissionService = ref.read(questAdmissionServiceProvider);
+    final created = await admissionService.startFactionAdmission(
+        player.id, factionId);
+
     // +5 reputação com NPC da facção ao iniciar admissão
     try {
       final npcId = AssetLoader.npcIdForFaction(factionId);
@@ -130,7 +146,9 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Facção marcada como pendente. Missões de admissão virão no próximo bloco.'),
+            content: Text(created.isEmpty
+                ? 'Facção marcada como pendente. (Pool de admissão vazio — verifique JSON.)'
+                : 'Admissão iniciada — ${created.length} missões criadas.'),
             backgroundColor: AppColors.mp,
             duration: const Duration(seconds: 4),
           ),

@@ -5,22 +5,69 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/guild_rank.dart';
-import '../../../data/database/daos/guild_dao.dart';
-import '../../../data/database/app_database.dart';
 import '../../../domain/enums/source_type.dart';
 import '../../../domain/models/player_snapshot.dart';
 import 'package:drift/drift.dart' hide Column;
 import '../../shared/widgets/npc_dialog_overlay.dart';
 import '../../shared/widgets/reward_toast.dart';
 
-// Provider do status da guilda
-final guildStatusProvider = FutureProvider.autoDispose<GuildStatusTableData?>((ref) async {
+/// Sprint 3.4 Etapa A — snapshot mínimo da Guilda usando as fontes de
+/// dados consolidadas (`player_faction_membership` factionId='guild' +
+/// `player_faction_reputation` factionId='guild' + `players.guildRank`).
+///
+/// Substitui `GuildStatusTableData` que vinha da `guild_status` (DROPPED).
+/// Etapa D vai redesenhar essa tela completamente — esta classe é
+/// transitória pra manter o UX atual funcionando com as fontes novas.
+class GuildMembershipSnapshot {
+  final bool admitted;
+  final String guildRank; // 'none', 'e'..'s'
+  final int reputation;
+  final DateTime? joinedAt;
+
+  const GuildMembershipSnapshot({
+    required this.admitted,
+    required this.guildRank,
+    required this.reputation,
+    this.joinedAt,
+  });
+}
+
+final guildStatusProvider =
+    FutureProvider.autoDispose<GuildMembershipSnapshot?>((ref) async {
   final player = ref.watch(currentPlayerProvider);
   if (player == null) return null;
   final db = ref.read(appDatabaseProvider);
-  final dao = GuildDao(db);
-  await dao.ensureExists(player.id);
-  return dao.getStatus(player.id);
+
+  // Membership row pra factionId='guild' (lazy: pode não existir ainda).
+  final memRows = await db.customSelect(
+    "SELECT joined_at FROM player_faction_membership "
+    "WHERE player_id = ? AND faction_id = 'guild' "
+    "LIMIT 1",
+    variables: [Variable.withInt(player.id)],
+  ).get();
+  DateTime? joinedAt;
+  if (memRows.isNotEmpty) {
+    final raw = memRows.first.data['joined_at'];
+    if (raw is int) joinedAt = DateTime.fromMillisecondsSinceEpoch(raw);
+  }
+
+  // Reputação pra factionId='guild' (lazy default 50 se não existe).
+  final repRows = await db.customSelect(
+    "SELECT reputation FROM player_faction_reputation "
+    "WHERE player_id = ? AND faction_id = 'guild' "
+    "LIMIT 1",
+    variables: [Variable.withInt(player.id)],
+  ).get();
+  final reputation = repRows.isNotEmpty
+      ? repRows.first.read<int>('reputation')
+      : 50;
+
+  return GuildMembershipSnapshot(
+    admitted: player.guildRank != 'none',
+    guildRank: player.guildRank,
+    reputation: reputation,
+    joinedAt: joinedAt,
+  );
 });
 
 class GuildScreen extends ConsumerWidget {
@@ -47,10 +94,10 @@ class GuildScreen extends ConsumerWidget {
   }
 
   Widget _buildContent(BuildContext context, WidgetRef ref,
-      dynamic player, GuildStatusTableData? status) {
+      dynamic player, GuildMembershipSnapshot? status) {
     final admitted = status != null && status.guildRank != 'none';
     final rankLabel = _rankLabel(status?.guildRank ?? 'none');
-    final reputation = status?.guildReputation ?? 0;
+    final reputation = status?.reputation ?? 0;
 
     return Column(
       children: [
@@ -132,7 +179,7 @@ class GuildScreen extends ConsumerWidget {
   }
 
   Widget _buildNoryanCard(BuildContext context, WidgetRef ref,
-      bool admitted, GuildStatusTableData? status, dynamic player) {
+      bool admitted, GuildMembershipSnapshot? status, dynamic player) {
     final msg = admitted
         ? '"Bem-vindo de volta, aventureiro. A Guilda registrou sua presença."'
         : '"Você chegou até aqui. Isso já diz algo. Mas carregar o Colar exige mais do que presença."';
@@ -186,7 +233,7 @@ class GuildScreen extends ConsumerWidget {
   }
 
   Widget _buildAdmissionCard(BuildContext context, WidgetRef ref,
-      dynamic player, GuildStatusTableData? status) {
+      dynamic player, GuildMembershipSnapshot? status) {
     // Sprint 2.2 Bloco 6 — gate mudou de "50 ouro gasto" pra "25 quests
     // concluídas". Contador vive em players.totalQuestsCompleted (migration
     // 20→21, incrementado nos 3 services de quest). Jogadores v0.28.0
@@ -313,7 +360,7 @@ class GuildScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildRankCard(GuildStatusTableData status) {
+  Widget _buildRankCard(GuildMembershipSnapshot status) {
     final rank = status.guildRank.toUpperCase();
     return Container(
       padding: const EdgeInsets.all(16),
@@ -349,7 +396,7 @@ class GuildScreen extends ConsumerWidget {
                       fontSize: 13, color: AppColors.gold)),
               const SizedBox(height: 4),
               Text(
-                'Colar Nível ${status.collarLevel} · ${status.guildReputation} reputação',
+                'Rank ${rank} · ${status.reputation} reputação',
                 style: GoogleFonts.roboto(
                     fontSize: 11, color: AppColors.textMuted),
               ),
@@ -443,7 +490,6 @@ class GuildScreen extends ConsumerWidget {
   Future<void> _confirmAdmission(
       BuildContext context, WidgetRef ref, dynamic player) async {
     final db = ref.read(appDatabaseProvider);
-    final dao = GuildDao(db);
     final invService = ref.read(playerInventoryServiceProvider);
     final eqService = ref.read(playerEquipmentServiceProvider);
     final rankService = ref.read(playerRankServiceProvider);
@@ -464,9 +510,25 @@ class GuildScreen extends ConsumerWidget {
       return;
     }
 
-    // Guild DAO antigo (tabela guild_status) ainda é a fonte de reputation/
-    // cooldowns. Mantemos a escrita lá até Sprint 3.4 unificar.
-    await dao.completeAdmission(player.id);
+    // Sprint 3.4 Etapa A — registra membership na tabela nova
+    // (factionId='guild'). Substitui o `dao.completeAdmission` legacy
+    // que escrevia em `guild_status` (DROPPED). `INSERT OR IGNORE`
+    // mantém idempotência caso a row já exista.
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    await db.customStatement(
+      'INSERT OR IGNORE INTO player_faction_membership '
+      '(player_id, faction_id, joined_at, left_at, locked_until, '
+      ' debuff_until, admission_attempts) '
+      'VALUES (?, ?, ?, NULL, NULL, NULL, 0)',
+      [player.id, 'guild', nowMs],
+    );
+    // Caso já exista mas com joined_at NULL (pendente), promove agora.
+    await db.customStatement(
+      'UPDATE player_faction_membership SET joined_at = ? '
+      "WHERE player_id = ? AND faction_id = 'guild' "
+      'AND joined_at IS NULL',
+      [nowMs, player.id],
+    );
 
     // Rank canônico em players.guildRank (normalizado 'E') via service novo.
     await rankService.setRank(player.id, GuildRank.e);
