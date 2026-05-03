@@ -1,9 +1,20 @@
 import 'package:drift/drift.dart';
+import '../../../core/events/app_event_bus.dart';
+import '../../../core/events/diary_events.dart';
 import '../../database/app_database.dart';
 
 class DiaryService {
   final AppDatabase _db;
-  DiaryService(this._db);
+
+  /// Sprint 3.4 Sub-Etapa B.2 — bus opcional pra emitir
+  /// `DiaryEntryCreated` quando o jogador salva uma entrada. Foundation
+  /// pro sub-type `admission_diary_entry_window` reagir em tempo real
+  /// sem aguardar polling de outro evento terminal. Provider injeta;
+  /// callers legacy (testes que constroem DiaryService direto) podem
+  /// omitir e o emit vira noop.
+  final AppEventBus? _bus;
+
+  DiaryService(this._db, {AppEventBus? bus}) : _bus = bus;
 
   static int countWords(String text) {
     final trimmed = text.trim();
@@ -29,6 +40,7 @@ class DiaryService {
     final words = countWords(content);
     final existing = await getTodayEntry(playerId);
 
+    final isNew = existing == null;
     if (existing != null) {
       await (_db.update(_db.diaryEntriesTable)
             ..where((t) => t.id.equals(existing.id)))
@@ -48,6 +60,14 @@ class DiaryService {
         ),
       );
     }
+    // Sprint 3.4 Sub-Etapa B.2 — emite evento pra
+    // FactionAdmissionProgressService re-avaliar sub-tasks
+    // diary_entry_window em tempo real.
+    _bus?.publish(DiaryEntryCreated(
+      playerId: playerId,
+      wordCount: words,
+      isNew: isNew,
+    ));
   }
 
   /// Histórico de entradas (mais recentes primeiro)

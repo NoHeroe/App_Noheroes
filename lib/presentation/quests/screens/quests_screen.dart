@@ -11,6 +11,7 @@ import '../../individual_creation/widgets/create_individual_mission_sheet.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
 import '../../shared/widgets/player_stats_counter.dart';
 import '../providers/quests_screen_notifier.dart';
+import '../widgets/admission_mission_card.dart';
 import '../widgets/daily_quests_header.dart';
 import '../widgets/daily_section.dart';
 import '../widgets/extras_card.dart';
@@ -19,6 +20,7 @@ import '../widgets/internal_mission_card.dart';
 import '../widgets/mixed_mission_card.dart';
 import '../widgets/real_task_mission_card.dart';
 import '../widgets/section_accordion.dart';
+import '../../../domain/enums/mission_tab_origin.dart';
 
 /// Sprint 3.1 Bloco 14.6c — `/quests` reestruturada.
 /// Sprint 3.2 Etapa 1.3.A — header novo + seção "MISSÕES DIÁRIAS" no
@@ -251,6 +253,14 @@ class _MissionCardDispatcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Sprint 3.4 Sub-Etapa B.2 — missões de admissão eliminatória têm
+    // card próprio (sub-tasks listadas + countdown + locked
+    // placeholder pra sequenciamento). Outras categorias (class /
+    // faction weekly / individual / extras) seguem o dispatcher por
+    // modality original.
+    if (mission.tabOrigin == MissionTabOrigin.admission) {
+      return AdmissionMissionCard(mission: mission);
+    }
     return switch (mission.modality) {
       MissionModality.internal => InternalMissionCard(mission: mission),
       MissionModality.real => RealTaskMissionCard(mission: mission),

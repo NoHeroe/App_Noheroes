@@ -47,8 +47,12 @@ class _DiaryTabState extends ConsumerState<DiaryTab> {
     final player = ref.read(currentPlayerProvider);
     if (player == null || _ctrl.text.trim().isEmpty) return;
     setState(() => _saving = true);
-    await DiaryService(ref.read(appDatabaseProvider))
-        .saveEntry(player.id, _ctrl.text.trim());
+    // Sprint 3.4 Sub-Etapa B.2 — bus injetado pra emitir
+    // DiaryEntryCreated (consumido pelo FactionAdmissionProgressService).
+    await DiaryService(
+      ref.read(appDatabaseProvider),
+      bus: ref.read(appEventBusProvider),
+    ).saveEntry(player.id, _ctrl.text.trim());
     setState(() => _saving = false);
     ref.invalidate(_diaryTodayProvider);
     ref.invalidate(_diaryHistoryProvider);

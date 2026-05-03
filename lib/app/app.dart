@@ -40,6 +40,12 @@ class NoHeroesApp extends ConsumerWidget {
     // `admission_gold_earned_via_quests_window` do
     // `FactionAdmissionValidator`.
     ref.watch(questRewardStatsServiceProvider);
+    // Sprint 3.4 Sub-Etapa B.2 — listener que re-avalia sub-tasks de
+    // admissão eliminatória ao receber eventos terminais
+    // (DailyMissionCompleted, MissionCompleted, DiaryEntryCreated,
+    // RewardGranted) + sequenciamento (missão N+1 desbloqueada quando
+    // N completa) + reset em falha.
+    ref.watch(factionAdmissionProgressServiceProvider);
     return MaterialApp.router(
       title: 'NoHeroes',
       debugShowCheckedModeBanner: false,

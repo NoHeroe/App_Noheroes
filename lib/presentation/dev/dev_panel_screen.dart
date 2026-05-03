@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:drift/drift.dart' show Value, Variable;
@@ -11,6 +12,7 @@ import '../../app/providers.dart';
 import '../../core/config/faction_alliances.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/events/app_event.dart';
+import '../../core/events/faction_events.dart';
 import '../../core/events/reward_events.dart';
 import '../../core/utils/guild_rank.dart';
 import '../../data/database/app_database.dart';
@@ -339,6 +341,170 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
     _invalidateAll(player.id);
     AppSnack.success(context,
         'Guilda liberada (rank=E + membership + $closed quests fechadas).');
+  }
+
+  // ─── Sub-Etapa B.2 — atalhos pra testar admissão eliminatória ─
+
+  /// Completa todas as sub-tasks da admissão pendente do player atual.
+  /// Marca `completed=true` em cada sub-task de cada missão ativa
+  /// (tabOrigin=admission, faction matches `players.faction_type`
+  /// stripped de `pending:`). O listener regular (`FactionAdmission
+  /// ProgressService`) detecta no próximo evento e cascateia
+  /// `FactionAdmissionQuestCompleted` + promoção de próxima missão +
+  /// eventualmente `FactionAdmissionApproved`. Pra forçar essa cadeia
+  /// IMEDIATAMENTE, emitimos um `RewardGranted` no-op (qualquer evento
+  /// terminal serve — o listener escuta vários).
+  Future<void> _forceCompleteAdmission() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final raw = player.factionType ?? '';
+    if (raw.isEmpty || raw == 'none') {
+      if (!mounted) return;
+      AppSnack.error(context, 'Nenhuma admissão ativa.');
+      return;
+    }
+    final factionId = raw.startsWith('pending:')
+        ? raw.substring('pending:'.length)
+        : raw;
+
+    final db = ref.read(appDatabaseProvider);
+    final missionRepo = ref.read(missionRepositoryProvider);
+    final all = await missionRepo.findByTab(
+        player.id, MissionTabOrigin.admission);
+    var modified = 0;
+    for (final m in all) {
+      if (m.completedAt != null || m.failedAt != null) continue;
+      Map<String, dynamic> meta;
+      try {
+        meta = jsonDecode(m.metaJson) as Map<String, dynamic>;
+      } catch (_) {
+        continue;
+      }
+      if (meta['faction_id'] != factionId) continue;
+      final subs = (meta['sub_tasks'] as List?) ?? const [];
+      final updated = subs
+          .map((s) {
+            final mp = (s as Map).cast<String, dynamic>();
+            mp['completed'] = true;
+            return mp;
+          })
+          .toList();
+      meta['sub_tasks'] = updated;
+      meta['is_unlocked'] = true; // garante que progress detecta
+      await db.customUpdate(
+        'UPDATE player_mission_progress SET meta_json = ? WHERE id = ?',
+        variables: [
+          Variable.withString(jsonEncode(meta)),
+          Variable.withInt(m.id),
+        ],
+        updates: {db.playerMissionProgressTable},
+      );
+      modified++;
+    }
+    // Trigger no-op pra o listener processar.
+    ref.read(appEventBusProvider).publish(RewardGranted(
+        playerId: player.id,
+        rewardResolvedJson:
+            '{"xp":0,"gold":0,"gems":0,"seivas":0,"items":[],'
+            '"achievements_to_check":[],"recipes_to_unlock":[]}'));
+    if (!mounted) return;
+    _invalidateAll(player.id);
+    AppSnack.success(
+        context,
+        '$modified missões de admissão preenchidas. Aguarde cascata.');
+  }
+
+  /// Dispara `FactionAdmissionRejected` manualmente
+  /// (reason="dev_panel_force_reject"). Listener handler reseta
+  /// admissão (failed + rep -10 + lock 48h + faction_type='none').
+  Future<void> _forceRejectAdmission() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final raw = player.factionType ?? '';
+    if (raw.isEmpty || raw == 'none') {
+      if (!mounted) return;
+      AppSnack.error(context, 'Nenhuma admissão ativa.');
+      return;
+    }
+    final factionId = raw.startsWith('pending:')
+        ? raw.substring('pending:'.length)
+        : raw;
+
+    ref.read(appEventBusProvider).publish(FactionAdmissionRejected(
+          playerId: player.id,
+          factionId: factionId,
+          attemptCount: 1,
+          reason: 'dev_panel_force_reject',
+          missionId: 'DEV',
+        ));
+    if (!mounted) return;
+    AppSnack.success(
+        context,
+        'FactionAdmissionRejected emitido pra "$factionId". '
+        '_handleRejection vai resetar.');
+    // Pequeno delay + invalidate pra UI pegar mudanças.
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    if (mounted) _invalidateAll(player.id);
+  }
+
+  /// Subtrai 24h do `window_start_ms` de todas as sub-tasks de
+  /// missões ativas da admissão atual. Permite testar `window_expired`
+  /// sem aguardar 48h reais.
+  Future<void> _advanceAdmissionTime() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final raw = player.factionType ?? '';
+    if (raw.isEmpty || raw == 'none') {
+      if (!mounted) return;
+      AppSnack.error(context, 'Nenhuma admissão ativa.');
+      return;
+    }
+    final factionId = raw.startsWith('pending:')
+        ? raw.substring('pending:'.length)
+        : raw;
+
+    final db = ref.read(appDatabaseProvider);
+    final missionRepo = ref.read(missionRepositoryProvider);
+    final all = await missionRepo.findByTab(
+        player.id, MissionTabOrigin.admission);
+    const shift = 24 * 60 * 60 * 1000;
+    var modified = 0;
+    for (final m in all) {
+      if (m.completedAt != null || m.failedAt != null) continue;
+      Map<String, dynamic> meta;
+      try {
+        meta = jsonDecode(m.metaJson) as Map<String, dynamic>;
+      } catch (_) {
+        continue;
+      }
+      if (meta['faction_id'] != factionId) continue;
+      final ws = (meta['window_start_ms'] as int?) ?? 0;
+      if (ws > 0) {
+        meta['window_start_ms'] = ws - shift;
+        final subs = (meta['sub_tasks'] as List?) ?? const [];
+        final updated = subs.map((s) {
+          final mp = (s as Map).cast<String, dynamic>();
+          if ((mp['window_start_ms'] as int?) != null) {
+            mp['window_start_ms'] = (mp['window_start_ms'] as int) - shift;
+          }
+          return mp;
+        }).toList();
+        meta['sub_tasks'] = updated;
+        await db.customUpdate(
+          'UPDATE player_mission_progress SET meta_json = ? WHERE id = ?',
+          variables: [
+            Variable.withString(jsonEncode(meta)),
+            Variable.withInt(m.id),
+          ],
+          updates: {db.playerMissionProgressTable},
+        );
+        modified++;
+      }
+    }
+    if (!mounted) return;
+    _invalidateAll(player.id);
+    AppSnack.success(
+        context, '$modified missões avançadas em 24h.');
   }
 
   /// Lista rows de `player_faction_membership` + `player_faction_reputation`
@@ -968,6 +1134,17 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
             // Sprint 3.4 Etapa A hotfix — atalho pra testes da Guilda.
             _actionBtn('Liberar guilda (instantâneo)',
                 AppColors.gold, _unlockGuildInstantly),
+            const SizedBox(height: 6),
+            // Sprint 3.4 Sub-Etapa B.2 — atalhos pra testar admissão
+            // eliminatória sem aguardar 48h reais.
+            _actionBtn('Forçar conclusão de admissão atual',
+                AppColors.shadowAscending, _forceCompleteAdmission),
+            const SizedBox(height: 6),
+            _actionBtn('Forçar reprovação de admissão atual',
+                AppColors.hp, _forceRejectAdmission),
+            const SizedBox(height: 6),
+            _actionBtn('Avançar tempo +24h (admissão atual)',
+                AppColors.shadowObsessive, _advanceAdmissionTime),
             const SizedBox(height: 16),
 
             // 4. MISSÕES DIÁRIAS

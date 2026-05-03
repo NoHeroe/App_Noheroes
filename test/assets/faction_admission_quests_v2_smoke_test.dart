@@ -14,10 +14,14 @@ import 'package:noheroes_app/domain/services/faction_admission_sub_task_types.da
 /// validator silenciosamente cairia em `StateError` em produção
 /// (default do switch) e a sub-task viraria zumbi.
 ///
-/// Distribuição confirmada pelo CEO:
-///   guild=2 / moon=3 / sun=3 / renegades=3 / new_order=3 /
-///   black_legion=4 / trinity=4 / error=5 = 27 missões
-///   sub-tasks: 4+7+7+7+9+12+11+14 = 71
+/// Distribuição (Sub-Etapa B.2 — Guilda removida do catálogo
+/// porque usa modelo dual: Aventureiro nível 1 via guild_rank E+
+/// (flow especial em guild_screen.dart) + Facção Guilda nível 2
+/// com entrada DIRETA, sem admissão eliminatória. As 7 facções
+/// restantes seguem o flow eliminatório):
+///   moon=3 / sun=3 / renegades=3 / new_order=3 /
+///   black_legion=4 / trinity=4 / error=5 = 25 missões
+///   sub-tasks: 7+7+7+9+12+11+14 = 67
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -29,9 +33,9 @@ void main() {
     catalog = jsonDecode(raw) as Map<String, dynamic>;
   });
 
-  test('catálogo tem entries pra todas as 8 facções esperadas', () {
+  test('catálogo tem entries pras 7 facções com admissão eliminatória '
+      '(guild excluída — usa flow especial)', () {
     const expectedFactions = {
-      'guild',
       'moon_clan',
       'sun_clan',
       'renegades',
@@ -46,9 +50,12 @@ void main() {
     expect(actual, expectedFactions);
   });
 
-  test('distribuição de missões por facção bate com plan-first', () {
+  test('catálogo NÃO contém guild (modelo dual — entrada direta)', () {
+    expect(catalog.containsKey('guild'), isFalse);
+  });
+
+  test('distribuição de missões por facção bate com Sub-Etapa B.2', () {
     const expectedCounts = {
-      'guild': 2,
       'moon_clan': 3,
       'sun_clan': 3,
       'renegades': 3,
@@ -64,7 +71,7 @@ void main() {
     }
   });
 
-  test('total de sub-tasks bate com plan-first (71)', () {
+  test('total de sub-tasks bate com Sub-Etapa B.2 (67)', () {
     var total = 0;
     for (final factionKey in catalog.keys) {
       if (factionKey.startsWith('_')) continue;
@@ -73,7 +80,7 @@ void main() {
         total += (m['sub_tasks'] as List).length;
       }
     }
-    expect(total, 71);
+    expect(total, 67);
   });
 
   test('todos os sub_type referenciados existem em '

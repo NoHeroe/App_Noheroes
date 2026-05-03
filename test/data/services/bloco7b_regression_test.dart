@@ -251,67 +251,14 @@ void main() {
       expect(row.data['c'], 'mage');
     });
 
-    test('checkFactionAdmission sem missões completadas → false', () async {
-      final playerId = await _seedPlayer(db);
-      final service = QuestAdmissionService(
-        db,
-        MissionRepositoryDrift(db),
-        ClassQuestService(MissionRepositoryDrift(db)),
-        bus,
-      );
-      expect(await service.checkFactionAdmission(playerId, 'noryan'),
-          isFalse);
-    });
-
-    test('checkFactionAdmission com 3 admissões completas → true + '
-        'FactionJoined + faction_type promovido', () async {
-      final playerId = await _seedPlayer(db);
-      final repo = MissionRepositoryDrift(db);
-
-      // Seed 3 admissões completas pra faction_id='noryan'.
-      for (var i = 0; i < 3; i++) {
-        final id = await repo.insert(MissionProgress(
-          id: 0,
-          playerId: playerId,
-          missionKey: 'ADM_NORYAN_$i',
-          modality: MissionModality.internal,
-          tabOrigin: MissionTabOrigin.admission,
-          rank: GuildRank.e,
-          targetValue: 1,
-          currentValue: 1,
-          reward: const RewardDeclared(),
-          startedAt: DateTime.now(),
-          rewardClaimed: true,
-          metaJson: '{"faction_id":"noryan"}',
-        ));
-        await repo.markCompleted(id,
-            at: DateTime.now(), rewardClaimed: true);
-      }
-
-      final service = QuestAdmissionService(
-        db,
-        repo,
-        ClassQuestService(repo),
-        bus,
-      );
-
-      FactionJoined? captured;
-      final sub = bus.on<FactionJoined>().listen((e) => captured = e);
-
-      final ok = await service.checkFactionAdmission(playerId, 'noryan');
-      await pumpEventQueue();
-
-      expect(ok, isTrue);
-      expect(captured, matcherIsNotNull);
-      expect(captured!.factionId, 'noryan');
-
-      final row = await db.customSelect(
-          'SELECT faction_type AS f FROM players WHERE id = ?',
-          variables: [Variable.withInt(playerId)]).getSingle();
-      expect(row.data['f'], 'noryan');
-
-      await sub.cancel();
-    });
+    // Sprint 3.4 Sub-Etapa B.2 — `checkFactionAdmission` foi removido
+    // do QuestAdmissionService. A lógica de "verificar se admissão
+    // concluiu + promover faction_type + emitir FactionJoined" agora
+    // vive no `FactionAdmissionProgressService` (listener), que é
+    // testado diretamente em `faction_admission_progress_service_test.
+    // dart`. Os 2 testes de regressão antigos foram movidos pra
+    // contemplar o novo flow lá; aqui ficam removidos pra evitar
+    // duplicação + manter contagem de testes válida.
   });
 }
 

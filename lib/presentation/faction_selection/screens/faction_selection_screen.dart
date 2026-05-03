@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/config/faction_alliances.dart' show kSecretFactionUnlockKey;
 import '../../../core/constants/app_colors.dart';
+import '../../../core/events/faction_events.dart' show FactionJoined;
 import '../../../data/datasources/local/class_bonus_service.dart';
 // Sprint 3.1 Bloco 1 — QuestAdmissionService e factionsServiceProvider
 // foram .bakados. Este ecrã continua exibindo a escolha (lê JSON direto) e
@@ -54,6 +55,18 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
           (await repo.listCompletedKeys(player.id)).toSet();
       final filtered = <Map<String, dynamic>>[];
       for (final f in all) {
+        // Sprint 3.4 Sub-Etapa B.2 — modelo dual da Guilda. Aparece
+        // na lista APENAS se o player já é Aventureiro nível 1
+        // (guild_rank in ['e'..'s']). Player rank='none' não vê
+        // Guilda; é incentivado a fazer flow especial em /guild
+        // (complete 15 missões → recebe COLLAR + rank E) primeiro.
+        if (f['id'] == 'guild') {
+          if (player.guildRank == 'none' || player.guildRank.isEmpty) {
+            continue; // esconde até virar Aventureiro nível 1
+          }
+          filtered.add(f);
+          continue;
+        }
         if (f['isSecret'] != true) {
           filtered.add(f);
           continue;
@@ -133,6 +146,16 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
     final db = ref.read(appDatabaseProvider);
     final factionId = faction['id'] as String;
 
+    // Sprint 3.4 Sub-Etapa B.2 — modelo dual da Guilda. Player que
+    // chega aqui já é Aventureiro nível 1 (filtro em _loadFactions
+    // garante guild_rank in ['e'..'s']). Entrada DIRETA, sem admissão
+    // eliminatória. Promove faction_type='guild', cria membership
+    // row, emite FactionJoined direto.
+    if (factionId == 'guild') {
+      await _confirmGuildDirect(player.id);
+      return;
+    }
+
     // Sprint 3.4 Etapa A — bug histórico corrigido. Antes:
     //   - players.faction_type = 'pending:X' era setado direto via SQL
     //   - QuestAdmissionService NÃO era chamado (foi `.bakado` na 3.1
@@ -141,16 +164,14 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
     //     missões de admissão.
     //
     // Agora: setamos `pending:X` E chamamos `startFactionAdmission`
-    // que cria 3 quests em `player_mission_progress` (tabOrigin=admission).
-    // Etapa B vai estender pra "3 quests × 3 sub-tasks automáticas".
+    // que cria N quests em `player_mission_progress` (tabOrigin=
+    // admission). Sub-Etapa B.2 popula `metaJson` com sub-tasks
+    // automáticas + escala de dificuldade.
     await db.customStatement(
       "UPDATE players SET faction_type = ? WHERE id = ?",
       ['pending:$factionId', player.id],
     );
 
-    // Cria as 3 quests de admissão (foundation). Bug do path JSON
-    // também corrigido na Etapa A — `_loadAdmissionPool` lê direto
-    // `json[factionId]` sem wrapper.
     final admissionService = ref.read(questAdmissionServiceProvider);
     final created = await admissionService.startFactionAdmission(
         player.id, factionId);
@@ -310,6 +331,58 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
     );
   }
 
+  /// Sprint 3.4 Sub-Etapa B.2 — entrada direta na Facção Guilda
+  /// (modelo dual: Aventureiro nível 1 = `guild_rank in ['e'..'s']`,
+  /// já garantido pelo filtro de `_loadFactions`; este flow concede
+  /// nível 2 = `faction_type='guild'`).
+  Future<void> _confirmGuildDirect(int playerId) async {
+    final db = ref.read(appDatabaseProvider);
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+
+    await db.customStatement(
+      "UPDATE players SET faction_type = 'guild' WHERE id = ?",
+      [playerId],
+    );
+    await db.customStatement(
+      'INSERT OR IGNORE INTO player_faction_membership '
+      '(player_id, faction_id, joined_at, left_at, locked_until, '
+      ' debuff_until, admission_attempts) '
+      'VALUES (?, ?, ?, NULL, NULL, NULL, 0)',
+      [playerId, 'guild', nowMs],
+    );
+    await db.customStatement(
+      'UPDATE player_faction_membership SET joined_at = ?, '
+      'left_at = NULL '
+      "WHERE player_id = ? AND faction_id = 'guild' "
+      'AND joined_at IS NULL',
+      [nowMs, playerId],
+    );
+
+    // Emite FactionJoined diretamente (cascata pra listeners
+    // existentes — achievements `event_faction_joined`, etc).
+    ref.read(appEventBusProvider).publish(
+        FactionJoined(playerId: playerId, factionId: 'guild'));
+
+    final updated = await db.managers.playersTable
+        .filter((f) => f.id(playerId))
+        .getSingleOrNull();
+    if (mounted) {
+      ref.read(currentPlayerProvider.notifier).state = updated;
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+                'Você é agora membro oficial da Facção Guilda. '
+                'Buffs ativos.'),
+            backgroundColor: AppColors.shadowAscending,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+        context.go('/guild');
+      }
+    }
+  }
+
   Future<void> _confirmLoneWolf() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -425,6 +498,15 @@ class _FactionCardState extends State<_FactionCard> {
                             _badge('RECOMENDADA', AppColors.gold),
                           if (isSecret)
                             _badge('SECRETA', AppColors.hp),
+                          // Sprint 3.4 Sub-Etapa B.2 — distingue
+                          // visualmente Guilda (entrada direta) das
+                          // outras 7 facções (admissão eliminatória).
+                          if (data['id'] == 'guild')
+                            _badge('ENTRADA DIRETA',
+                                AppColors.shadowAscending)
+                          else if (data['id'] != 'error')
+                            _badge('ADMISSÃO ELIMINATÓRIA',
+                                AppColors.shadowObsessive),
                         ],
                       ),
                       const SizedBox(height: 2),

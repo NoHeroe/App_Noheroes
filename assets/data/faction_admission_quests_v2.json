@@ -1,28 +1,5 @@
 {
-  "_doc": "Sprint 3.4 Etapa B (Sub-Etapa B.1) — catálogo de admissão eliminatória v2. Substitui faction_admission_quests.json (legacy formato simples). Estrutura: cada facção tem N missões sequenciais; cada missão tem M sub_tasks com sub_type canônico (FactionAdmissionSubTaskTypes.all). Sub-tasks são automáticas — sistema observa via FactionAdmissionValidator. Janela de 48h por missão (escalonada por reputação) começa quando a missão é desbloqueada (Sub-Etapa B.2 implementa).",
-
-  "guild": [
-    {
-      "id": "ADM_GUILD_1",
-      "title": "Primeiro Passo do Aventureiro",
-      "description": "Todos começam aqui. Ninguém termina sozinho.",
-      "rank": "E",
-      "sub_tasks": [
-        {"sub_type": "admission_daily_count_window", "target": 5, "label": "Completar 5 dailies em 48h"},
-        {"sub_type": "admission_individual_completed_window", "target": 1, "label": "1 missão individual criada e completada"}
-      ]
-    },
-    {
-      "id": "ADM_GUILD_2",
-      "title": "Compromisso com Caelum",
-      "description": "O Colar pesa. Mas é o peso que sustenta.",
-      "rank": "E",
-      "sub_tasks": [
-        {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 48h"},
-        {"sub_type": "admission_streak_minimum", "target": 2, "label": "Streak de 2 dias mantido"}
-      ]
-    }
-  ],
+  "_doc": "Sprint 3.4 Etapa B v2 — catálogo de admissão eliminatória. Sub-Etapa B.2 (2026-05-04): bloco 'guild' REMOVIDO porque Guilda usa modelo dual (Aventureiro nível 1 via guild_rank E+ + Facção Guilda nível 2 com entrada DIRETA, sem admissão eliminatória). Demais 7 facções (moon_clan/sun_clan/black_legion/new_order/trinity/renegades/error) seguem flow eliminatório com sub-tasks automáticas. Janela 48h por missão (escala por reputação na Sub-Etapa B.2). 25 missões / 67 sub-tasks total.",
 
   "moon_clan": [
     {

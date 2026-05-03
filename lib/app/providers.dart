@@ -23,6 +23,8 @@ import '../domain/services/daily_mission_rollover_service.dart';
 import '../domain/services/daily_mission_stats_service.dart';
 import '../domain/services/daily_pool_service.dart';
 import '../domain/services/player_currency_stats_service.dart';
+import '../data/datasources/local/faction_admission_progress_service.dart';
+import '../data/datasources/local/leave_faction_service.dart';
 import '../data/datasources/local/quest_reward_stats_service.dart';
 import '../domain/services/faction_admission_validator.dart';
 import '../domain/services/player_screens_visited_service.dart';
@@ -479,6 +481,36 @@ final questRewardStatsServiceProvider =
 final factionAdmissionValidatorProvider =
     Provider<FactionAdmissionValidator>((ref) {
   return FactionAdmissionValidator(ref.watch(appDatabaseProvider));
+});
+
+/// Sprint 3.4 Sub-Etapa B.2 — flow de saída de facção (-20 rep +
+/// propagação matriz + lock 7d + debuff 48h). Tratamento especial pra
+/// Guilda preservando guild_rank (Aventureiro nível 1). Sem eager —
+/// é chamado on-demand pela UI.
+final leaveFactionServiceProvider = Provider<LeaveFactionService>((ref) {
+  return LeaveFactionService(
+    db: ref.watch(appDatabaseProvider),
+    bus: ref.watch(appEventBusProvider),
+    factionRep: ref.watch(factionReputationServiceProvider),
+  );
+});
+
+/// Sprint 3.4 Sub-Etapa B.2 — listener que re-avalia sub-tasks de
+/// admissão a cada evento terminal. Sequenciamento + reset em falha.
+/// Eager bootstrap no `NoHeroesApp.build`.
+final factionAdmissionProgressServiceProvider =
+    Provider<FactionAdmissionProgressService>((ref) {
+  final service = FactionAdmissionProgressService(
+    db: ref.watch(appDatabaseProvider),
+    bus: ref.watch(appEventBusProvider),
+    validator: ref.watch(factionAdmissionValidatorProvider),
+    missionRepo: ref.watch(missionRepositoryProvider),
+    factionRep: ref.watch(factionReputationServiceProvider),
+    factionRepo: ref.watch(playerFactionReputationRepositoryProvider),
+  );
+  service.start();
+  ref.onDispose(service.stop);
+  return service;
 });
 
 final dailyMissionGeneratorServiceProvider =
