@@ -549,6 +549,99 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
         context, '$modified missões avançadas em 24h.');
   }
 
+  /// Sprint 3.4 Etapa C — exibe `FactionBuffSnapshot` formatado:
+  /// multipliers efetivos + applied + pending + debuff (se houver).
+  Future<void> _showFactionBuffs() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final snap = await ref
+        .read(factionBuffServiceProvider)
+        .getBuffSnapshot(player.id);
+    if (!mounted) return;
+    final m = snap.multipliers;
+    final lines = <String>[
+      'faction_type: ${player.factionType ?? "(null)"}',
+      '',
+      'MULTIPLIERS efetivos:',
+      '  xp:  ${m.xpMult.toStringAsFixed(2)}',
+      '  gold:${m.goldMult.toStringAsFixed(2)}',
+      '  gems:${m.gemsMult.toStringAsFixed(2)}',
+      '  str: ${m.strengthMult.toStringAsFixed(2)}',
+      '  dex: ${m.dexterityMult.toStringAsFixed(2)}',
+      '  int: ${m.intelligenceMult.toStringAsFixed(2)}',
+      '  hp:  ${m.maxHpMult.toStringAsFixed(2)}',
+      '',
+      if (m.hasDebuff) ...[
+        'DEBUFF ATIVO até ${m.debuffEndsAt?.toIso8601String().substring(0, 16) ?? "?"}',
+        '',
+      ],
+      'APPLIED (${snap.applied.length}):',
+      ...snap.applied.map((e) => '  - ${e.label}'),
+      '',
+      'PENDING (${snap.pending.length}):',
+      ...snap.pending.map((e) => '  - ${e.label}'),
+    ];
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Faction buffs',
+            style: GoogleFonts.cinzelDecorative(
+                color: AppColors.shadowAscending, fontSize: 14)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Text(lines.join('\n'),
+                style: GoogleFonts.robotoMono(
+                    fontSize: 10, color: AppColors.textPrimary)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Sprint 3.4 Etapa C — seta `debuff_until = now + 48h` em
+  /// `player_faction_membership` da facção atual (ou da última row se
+  /// player saiu — caso típico). Permite testar UX sem aguardar 48h
+  /// reais.
+  Future<void> _triggerDebuff48h() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    final db = ref.read(appDatabaseProvider);
+
+    // Procura row da facção atual; se faction_type='none', pega a row
+    // mais recente (ordem por joined_at DESC NULLS LAST).
+    final rows = await db.customSelect(
+      'SELECT faction_id FROM player_faction_membership '
+      'WHERE player_id = ? '
+      'ORDER BY (joined_at IS NULL), joined_at DESC LIMIT 1',
+      variables: [Variable.withInt(player.id)],
+    ).get();
+    if (rows.isEmpty) {
+      if (!mounted) return;
+      AppSnack.error(context,
+          'Sem membership row pra debuffar — entre em uma facção primeiro.');
+      return;
+    }
+    final factionId = rows.first.read<String>('faction_id');
+    final until =
+        DateTime.now().add(const Duration(hours: 48)).millisecondsSinceEpoch;
+
+    await db.customStatement(
+      'UPDATE player_faction_membership SET debuff_until = ? '
+      'WHERE player_id = ? AND faction_id = ?',
+      [until, player.id, factionId],
+    );
+    if (!mounted) return;
+    AppSnack.success(context, 'Debuff 48h ativado em "$factionId".');
+  }
+
   /// Lista rows de `player_faction_membership` + `player_faction_reputation`
   /// pra debug. Mostra timestamps em ISO local pra leitura.
   Future<void> _listMembership() async {
@@ -1187,6 +1280,13 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
             const SizedBox(height: 6),
             _actionBtn('Avançar tempo +24h (admissão atual)',
                 AppColors.shadowObsessive, _advanceAdmissionTime),
+            const SizedBox(height: 6),
+            // Sprint 3.4 Etapa C — buffs runtime.
+            _actionBtn('Mostrar buffs ativos',
+                AppColors.shadowAscending, _showFactionBuffs),
+            const SizedBox(height: 6),
+            _actionBtn('Trigger debuff 48h (manual)',
+                AppColors.hp, _triggerDebuff48h),
             const SizedBox(height: 16),
 
             // 4. MISSÕES DIÁRIAS

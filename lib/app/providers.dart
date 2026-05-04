@@ -27,6 +27,7 @@ import '../data/datasources/local/faction_admission_progress_service.dart';
 import '../data/datasources/local/leave_faction_service.dart';
 import '../data/datasources/local/quest_reward_stats_service.dart';
 import '../domain/services/faction_admission_validator.dart';
+import '../domain/services/faction_buff_service.dart';
 import '../domain/services/player_screens_visited_service.dart';
 import '../data/database/daos/daily_missions_dao.dart';
 import '../data/database/daos/player_daily_mission_stats_dao.dart';
@@ -294,6 +295,7 @@ final rewardGrantServiceProvider = Provider<RewardGrantService>((ref) {
     recipes: ref.watch(playerRecipesServiceProvider),
     factionRep: ref.watch(playerFactionReputationRepositoryProvider),
     eventBus: ref.watch(appEventBusProvider),
+    factionBuff: ref.watch(factionBuffServiceProvider),
   );
 });
 
@@ -497,6 +499,13 @@ final factionAdmissionValidatorProvider =
   return FactionAdmissionValidator(ref.watch(appDatabaseProvider));
 });
 
+/// Sprint 3.4 Etapa C — service que combina catálogo + state do player
+/// e produz multipliers efetivos (xp/gold/gems + atributos virtuais).
+/// Stateless. Lazy-load do JSON no 1º acesso.
+final factionBuffServiceProvider = Provider<FactionBuffService>((ref) {
+  return FactionBuffService(ref.watch(appDatabaseProvider));
+});
+
 /// Sprint 3.4 Sub-Etapa B.2 — flow de saída de facção (-20 rep +
 /// propagação matriz + lock 7d + debuff 48h). Tratamento especial pra
 /// Guilda preservando guild_rank (Aventureiro nível 1). Sem eager —
@@ -622,6 +631,8 @@ final factionReputationServiceProvider =
   return FactionReputationService(
     repo: ref.watch(playerFactionReputationRepositoryProvider),
     bus: ref.watch(appEventBusProvider),
+    db: ref.watch(appDatabaseProvider),
+    factionBuff: ref.watch(factionBuffServiceProvider),
   );
 });
 

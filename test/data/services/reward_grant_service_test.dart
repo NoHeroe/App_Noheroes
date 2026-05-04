@@ -14,6 +14,7 @@ import 'package:noheroes_app/data/repositories/drift/mission_repository_drift.da
 import 'package:noheroes_app/data/repositories/drift/player_achievements_repository_drift.dart';
 import 'package:noheroes_app/data/repositories/drift/player_faction_reputation_repository_drift.dart';
 import 'package:noheroes_app/data/services/reward_grant_service.dart';
+import 'package:noheroes_app/domain/services/faction_buff_service.dart';
 import 'package:noheroes_app/domain/enums/mission_modality.dart';
 import 'package:noheroes_app/domain/enums/mission_tab_origin.dart';
 import 'package:noheroes_app/domain/exceptions/reward_exceptions.dart';
@@ -287,6 +288,168 @@ void main() {
       await pumpEventQueue();
 
       expect(captured, isNull);
+      await sub.cancel();
+    });
+  });
+
+  // ─── Sprint 3.4 Etapa C — buffs de facção em runtime ──────────────
+  //
+  // Constrói um service com FactionBuffService injetado + catálogo
+  // controlado. Verifica xp/gold/gems pós-buff, debuff override (-30%),
+  // e que RewardGranted carrega valores buffed.
+  group('RewardGrantService — buffs de facção (Etapa C)', () {
+    late RewardGrantService buffedService;
+    late FactionBuffService buffService;
+
+    setUp(() {
+      buffService = FactionBuffService(db);
+      buffService.debugSetCatalog(<String, dynamic>{
+        'new_order': {
+          'applied': {
+            'xp_mult': 1.10,
+            'gold_mult': 1.0,
+            'gems_mult': 1.0,
+            'strength_mult': 1.0,
+            'dexterity_mult': 1.0,
+            'intelligence_mult': 1.0,
+            'max_hp_mult': 1.10,
+          },
+          'pending': [],
+        },
+        'sun_clan': {
+          'applied': {
+            'xp_mult': 1.0,
+            'gold_mult': 1.09,
+          },
+          'pending': [],
+        },
+      });
+      final catalog = ItemsCatalogService(db);
+      buffedService = RewardGrantService(
+        db: db,
+        missionRepo: missionRepo,
+        achievementsRepo: PlayerAchievementsRepositoryDrift(db),
+        inventory: PlayerInventoryService(db, catalog),
+        recipes: PlayerRecipesService(db, RecipesCatalogService(db)),
+        factionRep: PlayerFactionReputationRepositoryDrift(db),
+        eventBus: bus,
+        factionBuff: buffService,
+      );
+    });
+
+    Future<int> seedFactionPlayer(String factionType) async {
+      return db.customInsert(
+        "INSERT INTO players (email, password_hash, shadow_name, level, xp, "
+        "xp_to_next, gold, gems, strength, dexterity, intelligence, "
+        "constitution, spirit, charisma, attribute_points, shadow_corruption, "
+        "vitalism_level, vitalism_xp, faction_type) "
+        "VALUES (?, ?, 'Sombra', 1, 0, 100, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, ?)",
+        variables: [
+          Variable.withString('test@test.com'),
+          Variable.withString('hash'),
+          Variable.withString(factionType),
+        ],
+      );
+    }
+
+    test('Nova Ordem +10% XP: reward 50 XP → player ganha 55', () async {
+      // Usa valor que NÃO cruza xp_to_next=100 (evita level up que reseta
+      // residual e desviaria a asserção do que estamos validando).
+      final playerId = await seedFactionPlayer('new_order');
+      final missionId = await _seedMission(db, playerId);
+
+      await buffedService.grant(
+        missionProgressId: missionId,
+        playerId: playerId,
+        resolved: const RewardResolved(xp: 50),
+      );
+
+      final rows = await db.customSelect(
+          'SELECT xp, level FROM players WHERE id = ?',
+          variables: [Variable.withInt(playerId)]).get();
+      expect(rows.single.data['xp'], 55, reason: 'round(50 × 1.10) = 55');
+      expect(rows.single.data['level'], 1, reason: 'sem level up');
+    });
+
+    test('Sol +9% gold: reward 50 gold → player ganha 55 (round)', () async {
+      final playerId = await seedFactionPlayer('sun_clan');
+      final missionId = await _seedMission(db, playerId);
+
+      await buffedService.grant(
+        missionProgressId: missionId,
+        playerId: playerId,
+        resolved: const RewardResolved(gold: 50),
+      );
+
+      final rows = await db.customSelect(
+          'SELECT gold FROM players WHERE id = ?',
+          variables: [Variable.withInt(playerId)]).get();
+      // round(50 × 1.09) = round(54.5) = 54 (Banker rounding) ou 55 (round half away).
+      // Dart .round() em num: round half away from zero → 55.
+      expect(rows.single.data['gold'], 55);
+    });
+
+    test('Player sem facção (faction_type=none) → sem buff', () async {
+      final playerId = await seedFactionPlayer('none');
+      final missionId = await _seedMission(db, playerId);
+
+      await buffedService.grant(
+        missionProgressId: missionId,
+        playerId: playerId,
+        resolved: const RewardResolved(xp: 50, gold: 50),
+      );
+
+      final rows = await db.customSelect(
+          'SELECT xp, gold FROM players WHERE id = ?',
+          variables: [Variable.withInt(playerId)]).get();
+      expect(rows.single.data['xp'], 50);
+      expect(rows.single.data['gold'], 50);
+    });
+
+    test('Debuff -30%: reward 50 XP / 50 gold → 35 / 35', () async {
+      final playerId = await seedFactionPlayer('new_order');
+      final missionId = await _seedMission(db, playerId);
+      // Seed debuff em member row.
+      final until =
+          DateTime.now().add(const Duration(hours: 24)).millisecondsSinceEpoch;
+      await db.customStatement(
+        'INSERT INTO player_faction_membership '
+        '(player_id, faction_id, debuff_until) VALUES (?, ?, ?)',
+        [playerId, 'new_order', until],
+      );
+
+      await buffedService.grant(
+        missionProgressId: missionId,
+        playerId: playerId,
+        resolved: const RewardResolved(xp: 50, gold: 50),
+      );
+
+      final rows = await db.customSelect(
+          'SELECT xp, gold FROM players WHERE id = ?',
+          variables: [Variable.withInt(playerId)]).get();
+      // round(50 × 0.7) = 35; round(50 × 0.7) = 35.
+      expect(rows.single.data['xp'], 35);
+      expect(rows.single.data['gold'], 35);
+    });
+
+    test('RewardGranted carrega valores PÓS-buff', () async {
+      final playerId = await seedFactionPlayer('new_order');
+      final missionId = await _seedMission(db, playerId);
+
+      RewardGranted? captured;
+      final sub = bus.on<RewardGranted>().listen((e) => captured = e);
+
+      await buffedService.grant(
+        missionProgressId: missionId,
+        playerId: playerId,
+        resolved: const RewardResolved(xp: 50),
+      );
+      await pumpEventQueue();
+
+      expect(captured, isNotNull);
+      // Evento traz JSON com xp pós-buff (55), não 50.
+      expect(captured!.rewardResolvedJson, contains('"xp":55'));
+
       await sub.cancel();
     });
   });

@@ -4,7 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:noheroes_app/core/events/app_event_bus.dart';
 import 'package:noheroes_app/core/events/faction_events.dart';
 import 'package:noheroes_app/data/database/app_database.dart';
+import 'package:drift/drift.dart' show Variable;
+
 import 'package:noheroes_app/data/repositories/drift/player_faction_reputation_repository_drift.dart';
+import 'package:noheroes_app/domain/services/faction_buff_service.dart';
 import 'package:noheroes_app/domain/services/faction_reputation_service.dart';
 
 void main() {
@@ -128,6 +131,107 @@ void main() {
       await service.adjustReputation(
           playerId: 1, factionId: 'guild', delta: -500);
       expect(await service.current(1, 'guild'), 0);
+    });
+  });
+
+  // ─── Sprint 3.4 Etapa C — xpMult universal aplica em rep ──────────
+  group('FactionReputationService — xpMult universal (Etapa C)', () {
+    late FactionReputationService buffedService;
+    late FactionBuffService buffService;
+    const playerId = 1;
+
+    setUp(() async {
+      buffService = FactionBuffService(db);
+      buffService.debugSetCatalog(<String, dynamic>{
+        'guild': {
+          'applied': {'xp_mult': 1.10},  // hipotético — Guilda buff ativo
+          'pending': [],
+        },
+        'new_order': {
+          'applied': {'xp_mult': 1.10},
+          'pending': [],
+        },
+      });
+      buffedService = FactionReputationService(
+        repo: PlayerFactionReputationRepositoryDrift(db),
+        bus: bus,
+        db: db,
+        factionBuff: buffService,
+      );
+    });
+
+    Future<void> seedPlayer(String factionType) async {
+      await db.customStatement(
+        "INSERT INTO players (id, email, password_hash, faction_type) "
+        "VALUES (?, ?, ?, ?)",
+        [playerId, 't@t.com', 'hash', factionType],
+      );
+    }
+
+    test('Player Nova Ordem ganhando rep em moon_clan: +10 → +11 (round)',
+        () async {
+      await seedPlayer('new_order');
+      // sun_clan/moon_clan/etc não têm relação na matriz com new_order
+      // (ver kFactionAlliances Sprint 3.4 Q13). Vou usar moon_clan que
+      // tem rivais — mas cuidado: matriz pode propagar.
+      // Simplificação: usar 'noryan' (não existe na matriz) → sem propagação.
+      await buffedService.adjustReputation(
+        playerId: playerId,
+        factionId: 'noryan',
+        delta: 10,
+      );
+      // round(10 × 1.10) = 11.
+      expect(await buffedService.current(playerId, 'noryan'), 61);
+    });
+
+    test('OPÇÃO A: Guilda member ganhando rep da Guilda → SEM buff', () async {
+      await seedPlayer('guild');
+      await buffedService.adjustReputation(
+        playerId: playerId,
+        factionId: 'guild',
+        delta: 10,
+      );
+      // Sem buff (OPÇÃO A): delta cru +10. Default 50 → 60.
+      // Mas matriz Guilda propaga +0.1 pra outras 7 facções (delta original).
+      expect(await buffedService.current(playerId, 'guild'), 60);
+    });
+
+    test('OPÇÃO A: Guilda member ganhando rep de OUTRA facção → COM buff',
+        () async {
+      await seedPlayer('guild');
+      // Hipotético: ganha +10 rep em moon_clan. Buff 1.10 aplica.
+      // moon_clan não está na matriz com noryan → sem propagação confusa.
+      // Mas moon_clan TEM matriz: rivais sun_clan -0.5, alianças etc.
+      // Pra evitar propagações, uso 'noryan' (não na matriz).
+      await buffedService.adjustReputation(
+        playerId: playerId,
+        factionId: 'noryan',
+        delta: 10,
+      );
+      // round(10 × 1.10) = 11. Default 50 → 61.
+      expect(await buffedService.current(playerId, 'noryan'), 61);
+    });
+
+    test('Delta NEGATIVO não amplifica (penalidade passa cru)', () async {
+      await seedPlayer('new_order');
+      // Player Nova Ordem com xp_mult=1.10. Delta -10 → fica -10 (não -11).
+      await buffedService.adjustReputation(
+        playerId: playerId,
+        factionId: 'noryan',
+        delta: -10,
+      );
+      // Default 50 - 10 (cru) = 40.
+      expect(await buffedService.current(playerId, 'noryan'), 40);
+    });
+
+    test('Player sem facção → mults 1.0 → sem buff', () async {
+      await seedPlayer('none');
+      await buffedService.adjustReputation(
+        playerId: playerId,
+        factionId: 'noryan',
+        delta: 10,
+      );
+      expect(await buffedService.current(playerId, 'noryan'), 60);
     });
   });
 }

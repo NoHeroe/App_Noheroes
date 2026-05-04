@@ -8,6 +8,7 @@ import '../../../core/utils/guild_rank.dart';
 import '../../../core/utils/item_equip_policy.dart';
 import '../../../domain/enums/equipment_slot.dart';
 import '../../../domain/enums/item_rarity.dart';
+import '../../../domain/models/faction_buff_multipliers.dart';
 import '../../../domain/models/inventory_entry_with_spec.dart';
 import '../../shared/widgets/feature_chip.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
@@ -38,6 +39,24 @@ final aggregatedEquipmentStatsProvider =
       .aggregatedStatsOf(player.id);
 });
 
+/// Sprint 3.4 Etapa C — snapshot de buffs ativos+pending da facção.
+/// Reage a mudanças do player (faction_type, debuff_until via membership).
+final factionBuffSnapshotProvider =
+    FutureProvider.autoDispose<FactionBuffSnapshot>((ref) async {
+  final player = ref.watch(currentPlayerProvider);
+  if (player == null) return FactionBuffSnapshot.empty;
+  return ref.read(factionBuffServiceProvider).getBuffSnapshot(player.id);
+});
+
+/// Sprint 3.4 Etapa C — atributos efetivos pós-buff (str/dex/int/maxHp).
+final effectiveAttributesProvider =
+    FutureProvider.autoDispose<EffectiveAttributes>((ref) async {
+  final player = ref.watch(currentPlayerProvider);
+  if (player == null) return EffectiveAttributes.empty;
+  return ref.read(factionBuffServiceProvider)
+      .getEffectiveAttributes(player.id);
+});
+
 class CharacterScreen extends ConsumerWidget {
   const CharacterScreen({super.key});
 
@@ -52,6 +71,12 @@ class CharacterScreen extends ConsumerWidget {
     // (síncrono, só spec.stats) — runas nunca eram somadas.
     final aggregatedAsync = ref.watch(aggregatedEquipmentStatsProvider);
     final stats = aggregatedAsync.value ?? const <String, num>{};
+
+    // Sprint 3.4 Etapa C — buffs de facção em runtime.
+    final buffSnapshot =
+        ref.watch(factionBuffSnapshotProvider).value ?? FactionBuffSnapshot.empty;
+    final effective =
+        ref.watch(effectiveAttributesProvider).value ?? EffectiveAttributes.empty;
 
     return Scaffold(
       backgroundColor: AppColors.black,
@@ -72,9 +97,15 @@ class CharacterScreen extends ConsumerWidget {
                         const SizedBox(height: 12),
                         _buildGuildRankCard(player),
                         const SizedBox(height: 12),
-                        _buildAttributes(context, ref, player),
+                        _buildAttributes(context, ref, player, effective),
                         const SizedBox(height: 12),
                         if (player != null) StatsPanel(player: player),
+                        if (buffSnapshot.applied.isNotEmpty ||
+                            buffSnapshot.pending.isNotEmpty ||
+                            buffSnapshot.multipliers.hasDebuff) ...[
+                          const SizedBox(height: 12),
+                          _buildFactionBuffsSection(buffSnapshot),
+                        ],
                         if (stats.isNotEmpty) ...[
                           const SizedBox(height: 12),
                           _buildEquipmentStatsSummary(stats),
@@ -597,18 +628,28 @@ class CharacterScreen extends ConsumerWidget {
         GuildRank.s    => Colors.deepOrange,
       };
 
-  Widget _buildAttributes(BuildContext context, WidgetRef ref, player) {
+  Widget _buildAttributes(BuildContext context, WidgetRef ref, player,
+      EffectiveAttributes effective) {
+    // Sprint 3.4 Etapa C — `effective` traz valores pós-buff de facção.
+    // Pra atributos com delta != 0, rendererá "12 → 13 (+1)" ao lado do
+    // valor base. Atributos sem buff (constitution, spirit) renderizam
+    // sem indicador.
     final attrs = [
       ('Força',        'strength',     (player?.strength     ?? 1),
-          Icons.fitness_center,         AppColors.hp,           'Poder físico, dano e carga'),
+          Icons.fitness_center,         AppColors.hp,           'Poder físico, dano e carga',
+          effective.strengthEffective, effective.strengthDelta),
       ('Destreza',     'dexterity',    (player?.dexterity    ?? 1),
-          Icons.speed,                  AppColors.shadowStable, 'Precisão, crítico e esquiva'),
+          Icons.speed,                  AppColors.shadowStable, 'Precisão, crítico e esquiva',
+          effective.dexterityEffective, effective.dexterityDelta),
       ('Inteligência', 'intelligence', (player?.intelligence ?? 1),
-          Icons.psychology_outlined,    AppColors.mp,           'Dano mágico e resistência'),
+          Icons.psychology_outlined,    AppColors.mp,           'Dano mágico e resistência',
+          effective.intelligenceEffective, effective.intelligenceDelta),
       ('Constituição', 'constitution', (player?.constitution ?? 1),
-          Icons.shield_outlined,        AppColors.xp,           'HP máximo e resistência física'),
+          Icons.shield_outlined,        AppColors.xp,           'HP máximo e resistência física',
+          (player?.constitution ?? 1), 0),
       ('Espírito',     'spirit',       (player?.spirit       ?? 1),
-          Icons.self_improvement,       AppColors.gold,         'MP, vitalismo e estabilidade'),
+          Icons.self_improvement,       AppColors.gold,         'MP, vitalismo e estabilidade',
+          (player?.spirit ?? 1), 0),
     ];
 
     final hasPoints = (player?.attributePoints ?? 0) > 0;
@@ -641,6 +682,8 @@ class CharacterScreen extends ConsumerWidget {
           ...attrs.map((a) {
             final base = a.$3 as int;
             final color = a.$5 as Color;
+            final eff = a.$7 as int;
+            final delta = a.$8 as int;
             return Padding(
               padding: const EdgeInsets.only(bottom: 14),
               child: Column(
@@ -654,11 +697,25 @@ class CharacterScreen extends ConsumerWidget {
                           style: GoogleFonts.roboto(
                               fontSize: 13, color: AppColors.textPrimary)),
                     ),
-                    Text('$base',
-                        style: GoogleFonts.cinzelDecorative(
-                            fontSize: 14,
-                            color: color,
-                            fontWeight: FontWeight.bold)),
+                    if (delta > 0) ...[
+                      Text('$base → ',
+                          style: GoogleFonts.cinzelDecorative(
+                              fontSize: 12, color: AppColors.textMuted)),
+                      Text('$eff',
+                          style: GoogleFonts.cinzelDecorative(
+                              fontSize: 14,
+                              color: color,
+                              fontWeight: FontWeight.bold)),
+                      const SizedBox(width: 4),
+                      Text('(+$delta)',
+                          style: GoogleFonts.roboto(
+                              fontSize: 10, color: AppColors.gold)),
+                    ] else
+                      Text('$base',
+                          style: GoogleFonts.cinzelDecorative(
+                              fontSize: 14,
+                              color: color,
+                              fontWeight: FontWeight.bold)),
                     if (hasPoints) ...[
                       const SizedBox(width: 10),
                       GestureDetector(
@@ -699,6 +756,84 @@ class CharacterScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  // Sprint 3.4 Etapa C — seção de buffs de facção. Mostra:
+  // 1. Alerta de DEBUFF DE SAÍDA (-30% XP/gold) com timestamp se ativo
+  // 2. Lista de buffs APLICADOS (verde) — runtime hoje
+  // 3. Lista de buffs FUTUROS (cinza) — pending narrativos
+  Widget _buildFactionBuffsSection(FactionBuffSnapshot snap) {
+    final m = snap.multipliers;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (m.hasDebuff) ...[
+            Row(children: [
+              const Icon(Icons.warning_amber_rounded,
+                  color: AppColors.hp, size: 16),
+              const SizedBox(width: 6),
+              Text('DEBUFF DE SAÍDA',
+                  style: GoogleFonts.cinzelDecorative(
+                      fontSize: 11,
+                      color: AppColors.hp,
+                      letterSpacing: 1.5)),
+            ]),
+            const SizedBox(height: 8),
+            Text(
+              '-30% XP / -30% ouro até ${_fmtDebuffEnd(m.debuffEndsAt)}',
+              style: GoogleFonts.roboto(
+                  fontSize: 11, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 14),
+          ],
+          if (snap.applied.isNotEmpty) ...[
+            Text('BUFFS ATIVOS',
+                style: GoogleFonts.cinzelDecorative(
+                    fontSize: 11,
+                    color: AppColors.shadowAscending,
+                    letterSpacing: 2)),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: snap.applied
+                  .map((e) => _bonusChip(e.label, AppColors.shadowAscending))
+                  .toList(growable: false),
+            ),
+            if (snap.pending.isNotEmpty) const SizedBox(height: 14),
+          ],
+          if (snap.pending.isNotEmpty) ...[
+            Text('BUFFS FUTUROS',
+                style: GoogleFonts.cinzelDecorative(
+                    fontSize: 11,
+                    color: AppColors.textMuted,
+                    letterSpacing: 2)),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: snap.pending
+                  .map((e) => _bonusChip(e.label, AppColors.textMuted))
+                  .toList(growable: false),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _fmtDebuffEnd(DateTime? at) {
+    if (at == null) return '?';
+    String pad(int n) => n.toString().padLeft(2, '0');
+    return '${pad(at.day)}/${pad(at.month)} ${pad(at.hour)}:${pad(at.minute)}';
   }
 
   // Novo: mostra stats agregados dos itens equipados (chaves livres —

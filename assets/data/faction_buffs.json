@@ -1,0 +1,126 @@
+{
+  "_doc": "Sprint 3.4 Etapa C — buffs em runtime por facção. xp_mult é UNIVERSAL (afeta XP de quests E reputação ganha). Atributos (strength/dex/int/maxHp) aplicam virtualmente sobre players_table sem mexer no DB. Engine Unity do combate lê EffectiveAttributes (FactionBuffService.getEffectiveAttributes) e usa direto sem recalcular. Debuff de saída (-30% XP/gold por 48h) aplica via player_faction_membership.debuff_until — não está no JSON, é runtime. defense_mult NÃO existe no schema; foi catalogado como pending de cada facção até sistema de combate criar coluna. max_hp_mult alinha 1:1 com players.maxHp.",
+
+  "guild": {
+    "applied": {
+      "xp_mult": 1.0,
+      "gold_mult": 1.0,
+      "gems_mult": 1.0,
+      "strength_mult": 1.0,
+      "dexterity_mult": 1.0,
+      "intelligence_mult": 1.0,
+      "max_hp_mult": 1.0
+    },
+    "pending": [
+      {"label": "Custos zerados em provas de ascensão (sprint futura)"},
+      {"label": "Loja com descontos especiais (sprint futura)"},
+      {"label": "+5% XP/reputação universal (quando missões de guilda existirem)"}
+    ]
+  },
+
+  "moon_clan": {
+    "applied": {
+      "xp_mult": 1.0,
+      "gold_mult": 1.0,
+      "gems_mult": 1.0,
+      "strength_mult": 1.10,
+      "dexterity_mult": 1.10,
+      "intelligence_mult": 1.0,
+      "max_hp_mult": 1.0
+    },
+    "pending": [
+      {"label": "+11% drop de loot de missões (loot system — sprint futura)"}
+    ]
+  },
+
+  "sun_clan": {
+    "applied": {
+      "xp_mult": 1.0,
+      "gold_mult": 1.09,
+      "gems_mult": 1.0,
+      "strength_mult": 1.0,
+      "dexterity_mult": 1.0,
+      "intelligence_mult": 1.22,
+      "max_hp_mult": 1.0
+    },
+    "pending": []
+  },
+
+  "renegades": {
+    "applied": {
+      "xp_mult": 1.0,
+      "gold_mult": 1.10,
+      "gems_mult": 1.0,
+      "strength_mult": 1.0,
+      "dexterity_mult": 1.0,
+      "intelligence_mult": 1.0,
+      "max_hp_mult": 1.0
+    },
+    "pending": [
+      {"label": "+15% chance crítica (sistema de chance crítica — sprint futura)"}
+    ]
+  },
+
+  "new_order": {
+    "applied": {
+      "xp_mult": 1.10,
+      "gold_mult": 1.0,
+      "gems_mult": 1.0,
+      "strength_mult": 1.0,
+      "dexterity_mult": 1.0,
+      "intelligence_mult": 1.0,
+      "max_hp_mult": 1.10
+    },
+    "pending": [
+      {"label": "+15% Defesa (sistema combate Unity — sprint futura)"}
+    ]
+  },
+
+  "black_legion": {
+    "applied": {
+      "xp_mult": 1.05,
+      "gold_mult": 1.0,
+      "gems_mult": 1.0,
+      "strength_mult": 1.25,
+      "dexterity_mult": 1.0,
+      "intelligence_mult": 1.0,
+      "max_hp_mult": 1.0
+    },
+    "pending": [
+      {"label": "+10% drop de equipamento (loot system — sprint futura)"}
+    ]
+  },
+
+  "trinity": {
+    "applied": {
+      "xp_mult": 1.05,
+      "gold_mult": 1.0,
+      "gems_mult": 1.05,
+      "strength_mult": 1.0,
+      "dexterity_mult": 1.0,
+      "intelligence_mult": 1.0,
+      "max_hp_mult": 1.0
+    },
+    "pending": [
+      {"label": "+12% recuperação de Vita (sistema Vita/Lumen/Umbra — sprint futura)"},
+      {"label": "+12% recuperação de Lumen (sprint futura)"},
+      {"label": "+12% recuperação de Umbra (sprint futura)"}
+    ]
+  },
+
+  "error": {
+    "applied": {
+      "xp_mult": 1.15,
+      "gold_mult": 1.0,
+      "gems_mult": 1.10,
+      "strength_mult": 1.0,
+      "dexterity_mult": 1.0,
+      "intelligence_mult": 1.0,
+      "max_hp_mult": 1.0
+    },
+    "pending": [
+      {"label": "Acesso a recipes secretas (recipe system — sprint futura)"},
+      {"label": "+20% chance de loot raro (loot system — sprint futura)"}
+    ]
+  }
+}
