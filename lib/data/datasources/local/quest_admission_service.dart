@@ -72,8 +72,35 @@ class QuestAdmissionService {
     this._eventBus,
   );
 
-  /// Janela base de 48h em ms.
-  static const int _baseWindowMs = 48 * 60 * 60 * 1000;
+  /// Sprint 3.4 Sub-Etapa B.2 hotfix #2 — janela base por tier
+  /// narrativo da facção. Cada tier reflete dificuldade esperada:
+  ///
+  /// - **MÉDIO** (lua/sol/renegados): 48h. Throughput ~6 dailies.
+  /// - **ALTO** (nova ordem/legião negra/trindade): 72h. Throughput ~9.
+  /// - **EXTREMO** (error): 96h. Throughput ~12.
+  ///
+  /// A janela é o tempo absoluto pra player completar UMA missão da
+  /// admissão; sequenciamento garante que cada missão da sequência
+  /// recebe sua janela própria a partir do unlock. Reputação modifica
+  /// (rep > 70: +24h; rep < 40: -12h) pra criar gradiente de
+  /// dificuldade dinâmica.
+  static const Map<_AdmissionTier, int> _tierBaseWindowMs = {
+    _AdmissionTier.medium: 48 * 60 * 60 * 1000,
+    _AdmissionTier.high: 72 * 60 * 60 * 1000,
+    _AdmissionTier.extreme: 96 * 60 * 60 * 1000,
+  };
+
+  /// Mapa de facção pra tier narrativo. Guilda NÃO entra (modelo dual
+  /// — usa entrada direta sem admissão eliminatória).
+  static const Map<String, _AdmissionTier> _factionTier = {
+    'moon_clan': _AdmissionTier.medium,
+    'sun_clan': _AdmissionTier.medium,
+    'renegades': _AdmissionTier.medium,
+    'new_order': _AdmissionTier.high,
+    'black_legion': _AdmissionTier.high,
+    'trinity': _AdmissionTier.high,
+    'error': _AdmissionTier.extreme,
+  };
 
   /// Sub-types que **não sofrem** scaling de threshold (zero/exact).
   static const Set<String> _noScaleSubTypes = {
@@ -140,7 +167,7 @@ class QuestAdmissionService {
 
     // Captura snapshot do estado pra scaling + persistência.
     final reputation = await _readReputation(playerId, factionId);
-    final scale = _calculateScale(reputation);
+    final scale = _calculateScale(factionId, reputation);
     final player = await PlayerDao(_db).findById(playerId);
     final snapshotRank = player?.guildRank ?? 'none';
 
@@ -257,15 +284,38 @@ class QuestAdmissionService {
     return rows.isNotEmpty ? rows.first.read<int>('admission_attempts') : 1;
   }
 
-  /// Calcula janela + multiplier de threshold em função da reputação.
-  ({int windowMs, double thresholdMult}) _calculateScale(int reputation) {
+  /// Sprint 3.4 Sub-Etapa B.2 hotfix #2 — janela escalada por tier
+  /// narrativo da facção + reputação. Threshold sempre escala pela
+  /// reputação (independente do tier).
+  ///
+  /// Tabela final de janelas (ms):
+  ///
+  /// | Tier | rep < 40 (-12h) | rep 40..70 (base) | rep > 70 (+24h) |
+  /// |---|---|---|---|
+  /// | MÉDIO  | 36h | 48h  | 72h  |
+  /// | ALTO   | 60h | 72h  | 96h  |
+  /// | EXTREMO| 84h | 96h  | 120h |
+  ///
+  /// `factionId` desconhecido (não está em `_factionTier`) cai em
+  /// MÉDIO como default seguro. Defesa em profundidade — não deveria
+  /// acontecer no flow normal porque caller já valida factionId.
+  ({int windowMs, double thresholdMult}) _calculateScale(
+      String factionId, int reputation) {
+    final tier = _factionTier[factionId] ?? _AdmissionTier.medium;
+    final baseMs = _tierBaseWindowMs[tier]!;
+    int windowMs;
+    double thresholdMult;
     if (reputation > 70) {
-      return (windowMs: 72 * 60 * 60 * 1000, thresholdMult: 0.85);
+      windowMs = baseMs + 24 * 60 * 60 * 1000; // +24h
+      thresholdMult = 0.85;
+    } else if (reputation < 40) {
+      windowMs = baseMs - 12 * 60 * 60 * 1000; // -12h
+      thresholdMult = 1.20;
+    } else {
+      windowMs = baseMs;
+      thresholdMult = 1.0;
     }
-    if (reputation < 40) {
-      return (windowMs: 36 * 60 * 60 * 1000, thresholdMult: 1.20);
-    }
-    return (windowMs: _baseWindowMs, thresholdMult: 1.0);
+    return (windowMs: windowMs, thresholdMult: thresholdMult);
   }
 
   /// Aplica scaling no target — respeitando regras (zero/exact não
@@ -341,3 +391,8 @@ class QuestAdmissionService {
     }
   }
 }
+
+/// Sprint 3.4 Sub-Etapa B.2 hotfix #2 — tier narrativo da admissão.
+/// Define janela base + dificuldade esperada. Mapping concreto de
+/// facção pra tier vive em [QuestAdmissionService._factionTier].
+enum _AdmissionTier { medium, high, extreme }

@@ -153,8 +153,8 @@ class FactionAdmissionValidator {
     required FactionAdmissionSubTask subTask,
   }) async {
     switch (subTask.subType) {
-      case FactionAdmissionSubTaskTypes.dailyCountWindow:
-        return _evalDailyCountWindow(playerId, subTask);
+      case FactionAdmissionSubTaskTypes.modalityCountWindow:
+        return _evalModalityCountWindow(playerId, subTask);
       case FactionAdmissionSubTaskTypes.zeroFailedWindow:
         return _evalZeroFailedWindow(playerId, subTask);
       case FactionAdmissionSubTaskTypes.fullPerfectDayWindow:
@@ -184,11 +184,17 @@ class FactionAdmissionValidator {
 
   // ─── implementações por sub-type ──────────────────────────────────
 
-  /// Conta dailies completed/partial na janela. Filtra por modalidade
-  /// se params.modalidade != null. Filtra por rank se
-  /// params.respect_snapshot_rank == true (verifica player.guildRank
-  /// corrente >= snapshotRank).
-  Future<SubTaskEvaluation> _evalDailyCountWindow(
+  /// Sprint 3.4 Sub-Etapa B.2 hotfix #2 — renomeado de
+  /// `_evalDailyCountWindow`. Conta atividades por **pilar** (modalidade)
+  /// na janela. Hoje aterriza apenas em `daily_missions` (cap por
+  /// throughput de 3 dailies/dia). Sprint futura expande UNION com
+  /// `player_mission_progress` (individuais/classe/extras) quando D1
+  /// for endereçada (ver dívidas_pos_sprint_3.4.md).
+  ///
+  /// Filtra por modalidade se `params.modalidade != null`. Filtra por
+  /// rank se `params.respect_snapshot_rank == true` (verifica
+  /// `player.guildRank` corrente >= `snapshotRank`).
+  Future<SubTaskEvaluation> _evalModalityCountWindow(
       int playerId, FactionAdmissionSubTask sub) async {
     final modalidade = sub.params?['modalidade'] as String?;
     final respectRank =

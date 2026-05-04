@@ -1,5 +1,5 @@
 {
-  "_doc": "Sprint 3.4 Etapa B v2 — catálogo de admissão eliminatória. Sub-Etapa B.2 (2026-05-04): bloco 'guild' REMOVIDO porque Guilda usa modelo dual (Aventureiro nível 1 via guild_rank E+ + Facção Guilda nível 2 com entrada DIRETA, sem admissão eliminatória). Demais 7 facções (moon_clan/sun_clan/black_legion/new_order/trinity/renegades/error) seguem flow eliminatório com sub-tasks automáticas. Janela 48h por missão (escala por reputação na Sub-Etapa B.2). 25 missões / 67 sub-tasks total.",
+  "_doc": "Sprint 3.4 Etapa B v2 — catálogo de admissão eliminatória. Sub-Etapa B.2 hotfix #2 (2026-05-04): catálogo recalibrado contra throughput real (~3 dailies/dia) com margem escalada por tier (MÉDIO 80%/ALTO 85%/EXTREMO 90%). Sub-type renomeado de `admission_daily_count_window` → `admission_modality_count_window` (aceita filtro de pilar via params.modalidade; sem modalidade = qualquer). Hoje conta apenas `daily_missions`; expansão pra individuais/classe é dívida D1 catalogada em `.vault/docs/sprints/dividas_pos_sprint_3.4.md`. Janelas base: MÉDIO 48h, ALTO 72h, EXTREMO 96h (escala +24h/-12h por reputação na Sub-Etapa B.2). 25 missões / 67 sub-tasks total. Modelo dual da Guilda — bloco 'guild' permanece REMOVIDO.",
 
   "moon_clan": [
     {
@@ -8,7 +8,7 @@
       "description": "A Lua escuta quem sabe ouvir-se primeiro.",
       "rank": "E",
       "sub_tasks": [
-        {"sub_type": "admission_daily_count_window", "target": 5, "params": {"modalidade": "mental"}, "label": "5 missões mentais em 48h"},
+        {"sub_type": "admission_modality_count_window", "target": 2, "params": {"modalidade": "mental"}, "label": "2 missões mentais em 48h"},
         {"sub_type": "admission_diary_entry_window", "target": 1, "label": "1 entrada de diário escrita"}
       ]
     },
@@ -18,7 +18,7 @@
       "description": "Quem ataca sem aviso ataca duas vezes — em silêncio e em precisão.",
       "rank": "D",
       "sub_tasks": [
-        {"sub_type": "admission_daily_count_window", "target": 5, "params": {"modalidade": "fisico", "respect_snapshot_rank": true}, "label": "5 missões físicas em 48h (rank D+)"},
+        {"sub_type": "admission_modality_count_window", "target": 2, "params": {"modalidade": "fisico", "respect_snapshot_rank": true}, "label": "2 missões físicas em 48h (rank D+)"},
         {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 48h"},
         {"sub_type": "admission_streak_minimum", "target": 2, "label": "Streak de 2 dias"}
       ]
@@ -30,7 +30,7 @@
       "rank": "D",
       "sub_tasks": [
         {"sub_type": "admission_full_perfect_day_window", "target": 1, "label": "100% das dailies em 1 dia"},
-        {"sub_type": "admission_daily_count_window", "target": 10, "label": "10 dailies quaisquer em 48h"}
+        {"sub_type": "admission_modality_count_window", "target": 5, "label": "5 dailies quaisquer em 48h"}
       ]
     }
   ],
@@ -42,7 +42,7 @@
       "description": "O sol não pede permissão pra nascer. Você também não.",
       "rank": "E",
       "sub_tasks": [
-        {"sub_type": "admission_daily_count_window", "target": 5, "params": {"modalidade": "fisico"}, "label": "5 missões físicas em 48h"},
+        {"sub_type": "admission_modality_count_window", "target": 2, "params": {"modalidade": "fisico"}, "label": "2 missões físicas em 48h"},
         {"sub_type": "admission_streak_minimum", "target": 1, "label": "Streak de 1 dia"}
       ]
     },
@@ -52,7 +52,7 @@
       "description": "Calor sustentado é mais raro que explosão. Prove durabilidade.",
       "rank": "D",
       "sub_tasks": [
-        {"sub_type": "admission_daily_count_window", "target": 5, "params": {"modalidade": "fisico", "respect_snapshot_rank": true}, "label": "5 missões físicas em 48h (rank D+)"},
+        {"sub_type": "admission_modality_count_window", "target": 2, "params": {"modalidade": "fisico", "respect_snapshot_rank": true}, "label": "2 missões físicas em 48h (rank D+)"},
         {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 48h"}
       ]
     },
@@ -63,8 +63,8 @@
       "rank": "D",
       "sub_tasks": [
         {"sub_type": "admission_full_perfect_day_window", "target": 1, "label": "100% das dailies em 1 dia"},
-        {"sub_type": "admission_gold_earned_via_quests_window", "target": 80, "label": "80+ ouro acumulado via quests"},
-        {"sub_type": "admission_streak_minimum", "target": 3, "label": "Streak de 3 dias"}
+        {"sub_type": "admission_gold_earned_via_quests_window", "target": 70, "label": "70+ ouro acumulado via quests em 48h"},
+        {"sub_type": "admission_streak_minimum", "target": 2, "label": "Streak de 2 dias"}
       ]
     }
   ],
@@ -76,7 +76,7 @@
       "description": "Liberdade custa. Mostre que sabe pagar o próprio caminho.",
       "rank": "E",
       "sub_tasks": [
-        {"sub_type": "admission_gold_earned_via_quests_window", "target": 50, "label": "Acumular 50+ ouro via quests em 48h"},
+        {"sub_type": "admission_gold_earned_via_quests_window", "target": 40, "label": "Acumular 40+ ouro via quests em 48h"},
         {"sub_type": "admission_individual_completed_window", "target": 1, "label": "1 missão individual completada"}
       ]
     },
@@ -110,9 +110,9 @@
       "description": "Resistência começa em ler o que ninguém quer escrever.",
       "rank": "D",
       "sub_tasks": [
-        {"sub_type": "admission_daily_count_window", "target": 8, "params": {"modalidade": "mental"}, "label": "8 missões mentais em 48h"},
+        {"sub_type": "admission_modality_count_window", "target": 3, "params": {"modalidade": "mental"}, "label": "3 missões mentais em 72h"},
         {"sub_type": "admission_diary_entry_window", "target": 2, "label": "2 entradas de diário"},
-        {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 48h"}
+        {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 72h"}
       ]
     },
     {
@@ -121,7 +121,7 @@
       "description": "Cada dia perfeito é um manifesto contra o caos.",
       "rank": "D",
       "sub_tasks": [
-        {"sub_type": "admission_daily_count_window", "target": 10, "params": {"modalidade": "mental", "respect_snapshot_rank": true}, "label": "10 missões mentais em 48h (rank D+)"},
+        {"sub_type": "admission_modality_count_window", "target": 3, "params": {"modalidade": "mental", "respect_snapshot_rank": true}, "label": "3 missões mentais em 72h (rank D+)"},
         {"sub_type": "admission_full_perfect_day_window", "target": 1, "label": "100% das dailies em 1 dia"},
         {"sub_type": "admission_streak_minimum", "target": 3, "label": "Streak de 3 dias"}
       ]
@@ -133,7 +133,7 @@
       "rank": "C",
       "sub_tasks": [
         {"sub_type": "admission_no_partial_day_window", "target": 2, "label": "2 dias sem partials"},
-        {"sub_type": "admission_daily_count_window", "target": 15, "params": {"respect_snapshot_rank": true}, "label": "15 dailies quaisquer (rank C+)"},
+        {"sub_type": "admission_modality_count_window", "target": 8, "params": {"respect_snapshot_rank": true}, "label": "8 dailies quaisquer (rank C+)"},
         {"sub_type": "admission_individual_completed_window", "target": 2, "label": "2 missões individuais"}
       ]
     }
@@ -142,13 +142,14 @@
   "black_legion": [
     {
       "id": "ADM_LEGION_1",
+      "_design_note": "Ajuste A do CEO: target 5 físicas em 72h é EXCEÇÃO ao cap teórico do tier (cap = 3 físicas). Justificada como filtro narrativo: Legião premia VOLUME físico — adepto físico cumpre (gerador adaptativo dá ~5-6 físicas/72h pra adepto), generalista sofre.",
       "title": "Ordem da Legião",
       "description": "Não há lugar pra hesitação na Legião. Aja.",
       "rank": "D",
       "sub_tasks": [
-        {"sub_type": "admission_daily_count_window", "target": 10, "params": {"modalidade": "fisico"}, "label": "10 missões físicas em 48h"},
+        {"sub_type": "admission_modality_count_window", "target": 5, "params": {"modalidade": "fisico"}, "label": "5 missões físicas em 72h"},
         {"sub_type": "admission_streak_minimum", "target": 3, "label": "Streak de 3 dias"},
-        {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 48h"}
+        {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 72h"}
       ]
     },
     {
@@ -157,7 +158,7 @@
       "description": "Volume sem cair. Esse é o ferro da Legião.",
       "rank": "D",
       "sub_tasks": [
-        {"sub_type": "admission_daily_count_window", "target": 15, "params": {"respect_snapshot_rank": true}, "label": "15 dailies em 48h (rank D+)"},
+        {"sub_type": "admission_modality_count_window", "target": 8, "params": {"respect_snapshot_rank": true}, "label": "8 dailies em 72h (rank D+)"},
         {"sub_type": "admission_no_partial_day_window", "target": 2, "label": "2 dias sem partial completion"}
       ]
     },
@@ -167,9 +168,9 @@
       "description": "Yuna não admite meio-termo. E nem nós.",
       "rank": "C",
       "sub_tasks": [
-        {"sub_type": "admission_no_partial_day_window", "target": 3, "label": "3 dias sem partial"},
+        {"sub_type": "admission_no_partial_day_window", "target": 2, "label": "2 dias sem partial"},
         {"sub_type": "admission_full_perfect_day_window", "target": 2, "label": "2 dias 100%"},
-        {"sub_type": "admission_daily_count_window", "target": 12, "params": {"modalidade": "fisico"}, "label": "12 missões físicas"}
+        {"sub_type": "admission_modality_count_window", "target": 3, "params": {"modalidade": "fisico"}, "label": "3 missões físicas em 72h"}
       ]
     },
     {
@@ -178,9 +179,9 @@
       "description": "A Legião é o último teste. E o primeiro destino.",
       "rank": "C",
       "sub_tasks": [
-        {"sub_type": "admission_daily_count_window", "target": 20, "params": {"respect_snapshot_rank": true}, "label": "20 dailies em 48h (rank C+)"},
-        {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 48h"},
-        {"sub_type": "admission_streak_minimum", "target": 5, "label": "Streak de 5 dias"},
+        {"sub_type": "admission_modality_count_window", "target": 8, "params": {"respect_snapshot_rank": true}, "label": "8 dailies em 72h (rank C+)"},
+        {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 72h"},
+        {"sub_type": "admission_streak_minimum", "target": 3, "label": "Streak de 3 dias"},
         {"sub_type": "admission_individual_completed_window", "target": 2, "label": "2 missões individuais"}
       ]
     }
@@ -189,13 +190,14 @@
   "trinity": [
     {
       "id": "ADM_TRINITY_1",
+      "_design_note": "Ajuste C confirmado: 3+3+3 mantido — equilíbrio é a essência narrativa da Trindade. Player adepto extremo de 1 pilar sofre (gerador adaptativo privilegia 1 pilar); generalista cumpre fácil.",
       "title": "Os Três Aspectos",
       "description": "Corpo, Mente, Espírito. Os três têm que cantar juntos.",
       "rank": "D",
       "sub_tasks": [
-        {"sub_type": "admission_daily_count_window", "target": 3, "params": {"modalidade": "fisico"}, "label": "3 missões físicas em 48h"},
-        {"sub_type": "admission_daily_count_window", "target": 3, "params": {"modalidade": "mental"}, "label": "3 missões mentais em 48h"},
-        {"sub_type": "admission_daily_count_window", "target": 3, "params": {"modalidade": "espiritual"}, "label": "3 missões espirituais em 48h"}
+        {"sub_type": "admission_modality_count_window", "target": 3, "params": {"modalidade": "fisico"}, "label": "3 missões físicas em 72h"},
+        {"sub_type": "admission_modality_count_window", "target": 3, "params": {"modalidade": "mental"}, "label": "3 missões mentais em 72h"},
+        {"sub_type": "admission_modality_count_window", "target": 3, "params": {"modalidade": "espiritual"}, "label": "3 missões espirituais em 72h"}
       ]
     },
     {
@@ -205,18 +207,18 @@
       "rank": "D",
       "sub_tasks": [
         {"sub_type": "admission_diary_entry_window", "target": 2, "label": "2 entradas de diário"},
-        {"sub_type": "admission_daily_count_window", "target": 5, "params": {"modalidade": "espiritual"}, "label": "5 missões espirituais"},
+        {"sub_type": "admission_modality_count_window", "target": 3, "params": {"modalidade": "espiritual"}, "label": "3 missões espirituais em 72h"},
         {"sub_type": "admission_streak_minimum", "target": 2, "label": "Streak de 2 dias"}
       ]
     },
     {
       "id": "ADM_TRINITY_3",
       "title": "Jejum do Conhecimento",
-      "description": "Saber demais cega. Por 48h, abandone o intelecto.",
+      "description": "Saber demais cega. Por 72h, abandone o intelecto.",
       "rank": "C",
       "sub_tasks": [
         {"sub_type": "admission_zero_category_window", "target": 0, "params": {"modalidade": "mental"}, "label": "0 missões mentais completadas (jejum)"},
-        {"sub_type": "admission_daily_count_window", "target": 8, "params": {"modalidade": "espiritual"}, "label": "8 missões espirituais"}
+        {"sub_type": "admission_modality_count_window", "target": 3, "params": {"modalidade": "espiritual"}, "label": "3 missões espirituais em 72h"}
       ]
     },
     {
@@ -226,8 +228,8 @@
       "rank": "C",
       "sub_tasks": [
         {"sub_type": "admission_full_perfect_day_window", "target": 2, "label": "2 dias 100%"},
-        {"sub_type": "admission_daily_count_window", "target": 12, "params": {"respect_snapshot_rank": true}, "label": "12 dailies (rank C+)"},
-        {"sub_type": "admission_streak_minimum", "target": 5, "label": "Streak de 5 dias"}
+        {"sub_type": "admission_modality_count_window", "target": 8, "params": {"respect_snapshot_rank": true}, "label": "8 dailies (rank C+)"},
+        {"sub_type": "admission_streak_minimum", "target": 3, "label": "Streak de 3 dias"}
       ]
     }
   ],
@@ -239,9 +241,9 @@
       "description": "ERROR não convoca. ERROR seleciona quem se nota.",
       "rank": "C",
       "sub_tasks": [
-        {"sub_type": "admission_daily_count_window", "target": 15, "label": "15 dailies em 48h"},
+        {"sub_type": "admission_modality_count_window", "target": 11, "label": "11 dailies em 96h"},
         {"sub_type": "admission_diary_entry_window", "target": 3, "label": "3 entradas de diário"},
-        {"sub_type": "admission_streak_minimum", "target": 5, "label": "Streak de 5 dias"}
+        {"sub_type": "admission_streak_minimum", "target": 4, "label": "Streak de 4 dias"}
       ]
     },
     {
@@ -251,7 +253,7 @@
       "rank": "C",
       "sub_tasks": [
         {"sub_type": "admission_no_partial_day_window", "target": 3, "label": "3 dias sem partial"},
-        {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 48h"},
+        {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 96h"},
         {"sub_type": "admission_individual_completed_window", "target": 3, "label": "3 missões individuais"}
       ]
     },
@@ -261,9 +263,9 @@
       "description": "Os três aspectos. Em rank de elite. Sem desculpa.",
       "rank": "B",
       "sub_tasks": [
-        {"sub_type": "admission_daily_count_window", "target": 3, "params": {"modalidade": "fisico", "respect_snapshot_rank": true}, "label": "3 físicas em 48h (rank B+)"},
-        {"sub_type": "admission_daily_count_window", "target": 3, "params": {"modalidade": "mental", "respect_snapshot_rank": true}, "label": "3 mentais em 48h (rank B+)"},
-        {"sub_type": "admission_daily_count_window", "target": 3, "params": {"modalidade": "espiritual", "respect_snapshot_rank": true}, "label": "3 espirituais em 48h (rank B+)"}
+        {"sub_type": "admission_modality_count_window", "target": 3, "params": {"modalidade": "fisico", "respect_snapshot_rank": true}, "label": "3 físicas em 96h (rank B+)"},
+        {"sub_type": "admission_modality_count_window", "target": 3, "params": {"modalidade": "mental", "respect_snapshot_rank": true}, "label": "3 mentais em 96h (rank B+)"},
+        {"sub_type": "admission_modality_count_window", "target": 3, "params": {"modalidade": "espiritual", "respect_snapshot_rank": true}, "label": "3 espirituais em 96h (rank B+)"}
       ]
     },
     {
@@ -272,8 +274,8 @@
       "description": "Não se queixe. Não pare. Não falhe.",
       "rank": "B",
       "sub_tasks": [
-        {"sub_type": "admission_no_partial_day_window", "target": 5, "label": "5 dias sem partial"},
-        {"sub_type": "admission_daily_count_window", "target": 20, "params": {"respect_snapshot_rank": true}, "label": "20 dailies (rank B+)"}
+        {"sub_type": "admission_no_partial_day_window", "target": 3, "label": "3 dias sem partial"},
+        {"sub_type": "admission_modality_count_window", "target": 11, "params": {"respect_snapshot_rank": true}, "label": "11 dailies (rank B+)"}
       ]
     },
     {
@@ -283,8 +285,8 @@
       "rank": "B",
       "sub_tasks": [
         {"sub_type": "admission_full_perfect_day_window", "target": 3, "label": "3 dias 100%"},
-        {"sub_type": "admission_streak_minimum", "target": 10, "label": "Streak de 10 dias"},
-        {"sub_type": "admission_daily_count_window", "target": 30, "params": {"respect_snapshot_rank": true}, "label": "30 dailies (rank B+)"}
+        {"sub_type": "admission_streak_minimum", "target": 4, "label": "Streak de 4 dias"},
+        {"sub_type": "admission_modality_count_window", "target": 11, "params": {"respect_snapshot_rank": true}, "label": "11 dailies (rank B+)"}
       ]
     }
   ]

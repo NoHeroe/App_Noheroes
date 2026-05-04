@@ -80,7 +80,7 @@ void main() {
 
   // ─── 1. dailyCountWindow ────────────────────────────────────────
 
-  group('admission_daily_count_window', () {
+  group('admission_modality_count_window', () {
     test('atinge target quando há N+ dailies completed na janela',
         () async {
       await insertDaily(id: 1, modalidade: 'mental', status: 'completed', completedAt: 1500);
@@ -90,7 +90,7 @@ void main() {
       final eval = await validator.evaluate(
         playerId: playerId,
         subTask: const FactionAdmissionSubTask(
-          subType: FactionAdmissionSubTaskTypes.dailyCountWindow,
+          subType: FactionAdmissionSubTaskTypes.modalityCountWindow,
           target: 3,
           windowStartMs: windowStart,
           params: {'modalidade': 'mental'},
@@ -106,7 +106,7 @@ void main() {
       final eval = await validator.evaluate(
         playerId: playerId,
         subTask: const FactionAdmissionSubTask(
-          subType: FactionAdmissionSubTaskTypes.dailyCountWindow,
+          subType: FactionAdmissionSubTaskTypes.modalityCountWindow,
           target: 1,
           windowStartMs: windowStart,
           params: {'modalidade': 'mental'},
@@ -123,7 +123,7 @@ void main() {
       final eval = await validator.evaluate(
         playerId: playerId,
         subTask: const FactionAdmissionSubTask(
-          subType: FactionAdmissionSubTaskTypes.dailyCountWindow,
+          subType: FactionAdmissionSubTaskTypes.modalityCountWindow,
           target: 1,
           windowStartMs: windowStart,
           params: {'modalidade': 'fisico'},
@@ -140,7 +140,7 @@ void main() {
       final eval = await validator.evaluate(
         playerId: playerId,
         subTask: const FactionAdmissionSubTask(
-          subType: FactionAdmissionSubTaskTypes.dailyCountWindow,
+          subType: FactionAdmissionSubTaskTypes.modalityCountWindow,
           target: 1,
           windowStartMs: windowStart,
           snapshotRank: 'd',
@@ -505,7 +505,7 @@ void main() {
   group('FactionAdmissionSubTask JSON', () {
     test('toJson/fromJson roundtrip preserva campos', () {
       const original = FactionAdmissionSubTask(
-        subType: FactionAdmissionSubTaskTypes.dailyCountWindow,
+        subType: FactionAdmissionSubTaskTypes.modalityCountWindow,
         target: 5,
         windowStartMs: 12345,
         snapshotRank: 'd',
@@ -538,7 +538,7 @@ void main() {
     // em vez de sub_type cru.
     test('label roundtrip: toJson inclui label se não-null', () {
       const original = FactionAdmissionSubTask(
-        subType: FactionAdmissionSubTaskTypes.dailyCountWindow,
+        subType: FactionAdmissionSubTaskTypes.modalityCountWindow,
         target: 5,
         windowStartMs: 1000,
         label: 'Completar 5 missões mentais em 48h',

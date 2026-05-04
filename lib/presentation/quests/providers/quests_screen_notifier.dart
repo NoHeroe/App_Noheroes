@@ -182,11 +182,20 @@ class QuestsScreenNotifier
         .where((m) => m.modality == MissionModality.individual)
         .toList(growable: false);
 
+    // Sprint 3.4 Sub-Etapa B.2 hotfix #2 — filtra missões de admissão
+    // já encerradas (completed ou failed). Player vê apenas o que
+    // ainda está em progresso ou cadeado. Quando admissão completa
+    // de fato, aba some (vazia) — bom feedback. Histórico curto
+    // ("completed há < 24h" como feedback positivo) é dívida D10.
+    final admissionActive = (results[2] as List<MissionProgress>)
+        .where((m) => m.completedAt == null && m.failedAt == null)
+        .toList(growable: false);
+
     return QuestsScreenState(
       dailyMissionsNew: dailyToday,
       classMissions: results[0] as List<MissionProgress>,
       factionMissions: results[1] as List<MissionProgress>,
-      admissionMissions: results[2] as List<MissionProgress>,
+      admissionMissions: admissionActive,
       individualMissions: individuals,
       extrasCatalog: extrasSpecs,
     );

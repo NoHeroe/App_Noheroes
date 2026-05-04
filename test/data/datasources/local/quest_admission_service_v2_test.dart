@@ -138,15 +138,16 @@ void main() {
         await service.startFactionAdmission(playerId, 'moon_clan');
     final firstMeta =
         jsonDecode(created.first.metaJson) as Map<String, dynamic>;
+    // moon_clan = MÉDIO; rep > 70 escala janela base 48h → 72h.
     expect(firstMeta['window_duration_ms'], 72 * 60 * 60 * 1000);
 
-    // ADM_MOON_1 sub-task 1 = daily_count_window target=5 mental.
-    // Threshold scaling -15% → ceil(5 * 0.85) = ... no, mult=0.85,
-    // floor(4.25) = 4. (Ver _scaleTarget: mult > 1 = ceil; mult < 1 = floor.)
+    // ADM_MOON_1 sub-task 1 (catálogo recalibrado hotfix #2):
+    // modality_count_window target=2 mental. Threshold scaling
+    // -15% → floor(2 * 0.85) = 1. MIN 1 aplicado.
     final subs = (firstMeta['sub_tasks'] as List).cast<Map>();
-    final dailyCount = subs.firstWhere(
-        (s) => s['sub_type'] == 'admission_daily_count_window');
-    expect(dailyCount['target'], 4); // floor(5 * 0.85) = 4
+    final modalityCount = subs.firstWhere(
+        (s) => s['sub_type'] == 'admission_modality_count_window');
+    expect(modalityCount['target'], 1); // floor(2 * 0.85) = 1
   });
 
   test('reputação < 40 → janela 36h + threshold aumentado (+20%)',
@@ -162,13 +163,14 @@ void main() {
         await service.startFactionAdmission(playerId, 'moon_clan');
     final firstMeta =
         jsonDecode(created.first.metaJson) as Map<String, dynamic>;
+    // moon_clan = MÉDIO; rep < 40 escala janela base 48h → 36h.
     expect(firstMeta['window_duration_ms'], 36 * 60 * 60 * 1000);
 
-    // 5 * 1.20 = 6 (ceil pra mult > 1).
+    // ADM_MOON_1 sub-task 1: target=2 × 1.20 = 2.4 → ceil = 3.
     final subs = (firstMeta['sub_tasks'] as List).cast<Map>();
-    final dailyCount = subs.firstWhere(
-        (s) => s['sub_type'] == 'admission_daily_count_window');
-    expect(dailyCount['target'], 6);
+    final modalityCount = subs.firstWhere(
+        (s) => s['sub_type'] == 'admission_modality_count_window');
+    expect(modalityCount['target'], 3); // ceil(2 * 1.20) = 3
   });
 
   // Sprint 3.4 hotfix B.2 — label do catálogo persiste em metaJson.
@@ -184,9 +186,9 @@ void main() {
           reason: 'sub-task deveria ter label persistido');
       expect((s['label'] as String).isNotEmpty, isTrue);
     }
-    // Verifica conteúdo do 1º label (vem do catálogo v2:
-    // ADM_MOON_1 sub-task 1 = "5 missões mentais em 48h").
-    expect(subs.first['label'], contains('5 missões mentais'));
+    // Verifica conteúdo do 1º label (vem do catálogo v2 recalibrado
+    // hotfix #2: ADM_MOON_1 sub-task 1 = "2 missões mentais em 48h").
+    expect(subs.first['label'], contains('missões mentais'));
   });
 
   test('zero_failed_window NÃO sofre scaling (target=0 sempre)',

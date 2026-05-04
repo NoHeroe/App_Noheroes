@@ -24,15 +24,25 @@
 abstract class FactionAdmissionSubTaskTypes {
   FactionAdmissionSubTaskTypes._();
 
-  /// "Completar N dailies de modalidade X em janela Y".
+  /// "Completar N atividades de modalidade X em janela Y" (Sprint 3.4
+  /// Sub-Etapa B.2 hotfix #2 — renomeado de `admission_daily_count_window`
+  /// pra `admission_modality_count_window` porque a intenção é contar
+  /// atividades por **pilar** (físico/mental/espiritual), não
+  /// necessariamente daily missions; sem modalidade = qualquer.
+  ///
+  /// **Estado atual (hotfix #2):** conta apenas `daily_missions`. Dívida
+  /// catalogada (D1 em `dividas_pos_sprint_3.4.md`) — sprint futura
+  /// expande UNION pra individuais/classe/extras quando coluna de pilar
+  /// for adicionada em `player_mission_progress`.
+  ///
   /// `params`:
   ///   - `modalidade`: `String?` (`fisico`/`mental`/`espiritual`/
   ///     `vitalismo`); null = qualquer modalidade
   ///   - opcional `respect_snapshot_rank`: bool — se true, conta
-  ///     apenas dailies completadas com `player.guildRank >=
+  ///     apenas atividades completadas com `player.guildRank >=
   ///     snapshot_rank` (D2 do plan-first)
-  static const String dailyCountWindow =
-      'admission_daily_count_window';
+  static const String modalityCountWindow =
+      'admission_modality_count_window';
 
   /// "0 falhas em janela Y" (D1: niet = failed).
   /// Sucesso = COUNT(daily_missions WHERE status='failed' AND
@@ -92,7 +102,7 @@ abstract class FactionAdmissionSubTaskTypes {
   /// de catálogo (rejeita sub-types desconhecidos com
   /// `FormatException` em vez de silenciosamente ignorar).
   static const Set<String> all = {
-    dailyCountWindow,
+    modalityCountWindow,
     zeroFailedWindow,
     fullPerfectDayWindow,
     individualCompletedWindow,
