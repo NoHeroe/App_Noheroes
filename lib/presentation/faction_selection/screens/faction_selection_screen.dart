@@ -79,6 +79,22 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
         // desbloqueado → escondida.
       }
 
+      // Sprint 3.4 Etapa C hotfix #1 — anexa labels dinâmicos de buffs
+      // lidos do FactionBuffService (catálogo único de fonte canônica).
+      // Substitui strings hardcoded em `data['buffs']` que estavam
+      // desatualizadas pós-recalibragem hotfix #2 da Sub-Etapa B.
+      final buffSvc = ref.read(factionBuffServiceProvider);
+      for (final f in filtered) {
+        try {
+          final preview = await buffSvc.previewLabelsForFaction(f['id'] as String);
+          f['buffs_applied'] = preview.applied;
+          f['buffs_pending'] = preview.pending;
+        } catch (_) {
+          f['buffs_applied'] = const <String>[];
+          f['buffs_pending'] = const <String>[];
+        }
+      }
+
       if (!mounted) return;
       setState(() => _factions = filtered);
     } catch (_) {
@@ -120,7 +136,10 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
                     fontSize: 12,
                     fontStyle: FontStyle.italic)),
             const SizedBox(height: 10),
-            Text('Você receberá 3 missões de admissão.\nComplete-as para entrar na facção.\nFalhar resultará em penalidade de reputação.',
+            // Sprint 3.4 Etapa C hotfix #1 — texto genérico (sem
+            // quantidade exata de missões). O sistema de admissão
+            // gera N missões dinamicamente por facção/tier.
+            Text('Missões de admissão serão geradas para avaliar sua aptidão.\nFalhar resultará em penalidade de reputação.',
                 style: GoogleFonts.roboto(
                     color: AppColors.textSecondary, fontSize: 13, height: 1.5)),
           ],
@@ -451,7 +470,16 @@ class _FactionCardState extends State<_FactionCard> {
   Widget build(BuildContext context) {
     final isSecret = data['isSecret'] == true;
     final isRecommended = data['recommended'] == true;
-    final buffs = (data['buffs'] as List).cast<String>();
+    // Sprint 3.4 Etapa C hotfix #1 — labels dinâmicos do FactionBuffService.
+    // Fallback pra `data['buffs']` (legacy factions.json) só se preview
+    // não foi populado (sem catálogo). Pending separado em cinza.
+    final appliedRaw = data['buffs_applied'];
+    final pendingRaw = data['buffs_pending'];
+    final List<String> applied = appliedRaw is List
+        ? appliedRaw.cast<String>()
+        : (data['buffs'] as List).cast<String>();
+    final List<String> pending =
+        pendingRaw is List ? pendingRaw.cast<String>() : const [];
 
     return GestureDetector(
       onTap: () {
@@ -578,25 +606,46 @@ class _FactionCardState extends State<_FactionCard> {
               ),
             ),
             const SizedBox(height: 8),
+            // Sprint 3.4 Etapa C hotfix #1 — Wrap com applied (cor da
+            // facção) + pending (cinza). Sem `take(3)` quando expandido —
+            // mostra tudo só no estado expandido pra evitar overflow no
+            // collapsed.
             Wrap(
               spacing: 6,
               runSpacing: 4,
-              children: buffs
-                  .take(3)
-                  .map((b) => Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(
-                              color: color.withValues(alpha: 0.3)),
-                        ),
-                        child: Text(b,
-                            style: GoogleFonts.roboto(
-                                fontSize: 10, color: color)),
-                      ))
-                  .toList(),
+              children: [
+                ...(_expanded ? applied : applied.take(3)).map(
+                  (b) => Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                      border:
+                          Border.all(color: color.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(b,
+                        style: GoogleFonts.roboto(
+                            fontSize: 10, color: color)),
+                  ),
+                ),
+                if (_expanded)
+                  ...pending.map(
+                    (b) => Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.textMuted.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                            color: AppColors.textMuted.withValues(alpha: 0.3)),
+                      ),
+                      child: Text('$b · FUTURO',
+                          style: GoogleFonts.roboto(
+                              fontSize: 10, color: AppColors.textMuted)),
+                    ),
+                  ),
+              ],
             ),
           ],
         ),

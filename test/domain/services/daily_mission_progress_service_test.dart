@@ -12,6 +12,7 @@ import 'package:noheroes_app/domain/models/daily_mission.dart';
 import 'package:noheroes_app/domain/models/daily_mission_status.dart';
 import 'package:noheroes_app/domain/models/daily_sub_task_instance.dart';
 import 'package:noheroes_app/domain/services/daily_mission_progress_service.dart';
+import 'package:noheroes_app/domain/services/faction_buff_service.dart';
 
 DailyMission _mkMission({
   required int playerId,
@@ -617,6 +618,136 @@ void main() {
       final p = await readPlayer();
       expect(p.gold, 0);
       expect(p.xp, 0);
+    });
+  });
+
+  // ─── Sprint 3.4 Etapa C hotfix #1 — buffs em daily missions ────────
+  //
+  // Bug histórico: confirmCompletion/applyPartialReward/applyAutoCompleted
+  // chamavam _playerDao.addXp + UPDATE gold direto sem aplicar buff de
+  // facção. Após hotfix #1, todos os 3 caminhos passam pelo `_applyBuffs`
+  // do service que consulta FactionBuffService (opcional pra testes).
+  group('Etapa C hotfix #1 — buffs aplicam em daily reward', () {
+    late DailyMissionProgressService buffedSvc;
+    late FactionBuffService buffSvc;
+
+    setUp(() {
+      buffSvc = FactionBuffService(db);
+      buffSvc.debugSetCatalog(<String, dynamic>{
+        'new_order': {
+          'applied': {
+            'xp_mult': 1.10,
+            'gold_mult': 1.0,
+          },
+          'pending': [],
+        },
+        'sun_clan': {
+          'applied': {
+            'xp_mult': 1.0,
+            'gold_mult': 1.09,
+          },
+          'pending': [],
+        },
+      });
+      buffedSvc = DailyMissionProgressService(
+        db: db,
+        missionsDao: dao,
+        playerDao: playerDao,
+        bus: bus,
+        factionBuff: buffSvc,
+      );
+    });
+
+    test('Player Nova Ordem confirma daily 100% → XP +10% (CEO bug P0-A)',
+        () async {
+      // Set faction_type=new_order; rank C → reward base xp=28, gold=20.
+      await db.customStatement(
+        "UPDATE players SET faction_type = 'new_order' WHERE id = ?",
+        [pid],
+      );
+      // Completa as 3 sub-tasks em 100%.
+      await buffedSvc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'a', delta: 10);
+      await buffedSvc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'b', delta: 20);
+      await buffedSvc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'c', delta: 5);
+
+      await buffedSvc.confirmCompletion(missionId: missionId);
+
+      final p = await readPlayer();
+      // Base xp rank C = 28. mult=1.0 (factor=1.0 com 3/3). round(28×1.10) = 31.
+      expect(p.xp, 31, reason: 'Nova Ordem +10% xp: round(28 × 1.10) = 31');
+      // Gold xp_mult=1.0 → round(20 × 1.0) = 20.
+      expect(p.gold, 20);
+    });
+
+    test('Player Sol confirma daily 100% → gold +9%', () async {
+      await db.customStatement(
+        "UPDATE players SET faction_type = 'sun_clan' WHERE id = ?",
+        [pid],
+      );
+      await buffedSvc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'a', delta: 10);
+      await buffedSvc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'b', delta: 20);
+      await buffedSvc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'c', delta: 5);
+
+      await buffedSvc.confirmCompletion(missionId: missionId);
+
+      final p = await readPlayer();
+      // Sol xp_mult=1.0 → xp 28; gold_mult=1.09 → round(20 × 1.09) = 22.
+      expect(p.xp, 28);
+      expect(p.gold, 22, reason: 'Sun Clan +9% gold: round(20 × 1.09) = 22');
+    });
+
+    test('Player sem facção (faction_type=none) → reward cru', () async {
+      await db.customStatement(
+        "UPDATE players SET faction_type = 'none' WHERE id = ?",
+        [pid],
+      );
+      await buffedSvc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'a', delta: 10);
+      await buffedSvc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'b', delta: 20);
+      await buffedSvc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'c', delta: 5);
+
+      await buffedSvc.confirmCompletion(missionId: missionId);
+
+      final p = await readPlayer();
+      expect(p.xp, 28);
+      expect(p.gold, 20);
+    });
+
+    test('Debuff -30% ativo → xp/gold viram 70%', () async {
+      await db.customStatement(
+        "UPDATE players SET faction_type = 'new_order' WHERE id = ?",
+        [pid],
+      );
+      // Seed debuff em membership row.
+      final until = DateTime.now()
+          .add(const Duration(hours: 24))
+          .millisecondsSinceEpoch;
+      await db.customStatement(
+        'INSERT INTO player_faction_membership '
+        '(player_id, faction_id, debuff_until) VALUES (?, ?, ?)',
+        [pid, 'new_order', until],
+      );
+      await buffedSvc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'a', delta: 10);
+      await buffedSvc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'b', delta: 20);
+      await buffedSvc.incrementSubTask(
+          missionId: missionId, subTaskKey: 'c', delta: 5);
+
+      await buffedSvc.confirmCompletion(missionId: missionId);
+
+      final p = await readPlayer();
+      // Debuff override: xp_mult/gold_mult = 0.7. round(28×0.7)=20, round(20×0.7)=14.
+      expect(p.xp, 20, reason: 'debuff -30% xp: round(28 × 0.7) = 20');
+      expect(p.gold, 14, reason: 'debuff -30% gold: round(20 × 0.7) = 14');
     });
   });
 }

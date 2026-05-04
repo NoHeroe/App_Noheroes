@@ -1285,7 +1285,7 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
             _actionBtn('Mostrar buffs ativos',
                 AppColors.shadowAscending, _showFactionBuffs),
             const SizedBox(height: 6),
-            _actionBtn('Trigger debuff 48h (manual)',
+            _actionBtn('Forçar debuff 48h (sem sair)',
                 AppColors.hp, _triggerDebuff48h),
             const SizedBox(height: 16),
 

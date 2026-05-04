@@ -183,22 +183,22 @@ class FactionAdmissionProgressService {
     if (factionId == null) return;
 
     // Janela expirada?
+    //
+    // Sprint 3.4 Etapa C hotfix #1 — antes de rejeitar admissão por
+    // janela expirada, re-avalia sub-tasks com `expired=true`. Sub-types
+    // não-monotônicos (zero_failed_window, zero_category_window) só
+    // declaram sucesso na expiração — antes não era possível distinguir
+    // "ainda em janela com 0 falhas" de "janela fechada com 0 falhas".
+    // Se TODAS sub-tasks ficam achieved no fechamento → completa a
+    // missão normalmente. Caso contrário → rejeita por janela expirada.
     final windowStartMs = (meta['window_start_ms'] as int?) ?? 0;
     final windowDurationMs =
         (meta['window_duration_ms'] as int?) ?? (48 * 60 * 60 * 1000);
-    if (windowStartMs > 0 &&
-        nowMs > windowStartMs + windowDurationMs) {
-      await _rejectAdmission(
-        playerId: playerId,
-        factionId: factionId,
-        missionId: meta['mission_id'] as String? ?? mission.missionKey,
-        reason:
-            'window_expired:${meta['mission_id'] ?? mission.missionKey}',
-      );
-      return; // admissão inteira foi resetada
-    }
+    final expired =
+        windowStartMs > 0 && nowMs > windowStartMs + windowDurationMs;
 
-    // Re-avalia sub-tasks.
+    // Re-avalia sub-tasks (`expired` controla declaração de sucesso pra
+    // sub-types não-monotônicos).
     final rawSubs = (meta['sub_tasks'] as List?) ?? const [];
     final subs = <Map<String, dynamic>>[];
     var anyChanged = false;
@@ -224,7 +224,7 @@ class FactionAdmissionProgressService {
         continue;
       }
       final eval = await _validator.evaluate(
-          playerId: playerId, subTask: subTask);
+          playerId: playerId, subTask: subTask, expired: expired);
 
       if (eval.failed) {
         await _rejectAdmission(
@@ -246,6 +246,21 @@ class FactionAdmissionProgressService {
         allCompleted = false;
       }
       subs.add(m);
+    }
+
+    // Sprint 3.4 Etapa C hotfix #1 — se janela expirou E nem todas
+    // sub-tasks ficaram achieved no fechamento, rejeita admissão.
+    // Persistência do estado parcial é descartada (rejection limpa
+    // tudo) — não precisamos chamar _persistMeta nesse path.
+    if (expired && !allCompleted) {
+      await _rejectAdmission(
+        playerId: playerId,
+        factionId: factionId,
+        missionId: meta['mission_id'] as String? ?? mission.missionKey,
+        reason:
+            'window_expired:${meta['mission_id'] ?? mission.missionKey}',
+      );
+      return;
     }
 
     if (anyChanged) {

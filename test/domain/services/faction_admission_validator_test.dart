@@ -154,7 +154,12 @@ void main() {
   // ─── 2. zeroFailedWindow ────────────────────────────────────────
 
   group('admission_zero_failed_window', () {
-    test('achieved=true quando 0 falhas na janela', () async {
+    // Sprint 3.4 Etapa C hotfix #1 — bug histórico: durante janela
+    // aberta com 0 falhas, retornava achieved=true prematuramente.
+    // Comportamento correto: pending (achieved=false) durante janela
+    // aberta; achieved=true só quando expired=true E count=0.
+    test('janela aberta com 0 falhas → pending (achieved=false)',
+        () async {
       await insertDaily(id: 1, modalidade: 'mental', status: 'completed', completedAt: 1500);
       final eval = await validator.evaluate(
         playerId: playerId,
@@ -163,6 +168,23 @@ void main() {
           target: 0,
           windowStartMs: windowStart,
         ),
+      );
+      expect(eval.achieved, isFalse,
+          reason: 'janela aberta com 0 falhas é pending — não pode declarar sucesso');
+      expect(eval.failed, isFalse);
+    });
+
+    test('janela EXPIRADA com 0 falhas → achieved=true (sucesso confirmado)',
+        () async {
+      await insertDaily(id: 1, modalidade: 'mental', status: 'completed', completedAt: 1500);
+      final eval = await validator.evaluate(
+        playerId: playerId,
+        subTask: const FactionAdmissionSubTask(
+          subType: FactionAdmissionSubTaskTypes.zeroFailedWindow,
+          target: 0,
+          windowStartMs: windowStart,
+        ),
+        expired: true,
       );
       expect(eval.achieved, isTrue);
       expect(eval.failed, isFalse);
@@ -178,6 +200,22 @@ void main() {
           target: 0,
           windowStartMs: windowStart,
         ),
+      );
+      expect(eval.achieved, isFalse);
+      expect(eval.failed, isTrue);
+    });
+
+    test('falha persiste mesmo com expired=true (irrecuperável)',
+        () async {
+      await insertDaily(id: 1, modalidade: 'mental', status: 'failed', completedAt: 1500);
+      final eval = await validator.evaluate(
+        playerId: playerId,
+        subTask: const FactionAdmissionSubTask(
+          subType: FactionAdmissionSubTaskTypes.zeroFailedWindow,
+          target: 0,
+          windowStartMs: windowStart,
+        ),
+        expired: true,
       );
       expect(eval.achieved, isFalse);
       expect(eval.failed, isTrue);
@@ -290,7 +328,26 @@ void main() {
       expect(eval.failed, isTrue);
     });
 
-    test('achieved se completou outras modalidades (não a proibida)',
+    test('janela aberta sem violar a proibida → pending (achieved=false)',
+        () async {
+      // Sprint 3.4 Etapa C hotfix #1 — não-monotônico, mesma família que
+      // zero_failed_window. Durante janela aberta sem violação: pending.
+      await insertDaily(id: 1, modalidade: 'fisico', status: 'completed', completedAt: 1500);
+      final eval = await validator.evaluate(
+        playerId: playerId,
+        subTask: const FactionAdmissionSubTask(
+          subType: FactionAdmissionSubTaskTypes.zeroCategoryWindow,
+          target: 0,
+          windowStartMs: windowStart,
+          params: {'modalidade': 'mental'},
+        ),
+      );
+      expect(eval.achieved, isFalse,
+          reason: 'janela aberta sem violar é pending — não pode declarar sucesso');
+      expect(eval.failed, isFalse);
+    });
+
+    test('janela EXPIRADA sem violar → achieved=true (sucesso confirmado)',
         () async {
       await insertDaily(id: 1, modalidade: 'fisico', status: 'completed', completedAt: 1500);
       final eval = await validator.evaluate(
@@ -301,6 +358,7 @@ void main() {
           windowStartMs: windowStart,
           params: {'modalidade': 'mental'},
         ),
+        expired: true,
       );
       expect(eval.achieved, isTrue);
       expect(eval.failed, isFalse);

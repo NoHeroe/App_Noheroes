@@ -557,6 +557,7 @@ final dailyMissionProgressServiceProvider =
     missionsDao: ref.watch(dailyMissionsDaoProvider),
     playerDao: PlayerDao(db),
     bus: ref.watch(appEventBusProvider),
+    factionBuff: ref.watch(factionBuffServiceProvider),
   );
 });
 

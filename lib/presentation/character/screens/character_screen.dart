@@ -102,9 +102,11 @@ class CharacterScreen extends ConsumerWidget {
                         if (player != null) StatsPanel(player: player),
                         if (buffSnapshot.applied.isNotEmpty ||
                             buffSnapshot.pending.isNotEmpty ||
-                            buffSnapshot.multipliers.hasDebuff) ...[
+                            buffSnapshot.multipliers.hasDebuff ||
+                            effective.maxHpDelta > 0) ...[
                           const SizedBox(height: 12),
-                          _buildFactionBuffsSection(buffSnapshot),
+                          _buildFactionBuffsSection(
+                              buffSnapshot, effective),
                         ],
                         if (stats.isNotEmpty) ...[
                           const SizedBox(height: 12),
@@ -761,8 +763,15 @@ class CharacterScreen extends ConsumerWidget {
   // Sprint 3.4 Etapa C — seção de buffs de facção. Mostra:
   // 1. Alerta de DEBUFF DE SAÍDA (-30% XP/gold) com timestamp se ativo
   // 2. Lista de buffs APLICADOS (verde) — runtime hoje
-  // 3. Lista de buffs FUTUROS (cinza) — pending narrativos
-  Widget _buildFactionBuffsSection(FactionBuffSnapshot snap) {
+  // 3. Linha de ATRIBUTOS EFETIVOS pra maxHp (str/dex/int já aparecem
+  //    em _buildAttributes acima)
+  // 4. Lista de buffs FUTUROS (cinza) — pending narrativos
+  // Sprint 3.4 Etapa C hotfix #1:
+  // - Texto contextual quando debuff ativo: buffs visíveis mas
+  //   "neutralizados pelo debuff" (player ainda é member da facção)
+  // - Linha "HP Máximo: 100 → 110 (+10)" quando maxHpDelta > 0
+  Widget _buildFactionBuffsSection(
+      FactionBuffSnapshot snap, EffectiveAttributes effective) {
     final m = snap.multipliers;
 
     return Container(
@@ -808,6 +817,45 @@ class CharacterScreen extends ConsumerWidget {
                   .map((e) => _bonusChip(e.label, AppColors.shadowAscending))
                   .toList(growable: false),
             ),
+            if (m.hasDebuff) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Buffs suspensos pelo debuff de saída — efeito real -30%.',
+                style: GoogleFonts.roboto(
+                    fontSize: 10,
+                    color: AppColors.textMuted,
+                    fontStyle: FontStyle.italic),
+              ),
+            ],
+            if (effective.maxHpDelta > 0 || snap.pending.isNotEmpty)
+              const SizedBox(height: 14),
+          ],
+          if (effective.maxHpDelta > 0) ...[
+            Text('ATRIBUTOS EFETIVOS',
+                style: GoogleFonts.cinzelDecorative(
+                    fontSize: 11,
+                    color: AppColors.gold,
+                    letterSpacing: 2)),
+            const SizedBox(height: 10),
+            Row(children: [
+              const Icon(Icons.favorite, color: AppColors.hp, size: 14),
+              const SizedBox(width: 8),
+              Text('HP Máximo:',
+                  style: GoogleFonts.roboto(
+                      fontSize: 12, color: AppColors.textPrimary)),
+              const SizedBox(width: 6),
+              Text(
+                '${effective.maxHpBase} → ${effective.maxHpEffective}',
+                style: GoogleFonts.cinzelDecorative(
+                    fontSize: 13,
+                    color: AppColors.hp,
+                    fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(width: 4),
+              Text('(+${effective.maxHpDelta})',
+                  style: GoogleFonts.roboto(
+                      fontSize: 10, color: AppColors.gold)),
+            ]),
             if (snap.pending.isNotEmpty) const SizedBox(height: 14),
           ],
           if (snap.pending.isNotEmpty) ...[

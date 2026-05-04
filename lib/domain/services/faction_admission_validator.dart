@@ -148,15 +148,23 @@ class FactionAdmissionValidator {
 
   /// Avalia a sub-task contra o estado atual do DB. Retorna
   /// [SubTaskEvaluation] indicando current/target/achieved/failed.
+  ///
+  /// Sprint 3.4 Etapa C hotfix #1 — `expired` indica que a janela
+  /// terminou. Afeta sub-types **não-monotônicos** (`zero_failed_window`,
+  /// `zero_category_window`, `no_partial_day_window`): durante a janela
+  /// aberta retornam `pending` (achieved=false) mesmo com count=0;
+  /// somente na expiração viram `achieved=true` (sucesso confirmado).
+  /// Sub-types monotônicos (count crescente) ignoram `expired`.
   Future<SubTaskEvaluation> evaluate({
     required int playerId,
     required FactionAdmissionSubTask subTask,
+    bool expired = false,
   }) async {
     switch (subTask.subType) {
       case FactionAdmissionSubTaskTypes.modalityCountWindow:
         return _evalModalityCountWindow(playerId, subTask);
       case FactionAdmissionSubTaskTypes.zeroFailedWindow:
-        return _evalZeroFailedWindow(playerId, subTask);
+        return _evalZeroFailedWindow(playerId, subTask, expired: expired);
       case FactionAdmissionSubTaskTypes.fullPerfectDayWindow:
         return _evalFullPerfectDayWindow(playerId, subTask);
       case FactionAdmissionSubTaskTypes.individualCompletedWindow:
@@ -164,7 +172,7 @@ class FactionAdmissionValidator {
       case FactionAdmissionSubTaskTypes.diaryEntryWindow:
         return _evalDiaryEntryWindow(playerId, subTask);
       case FactionAdmissionSubTaskTypes.zeroCategoryWindow:
-        return _evalZeroCategoryWindow(playerId, subTask);
+        return _evalZeroCategoryWindow(playerId, subTask, expired: expired);
       case FactionAdmissionSubTaskTypes.streakMinimum:
         return _evalStreakMinimum(playerId, subTask);
       case FactionAdmissionSubTaskTypes.goldEarnedViaQuestsWindow:
@@ -245,7 +253,8 @@ class FactionAdmissionValidator {
   /// "0 falhas na janela". Falha (count > 0) é IRRECUPERÁVEL na
   /// janela — marcamos `failed=true` pra caller resetar admissão.
   Future<SubTaskEvaluation> _evalZeroFailedWindow(
-      int playerId, FactionAdmissionSubTask sub) async {
+      int playerId, FactionAdmissionSubTask sub,
+      {bool expired = false}) async {
     final rows = await _db.customSelect(
       "SELECT COUNT(*) AS c FROM daily_missions "
       "WHERE player_id = ? AND status = 'failed' "
@@ -256,12 +265,15 @@ class FactionAdmissionValidator {
       ],
     ).get();
     final count = rows.first.read<int>('c');
-    // achieved se count == 0 E target == 0 (target será 0 sempre pra
-    // este sub-type por convenção do JSON).
+    // Sprint 3.4 Etapa C hotfix #1 — não-monotônico. Durante janela
+    // aberta com count=0: pending (não pode declarar sucesso porque
+    // ainda pode falhar). Só vira `achieved=true` quando janela expira
+    // sem falhas (`expired=true && count==0`). Falha continua
+    // irrecuperável: `count > 0` → failed sempre.
     return SubTaskEvaluation(
       current: count,
       target: sub.target,
-      achieved: count == 0,
+      achieved: expired && count == 0,
       failed: count > 0,
     );
   }
@@ -339,7 +351,8 @@ class FactionAdmissionValidator {
   /// "0 missões de modalidade X completadas na janela" (Trindade
   /// "Jejum"). Falha = qualquer completion da modalidade no período.
   Future<SubTaskEvaluation> _evalZeroCategoryWindow(
-      int playerId, FactionAdmissionSubTask sub) async {
+      int playerId, FactionAdmissionSubTask sub,
+      {bool expired = false}) async {
     final modalidade = sub.params?['modalidade'] as String?;
     if (modalidade == null) {
       throw const FormatException(
@@ -356,10 +369,14 @@ class FactionAdmissionValidator {
       ],
     ).get();
     final count = rows.first.read<int>('c');
+    // Sprint 3.4 Etapa C hotfix #1 — não-monotônico (mesma família que
+    // zero_failed_window). Durante janela aberta com count=0: pending.
+    // Só vira `achieved=true` na expiração da janela sem completar
+    // missões da categoria proibida.
     return SubTaskEvaluation(
       current: count,
       target: sub.target,
-      achieved: count == 0,
+      achieved: expired && count == 0,
       failed: count > 0,
     );
   }

@@ -254,6 +254,46 @@ class FactionBuffService {
 
   int _pct(double mult) => ((mult - 1.0) * 100).round();
 
+  /// Sprint 3.4 Etapa C hotfix #1 — preview SEM player (UI de seleção
+  /// de facção precisa exibir buffs de cada facção antes do player
+  /// escolher). Lê apenas do catálogo, sem `getActiveMultipliers` que
+  /// depende de `players.faction_type`. Não considera debuff (não
+  /// aplicável quando player ainda não é member).
+  Future<({List<String> applied, List<String> pending})>
+      previewLabelsForFaction(String factionId) async {
+    final catalog = await _loadCatalog();
+    final entry = catalog[factionId] as Map<String, dynamic>?;
+    if (entry == null) {
+      return (applied: const <String>[], pending: const <String>[]);
+    }
+
+    final appliedRaw =
+        (entry['applied'] as Map<String, dynamic>?) ?? const {};
+    final mults = FactionBuffMultipliers(
+      xpMult: _readMult(appliedRaw, 'xp_mult'),
+      goldMult: _readMult(appliedRaw, 'gold_mult'),
+      gemsMult: _readMult(appliedRaw, 'gems_mult'),
+      strengthMult: _readMult(appliedRaw, 'strength_mult'),
+      dexterityMult: _readMult(appliedRaw, 'dexterity_mult'),
+      intelligenceMult: _readMult(appliedRaw, 'intelligence_mult'),
+      maxHpMult: _readMult(appliedRaw, 'max_hp_mult'),
+      hasDebuff: false,
+      debuffEndsAt: null,
+    );
+    final applied = _renderAppliedEntries(mults)
+        .map((e) => e.label)
+        .toList(growable: false);
+
+    final pendingRaw =
+        (entry['pending'] as List?)?.cast<Map<String, dynamic>>() ??
+            const [];
+    final pending = pendingRaw
+        .map((m) => (m['label'] as String?) ?? '?')
+        .toList(growable: false);
+
+    return (applied: applied, pending: pending);
+  }
+
   /// Atributos efetivos (base + buff aplicado). Usado pela UI /personagem
   /// e pela engine Unity (lê via DAO/API quando integrado).
   ///

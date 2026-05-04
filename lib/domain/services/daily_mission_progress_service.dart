@@ -9,6 +9,7 @@ import '../../data/database/daos/player_dao.dart';
 import '../models/daily_mission.dart';
 import '../models/daily_mission_status.dart';
 import '../models/daily_sub_task_instance.dart';
+import 'faction_buff_service.dart';
 
 /// Sprint 3.2 Etapa 1.3.A Hotfix-2 — acumulador, cap individual, fechamento
 /// manual e fórmula linear de reward.
@@ -33,15 +34,39 @@ class DailyMissionProgressService {
   final PlayerDao _playerDao;
   final AppEventBus _bus;
 
+  /// Sprint 3.4 Etapa C hotfix #1 — buffs de facção aplicam em XP/gold de
+  /// daily missions também. Path histórico (Sprint 3.2 1.3.A) credita XP
+  /// via `_playerDao.addXp` + `customUpdate gold` diretamente, sem passar
+  /// por `RewardGrantService`. Sub-Etapa C original cobria apenas o
+  /// caminho do RewardGrantService (rewards de classe/individual/extras/
+  /// admissão), deixando dailies sem buff.
+  ///
+  /// Opcional pra retrocompat de testes legacy (path null = neutral).
+  final FactionBuffService? _factionBuff;
+
   DailyMissionProgressService({
     required AppDatabase db,
     required DailyMissionsDao missionsDao,
     required PlayerDao playerDao,
     required AppEventBus bus,
+    FactionBuffService? factionBuff,
   })  : _db = db,
         _missionsDao = missionsDao,
         _playerDao = playerDao,
-        _bus = bus;
+        _bus = bus,
+        _factionBuff = factionBuff;
+
+  /// Aplica xpMult + goldMult em (xp, gold). Round em ambos (CEO confirmou
+  /// hotfix #1). Path neutral quando service nulo (testes legacy).
+  Future<({int xp, int gold})> _applyBuffs(
+      int playerId, int xp, int gold) async {
+    if (_factionBuff == null) return (xp: xp, gold: gold);
+    final mults = await _factionBuff.getActiveMultipliers(playerId);
+    return (
+      xp: (xp * mults.xpMult).round(),
+      gold: (gold * mults.goldMult).round(),
+    );
+  }
 
   static const Map<String, DailyRankReward> rewardByRank = {
     'E': DailyRankReward(xp: 8, gold: 5),
@@ -171,16 +196,20 @@ class DailyMissionProgressService {
         status: status,
         dailyMissionsStreak: player.dailyMissionsStreak,
       );
-      goldEarned = reward.gold;
+      // Sprint 3.4 Etapa C hotfix #1 — aplica buffs de facção (xpMult +
+      // goldMult) ou debuff de saída (-30%). Tudo via _applyBuffs.
+      final buffed = await _applyBuffs(
+          mission.playerId, reward.xp, reward.gold);
+      goldEarned = buffed.gold;
 
-      if (reward.xp > 0) {
-        levelUp = await _playerDao.addXp(mission.playerId, reward.xp);
+      if (buffed.xp > 0) {
+        levelUp = await _playerDao.addXp(mission.playerId, buffed.xp);
       }
-      if (reward.gold > 0) {
+      if (buffed.gold > 0) {
         await _db.customUpdate(
           'UPDATE players SET gold = gold + ? WHERE id = ?',
           variables: [
-            Variable.withInt(reward.gold),
+            Variable.withInt(buffed.gold),
             Variable.withInt(mission.playerId),
           ],
           updates: {_db.playersTable},
@@ -364,16 +393,18 @@ class DailyMissionProgressService {
       status: DailyMissionStatus.partial,
       dailyMissionsStreak: player.dailyMissionsStreak,
     );
+    // Sprint 3.4 Etapa C hotfix #1 — buffs de facção em rollover partial.
+    final buffed = await _applyBuffs(mission.playerId, reward.xp, reward.gold);
 
     LevelUp? levelUp;
-    if (reward.xp > 0) {
-      levelUp = await _playerDao.addXp(mission.playerId, reward.xp);
+    if (buffed.xp > 0) {
+      levelUp = await _playerDao.addXp(mission.playerId, buffed.xp);
     }
-    if (reward.gold > 0) {
+    if (buffed.gold > 0) {
       await _db.customUpdate(
         'UPDATE players SET gold = gold + ? WHERE id = ?',
         variables: [
-          Variable.withInt(reward.gold),
+          Variable.withInt(buffed.gold),
           Variable.withInt(mission.playerId),
         ],
         updates: {_db.playersTable},
@@ -393,7 +424,7 @@ class DailyMissionProgressService {
       modalidade: mission.modalidade,
       fullCompleted: false,
       partial: true,
-      goldEarned: reward.gold,
+      goldEarned: buffed.gold,
     ));
     if (levelUp != null) _bus.publish(levelUp);
   }
@@ -422,16 +453,18 @@ class DailyMissionProgressService {
       status: DailyMissionStatus.completed,
       dailyMissionsStreak: player.dailyMissionsStreak,
     );
+    // Sprint 3.4 Etapa C hotfix #1 — buffs em auto-confirm também.
+    final buffed = await _applyBuffs(mission.playerId, reward.xp, reward.gold);
 
     LevelUp? levelUp;
-    if (reward.xp > 0) {
-      levelUp = await _playerDao.addXp(mission.playerId, reward.xp);
+    if (buffed.xp > 0) {
+      levelUp = await _playerDao.addXp(mission.playerId, buffed.xp);
     }
-    if (reward.gold > 0) {
+    if (buffed.gold > 0) {
       await _db.customUpdate(
         'UPDATE players SET gold = gold + ? WHERE id = ?',
         variables: [
-          Variable.withInt(reward.gold),
+          Variable.withInt(buffed.gold),
           Variable.withInt(mission.playerId),
         ],
         updates: {_db.playersTable},
@@ -453,7 +486,7 @@ class DailyMissionProgressService {
       fullCompleted: true,
       partial: false,
       wasAutoConfirmed: true,
-      goldEarned: reward.gold,
+      goldEarned: buffed.gold,
     ));
     if (levelUp != null) _bus.publish(levelUp);
   }
