@@ -1,6 +1,6 @@
 <!-- Template — arquivo ADR-XXXX-titulo-kebab.md -->
-<!-- Criar em .vault/02_ADRs/. -->
-<!-- Descobrir próximo número via: ls .vault/02_ADRs/ | grep -oE 'ADR-[0-9]{4}' | sort -V | tail -1 -->
+<!-- Criar em .vault/App/02_ADRs/. -->
+<!-- Descobrir próximo número via: ls .vault/App/02_ADRs/ | grep -oE 'ADR-[0-9]{4}' | sort -V | tail -1 -->
 
 # ADR-{{NUMERO_4_DIGITOS}} · {{TITULO}}
 

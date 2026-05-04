@@ -1,5 +1,5 @@
 <!-- Template — arquivo Sprint_X.Y_close.md -->
-<!-- Criar em .vault/03_Sprints/ ao publicar release final da sprint. -->
+<!-- Criar em .vault/App/03_Sprints/ ao publicar release final da sprint. -->
 
 # Sprint {{NUMERO}} — {{TITULO}} — FECHADA
 

@@ -10,11 +10,11 @@
 
 | Evento | Ação no vault | Template | Mensagem do commit (vault) |
 |---|---|---|---|
-| **Etapa fechada** (commit `feat`/`fix` em sprint ativa) | Atualiza `.vault/03_Sprints/Fase_X/Sprint_Y.Z.md` adicionando seção da etapa + appende `journal.txt` | `etapa.md` | `docs(vault): registra Etapa X.Y` |
-| **Sprint fechada** (tag publicada) | Cria `.vault/03_Sprints/Sprint_X.Y_close.md` + atualiza `ESTADO_ATUAL` + `ROADMAP` + `journal` | `sprint-close.md` | `docs(vault): fecha Sprint X.Y (vX.Y.Z)` |
-| **Decisão arquitetural significativa** | Cria `.vault/02_ADRs/ADR-XXXX-titulo-kebab.md` (consultar pasta pro próximo número) + atualiza `ESTADO_ATUAL` com link | `adr.md` | `docs(vault): ADR-XXXX <título>` |
-| **Bug em produção (P0/P1)** | Cria `.vault/docs/postmortems/YYYY-MM-DD-titulo-kebab.md` + appende `journal` + (se houver pattern preventivo) cria ADR | `postmortem.md` | `docs(vault): postmortem <título>` |
-| **Lição técnica standalone** | Cria `.vault/docs/lessons/YYYY-MM-DD-titulo-kebab.md` (criar pasta se não existe) | `licao.md` | `docs(vault): lição <título>` |
+| **Etapa fechada** (commit `feat`/`fix` em sprint ativa) | Atualiza `.vault/App/03_Sprints/Fase_X/Sprint_Y.Z.md` adicionando seção da etapa + appende `journal.txt` | `etapa.md` | `docs(vault): registra Etapa X.Y` |
+| **Sprint fechada** (tag publicada) | Cria `.vault/App/03_Sprints/Sprint_X.Y_close.md` + atualiza `ESTADO_ATUAL` + `ROADMAP` + `journal` | `sprint-close.md` | `docs(vault): fecha Sprint X.Y (vX.Y.Z)` |
+| **Decisão arquitetural significativa** | Cria `.vault/App/02_ADRs/ADR-XXXX-titulo-kebab.md` (consultar pasta pro próximo número) + atualiza `ESTADO_ATUAL` com link | `adr.md` | `docs(vault): ADR-XXXX <título>` |
+| **Bug em produção (P0/P1)** | Cria `.vault/App/docs/postmortems/YYYY-MM-DD-titulo-kebab.md` + appende `journal` + (se houver pattern preventivo) cria ADR | `postmortem.md` | `docs(vault): postmortem <título>` |
+| **Lição técnica standalone** | Cria `.vault/App/docs/lessons/YYYY-MM-DD-titulo-kebab.md` (criar pasta se não existe) | `licao.md` | `docs(vault): lição <título>` |
 
 ---
 
@@ -68,27 +68,27 @@ Antes de criar ADR/postmortem/sprint close, descobrir números **dinamicamente**
 Listar pasta e pegar o último número:
 
 ```bash
-ls .vault/02_ADRs/ | grep -oE 'ADR-[0-9]{4}' | sort -V | tail -1
+ls .vault/App/02_ADRs/ | grep -oE 'ADR-[0-9]{4}' | sort -V | tail -1
 ```
 
 Próximo = último + 1, formato 4 dígitos (`0019` → `0020`).
 
 ### Sprint ativa
 
-Ler `.vault/00_Index/ESTADO_ATUAL.md` seção **"Sprint ativo"**.
+Ler `.vault/App/00_Index/ESTADO_ATUAL.md` seção **"Sprint ativo"**.
 
 ### Última versão publicada
 
-Ler `.vault/00_Index/ESTADO_ATUAL.md` seção **"Versão em produção"**.
+Ler `.vault/App/00_Index/ESTADO_ATUAL.md` seção **"Versão em produção"**.
 
 ### Próximo número de Sprint close
 
-Listar `.vault/03_Sprints/` e ver qual sprint está ativa em `ESTADO_ATUAL`. O `_close` herda o número da sprint ativa.
+Listar `.vault/App/03_Sprints/` e ver qual sprint está ativa em `ESTADO_ATUAL`. O `_close` herda o número da sprint ativa.
 
 ### Sprints já fechadas
 
 ```bash
-ls .vault/03_Sprints/ | grep '_close.md$'
+ls .vault/App/03_Sprints/ | grep '_close.md$'
 ```
 
 **NUNCA hard-codar números.** Sempre descobrir antes de criar arquivo novo.

@@ -13,7 +13,7 @@ import 'package:noheroes_app/data/database/app_database.dart';
 /// Drift detecta upgrade e roda onUpgrade → bloco `if (from < 30)` →
 /// `_applyHotfix29To30()` (privado, exercitado via caminho real).
 ///
-/// Ver `.vault/02_ADRs/ADR-0019-drift-migration-dataclass-pitfall.md`.
+/// Ver `.vault/App/02_ADRs/ADR-0019-drift-migration-dataclass-pitfall.md`.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 

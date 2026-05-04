@@ -1,5 +1,5 @@
 <!-- Template — arquivo YYYY-MM-DD-titulo-kebab.md -->
-<!-- Criar em .vault/docs/lessons/ (mkdir -p se pasta não existe). -->
+<!-- Criar em .vault/App/docs/lessons/ (mkdir -p se pasta não existe). -->
 <!-- Use postmortem.md em vez deste template se houve bug em produção. -->
 
 # Lição — {{TITULO}} ({{YYYY-MM-DD}})

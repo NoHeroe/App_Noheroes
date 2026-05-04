@@ -532,7 +532,7 @@ class AppDatabase extends _$AppDatabase {
       if (from < 30) {
         // Sprint 3.3 HOTFIX — corretiva da migration 27→28 que falhou
         // silencioso. Ver
-        // `.vault/02_ADRs/ADR-0019-drift-migration-dataclass-pitfall.md`.
+        // `.vault/App/02_ADRs/ADR-0019-drift-migration-dataclass-pitfall.md`.
         await _applyHotfix29To30();
       }
       if (from < 31) {
@@ -755,7 +755,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// Sprint 3.3 HOTFIX — corretiva da migration 27→28 que falhou
   /// silencioso em devices que upgradaram 27→29 sequencial. Ver
-  /// `.vault/02_ADRs/ADR-0019-drift-migration-dataclass-pitfall.md`
+  /// `.vault/App/02_ADRs/ADR-0019-drift-migration-dataclass-pitfall.md`
   /// pro contexto completo.
   ///
   /// IDEMPOTENTE:

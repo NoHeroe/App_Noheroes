@@ -1,5 +1,5 @@
 <!-- Template — arquivo YYYY-MM-DD-titulo-kebab.md -->
-<!-- Criar em .vault/docs/postmortems/. -->
+<!-- Criar em .vault/App/docs/postmortems/. -->
 
 # Postmortem — {{TITULO}} ({{YYYY-MM-DD}})
 

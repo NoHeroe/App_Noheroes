@@ -23,16 +23,16 @@ O vault está listado em `.gitignore` do projeto principal — não é submódul
 
 | Caminho | Propósito |
 |---|---|
-| `.vault/00_Index/ESTADO_ATUAL.md` | Snapshot do projeto: versão em produção, schema atual, sprint ativa, fases. **Manter atualizado** sempre que mudar versão/schema/sprint. |
-| `.vault/00_Index/MOC.md` | Map of Content (Obsidian) — índice navegável. |
-| `.vault/00_Index/REGRAS_ENGENHARIA.md` | 10 leis do projeto. Consultar antes de qualquer mudança não-trivial. |
-| `.vault/02_ADRs/ADR-XXXX-titulo-kebab.md` | Decisões arquiteturais. **Numeração sequencial 4 dígitos.** Próximo número = descobrir dinamicamente (ver `.claude/workflow.md`). |
-| `.vault/03_Sprints/Fase_X_Y/Sprint_Z.W.md` | Sprint planejada/em andamento. |
-| `.vault/03_Sprints/Sprint_Z.W_close.md` | Sprint fechada — escrita ao publicar release. |
-| `.vault/03_Sprints/ROADMAP.md` | Plano macro 5 fases + épocas do projeto. |
-| `.vault/docs/postmortems/YYYY-MM-DD-titulo-kebab.md` | Bugs P0/P1 detectados em produção. |
-| `.vault/docs/sprints/journal.txt` | Log cronológico de sprints e hotfixes. **Append-only.** |
-| `.vault/docs/lessons/YYYY-MM-DD-titulo-kebab.md` | Lições técnicas standalone (sem postmortem específico). Pasta criada lazy na 1ª lição. |
+| `.vault/App/00_Index/ESTADO_ATUAL.md` | Snapshot do projeto: versão em produção, schema atual, sprint ativa, fases. **Manter atualizado** sempre que mudar versão/schema/sprint. |
+| `.vault/App/00_Index/MOC.md` | Map of Content (Obsidian) — índice navegável. |
+| `.vault/App/00_Index/REGRAS_ENGENHARIA.md` | 10 leis do projeto. Consultar antes de qualquer mudança não-trivial. |
+| `.vault/App/02_ADRs/ADR-XXXX-titulo-kebab.md` | Decisões arquiteturais. **Numeração sequencial 4 dígitos.** Próximo número = descobrir dinamicamente (ver `.claude/workflow.md`). |
+| `.vault/App/03_Sprints/Fase_X_Y/Sprint_Z.W.md` | Sprint planejada/em andamento. |
+| `.vault/App/03_Sprints/Sprint_Z.W_close.md` | Sprint fechada — escrita ao publicar release. |
+| `.vault/App/03_Sprints/ROADMAP.md` | Plano macro 5 fases + épocas do projeto. |
+| `.vault/App/docs/postmortems/YYYY-MM-DD-titulo-kebab.md` | Bugs P0/P1 detectados em produção. |
+| `.vault/App/docs/sprints/journal.txt` | Log cronológico de sprints e hotfixes. **Append-only.** |
+| `.vault/App/docs/lessons/YYYY-MM-DD-titulo-kebab.md` | Lições técnicas standalone (sem postmortem específico). Pasta criada lazy na 1ª lição. |
 
 ---
 
@@ -140,7 +140,7 @@ Subprefixos comuns no projeto: `sprint-X.Y-etapa-N`, `sprint-X.Y-hotfix`, `sprin
 
 ## Regras de ouro
 
-1. **Antes de criar ADR/postmortem novo, descobrir números atualizados dinamicamente** (`ls .vault/02_ADRs/ | grep -oE 'ADR-[0-9]{4}' | sort -V | tail -1`). Nunca hard-codar.
+1. **Antes de criar ADR/postmortem novo, descobrir números atualizados dinamicamente** (`ls .vault/App/02_ADRs/ | grep -oE 'ADR-[0-9]{4}' | sort -V | tail -1`). Nunca hard-codar.
 2. **Antes de mudar `ESTADO_ATUAL` ou `ROADMAP`, ler primeiro** — esses arquivos têm histórico, não apagar conteúdo sem motivo.
 3. **Wikilinks devem apontar pra arquivo existente.** Verificar antes de incluir num doc novo.
 4. **Templates são guia, não camisa-de-força** — campos opcionais podem ser omitidos quando não fazem sentido.
@@ -153,6 +153,6 @@ Subprefixos comuns no projeto: `sprint-X.Y-etapa-N`, `sprint-X.Y-hotfix`, `sprin
 
 - [`.claude/workflow.md`](.claude/workflow.md) — gatilhos detalhados + comandos de descoberta
 - [`.claude/templates/`](.claude/templates/) — 5 templates pra docs novas
-- `.vault/00_Index/ESTADO_ATUAL.md` — snapshot atual do projeto
-- `.vault/00_Index/REGRAS_ENGENHARIA.md` — 10 leis do projeto
-- `.vault/03_Sprints/ROADMAP.md` — plano macro
+- `.vault/App/00_Index/ESTADO_ATUAL.md` — snapshot atual do projeto
+- `.vault/App/00_Index/REGRAS_ENGENHARIA.md` — 10 leis do projeto
+- `.vault/App/03_Sprints/ROADMAP.md` — plano macro
