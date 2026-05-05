@@ -15,8 +15,15 @@ class StatBarsRow extends ConsumerWidget {
     final playerAsync = ref.watch(playerStreamProvider);
     final player = playerAsync.value ?? ref.watch(currentPlayerProvider);
 
+    // Sprint 3.4 Etapa C hotfix #2 (P1-C) — `maxHp` lê do
+    // `effectiveAttributesProvider` (pós-buff de facção), não do DB
+    // direto. Mantém consistência com /personagem (player Nova Ordem
+    // vê 110/X em ambas as telas, não 100/X aqui e 110 lá).
+    // Fallback pra `player.maxHp` enquanto provider carrega.
+    final effective = ref.watch(effectiveAttributesProvider).value;
+
     final hp      = player?.hp ?? 100;
-    final maxHp   = player?.maxHp ?? 100;
+    final maxHp   = effective?.maxHpEffective ?? (player?.maxHp ?? 100);
     final mp      = player?.mp ?? 100;
     final maxMp   = player?.maxMp ?? 100;
     final xp      = player?.xp ?? 0;

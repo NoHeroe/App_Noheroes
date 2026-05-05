@@ -26,6 +26,7 @@ import '../domain/services/player_currency_stats_service.dart';
 import '../data/datasources/local/faction_admission_progress_service.dart';
 import '../data/datasources/local/leave_faction_service.dart';
 import '../data/datasources/local/quest_reward_stats_service.dart';
+import '../domain/models/faction_buff_multipliers.dart';
 import '../domain/services/faction_admission_validator.dart';
 import '../domain/services/faction_buff_service.dart';
 import '../domain/services/player_screens_visited_service.dart';
@@ -504,6 +505,30 @@ final factionAdmissionValidatorProvider =
 /// Stateless. Lazy-load do JSON no 1º acesso.
 final factionBuffServiceProvider = Provider<FactionBuffService>((ref) {
   return FactionBuffService(ref.watch(appDatabaseProvider));
+});
+
+/// Sprint 3.4 Etapa C hotfix #2 (P1-C) — promovido pra escopo global.
+/// Snapshot de buffs ativos+pending da facção. Consumido por /personagem
+/// (seções "BUFFS ATIVOS" / "FUTUROS") e dev panel.
+final factionBuffSnapshotProvider =
+    FutureProvider.autoDispose<FactionBuffSnapshot>((ref) async {
+  final player = ref.watch(currentPlayerProvider);
+  if (player == null) return FactionBuffSnapshot.empty;
+  return ref.read(factionBuffServiceProvider).getBuffSnapshot(player.id);
+});
+
+/// Sprint 3.4 Etapa C hotfix #2 (P1-C) — promovido pra escopo global.
+/// Atributos efetivos pós-buff (str/dex/int/maxHp). Consumido por:
+/// - /personagem: render "12 → 13 (+1)" + "HP Máximo: 100 → 110 (+10)"
+/// - Santuário (`StatBarsRow`): barra HP usa `maxHpEffective` em vez de
+///   `players.maxHp` direto (correção da inconsistência reportada pelo CEO)
+final effectiveAttributesProvider =
+    FutureProvider.autoDispose<EffectiveAttributes>((ref) async {
+  final player = ref.watch(currentPlayerProvider);
+  if (player == null) return EffectiveAttributes.empty;
+  return ref
+      .read(factionBuffServiceProvider)
+      .getEffectiveAttributes(player.id);
 });
 
 /// Sprint 3.4 Sub-Etapa B.2 — flow de saída de facção (-20 rep +

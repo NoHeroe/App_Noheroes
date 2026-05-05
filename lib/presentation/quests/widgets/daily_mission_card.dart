@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../domain/models/daily_mission.dart';
 import '../../../domain/models/daily_mission_status.dart';
@@ -26,7 +28,7 @@ import 'mission_completion_popup.dart';
 ///
 /// Tap no body alterna pending ↔ aberto. Tap em closed é noop.
 /// `ValueKey(mission.id)` no parent preserva `_expanded` entre rebuilds.
-class DailyMissionCard extends StatefulWidget {
+class DailyMissionCard extends ConsumerStatefulWidget {
   final DailyMission mission;
 
   /// Recompensa base (XP/gold do rank). Mostrada apenas em closed cards
@@ -69,10 +71,10 @@ class DailyMissionCard extends StatefulWidget {
   });
 
   @override
-  State<DailyMissionCard> createState() => _DailyMissionCardState();
+  ConsumerState<DailyMissionCard> createState() => _DailyMissionCardState();
 }
 
-class _DailyMissionCardState extends State<DailyMissionCard> {
+class _DailyMissionCardState extends ConsumerState<DailyMissionCard> {
   bool _expanded = false;
   bool _confirming = false;
 
@@ -446,11 +448,29 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
     try {
       await widget.onConfirm();
       if (!mounted) return;
+
+      // Sprint 3.4 Etapa C hotfix #2 (P0-C/D) — preview de reward usava
+      // `computeReward(...)` puro que retorna valor BASE. O service já
+      // aplica buff de facção (xp_mult/gold_mult) ou debuff de saída
+      // (-30%) via `_applyBuffs` antes do persist. Sem aplicar o mesmo
+      // buff no preview, o popup mostrava valor declared (8 XP) mas
+      // player ganhava buffed (9 XP com Nova Ordem +10%).
+      //
+      // Single source of truth: `getActiveMultipliers(playerId)` lê
+      // `players.faction_type` + `player_faction_membership.debuff_until`
+      // — exatamente os mesmos inputs que `_applyBuffs` no service.
+      final mults = await ref
+          .read(factionBuffServiceProvider)
+          .getActiveMultipliers(widget.mission.playerId);
+      final buffedXp = (previewReward.xp * mults.xpMult).round();
+      final buffedGold = (previewReward.gold * mults.goldMult).round();
+
+      if (!mounted) return;
       MissionCompletionPopup.show(
         context,
         status: previewStatus,
-        rewardXp: previewReward.xp,
-        rewardGold: previewReward.gold,
+        rewardXp: buffedXp,
+        rewardGold: buffedGold,
         originKey: widget.cardKey,
         targetKey: widget.counterKey,
       );

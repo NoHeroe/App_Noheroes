@@ -98,6 +98,13 @@ class FactionAdmissionProgressService {
 
   void start() {
     _subs.add(_bus.on<DailyMissionCompleted>().listen(_onAnyEvent));
+    // Sprint 3.4 Etapa C hotfix #2 (P0-E) — DailyMissionFailed também
+    // dispara re-avaliação. Sub-tasks `zero_failed_window` /
+    // `zero_category_window` precisam detectar a falha imediatamente
+    // pra rejeitar admissão. Sem este listener, rejection só acontecia
+    // por timing aleatório (próxima `DailyMissionCompleted` re-avalia
+    // todas e captura a falha tardiamente).
+    _subs.add(_bus.on<DailyMissionFailed>().listen(_onAnyEvent));
     _subs.add(_bus.on<MissionCompleted>().listen(_onAnyEvent));
     _subs.add(_bus.on<DiaryEntryCreated>().listen(_onAnyEvent));
     _subs.add(_bus.on<RewardGranted>().listen(_onAnyEvent));

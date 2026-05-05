@@ -39,23 +39,12 @@ final aggregatedEquipmentStatsProvider =
       .aggregatedStatsOf(player.id);
 });
 
-/// Sprint 3.4 Etapa C — snapshot de buffs ativos+pending da facção.
-/// Reage a mudanças do player (faction_type, debuff_until via membership).
-final factionBuffSnapshotProvider =
-    FutureProvider.autoDispose<FactionBuffSnapshot>((ref) async {
-  final player = ref.watch(currentPlayerProvider);
-  if (player == null) return FactionBuffSnapshot.empty;
-  return ref.read(factionBuffServiceProvider).getBuffSnapshot(player.id);
-});
-
-/// Sprint 3.4 Etapa C — atributos efetivos pós-buff (str/dex/int/maxHp).
-final effectiveAttributesProvider =
-    FutureProvider.autoDispose<EffectiveAttributes>((ref) async {
-  final player = ref.watch(currentPlayerProvider);
-  if (player == null) return EffectiveAttributes.empty;
-  return ref.read(factionBuffServiceProvider)
-      .getEffectiveAttributes(player.id);
-});
+// Sprint 3.4 Etapa C — `factionBuffSnapshotProvider` e
+// `effectiveAttributesProvider` foram promovidos pra `lib/app/providers.dart`
+// (escopo global) no hotfix #2 (P1-C). Outros widgets (StatBarsRow do
+// Santuário) também precisavam consumir os mesmos valores efetivos, pra
+// manter consistência entre /personagem e Santuário (player Nova Ordem
+// vê maxHp 110 nas duas telas).
 
 class CharacterScreen extends ConsumerWidget {
   const CharacterScreen({super.key});
