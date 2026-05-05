@@ -144,6 +144,13 @@ class FactionAdmissionProgressService {
     }
   }
 
+  /// Sprint 3.4 Etapa C hotfix #3 (P0-F) — exposto público pra que
+  /// callers (ex: `QuestsScreenNotifier.build`) possam disparar
+  /// re-avaliação on-demand. Necessário porque expiração de janela é
+  /// passiva (não emite evento) — sem trigger explícito ao carregar
+  /// `/quests`, admissão com janela expirada ficava zumbi.
+  Future<void> evaluatePlayer(int playerId) => _evaluatePlayer(playerId);
+
   Future<void> _evaluatePlayer(int playerId) async {
     final all =
         await _missionRepo.findByTab(playerId, MissionTabOrigin.admission);

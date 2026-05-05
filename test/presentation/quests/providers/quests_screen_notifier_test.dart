@@ -183,9 +183,12 @@ void main() {
       expect(state.admissionMissions, isEmpty);
       expect(state.individualMissions, hasLength(1));
       expect(state.extrasCatalog, isEmpty);
-      // 4 findByTab calls (classTab, faction, admission, extras) — daily
-      // legacy foi droppado da UI na Etapa 1.3.A.
-      expect(repo.findByTabCalls, 4);
+      // Sprint 3.4 Etapa C hotfix #3 (P0-F) — 5 calls: 4 do bloco
+      // Future.wait (classTab/faction/admission/extras) + 1 de
+      // FactionAdmissionProgressService.evaluatePlayer (lê admission
+      // pra re-avaliar expiração de janela). Daily legacy ainda fora
+      // da contagem (droppado da UI na Etapa 1.3.A).
+      expect(repo.findByTabCalls, 5);
     });
 
     test('doneCount soma missões `completedAt != null` das seções legacy',

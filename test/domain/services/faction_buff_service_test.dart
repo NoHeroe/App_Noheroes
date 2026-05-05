@@ -157,8 +157,12 @@ void main() {
   });
 
   group('FactionBuffService — debuff override', () {
-    test('debuff_until > now → xp/gold viram 0.7, atributos voltam 1.0',
+    test('debuff_until > now → xp/gold viram 0.7; atributos PRESERVAM facção',
         () async {
+      // Sprint 3.4 Etapa C hotfix #3 (P0-G) — atributos NÃO sofrem
+      // debuff. Player Nova Ordem com debuff ativo deve continuar
+      // vendo +10% maxHp. Bug original (Etapa C) zerava todos atributos
+      // pra 1.0 durante debuff, violando decisão CEO 5.
       await seedPlayer(factionType: 'new_order');
       final until =
           DateTime.now().add(const Duration(hours: 24)).millisecondsSinceEpoch;
@@ -166,15 +170,34 @@ void main() {
 
       final m = await service.getActiveMultipliers(playerId);
       expect(m.hasDebuff, isTrue);
+      // Override econômico: xp/gold viram 0.7.
       expect(m.xpMult, 0.7);
       expect(m.goldMult, 0.7);
+      // Atributos PRESERVAM mults da facção atual (Nova Ordem maxHp 1.10).
+      expect(m.maxHpMult, 1.10,
+          reason: 'maxHp da facção PRESERVADO durante debuff');
+      expect(m.strengthMult, 1.0); // Nova Ordem não tem str_mult
+      expect(m.dexterityMult, 1.0);
+      expect(m.intelligenceMult, 1.0);
       expect(m.gemsMult, 1.0);
-      // Atributos NÃO sofrem debuff (CEO confirmou). Mesmo que Nova Ordem
-      // tivesse strength_mult > 1.0, durante debuff voltaria pra 1.0
-      // (override completo).
-      expect(m.strengthMult, 1.0);
-      expect(m.maxHpMult, 1.0);
       expect(m.debuffEndsAt, isNotNull);
+    });
+
+    test('debuff em Black Legion → xp 0.7 mas str preserva 1.25',
+        () async {
+      // Black Legion: xp_mult=1.05, strength_mult=1.25. Durante debuff,
+      // xp vira 0.7 (override) mas strength preserva 1.25.
+      await seedPlayer(factionType: 'black_legion');
+      final until =
+          DateTime.now().add(const Duration(hours: 12)).millisecondsSinceEpoch;
+      await seedDebuff(factionId: 'black_legion', untilMs: until);
+
+      final m = await service.getActiveMultipliers(playerId);
+      expect(m.hasDebuff, isTrue);
+      expect(m.xpMult, 0.7); // override
+      expect(m.goldMult, 0.7);
+      expect(m.strengthMult, 1.25,
+          reason: 'Força preserva mult da facção durante debuff');
     });
 
     test('debuff_until expirado (no passado) → mults da facção normais',
@@ -232,16 +255,20 @@ void main() {
           reason: 'floor(11 × 1.25) = floor(13.75) = 13');
     });
 
-    test('debuff ativo → atributos NÃO sofrem (mantém base)', () async {
+    test('debuff ativo → atributos NÃO sofrem (mantém buff da facção)',
+        () async {
+      // Sprint 3.4 Etapa C hotfix #3 (P0-G) — atributos preservam
+      // mult da facção durante debuff. Black Legion str_mult=1.25.
+      // strength 20 × 1.25 = floor(25) = 25 (mesmo durante debuff).
       await seedPlayer(factionType: 'black_legion', strength: 20);
       final until =
           DateTime.now().add(const Duration(hours: 12)).millisecondsSinceEpoch;
       await seedDebuff(factionId: 'black_legion', untilMs: until);
 
       final eff = await service.getEffectiveAttributes(playerId);
-      // Sob debuff, strengthMult vira 1.0 → effective = base.
       expect(eff.strengthBase, 20);
-      expect(eff.strengthEffective, 20);
+      expect(eff.strengthEffective, 25,
+          reason: 'Força preserva +25% Black Legion mesmo durante debuff');
     });
 
     test('player sem facção → effective = base (sem buff)', () async {
@@ -285,9 +312,11 @@ void main() {
 
     test('Debuff ativo → applied econômicos OMITIDOS, atributos preservados',
         () async {
-      // Catálogo Nova Ordem: xp 1.10 + maxHp 1.10. Sob debuff:
-      // xp/gold viram 0.7 (mas applied list NÃO mostra positivos pq mults
-      // estão override 0.7). maxHp também vira 1.0. Logo applied vazio.
+      // Sprint 3.4 Etapa C hotfix #3 (P0-G) — durante debuff:
+      // xp/gold viram 0.7 (override econômico). _renderAppliedEntries
+      // pula econômicos via `if (!hasDebuff)` (econômicos não aparecem
+      // como bônus). Atributos (maxHp 1.10) PRESERVAM mults da facção
+      // → aparecem em applied.
       await seedPlayer(factionType: 'new_order');
       final until =
           DateTime.now().add(const Duration(hours: 12)).millisecondsSinceEpoch;
@@ -295,8 +324,11 @@ void main() {
 
       final snap = await service.getBuffSnapshot(playerId);
       expect(snap.multipliers.hasDebuff, isTrue);
-      expect(snap.applied, isEmpty,
-          reason: 'durante debuff, override completo zera applied');
+      // Econômicos pulados durante debuff; maxHp 1.10 (atributo)
+      // continua em applied.
+      expect(snap.applied.length, 1,
+          reason: 'maxHp preservado em applied durante debuff');
+      expect(snap.applied.first.label, contains('Vida máxima'));
     });
   });
 

@@ -104,14 +104,23 @@ class FactionBuffService {
     return _withDebuffIfActive(playerId, base, factionType);
   }
 
-  /// Aplica debuff de saída se `debuff_until > now`. Override completo:
-  /// xpMult/goldMult viram 0.7, demais voltam pra 1.0 (debuff só afeta
-  /// economia/progressão).
+  /// Aplica debuff de saída se `debuff_until > now`. Override **só de
+  /// fluxo de progressão**: `xpMult` e `goldMult` viram 0.7. `gemsMult`
+  /// e atributos (str/dex/int/maxHp) **preservam os mults da facção**
+  /// (`base`).
+  ///
+  /// Sprint 3.4 Etapa C hotfix #3 (P0-G) — corrige regressão da Etapa
+  /// C original que zerava todos atributos pra 1.0 durante debuff,
+  /// violando decisão CEO 5: "atributos NÃO sofrem debuff — só fluxo
+  /// de progressão". Player Nova Ordem com debuff ativo deve continuar
+  /// vendo `+10% Vida máxima`.
   ///
   /// Lê `player_faction_membership` da PRÓPRIA facção atual quando
   /// `factionType` aponta pra uma. Se `factionType` é `none` ou null,
-  /// busca a row mais recente com `debuff_until > now` (player saiu de
-  /// uma facção e ainda está debuffado — caso normal).
+  /// busca a row mais recente com `debuff_until > now` (player saiu
+  /// de uma facção e ainda está debuffado — caso normal). Nesse caso
+  /// `base` é neutral (player não tem facção atual), então atributos
+  /// ficam em 1.0 naturalmente — sem override extra.
   Future<FactionBuffMultipliers> _withDebuffIfActive(
     int playerId,
     FactionBuffMultipliers base,
@@ -131,15 +140,16 @@ class FactionBuffService {
     final debuffUntilMs = rows.first.read<int?>('debuff_until');
     if (debuffUntilMs == null || debuffUntilMs <= nowMs) return base;
 
-    // Debuff ATIVO. Override econômico, atributos voltam pra 1.0.
+    // Debuff ATIVO. Override SÓ econômico (xp/gold). Atributos +
+    // gems preservam os mults da facção atual via `base.xxxMult`.
     return FactionBuffMultipliers(
       xpMult: 0.7,
       goldMult: 0.7,
-      gemsMult: 1.0,
-      strengthMult: 1.0,
-      dexterityMult: 1.0,
-      intelligenceMult: 1.0,
-      maxHpMult: 1.0,
+      gemsMult: base.gemsMult,
+      strengthMult: base.strengthMult,
+      dexterityMult: base.dexterityMult,
+      intelligenceMult: base.intelligenceMult,
+      maxHpMult: base.maxHpMult,
       hasDebuff: true,
       debuffEndsAt: DateTime.fromMillisecondsSinceEpoch(debuffUntilMs),
     );

@@ -165,6 +165,19 @@ class QuestsScreenNotifier
     final dailyToday =
         await dailyGenerator.getTodayMissions(playerId);
 
+    // Sprint 3.4 Etapa C hotfix #3 (P0-F) — re-avalia admissões antes
+    // de listar pra UI. Expiração de janela é passiva (não emite
+    // evento), então sem trigger explícito ao carregar /quests,
+    // missão com janela expirada ficava zumbi (UI mostrava
+    // "expirada" calculando do metaJson, mas state persistente
+    // continuava active). `evaluatePlayer` roda `_processMission`
+    // em todas as admissões ativas — handler do hotfix #1 detecta
+    // expiração + re-avalia sub-tasks com expired=true; rejeita
+    // se alguma falhou ou completa se todas achieved no fechamento.
+    await ref
+        .read(factionAdmissionProgressServiceProvider)
+        .evaluatePlayer(playerId);
+
     final results = await Future.wait([
       repo.findByTab(playerId, MissionTabOrigin.classTab),
       repo.findByTab(playerId, MissionTabOrigin.faction),
