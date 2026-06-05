@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/guild_rank.dart';
+import '../../../core/utils/faction_theme.dart';
 import '../../../domain/enums/source_type.dart';
 import '../../../domain/models/player_snapshot.dart';
 import '../../../domain/models/faction_buff_multipliers.dart';
@@ -145,29 +146,8 @@ class GuildScreen extends ConsumerWidget {
   }
 
   // ── D1 ────────────────────────────────────────────────────────────
-  // Catálogo estático de tema por facção (espelha assets/data/factions.json
-  // + character_screen._factionName). Mantido inline pra evitar I/O async
-  // num card de destaque; cores são estáveis (não mudam em runtime).
-  static const _factionNames = {
-    'guild':        'Guilda de Aventureiros',
-    'moon_clan':    'Clã da Lua',
-    'sun_clan':     'Clã do Sol',
-    'black_legion': 'Legião Negra',
-    'new_order':    'Nova Ordem',
-    'trinity':      'Culto da Trindade',
-    'renegades':    'Os Renegados',
-    'error':        'Facção ERROR',
-  };
-  static const _factionColors = {
-    'guild':        Color(0xFFC2A05A),
-    'moon_clan':    Color(0xFF3070B3),
-    'sun_clan':     Color(0xFFC2A05A),
-    'black_legion': Color(0xFF8B2020),
-    'new_order':    Color(0xFF6B4FA0),
-    'trinity':      Color(0xFF4FA06B),
-    'renegades':    Color(0xFFB36B00),
-    'error':        Color(0xFF7B2FBE),
-  };
+  // Tema (nome/cor) por facção vive em FactionTheme (Etapa E extraiu os
+  // maps que eram inline aqui, pra reuso na FactionScreen).
 
   Widget _buildFactionCard(
       BuildContext context, WidgetRef ref, String factionType) {
@@ -179,8 +159,8 @@ class GuildScreen extends ConsumerWidget {
       return _buildNoFactionCard(context, isPending, factionType);
     }
 
-    final name = _factionNames[factionType] ?? factionType;
-    final color = _factionColors[factionType] ?? AppColors.gold;
+    final name = FactionTheme.nameOf(factionType);
+    final color = FactionTheme.colorOf(factionType);
     final buffAsync = ref.watch(factionBuffSnapshotProvider);
 
     return Container(
@@ -253,27 +233,26 @@ class GuildScreen extends ConsumerWidget {
             data: (snap) => _buildFactionBuffs(snap, color),
           ),
           const SizedBox(height: 16),
-          // "Ver detalhes" — desabilitado até a página /faction/<id> da
-          // Etapa E existir.
-          Opacity(
-            opacity: 0.5,
+          // Sprint 3.4 Etapa E — "Ver detalhes" religado: abre a ficha da
+          // facção atual (/faction/<faction_type>).
+          GestureDetector(
+            onTap: () => context.go('/faction/$factionType'),
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.border),
-                color: AppColors.surfaceAlt,
+                border: Border.all(color: color.withValues(alpha: 0.4)),
+                color: color.withValues(alpha: 0.1),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.lock_outline,
-                      color: AppColors.textMuted, size: 14),
+                  Text('Ver detalhes',
+                      style: GoogleFonts.cinzelDecorative(
+                          fontSize: 11, color: color, letterSpacing: 1)),
                   const SizedBox(width: 8),
-                  Text('Ver detalhes — em breve',
-                      style: GoogleFonts.roboto(
-                          fontSize: 11, color: AppColors.textMuted)),
+                  Icon(Icons.chevron_right, color: color, size: 16),
                 ],
               ),
             ),
@@ -315,7 +294,7 @@ class GuildScreen extends ConsumerWidget {
       BuildContext context, bool isPending, String factionType) {
     if (isPending) {
       final pendingId = factionType.substring('pending:'.length);
-      final pendingName = _factionNames[pendingId] ?? pendingId;
+      final pendingName = FactionTheme.nameOf(pendingId);
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
@@ -454,7 +433,7 @@ class GuildScreen extends ConsumerWidget {
       return;
     }
 
-    final name = _factionNames[factionType] ?? factionType;
+    final name = FactionTheme.nameOf(factionType);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(

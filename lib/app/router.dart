@@ -21,6 +21,7 @@ import '../presentation/shop/screens/shop_screen.dart';
 import '../presentation/shop/screens/shops_list_screen.dart';
 import '../presentation/class_selection/screens/class_selection_screen.dart';
 import '../presentation/faction_selection/screens/faction_selection_screen.dart';
+import '../presentation/faction/screens/faction_screen.dart';
 import '../presentation/achievements/screens/achievements_screen.dart';
 import '../presentation/history/screens/history_screen.dart';
 import '../presentation/profile/screens/profile_screen.dart';
@@ -94,6 +95,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/achievements',       builder: (c, s) => const AchievementsScreen()),
       GoRoute(path: '/class-selection',    builder: (c, s) => const ClassSelectionScreen()),
       GoRoute(path: '/faction-selection',  builder: (c, s) => const FactionSelectionScreen()),
+      // Sprint 3.4 Etapa E — ficha da facção atual do player. `id` é o
+      // faction_type; a tela mostra a ficha de membro (ou fallback se o
+      // player não é membro daquela facção).
+      GoRoute(
+        path: '/faction/:id',
+        builder: (c, s) => FactionScreen(factionId: s.pathParameters['id']!),
+      ),
       // Sprint 3.1 Bloco 9 — Quiz de calibração inicial.
       // Sprint 3.1 Bloco 10b — também aceita `?recalibrate=true` (modo
       // refazer, acessado via SanctuaryDrawer item Refazer Calibração).
