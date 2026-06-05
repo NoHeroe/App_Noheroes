@@ -7,9 +7,14 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/guild_rank.dart';
 import '../../../domain/enums/source_type.dart';
 import '../../../domain/models/player_snapshot.dart';
+import '../../../domain/models/faction_buff_multipliers.dart';
 import 'package:drift/drift.dart' hide Column;
 import '../../shared/widgets/npc_dialog_overlay.dart';
 import '../../shared/widgets/reward_toast.dart';
+import '../../shared/widgets/app_snack.dart';
+// Sprint 3.4 Etapa D — religa a AscensionTab (até então órfã) num host
+// navegável a partir do header Aventureiro.
+import '../widgets/ascension_tab.dart';
 
 /// Sprint 3.4 Etapa A — snapshot mínimo da Guilda usando as fontes de
 /// dados consolidadas (`player_faction_membership` factionId='guild' +
@@ -98,6 +103,7 @@ class GuildScreen extends ConsumerWidget {
     final admitted = status != null && status.guildRank != 'none';
     final rankLabel = _rankLabel(status?.guildRank ?? 'none');
     final reputation = status?.reputation ?? 0;
+    final factionType = (player?.factionType as String?) ?? 'none';
 
     return Column(
       children: [
@@ -106,15 +112,27 @@ class GuildScreen extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             children: [
-              // Card Noryan Gray
+              // D1 — DESTAQUE PRINCIPAL: facção atual do player.
+              _buildFactionCard(context, ref, factionType),
+              const SizedBox(height: 12),
+
+              // D4 — Trocar facção (sai da atual via LeaveFactionService
+              // se member, ou vai direto pra seleção se sem facção).
+              _buildSwitchFactionButton(context, ref, player, factionType),
+              const SizedBox(height: 16),
+
+              // Card Noryan Gray (narrativa)
               _buildNoryanCard(context, ref, admitted, status, player),
               const SizedBox(height: 16),
 
+              // D2 — Header Aventureiro nível 1 (rank + ascensão) OU
+              // fluxo de admissão (rank == none).
               if (!admitted) ...[
                 _buildAdmissionCard(context, ref, player, status),
               ] else ...[
-                _buildRankCard(status!),
+                _buildRankCard(context, status),
                 const SizedBox(height: 16),
+                // D3 — Missões de Guilda (placeholder elegante).
                 _buildMissionsPlaceholder(),
                 const SizedBox(height: 16),
                 _buildGuildShopCard(context),
@@ -123,6 +141,383 @@ class GuildScreen extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  // ── D1 ────────────────────────────────────────────────────────────
+  // Catálogo estático de tema por facção (espelha assets/data/factions.json
+  // + character_screen._factionName). Mantido inline pra evitar I/O async
+  // num card de destaque; cores são estáveis (não mudam em runtime).
+  static const _factionNames = {
+    'guild':        'Guilda de Aventureiros',
+    'moon_clan':    'Clã da Lua',
+    'sun_clan':     'Clã do Sol',
+    'black_legion': 'Legião Negra',
+    'new_order':    'Nova Ordem',
+    'trinity':      'Culto da Trindade',
+    'renegades':    'Os Renegados',
+    'error':        'Facção ERROR',
+  };
+  static const _factionColors = {
+    'guild':        Color(0xFFC2A05A),
+    'moon_clan':    Color(0xFF3070B3),
+    'sun_clan':     Color(0xFFC2A05A),
+    'black_legion': Color(0xFF8B2020),
+    'new_order':    Color(0xFF6B4FA0),
+    'trinity':      Color(0xFF4FA06B),
+    'renegades':    Color(0xFFB36B00),
+    'error':        Color(0xFF7B2FBE),
+  };
+
+  Widget _buildFactionCard(
+      BuildContext context, WidgetRef ref, String factionType) {
+    final isPending = factionType.startsWith('pending:');
+    final hasFaction =
+        factionType.isNotEmpty && factionType != 'none' && !isPending;
+
+    if (!hasFaction) {
+      return _buildNoFactionCard(context, isPending, factionType);
+    }
+
+    final name = _factionNames[factionType] ?? factionType;
+    final color = _factionColors[factionType] ?? AppColors.gold;
+    final buffAsync = ref.watch(factionBuffSnapshotProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.55), width: 1.5),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [color.withValues(alpha: 0.14), AppColors.surface],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.25),
+            blurRadius: 18,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              // Brasão temático
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color.withValues(alpha: 0.15),
+                  border: Border.all(color: color, width: 2),
+                ),
+                child: Icon(Icons.shield, color: color, size: 28),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('SUA FACÇÃO',
+                        style: GoogleFonts.roboto(
+                            fontSize: 9,
+                            color: AppColors.textMuted,
+                            letterSpacing: 2)),
+                    const SizedBox(height: 4),
+                    Text(name,
+                        style: GoogleFonts.cinzelDecorative(
+                            fontSize: 16, color: color, letterSpacing: 1)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Buffs ativos (reusa FactionBuffService via provider global —
+          // consistente com /personagem).
+          buffAsync.when(
+            loading: () => const SizedBox(
+                height: 18,
+                child: Center(
+                    child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: AppColors.gold)))),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (snap) => _buildFactionBuffs(snap, color),
+          ),
+          const SizedBox(height: 16),
+          // "Ver detalhes" — desabilitado até a página /faction/<id> da
+          // Etapa E existir.
+          Opacity(
+            opacity: 0.5,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.border),
+                color: AppColors.surfaceAlt,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.lock_outline,
+                      color: AppColors.textMuted, size: 14),
+                  const SizedBox(width: 8),
+                  Text('Ver detalhes — em breve',
+                      style: GoogleFonts.roboto(
+                          fontSize: 11, color: AppColors.textMuted)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFactionBuffs(FactionBuffSnapshot snap, Color color) {
+    if (snap.applied.isEmpty) {
+      return Text(
+        snap.multipliers.hasDebuff
+            ? 'Buffs suspensos pelo debuff de saída.'
+            : 'Sem buffs ativos no momento.',
+        style: GoogleFonts.roboto(fontSize: 11, color: AppColors.textMuted),
+      );
+    }
+    return Wrap(
+      spacing: 8,
+      runSpacing: 6,
+      children: snap.applied
+          .map((e) => Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: color.withValues(alpha: 0.4)),
+                ),
+                child: Text(e.label,
+                    style: GoogleFonts.roboto(fontSize: 10, color: color)),
+              ))
+          .toList(growable: false),
+    );
+  }
+
+  Widget _buildNoFactionCard(
+      BuildContext context, bool isPending, String factionType) {
+    if (isPending) {
+      final pendingId = factionType.substring('pending:'.length);
+      final pendingName = _factionNames[pendingId] ?? pendingId;
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.mp.withValues(alpha: 0.4)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              const Icon(Icons.hourglass_top, color: AppColors.mp, size: 20),
+              const SizedBox(width: 10),
+              Text('ADMISSÃO EM CURSO',
+                  style: GoogleFonts.cinzelDecorative(
+                      fontSize: 12, color: AppColors.mp, letterSpacing: 1.5)),
+            ]),
+            const SizedBox(height: 10),
+            Text(
+              'Você está em processo de admissão na facção $pendingName. '
+              'Complete as missões de admissão para jurar lealdade.',
+              style: GoogleFonts.roboto(
+                  fontSize: 12, color: AppColors.textSecondary, height: 1.5),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => context.go('/quests'),
+                style: TextButton.styleFrom(
+                  backgroundColor: AppColors.mp.withValues(alpha: 0.12),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(color: AppColors.mp.withValues(alpha: 0.4)),
+                  ),
+                ),
+                child: Text('Ver missões de admissão',
+                    style: GoogleFonts.cinzelDecorative(
+                        fontSize: 12, color: AppColors.mp)),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Sem facção.
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            const Icon(Icons.flag_outlined,
+                color: AppColors.textMuted, size: 20),
+            const SizedBox(width: 10),
+            Text('SEM FACÇÃO',
+                style: GoogleFonts.cinzelDecorative(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 1.5)),
+          ]),
+          const SizedBox(height: 10),
+          Text(
+            'Você ainda não jurou lealdade a nenhuma facção. Escolher um '
+            'lado desbloqueia buffs permanentes e conteúdo exclusivo.',
+            style: GoogleFonts.roboto(
+                fontSize: 12, color: AppColors.textSecondary, height: 1.5),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () => context.go('/faction-selection'),
+              style: TextButton.styleFrom(
+                backgroundColor: AppColors.gold.withValues(alpha: 0.15),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  side: BorderSide(color: AppColors.gold.withValues(alpha: 0.5)),
+                ),
+              ),
+              child: Text('Escolher facção',
+                  style: GoogleFonts.cinzelDecorative(
+                      fontSize: 12, color: AppColors.gold)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── D4 ────────────────────────────────────────────────────────────
+  Widget _buildSwitchFactionButton(BuildContext context, WidgetRef ref,
+      dynamic player, String factionType) {
+    final isMember = factionType.isNotEmpty &&
+        factionType != 'none' &&
+        !factionType.startsWith('pending:');
+
+    return GestureDetector(
+      onTap: () => _onSwitchFaction(context, ref, player, factionType, isMember),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+          color: AppColors.surface,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.swap_horiz,
+                color: AppColors.textSecondary, size: 18),
+            const SizedBox(width: 8),
+            Text(isMember ? 'Trocar de facção' : 'Escolher facção',
+                style: GoogleFonts.roboto(
+                    fontSize: 12, color: AppColors.textSecondary)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _onSwitchFaction(BuildContext context, WidgetRef ref,
+      dynamic player, String factionType, bool isMember) async {
+    // Sem facção (ou pending) → vai direto pra seleção, sem penalidade.
+    if (!isMember) {
+      context.go('/faction-selection');
+      return;
+    }
+
+    final name = _factionNames[factionType] ?? factionType;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.border),
+        ),
+        title: Text('Sair de $name?',
+            style: GoogleFonts.cinzelDecorative(
+                color: AppColors.textPrimary, fontSize: 15)),
+        content: Text(
+          'Sair custa caro:\n'
+          '• -20 de reputação na facção\n'
+          '• Debuff de -30% XP / -30% ouro por 48h\n'
+          '• Bloqueio de 7 dias para entrar em outra facção\n\n'
+          'Seu Rank de Aventureiro é preservado.',
+          style: GoogleFonts.roboto(
+              color: AppColors.textSecondary, fontSize: 13, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Ficar',
+                style: GoogleFonts.roboto(color: AppColors.textMuted)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Sair da facção',
+                style: GoogleFonts.roboto(color: AppColors.hp)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    // Conecta ao LeaveFactionService já pronto (Sub-Etapa B.2): aplica
+    // debuff 48h + lock 7d + -20 rep numa transação. Não duplicamos a
+    // lógica de saída aqui.
+    try {
+      await ref.read(leaveFactionServiceProvider).leaveFaction(
+            playerId: player.id,
+            factionId: factionType,
+          );
+    } catch (e) {
+      if (context.mounted) {
+        AppSnack.warning(context, 'Não foi possível sair: $e');
+      }
+      return;
+    }
+
+    // Refresca player + snapshot da guilda.
+    final updated = await ref.read(authDsProvider).currentSession();
+    ref.read(currentPlayerProvider.notifier).state = updated;
+    ref.invalidate(guildStatusProvider);
+    ref.invalidate(factionBuffSnapshotProvider);
+
+    if (context.mounted) context.go('/faction-selection');
+  }
+
+  void _openAscension(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const _AscensionHostScreen()),
     );
   }
 
@@ -363,77 +758,172 @@ class GuildScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildRankCard(GuildMembershipSnapshot status) {
-    final rank = status.guildRank.toUpperCase();
+  // ── D2 ────────────────────────────────────────────────────────────
+  // Header Aventureiro nível 1: rank atual + progressão E→S + CTA pros
+  // Testes de Ascensão (religa a AscensionTab, antes órfã).
+  static const _rankOrder = ['e', 'd', 'c', 'b', 'a', 's'];
+
+  Widget _buildRankCard(BuildContext context, GuildMembershipSnapshot status) {
+    final rankLower = status.guildRank.toLowerCase();
+    final rank = rankLower.toUpperCase();
+    final idx = _rankOrder.indexOf(rankLower);
+    final isMax = idx == _rankOrder.length - 1;
+    final nextRank = (idx >= 0 && !isMax)
+        ? _rankOrder[idx + 1].toUpperCase()
+        : null;
+    // Progressão visual E→S (idx 0..5).
+    final progress = idx >= 0 ? (idx / (_rankOrder.length - 1)) : 0.0;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: AppColors.gold.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.gold.withValues(alpha: 0.15),
-              border: Border.all(
-                  color: AppColors.gold.withValues(alpha: 0.5)),
-            ),
-            child: Center(
-              child: Text(rank,
-                  style: GoogleFonts.cinzelDecorative(
-                      fontSize: 18, color: AppColors.gold)),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              Text('Rank ${rank} da Guilda',
-                  style: GoogleFonts.cinzelDecorative(
-                      fontSize: 13, color: AppColors.gold)),
-              const SizedBox(height: 4),
-              Text(
-                'Rank ${rank} · ${status.reputation} reputação',
-                style: GoogleFonts.roboto(
-                    fontSize: 11, color: AppColors.textMuted),
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.gold.withValues(alpha: 0.15),
+                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
+                ),
+                child: Center(
+                  child: Text(rank,
+                      style: GoogleFonts.cinzelDecorative(
+                          fontSize: 18, color: AppColors.gold)),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Aventureiro Rank $rank',
+                        style: GoogleFonts.cinzelDecorative(
+                            fontSize: 13, color: AppColors.gold)),
+                    const SizedBox(height: 4),
+                    Text('${status.reputation} reputação',
+                        style: GoogleFonts.roboto(
+                            fontSize: 11, color: AppColors.textMuted)),
+                  ],
+                ),
               ),
             ],
           ),
+          const SizedBox(height: 14),
+          // Progressão E → S
+          Row(
+            children: [
+              Text('E',
+                  style: GoogleFonts.roboto(
+                      fontSize: 10, color: AppColors.textMuted)),
+              const SizedBox(width: 6),
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: AppColors.border,
+                    valueColor:
+                        const AlwaysStoppedAnimation(AppColors.gold),
+                    minHeight: 5,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text('S',
+                  style: GoogleFonts.roboto(
+                      fontSize: 10, color: AppColors.textMuted)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // CTA Testes de Ascensão (ou estado de topo).
+          if (isMax)
+            Row(
+              children: [
+                const Icon(Icons.star, color: Color(0xFFFFD700), size: 16),
+                const SizedBox(width: 8),
+                Text('Rank máximo atingido — Lenda de Caelum.',
+                    style: GoogleFonts.roboto(
+                        fontSize: 11, color: AppColors.textMuted)),
+              ],
+            )
+          else
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => _openAscension(context),
+                style: TextButton.styleFrom(
+                  backgroundColor: AppColors.gold.withValues(alpha: 0.12),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(color: AppColors.gold.withValues(alpha: 0.4)),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.arrow_circle_up,
+                        color: AppColors.gold, size: 16),
+                    const SizedBox(width: 8),
+                    Text(
+                        nextRank != null
+                            ? 'Testes de Ascensão — Rank $nextRank'
+                            : 'Testes de Ascensão',
+                        style: GoogleFonts.cinzelDecorative(
+                            fontSize: 11,
+                            color: AppColors.gold,
+                            letterSpacing: 1)),
+                  ],
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
+  // ── D3 ────────────────────────────────────────────────────────────
+  // Missões de Guilda — estado vazio elegante. NÃO implementa lógica
+  // (sprint futura, dívida D18).
   Widget _buildMissionsPlaceholder() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
       ),
-      child: Row(
+      child: Column(
         children: [
-          const Icon(Icons.map_outlined,
-              color: AppColors.textMuted, size: 20),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Missões da Guilda',
-                  style: GoogleFonts.roboto(
-                      fontSize: 13, color: AppColors.textPrimary)),
-              Text('Em breve — Sprint 3',
-                  style: GoogleFonts.roboto(
-                      fontSize: 11, color: AppColors.textMuted)),
-            ],
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.surfaceAlt,
+              border: Border.all(color: AppColors.border),
+            ),
+            child: const Icon(Icons.map_outlined,
+                color: AppColors.textMuted, size: 22),
           ),
+          const SizedBox(height: 12),
+          Text('Missões de Guilda',
+              style: GoogleFonts.cinzelDecorative(
+                  fontSize: 13, color: AppColors.textSecondary)),
+          const SizedBox(height: 6),
+          Text('Missões de Guilda chegam em breve.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.roboto(
+                  fontSize: 11, color: AppColors.textMuted)),
         ],
       ),
     );
@@ -594,4 +1084,28 @@ class GuildScreen extends ConsumerWidget {
         's' => 'Rank S',
         _ => 'Sem Rank',
       };
+}
+
+/// Sprint 3.4 Etapa D — host navegável da `AscensionTab` (até então órfã).
+/// Acessado via "Testes de Ascensão" no header Aventureiro de /guild.
+/// `AscensionTab` é um ListView; embutir num ListView do hub causaria
+/// conflito de scroll, então abre como tela própria via Navigator.push.
+class _AscensionHostScreen extends StatelessWidget {
+  const _AscensionHostScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.black,
+      appBar: AppBar(
+        backgroundColor: AppColors.black,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppColors.gold),
+        title: Text('TESTES DE ASCENSÃO',
+            style: GoogleFonts.cinzelDecorative(
+                fontSize: 13, color: AppColors.gold, letterSpacing: 2)),
+      ),
+      body: const SafeArea(child: AscensionTab()),
+    );
+  }
 }

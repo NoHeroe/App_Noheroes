@@ -23,7 +23,8 @@ import '../widgets/caelum_day_banner.dart';
 import '../widgets/shadow_status_card.dart';
 import '../widgets/npc_dialogue_card.dart';
 import '../../../core/utils/asset_loader.dart';
-import '../widgets/stat_bars_row.dart';
+// Sprint 3.4 Etapa D (D17) — StatBarsRow saiu do Santuário e foi pra
+// /personagem (shared/widgets). Import removido.
 import '../widgets/sanctuary_drawer.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
 import '../../guild/screens/guild_screen.dart';
@@ -317,9 +318,10 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Sprint 3.4 Etapa D (D17) — StatBarsRow movido pra
+                          // /personagem (acima dos atributos). Santuário abre
+                          // direto no banner do dia.
                           SizedBox(height: 8),
-                          StatBarsRow(),
-                          SizedBox(height: 12),
                           CaelumDayBanner(),
                           SizedBox(height: 16),
                           ShadowStatusCard(),

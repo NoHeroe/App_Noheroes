@@ -13,6 +13,9 @@ import '../../../domain/models/inventory_entry_with_spec.dart';
 import '../../shared/widgets/feature_chip.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
 import '../../shared/widgets/app_snack.dart';
+// Sprint 3.4 Etapa D (D17) — barras de status (HP/VT|MP/XP) migraram do
+// Santuário pra cá, renderizadas acima dos atributos.
+import '../../shared/widgets/stat_bars_row.dart';
 import '../widgets/stats_panel.dart';
 
 // Equipamento do jogador via playerEquipmentService. Substitui a leitura
@@ -85,6 +88,12 @@ class CharacterScreen extends ConsumerWidget {
                         _buildClassFaction(player),
                         const SizedBox(height: 12),
                         _buildGuildRankCard(player),
+                        const SizedBox(height: 12),
+                        // Sprint 3.4 Etapa D (D17) — barras de status acima dos
+                        // atributos. maxHp já vem pós-buff via
+                        // effectiveAttributesProvider (consistente com a seção
+                        // ATRIBUTOS EFETIVOS abaixo).
+                        const StatBarsRow(),
                         const SizedBox(height: 12),
                         _buildAttributes(context, ref, player, effective),
                         const SizedBox(height: 12),

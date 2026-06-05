@@ -6,6 +6,18 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/vitalism_calculator.dart';
 import '../../../data/database/tables/players_table_ext.dart';
 
+/// Barras de status do jogador (HP / VT|MP / XP).
+///
+/// Sprint 3.4 Etapa D (D17) — realocado de `sanctuary/widgets/` para
+/// `shared/widgets/`. As barras saíram do Santuário e passaram a viver em
+/// `/personagem` (acima dos atributos), onde fazem mais sentido contextual
+/// (tela de stats próprios). A profundidade relativa dos imports é idêntica
+/// à da casa antiga, então nenhum import interno mudou.
+///
+/// Sprint 3.4 Etapa C hotfix #2 (P1-C) — `maxHp` lê do
+/// `effectiveAttributesProvider` (pós-buff de facção), não do DB direto.
+/// Mantém consistência com /personagem (player Nova Ordem vê 110/X em ambas
+/// as telas). Fallback pra `player.maxHp` enquanto provider carrega.
 class StatBarsRow extends ConsumerWidget {
   const StatBarsRow({super.key});
 
@@ -15,11 +27,6 @@ class StatBarsRow extends ConsumerWidget {
     final playerAsync = ref.watch(playerStreamProvider);
     final player = playerAsync.value ?? ref.watch(currentPlayerProvider);
 
-    // Sprint 3.4 Etapa C hotfix #2 (P1-C) — `maxHp` lê do
-    // `effectiveAttributesProvider` (pós-buff de facção), não do DB
-    // direto. Mantém consistência com /personagem (player Nova Ordem
-    // vê 110/X em ambas as telas, não 100/X aqui e 110 lá).
-    // Fallback pra `player.maxHp` enquanto provider carrega.
     final effective = ref.watch(effectiveAttributesProvider).value;
 
     final hp      = player?.hp ?? 100;
