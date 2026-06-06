@@ -796,6 +796,61 @@
       "trigger": { "type": "daily_mission_failed_count", "target": 100 },
       "reward_tier_custom": { "xp": 1500, "gold": 2000, "gems": 60, "baus_secretos": 2 },
       "is_secret": true
+    },
+
+    {
+      "key": "FACCAO_LUA_CRESCENTE",
+      "name": "Sob a Lua Crescente",
+      "description": "Você jurou lealdade ao Clã da Lua.\n\nSilêncio, precisão e honra. A Lua não ilumina — ela esconde, e protege quem aprende a andar no escuro.",
+      "category": "faccao",
+      "trigger": { "type": "event_faction_joined", "target": 1, "params": { "faction_id": "moon_clan" } },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "FACCAO_SOL_NASCENTE",
+      "name": "Chama do Sol Nascente",
+      "description": "Você jurou lealdade ao Clã do Sol.\n\nForça, glória e sabedoria. Onde o Sol nasce, a ambição disciplinada vira luz — e a luz vira poder.",
+      "category": "faccao",
+      "trigger": { "type": "event_faction_joined", "target": 1, "params": { "faction_id": "sun_clan" } },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "FACCAO_LEGIAO_NEGRA",
+      "name": "Aço Sem Recuo",
+      "description": "Você marchou com a Legião Negra.\n\nPoder sem desculpas. Lealdade ou morte. Quem ergue o aço da Legião não conhece a palavra recuo.",
+      "category": "faccao",
+      "trigger": { "type": "event_faction_joined", "target": 1, "params": { "faction_id": "black_legion" } },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "FACCAO_NOVA_ORDEM",
+      "name": "A Ordem Renasce",
+      "description": "Você abraçou a Nova Ordem.\n\nResistência, cautela e renascimento. Dos escombros das antigas nações, ergue-se quem recusou a Legião.",
+      "category": "faccao",
+      "trigger": { "type": "event_faction_joined", "target": 1, "params": { "faction_id": "new_order" } },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "FACCAO_TRINDADE",
+      "name": "Os Três Caminhos",
+      "description": "Você se uniu ao Culto da Trindade.\n\nSombra é verdade. O Vazio revela o que a luz esconde — e os três caminhos convergem no mesmo abismo.",
+      "category": "faccao",
+      "trigger": { "type": "event_faction_joined", "target": 1, "params": { "faction_id": "trinity" } },
+      "reward_tier": "notavel",
+      "is_secret": false
+    },
+    {
+      "key": "FACCAO_RENEGADOS",
+      "name": "Fora da Lei",
+      "description": "Você caiu com os Renegados.\n\nOuro acima de lealdade. Liberdade acima de tudo. Sem ideologia, sem moral rígida — só o pragmatismo de quem sobrevive.",
+      "category": "faccao",
+      "trigger": { "type": "event_faction_joined", "target": 1, "params": { "faction_id": "renegades" } },
+      "reward_tier": "notavel",
+      "is_secret": false
     }
   ]
 }

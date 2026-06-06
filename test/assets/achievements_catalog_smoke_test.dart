@@ -49,8 +49,9 @@ void main() {
         .toList();
   });
 
-  test('catálogo tem 85 entries', () {
-    expect(entries.length, 85);
+  test('catálogo tem 91 entries', () {
+    // Sprint 3.4 Etapa G.1 — +6 conquistas de facção (categoria faccao).
+    expect(entries.length, 91);
   });
 
   test('todas as keys são únicas', () {
@@ -102,9 +103,11 @@ void main() {
       'active_days': 1,
       'speedrun': 2,
       'secret': 8,
+      // Sprint 3.4 Etapa G.1 — conquistas de facção (event_faction_joined).
+      'faccao': 6,
     });
     // Soma sanity.
-    expect(byCategory.values.fold<int>(0, (a, b) => a + b), 85);
+    expect(byCategory.values.fold<int>(0, (a, b) => a + b), 91);
   });
 
   test('todos reward_tier referenciados existem em tier_definitions', () {
