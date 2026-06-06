@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../data/datasources/local/diary_service.dart';
 import '../../../data/database/app_database.dart';
 import 'dart:math' as math;
 
@@ -302,8 +301,7 @@ class _DiarySectionState extends ConsumerState<_DiarySection> {
   Future<void> _load() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
-    final db = ref.read(appDatabaseProvider);
-    final service = DiaryService(db);
+    final service = ref.read(diaryServiceProvider);
     final entries = await service.getHistory(player.id);
     setState(() => _entries = entries);
   }
@@ -311,8 +309,11 @@ class _DiarySectionState extends ConsumerState<_DiarySection> {
   Future<void> _save() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null || _ctrl.text.trim().isEmpty) return;
-    final db = ref.read(appDatabaseProvider);
-    final service = DiaryService(db);
+    // Sprint 3.4 Etapa G.2 (D15) — usa o provider COM bus, pra que
+    // saveEntry publique DiaryEntryCreated e a sub-task de admissão
+    // admission_diary_entry_window progrida (antes: DiaryService(db) sem
+    // bus → publish virava no-op).
+    final service = ref.read(diaryServiceProvider);
     await service.saveEntry(player.id, _ctrl.text.trim());
     _ctrl.clear();
     setState(() => _writing = false);

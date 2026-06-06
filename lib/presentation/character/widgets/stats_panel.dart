@@ -7,7 +7,21 @@ import '../../../data/database/tables/players_table_ext.dart';
 
 class StatsPanel extends StatelessWidget {
   final PlayersTableData player;
-  const StatsPanel({super.key, required this.player});
+
+  /// Sprint 3.4 Etapa G.2 (D16) — % de bônus de XP/Ouro vindo do buff de
+  /// FACÇÃO (FactionBuffService), passado pelo character_screen (que assiste
+  /// factionBuffSnapshotProvider). Somado ao bônus de carisma/equipamento pra
+  /// o player ver o total real. Pode ser negativo durante debuff de saída
+  /// (xpMult/goldMult 0.7 → -30%), refletindo o que o RewardGrant aplica.
+  final int factionXpBonusPct;
+  final int factionGoldBonusPct;
+
+  const StatsPanel({
+    super.key,
+    required this.player,
+    this.factionXpBonusPct = 0,
+    this.factionGoldBonusPct = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -62,8 +76,14 @@ class StatsPanel extends StatelessWidget {
 
           const SizedBox(height: 12),
           _group('BÔNUS', [
-            _StatRow('Bônus XP',   '+${stats['xpBonus']}%',   AppColors.purple),
-            _StatRow('Bônus Ouro', '+${stats['goldBonus']}%',  AppColors.gold),
+            // Sprint 3.4 Etapa G.2 (D16) — soma carisma/equipamento + buff
+            // de facção (total real). _fmtPct cuida do sinal (debuff → -30%).
+            _StatRow('Bônus XP',
+                _fmtPct((stats['xpBonus'] ?? 0) + factionXpBonusPct),
+                AppColors.purple),
+            _StatRow('Bônus Ouro',
+                _fmtPct((stats['goldBonus'] ?? 0) + factionGoldBonusPct),
+                AppColors.gold),
           ]),
 
           if (player.classType == null || player.classType!.isEmpty) ...[
@@ -87,6 +107,10 @@ class StatsPanel extends StatelessWidget {
       ),
     );
   }
+
+  // Sprint 3.4 Etapa G.2 (D16) — formata % com sinal explícito (positivo
+  // ganha '+', negativo mantém '-' do debuff). Ex: 11 → "+11%", -25 → "-25%".
+  static String _fmtPct(int v) => v >= 0 ? '+$v%' : '$v%';
 
   Widget _group(String label, List<Widget> rows) {
     return Column(

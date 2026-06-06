@@ -69,6 +69,12 @@ class GuildRankSystem {
         GuildRank.s => 'Rank S',
       };
 
+  /// Sprint 3.4 Etapa G.2 (D14) — true se [current] >= [min] na ordem
+  /// e<d<c<b<a<s (comparação por índice do enum). Usado pra gatear
+  /// facções extremas (ERROR exige rank B+ pra entrar).
+  static bool meetsMinimum(GuildRank current, GuildRank min) =>
+      current.index >= min.index;
+
   /// Próximo rank (null se já é S)
   static GuildRank? next(GuildRank rank) {
     final idx = GuildRank.values.indexOf(rank);

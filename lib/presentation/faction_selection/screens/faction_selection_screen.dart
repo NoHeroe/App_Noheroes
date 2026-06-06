@@ -16,6 +16,7 @@ import 'dart:convert';
 import '../../shared/widgets/app_snack.dart';
 import '../../../data/datasources/local/npc_reputation_service.dart';
 import '../../../core/utils/asset_loader.dart';
+import '../../../core/utils/guild_rank.dart';
 import 'package:drift/drift.dart' show Variable;
 
 class FactionSelectionScreen extends ConsumerStatefulWidget {
@@ -122,6 +123,21 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
         context,
         'Bloqueado até ${_fmtLockDate(lockedUntil)} — você saiu de uma '
         'facção recentemente.',
+      );
+      return;
+    }
+
+    // Sprint 3.4 Etapa G.2 (D14) — ERROR (facção extrema) exige rank B+
+    // pra ENTRAR. Gate de RANK, independente do gate de visibilidade da
+    // Etapa F (achievement). ERROR continua visível na lista; só o confirm
+    // bloqueia. Ordem de rank: e<d<c<b<a<s.
+    if (faction['id'] == 'error' &&
+        !GuildRankSystem.meetsMinimum(
+            GuildRankSystem.fromString(player.guildRank), GuildRank.b)) {
+      if (!mounted) return;
+      AppSnack.warning(
+        context,
+        'A facção ERROR exige rank B ou superior na Guilda. Continue subindo.',
       );
       return;
     }

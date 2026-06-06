@@ -6,6 +6,7 @@ import '../core/utils/guild_rank.dart';
 import '../data/database/app_database.dart';
 import '../data/datasources/local/auth_local_ds.dart';
 import '../data/datasources/local/class_quest_service.dart';
+import '../data/datasources/local/diary_service.dart';
 import '../data/datasources/local/faction_quest_service.dart';
 import '../data/datasources/local/quest_admission_service.dart';
 import '../core/events/reward_events.dart';
@@ -96,6 +97,18 @@ final appEventBusProvider = Provider<AppEventBus>((ref) {
 // Vitalismos Únicos — orquestra pool, despertar, ritual e stubs de PvP.
 final vitalismUniqueServiceProvider = Provider<VitalismUniqueService>((ref) {
   return VitalismUniqueService(ref.watch(appDatabaseProvider));
+});
+
+// Sprint 3.4 Etapa G.2 (D15) — DiaryService COM bus injetado. Sem o bus,
+// `saveEntry` não publica `DiaryEntryCreated` → a sub-task de admissão
+// `admission_diary_entry_window` (consumida por
+// FactionAdmissionProgressService) não progride. Callers de ESCRITA
+// devem usar este provider (não `DiaryService(db)` direto).
+final diaryServiceProvider = Provider<DiaryService>((ref) {
+  return DiaryService(
+    ref.watch(appDatabaseProvider),
+    bus: ref.watch(appEventBusProvider),
+  );
 });
 
 // Sprint 2.1 — catálogo, inventário, equipamento e rank do jogador.

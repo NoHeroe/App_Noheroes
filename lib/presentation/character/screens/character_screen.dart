@@ -97,7 +97,19 @@ class CharacterScreen extends ConsumerWidget {
                         const SizedBox(height: 12),
                         _buildAttributes(context, ref, player, effective),
                         const SizedBox(height: 12),
-                        if (player != null) StatsPanel(player: player),
+                        if (player != null)
+                          // Sprint 3.4 Etapa G.2 (D16) — passa o % do buff de
+                          // facção (xp/gold) pro painel somar ao bônus exibido.
+                          // 1.10 → +10; debuff 0.7 → -30.
+                          StatsPanel(
+                            player: player,
+                            factionXpBonusPct:
+                                ((buffSnapshot.multipliers.xpMult - 1.0) * 100)
+                                    .round(),
+                            factionGoldBonusPct:
+                                ((buffSnapshot.multipliers.goldMult - 1.0) * 100)
+                                    .round(),
+                          ),
                         if (buffSnapshot.applied.isNotEmpty ||
                             buffSnapshot.pending.isNotEmpty ||
                             buffSnapshot.multipliers.hasDebuff ||
