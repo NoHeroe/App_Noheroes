@@ -17,11 +17,17 @@ class PlayerStatsCounter extends StatefulWidget {
   final int xp;
   final int gems;
 
+  /// Sprint 3.4 Etapa H — saldo de Insígnias (moeda de facção). Opcional:
+  /// só renderiza o chip quando != null (lojas de facção / HUD de facção).
+  /// Telas que não lidam com facção passam null (comportamento legacy).
+  final int? insignias;
+
   const PlayerStatsCounter({
     super.key,
     required this.gold,
     required this.xp,
     required this.gems,
+    this.insignias,
   });
 
   @override
@@ -109,6 +115,21 @@ class PlayerStatsCounterState extends State<PlayerStatsCounter>
                 fontWeight: FontWeight.w600,
               ),
             ),
+            // Sprint 3.4 Etapa H — chip de Insígnias (só quando fornecido).
+            if (widget.insignias != null) ...[
+              const SizedBox(width: 8),
+              const Icon(Icons.military_tech,
+                  size: 12, color: AppColors.shadowAscending),
+              const SizedBox(width: 3),
+              Text(
+                '${widget.insignias}',
+                style: GoogleFonts.roboto(
+                  fontSize: 11,
+                  color: AppColors.shadowAscending,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ],
         ),
       ),

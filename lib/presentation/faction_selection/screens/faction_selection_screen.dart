@@ -378,6 +378,12 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
       "UPDATE players SET faction_type = 'guild' WHERE id = ?",
       [playerId],
     );
+    // Sprint 3.4 Etapa H — bônus de boas-vindas em Insígnias (fonte interina
+    // da moeda de facção até D18). Ver DESIGN_DOC_ECONOMIA_FACCOES.md.
+    await db.customStatement(
+      'UPDATE players SET insignias = insignias + 100 WHERE id = ?',
+      [playerId],
+    );
     await db.customStatement(
       'INSERT OR IGNORE INTO player_faction_membership '
       '(player_id, faction_id, joined_at, left_at, locked_until, '

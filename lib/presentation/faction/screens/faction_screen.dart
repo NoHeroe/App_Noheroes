@@ -132,7 +132,7 @@ class FactionScreen extends ConsumerWidget {
         const SizedBox(height: 16),
         _buildReputationSection(repAsync, color),
         const SizedBox(height: 16),
-        _buildShopPlaceholder(),
+        _buildShopButton(context, color),
         const SizedBox(height: 12),
         _buildLeaveButton(context, ref, name),
       ],
@@ -381,27 +381,30 @@ class FactionScreen extends ConsumerWidget {
     );
   }
 
-  // Loja por facção ainda não existe (só a Guilda tem loja, gated por rank).
-  // Placeholder desabilitado até a Etapa H (lojas + moeda por facção).
-  Widget _buildShopPlaceholder() {
-    return Opacity(
-      opacity: 0.5,
+  // Sprint 3.4 Etapa H — botão religado: abre a loja da facção
+  // (/shop/faction_shop_<id>), comprável em Insígnias. Convenção de key
+  // espelha shops.json (faction_shop_<factionId>).
+  Widget _buildShopButton(BuildContext context, Color color) {
+    return GestureDetector(
+      onTap: () => context.go('/shop/faction_shop_$factionId'),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
-          color: AppColors.surfaceAlt,
+          border: Border.all(color: color.withValues(alpha: 0.4)),
+          color: color.withValues(alpha: 0.1),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.storefront, color: AppColors.textMuted, size: 16),
+            Icon(Icons.storefront, color: color, size: 16),
             const SizedBox(width: 8),
-            Text('Loja da facção — em breve',
-                style: GoogleFonts.roboto(
-                    fontSize: 12, color: AppColors.textMuted)),
+            Text('Loja da facção',
+                style: GoogleFonts.cinzelDecorative(
+                    fontSize: 12, color: color, letterSpacing: 1)),
+            const SizedBox(width: 6),
+            Icon(Icons.chevron_right, color: color, size: 16),
           ],
         ),
       ),

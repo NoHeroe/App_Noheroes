@@ -56,11 +56,15 @@ void main() {
       expect(missing, isEmpty, reason: 'refs inexistentes: $missing');
     });
 
-    test('todas as entries têm price_coins ou price_gems', () {
+    test('todas as entries têm price_coins, price_gems ou price_insignias', () {
+      // Sprint 3.4 Etapa H — lojas de facção usam price_insignias (moeda
+      // de facção). Toda entry precisa de pelo menos uma das 3 moedas.
       final invalid = <String>[];
       for (final shop in shops) {
         for (final entry in shop.items) {
-          if (entry.priceCoins == null && entry.priceGems == null) {
+          if (entry.priceCoins == null &&
+              entry.priceGems == null &&
+              entry.priceInsignias == null) {
             invalid.add('${shop.key} → ${entry.itemKey} (sem preço)');
           }
         }
@@ -78,6 +82,26 @@ void main() {
           if (entry.priceGems != null) {
             expect(entry.priceGems!, greaterThan(0));
           }
+          if (entry.priceInsignias != null) {
+            expect(entry.priceInsignias!, greaterThan(0),
+                reason: '${shop.key} → ${entry.itemKey}');
+          }
+        }
+      }
+    });
+
+    test('lojas de facção (type=faction) têm accepts_factions e usam '
+        'price_insignias', () {
+      // Sprint 3.4 Etapa H.
+      final factionShops = shops.where((s) => s.type == 'faction').toList();
+      expect(factionShops.length, greaterThanOrEqualTo(7),
+          reason: '7 facções reais devem ter loja');
+      for (final s in factionShops) {
+        expect(s.acceptedFactions, isNotEmpty,
+            reason: '${s.key} deve gatear por accepts_factions');
+        for (final entry in s.items) {
+          expect(entry.priceInsignias, isNotNull,
+              reason: '${s.key} → ${entry.itemKey} deve custar Insígnias');
         }
       }
     });

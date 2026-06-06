@@ -400,6 +400,15 @@ class FactionAdmissionProgressService {
       updates: {_db.playersTable},
     );
 
+    // Sprint 3.4 Etapa H — bônus de boas-vindas em Insígnias (fonte
+    // interina da moeda de facção até missões de facção D18 existirem).
+    // Ver .vault/App/docs/DESIGN_DOC_ECONOMIA_FACCOES.md.
+    await _db.customUpdate(
+      'UPDATE players SET insignias = insignias + 100 WHERE id = ?',
+      variables: [Variable.withInt(playerId)],
+      updates: {_db.playersTable},
+    );
+
     // Cria/promove membership row.
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     await _db.customStatement(

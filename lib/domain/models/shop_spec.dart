@@ -46,11 +46,15 @@ class ShopItemEntry {
   final String itemKey;
   final int? priceCoins;
   final int? priceGems;
+  // Sprint 3.4 Etapa H — preço em Insígnias (moeda de facção). Usado nas
+  // lojas type='faction'. Null = não comprável com Insígnias.
+  final int? priceInsignias;
 
   const ShopItemEntry({
     required this.itemKey,
     this.priceCoins,
     this.priceGems,
+    this.priceInsignias,
   });
 
   factory ShopItemEntry.fromJson(Map<String, dynamic> json) {
@@ -58,6 +62,7 @@ class ShopItemEntry {
       itemKey:    json['key'] as String,
       priceCoins: _intOrNull(json['price_coins']),
       priceGems:  _intOrNull(json['price_gems']),
+      priceInsignias: _intOrNull(json['price_insignias']),
     );
   }
 }

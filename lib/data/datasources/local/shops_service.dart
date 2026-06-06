@@ -26,6 +26,7 @@ enum BuyRejectReason {
   factionRestricted,
   insufficientCoins,
   insufficientGems,
+  insufficientInsignias,
   noPriceDefined,
   dbError,
 }
@@ -87,6 +88,7 @@ class ShopsService {
     required PlayerSnapshot player,
     required int playerCoins,
     required int playerGems,
+    int playerInsignias = 0,
   }) async {
     final shop = await findByKey(shopKey);
     if (shop == null) return const [];
@@ -124,13 +126,16 @@ class ShopsService {
 
       final price = entry.priceCoins;
       final gems  = entry.priceGems;
+      final insignias = entry.priceInsignias;
       final canAfford = (price == null || playerCoins >= price) &&
-          (gems == null || playerGems >= gems);
+          (gems == null || playerGems >= gems) &&
+          (insignias == null || playerInsignias >= insignias);
 
       result.add(ShopItemView(
         spec:              spec,
         priceCoins:        price,
         priceGems:         gems,
+        priceInsignias:    insignias,
         canAfford:         canAfford,
         canInteract:       rejectReason == null,
         rejectReasonLabel: rejectReason,
@@ -177,6 +182,7 @@ class ShopsService {
     required PlayerSnapshot player,
     required int playerCoins,
     required int playerGems,
+    int playerInsignias = 0,
   }) async {
     final shop = await findByKey(shopKey);
     if (shop == null) return BuyResult.rejected(BuyRejectReason.shopNotFound);
@@ -229,7 +235,9 @@ class ShopsService {
     // Preço.
     final priceCoins = entry.priceCoins;
     final priceGems  = entry.priceGems;
-    if (priceCoins == null && priceGems == null) {
+    // Sprint 3.4 Etapa H — preço em Insígnias (lojas de facção).
+    final priceInsignias = entry.priceInsignias;
+    if (priceCoins == null && priceGems == null && priceInsignias == null) {
       return BuyResult.rejected(BuyRejectReason.noPriceDefined);
     }
     if (priceCoins != null && playerCoins < priceCoins) {
@@ -237,6 +245,9 @@ class ShopsService {
     }
     if (priceGems != null && playerGems < priceGems) {
       return BuyResult.rejected(BuyRejectReason.insufficientGems);
+    }
+    if (priceInsignias != null && playerInsignias < priceInsignias) {
+      return BuyResult.rejected(BuyRejectReason.insufficientInsignias);
     }
 
     // Sprint 3.1 Bloco 14.5 — fix do débito #3 (ADR 0018): débito de
@@ -259,6 +270,13 @@ class ShopsService {
                 ..where((t) => t.id.equals(playerId)))
               .write(PlayersTableCompanion(
             gems: Value(playerGems - priceGems),
+          ));
+        }
+        if (priceInsignias != null) {
+          await (_db.update(_db.playersTable)
+                ..where((t) => t.id.equals(playerId)))
+              .write(PlayersTableCompanion(
+            insignias: Value(playerInsignias - priceInsignias),
           ));
         }
         final id = await _inventory.addItem(

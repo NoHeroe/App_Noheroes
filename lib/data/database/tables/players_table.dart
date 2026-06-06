@@ -38,6 +38,12 @@ class PlayersTable extends Table {
   IntColumn get gold => integer().withDefault(const Constant(0))();
   IntColumn get gems => integer().withDefault(const Constant(0))();
 
+  // Sprint 3.4 Etapa H — moeda de facção "Insígnias". Ganha por entrar/
+  // progredir em facção (fonte interina: bônus de boas-vindas; canônica
+  // futura: missões de facção D18). Gasta nas lojas de facção. Schema 36
+  // adiciona via m.addColumn. Default 0 cobre players legacy.
+  IntColumn get insignias => integer().withDefault(const Constant(0))();
+
   // Progressão narrativa
   IntColumn get streakDays => integer().withDefault(const Constant(0))();
   IntColumn get caelumDay => integer().withDefault(const Constant(1))();

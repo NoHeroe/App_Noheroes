@@ -103,7 +103,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 35;
+  int get schemaVersion => 36;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -745,6 +745,19 @@ class AppDatabase extends _$AppDatabase {
         } catch (e, st) {
           // ignore: avoid_print
           print('[migration 34→35] addColumn failed: $e\n$st');
+        }
+      }
+      if (from < 36) {
+        // Sprint 3.4 Etapa H — moeda de facção `players.insignias`.
+        // Pattern ADR-0019: `m.addColumn` (não toca data class). Default 0
+        // cobre players legacy; novos nascem com 0 via onCreate.createAll().
+        try {
+          await m.addColumn(playersTable, playersTable.insignias);
+          // ignore: avoid_print
+          print('[migration 35→36] added insignias');
+        } catch (e, st) {
+          // ignore: avoid_print
+          print('[migration 35→36] addColumn failed: $e\n$st');
         }
       }
     },

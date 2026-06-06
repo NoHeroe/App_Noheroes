@@ -91,6 +91,112 @@
         {"key": "POTION_HEAL_MEDIUM_B", "price_coins": 320},
         {"key": "POTION_MANA_MEDIUM_B", "price_coins": 320}
       ]
+    },
+
+    {
+      "key": "faction_shop_moon_clan",
+      "name": "Arsenal do Clã da Lua",
+      "description": "Lâminas silenciosas e relíquias lunares. Pago em Insígnias.",
+      "npc_id": "azuos",
+      "region": "faction",
+      "type": "faction",
+      "accepts_factions": ["moon_clan"],
+      "accepts_ranks": [],
+      "items": [
+        {"key": "DAGGER_SHADOW", "price_insignias": 90},
+        {"key": "RING_SHADOW", "price_insignias": 130},
+        {"key": "RELIC_MOON_BADGE_S", "price_insignias": 300}
+      ]
+    },
+    {
+      "key": "faction_shop_sun_clan",
+      "name": "Tesouraria do Clã do Sol",
+      "description": "Saber arcano e ornamentos solares. Pago em Insígnias.",
+      "npc_id": "koda",
+      "region": "faction",
+      "type": "faction",
+      "accepts_factions": ["sun_clan"],
+      "accepts_ranks": [],
+      "items": [
+        {"key": "RING_INT", "price_insignias": 90},
+        {"key": "STAFF_ARCANE", "price_insignias": 150},
+        {"key": "RELIC_MEDALLION_SUN_S", "price_insignias": 300}
+      ]
+    },
+    {
+      "key": "faction_shop_black_legion",
+      "name": "Forja da Legião Negra",
+      "description": "Aço pesado pros que não recuam. Pago em Insígnias.",
+      "npc_id": "yuna_lannatary",
+      "region": "faction",
+      "type": "faction",
+      "accepts_factions": ["black_legion"],
+      "accepts_ranks": [],
+      "items": [
+        {"key": "RING_STRENGTH", "price_insignias": 90},
+        {"key": "ARMOR_COLOSSUS", "price_insignias": 170},
+        {"key": "SWORD_VOID", "price_insignias": 280}
+      ]
+    },
+    {
+      "key": "faction_shop_new_order",
+      "name": "Depósito da Nova Ordem",
+      "description": "Resistência, cura e relíquias de renascimento. Pago em Insígnias.",
+      "npc_id": "new_order_agent",
+      "region": "faction",
+      "type": "faction",
+      "accepts_factions": ["new_order"],
+      "accepts_ranks": [],
+      "items": [
+        {"key": "POTION_HEAL_MASTER_A", "price_insignias": 80},
+        {"key": "RELIC_AEGIS_SHIELD_S", "price_insignias": 260},
+        {"key": "RING_YGGDRASIL_S", "price_insignias": 300}
+      ]
+    },
+    {
+      "key": "faction_shop_trinity",
+      "name": "Santuário da Trindade",
+      "description": "Artefatos do Vazio e da sombra sagrada. Pago em Insígnias.",
+      "npc_id": "trinity_priest",
+      "region": "faction",
+      "type": "faction",
+      "accepts_factions": ["trinity"],
+      "accepts_ranks": [],
+      "items": [
+        {"key": "STAFF_VOID", "price_insignias": 150},
+        {"key": "ARMOR_VOID", "price_insignias": 180},
+        {"key": "RELIC_SHADOW", "price_insignias": 280}
+      ]
+    },
+    {
+      "key": "faction_shop_renegades",
+      "name": "Mercado dos Renegados",
+      "description": "Ferramentas de mercenário e contrabando. Pago em Insígnias.",
+      "npc_id": "renegade_leader",
+      "region": "faction",
+      "type": "faction",
+      "accepts_factions": ["renegades"],
+      "accepts_ranks": [],
+      "items": [
+        {"key": "EARRING_SWIFT", "price_insignias": 90},
+        {"key": "CLAWS_ROGUE", "price_insignias": 150},
+        {"key": "RELIC_CURSED_COMPASS_S", "price_insignias": 280}
+      ]
+    },
+    {
+      "key": "faction_shop_error",
+      "name": "Mercado Oculto da ERROR",
+      "description": "Relíquias dimensionais que não deveriam existir. Pago em Insígnias.",
+      "npc_id": "chrysalis_agent",
+      "region": "faction",
+      "type": "faction",
+      "accepts_factions": ["error"],
+      "accepts_ranks": [],
+      "items": [
+        {"key": "EMBLEM_SHADOW", "price_insignias": 120},
+        {"key": "RING_SUBSPACE_S", "price_insignias": 300},
+        {"key": "RELIC_ORB_CHAOS_S", "price_insignias": 320}
+      ]
     }
   ]
 }

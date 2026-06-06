@@ -17,6 +17,8 @@ class ShopItemView {
   final ItemSpec spec;
   final int? priceCoins;
   final int? priceGems;
+  // Sprint 3.4 Etapa H — preço em Insígnias (lojas de facção).
+  final int? priceInsignias;
   final bool canAfford;
   final bool canInteract;
   final String? rejectReasonLabel;
@@ -25,6 +27,7 @@ class ShopItemView {
     required this.spec,
     required this.priceCoins,
     required this.priceGems,
+    this.priceInsignias,
     required this.canAfford,
     this.canInteract = true,
     this.rejectReasonLabel,

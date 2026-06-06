@@ -124,6 +124,7 @@ PlayersTableData _fakePlayer({int dailyStreak = 0, String rank = 'E'}) {
     xpToNext: 100,
     gold: 0,
     gems: 0,
+    insignias: 0,
     strength: 1,
     dexterity: 1,
     intelligence: 1,

@@ -182,6 +182,14 @@ class $PlayersTableTable extends PlayersTable
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
+  static const VerificationMeta _insigniasMeta =
+      const VerificationMeta('insignias');
+  @override
+  late final GeneratedColumn<int> insignias = GeneratedColumn<int>(
+      'insignias', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   static const VerificationMeta _streakDaysMeta =
       const VerificationMeta('streakDays');
   @override
@@ -403,6 +411,7 @@ class $PlayersTableTable extends PlayersTable
         currentVitalism,
         gold,
         gems,
+        insignias,
         streakDays,
         caelumDay,
         shadowState,
@@ -547,6 +556,10 @@ class $PlayersTableTable extends PlayersTable
     if (data.containsKey('gems')) {
       context.handle(
           _gemsMeta, gems.isAcceptableOrUnknown(data['gems']!, _gemsMeta));
+    }
+    if (data.containsKey('insignias')) {
+      context.handle(_insigniasMeta,
+          insignias.isAcceptableOrUnknown(data['insignias']!, _insigniasMeta));
     }
     if (data.containsKey('streak_days')) {
       context.handle(
@@ -746,6 +759,8 @@ class $PlayersTableTable extends PlayersTable
           .read(DriftSqlType.int, data['${effectivePrefix}gold'])!,
       gems: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}gems'])!,
+      insignias: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}insignias'])!,
       streakDays: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}streak_days'])!,
       caelumDay: attachedDatabase.typeMapping
@@ -835,6 +850,7 @@ class PlayersTableData extends DataClass
   final int currentVitalism;
   final int gold;
   final int gems;
+  final int insignias;
   final int streakDays;
   final int caelumDay;
   final String shadowState;
@@ -912,6 +928,7 @@ class PlayersTableData extends DataClass
       required this.currentVitalism,
       required this.gold,
       required this.gems,
+      required this.insignias,
       required this.streakDays,
       required this.caelumDay,
       required this.shadowState,
@@ -964,6 +981,7 @@ class PlayersTableData extends DataClass
     map['current_vitalism'] = Variable<int>(currentVitalism);
     map['gold'] = Variable<int>(gold);
     map['gems'] = Variable<int>(gems);
+    map['insignias'] = Variable<int>(insignias);
     map['streak_days'] = Variable<int>(streakDays);
     map['caelum_day'] = Variable<int>(caelumDay);
     map['shadow_state'] = Variable<String>(shadowState);
@@ -1037,6 +1055,7 @@ class PlayersTableData extends DataClass
       currentVitalism: Value(currentVitalism),
       gold: Value(gold),
       gems: Value(gems),
+      insignias: Value(insignias),
       streakDays: Value(streakDays),
       caelumDay: Value(caelumDay),
       shadowState: Value(shadowState),
@@ -1109,6 +1128,7 @@ class PlayersTableData extends DataClass
       currentVitalism: serializer.fromJson<int>(json['currentVitalism']),
       gold: serializer.fromJson<int>(json['gold']),
       gems: serializer.fromJson<int>(json['gems']),
+      insignias: serializer.fromJson<int>(json['insignias']),
       streakDays: serializer.fromJson<int>(json['streakDays']),
       caelumDay: serializer.fromJson<int>(json['caelumDay']),
       shadowState: serializer.fromJson<String>(json['shadowState']),
@@ -1170,6 +1190,7 @@ class PlayersTableData extends DataClass
       'currentVitalism': serializer.toJson<int>(currentVitalism),
       'gold': serializer.toJson<int>(gold),
       'gems': serializer.toJson<int>(gems),
+      'insignias': serializer.toJson<int>(insignias),
       'streakDays': serializer.toJson<int>(streakDays),
       'caelumDay': serializer.toJson<int>(caelumDay),
       'shadowState': serializer.toJson<String>(shadowState),
@@ -1226,6 +1247,7 @@ class PlayersTableData extends DataClass
           int? currentVitalism,
           int? gold,
           int? gems,
+          int? insignias,
           int? streakDays,
           int? caelumDay,
           String? shadowState,
@@ -1276,6 +1298,7 @@ class PlayersTableData extends DataClass
         currentVitalism: currentVitalism ?? this.currentVitalism,
         gold: gold ?? this.gold,
         gems: gems ?? this.gems,
+        insignias: insignias ?? this.insignias,
         streakDays: streakDays ?? this.streakDays,
         caelumDay: caelumDay ?? this.caelumDay,
         shadowState: shadowState ?? this.shadowState,
@@ -1350,6 +1373,7 @@ class PlayersTableData extends DataClass
           : this.currentVitalism,
       gold: data.gold.present ? data.gold.value : this.gold,
       gems: data.gems.present ? data.gems.value : this.gems,
+      insignias: data.insignias.present ? data.insignias.value : this.insignias,
       streakDays:
           data.streakDays.present ? data.streakDays.value : this.streakDays,
       caelumDay: data.caelumDay.present ? data.caelumDay.value : this.caelumDay,
@@ -1437,6 +1461,7 @@ class PlayersTableData extends DataClass
           ..write('currentVitalism: $currentVitalism, ')
           ..write('gold: $gold, ')
           ..write('gems: $gems, ')
+          ..write('insignias: $insignias, ')
           ..write('streakDays: $streakDays, ')
           ..write('caelumDay: $caelumDay, ')
           ..write('shadowState: $shadowState, ')
@@ -1492,6 +1517,7 @@ class PlayersTableData extends DataClass
         currentVitalism,
         gold,
         gems,
+        insignias,
         streakDays,
         caelumDay,
         shadowState,
@@ -1546,6 +1572,7 @@ class PlayersTableData extends DataClass
           other.currentVitalism == this.currentVitalism &&
           other.gold == this.gold &&
           other.gems == this.gems &&
+          other.insignias == this.insignias &&
           other.streakDays == this.streakDays &&
           other.caelumDay == this.caelumDay &&
           other.shadowState == this.shadowState &&
@@ -1598,6 +1625,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
   final Value<int> currentVitalism;
   final Value<int> gold;
   final Value<int> gems;
+  final Value<int> insignias;
   final Value<int> streakDays;
   final Value<int> caelumDay;
   final Value<String> shadowState;
@@ -1648,6 +1676,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.currentVitalism = const Value.absent(),
     this.gold = const Value.absent(),
     this.gems = const Value.absent(),
+    this.insignias = const Value.absent(),
     this.streakDays = const Value.absent(),
     this.caelumDay = const Value.absent(),
     this.shadowState = const Value.absent(),
@@ -1699,6 +1728,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.currentVitalism = const Value.absent(),
     this.gold = const Value.absent(),
     this.gems = const Value.absent(),
+    this.insignias = const Value.absent(),
     this.streakDays = const Value.absent(),
     this.caelumDay = const Value.absent(),
     this.shadowState = const Value.absent(),
@@ -1751,6 +1781,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     Expression<int>? currentVitalism,
     Expression<int>? gold,
     Expression<int>? gems,
+    Expression<int>? insignias,
     Expression<int>? streakDays,
     Expression<int>? caelumDay,
     Expression<String>? shadowState,
@@ -1802,6 +1833,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       if (currentVitalism != null) 'current_vitalism': currentVitalism,
       if (gold != null) 'gold': gold,
       if (gems != null) 'gems': gems,
+      if (insignias != null) 'insignias': insignias,
       if (streakDays != null) 'streak_days': streakDays,
       if (caelumDay != null) 'caelum_day': caelumDay,
       if (shadowState != null) 'shadow_state': shadowState,
@@ -1862,6 +1894,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       Value<int>? currentVitalism,
       Value<int>? gold,
       Value<int>? gems,
+      Value<int>? insignias,
       Value<int>? streakDays,
       Value<int>? caelumDay,
       Value<String>? shadowState,
@@ -1912,6 +1945,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       currentVitalism: currentVitalism ?? this.currentVitalism,
       gold: gold ?? this.gold,
       gems: gems ?? this.gems,
+      insignias: insignias ?? this.insignias,
       streakDays: streakDays ?? this.streakDays,
       caelumDay: caelumDay ?? this.caelumDay,
       shadowState: shadowState ?? this.shadowState,
@@ -2015,6 +2049,9 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     }
     if (gems.present) {
       map['gems'] = Variable<int>(gems.value);
+    }
+    if (insignias.present) {
+      map['insignias'] = Variable<int>(insignias.value);
     }
     if (streakDays.present) {
       map['streak_days'] = Variable<int>(streakDays.value);
@@ -2126,6 +2163,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
           ..write('currentVitalism: $currentVitalism, ')
           ..write('gold: $gold, ')
           ..write('gems: $gems, ')
+          ..write('insignias: $insignias, ')
           ..write('streakDays: $streakDays, ')
           ..write('caelumDay: $caelumDay, ')
           ..write('shadowState: $shadowState, ')
@@ -16269,6 +16307,7 @@ typedef $$PlayersTableTableCreateCompanionBuilder = PlayersTableCompanion
   Value<int> currentVitalism,
   Value<int> gold,
   Value<int> gems,
+  Value<int> insignias,
   Value<int> streakDays,
   Value<int> caelumDay,
   Value<String> shadowState,
@@ -16321,6 +16360,7 @@ typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
   Value<int> currentVitalism,
   Value<int> gold,
   Value<int> gems,
+  Value<int> insignias,
   Value<int> streakDays,
   Value<int> caelumDay,
   Value<String> shadowState,
@@ -16428,6 +16468,9 @@ class $$PlayersTableTableFilterComposer
 
   ColumnFilters<int> get gems => $composableBuilder(
       column: $table.gems, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get insignias => $composableBuilder(
+      column: $table.insignias, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get streakDays => $composableBuilder(
       column: $table.streakDays, builder: (column) => ColumnFilters(column));
@@ -16605,6 +16648,9 @@ class $$PlayersTableTableOrderingComposer
   ColumnOrderings<int> get gems => $composableBuilder(
       column: $table.gems, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get insignias => $composableBuilder(
+      column: $table.insignias, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get streakDays => $composableBuilder(
       column: $table.streakDays, builder: (column) => ColumnOrderings(column));
 
@@ -16776,6 +16822,9 @@ class $$PlayersTableTableAnnotationComposer
   GeneratedColumn<int> get gems =>
       $composableBuilder(column: $table.gems, builder: (column) => column);
 
+  GeneratedColumn<int> get insignias =>
+      $composableBuilder(column: $table.insignias, builder: (column) => column);
+
   GeneratedColumn<int> get streakDays => $composableBuilder(
       column: $table.streakDays, builder: (column) => column);
 
@@ -16904,6 +16953,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> currentVitalism = const Value.absent(),
             Value<int> gold = const Value.absent(),
             Value<int> gems = const Value.absent(),
+            Value<int> insignias = const Value.absent(),
             Value<int> streakDays = const Value.absent(),
             Value<int> caelumDay = const Value.absent(),
             Value<String> shadowState = const Value.absent(),
@@ -16955,6 +17005,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             currentVitalism: currentVitalism,
             gold: gold,
             gems: gems,
+            insignias: insignias,
             streakDays: streakDays,
             caelumDay: caelumDay,
             shadowState: shadowState,
@@ -17006,6 +17057,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<int> currentVitalism = const Value.absent(),
             Value<int> gold = const Value.absent(),
             Value<int> gems = const Value.absent(),
+            Value<int> insignias = const Value.absent(),
             Value<int> streakDays = const Value.absent(),
             Value<int> caelumDay = const Value.absent(),
             Value<String> shadowState = const Value.absent(),
@@ -17057,6 +17109,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             currentVitalism: currentVitalism,
             gold: gold,
             gems: gems,
+            insignias: insignias,
             streakDays: streakDays,
             caelumDay: caelumDay,
             shadowState: shadowState,

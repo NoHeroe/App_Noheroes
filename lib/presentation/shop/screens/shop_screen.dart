@@ -67,6 +67,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
         player:      snap,
         playerCoins: player.gold,
         playerGems:  player.gems,
+        playerInsignias: player.insignias,
       );
       if (!mounted) return;
       setState(() {
@@ -97,6 +98,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       player:      snap,
       playerCoins: player.gold,
       playerGems:  player.gems,
+      playerInsignias: player.insignias,
     );
     if (!mounted) return;
 
@@ -116,6 +118,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   String _rejectLabel(BuyRejectReason r) => switch (r) {
         BuyRejectReason.insufficientCoins      => 'Ouro insuficiente.',
         BuyRejectReason.insufficientGems       => 'Gemas insuficientes.',
+        BuyRejectReason.insufficientInsignias  => 'Insígnias insuficientes.',
         BuyRejectReason.levelTooLow            => 'Nível insuficiente.',
         BuyRejectReason.rankTooLow             => 'Rank insuficiente.',
         BuyRejectReason.classRestricted        => 'Classe não permitida.',
@@ -275,12 +278,15 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
           Consumer(
             builder: (_, ref, __) {
               final p = ref.watch(currentPlayerProvider);
+              // Sprint 3.4 Etapa H — exibe Insígnias só nas lojas de facção.
+              final showInsignias = _shop?.type == 'faction';
               return Padding(
                 padding: const EdgeInsets.only(right: 4),
                 child: PlayerStatsCounter(
                   gold: p?.gold ?? 0,
                   xp: p?.xp ?? 0,
                   gems: p?.gems ?? 0,
+                  insignias: showInsignias ? (p?.insignias ?? 0) : null,
                 ),
               );
             },
@@ -320,9 +326,19 @@ class _ItemRow extends StatelessWidget {
     final color = locked ? AppColors.textMuted : rarityColor;
     final textColor =
         locked ? AppColors.textMuted : AppColors.textPrimary;
+    // Sprint 3.4 Etapa H — preço pode ser em Insígnias (🎖️).
     final priceText = view.priceCoins != null
         ? '🪙 ${view.priceCoins}'
-        : (view.priceGems != null ? '💎 ${view.priceGems}' : '—');
+        : view.priceGems != null
+            ? '💎 ${view.priceGems}'
+            : view.priceInsignias != null
+                ? '🎖️ ${view.priceInsignias}'
+                : '—';
+    final cantAffordLabel = view.priceInsignias != null
+        ? 'SEM INSÍGNIAS'
+        : view.priceGems != null
+            ? 'SEM GEMAS'
+            : 'SEM OURO';
 
     return Opacity(
       opacity: locked ? 0.55 : 1.0,
@@ -414,7 +430,7 @@ class _ItemRow extends StatelessWidget {
                       child: Text(
                         locked
                             ? 'BLOQUEADO'
-                            : (view.canAfford ? 'COMPRAR' : 'SEM OURO'),
+                            : (view.canAfford ? 'COMPRAR' : cantAffordLabel),
                         style: GoogleFonts.cinzelDecorative(
                             fontSize: 10,
                             color: _actionBgColor(locked, view.canAfford),
