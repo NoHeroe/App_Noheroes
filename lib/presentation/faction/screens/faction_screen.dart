@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:drift/drift.dart' show Variable;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -55,23 +56,31 @@ class FactionScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final player = ref.watch(currentPlayerProvider);
     final currentFaction = player?.factionType ?? 'none';
+
+    // Sprint 3.4 Etapa F — ficha dedicada do Lobo Solitário.
+    final isLoneWolf = FactionTheme.isLoneWolf(factionId) &&
+        FactionTheme.isLoneWolf(currentFaction);
     final isMember =
-        FactionTheme.isReal(factionId) && currentFaction == factionId;
+        FactionTheme.hasRealFaction(factionId) && currentFaction == factionId;
 
     final color = FactionTheme.colorOf(factionId);
     final name = FactionTheme.nameOf(factionId);
+
+    final headerTitle = isLoneWolf ? name : (isMember ? name : 'FACÇÃO');
+    final headerColor = (isLoneWolf || isMember) ? color : AppColors.gold;
 
     return Scaffold(
       backgroundColor: AppColors.black,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(context, isMember ? name : 'FACÇÃO',
-                isMember ? color : AppColors.gold),
+            _buildHeader(context, headerTitle, headerColor),
             Expanded(
-              child: isMember
-                  ? _buildMemberView(context, ref, color, name)
-                  : _buildNonMemberView(context, currentFaction),
+              child: isLoneWolf
+                  ? _buildLoneWolfView(context, ref, color)
+                  : isMember
+                      ? _buildMemberView(context, ref, color, name)
+                      : _buildNonMemberView(context, currentFaction),
             ),
           ],
         ),
@@ -478,6 +487,177 @@ class FactionScreen extends ConsumerWidget {
       return;
     }
 
+    final updated = await ref.read(authDsProvider).currentSession();
+    ref.read(currentPlayerProvider.notifier).state = updated;
+    ref.invalidate(factionBuffSnapshotProvider);
+
+    if (context.mounted) context.go('/faction-selection');
+  }
+
+  // ── F (Etapa F) — ficha dedicada do Lobo Solitário ─────────────────
+  // Sem reputação, sem loja. Lore + 3 bônus + abandonar caminho.
+  Widget _buildLoneWolfView(BuildContext context, WidgetRef ref, Color color) {
+    final buffAsync =
+        ref.watch(_factionBuffPreviewProvider(FactionTheme.loneWolf));
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      children: [
+        // Banner void.
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border:
+                Border.all(color: color.withValues(alpha: 0.55), width: 1.5),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [color.withValues(alpha: 0.18), AppColors.surface],
+            ),
+            boxShadow: [
+              BoxShadow(
+                  color: color.withValues(alpha: 0.22),
+                  blurRadius: 18,
+                  spreadRadius: 1),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color.withValues(alpha: 0.15),
+                  border: Border.all(color: color, width: 2),
+                ),
+                child: Icon(Icons.dark_mode_outlined, color: color, size: 30),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Lobo Solitário',
+                        style: GoogleFonts.cinzelDecorative(
+                            fontSize: 17, color: color, letterSpacing: 1)),
+                    const SizedBox(height: 4),
+                    Text('Sem lealdades. Só o caminho.',
+                        style: GoogleFonts.roboto(
+                            fontSize: 11,
+                            color: AppColors.textMuted,
+                            fontStyle: FontStyle.italic)),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: color.withValues(alpha: 0.4)),
+                      ),
+                      child: Text('CAMINHO',
+                          style: GoogleFonts.roboto(
+                              fontSize: 9, color: color, letterSpacing: 1.5)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        // LORE (texto próprio — não há entry em factions.json).
+        _section(
+          title: 'O CAMINHO',
+          color: color,
+          child: Text(
+            'Você escolheu trilhar sozinho.\n\n'
+            'Solidão escolhida não é solidão — é nitidez. O Vazio respeita '
+            'quem não pede companhia pra atravessar. Sem facção, sem buffs '
+            'de atributo do coletivo — mas cada passo rende mais por ser seu.',
+            style: GoogleFonts.roboto(
+                fontSize: 12, color: AppColors.textSecondary, height: 1.6),
+          ),
+        ),
+        const SizedBox(height: 16),
+        // BUFFS (reusa a seção; lê o entry lone_wolf do catálogo).
+        _buildBuffsSection(buffAsync, color),
+        const SizedBox(height: 16),
+        // Abandonar — volta pra 'none' e abre a seleção (sem penalidade:
+        // Lobo não é facção, então não passa pelo LeaveFactionService).
+        GestureDetector(
+          onTap: () => _onAbandonLoneWolf(context, ref),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 13),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.hp.withValues(alpha: 0.4)),
+              color: AppColors.hp.withValues(alpha: 0.06),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.logout, color: AppColors.hp, size: 16),
+                const SizedBox(width: 8),
+                Text('Abandonar caminho do Lobo',
+                    style:
+                        GoogleFonts.roboto(fontSize: 12, color: AppColors.hp)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _onAbandonLoneWolf(BuildContext context, WidgetRef ref) async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.border),
+        ),
+        title: Text('Abandonar o caminho do Lobo?',
+            style: GoogleFonts.cinzelDecorative(
+                color: AppColors.textPrimary, fontSize: 15)),
+        content: Text(
+          'Você volta a ficar sem caminho definido e pode escolher uma '
+          'facção. O bônus de Lobo Solitário (+5% XP/ouro/gemas) é perdido '
+          'enquanto não for Lobo de novo.',
+          style: GoogleFonts.roboto(
+              color: AppColors.textSecondary, fontSize: 13, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Ficar',
+                style: GoogleFonts.roboto(color: AppColors.textMuted)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Abandonar',
+                style: GoogleFonts.roboto(color: AppColors.hp)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    final db = ref.read(appDatabaseProvider);
+    await db.customUpdate(
+      'UPDATE players SET faction_type = ? WHERE id = ?',
+      variables: [Variable.withString('none'), Variable.withInt(player.id)],
+      updates: {db.playersTable},
+    );
     final updated = await ref.read(authDsProvider).currentSession();
     ref.read(currentPlayerProvider.notifier).state = updated;
     ref.invalidate(factionBuffSnapshotProvider);

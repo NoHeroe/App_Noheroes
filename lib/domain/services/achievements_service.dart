@@ -857,8 +857,13 @@ class AchievementsService {
         final player = await playerDao.findById(playerId);
         if (player == null) return false;
         final ft = player.factionType;
-        if (ft == null || ft.isEmpty || ft.startsWith('pending:')) {
-          // Pending = ainda em admissão; não conta como joined.
+        if (ft == null ||
+            ft.isEmpty ||
+            ft.startsWith('pending:') ||
+            ft == 'lone_wolf') {
+          // Pending = ainda em admissão; lone_wolf = anti-facção (Etapa F).
+          // Nenhum dos dois conta como "entrou em facção". (Literal pra não
+          // puxar dep de Flutter — FactionTheme importa material.)
           return false;
         }
         if (expectedFaction == null) {

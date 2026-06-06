@@ -18,6 +18,20 @@
     ]
   },
 
+  "lone_wolf": {
+    "_doc": "Sprint 3.4 Etapa F — Caminho do Lobo Solitário. Sentinel faction_type='lone_wolf' (opt-in). Trade-off anti-facção: ganha progressão (xp/gold/gems +5%) por ir sozinho, mas SEM buffs de atributo (str/dex/int/maxHp = 1.0). Flui pelo pipeline padrão (getActiveMultipliers cai no catalog[factionType]).",
+    "applied": {
+      "xp_mult": 1.05,
+      "gold_mult": 1.05,
+      "gems_mult": 1.05,
+      "strength_mult": 1.0,
+      "dexterity_mult": 1.0,
+      "intelligence_mult": 1.0,
+      "max_hp_mult": 1.0
+    },
+    "pending": []
+  },
+
   "moon_clan": {
     "applied": {
       "xp_mult": 1.0,

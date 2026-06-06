@@ -730,9 +730,7 @@
       "category": "secret",
       "trigger": { "type": "event_class_selected", "target": 1, "params": { "class_key": "lobo_solitario" } },
       "reward_tier_custom": { "xp": 500, "gold": 1000, "gems": 30, "baus_secretos": 1 },
-      "is_secret": true,
-      "disabled": true,
-      "shell_reason": "classe lobo_solitario ainda não existe em classes.json — habilitar quando for adicionada"
+      "is_secret": true
     },
     {
       "key": "SECRET_VETERANO_MIL_VOLTAS",

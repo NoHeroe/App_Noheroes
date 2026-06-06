@@ -151,9 +151,15 @@ class GuildScreen extends ConsumerWidget {
 
   Widget _buildFactionCard(
       BuildContext context, WidgetRef ref, String factionType) {
+    // Sprint 3.4 Etapa F — Lobo Solitário tem card próprio (não é facção
+    // real, mas mostra os bônus e linka pra ficha dedicada).
+    if (FactionTheme.isLoneWolf(factionType)) {
+      return _buildLoneWolfCard(context, ref);
+    }
+
     final isPending = factionType.startsWith('pending:');
-    final hasFaction =
-        factionType.isNotEmpty && factionType != 'none' && !isPending;
+    // Usa o helper central do sweep (exclui lone_wolf/none/pending).
+    final hasFaction = FactionTheme.hasRealFaction(factionType);
 
     if (!hasFaction) {
       return _buildNoFactionCard(context, isPending, factionType);
@@ -237,6 +243,112 @@ class GuildScreen extends ConsumerWidget {
           // facção atual (/faction/<faction_type>).
           GestureDetector(
             onTap: () => context.go('/faction/$factionType'),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: color.withValues(alpha: 0.4)),
+                color: color.withValues(alpha: 0.1),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Ver detalhes',
+                      style: GoogleFonts.cinzelDecorative(
+                          fontSize: 11, color: color, letterSpacing: 1)),
+                  const SizedBox(width: 8),
+                  Icon(Icons.chevron_right, color: color, size: 16),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Sprint 3.4 Etapa F — card especial do Lobo Solitário (sentinel
+  // faction_type='lone_wolf'). Tema void/cinza, anti-facção. Mostra os
+  // bônus (+5% XP/gold/gems via FactionBuffService) e linka pra ficha.
+  Widget _buildLoneWolfCard(BuildContext context, WidgetRef ref) {
+    final color = FactionTheme.colorOf(FactionTheme.loneWolf);
+    final buffAsync = ref.watch(factionBuffSnapshotProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.55), width: 1.5),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [color.withValues(alpha: 0.16), AppColors.surface],
+        ),
+        boxShadow: [
+          BoxShadow(
+              color: color.withValues(alpha: 0.22),
+              blurRadius: 18,
+              spreadRadius: 1),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color.withValues(alpha: 0.15),
+                  border: Border.all(color: color, width: 2),
+                ),
+                child: Icon(Icons.dark_mode_outlined, color: color, size: 28),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('SEU CAMINHO',
+                        style: GoogleFonts.roboto(
+                            fontSize: 9,
+                            color: AppColors.textMuted,
+                            letterSpacing: 2)),
+                    const SizedBox(height: 4),
+                    Text('Lobo Solitário',
+                        style: GoogleFonts.cinzelDecorative(
+                            fontSize: 16, color: color, letterSpacing: 1)),
+                    const SizedBox(height: 2),
+                    Text('Sem lealdades. Só o caminho.',
+                        style: GoogleFonts.roboto(
+                            fontSize: 11,
+                            color: AppColors.textMuted,
+                            fontStyle: FontStyle.italic)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          buffAsync.when(
+            loading: () => const SizedBox(
+                height: 18,
+                child: Center(
+                    child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: AppColors.gold)))),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (snap) => _buildFactionBuffs(snap, color),
+          ),
+          const SizedBox(height: 16),
+          GestureDetector(
+            onTap: () => context.go('/faction/${FactionTheme.loneWolf}'),
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -396,9 +508,10 @@ class GuildScreen extends ConsumerWidget {
   // ── D4 ────────────────────────────────────────────────────────────
   Widget _buildSwitchFactionButton(BuildContext context, WidgetRef ref,
       dynamic player, String factionType) {
-    final isMember = factionType.isNotEmpty &&
-        factionType != 'none' &&
-        !factionType.startsWith('pending:');
+    // Sprint 3.4 Etapa F — 🔴 CRÍTICO: lone_wolf NÃO é membro real. Usa o
+    // helper central pra NÃO chamar leaveFaction('lone_wolf') (que lançaria).
+    // Lobo cai em isMember=false → botão só navega pra /faction-selection.
+    final isMember = FactionTheme.hasRealFaction(factionType);
 
     return GestureDetector(
       onTap: () => _onSwitchFaction(context, ref, player, factionType, isMember),

@@ -11,6 +11,11 @@ import 'package:flutter/material.dart';
 class FactionTheme {
   FactionTheme._();
 
+  /// Sentinel da Etapa F — `faction_type='lone_wolf'` (Caminho do Lobo
+  /// Solitário). NÃO é facção real: dá bônus via catálogo (faction_buffs.json)
+  /// mas `hasRealFaction`/`isReal` retornam false (tema anti-facção).
+  static const loneWolf = 'lone_wolf';
+
   static const _names = <String, String>{
     'guild':        'Guilda de Aventureiros',
     'moon_clan':    'Clã da Lua',
@@ -20,6 +25,8 @@ class FactionTheme {
     'trinity':      'Culto da Trindade',
     'renegades':    'Os Renegados',
     'error':        'Facção ERROR',
+    // Etapa F — tema de display (NÃO é facção real; ver hasRealFaction).
+    'lone_wolf':    'Lobo Solitário',
   };
 
   static const _colors = <String, Color>{
@@ -31,6 +38,8 @@ class FactionTheme {
     'trinity':      Color(0xFF4FA06B),
     'renegades':    Color(0xFFB36B00),
     'error':        Color(0xFF7B2FBE),
+    // Etapa F — cinza/void (Umbra), soulslike anti-facção.
+    'lone_wolf':    Color(0xFF6E6E78),
   };
 
   /// Cor de fallback (dourado padrão da Guilda) pra ids desconhecidos.
@@ -40,11 +49,24 @@ class FactionTheme {
 
   static Color colorOf(String id) => _colors[id] ?? fallbackColor;
 
-  /// `true` se [id] é uma facção real (membro de fato) — exclui `null`,
-  /// vazio, `'none'` e `'pending:*'` (admissão em curso, sem buff/ficha).
-  static bool isReal(String? id) =>
-      id != null &&
-      id.isNotEmpty &&
-      id != 'none' &&
-      !id.startsWith('pending:');
+  /// `true` se [factionType] é a marca do Lobo Solitário (sentinel).
+  static bool isLoneWolf(String? factionType) => factionType == loneWolf;
+
+  /// Sprint 3.4 Etapa F — helper CENTRAL pro sweep. `true` SÓ pras facções
+  /// reais de combate/ideológicas (as 7 + Guilda nível 2). Retorna `false`
+  /// pra `null`/`''`/`'none'`/`'lone_wolf'`/`'pending:*'`.
+  ///
+  /// ⚠️ Lobo Solitário é EXCLUÍDO de propósito: tem tema de display
+  /// (nameOf/colorOf) mas NÃO é facção real — não recebe missões/reputação
+  /// de facção, não é "membro" (não chamar LeaveFactionService), etc.
+  static bool hasRealFaction(String? factionType) =>
+      factionType != null &&
+      factionType.isNotEmpty &&
+      factionType != 'none' &&
+      factionType != loneWolf &&
+      !factionType.startsWith('pending:');
+
+  /// Alias retrocompatível — delega pra [hasRealFaction] (mesma semântica,
+  /// já excluindo lone_wolf). Mantido pros call-sites existentes (Etapa E).
+  static bool isReal(String? id) => hasRealFaction(id);
 }

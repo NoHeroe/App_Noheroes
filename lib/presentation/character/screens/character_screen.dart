@@ -968,6 +968,7 @@ class CharacterScreen extends ConsumerWidget {
         'renegades'    => 'Renegados',
         'error'        => 'ERROR',
         'guild'        => 'Guilda',
+        'lone_wolf'    => 'Lobo Solitário',
         _              => '',
       };
 }

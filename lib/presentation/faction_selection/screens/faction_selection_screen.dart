@@ -6,7 +6,7 @@ import '../../../app/providers.dart';
 import '../../../core/config/faction_alliances.dart' show kSecretFactionUnlockKey;
 import '../../../core/constants/app_colors.dart';
 import '../../../core/events/faction_events.dart' show FactionJoined;
-import '../../../data/datasources/local/class_bonus_service.dart';
+import '../../../core/events/reward_events.dart' show AchievementUnlocked;
 // Sprint 3.1 Bloco 1 — QuestAdmissionService e factionsServiceProvider
 // foram .bakados. Este ecrã continua exibindo a escolha (lê JSON direto) e
 // marca a facção como `pending:<id>` em players; a criação das missões de
@@ -16,7 +16,7 @@ import 'dart:convert';
 import '../../shared/widgets/app_snack.dart';
 import '../../../data/datasources/local/npc_reputation_service.dart';
 import '../../../core/utils/asset_loader.dart';
-import 'package:drift/drift.dart' show Variable, DriftDatabase;
+import 'package:drift/drift.dart' show Variable;
 
 class FactionSelectionScreen extends ConsumerStatefulWidget {
   const FactionSelectionScreen({super.key});
@@ -110,6 +110,22 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
     final faction = _factions[_selected];
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
+
+    // Sprint 3.4 Etapa F (D20) — enforça o lock de 7 dias pós-saída.
+    // Bloqueia ENTRAR em facção real (inclui Facção Guilda nível 2, tratada
+    // abaixo). Virar Lobo Solitário é LIVRE (o gate NÃO existe em
+    // _confirmLoneWolf). customSelect per ADR-0019.
+    final lockedUntil = await _readActiveFactionLock(player.id);
+    if (lockedUntil != null) {
+      if (!mounted) return;
+      AppSnack.warning(
+        context,
+        'Bloqueado até ${_fmtLockDate(lockedUntil)} — você saiu de uma '
+        'facção recentemente.',
+      );
+      return;
+    }
+    if (!mounted) return;
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -433,19 +449,81 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
     final player = ref.read(currentPlayerProvider);
     if (player != null) {
       final db = ref.read(appDatabaseProvider);
+      // Sprint 3.4 Etapa F — opt-in seta o sentinel 'lone_wolf' (antes era
+      // 'none'). Ativa os bônus +5% XP/ouro/gemas via FactionBuffService
+      // (catalog['lone_wolf']). NÃO passa pelo lock 7d (virar Lobo é livre).
       await db.customUpdate(
         'UPDATE players SET faction_type = ? WHERE id = ?',
         variables: [
-          Variable.withString('none'),
+          Variable.withString('lone_wolf'),
           Variable.withInt(player.id),
         ],
         updates: {db.playersTable},
       );
+
+      // ERROR unlock: concede SECRET_LOBO_SOLITARIO SÓ se o player nunca
+      // fez uma escolha de facção do lvl 7 (facção ideológica OU Facção
+      // Guilda nível 2). Aventureiro nível 1 (guild_rank) NÃO conta —
+      // distinguido por: guild row com left_at é ex-Facção-Guilda nível 2
+      // (Aventureiro puro nunca consegue leaveFaction('guild')).
+      await _grantLoneWolfAchievementIfFirstChoice(player.id);
+
       final updated = await ref.read(authDsProvider).currentSession();
       ref.read(currentPlayerProvider.notifier).state = updated;
+      ref.invalidate(factionBuffSnapshotProvider);
     }
     if (!mounted) return;
     context.go('/sanctuary');
+  }
+
+  /// Sprint 3.4 Etapa F — gate da ERROR (decisão CEO): conquista concedida
+  /// só na PRIMEIRA escolha de facção do lvl 7 sendo Lobo. Conta como "já
+  /// escolheu": qualquer membership de facção ideológica (faction_id !=
+  /// 'guild') OU guild row que foi abandonada (left_at != null = ex-Facção
+  /// Guilda nível 2). NÃO conta: Aventureiro nível 1 (guild row sem left_at).
+  Future<void> _grantLoneWolfAchievementIfFirstChoice(int playerId) async {
+    final db = ref.read(appDatabaseProvider);
+    final rows = await db.customSelect(
+      'SELECT COUNT(*) AS c FROM player_faction_membership '
+      'WHERE player_id = ? AND joined_at IS NOT NULL '
+      "AND (faction_id != 'guild' OR left_at IS NOT NULL)",
+      variables: [Variable.withInt(playerId)],
+    ).get();
+    final everChoseFaction = (rows.first.read<int>('c')) > 0;
+    if (everChoseFaction) return;
+
+    const key = 'SECRET_LOBO_SOLITARIO';
+    final repo = ref.read(playerAchievementsRepositoryProvider);
+    if (await repo.isCompleted(playerId, key)) return;
+    await repo.markCompleted(playerId, key, at: DateTime.now());
+    // Mesmo pipeline do dev panel: publica AchievementUnlocked (popup +
+    // cascata metaLike). Reward (xp/gold/gems/baú) é coleta MANUAL na tela
+    // de conquistas (ADR-0020) — disponível porque a conquista virou
+    // disabled:false.
+    ref.read(appEventBusProvider).publish(
+        AchievementUnlocked(playerId: playerId, achievementKey: key));
+  }
+
+  /// D20 — lê o `locked_until` ativo (> now) da membership mais recente.
+  /// Retorna a data se ainda bloqueado, senão null.
+  Future<DateTime?> _readActiveFactionLock(int playerId) async {
+    final db = ref.read(appDatabaseProvider);
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final rows = await db.customSelect(
+      'SELECT locked_until FROM player_faction_membership '
+      'WHERE player_id = ? AND locked_until IS NOT NULL '
+      'ORDER BY locked_until DESC LIMIT 1',
+      variables: [Variable.withInt(playerId)],
+    ).get();
+    if (rows.isEmpty) return null;
+    final ms = rows.first.read<int?>('locked_until');
+    if (ms == null || ms <= nowMs) return null;
+    return DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
+  String _fmtLockDate(DateTime at) {
+    String p(int n) => n.toString().padLeft(2, '0');
+    return '${p(at.day)}/${p(at.month)} ${p(at.hour)}:${p(at.minute)}';
   }
 
 }

@@ -122,6 +122,9 @@ class WeeklyResetService {
   String? _validFactionId(String? raw) {
     if (raw == null || raw.isEmpty) return null;
     if (raw == 'none') return null;
+    // Sprint 3.4 Etapa F — Lobo Solitário não é facção real: sem missões
+    // de facção. Early-return explícito (silencia warning de "não-listada").
+    if (raw == 'lone_wolf') return null;
     if (raw.startsWith('pending:')) return null;
     if (!kKnownFactions.contains(raw)) return null;
     return raw;

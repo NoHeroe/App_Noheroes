@@ -18,7 +18,8 @@ import 'package:noheroes_app/domain/services/achievement_trigger_types.dart';
 /// - 85 entries presentes
 /// - Todas as keys são únicas
 /// - 8 conquistas `is_secret: true` (todas em categoria `secret`)
-/// - 2 conquistas `disabled: true` (LOBO + VIDENTE — shell)
+/// - 1 conquista `disabled: true` (VIDENTE — shell). LOBO foi habilitada
+///   na Sprint 3.4 Etapa F (concessão imperativa no opt-in de Lobo).
 /// - Distribuição por categoria bate com spec da etapa
 /// - Cada trigger é parseável (não lança em `fromJson`)
 /// - Triggers com `params.sub_task_key` referenciam keys válidas das
@@ -68,12 +69,14 @@ void main() {
     }
   });
 
-  test('2 conquistas com disabled=true (apenas LOBO + VIDENTE)', () {
+  test('1 conquista com disabled=true (apenas VIDENTE)', () {
+    // Sprint 3.4 Etapa F — SECRET_LOBO_SOLITARIO habilitada (disabled
+    // removido). Resta só VIDENTE como shell.
     final disabled =
         entries.where((e) => (e['disabled'] as bool?) == true).toList();
-    expect(disabled.length, 2);
+    expect(disabled.length, 1);
     final keys = disabled.map((e) => e['key'] as String).toSet();
-    expect(keys, {'SECRET_LOBO_SOLITARIO', 'SECRET_QUEDA_DO_VIDENTE'});
+    expect(keys, {'SECRET_QUEDA_DO_VIDENTE'});
   });
 
   test('distribuição por categoria bate com spec', () {

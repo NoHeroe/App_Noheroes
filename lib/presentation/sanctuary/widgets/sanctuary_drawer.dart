@@ -34,6 +34,7 @@ class SanctuaryDrawer extends ConsumerWidget {
       'trinity'     => 'Trindade',
       'renegades'   => 'Renegados',
       'guild'       => 'Guilda',
+      'lone_wolf'   => 'Lobo Solitário',
       _             => factionType,
     };
   }
