@@ -17,6 +17,7 @@ import '../../shared/widgets/app_snack.dart';
 import '../../../data/datasources/local/npc_reputation_service.dart';
 import '../../../core/utils/asset_loader.dart';
 import '../../../core/utils/guild_rank.dart';
+import '../faction_selection_gate.dart';
 import 'package:drift/drift.dart' show Variable;
 
 class FactionSelectionScreen extends ConsumerStatefulWidget {
@@ -112,6 +113,21 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
 
+    final factionId = faction['id'] as String;
+
+    // Hotfix pós-validação 3.4 (BUG 2) — gate de nível. Facções
+    // ideológicas exigem nível 7 (mesmo unlock anunciado no Santuário).
+    // A Facção Guilda nível 2 (id='guild') é gated por guild_rank
+    // (Aventureiro, desbloqueado no nível 6), não por este gate.
+    if (!FactionSelectionGate.canSelect(
+        factionId: factionId, level: player.level)) {
+      AppSnack.warning(
+        context,
+        'Facções exigem nível 7. Continue evoluindo para escolher um lado.',
+      );
+      return;
+    }
+
     // Sprint 3.4 Etapa F (D20) — enforça o lock de 7 dias pós-saída.
     // Bloqueia ENTRAR em facção real (inclui Facção Guilda nível 2, tratada
     // abaixo). Virar Lobo Solitário é LIVRE (o gate NÃO existe em
@@ -195,7 +211,6 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
 
     setState(() => _loading = true);
     final db = ref.read(appDatabaseProvider);
-    final factionId = faction['id'] as String;
 
     // Sprint 3.4 Sub-Etapa B.2 — modelo dual da Guilda. Player que
     // chega aqui já é Aventureiro nível 1 (filtro em _loadFactions
@@ -293,26 +308,31 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
         ),
       );
 
-  Widget _buildHeader() => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-        child: Column(
-          children: [
-            Text('ESCOLHA DAS FACÇÕES',
-                style: GoogleFonts.cinzelDecorative(
-                    fontSize: 15, color: AppColors.gold, letterSpacing: 3)),
-            const SizedBox(height: 8),
-            Text(
-              'Você atingiu o nível 7.\nCaelum exige que você escolha um lado.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.roboto(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                  height: 1.5,
-                  fontStyle: FontStyle.italic),
-            ),
-          ],
-        ),
-      );
+  Widget _buildHeader() {
+    // Hotfix pós-validação 3.4 (BUG 4) — subtítulo condicional. Remove o
+    // anúncio "Você atingiu o nível 7" pra quem já passou desse nível.
+    final level = ref.read(currentPlayerProvider)?.level ?? 7;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+      child: Column(
+        children: [
+          Text('ESCOLHA DAS FACÇÕES',
+              style: GoogleFonts.cinzelDecorative(
+                  fontSize: 15, color: AppColors.gold, letterSpacing: 3)),
+          const SizedBox(height: 8),
+          Text(
+            FactionSelectionGate.headerSubtitle(level),
+            textAlign: TextAlign.center,
+            style: GoogleFonts.roboto(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+                height: 1.5,
+                fontStyle: FontStyle.italic),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildList() => ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
