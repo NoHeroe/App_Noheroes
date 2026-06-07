@@ -13,14 +13,12 @@ import 'package:noheroes_app/data/database/app_database.dart';
 import 'package:noheroes_app/data/database/daos/player_dao.dart';
 import 'package:noheroes_app/data/datasources/local/mission_catalogs_service.dart';
 import 'package:noheroes_app/data/repositories/drift/active_faction_quests_repository_drift.dart';
-import 'package:noheroes_app/data/repositories/drift/mission_preferences_repository_drift.dart';
 import 'package:noheroes_app/data/repositories/drift/mission_repository_drift.dart';
 import 'package:noheroes_app/domain/enums/mission_modality.dart';
 import 'package:noheroes_app/domain/enums/mission_tab_origin.dart';
 import 'package:noheroes_app/domain/models/mission_progress.dart';
 import 'package:noheroes_app/domain/models/reward_declared.dart';
 import 'package:noheroes_app/domain/services/mission_assignment_service.dart';
-import 'package:noheroes_app/domain/services/mission_preferences_service.dart';
 import 'package:noheroes_app/domain/services/weekly_reset_service.dart';
 
 class _FakeBundle extends AssetBundle {
@@ -80,14 +78,8 @@ void main() {
     bus = AppEventBus();
     repo = MissionRepositoryDrift(db);
     playerDao = PlayerDao(db);
-    final prefsService = MissionPreferencesService(
-      repo: MissionPreferencesRepositoryDrift(db),
-      bus: bus,
-      db: db,
-    );
     final assignment = MissionAssignmentService(
       missionRepo: repo,
-      prefsService: prefsService,
       catalogs: MissionCatalogsService(
         bundle: _FakeBundle({
           'assets/data/missions_faction_weekly.json': jsonEncode({

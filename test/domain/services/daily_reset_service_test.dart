@@ -15,7 +15,6 @@ import 'package:noheroes_app/data/datasources/local/player_inventory_service.dar
 import 'package:noheroes_app/data/datasources/local/player_recipes_service.dart';
 import 'package:noheroes_app/data/datasources/local/recipes_catalog_service.dart';
 import 'package:noheroes_app/data/repositories/drift/active_faction_quests_repository_drift.dart';
-import 'package:noheroes_app/data/repositories/drift/mission_preferences_repository_drift.dart';
 import 'package:noheroes_app/data/repositories/drift/mission_repository_drift.dart';
 import 'package:noheroes_app/data/repositories/drift/player_achievements_repository_drift.dart';
 import 'package:noheroes_app/data/repositories/drift/player_faction_reputation_repository_drift.dart';
@@ -26,7 +25,6 @@ import 'package:noheroes_app/domain/models/mission_progress.dart';
 import 'package:noheroes_app/domain/models/reward_declared.dart';
 import 'package:noheroes_app/domain/services/daily_reset_service.dart';
 import 'package:noheroes_app/domain/services/mission_assignment_service.dart';
-import 'package:noheroes_app/domain/services/mission_preferences_service.dart';
 import 'package:noheroes_app/domain/services/reward_resolve_service.dart';
 
 Future<int> _seedPlayer(AppDatabase db, {int? lastDailyReset}) async {
@@ -87,14 +85,8 @@ void main() {
     repo = MissionRepositoryDrift(db);
     playerDao = PlayerDao(db);
     final catalog = ItemsCatalogService(db);
-    final prefsService = MissionPreferencesService(
-      repo: MissionPreferencesRepositoryDrift(db),
-      bus: bus,
-      db: db,
-    );
     final assignment = MissionAssignmentService(
       missionRepo: repo,
-      prefsService: prefsService,
       catalogs: MissionCatalogsService(), // não lê seeds neste teste
       factionRepo: ActiveFactionQuestsRepositoryDrift(db),
       bus: bus,

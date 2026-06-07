@@ -41,7 +41,6 @@ void main() {
     test('as 6 tabelas novas existem e respondem a COUNT', () async {
       for (final table in [
         'player_mission_progress',
-        'player_mission_preferences',
         'player_individual_missions',
         'player_achievements_completed',
         'player_faction_reputation',
@@ -218,56 +217,8 @@ void main() {
     });
   });
 
-  group('player_mission_preferences — PK = player_id', () {
-    test('mesmo player_id inserido 2x falha', () async {
-      final now = DateTime.now().millisecondsSinceEpoch;
-      await db.into(db.playerMissionPreferencesTable).insert(
-            PlayerMissionPreferencesTableCompanion(
-              playerId: const Value(1),
-              primaryFocus: const Value('fisico'),
-              intensity: const Value('medium'),
-              missionStyle: const Value('mixed'),
-              createdAt: Value(now),
-              updatedAt: Value(now),
-            ),
-          );
-      await expectLater(
-        db.into(db.playerMissionPreferencesTable).insert(
-              PlayerMissionPreferencesTableCompanion(
-                playerId: const Value(1),
-                primaryFocus: const Value('mental'),
-                intensity: const Value('light'),
-                missionStyle: const Value('real'),
-                createdAt: Value(now),
-                updatedAt: Value(now),
-              ),
-            ),
-        throwsA(isA<SqliteException>()),
-      );
-    });
-
-    test('defaults aplicam quando campos omitidos', () async {
-      final now = DateTime.now().millisecondsSinceEpoch;
-      await db.into(db.playerMissionPreferencesTable).insert(
-            PlayerMissionPreferencesTableCompanion(
-              playerId: const Value(42),
-              primaryFocus: const Value('vitalismo'),
-              intensity: const Value('adaptive'),
-              missionStyle: const Value('internal'),
-              createdAt: Value(now),
-              updatedAt: Value(now),
-            ),
-          );
-      final prefs = await (db.select(db.playerMissionPreferencesTable)
-            ..where((t) => t.playerId.equals(42)))
-          .getSingle();
-      expect(prefs.physicalSubfocus, '[]');
-      expect(prefs.mentalSubfocus, '[]');
-      expect(prefs.spiritualSubfocus, '[]');
-      expect(prefs.timeDailyMinutes, 30);
-      expect(prefs.updatesCount, 0);
-    });
-  });
+  // Schema 37: `player_mission_preferences` removida (reescrita das
+  // diárias). Testes da PK/defaults daquela tabela saíram junto.
 
   group('player_individual_missions — soft delete + defaults', () {
     test('deletedAt nullable + contadores default 0 + repeats=true', () async {
@@ -354,7 +305,6 @@ void main() {
       await legacyDb.customSelect('SELECT 1').get();
       for (final table in [
         'player_mission_progress',
-        'player_mission_preferences',
         'player_individual_missions',
         'player_achievements_completed',
         'player_faction_reputation',

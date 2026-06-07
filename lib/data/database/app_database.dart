@@ -36,7 +36,6 @@ import 'tables/player_recipes_unlocked_table.dart';
 // Sprint 3.1 — schema 24, reset brutal. Novas tabelas unificam hábitos/quests
 // e adicionam preferências do quiz, conquistas, reputação e individuais.
 import 'tables/player_mission_progress_table.dart';
-import 'tables/player_mission_preferences_table.dart';
 import 'tables/player_individual_missions_table.dart';
 import 'tables/player_achievements_completed_table.dart';
 import 'tables/player_faction_reputation_table.dart';
@@ -75,7 +74,6 @@ part 'app_database.g.dart';
     PlayerRecipesUnlockedTable,
     // Sprint 3.1 — schema 24.
     PlayerMissionProgressTable,
-    PlayerMissionPreferencesTable,
     PlayerIndividualMissionsTable,
     PlayerAchievementsCompletedTable,
     PlayerFactionReputationTable,
@@ -103,7 +101,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 36;
+  int get schemaVersion => 37;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -386,7 +384,9 @@ class AppDatabase extends _$AppDatabase {
         }
         try {
           await m.createTable(playerMissionProgressTable);
-          await m.createTable(playerMissionPreferencesTable);
+          // schema 37 — player_mission_preferences removida (reescrita das
+          // diárias). Não recria no path de reset <24; nada a consome e o
+          // bloco from<37 dropa de qualquer forma.
           await m.createTable(playerIndividualMissionsTable);
           await m.createTable(playerAchievementsCompletedTable);
           await m.createTable(playerFactionReputationTable);
@@ -758,6 +758,22 @@ class AppDatabase extends _$AppDatabase {
         } catch (e, st) {
           // ignore: avoid_print
           print('[migration 35→36] addColumn failed: $e\n$st');
+        }
+      }
+      if (from < 37) {
+        // Reescrita das diárias — remoção do questionário de ajuste. As
+        // diárias passaram a ser fixas (1 físico + 1 mental + 1
+        // espiritual, geradas pelo `DailyMissionGeneratorService`), então
+        // `player_mission_preferences` (primaryFocus/intensity/style/etc.)
+        // não tem mais uso. DROP idempotente.
+        try {
+          await customStatement(
+              'DROP TABLE IF EXISTS player_mission_preferences');
+          // ignore: avoid_print
+          print('[migration 36→37] dropped player_mission_preferences');
+        } catch (e, st) {
+          // ignore: avoid_print
+          print('[migration 36→37] drop failed: $e\n$st');
         }
       }
     },

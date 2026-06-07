@@ -13,26 +13,27 @@ import '../models/daily_sub_task_instance.dart';
 import '../models/daily_sub_task_spec.dart';
 import 'body_metrics_service.dart';
 import 'daily_pool_service.dart';
-import 'mission_preferences_service.dart';
 
-/// Sprint 3.2 Etapa 1.2 — geração das 3 missões diárias.
+/// Schema 37 (reescrita das diárias) — geração das 3 missões diárias.
 ///
-/// Distribuição (peso por modalidade no sorteio de cada slot):
-///   - primaryFocus (do quiz Bloco 9): 50%
-///   - outros 2 pilares: 20% cada
-///   - Vitalismo: 10%
+/// **Modelo fixo, igual pra todos os jogadores:** 1 missão de cada pilar
+/// — [MissionCategory.fisico], [MissionCategory.mental],
+/// [MissionCategory.espiritual] — por dia. Sem questionário de ajuste,
+/// sem `primaryFocus`, sem Vitalismo diário.
 ///
-/// Garante **≥ 2 modalidades distintas** no dia: se os 3 sorteios
-/// independentes caem na mesma modalidade, força o 3º slot pra outra
-/// (escolhida com pesos relativos das 3 modalidades restantes).
+/// Cada missão tira 1 sub-categoria rotativa do pool da modalidade e
+/// monta [subTasksPerMission] sub-tarefas, escaladas por rank via
+/// `escala_por_rank` (filtra sub-tarefas com escala 0 no rank do
+/// jogador). Recompensa por rank vive no `DailyMissionProgressService`.
 ///
-/// Filtra sub-tarefas com `escala_por_rank[rank] == 0` no rank do
-/// jogador (sub-tarefas tipo "retiro_dia rank E" simplesmente não
-/// entram no pool de sorteio).
+/// **BUG 1 (geração concorrente gerava 6/9):** `generateForToday` usa
+/// um **single-flight guard** por `(playerId, dateStr)` — chamadas
+/// concorrentes aguardam a MESMA Future em vez de cada uma rodar o
+/// check-and-insert (TOCTOU). Combinado com o guard idempotente
+/// `findByPlayerAndDate`, o resultado é exatamente 3, nunca 9.
 class DailyMissionGeneratorService {
   final DailyPoolService _pools;
   final BodyMetricsService _bodyMetrics;
-  final MissionPreferencesService _prefs;
   final PlayerDao _playerDao;
   final DailyMissionsDao _missionsDao;
   final AppEventBus _bus;
@@ -41,14 +42,12 @@ class DailyMissionGeneratorService {
   DailyMissionGeneratorService({
     required DailyPoolService pools,
     required BodyMetricsService bodyMetrics,
-    required MissionPreferencesService prefs,
     required PlayerDao playerDao,
     required DailyMissionsDao missionsDao,
     required AppEventBus bus,
     Random? random,
   })  : _pools = pools,
         _bodyMetrics = bodyMetrics,
-        _prefs = prefs,
         _playerDao = playerDao,
         _missionsDao = missionsDao,
         _bus = bus,
@@ -57,6 +56,19 @@ class DailyMissionGeneratorService {
   static const int missionsPerDay = 3;
   static const int subTasksPerMission = 3;
 
+  /// Modalidades fixas do dia: 1 de cada pilar, sempre nesta ordem.
+  /// Vitalismo NÃO entra nas diárias (modelo schema 37).
+  static const List<MissionCategory> fixedModalidades = [
+    MissionCategory.fisico,
+    MissionCategory.mental,
+    MissionCategory.espiritual,
+  ];
+
+  /// Single-flight: gerações em curso por `(playerId, dateStr)`. Garante
+  /// que builds concorrentes da /quests (BUG 1) compartilhem a mesma
+  /// Future em vez de cada um gerar e inserir 3 (= 6/9 duplicadas).
+  final Map<String, Future<List<DailyMission>>> _inFlight = {};
+
   /// Idempotente — se já existem missões do dia [date] (default hoje)
   /// pro [playerId], retorna elas sem gerar de novo.
   ///
@@ -64,10 +76,31 @@ class DailyMissionGeneratorService {
   /// apagadas antes de gerar 3 novas. Usado pelo dev tool "Resetar
   /// missões diárias de hoje" — não usar em prod path.
   Future<List<DailyMission>> generateForToday(int playerId,
-      {DateTime? date, bool force = false}) async {
+      {DateTime? date, bool force = false}) {
     final now = date ?? DateTime.now();
     final dateStr = _dateStr(now);
+    final flightKey = '$playerId|$dateStr';
 
+    // Se já há uma geração em curso pra (player, dia), aguarda a mesma
+    // Future. O check-and-set é atômico (Dart single-thread, sem await
+    // entre o get e o put).
+    final inFlight = _inFlight[flightKey];
+    if (inFlight != null) return inFlight;
+
+    final future = _generate(playerId, now, dateStr, force);
+    _inFlight[flightKey] = future;
+    // Limpa o registro ao terminar (sucesso ou erro) sem alterar o
+    // retorno do caller.
+    future.whenComplete(() {
+      if (identical(_inFlight[flightKey], future)) {
+        _inFlight.remove(flightKey);
+      }
+    });
+    return future;
+  }
+
+  Future<List<DailyMission>> _generate(
+      int playerId, DateTime now, String dateStr, bool force) async {
     final existing =
         await _missionsDao.findByPlayerAndDate(playerId, dateStr);
     if (existing.isNotEmpty) {
@@ -83,42 +116,23 @@ class DailyMissionGeneratorService {
     }
     final rank = _normalizeRank(player.guildRank);
 
-    final prefs = await _prefs.findCurrent(playerId);
-    final primaryFocus = prefs?.primaryFocus ?? MissionCategory.fisico;
-
-    // Sorteia as 3 modalidades respeitando pesos + ≥2 distintas.
-    final modalidades = _drawModalidades(primaryFocus);
-
     // Garante sub-tarefas únicas cross-missions no dia.
     final usedKeys = <String>{};
     // Hotfix Etapa 1.3.A — dedup de títulos cross-missions também.
-    // Antes: 3 missões podiam compartilhar título (ex: "O Peso da
-    // Sobrevivência" 2x). Agora cada missão tira do pool restante.
     final usedTitulos = <String>{};
 
     final drafts = <DailyMission>[];
-    for (final mod in modalidades) {
-      final draft = mod == MissionCategory.vitalismo
-          ? _buildVitalismoMission(
-              playerId: playerId,
-              dateStr: dateStr,
-              now: now,
-              rank: rank,
-              player: player,
-              usedKeys: usedKeys,
-              usedTitulos: usedTitulos,
-            )
-          : _buildModalidadeMission(
-              playerId: playerId,
-              dateStr: dateStr,
-              now: now,
-              modalidade: mod,
-              rank: rank,
-              player: player,
-              usedKeys: usedKeys,
-              usedTitulos: usedTitulos,
-            );
-      drafts.add(draft);
+    for (final mod in fixedModalidades) {
+      drafts.add(_buildModalidadeMission(
+        playerId: playerId,
+        dateStr: dateStr,
+        now: now,
+        modalidade: mod,
+        rank: rank,
+        player: player,
+        usedKeys: usedKeys,
+        usedTitulos: usedTitulos,
+      ));
     }
 
     final saved = await _missionsDao.insertAll(drafts);
@@ -141,57 +155,6 @@ class DailyMissionGeneratorService {
   }
 
   Future<DailyMission?> getMissionById(int id) => _missionsDao.findById(id);
-
-  // ─── sorteio de modalidades (50/20/20/10 + ≥2 distintas) ────────────
-
-  List<MissionCategory> _drawModalidades(MissionCategory primary) {
-    final weights = _weightsFor(primary);
-    final out = [
-      _weightedPick(weights),
-      _weightedPick(weights),
-      _weightedPick(weights),
-    ];
-
-    // Forçamento: se as 3 caíram iguais, força a 3ª pra outra
-    // modalidade respeitando os pesos relativos das 3 restantes.
-    if (out.toSet().length == 1) {
-      final remaining = Map<MissionCategory, int>.from(weights)
-        ..remove(out.first);
-      out[2] = _weightedPick(remaining);
-    }
-    return out;
-  }
-
-  Map<MissionCategory, int> _weightsFor(MissionCategory primary) {
-    final w = <MissionCategory, int>{
-      MissionCategory.fisico: 20,
-      MissionCategory.mental: 20,
-      MissionCategory.espiritual: 20,
-      MissionCategory.vitalismo: 10,
-    };
-    if (primary == MissionCategory.vitalismo) {
-      // Edge case: primaryFocus = vitalismo. Aumenta peso do vitalismo
-      // pra 50, mantém 20/20/10 no resto (mas só temos 3 outros).
-      // Distribuição final: vit 50, fisico 20, mental 20, espiritual 10.
-      // Mantém soma 100. (Caelum + Etapa 1.1 mostra Vitalismo é raro:
-      // se virou primaryFocus, aumenta presença mas não vira maioria.)
-      w[MissionCategory.vitalismo] = 50;
-      w[MissionCategory.espiritual] = 10;
-    } else {
-      w[primary] = 50;
-    }
-    return w;
-  }
-
-  MissionCategory _weightedPick(Map<MissionCategory, int> weights) {
-    final total = weights.values.fold<int>(0, (a, b) => a + b);
-    var r = _random.nextInt(total);
-    for (final entry in weights.entries) {
-      r -= entry.value;
-      if (r < 0) return entry.key;
-    }
-    return weights.keys.last; // fallback (não deveria acontecer)
-  }
 
   // ─── construção da missão (mono-modalidade) ──────────────────────────
 
@@ -312,125 +275,12 @@ class DailyMissionGeneratorService {
     );
   }
 
-  // ─── construção Vitalismo (1 sub-tarefa por pilar) ───────────────────
-
-  DailyMission _buildVitalismoMission({
-    required int playerId,
-    required String dateStr,
-    required DateTime now,
-    required String rank,
-    required PlayersTableData player,
-    required Set<String> usedKeys,
-    required Set<String> usedTitulos,
-  }) {
-    final vitPool = _pools.vitalismoPool();
-    final pesosPorPilar = vitPool.pesosSubcategoriaPorPilar;
-
-    final fis = _pickVitalismoSubTask(
-        pilar: 'fisico',
-        category: MissionCategory.fisico,
-        pesos: pesosPorPilar['fisico']!,
-        rank: rank,
-        player: player,
-        usedKeys: usedKeys);
-    final men = _pickVitalismoSubTask(
-        pilar: 'mental',
-        category: MissionCategory.mental,
-        pesos: pesosPorPilar['mental']!,
-        rank: rank,
-        player: player,
-        usedKeys: usedKeys);
-    final esp = _pickVitalismoSubTask(
-        pilar: 'espiritual',
-        category: MissionCategory.espiritual,
-        pesos: pesosPorPilar['espiritual']!,
-        rank: rank,
-        player: player,
-        usedKeys: usedKeys);
-
-    final subInsts = [fis, men, esp];
-    final titulo = _pickTitulo(vitPool.titulos, usedTitulos);
-    usedTitulos.add(titulo);
-    final quote = vitPool.quotes[_random.nextInt(vitPool.quotes.length)];
-
-    return DailyMission(
-      id: 0,
-      playerId: playerId,
-      data: dateStr,
-      modalidade: MissionCategory.vitalismo,
-      subCategoria: null,
-      tituloKey: titulo,
-      tituloResolvido: titulo,
-      quoteResolvida: quote,
-      subTarefas: subInsts,
-      status: DailyMissionStatus.pending,
-      createdAt: now,
-      completedAt: null,
-      rewardClaimed: false,
-    );
-  }
-
-  DailySubTaskInstance _pickVitalismoSubTask({
-    required String pilar,
-    required MissionCategory category,
-    required Map<String, double> pesos,
-    required String rank,
-    required PlayersTableData player,
-    required Set<String> usedKeys,
-  }) {
-    final pool = _pools.poolFor(category) as DailyModalidadePool;
-    // Tenta sub-categorias em ordem de peso decrescente até achar uma
-    // com sub-tarefa elegível.
-    final subCats = pesos.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-
-    // Sorteio ponderado da sub-categoria.
-    final subCat = _pickSubcategoriaDouble(pesos);
-
-    DailySubTaskSpec? spec = _firstEligible(
-        pool, subCat, rank, player, usedKeys);
-    if (spec == null) {
-      // Fallback: tenta outras sub-cats do mesmo pilar.
-      for (final entry in subCats) {
-        if (entry.key == subCat) continue;
-        spec = _firstEligible(pool, entry.key, rank, player, usedKeys);
-        if (spec != null) break;
-      }
-    }
-    if (spec == null) {
-      throw StateError(
-          'Vitalismo: sem sub-tarefa elegível em $pilar (rank=$rank, '
-          'usadas=${usedKeys.length})');
-    }
-    usedKeys.add(spec.key);
-    return DailySubTaskInstance(
-      subTaskKey: spec.key,
-      nomeVisivel: spec.nomeVisivel,
-      escalaAlvo: _resolveScale(spec, rank, player),
-      unidade: spec.unidade,
-      tipoUnidade: spec.tipoUnidade,
-      subPilar: pilar,
-    );
-  }
-
-  DailySubTaskSpec? _firstEligible(DailyModalidadePool pool, String subCat,
-      String rank, PlayersTableData player, Set<String> usedKeys) {
-    final candidatas = pool.subTarefas
-        .where((s) => s.subCategoria == subCat)
-        .where((s) => !usedKeys.contains(s.key))
-        .where((s) => _resolveScale(s, rank, player) > 0)
-        .toList();
-    if (candidatas.isEmpty) return null;
-    candidatas.shuffle(_random);
-    return candidatas.first;
-  }
-
   // ─── helpers ────────────────────────────────────────────────────────
 
   /// Sorteia um título do pool, evitando os já usados em outras missões
-  /// do mesmo dia. Pior caso (improvável dados os pools 8/sub-cat e 12
-  /// no Vitalismo): se 100% dos candidatos foram usados, cai pra
-  /// sorteio sobre o pool inteiro como fallback.
+  /// do mesmo dia. Pior caso (improvável dados os pools 8/sub-cat): se
+  /// 100% dos candidatos foram usados, cai pra sorteio sobre o pool
+  /// inteiro como fallback.
   String _pickTitulo(List<String> pool, Set<String> usedTitulos) {
     final candidatos = pool.where((t) => !usedTitulos.contains(t)).toList();
     if (candidatos.isEmpty) {

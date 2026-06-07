@@ -40,7 +40,6 @@ import '../domain/services/mission_assignment_service.dart';
 import '../domain/services/individual_creation_service.dart';
 import '../domain/services/individual_delete_service.dart';
 import '../domain/services/mission_balancer_service.dart';
-import '../domain/services/mission_preferences_service.dart';
 import '../domain/services/mission_progress_service.dart';
 import '../domain/services/reward_resolve_service.dart';
 import '../domain/services/weekly_reset_service.dart';
@@ -50,13 +49,11 @@ import '../domain/strategies/mission_strategy.dart';
 import '../domain/strategies/mixed_modality_strategy.dart';
 import '../domain/strategies/real_task_modality_strategy.dart';
 import '../data/repositories/drift/active_faction_quests_repository_drift.dart';
-import '../data/repositories/drift/mission_preferences_repository_drift.dart';
 import '../data/repositories/drift/mission_repository_drift.dart';
 import '../data/repositories/drift/player_achievements_repository_drift.dart';
 import '../data/repositories/drift/player_faction_reputation_repository_drift.dart';
 import '../data/repositories/drift/player_individual_missions_repository_drift.dart';
 import '../domain/repositories/active_faction_quests_repository.dart';
-import '../domain/repositories/mission_preferences_repository.dart';
 import '../domain/repositories/mission_repository.dart';
 import '../domain/repositories/player_achievements_repository.dart';
 import '../domain/repositories/player_faction_reputation_repository.dart';
@@ -580,7 +577,6 @@ final dailyMissionGeneratorServiceProvider =
   return DailyMissionGeneratorService(
     pools: ref.watch(dailyPoolServiceProvider),
     bodyMetrics: ref.watch(bodyMetricsServiceProvider),
-    prefs: ref.watch(missionPreferencesServiceProvider),
     playerDao: PlayerDao(db),
     missionsDao: ref.watch(dailyMissionsDaoProvider),
     bus: ref.watch(appEventBusProvider),
@@ -606,16 +602,6 @@ final dailyMissionRolloverServiceProvider =
     missionsDao: ref.watch(dailyMissionsDaoProvider),
     playerDao: PlayerDao(db),
     progress: ref.watch(dailyMissionProgressServiceProvider),
-  );
-});
-
-// Sprint 3.1 Bloco 9 — MissionPreferencesService (quiz de calibração).
-final missionPreferencesServiceProvider =
-    Provider<MissionPreferencesService>((ref) {
-  return MissionPreferencesService(
-    repo: ref.watch(missionPreferencesRepositoryProvider),
-    bus: ref.watch(appEventBusProvider),
-    db: ref.watch(appDatabaseProvider),
   );
 });
 
@@ -657,7 +643,6 @@ final missionAssignmentServiceProvider =
     Provider<MissionAssignmentService>((ref) {
   return MissionAssignmentService(
     missionRepo: ref.watch(missionRepositoryProvider),
-    prefsService: ref.watch(missionPreferencesServiceProvider),
     catalogs: ref.watch(missionCatalogsServiceProvider),
     factionRepo: ref.watch(activeFactionQuestsRepositoryProvider),
     bus: ref.watch(appEventBusProvider),
@@ -698,18 +683,6 @@ final weeklyResetServiceProvider = Provider<WeeklyResetService>((ref) {
   );
 });
 
-// Sprint 3.1 Bloco 10a.1 — Gate de "Refazer calibração" no SanctuaryDrawer
-// (Bloco 10a.2 consome). FutureProvider.family resolve o check async pro
-// drawer sem widget rebuild caro. autodispose garante que múltiplas
-// aberturas do drawer não acumulam providers.
-final canRecalibrateProvider = FutureProvider.autoDispose
-    .family<bool, ({int playerId, int playerLevel})>((ref, args) async {
-  return ref.watch(missionPreferencesServiceProvider).canRecalibrate(
-        playerId: args.playerId,
-        playerLevel: args.playerLevel,
-      );
-});
-
 // Sprint 3.1 Bloco 4 — Repository Pattern (ADR 0016).
 //
 // Cada provider retorna a **interface** — swap Supabase futuro é trocar
@@ -718,11 +691,6 @@ final canRecalibrateProvider = FutureProvider.autoDispose
 // conhecer a impl concreta.
 final missionRepositoryProvider = Provider<MissionRepository>((ref) {
   return MissionRepositoryDrift(ref.watch(appDatabaseProvider));
-});
-
-final missionPreferencesRepositoryProvider =
-    Provider<MissionPreferencesRepository>((ref) {
-  return MissionPreferencesRepositoryDrift(ref.watch(appDatabaseProvider));
 });
 
 final playerAchievementsRepositoryProvider =

@@ -6,16 +6,12 @@ import '../../core/events/app_event_bus.dart';
 import '../../core/events/mission_events.dart';
 import '../../core/utils/guild_rank.dart';
 import '../../data/datasources/local/mission_catalogs_service.dart';
-import '../enums/mission_category.dart';
 import '../enums/mission_modality.dart';
-import '../enums/mission_style.dart';
 import '../enums/mission_tab_origin.dart';
-import '../models/mission_preferences.dart';
 import '../models/mission_progress.dart';
 import '../models/reward_declared.dart';
 import '../repositories/active_faction_quests_repository.dart';
 import '../repositories/mission_repository.dart';
-import 'mission_preferences_service.dart';
 
 /// Sprint 3.1 Bloco 13a — assignment pool-based (ADR 0017 + DESIGN_DOC §8).
 ///
@@ -23,16 +19,19 @@ import 'mission_preferences_service.dart';
 /// (`MissionCatalogsService`), aplicando:
 ///
 ///   - **Rank gating** (ADR 0017): pool cross-rank via `RankPools.filterByRank`.
-///   - **Preferences filter** (ADR 0015): `primaryFocus` + `intensity`-like +
-///     `missionStyle` (quando declarado no entry).
 ///   - **Sampling**: `Random` injetável pra testes determinísticos.
 ///
 /// Emite `MissionStarted` pós-commit de cada MissionProgress criado —
 /// o evento do Bloco 2 é suficiente (sem criar `MissionAssigned` novo
 /// conforme decisão CEO).
+///
+/// Schema 37 (reescrita das diárias): o assign de **diárias legacy**
+/// (`assignDailyForPlayer`, baseado em `MissionPreferences`) foi removido
+/// — as diárias agora são geradas pelo `DailyMissionGeneratorService`
+/// (modelo fixo). Restam **missões de classe** (`assignClassDaily`) e
+/// **facção semanal** (`ensureWeeklyFactionQuest`).
 class MissionAssignmentService {
   final MissionRepository _missionRepo;
-  final MissionPreferencesService _prefsService;
   final MissionCatalogsService _catalogs;
   final ActiveFactionQuestsRepository _factionRepo;
   final AppEventBus _bus;
@@ -40,45 +39,18 @@ class MissionAssignmentService {
 
   MissionAssignmentService({
     required MissionRepository missionRepo,
-    required MissionPreferencesService prefsService,
     required MissionCatalogsService catalogs,
     required ActiveFactionQuestsRepository factionRepo,
     required AppEventBus bus,
     Random? random,
   })  : _missionRepo = missionRepo,
-        _prefsService = prefsService,
         _catalogs = catalogs,
         _factionRepo = factionRepo,
         _bus = bus,
         _random = random ?? Random();
 
-  /// Quantidade fixa de diárias por assign. DESIGN_DOC §8 aceita "3-5";
-  /// escalonamento por `preferences.timeDailyMinutes` fica pra sprint
-  /// futura (débito registrado).
-  static const int kDailyPerAssign = 3;
-
   /// Quantidade fixa de missões de classe por dia.
   static const int kClassPerDay = 3;
-
-  /// Assigna [kDailyPerAssign] diárias pro jogador consumindo
-  /// preferences + rank. Retorna os ids das `MissionProgress` criadas.
-  /// Retorna lista vazia se preferences não existem (jogador ainda não
-  /// calibrou) OU catálogo está vazio.
-  Future<List<int>> assignDailyForPlayer({
-    required int playerId,
-    required GuildRank playerRank,
-  }) async {
-    final prefs = await _prefsService.findCurrent(playerId);
-    if (prefs == null) return const [];
-    final pool = await _catalogs.loadDaily();
-    if (pool.isEmpty) return const [];
-
-    final filtered = _filterDailyPool(pool, prefs, playerRank);
-    if (filtered.isEmpty) return const [];
-
-    final picked = _sampleN(filtered, kDailyPerAssign);
-    return _persistAndEmit(playerId, picked, MissionTabOrigin.daily);
-  }
 
   /// Assigna [kClassPerDay] missões de classe pro jogador. Filtra pool
   /// por `class_key` + rank. Retorna ids criadas.
@@ -144,39 +116,6 @@ class MissionAssignmentService {
   }
 
   // ─── helpers privados ──────────────────────────────────────────────
-
-  /// Distribuição 60/40: 60% do pool fica com missões do `primaryFocus`,
-  /// 40% mix de outras categorias. `missionStyle` exact match quando a
-  /// entry declara `modality`. `intensity` aplica correspondência frouxa
-  /// via rank (sem campo intensity nos seeds — simplificação MVP).
-  List<Map<String, dynamic>> _filterDailyPool(
-    List<Map<String, dynamic>> pool,
-    MissionPreferences prefs,
-    GuildRank playerRank,
-  ) {
-    // 1. Rank gating.
-    final ranked = RankPools.filterByRank<Map<String, dynamic>>(
-      pool,
-      playerRank,
-      (e) => _rankOf(e),
-    );
-
-    // 2. Mission style filter (real/internal/mixed — só `real` e
-    //    `internal` têm entries em daily; `mixed` raro).
-    final styled = ranked.where((e) {
-      final mod = _modalityOf(e);
-      switch (prefs.missionStyle) {
-        case MissionStyle.real:
-          return mod == MissionModality.real;
-        case MissionStyle.internal:
-          return mod == MissionModality.internal;
-        case MissionStyle.mixed:
-          return true; // aceita ambos
-      }
-    }).toList();
-
-    return styled;
-  }
 
   /// Sampling sem reposição. Respeita `weightFor` do ADR 0017 se forem
   /// ranks heterogêneos — pro MVP simplificamos pra shuffle uniforme
@@ -288,11 +227,3 @@ class MissionAssignmentService {
     return '$isoYear-W${weekNum.toString().padLeft(2, '0')}';
   }
 }
-
-// ignore_for_file: unused_element
-
-/// Placeholder pra `MissionCategory` usado (evita warning de import
-/// não usado em cenário de filtro de prefs primaryFocus). Pro MVP,
-/// primaryFocus entra no filtro via `missionStyle`; categoria específica
-/// será considerada no Bloco 14.
-void _ignorePrimaryFocus(MissionCategory _) {}

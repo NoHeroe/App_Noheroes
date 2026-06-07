@@ -25,7 +25,6 @@ import '../presentation/faction/screens/faction_screen.dart';
 import '../presentation/achievements/screens/achievements_screen.dart';
 import '../presentation/history/screens/history_screen.dart';
 import '../presentation/profile/screens/profile_screen.dart';
-import '../presentation/mission_calibration/screens/mission_calibration_screen.dart';
 import '../presentation/quests/screens/quests_screen.dart';
 import '../presentation/dev/dev_panel_screen.dart';
 import '../presentation/battle/screens/battle_hub_screen.dart';
@@ -101,24 +100,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/faction/:id',
         builder: (c, s) => FactionScreen(factionId: s.pathParameters['id']!),
-      ),
-      // Sprint 3.1 Bloco 9 — Quiz de calibração inicial.
-      // Sprint 3.1 Bloco 10b — também aceita `?recalibrate=true` (modo
-      // refazer, acessado via SanctuaryDrawer item Refazer Calibração).
-      GoRoute(
-        path: '/mission_calibration',
-        builder: (c, s) => MissionCalibrationScreen(
-          isRecalibrate:
-              s.uri.queryParameters['recalibrate'] == 'true',
-        ),
-        redirect: (context, state) {
-          final player = ref.read(currentPlayerProvider);
-          if (player == null) return '/login';
-          if (player.level < 5) return '/sanctuary';
-          final cls = player.classType;
-          if (cls == null || cls.isEmpty) return '/class-selection';
-          return null;
-        },
       ),
       GoRoute(path: '/dev',                builder: (c, s) => const DevPanelScreen()),
       GoRoute(path: '/battle',             builder: (c, s) => const BattleHubScreen()),

@@ -8,32 +8,10 @@ import 'package:noheroes_app/core/events/app_event_bus.dart';
 import 'package:noheroes_app/data/database/app_database.dart';
 import 'package:noheroes_app/data/database/daos/daily_missions_dao.dart';
 import 'package:noheroes_app/data/database/daos/player_dao.dart';
-import 'package:noheroes_app/domain/enums/intensity.dart';
 import 'package:noheroes_app/domain/enums/mission_category.dart';
-import 'package:noheroes_app/domain/enums/mission_style.dart';
-import 'package:noheroes_app/domain/models/mission_preferences.dart';
-import 'package:noheroes_app/domain/repositories/mission_preferences_repository.dart';
 import 'package:noheroes_app/domain/services/body_metrics_service.dart';
 import 'package:noheroes_app/domain/services/daily_mission_generator_service.dart';
 import 'package:noheroes_app/domain/services/daily_pool_service.dart';
-import 'package:noheroes_app/domain/services/mission_preferences_service.dart';
-
-class _FakePrefsRepo implements MissionPreferencesRepository {
-  MissionPreferences? stored;
-
-  @override
-  Future<MissionPreferences?> findByPlayerId(int playerId) async => stored;
-
-  @override
-  Future<void> upsert(MissionPreferences prefs) async => stored = prefs;
-
-  @override
-  Future<int> updatesCountOf(int playerId) async =>
-      stored?.updatesCount ?? 0;
-
-  @override
-  Future<void> deleteForPlayer(int playerId) async => stored = null;
-}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -41,33 +19,17 @@ void main() {
   late AppDatabase db;
   late DailyPoolService pools;
   late BodyMetricsService bodyMetrics;
-  late MissionPreferencesService prefs;
-  late _FakePrefsRepo prefsRepo;
   late AppEventBus bus;
   late DailyMissionsDao missionsDao;
   late PlayerDao playerDao;
 
-  Future<int> seedPlayer({
-    String rank = 'C',
-    MissionCategory? primaryFocus,
-  }) async {
-    final id = await db.into(db.playersTable).insert(PlayersTableCompanion(
+  Future<int> seedPlayer({String rank = 'C'}) async {
+    return db.into(db.playersTable).insert(PlayersTableCompanion(
           email: Value('p${DateTime.now().microsecondsSinceEpoch}@t'),
           passwordHash: const Value('h'),
           shadowName: const Value('S'),
           guildRank: Value(rank),
         ));
-    if (primaryFocus != null) {
-      prefsRepo.stored = MissionPreferences(
-        playerId: id,
-        primaryFocus: primaryFocus,
-        intensity: Intensity.medium,
-        missionStyle: MissionStyle.mixed,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-    }
-    return id;
   }
 
   setUp(() async {
@@ -75,9 +37,7 @@ void main() {
     pools = DailyPoolService();
     await pools.loadAll();
     bodyMetrics = BodyMetricsService(dao: PlayerDao(db), bus: AppEventBus());
-    prefsRepo = _FakePrefsRepo();
     bus = AppEventBus();
-    prefs = MissionPreferencesService(repo: prefsRepo, bus: bus, db: db);
     missionsDao = DailyMissionsDao(db);
     playerDao = PlayerDao(db);
   });
@@ -91,17 +51,16 @@ void main() {
       DailyMissionGeneratorService(
         pools: pools,
         bodyMetrics: bodyMetrics,
-        prefs: prefs,
         playerDao: playerDao,
         missionsDao: missionsDao,
         bus: bus,
         random: random ?? Random(42),
       );
 
-  group('generateForToday', () {
+  group('generateForToday — modelo fixo [fisico, mental, espiritual]', () {
     test('gera exatamente 3 missões, cada uma com 3 sub-tarefas',
         () async {
-      final pid = await seedPlayer(primaryFocus: MissionCategory.fisico);
+      final pid = await seedPlayer();
       final svc = make();
       final missions = await svc.generateForToday(pid);
       expect(missions.length, 3);
@@ -115,8 +74,28 @@ void main() {
       }
     });
 
+    test('as 3 modalidades são fisico, mental e espiritual (sem vitalismo)',
+        () async {
+      // Várias seeds: deve ser SEMPRE o trio fixo, nunca vitalismo.
+      for (var i = 0; i < 30; i++) {
+        await db.delete(db.dailyMissionsTable).go();
+        final pid = await seedPlayer();
+        final svc = make(random: Random(i * 11 + 1));
+        final missions = await svc.generateForToday(pid);
+        final modalidades = missions.map((m) => m.modalidade).toList();
+        expect(modalidades, [
+          MissionCategory.fisico,
+          MissionCategory.mental,
+          MissionCategory.espiritual,
+        ], reason: 'seed=$i: trio fixo na ordem canônica');
+        expect(
+            modalidades.contains(MissionCategory.vitalismo), isFalse,
+            reason: 'vitalismo não entra nas diárias');
+      }
+    });
+
     test('sub-tarefas únicas cross-missions no mesmo dia', () async {
-      final pid = await seedPlayer(primaryFocus: MissionCategory.mental);
+      final pid = await seedPlayer();
       final svc = make();
       final missions = await svc.generateForToday(pid);
       final allKeys = <String>[];
@@ -128,8 +107,7 @@ void main() {
     });
 
     test('idempotência: re-chamar retorna as mesmas missões', () async {
-      final pid =
-          await seedPlayer(primaryFocus: MissionCategory.espiritual);
+      final pid = await seedPlayer();
       final svc = make();
       final first = await svc.generateForToday(pid);
       final second = await svc.generateForToday(pid);
@@ -140,32 +118,18 @@ void main() {
 
     test('persistência: getTodayMissions devolve o que foi salvo',
         () async {
-      final pid = await seedPlayer(primaryFocus: MissionCategory.fisico);
+      final pid = await seedPlayer();
       final svc = make();
       await svc.generateForToday(pid);
       final fetched = await svc.getTodayMissions(pid);
       expect(fetched.length, 3);
     });
 
-    test('garante ≥2 modalidades distintas no dia (forçamento)',
-        () async {
-      // Random "ruim" que sempre retorna 0 — sem forçamento, todos os 3
-      // sorteios cairiam no primeiro pilar do mapa de pesos. Validamos
-      // que o forçamento entra e quebra o trio.
-      final pid = await seedPlayer(primaryFocus: MissionCategory.fisico);
-      final svc = make(random: _AlwaysZero());
-      final missions = await svc.generateForToday(pid);
-      final modalidades =
-          missions.map((m) => m.modalidade).toSet();
-      expect(modalidades.length, greaterThanOrEqualTo(2),
-          reason: 'sempre ≥2 modalidades distintas');
-    });
-
     test(
         'sub-tarefas com escala 0 no rank do jogador NÃO são sorteadas',
         () async {
-      // Rank E + Espiritual/Ritual: 3 sub-tarefas têm escala 0
-      // (jejum_curto, repetir_pratica, jejum_dia). Nunca devem aparecer.
+      // Rank E: várias sub-tarefas têm escala 0 (jejum_curto, retiro_dia,
+      // timer_concentracao, etc.). Nunca devem aparecer.
       const banidasRankE = {
         'jejum_curto',
         'repetir_pratica',
@@ -176,17 +140,9 @@ void main() {
         'timer_concentracao',
       };
       for (var i = 0; i < 20; i++) {
+        await db.delete(db.dailyMissionsTable).go();
         final pid = await seedPlayer(rank: 'E');
-        // Reseta DB pra cada iteração — diferentes seeds.
-        final svc = DailyMissionGeneratorService(
-          pools: pools,
-          bodyMetrics: bodyMetrics,
-          prefs: prefs,
-          playerDao: playerDao,
-          missionsDao: missionsDao,
-          bus: bus,
-          random: Random(i * 13 + 1),
-        );
+        final svc = make(random: Random(i * 13 + 1));
         final missions = await svc.generateForToday(pid);
         for (final m in missions) {
           for (final s in m.subTarefas) {
@@ -195,32 +151,6 @@ void main() {
           }
         }
       }
-    });
-
-    test('Vitalismo: 1 sub-tarefa de cada pilar quando cai', () async {
-      // Tenta forçar Vitalismo escolhendo seed que produza pelo menos
-      // uma missão Vitalismo nas 3.
-      final pid = await seedPlayer(primaryFocus: MissionCategory.fisico);
-      // Roda várias seeds até achar uma com Vitalismo.
-      for (var i = 0; i < 50; i++) {
-        await db.delete(db.dailyMissionsTable).go();
-        final svc = make(random: Random(i * 7 + 3));
-        final missions = await svc.generateForToday(pid);
-        final vitalismo = missions
-            .where((m) => m.modalidade == MissionCategory.vitalismo)
-            .toList();
-        if (vitalismo.isNotEmpty) {
-          final v = vitalismo.first;
-          final pilares =
-              v.subTarefas.map((s) => s.subPilar).toSet();
-          expect(pilares, {'fisico', 'mental', 'espiritual'},
-              reason: 'Vitalismo deve ter 1 sub de cada pilar');
-          expect(v.subCategoria, isNull,
-              reason: 'sub_categoria null em Vitalismo');
-          return;
-        }
-      }
-      // Não rolou — registra a observação mas não falha (probabilístico).
     });
 
     test('rank A: água/proteína usam IMC do BodyMetricsService',
@@ -259,23 +189,44 @@ void main() {
     });
   });
 
+  // BUG 1 — geração concorrente não pode duplicar (single-flight guard).
+  group('BUG 1: geração concorrente é atômica', () {
+    test('10 chamadas concorrentes → exatamente 3 missões, nunca 6/9',
+        () async {
+      final pid = await seedPlayer();
+      final svc = make();
+      // Dispara 10 generateForToday em paralelo (simula builds da /quests
+      // re-disparados por invalidateSelf durante o build).
+      final futures =
+          List.generate(10, (_) => svc.generateForToday(pid));
+      final results = await Future.wait(futures);
+
+      // Todas as chamadas devem ver o MESMO conjunto de 3 missões.
+      for (final r in results) {
+        expect(r.length, 3, reason: 'cada chamada retorna 3');
+      }
+      final firstIds = results.first.map((m) => m.id).toSet();
+      for (final r in results) {
+        expect(r.map((m) => m.id).toSet(), firstIds,
+            reason: 'mesmas missões em todas as chamadas');
+      }
+
+      // E no banco só pode haver 3 linhas pro dia.
+      final dateStr = _todayStr();
+      final persisted = await missionsDao.findByPlayerAndDate(pid, dateStr);
+      expect(persisted.length, 3,
+          reason: 'sem duplicação no banco (era o BUG 1: 6/9)');
+    });
+  });
+
   // Hotfix Etapa 1.3.A — dedup de títulos cross-missions.
   group('dedup de títulos', () {
     test('50 seeds: nenhuma roda tem título duplicado entre as 3 missões',
         () async {
       for (var i = 0; i < 50; i++) {
-        final pid =
-            await seedPlayer(primaryFocus: MissionCategory.fisico);
         await db.delete(db.dailyMissionsTable).go();
-        final svc = DailyMissionGeneratorService(
-          pools: pools,
-          bodyMetrics: bodyMetrics,
-          prefs: prefs,
-          playerDao: playerDao,
-          missionsDao: missionsDao,
-          bus: bus,
-          random: Random(i + 7),
-        );
+        final pid = await seedPlayer();
+        final svc = make(random: Random(i + 7));
         final missions = await svc.generateForToday(pid);
         final titulos = missions.map((m) => m.tituloResolvido).toList();
         expect(titulos.toSet().length, titulos.length,
@@ -285,13 +236,9 @@ void main() {
   });
 }
 
-/// Random determinístico que sempre retorna 0 — usado pra simular caso
-/// patológico onde os 3 sorteios cairiam todos na mesma modalidade.
-class _AlwaysZero implements Random {
-  @override
-  bool nextBool() => false;
-  @override
-  double nextDouble() => 0.0;
-  @override
-  int nextInt(int max) => 0;
+String _todayStr() {
+  final d = DateTime.now();
+  return '${d.year.toString().padLeft(4, '0')}-'
+      '${d.month.toString().padLeft(2, '0')}-'
+      '${d.day.toString().padLeft(2, '0')}';
 }

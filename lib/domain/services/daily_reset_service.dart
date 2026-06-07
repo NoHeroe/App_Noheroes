@@ -137,11 +137,10 @@ class DailyResetService {
     await _playerDao.markDailyReset(playerId, now);
 
     // ── Fase 2: reassign ────────────────────────────────────────────
+    // Schema 37: diárias legacy removidas (agora geradas pelo
+    // `DailyMissionGeneratorService`, modelo fixo). Aqui só reassigna
+    // missões de classe.
     final rank = _rankOf(player.guildRank);
-    final newDaily = await _assignment.assignDailyForPlayer(
-      playerId: playerId,
-      playerRank: rank,
-    );
     final newClass = await _assignment.assignClassDaily(
       playerId: playerId,
       classKey: player.classType,
@@ -151,7 +150,6 @@ class DailyResetService {
     return DailyResetResult(
       applied: true,
       processed: processed,
-      reassignedDaily: newDaily.length,
       reassignedClass: newClass.length,
     );
   }

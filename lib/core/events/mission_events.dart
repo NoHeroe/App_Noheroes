@@ -171,16 +171,3 @@ class IndividualCreated extends AppEvent {
   String toString() =>
       'IndividualCreated(player=$playerId, key=$missionKey, cat=$categoria)';
 }
-
-/// Preferências do jogador mudaram (primeira calibração, refazer, ou update
-/// programático). `MissionAssignmentService` do Bloco 14 escuta pra
-/// recalcular pools.
-class MissionPreferencesChanged extends AppEvent {
-  @override
-  final int playerId;
-
-  MissionPreferencesChanged({required this.playerId, super.at});
-
-  @override
-  String toString() => 'MissionPreferencesChanged(player=$playerId)';
-}

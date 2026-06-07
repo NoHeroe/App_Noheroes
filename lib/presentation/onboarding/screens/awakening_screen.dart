@@ -7,42 +7,27 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/datasources/local/tutorial_service.dart';
-import '../../../domain/enums/intensity.dart';
-import '../../../domain/enums/mission_category.dart';
-import '../../../domain/enums/mission_style.dart';
-import '../../../domain/models/extras_mission_spec.dart';
-import '../../../domain/models/mission_preferences.dart';
 import '../../../domain/services/body_metrics_service.dart';
 
-/// Sprint 3.1 Bloco 14.6a — Onboarding Soulslike Fundido.
+/// Onboarding Soulslike (reescrita das diÃ¡rias, schema 37).
 ///
-/// Funde o awakening narrativo (v0.28.2) com o quiz de calibração
-/// (Bloco 9) numa cerimônia única executada no despertar. Substitui a
-/// phase13 do TutorialManager — que foi removida do `runAll` — e grava
-/// as preferências de missão direto do Awakening.
+/// CerimÃ´nia narrativa do despertar. O **questionÃ¡rio de ajuste**
+/// (Encruzilhada de pilar + 3 cenÃ¡rios morais) foi REMOVIDO: as diÃ¡rias
+/// passaram a ser fixas (1 fÃ­sico + 1 mental + 1 espiritual, iguais pra
+/// todos), entÃ£o nÃ£o hÃ¡ mais `primaryFocus` a compilar nem missÃ£o extra
+/// de despertar.
 ///
 /// ## Fluxo
-///   0. Ruínas: "Você desperta entre ruínas..."
-///   1. O Vazio: "Você não é de Caelum..."
+///   0. RuÃ­nas: "VocÃª desperta entre ruÃ­nas..."
+///   1. O Vazio: "VocÃª nÃ£o Ã© de Caelum..."
 ///   2. Nome: "Como devemos lhe chamar?"
-///   3. Encruzilhada: escolha direta entre os 4 pilares (peso x2)
-///   4-6. Três cenários morais, cada um com 4 opções mapeadas aos pilares
-///   7. Conclusão: "Vai. Que Caelum reconheça..."
-///
-/// ## Compilação do foco
-/// Votação ponderada: direta conta 2, cada cenário conta 1. Empate
-/// resolvido pela escolha direta. Lógica isolada em [AwakeningCeremony]
-/// pra ser coberta por testes unitários.
+///   3. ConclusÃ£o/Despertar: "Vai. Que Caelum reconheÃ§a..."
+///   â†’ CalibraÃ§Ã£o do Sistema: peso + altura (passo tÃ©cnico separado)
 ///
 /// ## Efeitos colaterais no finish
 ///   - `AuthLocalDs.completeOnboarding` (name + narrativeMode='longa')
-///   - `MissionPreferencesService.save` (primaryFocus + defaults)
-///   - 4x `MissionRepository.insert` (uma missão por pilar, modality
-///     `real`, tab `individual`, reward calculada pelo
-///     [MissionBalancerService])
-///   - `TutorialService.markDone(phase0_onboarding)` +
-///     `markDone(phase13_mission_calibration)` — este último pra não
-///     disparar o quiz antigo via drawer residual
+///   - `BodyMetricsService.save` (peso + altura, na CalibraÃ§Ã£o)
+///   - `TutorialService.markDone(phase0_onboarding)`
 ///   - `context.go('/sanctuary')`
 class AwakeningScreen extends ConsumerStatefulWidget {
   const AwakeningScreen({super.key});
@@ -60,13 +45,11 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
 
   int _step = 0;
   final _nameCtrl = TextEditingController();
-  MissionCategory? _directChoice;
-  final List<MissionCategory?> _scenarioChoices = [null, null, null];
   bool _ready = false;
   bool _finishing = false;
 
-  // Sprint 3.2 Etapa 1.0 — Calibração do Sistema (pós-cerimônia, pré-finish).
-  // Visual separado da cerimônia: sem _SceneBg, sem narrativa do Vazio.
+  // Sprint 3.2 Etapa 1.0 â€” CalibraÃ§Ã£o do Sistema (pÃ³s-cerimÃ´nia, prÃ©-finish).
+  // Visual separado da cerimÃ´nia: sem _SceneBg, sem narrativa do Vazio.
   bool _inCalibration = false;
   final _weightCtrl = TextEditingController();
   final _heightCtrl = TextEditingController();
@@ -74,22 +57,22 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
   String? _heightError;
 
   List<_Scene> get _scenes => [
-        // 0 — Ruínas
+        // 0 â€” RuÃ­nas
         const _Scene(
           npc: null,
           text:
-              'Você desperta entre ruínas antigas…\n\nA luz do céu parece quebrada.\n\nHá algo errado com seu corpo.',
+              'VocÃª desperta entre ruÃ­nas antigasâ€¦\n\nA luz do cÃ©u parece quebrada.\n\nHÃ¡ algo errado com seu corpo.',
           mood: _Mood.ruins,
         ),
-        // 1 — O Vazio se apresenta
+        // 1 â€” O Vazio se apresenta
         const _Scene(
           npc: 'O Vazio',
           text:
-              '"Você não é de Caelum.\n\nSua forma aqui é uma Sombra — ainda instável.\n\nSe quiser sobreviver, vai precisar aprender rápido."',
+              '"VocÃª nÃ£o Ã© de Caelum.\n\nSua forma aqui Ã© uma Sombra â€” ainda instÃ¡vel.\n\nSe quiser sobreviver, vai precisar aprender rÃ¡pido."',
           mood: _Mood.npc,
           isVoid: true,
         ),
-        // 2 — Nome
+        // 2 â€” Nome
         const _Scene(
           npc: 'O Vazio',
           text: 'Como devemos lhe chamar?',
@@ -97,43 +80,16 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
           isNameInput: true,
           isVoid: true,
         ),
-        // 3 — Encruzilhada (direta, peso x2)
+        // 3 â€” ConclusÃ£o / Despertar
         const _Scene(
           npc: 'O Vazio',
           text:
-              '"Quatro pilares sustentam quem caminha em Caelum.\n\nQual deles chama teu nome primeiro?"',
-          mood: _Mood.crossroads,
-          isDirectChoice: true,
-          isVoid: true,
-        ),
-        // 4 — Cenário 1: Besta Ferida
-        _scenarioScene(0),
-        // 5 — Cenário 2: Torre em Ruínas
-        _scenarioScene(1),
-        // 6 — Cenário 3: Pacto Oferecido
-        _scenarioScene(2),
-        // 7 — Conclusão
-        const _Scene(
-          npc: 'O Vazio',
-          text:
-              '"Tuas escolhas pesaram.\n\nCaelum já reconhece por onde vais andar.\n\nVai. A Sombra te segue."',
+              '"Caelum jÃ¡ te reconhece.\n\nVai. A Sombra te segue."',
           mood: _Mood.conclusion,
           isFinish: true,
           isVoid: true,
         ),
       ];
-
-  _Scene _scenarioScene(int index) {
-    final scenario = AwakeningCeremony.scenarios[index];
-    return _Scene(
-      npc: 'O Vazio',
-      text: scenario.prompt,
-      mood: _Mood.scenario,
-      isScenario: true,
-      scenarioIndex: index,
-      isVoid: true,
-    );
-  }
 
   @override
   void initState() {
@@ -167,15 +123,11 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
     final scene = _scenes[_step];
 
     if (scene.isNameInput && _nameCtrl.text.trim().isEmpty) return;
-    if (scene.isDirectChoice && _directChoice == null) return;
-    if (scene.isScenario && _scenarioChoices[scene.scenarioIndex!] == null) {
-      return;
-    }
 
     if (scene.isFinish) {
-      // Sprint 3.2 Etapa 1.0 — antes do finish narrativo, exibe a tela
-      // separada de Calibração do Sistema (peso/altura). Visual rompe
-      // com a cerimônia de propósito — é setup técnico funcional.
+      // Sprint 3.2 Etapa 1.0 â€” antes do finish narrativo, exibe a tela
+      // separada de CalibraÃ§Ã£o do Sistema (peso/altura). Visual rompe
+      // com a cerimÃ´nia de propÃ³sito â€” Ã© setup tÃ©cnico funcional.
       setState(() => _inCalibration = true);
       return;
     }
@@ -192,7 +144,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
     setState(() => _ready = true);
   }
 
-  /// Sprint 3.2 Etapa 1.0 — confirma a Calibração do Sistema.
+  /// Sprint 3.2 Etapa 1.0 â€” confirma a CalibraÃ§Ã£o do Sistema.
   /// Valida ranges, persiste peso/altura e dispara o `_finish` narrativo
   /// original (preferences + extras + onboarding done + nav /sanctuary).
   Future<void> _confirmCalibration() async {
@@ -234,13 +186,6 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
       return;
     }
 
-    final primaryFocus = AwakeningCeremony.compilePrimaryFocus(
-      direct: _directChoice!,
-      scenarios: List<MissionCategory>.from(
-          _scenarioChoices.map((c) => c!)),
-    );
-
-    final now = DateTime.now();
     final name = _nameCtrl.text.trim().isEmpty
         ? 'Sombra'
         : _nameCtrl.text.trim();
@@ -248,29 +193,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
     final authDs = ref.read(authDsProvider);
     await authDs.completeOnboarding(player.id, name, 'longa');
 
-    await ref.read(missionPreferencesServiceProvider).save(
-          MissionPreferences(
-            playerId: player.id,
-            primaryFocus: primaryFocus,
-            intensity: Intensity.medium,
-            missionStyle: MissionStyle.mixed,
-            createdAt: now,
-            updatedAt: now,
-          ),
-        );
-
-    // Sprint 3.1 Bloco 14.5 — ao invés de inserir 4 MissionProgress
-    // (padrão abandonado pelo CEO), salva 1 `ExtrasMissionSpec`
-    // dinâmica em `SharedPreferences`. O `ExtrasCatalogService` faz
-    // merge com o catálogo estático e o `QuestsScreenNotifier` (14.6c)
-    // renderiza na seção EXTRAS de `/quests`.
-    final extraSpec = AwakeningCeremony.awakeningExtraFor(primaryFocus);
-    await ref
-        .read(extrasCatalogServiceProvider)
-        .saveAwakeningExtra(player.id, extraSpec);
-
     await TutorialService.markDone(TutorialPhase.phase0_onboarding);
-    await TutorialService.markDone(TutorialPhase.phase13_mission_calibration);
 
     final updated = await authDs.currentSession();
     if (!mounted) return;
@@ -283,10 +206,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
     if (_inCalibration) return _buildCalibrationScreen();
 
     final scene = _scenes[_step];
-    final tapAdvances = !scene.isNameInput &&
-        !scene.isDirectChoice &&
-        !scene.isScenario &&
-        !scene.isFinish;
+    final tapAdvances = !scene.isNameInput && !scene.isFinish;
     return GestureDetector(
       onTap: tapAdvances ? _advance : null,
       behavior: HitTestBehavior.opaque,
@@ -357,11 +277,11 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
     );
   }
 
-  /// Sprint 3.2 Etapa 1.0 — tela "Calibração do Sistema".
+  /// Sprint 3.2 Etapa 1.0 â€” tela "CalibraÃ§Ã£o do Sistema".
   ///
-  /// Visualmente separada da cerimônia de propósito (sem _SceneBg/animação,
-  /// sem narrativa do Vazio). É setup técnico funcional — pense nas telas
-  /// de alocação inicial de Dark Souls. Estética soulslike preservada via
+  /// Visualmente separada da cerimÃ´nia de propÃ³sito (sem _SceneBg/animaÃ§Ã£o,
+  /// sem narrativa do Vazio). Ã‰ setup tÃ©cnico funcional â€” pense nas telas
+  /// de alocaÃ§Ã£o inicial de Dark Souls. EstÃ©tica soulslike preservada via
   /// CinzelDecorative + gold contido + borda gold simples.
   Widget _buildCalibrationScreen() {
     return Scaffold(
@@ -384,7 +304,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'CALIBRAÇÃO DO SISTEMA',
+                    'CALIBRAÃ‡ÃƒO DO SISTEMA',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.cinzelDecorative(
                       fontSize: 14,
@@ -394,7 +314,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Antes de iniciar tuas missões, o sistema precisa calibrar tuas medidas pra calcular hidratação e nutrição corretas.',
+                    'Antes de iniciar tuas missÃµes, o sistema precisa calibrar tuas medidas pra calcular hidrataÃ§Ã£o e nutriÃ§Ã£o corretas.',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.roboto(
                       fontSize: 12,
@@ -501,7 +421,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
         ),
         child: Center(
           child: Text(
-            _finishing ? 'CALIBRANDO…' : 'CONTINUAR',
+            _finishing ? 'CALIBRANDOâ€¦' : 'CONTINUAR',
             style: GoogleFonts.cinzelDecorative(
               fontSize: 12,
               color: enabled ? AppColors.gold : AppColors.textMuted,
@@ -593,22 +513,6 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
             const SizedBox(height: 12),
             _buildBtn('Confirmar', _advance),
           ],
-          if (scene.isDirectChoice) ...[
-            const SizedBox(height: 14),
-            _buildDirectChoice(),
-            if (_directChoice != null) ...[
-              const SizedBox(height: 10),
-              _buildBtn('Continuar', _advance),
-            ],
-          ],
-          if (scene.isScenario) ...[
-            const SizedBox(height: 14),
-            _buildScenarioChoice(scene.scenarioIndex!),
-            if (_scenarioChoices[scene.scenarioIndex!] != null) ...[
-              const SizedBox(height: 10),
-              _buildBtn('Seguir adiante', _advance),
-            ],
-          ],
           if (scene.isFinish) ...[
             const SizedBox(height: 14),
             _buildBtn('Despertar', _advance),
@@ -642,42 +546,6 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
         ),
       );
 
-  Widget _buildDirectChoice() => Column(
-        children: MissionCategory.values.map((cat) {
-          final selected = _directChoice == cat;
-          return _ChoiceTile(
-            label: cat.display,
-            hint: _pillarHint(cat),
-            selected: selected,
-            onTap: () => setState(() => _directChoice = cat),
-          );
-        }).toList(),
-      );
-
-  Widget _buildScenarioChoice(int index) {
-    final scenario = AwakeningCeremony.scenarios[index];
-    return Column(
-      children: scenario.options.map((opt) {
-        final selected = _scenarioChoices[index] == opt.mapsTo;
-        return _ChoiceTile(
-          label: opt.label,
-          hint: null,
-          selected: selected,
-          onTap: () => setState(() => _scenarioChoices[index] = opt.mapsTo),
-        );
-      }).toList(),
-    );
-  }
-
-  String _pillarHint(MissionCategory cat) => switch (cat) {
-        MissionCategory.fisico => 'Corpo que resiste. Força forjada na carne.',
-        MissionCategory.mental => 'Mente afiada. Estudo e estratégia.',
-        MissionCategory.espiritual =>
-          'Silêncio interno. Rituais e presença.',
-        MissionCategory.vitalismo =>
-          'Ciclo entre os pilares. Fluxo que integra.',
-      };
-
   Widget _buildBtn(String label, VoidCallback onTap) => GestureDetector(
         onTap: _finishing ? null : onTap,
         child: Container(
@@ -699,157 +567,11 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
       );
 }
 
-/// Cerimônia do Awakening 14.6a — lógica pura extraída do widget pra ser
-/// coberta por testes unitários. A tela consome diretamente via chamadas
-/// estáticas, mantendo `AwakeningScreen` enxuto.
-class AwakeningCeremony {
-  const AwakeningCeremony._();
-
-  /// Votação ponderada: direta pesa 2, cada cenário pesa 1. Empate é
-  /// resolvido pela escolha direta (sempre entra no pool de empatados
-  /// por construção).
-  static MissionCategory compilePrimaryFocus({
-    required MissionCategory direct,
-    required List<MissionCategory> scenarios,
-  }) {
-    final votes = <MissionCategory, int>{for (final c in MissionCategory.values) c: 0};
-    votes[direct] = (votes[direct] ?? 0) + 2;
-    for (final s in scenarios) {
-      votes[s] = (votes[s] ?? 0) + 1;
-    }
-    var maxVotes = -1;
-    final leaders = <MissionCategory>[];
-    for (final entry in votes.entries) {
-      if (entry.value > maxVotes) {
-        maxVotes = entry.value;
-        leaders
-          ..clear()
-          ..add(entry.key);
-      } else if (entry.value == maxVotes) {
-        leaders.add(entry.key);
-      }
-    }
-    if (leaders.contains(direct)) return direct;
-    return leaders.first;
-  }
-
-  /// Sprint 3.1 Bloco 14.5 — retorna a `ExtrasMissionSpec` baseada no
-  /// pilar compilado no quiz. 1 entry por jogador, doada pelo "O Vazio"
-  /// (type: npc). Copy canônico (aprovado CEO 14.5).
-  ///
-  /// Rewards zeradas — é missão narrativa sem rastreio quantitativo
-  /// de progresso; o botão "Aceitar" é placeholder no Bloco 11a
-  /// (débito em `DEBITO_EXTRAS_GATE.md`).
-  static ExtrasMissionSpec awakeningExtraFor(MissionCategory pillar) =>
-      switch (pillar) {
-        MissionCategory.fisico => const ExtrasMissionSpec(
-            key: 'awakening_primeira_forja',
-            type: ExtraMissionType.npc,
-            title: 'A Primeira Forja',
-            description:
-                'O Vazio observa teus músculos despertarem. Forje teu corpo pela primeira vez.',
-          ),
-        MissionCategory.mental => const ExtrasMissionSpec(
-            key: 'awakening_primeiro_veu',
-            type: ExtraMissionType.npc,
-            title: 'O Primeiro Véu',
-            description:
-                'O Vazio te oferece uma página em branco. Que tua mente lave o que vê.',
-          ),
-        MissionCategory.espiritual => const ExtrasMissionSpec(
-            key: 'awakening_primeiro_silencio',
-            type: ExtraMissionType.npc,
-            title: 'O Primeiro Silêncio',
-            description:
-                'O Vazio te convida ao silêncio. Escuta o que o mundo esconde.',
-          ),
-        MissionCategory.vitalismo => const ExtrasMissionSpec(
-            key: 'awakening_primeiro_ciclo',
-            type: ExtraMissionType.npc,
-            title: 'O Primeiro Ciclo',
-            description:
-                'O Vazio observa teu equilíbrio. Une corpo, mente e alma pela primeira vez.',
-          ),
-      };
-
-  static const List<AwakeningScenario> scenarios = [
-    AwakeningScenario(
-      prompt:
-          '"Uma besta ferida — teu companheiro de caminho — agoniza aos teus pés. O que fazes?"',
-      options: [
-        AwakeningOption(
-            label: 'Pôr fim ao sofrimento de uma vez, com tuas próprias mãos',
-            mapsTo: MissionCategory.fisico),
-        AwakeningOption(
-            label: 'Abandonar o aliado e seguir adiante',
-            mapsTo: MissionCategory.mental),
-        AwakeningOption(
-            label: 'Tentar curá-lo — não sabes ainda como',
-            mapsTo: MissionCategory.espiritual),
-        AwakeningOption(
-            label: 'Velar ao lado dele até o ciclo se fechar',
-            mapsTo: MissionCategory.vitalismo),
-      ],
-    ),
-    AwakeningScenario(
-      prompt:
-          '"Uma torre em ruínas ergue-se à frente. Na base, gravado em pedra: \'Só os dignos entram\'. E agora?"',
-      options: [
-        AwakeningOption(
-            label: 'Forçar a entrada a golpes — a dignidade se prova na ação',
-            mapsTo: MissionCategory.fisico),
-        AwakeningOption(
-            label: 'Decifrar a inscrição antes de tocar em nada',
-            mapsTo: MissionCategory.mental),
-        AwakeningOption(
-            label: 'Ajoelhar e pedir permissão ao que habita ali',
-            mapsTo: MissionCategory.espiritual),
-        AwakeningOption(
-            label: 'Rodear a torre até achar outra passagem',
-            mapsTo: MissionCategory.vitalismo),
-      ],
-    ),
-    AwakeningScenario(
-      prompt:
-          '"Uma entidade sem forma te oferece poder em troca de um fragmento da tua alma. Resposta?"',
-      options: [
-        AwakeningOption(
-            label: 'Aceitar e carregar o peso',
-            mapsTo: MissionCategory.fisico),
-        AwakeningOption(
-            label: 'Negociar as condições, frase por frase',
-            mapsTo: MissionCategory.mental),
-        AwakeningOption(
-            label: 'Recusar — a alma não é moeda',
-            mapsTo: MissionCategory.espiritual),
-        AwakeningOption(
-            label: 'Provar o pacto e ver até onde vai',
-            mapsTo: MissionCategory.vitalismo),
-      ],
-    ),
-  ];
-}
-
-class AwakeningScenario {
-  final String prompt;
-  final List<AwakeningOption> options;
-  const AwakeningScenario({required this.prompt, required this.options});
-}
-
-class AwakeningOption {
-  final String label;
-  final MissionCategory mapsTo;
-  const AwakeningOption({required this.label, required this.mapsTo});
-}
-
 class _Scene {
   final String? npc;
   final String text;
   final _Mood mood;
   final bool isNameInput;
-  final bool isDirectChoice;
-  final bool isScenario;
-  final int? scenarioIndex;
   final bool isFinish;
   final bool isVoid;
   const _Scene({
@@ -857,78 +579,12 @@ class _Scene {
     required this.text,
     required this.mood,
     this.isNameInput = false,
-    this.isDirectChoice = false,
-    this.isScenario = false,
-    this.scenarioIndex,
     this.isFinish = false,
     this.isVoid = false,
   });
 }
 
 enum _Mood { ruins, npc, identity, crossroads, scenario, conclusion }
-
-class _ChoiceTile extends StatelessWidget {
-  final String label;
-  final String? hint;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _ChoiceTile({
-    required this.label,
-    required this.hint,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        width: double.infinity,
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          border: Border.all(
-              color: selected ? AppColors.gold : AppColors.border,
-              width: selected ? 1.5 : 1),
-          borderRadius: BorderRadius.circular(12),
-          color: selected
-              ? AppColors.gold.withValues(alpha: 0.08)
-              : Colors.white.withValues(alpha: 0.03),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: GoogleFonts.cinzelDecorative(
-                        fontSize: 12,
-                        color:
-                            selected ? AppColors.gold : AppColors.textPrimary),
-                  ),
-                  if (hint != null) ...[
-                    const SizedBox(height: 3),
-                    Text(hint!,
-                        style: GoogleFonts.roboto(
-                            fontSize: 10, color: AppColors.textMuted)),
-                  ],
-                ],
-              ),
-            ),
-            if (selected)
-              const Icon(Icons.check_circle,
-                  color: AppColors.gold, size: 18),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _SceneBg extends StatefulWidget {
   final _Mood mood;

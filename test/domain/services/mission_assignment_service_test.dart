@@ -8,20 +8,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:noheroes_app/core/events/app_event_bus.dart';
-import 'package:noheroes_app/core/events/mission_events.dart';
 import 'package:noheroes_app/core/utils/guild_rank.dart';
 import 'package:noheroes_app/data/database/app_database.dart';
 import 'package:noheroes_app/data/datasources/local/mission_catalogs_service.dart';
 import 'package:noheroes_app/data/repositories/drift/active_faction_quests_repository_drift.dart';
-import 'package:noheroes_app/data/repositories/drift/mission_preferences_repository_drift.dart';
 import 'package:noheroes_app/data/repositories/drift/mission_repository_drift.dart';
-import 'package:noheroes_app/domain/enums/intensity.dart';
-import 'package:noheroes_app/domain/enums/mission_category.dart';
-import 'package:noheroes_app/domain/enums/mission_modality.dart';
-import 'package:noheroes_app/domain/enums/mission_style.dart';
-import 'package:noheroes_app/domain/models/mission_preferences.dart';
 import 'package:noheroes_app/domain/services/mission_assignment_service.dart';
-import 'package:noheroes_app/domain/services/mission_preferences_service.dart';
 
 class _FakeBundle extends AssetBundle {
   final Map<String, String> contents;
@@ -56,36 +48,15 @@ Future<int> _seedPlayer(AppDatabase db) async {
   );
 }
 
-MissionPreferences _prefs(int playerId, {
-  MissionCategory focus = MissionCategory.fisico,
-  MissionStyle style = MissionStyle.real,
-}) {
-  final now = DateTime.now();
-  return MissionPreferences(
-    playerId: playerId,
-    primaryFocus: focus,
-    intensity: Intensity.medium,
-    missionStyle: style,
-    createdAt: now,
-    updatedAt: now,
-  );
-}
-
 void main() {
   late AppDatabase db;
   late AppEventBus bus;
   late MissionRepositoryDrift missionRepo;
-  late MissionPreferencesService prefsService;
 
   setUp(() {
     db = AppDatabase.forTesting(NativeDatabase.memory());
     bus = AppEventBus();
     missionRepo = MissionRepositoryDrift(db);
-    prefsService = MissionPreferencesService(
-      repo: MissionPreferencesRepositoryDrift(db),
-      bus: bus,
-      db: db,
-    );
   });
 
   tearDown(() async {
@@ -96,7 +67,6 @@ void main() {
   MissionAssignmentService makeService(_FakeBundle bundle) {
     return MissionAssignmentService(
       missionRepo: missionRepo,
-      prefsService: prefsService,
       catalogs: MissionCatalogsService(bundle: bundle),
       factionRepo: ActiveFactionQuestsRepositoryDrift(db),
       bus: bus,
@@ -104,138 +74,10 @@ void main() {
     );
   }
 
-  group('assignDailyForPlayer', () {
-    test('sem prefs → lista vazia', () async {
-      final playerId = await _seedPlayer(db);
-      final service = makeService(_FakeBundle({
-        'assets/data/missions_daily.json': jsonEncode({
-          'missions': [
-            {
-              'key': 'D_E',
-              'title': 't',
-              'description': 'd',
-              'modality': 'real',
-              'category': 'fisico',
-              'rank': 'e',
-              'target_value': 10,
-              'reward': {'xp': 10}
-            },
-          ],
-        }),
-      }));
-      final ids = await service.assignDailyForPlayer(
-          playerId: playerId, playerRank: GuildRank.e);
-      expect(ids, isEmpty);
-    });
-
-    test('feliz: 3 missões criadas + MissionStarted emit', () async {
-      final playerId = await _seedPlayer(db);
-      await prefsService.save(_prefs(playerId));
-      final captured = <MissionStarted>[];
-      final sub = bus.on<MissionStarted>().listen(captured.add);
-
-      final service = makeService(_FakeBundle({
-        'assets/data/missions_daily.json': jsonEncode({
-          'missions': [
-            for (var i = 0; i < 5; i++)
-              {
-                'key': 'D_$i',
-                'title': 't$i',
-                'description': 'd',
-                'modality': 'real',
-                'category': 'fisico',
-                'rank': 'e',
-                'target_value': 10,
-                'reward': {'xp': 10}
-              },
-          ],
-        }),
-      }));
-      final ids = await service.assignDailyForPlayer(
-          playerId: playerId, playerRank: GuildRank.e);
-      await Future<void>.delayed(const Duration(milliseconds: 20));
-      expect(ids.length, 3);
-      expect(captured.length, 3);
-      final active = await missionRepo.findActive(playerId);
-      expect(active.length, 3);
-      await sub.cancel();
-    });
-
-    test('rank gating: jogador E NÃO recebe rank B', () async {
-      final playerId = await _seedPlayer(db);
-      await prefsService.save(_prefs(playerId));
-      final service = makeService(_FakeBundle({
-        'assets/data/missions_daily.json': jsonEncode({
-          'missions': [
-            for (var i = 0; i < 3; i++)
-              {
-                'key': 'D_B_$i',
-                'title': 't',
-                'description': 'd',
-                'modality': 'real',
-                'category': 'fisico',
-                'rank': 'b',
-                'target_value': 10,
-                'reward': {'xp': 10}
-              },
-          ],
-        }),
-      }));
-      final ids = await service.assignDailyForPlayer(
-          playerId: playerId, playerRank: GuildRank.e);
-      expect(ids, isEmpty,
-          reason: 'jogador E não pode receber rank B');
-    });
-
-    test('mission_style=internal filtra só modality=internal',
-        () async {
-      final playerId = await _seedPlayer(db);
-      await prefsService.save(_prefs(playerId, style: MissionStyle.internal));
-      final service = makeService(_FakeBundle({
-        'assets/data/missions_daily.json': jsonEncode({
-          'missions': [
-            {
-              'key': 'REAL',
-              'title': 't',
-              'description': 'd',
-              'modality': 'real',
-              'category': 'fisico',
-              'rank': 'e',
-              'target_value': 10,
-              'reward': {'xp': 10}
-            },
-            {
-              'key': 'INT1',
-              'title': 't',
-              'description': 'd',
-              'modality': 'internal',
-              'category': 'fisico',
-              'rank': 'e',
-              'target_value': 1,
-              'reward': {'xp': 10}
-            },
-            {
-              'key': 'INT2',
-              'title': 't',
-              'description': 'd',
-              'modality': 'internal',
-              'category': 'fisico',
-              'rank': 'e',
-              'target_value': 1,
-              'reward': {'xp': 10}
-            },
-          ],
-        }),
-      }));
-      final ids = await service.assignDailyForPlayer(
-          playerId: playerId, playerRank: GuildRank.e);
-      // 2 internal + 1 real → filtro retira real → só 2 internal passam
-      expect(ids.length, 2);
-      final active = await missionRepo.findActive(playerId);
-      expect(active.every((m) => m.modality == MissionModality.internal),
-          isTrue);
-    });
-  });
+  // Schema 37: `assignDailyForPlayer` (diárias legacy baseadas em
+  // MissionPreferences) foi removido. Diárias agora vêm do
+  // DailyMissionGeneratorService (modelo fixo) — cobertas em
+  // daily_mission_generator_service_test.dart.
 
   group('assignClassDaily', () {
     test('filtra por classKey + cria 3 missions', () async {
