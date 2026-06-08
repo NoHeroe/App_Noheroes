@@ -5,6 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/database/app_database.dart';
+import '../widgets/library_atmosphere.dart';
+import '../widgets/library_cards_section.dart';
+import '../../shared/widgets/nh_medallion.dart';
 import 'dart:math' as math;
 
 class LibraryScreen extends ConsumerStatefulWidget {
@@ -44,12 +47,17 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.black,
-      body: FadeTransition(
-        opacity: _fade,
-        child: _section == -1
-            ? _buildHub(context)
-            : _buildSection(),
+      backgroundColor: AppColors.blackVeil,
+      body: Stack(
+        children: [
+          const LibraryAtmosphere(),
+          FadeTransition(
+            opacity: _fade,
+            child: _section == -1
+                ? _buildHub(context)
+                : _buildSection(),
+          ),
+        ],
       ),
     );
   }
@@ -61,99 +69,82 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
         children: [
           // Header
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: Row(
               children: [
                 GestureDetector(
                   onTap: () => context.go('/sanctuary'),
-                  child: const Icon(Icons.arrow_back_ios,
-                      color: AppColors.textSecondary, size: 20),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0xFF221A2E), Color(0xFF0B0910)],
+                      ),
+                      border: Border.all(color: AppColors.borderViolet),
+                    ),
+                    child: const Icon(Icons.arrow_back_ios_new,
+                        color: AppColors.txt2, size: 16),
+                  ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 14),
                 Text('BIBLIOTECA',
                     style: GoogleFonts.cinzelDecorative(
-                        fontSize: 16,
-                        color: const Color(0xFFC2A05A),
-                        letterSpacing: 2)),
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.goldLt,
+                        letterSpacing: 2,
+                        shadows: [
+                          Shadow(
+                              color: AppColors.gold.withValues(alpha: 0.5),
+                              blurRadius: 12),
+                        ])),
               ],
             ),
           ),
           const SizedBox(height: 8),
-          // Hub visual
+          // Medalhões dispersos (estilo Santuário) — acesso às seções.
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  // Descrição do hub
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFC2A05A).withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                          color: const Color(0xFFC2A05A).withValues(alpha: 0.2)),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 0),
+                      child: NhMedallion(
+                        label: 'Diário',
+                        icon: Icons.auto_stories_outlined,
+                        size: 76,
+                        onTap: () => _navigate(0),
+                      ),
                     ),
-                    child: Text(
-                      'O conhecimento de Caelum vive aqui. Registros, obras e memórias dos que vieram antes.',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.roboto(
-                          fontSize: 11,
-                          color: AppColors.textSecondary,
-                          height: 1.5,
-                          fontStyle: FontStyle.italic),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 34),
+                      child: NhMedallion(
+                        label: 'Obras',
+                        icon: Icons.menu_book_outlined,
+                        size: 76,
+                        badge: 'EM BREVE',
+                        onTap: () => _navigate(1),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  // Cards de seção
-                  Expanded(
-                    child: Column(
-                      children: [
-                        // Diário — full width
-                        Expanded(
-                          flex: 2,
-                          child: _HubCard(
-                            title: 'DIÁRIO',
-                            subtitle: 'Seus registros em Caelum',
-                            icon: Icons.auto_stories_outlined,
-                            color: const Color(0xFF8B3DFF),
-                            onTap: () => _navigate(0),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        // Obras + Coleção — row
-                        Expanded(
-                          flex: 3,
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: _HubCard(
-                                  title: 'OBRAS',
-                                  subtitle: 'Leituras do universo',
-                                  icon: Icons.menu_book_outlined,
-                                  color: const Color(0xFF3070B3),
-                                  onTap: () => _navigate(1),
-                                  badge: 'EM BREVE',
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: _HubCard(
-                                  title: 'COLEÇÃO',
-                                  subtitle: 'Lore & Progresso',
-                                  icon: Icons.explore_outlined,
-                                  color: const Color(0xFFC2A05A),
-                                  onTap: () => _navigate(2),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    Padding(
+                      padding: const EdgeInsets.only(top: 14),
+                      child: NhMedallion(
+                        label: 'Coleção',
+                        icon: Icons.style_outlined,
+                        size: 76,
+                        onTap: () => _navigate(2),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -167,113 +158,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
     return switch (_section) {
       0 => _DiarySection(onBack: () => _navigate(-1)),
       1 => _WorksSection(onBack: () => _navigate(-1)),
-      2 => _CollectionSection(onBack: () => _navigate(-1)),
+      // Fatia 2 — a COLEÇÃO agora abre o acervo de CARTAS (casca visual,
+      // dados mock). A antiga _CollectionSection (lore) foi APOSENTADA —
+      // ver "LORE APOSENTADO" mais abaixo (preservada, sem rota de acesso).
+      2 => LibraryCardsSection(onBack: () => _navigate(-1)),
       _ => const SizedBox.shrink(),
     };
-  }
-}
-
-// ─── HUB CARD ──────────────────────────────────────────────────────────────
-class _HubCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-  final String? badge;
-
-  const _HubCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-    this.badge,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              color.withValues(alpha: 0.1),
-              AppColors.surface,
-            ],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.08),
-              blurRadius: 12,
-              spreadRadius: 1,
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            // Decoração de fundo
-            Positioned(
-              right: -10, bottom: -10,
-              child: Icon(icon,
-                  color: color.withValues(alpha: 0.06), size: 80),
-            ),
-            // Conteúdo
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Icon(icon, color: color, size: 28),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title,
-                          style: GoogleFonts.cinzelDecorative(
-                              fontSize: 13,
-                              color: AppColors.textPrimary,
-                              letterSpacing: 1)),
-                      const SizedBox(height: 4),
-                      Text(subtitle,
-                          style: GoogleFonts.roboto(
-                              fontSize: 10,
-                              color: AppColors.textSecondary)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            // Badge
-            if (badge != null)
-              Positioned(
-                top: 10, right: 10,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 6, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppColors.gold.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(
-                        color: AppColors.gold.withValues(alpha: 0.4)),
-                  ),
-                  child: Text(badge!,
-                      style: GoogleFonts.roboto(
-                          fontSize: 8,
-                          color: AppColors.gold,
-                          letterSpacing: 1)),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
   }
 }
 
@@ -347,7 +237,7 @@ class _DiarySectionState extends ConsumerState<_DiarySection> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.auto_stories_outlined,
+                        const Icon(Icons.auto_stories_outlined,
                             color: AppColors.textMuted, size: 40),
                         const SizedBox(height: 12),
                         Text('Nenhum registro ainda.',
@@ -590,7 +480,13 @@ class _WorksSection extends StatelessWidget {
   }
 }
 
-// ─── COLEÇÃO ───────────────────────────────────────────────────────────────
+// ─── LORE APOSENTADO (Fatia 2 — decisão a arquivar) ─────────────────────────
+// A Coleção de LORE (Regiões/Personagens/Facções/Lore) foi SUBSTITUÍDA pela
+// Coleção de CARTAS (LibraryCardsSection). O código abaixo é preservado de
+// propósito (reversível) — sem rota de acesso a partir do hub. Os
+// `// ignore: unused_element` evitam ruído no analyze enquanto fica dormindo.
+// ─── COLEÇÃO (lore) ─────────────────────────────────────────────────────────
+// ignore: unused_element
 class _CollectionSection extends ConsumerWidget {
   final VoidCallback onBack;
   const _CollectionSection({required this.onBack});
@@ -624,10 +520,10 @@ class _CollectionSection extends ConsumerWidget {
         unlocked: _factionsUnlocked(player),
         lore: 'Facções descobertas ou ingressadas.',
       ),
-      _CollectionCat(
+      const _CollectionCat(
         title: 'Lore',
         icon: Icons.auto_stories_outlined,
-        color: const Color(0xFF4FA06B),
+        color: Color(0xFF4FA06B),
         total: 50,
         unlocked: 0,
         lore: 'Fragmentos do universo de Caelum. Desbloqueados via missões e regiões.',
@@ -681,6 +577,7 @@ class _CollectionSection extends ConsumerWidget {
   }
 }
 
+// ignore: unused_element
 class _CollectionCat {
   final String title;
   final IconData icon;
@@ -699,6 +596,7 @@ class _CollectionCat {
   });
 }
 
+// ignore: unused_element
 class _CollectionCard extends StatelessWidget {
   final _CollectionCat cat;
   const _CollectionCard({required this.cat});
@@ -786,6 +684,7 @@ class _CollectionCard extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _CircleProgressPainter extends CustomPainter {
   final double progress;
   final Color color;
