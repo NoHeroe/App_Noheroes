@@ -25,7 +25,6 @@ class MissionCatalogsService {
   // pra raiz PER-FACÇÃO (`{"moon_clan":[...], ...}`). Cacheamos o mapa
   // raiz inteiro e indexamos por facção em `loadFactionWeekly`.
   Map<String, dynamic>? _factionWeeklyMap;
-  List<Map<String, dynamic>>? _ascension;
 
   MissionCatalogsService({AssetBundle? bundle})
       : _bundle = bundle ?? rootBundle;
@@ -34,7 +33,6 @@ class MissionCatalogsService {
   static const String _classPath = 'assets/data/missions_class.json';
   static const String _factionWeeklyPath =
       'assets/data/missions_faction_weekly.json';
-  static const String _ascensionPath = 'assets/data/missions_ascension.json';
 
   Future<List<Map<String, dynamic>>> loadDaily() async {
     return _daily ??= await _loadArray(_dailyPath);
@@ -60,13 +58,6 @@ class MissionCatalogsService {
     if (list is! List) return const [];
     return list
         .map((e) => (e as Map).cast<String, dynamic>())
-        .toList(growable: false);
-  }
-
-  Future<List<Map<String, dynamic>>> loadAscension(String currentRank) async {
-    _ascension ??= await _loadArray(_ascensionPath);
-    return _ascension!
-        .where((e) => e['rank'] == currentRank)
         .toList(growable: false);
   }
 
@@ -115,6 +106,5 @@ class MissionCatalogsService {
     _daily = null;
     _class = null;
     _factionWeeklyMap = null;
-    _ascension = null;
   }
 }
