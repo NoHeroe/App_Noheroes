@@ -39,25 +39,31 @@ void main() {
     });
   });
 
-  group('FactionSelectionGate.headerSubtitle (BUG 4)', () {
-    test('mostra "atingiu o nível 7" exatamente no nível 7', () {
-      final msg = FactionSelectionGate.headerSubtitle(7);
-      expect(msg, contains('Você atingiu o nível 7'));
-      expect(msg, contains('escolha um lado'));
-    });
-
-    test('omite o anúncio de nível 7 quando já passou (> 7)', () {
-      for (final lvl in [8, 12, 30]) {
-        final msg = FactionSelectionGate.headerSubtitle(lvl);
-        expect(msg, isNot(contains('nível 7')),
-            reason: 'nível $lvl não deveria ver o anúncio redundante');
-        expect(msg, contains('escolha um lado'));
+  group('FactionSelectionGate.canSelectLoneWolf (ITEM 1)', () {
+    test('Lobo Solitário bloqueado abaixo do nível 7', () {
+      for (var lvl = 1; lvl < 7; lvl++) {
+        expect(FactionSelectionGate.canSelectLoneWolf(lvl), isFalse,
+            reason: 'nível $lvl não deveria liberar o Lobo Solitário');
       }
     });
 
-    test('abaixo do nível 7 mantém a frase de nível (defensivo)', () {
-      final msg = FactionSelectionGate.headerSubtitle(5);
-      expect(msg, contains('nível 7'));
+    test('Lobo Solitário liberado no nível 7 e acima', () {
+      for (final lvl in [7, 8, 20, 99]) {
+        expect(FactionSelectionGate.canSelectLoneWolf(lvl), isTrue,
+            reason: 'nível $lvl deveria liberar o Lobo Solitário');
+      }
+    });
+  });
+
+  group('FactionSelectionGate.headerSubtitle (ITEM 4 — neutro)', () {
+    test('subtítulo é neutro e NÃO menciona nível em qualquer nível', () {
+      for (final lvl in [5, 7, 8, 30]) {
+        final msg = FactionSelectionGate.headerSubtitle(lvl);
+        expect(msg, contains('escolha um lado'));
+        expect(msg, isNot(contains('nível')),
+            reason: 'nível $lvl não deveria mencionar nível no subtítulo');
+        expect(msg, isNot(contains('atingiu')));
+      }
     });
   });
 }

@@ -1,8 +1,10 @@
-/// Hotfix pós-validação Sprint 3.4 (BUG 2 + BUG 4).
+/// Lógica pura de gating da seleção de facção, extraída pra ser testável
+/// sem montar o widget inteiro (que depende de factions.json, achievements
+/// repo, buff service, etc).
 ///
-/// Lógica pura de gating da seleção de facção, extraída pra ser
-/// testável sem montar o widget inteiro (que depende de factions.json,
-/// achievements repo, buff service, etc).
+/// Histórico: hotfix pós-validação 3.4 (BUG 2 gate lvl 7 + BUG 4 mensagem).
+/// Ajuste pós-inspeção: Lobo Solitário também exige lvl 7 (ITEM 1) e o
+/// subtítulo virou NEUTRO (ITEM 4 — não menciona mais "nível 7").
 class FactionSelectionGate {
   /// Nível mínimo pra entrar em facção ideológica. Espelha o unlock
   /// exibido no Santuário (`if (level == 7) '🏴 Facções disponíveis'`).
@@ -19,13 +21,14 @@ class FactionSelectionGate {
     return level >= ideologicalMinLevel;
   }
 
-  /// Subtítulo do header da tela. Remove o anúncio "Você atingiu o nível
-  /// 7" quando o jogador já passou desse nível (BUG 4 — a frase ficava
-  /// redundante pra quem já estava bem além do 7).
-  static String headerSubtitle(int level) {
-    if (level > ideologicalMinLevel) {
-      return 'Caelum exige que você escolha um lado.';
-    }
-    return 'Você atingiu o nível 7.\nCaelum exige que você escolha um lado.';
-  }
+  /// ITEM 1 — o Caminho do Lobo Solitário também é uma escolha do "lvl 7":
+  /// só liberado a partir do nível 7, igual às ideológicas.
+  static bool canSelectLoneWolf(int level) => level >= ideologicalMinLevel;
+
+  /// Subtítulo do header da tela. NEUTRO por padrão (ITEM 4): como o
+  /// jogador pode escolher em QUALQUER nível ≥ 7, a frase não menciona
+  /// mais "nível 7" (antes aparecia sempre pra quem chegava exatamente no
+  /// 7, soando como anúncio repetido).
+  static String headerSubtitle(int level) =>
+      'Caelum exige que você escolha um lado.';
 }

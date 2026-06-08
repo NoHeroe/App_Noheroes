@@ -497,6 +497,16 @@ class FactionAdmissionProgressService {
         ],
         updates: {_db.playersTable},
       );
+      // ITEM 6 — welcome bonus +100 Insígnias. No flow normal o
+      // `_approveAdmission` já creditou (e o guard acima deu early-return);
+      // este path só roda quando a aprovação veio EXTERNA (dev panel
+      // `_forceCompleteAdmission`), que antes pulava o bônus. Mantém
+      // paridade com o fluxo real.
+      await _db.customUpdate(
+        'UPDATE players SET insignias = insignias + 100 WHERE id = ?',
+        variables: [Variable.withInt(evt.playerId)],
+        updates: {_db.playersTable},
+      );
       final nowMs = DateTime.now().millisecondsSinceEpoch;
       await _db.customStatement(
         'INSERT OR IGNORE INTO player_faction_membership '

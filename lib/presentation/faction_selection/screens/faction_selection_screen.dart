@@ -309,26 +309,57 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
       );
 
   Widget _buildHeader() {
-    // Hotfix pós-validação 3.4 (BUG 4) — subtítulo condicional. Remove o
-    // anúncio "Você atingiu o nível 7" pra quem já passou desse nível.
     final level = ref.read(currentPlayerProvider)?.level ?? 7;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-      child: Column(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('ESCOLHA DAS FACÇÕES',
-              style: GoogleFonts.cinzelDecorative(
-                  fontSize: 15, color: AppColors.gold, letterSpacing: 3)),
-          const SizedBox(height: 8),
-          Text(
-            FactionSelectionGate.headerSubtitle(level),
-            textAlign: TextAlign.center,
-            style: GoogleFonts.roboto(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-                height: 1.5,
-                fontStyle: FontStyle.italic),
+          // ITEM 3 — botão voltar (pop se houver pilha, senão /sanctuary).
+          GestureDetector(
+            onTap: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/sanctuary');
+              }
+            },
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                border: Border.all(color: AppColors.border),
+                borderRadius: BorderRadius.circular(10),
+                color: AppColors.surface,
+              ),
+              child: const Icon(Icons.arrow_back_ios_new,
+                  color: AppColors.textSecondary, size: 16),
+            ),
           ),
+          Expanded(
+            child: Column(
+              children: [
+                Text('ESCOLHA DAS FACÇÕES',
+                    style: GoogleFonts.cinzelDecorative(
+                        fontSize: 15,
+                        color: AppColors.gold,
+                        letterSpacing: 3)),
+                const SizedBox(height: 8),
+                Text(
+                  // ITEM 4 — subtítulo neutro (sem "nível 7").
+                  FactionSelectionGate.headerSubtitle(level),
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.roboto(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      height: 1.5,
+                      fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+          // Espelho do botão voltar pra manter o título centralizado.
+          const SizedBox(width: 40),
         ],
       ),
     );
@@ -372,30 +403,49 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
       );
 
   Widget _buildLoneWolfOption() {
+    // ITEM 1 — bloqueado (cinza + cadeado) até o nível 7, igual às facções.
+    final level = ref.read(currentPlayerProvider)?.level ?? 1;
+    final locked = !FactionSelectionGate.canSelectLoneWolf(level);
+    final fg = locked ? AppColors.textMuted : AppColors.textSecondary;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      child: GestureDetector(
-        onTap: _confirmLoneWolf,
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
-            color: AppColors.surface,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.person_outline, color: AppColors.textMuted, size: 24),
-              const SizedBox(height: 6),
-              Text('Caminho do Lobo Solitario',
-                  style: GoogleFonts.cinzelDecorative(
-                      fontSize: 12, color: AppColors.textSecondary, letterSpacing: 1)),
-              const SizedBox(height: 4),
-              Text('Seguir sem faccao. Pode mudar depois.',
-                  style: GoogleFonts.roboto(fontSize: 11, color: AppColors.textMuted)),
-            ],
+      child: Opacity(
+        opacity: locked ? 0.55 : 1.0,
+        child: GestureDetector(
+          onTap: () {
+            if (locked) {
+              AppSnack.warning(
+                  context, 'O Caminho do Lobo Solitário abre no nível 7.');
+            } else {
+              _confirmLoneWolf();
+            }
+          },
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+              color: AppColors.surface,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(locked ? Icons.lock_outline : Icons.person_outline,
+                    color: AppColors.textMuted, size: 24),
+                const SizedBox(height: 6),
+                Text('Caminho do Lobo Solitario',
+                    style: GoogleFonts.cinzelDecorative(
+                        fontSize: 12, color: fg, letterSpacing: 1)),
+                const SizedBox(height: 4),
+                Text(
+                    locked
+                        ? 'Disponivel no nivel 7.'
+                        : 'Seguir sem faccao. Pode mudar depois.',
+                    style: GoogleFonts.roboto(
+                        fontSize: 11, color: AppColors.textMuted)),
+              ],
+            ),
           ),
         ),
       ),
@@ -447,12 +497,12 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
       ref.read(currentPlayerProvider.notifier).state = updated;
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
+          const SnackBar(
+            content: Text(
                 'Você é agora membro oficial da Facção Guilda. '
                 'Buffs ativos.'),
             backgroundColor: AppColors.shadowAscending,
-            duration: const Duration(seconds: 4),
+            duration: Duration(seconds: 4),
           ),
         );
         context.go('/guild');
@@ -461,6 +511,17 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
   }
 
   Future<void> _confirmLoneWolf() async {
+    // ITEM 1 — Lobo Solitário também é uma escolha do lvl 7. Gate igual às
+    // ideológicas (FactionSelectionGate.canSelectLoneWolf).
+    final gatePlayer = ref.read(currentPlayerProvider);
+    if (gatePlayer != null &&
+        !FactionSelectionGate.canSelectLoneWolf(gatePlayer.level)) {
+      AppSnack.warning(
+        context,
+        'O Caminho do Lobo Solitário abre no nível 7.',
+      );
+      return;
+    }
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
