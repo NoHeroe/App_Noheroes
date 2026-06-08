@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/npc_session.dart';
@@ -14,20 +15,19 @@ import '../../../data/datasources/local/npc_reputation_service.dart';
 // Shadow futura. Hooks abaixo ficam como noop até lá.
 import '../../shared/widgets/milestone_popup.dart';
 import '../../shared/widgets/npc_dialog_overlay.dart';
-import '../../shared/widgets/player_stats_counter.dart';
 import '../../shared/widgets/app_snack.dart';
 import '../../shared/tutorial_manager.dart';
-import '../../../data/datasources/local/tutorial_service.dart';
 import '../../../data/database/tables/players_table_ext.dart';
 import '../widgets/caelum_day_banner.dart';
 import '../widgets/shadow_status_card.dart';
 import '../widgets/npc_dialogue_card.dart';
 import '../../../core/utils/asset_loader.dart';
-// Sprint 3.4 Etapa D (D17) — StatBarsRow saiu do Santuário e foi pra
-// /personagem (shared/widgets). Import removido.
 import '../widgets/sanctuary_drawer.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
-import '../../guild/screens/guild_screen.dart';
+// Restyle Santuário (mockup v3) — camada visual extraída em widgets.
+import '../widgets/sanctuary_atmosphere.dart';
+import '../widgets/sanctuary_header_widgets.dart';
+import '../widgets/sanctuary_combat_hex.dart';
 
 class SanctuaryScreen extends ConsumerStatefulWidget {
   const SanctuaryScreen({super.key});
@@ -37,11 +37,16 @@ class SanctuaryScreen extends ConsumerStatefulWidget {
 }
 
 class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
-  static bool _guildUnlockShownThisSession = false;
   Timer? _npcTimer;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _showNpc = false;
   int _lastLevel = 0;
+
+  @override
+  void dispose() {
+    _npcTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -161,22 +166,6 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     );
   }
 
-  Future<void> _showGuildUnlockOnce() async {
-    if (_SanctuaryScreenState._guildUnlockShownThisSession) return;
-    final prefs = await SharedPreferences.getInstance();
-    final shown = prefs.getBool('guild_unlock_shown') ?? false;
-    if (shown || !mounted) return;
-    _SanctuaryScreenState._guildUnlockShownThisSession = true;
-    await prefs.setBool('guild_unlock_shown', true);
-    if (!mounted) return;
-    NpcDialogOverlay.show(
-      context,
-      npcName: 'Noryan Gray',
-      npcTitle: 'Mestre da Guilda',
-      message: 'Aventureiro. A Guilda de Aventureiros agora esta acessivel para voce. Venha quando estiver pronto — o Colar te aguarda.',
-    );
-  }
-
   Future<void> _checkLevelTriggers() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null || !mounted) return;
@@ -287,9 +276,12 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       }
     });
 
+    final level = player?.level ?? 1;
+    final isVitalist = player?.isVitalist ?? false;
+
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) async {
+      onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
         final shouldExit = await _onWillPop();
         if (shouldExit && context.mounted) {
@@ -298,48 +290,70 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       },
       child: Scaffold(
         key: _scaffoldKey,
-        backgroundColor: AppColors.black,
+        backgroundColor: AppColors.blackVeil,
         drawer: const SanctuaryDrawer(),
         body: Stack(
           children: [
-            _buildAtmosphere(),
+            const SanctuaryAtmosphere(),
             SafeArea(
-              child: Column(
-                children: [
-                  _buildTopBar(
-                    context,
-                    player?.gold ?? 0,
-                    player?.xp ?? 0,
-                    player?.gems ?? 0,
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Sprint 3.4 Etapa D (D17) — StatBarsRow movido pra
-                          // /personagem (acima dos atributos). Santuário abre
-                          // direto no banner do dia.
-                          SizedBox(height: 8),
-                          CaelumDayBanner(),
-                          SizedBox(height: 16),
-                          ShadowStatusCard(),
-                          SizedBox(height: 20),
-                          _PlayButton(),
-                          SizedBox(height: 10),
-                          _SecondaryButtons(),
-                          SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Row 1 — perfil + carteira
+                    const Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: SanctuaryMiniProfile()),
+                        SizedBox(width: 16),
+                        SanctuaryWalletPills(),
+                      ],
+                    )
+                        .animate()
+                        .fadeIn(duration: 400.ms)
+                        .slideY(begin: -0.06, curve: Curves.easeOut),
+                    const SizedBox(height: 16),
+                    // Row 2 — utilitários
+                    SanctuaryUtilRow(
+                      onMenu: () => _scaffoldKey.currentState?.openDrawer(),
+                      onInbox: () => AppSnack.warning(
+                          context, 'Caixa de entrada em breve.'),
+                      onFriends: () =>
+                          AppSnack.warning(context, 'Amigos em breve.'),
+                      onBell: () => context.go('/notifications'),
+                    ).animate(delay: 80.ms).fadeIn(duration: 400.ms),
+                    const SizedBox(height: 20),
+                    const CaelumDayBanner()
+                        .animate(delay: 140.ms)
+                        .fadeIn(duration: 400.ms),
+                    const SizedBox(height: 20),
+                    const ShadowStatusCard()
+                        .animate(delay: 200.ms)
+                        .fadeIn(duration: 450.ms)
+                        .slideY(begin: 0.08, curve: Curves.easeOut),
+                    const SizedBox(height: 24),
+                    SanctuaryCombatHex(onTap: () => context.go('/battle'))
+                        .animate(delay: 280.ms)
+                        .fadeIn(duration: 450.ms)
+                        .slideY(begin: 0.1, curve: Curves.easeOut),
+                    const SizedBox(height: 28),
+                    _buildMedallions(context, level, isVitalist)
+                        .animate(delay: 360.ms)
+                        .fadeIn(duration: 500.ms),
+                    const Spacer(),
+                    // TEMP DEV — remover no release. Acesso ao Dev Panel
+                    // (saiu do topbar no restyle da Fatia 1).
+                    Center(child: _devChip(context)),
+                    const SizedBox(height: 16),
+                    const SizedBox(height: 88), // respiro acima da navbar
+                  ],
+                ),
               ),
             ),
             const Align(
               alignment: Alignment.bottomCenter,
-              child: NhBottomNav(currentIndex: 0),
+              child: NhBottomNav(currentIndex: 2),
             ),
             if (_showNpc)
               NpcDialogueOverlay(
@@ -354,124 +368,28 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     );
   }
 
-  Widget _buildAtmosphere() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment(0.0, -0.5),
-          radius: 1.2,
-          colors: [Color(0xFF1A0A2E), Color(0xFF0A0010), AppColors.black],
-          stops: [0.0, 0.5, 1.0],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTopBar(BuildContext context, int gold, int xp, int gems) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => _scaffoldKey.currentState?.openDrawer(),
-            child: _btn(Icons.menu),
-          ),
-          const SizedBox(width: 6),
-          GestureDetector(
-            onTap: () => context.go('/dev'),
-            child: Container(
-              width: 32, height: 32,
-              decoration: BoxDecoration(
-                border: Border.all(color: AppColors.hp.withValues(alpha: 0.4)),
-                borderRadius: BorderRadius.circular(8),
-                color: AppColors.hp.withValues(alpha: 0.08),
-              ),
-              child: const Icon(Icons.bug_report, color: AppColors.hp, size: 16),
-            ),
-          ),
-          Expanded(
-            child: Center(
-              child: Text('SANTUÁRIO',
-                  style: GoogleFonts.cinzelDecorative(
-                    fontSize: 13,
-                    color: AppColors.gold,
-                    letterSpacing: 3,
-                  )),
-            ),
-          ),
-          PlayerStatsCounter(gold: gold, xp: xp, gems: gems),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: () => context.go('/notifications'),
-            child: Stack(children: [
-              _btn(Icons.notifications_none),
-              Positioned(
-                top: 8, right: 8,
-                child: Container(
-                  width: 8, height: 8,
-                  decoration: const BoxDecoration(
-                      color: AppColors.purple,
-                      shape: BoxShape.circle),
-                ),
-              ),
-            ]),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _btn(IconData icon) => Container(
-        width: 40, height: 40,
-        decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(10),
-          color: AppColors.surface,
-        ),
-        child: Icon(icon, color: AppColors.textSecondary, size: 20),
-      );
-}
-class _PlayButton extends StatelessWidget {
-  const _PlayButton();
-
-  @override
-  Widget build(BuildContext context) {
+  // TEMP DEV — remover no release. Chip discreto de acesso ao Dev Panel.
+  Widget _devChip(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.go('/battle'),
+      onTap: () => context.go('/dev'),
       child: Container(
-        width: double.infinity,
-        height: 56,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-              color: const Color(0xFFB33030).withValues(alpha: 0.6),
-              width: 1.5),
-          gradient: LinearGradient(
-            colors: [
-              const Color(0xFF8B2020).withValues(alpha: 0.8),
-              const Color(0xFF3A0000).withValues(alpha: 0.6),
-            ],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFB33030).withValues(alpha: 0.25),
-              blurRadius: 12,
-              spreadRadius: 2,
-            ),
-          ],
+          borderRadius: BorderRadius.circular(8),
+          color: AppColors.surfaceVeil2,
+          border: Border.all(color: AppColors.goldDk),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.sports_martial_arts,
-                color: Colors.white, size: 22),
-            const SizedBox(width: 10),
+            const Icon(Icons.bug_report, size: 14, color: AppColors.txt2),
+            const SizedBox(width: 6),
             Text(
-              'ENTRAR EM COMBATE',
-              style: GoogleFonts.cinzelDecorative(
-                fontSize: 13,
-                color: Colors.white,
-                letterSpacing: 2,
+              'DEV',
+              style: GoogleFonts.roboto(
+                fontSize: 11,
+                letterSpacing: 1.5,
+                color: AppColors.txt2,
               ),
             ),
           ],
@@ -479,155 +397,61 @@ class _PlayButton extends StatelessWidget {
       ),
     );
   }
-}
 
-class _SecondaryButtons extends ConsumerWidget {
-  const _SecondaryButtons();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final player = ref.watch(currentPlayerProvider);
-    final level = player?.level ?? 1;
-    final guildUnlocked = level >= 6;
-    final hubUnlocked = level >= 25;
-    final isVitalist = player?.isVitalist ?? false;
-
-    return Column(
+  // Medalhões com alturas alternadas pra dispersão (mockup v3). Gates
+  // preservados: Biblioteca lvl 2, Guilda lvl 6, Vitalismo lvl 25.
+  Widget _buildMedallions(BuildContext context, int level, bool isVitalist) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Linha 1: Biblioteca + Vitalismo
-        Row(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: () {
-              final p = ref.read(currentPlayerProvider);
-              if ((p?.level ?? 1) >= 2) {
+        Padding(
+          padding: const EdgeInsets.only(top: 0),
+          child: SanctuaryMedallion(
+            label: 'Biblioteca',
+            icon: Icons.menu_book_outlined,
+            locked: level < 2,
+            onTap: () {
+              if (level >= 2) {
                 context.go('/library');
               } else {
                 AppSnack.warning(context, 'A Biblioteca abre no Nível 2.');
               }
             },
-                child: _SecBtn(
-                  icon: Icons.menu_book_outlined,
-                  label: 'Biblioteca',
-                  color: const Color(0xFFC2A05A),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  if (!hubUnlocked) {
-                    AppSnack.warning(context, 'Desbloqueado no nível 25.');
-                    return;
-                  }
-                  context.go(isVitalist ? '/vitalism' : '/magic');
-                },
-                child: _SecBtn(
-                  icon: !hubUnlocked
-                      ? Icons.lock_outline
-                      : (isVitalist ? Icons.bolt_outlined : Icons.auto_awesome),
-                  label: !hubUnlocked
-                      ? '???'
-                      : (isVitalist ? 'Vitalismo' : 'Magia'),
-                  color: !hubUnlocked
-                      ? AppColors.textMuted
-                      : (isVitalist
-                          ? const Color(0xFF8B3DFF)
-                          : AppColors.mp),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-        const SizedBox(height: 10),
-        // Linha 2: Guilda (largura total)
-        GestureDetector(
-          onTap: () {
-            if (guildUnlocked) {
-              context.go('/guild');
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(
-                  'A Guilda de Aventureiros abre no Nível 6.',
-                  style: GoogleFonts.roboto(color: Colors.white),
-                ),
-                backgroundColor: AppColors.surface,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  side: const BorderSide(color: AppColors.border),
-                ),
-                duration: const Duration(seconds: 2),
-              ));
-            }
-          },
-          child: Container(
-            width: double.infinity,
-            height: 48,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                  color: guildUnlocked
-                      ? AppColors.gold.withValues(alpha: 0.5)
-                      : AppColors.border),
-              color: guildUnlocked
-                  ? AppColors.gold.withValues(alpha: 0.06)
-                  : AppColors.surface,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  guildUnlocked ? Icons.shield_outlined : Icons.lock_outline,
-                  color: guildUnlocked ? AppColors.gold : AppColors.textMuted,
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  guildUnlocked ? 'Guilda de Aventureiros' : 'Guilda  (Nível 6)',
-                  style: GoogleFonts.cinzelDecorative(
-                      fontSize: 11,
-                      color: guildUnlocked
-                          ? AppColors.gold
-                          : AppColors.textMuted,
-                      letterSpacing: 1),
-                ),
-              ],
-            ),
+        Padding(
+          padding: const EdgeInsets.only(top: 20),
+          child: SanctuaryMedallion(
+            label: 'Guilda',
+            icon: Icons.shield_outlined,
+            locked: level < 6,
+            onTap: () {
+              if (level >= 6) {
+                context.go('/guild');
+              } else {
+                AppSnack.warning(
+                    context, 'A Guilda de Aventureiros abre no Nível 6.');
+              }
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: SanctuaryMedallion(
+            label: 'Vitalismo',
+            icon: isVitalist ? Icons.bolt_outlined : Icons.auto_awesome,
+            locked: level < 25,
+            onTap: () {
+              if (level >= 25) {
+                context.go(isVitalist ? '/vitalism' : '/magic');
+              } else {
+                AppSnack.warning(context, 'Desbloqueado no Nível 25.');
+              }
+            },
           ),
         ),
       ],
-    );
-  }
-}
-
-class _SecBtn extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  const _SecBtn({required this.icon, required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
-        color: color.withValues(alpha: 0.06),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(width: 8),
-          Text(label,
-              style: GoogleFonts.cinzelDecorative(
-                  fontSize: 11, color: color, letterSpacing: 1)),
-        ],
-      ),
     );
   }
 }

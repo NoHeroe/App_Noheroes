@@ -127,7 +127,7 @@ class _QuestsScreenState extends ConsumerState<QuestsScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: const NhBottomNav(currentIndex: 1),
+      bottomNavigationBar: const NhBottomNav(currentIndex: 0),
     );
   }
 }

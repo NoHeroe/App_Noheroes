@@ -43,4 +43,38 @@ class AppColors {
                                                                   static const rarityEpic      = Color(0xFF9C27B0);
                                                                     static const rarityLegendary = Color(0xFFFF9800);
                                                                       static const rarityMythic    = Color(0xFFFF1744);
-                                                                      }
+
+  // ── Tokens do restyle do Santuário (mockup v3) ──────────────────────
+  // Aditivos — NÃO substituem os base globais (black/surface/purple/gold).
+  static const blackVeil    = Color(0xFF070509); // fundo profundo da atmosfera
+  static const surfaceVeil  = Color(0xFF0D0B11);
+  static const surfaceVeil2 = Color(0xFF141019);
+  static const borderViolet = Color(0xFF241C30);
+
+  static const purpleLt   = Color(0xFF9B5CF6);
+  static const purpleDk   = Color(0xFF5B1FBF);
+  static const purpleGlow45 = Color(0x738B3DFF); // rgba(139,61,255,.45)
+
+  static const goldLt = Color(0xFFE4CB8A);
+  static const goldDk = Color(0xFF7A6233);
+
+  static const txt    = Color(0xFFECE6F2);
+  static const txt2   = Color(0xFF9B93A8);
+  static const txtMut = Color(0xFF5B5468);
+
+  // ── Conceitos de carta (Fatia 2 — Coleção) ──────────────────────────
+  static const conceptVita       = Color(0xFF8B3DFF); // == purple
+  static const conceptNeutro     = Color(0xFFB8B2C4);
+  static const conceptChrysalis  = Color(0xFF3FAE7A);
+  static const conceptCelestial  = Color(0xFF4A90D9);
+  static const conceptMagico     = Color(0xFFE0B341);
+  static const conceptCorrompido = Color(0xFFD8323F);
+
+  // ── Raridade de carta (gema) ────────────────────────────────────────
+  static const cardComum     = Color(0xFF8C8594);
+  static const cardRara      = Color(0xFF5AA8FF);
+  static const cardEpica     = Color(0xFFB06CFF);
+  static const cardLendaria  = Color(0xFFF0C850);
+  static const cardElite     = Color(0xFFFF5B6E);
+  static const cardExclusiva = Color(0xFF7FFFD4);
+}

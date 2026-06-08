@@ -4,50 +4,63 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 
+/// Restyle Santuário (mockup v3) — "DIA EM CAELUM" como faixa central
+/// (day strip): linha dourada → label → número → linha dourada.
+/// Dados reais (`caelumDay`) preservados.
 class CaelumDayBanner extends ConsumerWidget {
   const CaelumDayBanner({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final player = ref.watch(currentPlayerProvider);
+    final day = player?.caelumDay ?? 1;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border),
-        borderRadius: BorderRadius.circular(12),
-        color: AppColors.surface,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _item('DIA EM CAELUM', '${player?.caelumDay ?? 1}'),
-          _divider(),
-          _item('NÍVEL', '${player?.level ?? 1}'),
-        ],
-      ),
-    );
-  }
-
-  Widget _item(String label, String value) {
-    return Column(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(label,
-            style: GoogleFonts.roboto(
-                fontSize: 9,
-                color: AppColors.textMuted,
-                letterSpacing: 1.5)),
-        const SizedBox(height: 4),
-        Text(value,
-            style: GoogleFonts.cinzelDecorative(
-                fontSize: 14,
-                color: AppColors.gold,
-                fontWeight: FontWeight.bold)),
+        const _Rule(toRight: true),
+        const SizedBox(width: 12),
+        Text(
+          'DIA EM CAELUM',
+          style: GoogleFonts.roboto(
+            fontSize: 11.5,
+            letterSpacing: 2.5,
+            color: AppColors.txtMut,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '$day',
+          style: GoogleFonts.cinzelDecorative(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: AppColors.gold,
+          ),
+        ),
+        const SizedBox(width: 12),
+        const _Rule(toRight: false),
       ],
     );
   }
+}
 
-  Widget _divider() =>
-      Container(width: 1, height: 32, color: AppColors.border);
+class _Rule extends StatelessWidget {
+  /// `toRight: true` → transparent→goldDk (linha da esquerda).
+  final bool toRight;
+  const _Rule({required this.toRight});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 46,
+      height: 1,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: toRight
+              ? [Colors.transparent, AppColors.goldDk]
+              : [AppColors.goldDk, Colors.transparent],
+        ),
+      ),
+    );
+  }
 }

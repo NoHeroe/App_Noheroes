@@ -14,10 +14,11 @@ class NhBottomNav extends ConsumerWidget {
     final player = ref.watch(currentPlayerProvider);
     final level = player?.level ?? 1;
 
+    // Restyle Santuário (mockup v3) — Santuário no CENTRO (index 2).
     final items = [
-      _NavItem('Santuário', Icons.home_outlined,    Icons.home,        '/sanctuary', 1),
-      _NavItem('Missões',   Icons.assignment_outlined, Icons.assignment, '/quests',   1),
+      _NavItem('Missões',   Icons.assignment_outlined, Icons.assignment, '/quests',    1),
       _NavItem('Personagem',Icons.person_outline,   Icons.person,      '/character',  1),
+      _NavItem('Santuário', Icons.home_outlined,    Icons.home,        '/sanctuary',  1),
       _NavItem('Regiões',   Icons.map_outlined,     Icons.map,         '/regions',    4),
       _NavItem('Sombra',    Icons.blur_on_outlined,  Icons.blur_on,    '/shadow',    10),
     ];
@@ -28,7 +29,7 @@ class NhBottomNav extends ConsumerWidget {
         border: const Border(top: BorderSide(color: AppColors.border)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -69,31 +70,53 @@ class NhBottomNav extends ConsumerWidget {
                   }
                   context.go(item.route);
                 },
-                child: Container(
-                  color: Colors.transparent,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        locked
-                            ? Icons.lock_outline
-                            : (active ? item.activeIcon : item.icon),
-                        color: locked
-                            ? AppColors.border
-                            : (active ? AppColors.purple : AppColors.textMuted),
-                        size: 22,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(item.label,
-                          style: GoogleFonts.roboto(
-                            fontSize: 9,
+                child: Opacity(
+                  opacity: locked ? 0.45 : 1.0,
+                  child: Container(
+                    color: Colors.transparent,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          decoration: active
+                              ? const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.purpleGlow45,
+                                      blurRadius: 12,
+                                    ),
+                                  ],
+                                )
+                              : null,
+                          child: Icon(
+                            locked
+                                ? Icons.lock_outline
+                                : (active ? item.activeIcon : item.icon),
                             color: locked
-                                ? AppColors.border
-                                : (active ? AppColors.purple : AppColors.textMuted),
-                            fontWeight: active ? FontWeight.w600 : FontWeight.normal,
-                          )),
-                    ],
+                                ? AppColors.txtMut
+                                : (active
+                                    ? AppColors.purpleLt
+                                    : AppColors.textMuted),
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(item.label,
+                            style: GoogleFonts.roboto(
+                              fontSize: 9,
+                              color: locked
+                                  ? AppColors.txtMut
+                                  : (active
+                                      ? AppColors.purpleLt
+                                      : AppColors.textMuted),
+                              fontWeight:
+                                  active ? FontWeight.w600 : FontWeight.normal,
+                            )),
+                      ],
+                    ),
                   ),
                 ),
               );

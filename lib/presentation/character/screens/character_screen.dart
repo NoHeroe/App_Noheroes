@@ -131,7 +131,7 @@ class CharacterScreen extends ConsumerWidget {
           ),
           const Align(
             alignment: Alignment.bottomCenter,
-            child: NhBottomNav(currentIndex: 2),
+            child: NhBottomNav(currentIndex: 1),
           ),
         ],
       ),
