@@ -9,24 +9,24 @@ import '../../../core/constants/app_colors.dart';
 import '../../../data/datasources/local/tutorial_service.dart';
 import '../../../domain/services/body_metrics_service.dart';
 
-/// Onboarding Soulslike (reescrita das diÃ¡rias, schema 37).
+/// Onboarding Soulslike (reescrita das diárias, schema 37).
 ///
-/// CerimÃ´nia narrativa do despertar. O **questionÃ¡rio de ajuste**
-/// (Encruzilhada de pilar + 3 cenÃ¡rios morais) foi REMOVIDO: as diÃ¡rias
-/// passaram a ser fixas (1 fÃ­sico + 1 mental + 1 espiritual, iguais pra
-/// todos), entÃ£o nÃ£o hÃ¡ mais `primaryFocus` a compilar nem missÃ£o extra
+/// Cerimônia narrativa do despertar. O **questionário de ajuste**
+/// (Encruzilhada de pilar + 3 cenários morais) foi REMOVIDO: as diárias
+/// passaram a ser fixas (1 físico + 1 mental + 1 espiritual, iguais pra
+/// todos), então não há mais `primaryFocus` a compilar nem missão extra
 /// de despertar.
 ///
 /// ## Fluxo
-///   0. RuÃ­nas: "VocÃª desperta entre ruÃ­nas..."
-///   1. O Vazio: "VocÃª nÃ£o Ã© de Caelum..."
+///   0. Ruínas: "Você desperta entre ruínas..."
+///   1. O Vazio: "Você não é de Caelum..."
 ///   2. Nome: "Como devemos lhe chamar?"
-///   3. ConclusÃ£o/Despertar: "Vai. Que Caelum reconheÃ§a..."
-///   â†’ CalibraÃ§Ã£o do Sistema: peso + altura (passo tÃ©cnico separado)
+///   3. Conclusão/Despertar: "Vai. Que Caelum reconheça..."
+///   → Calibração do Sistema: peso + altura (passo técnico separado)
 ///
 /// ## Efeitos colaterais no finish
 ///   - `AuthLocalDs.completeOnboarding` (name + narrativeMode='longa')
-///   - `BodyMetricsService.save` (peso + altura, na CalibraÃ§Ã£o)
+///   - `BodyMetricsService.save` (peso + altura, na Calibração)
 ///   - `TutorialService.markDone(phase0_onboarding)`
 ///   - `context.go('/sanctuary')`
 class AwakeningScreen extends ConsumerStatefulWidget {
@@ -48,8 +48,8 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
   bool _ready = false;
   bool _finishing = false;
 
-  // Sprint 3.2 Etapa 1.0 â€” CalibraÃ§Ã£o do Sistema (pÃ³s-cerimÃ´nia, prÃ©-finish).
-  // Visual separado da cerimÃ´nia: sem _SceneBg, sem narrativa do Vazio.
+  // Sprint 3.2 Etapa 1.0 — Calibração do Sistema (pós-cerimônia, pré-finish).
+  // Visual separado da cerimônia: sem _SceneBg, sem narrativa do Vazio.
   bool _inCalibration = false;
   final _weightCtrl = TextEditingController();
   final _heightCtrl = TextEditingController();
@@ -57,22 +57,22 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
   String? _heightError;
 
   List<_Scene> get _scenes => [
-        // 0 â€” RuÃ­nas
+        // 0 — Ruínas
         const _Scene(
           npc: null,
           text:
-              'VocÃª desperta entre ruÃ­nas antigasâ€¦\n\nA luz do cÃ©u parece quebrada.\n\nHÃ¡ algo errado com seu corpo.',
+              'Você desperta entre ruínas antigas…\n\nA luz do céu parece quebrada.\n\nHá algo errado com seu corpo.',
           mood: _Mood.ruins,
         ),
-        // 1 â€” O Vazio se apresenta
+        // 1 — O Vazio se apresenta
         const _Scene(
           npc: 'O Vazio',
           text:
-              '"VocÃª nÃ£o Ã© de Caelum.\n\nSua forma aqui Ã© uma Sombra â€” ainda instÃ¡vel.\n\nSe quiser sobreviver, vai precisar aprender rÃ¡pido."',
+              '"Você não é de Caelum.\n\nSua forma aqui é uma Sombra — ainda instável.\n\nSe quiser sobreviver, vai precisar aprender rápido."',
           mood: _Mood.npc,
           isVoid: true,
         ),
-        // 2 â€” Nome
+        // 2 — Nome
         const _Scene(
           npc: 'O Vazio',
           text: 'Como devemos lhe chamar?',
@@ -80,11 +80,11 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
           isNameInput: true,
           isVoid: true,
         ),
-        // 3 â€” ConclusÃ£o / Despertar
+        // 3 — Conclusão / Despertar
         const _Scene(
           npc: 'O Vazio',
           text:
-              '"Caelum jÃ¡ te reconhece.\n\nVai. A Sombra te segue."',
+              '"Caelum já te reconhece.\n\nVai. A Sombra te segue."',
           mood: _Mood.conclusion,
           isFinish: true,
           isVoid: true,
@@ -125,9 +125,9 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
     if (scene.isNameInput && _nameCtrl.text.trim().isEmpty) return;
 
     if (scene.isFinish) {
-      // Sprint 3.2 Etapa 1.0 â€” antes do finish narrativo, exibe a tela
-      // separada de CalibraÃ§Ã£o do Sistema (peso/altura). Visual rompe
-      // com a cerimÃ´nia de propÃ³sito â€” Ã© setup tÃ©cnico funcional.
+      // Sprint 3.2 Etapa 1.0 — antes do finish narrativo, exibe a tela
+      // separada de Calibração do Sistema (peso/altura). Visual rompe
+      // com a cerimônia de propósito — é setup técnico funcional.
       setState(() => _inCalibration = true);
       return;
     }
@@ -144,7 +144,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
     setState(() => _ready = true);
   }
 
-  /// Sprint 3.2 Etapa 1.0 â€” confirma a CalibraÃ§Ã£o do Sistema.
+  /// Sprint 3.2 Etapa 1.0 — confirma a Calibração do Sistema.
   /// Valida ranges, persiste peso/altura e dispara o `_finish` narrativo
   /// original (preferences + extras + onboarding done + nav /sanctuary).
   Future<void> _confirmCalibration() async {
@@ -277,11 +277,11 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
     );
   }
 
-  /// Sprint 3.2 Etapa 1.0 â€” tela "CalibraÃ§Ã£o do Sistema".
+  /// Sprint 3.2 Etapa 1.0 — tela "Calibração do Sistema".
   ///
-  /// Visualmente separada da cerimÃ´nia de propÃ³sito (sem _SceneBg/animaÃ§Ã£o,
-  /// sem narrativa do Vazio). Ã‰ setup tÃ©cnico funcional â€” pense nas telas
-  /// de alocaÃ§Ã£o inicial de Dark Souls. EstÃ©tica soulslike preservada via
+  /// Visualmente separada da cerimônia de propósito (sem _SceneBg/animação,
+  /// sem narrativa do Vazio). É setup técnico funcional — pense nas telas
+  /// de alocação inicial de Dark Souls. Estética soulslike preservada via
   /// CinzelDecorative + gold contido + borda gold simples.
   Widget _buildCalibrationScreen() {
     return Scaffold(
@@ -304,7 +304,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'CALIBRAÃ‡ÃƒO DO SISTEMA',
+                    'CALIBRAÇÃO DO SISTEMA',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.cinzelDecorative(
                       fontSize: 14,
@@ -314,7 +314,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Antes de iniciar tuas missÃµes, o sistema precisa calibrar tuas medidas pra calcular hidrataÃ§Ã£o e nutriÃ§Ã£o corretas.',
+                    'Antes de iniciar tuas missões, o sistema precisa calibrar tuas medidas pra calcular hidratação e nutrição corretas.',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.roboto(
                       fontSize: 12,
@@ -421,7 +421,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
         ),
         child: Center(
           child: Text(
-            _finishing ? 'CALIBRANDOâ€¦' : 'CONTINUAR',
+            _finishing ? 'CALIBRANDO…' : 'CONTINUAR',
             style: GoogleFonts.cinzelDecorative(
               fontSize: 12,
               color: enabled ? AppColors.gold : AppColors.textMuted,
