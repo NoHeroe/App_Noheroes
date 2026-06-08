@@ -10,6 +10,7 @@ import '../../../core/events/diary_events.dart';
 import '../../../core/events/faction_events.dart';
 import '../../../core/events/mission_events.dart';
 import '../../../core/events/reward_events.dart';
+import '../../../core/utils/guild_rank.dart';
 import '../../../domain/enums/mission_tab_origin.dart';
 import '../../../domain/models/mission_progress.dart';
 import '../../../domain/repositories/mission_repository.dart';
@@ -17,6 +18,7 @@ import '../../../domain/repositories/player_faction_reputation_repository.dart';
 import '../../../domain/services/faction_admission_sub_task_types.dart';
 import '../../../domain/services/faction_admission_validator.dart';
 import '../../../domain/services/faction_reputation_service.dart';
+import '../../../domain/services/mission_assignment_service.dart';
 import '../../database/app_database.dart';
 
 /// Sprint 3.4 Sub-Etapa B.2 — listener que re-avalia sub-tasks de
@@ -73,6 +75,9 @@ class FactionAdmissionProgressService {
   final MissionRepository _missionRepo;
   final FactionReputationService _factionRep;
   final PlayerFactionReputationRepository _factionRepo;
+  // FATIA B4 (Fix gatilho-JOIN) — atribui a semanal de facção na hora da
+  // aprovação, sem esperar o boot do Santuário.
+  final MissionAssignmentService _assignment;
 
   final List<StreamSubscription> _subs = [];
 
@@ -83,12 +88,14 @@ class FactionAdmissionProgressService {
     required MissionRepository missionRepo,
     required FactionReputationService factionRep,
     required PlayerFactionReputationRepository factionRepo,
+    required MissionAssignmentService assignment,
   })  : _db = db,
         _bus = bus,
         _validator = validator,
         _missionRepo = missionRepo,
         _factionRep = factionRep,
-        _factionRepo = factionRepo;
+        _factionRepo = factionRepo,
+        _assignment = assignment;
 
   /// Lock de 48h após reprovação (cooldown anti re-tentativa imediata).
   static const Duration _rejectLock = Duration(hours: 48);
@@ -424,6 +431,10 @@ class FactionAdmissionProgressService {
       [nowMs, playerId, factionId],
     );
 
+    // FATIA B4 (Fix gatilho-JOIN) — atribui a semanal de facção AGORA
+    // (não espera o próximo boot do Santuário). Idempotente.
+    await _assignWeeklyOnJoin(playerId, factionId);
+
     final attemptCount =
         await _readAttemptCount(playerId, factionId);
 
@@ -434,6 +445,44 @@ class FactionAdmissionProgressService {
     ));
     // Cascata pra retrocompatibilidade com listeners existentes.
     _bus.publish(FactionJoined(playerId: playerId, factionId: factionId));
+  }
+
+  /// FATIA B4 (Fix gatilho-JOIN) — atribui a semanal de facção no momento
+  /// em que o player entra numa facção (aprovação real OU dev tool),
+  /// sem esperar o boot do Santuário rodar o `WeeklyResetService`.
+  ///
+  /// Idempotente: o upsert por (player, faction, weekStart) no
+  /// `ActiveFactionQuestsRepository` (dentro de `ensureWeeklyFactionQuest`)
+  /// não duplica se o reset cíclico rodar depois na mesma semana.
+  ///
+  /// NÃO mexe em `players.last_weekly_reset` — isto é JOIN, não ciclo de
+  /// reset. O timestamp continua sendo responsabilidade exclusiva do
+  /// `WeeklyResetService` (renovação a cada 7d). Erros são logados, nunca
+  /// propagados (não pode derrubar a aprovação).
+  Future<void> _assignWeeklyOnJoin(int playerId, String factionId) async {
+    try {
+      final rows = await _db.customSelect(
+        'SELECT guild_rank, total_gold_earned_via_quests FROM players '
+        'WHERE id = ? LIMIT 1',
+        variables: [Variable.withInt(playerId)],
+      ).get();
+      if (rows.isEmpty) return;
+      final guildRankRaw = rows.first.read<String?>('guild_rank') ?? 'e';
+      final baselineGold =
+          rows.first.read<int>('total_gold_earned_via_quests');
+      final rank = GuildRankSystem.fromString(guildRankRaw);
+      // Idempotente (upsert por player+faction+weekStart). progressId
+      // (null = facção sem pool, ex: guild) não é usado aqui.
+      await _assignment.ensureWeeklyFactionQuest(
+        playerId: playerId,
+        factionKey: factionId,
+        playerRank: rank,
+        baselineGoldEarned: baselineGold,
+      );
+    } catch (e, st) {
+      // ignore: avoid_print
+      print('[admission-progress] _assignWeeklyOnJoin falhou: $e\n$st');
+    }
   }
 
   Future<int> _readAttemptCount(int playerId, String factionId) async {
@@ -520,6 +569,11 @@ class FactionAdmissionProgressService {
         'WHERE player_id = ? AND faction_id = ? AND joined_at IS NULL',
         [nowMs, evt.playerId, evt.factionId],
       );
+
+      // FATIA B4 (Fix gatilho-JOIN) — cobre o caminho EXTERNO (dev tool
+      // `_forceCompleteAdmission`), que não passa por `_approveAdmission`.
+      // Atribui a semanal na hora. Idempotente.
+      await _assignWeeklyOnJoin(evt.playerId, evt.factionId);
 
       _bus.publish(
           FactionJoined(playerId: evt.playerId, factionId: evt.factionId));

@@ -1,45 +1,266 @@
 {
-  "missions": [
-    {"key": "FAC_GUILD_DILIGENCIA_D", "title": "Diligência da Guilda", "description": "Complete 15 missões diárias nesta semana.", "modality": "internal", "category": "mental", "tab_origin": "faction", "rank": "d", "faction_key": "guild", "target_value": 15, "reward": {"xp": 250, "gold": 120}},
-    {"key": "FAC_GUILD_TREINO_C", "title": "Treino Constante", "description": "Mantenha streak de 7 dias esta semana.", "modality": "internal", "category": "mental", "tab_origin": "faction", "rank": "c", "faction_key": "guild", "target_value": 7, "reward": {"xp": 300, "gold": 150}},
-    {"key": "FAC_GUILD_MESTRE_D", "title": "Passo do Mestre", "description": "Complete 3 missões de classe esta semana.", "modality": "internal", "category": "fisico", "tab_origin": "faction", "rank": "d", "faction_key": "guild", "target_value": 3, "reward": {"xp": 220, "gold": 110}},
-    {"key": "FAC_GUILD_HONRA_C", "title": "Honra da Guilda", "description": "Não falhe nenhuma missão esta semana.", "modality": "internal", "category": "mental", "tab_origin": "faction", "rank": "c", "faction_key": "guild", "target_value": 1, "reward": {"xp": 350, "gold": 175}},
-    {"key": "FAC_GUILD_AURORA_D", "title": "Aurora do Aventureiro", "description": "Acorde cedo 5 dias esta semana.", "modality": "real", "category": "fisico", "tab_origin": "faction", "rank": "d", "faction_key": "guild", "target_value": 5, "reward": {"xp": 200, "gold": 100}},
+  "_doc": "Semanal de facção — motor de sub-tarefas acumulativo. Janela = semana ISO (segunda 00:00 → +7d). Sub-types acumulativos espelham as queries da admissão. Targets calibrados pro modelo fixo (1 pilar/dia = 3 dailies/dia; máx 21/sem, 7/pilar). FATIA B4: 5 variantes por facção (sorteio dá variedade), SEM rank-gate (todo membro recebe em qualquer guild-rank) e SEM reward no JSON — o reward vem da curva por guild-rank no assign (MissionAssignmentService). gold_earned tem o target BASE (rank E); o assign escala por goldTargetMult. NUNCA usar modalidade=vitalismo (0/semana pela D22).",
 
-    {"key": "FAC_MOON_SILENCIO_D", "title": "Silêncio Lunar", "description": "Medite 10 minutos por 5 dias nesta semana.", "modality": "real", "category": "espiritual", "tab_origin": "faction", "rank": "d", "faction_key": "moon_clan", "target_value": 5, "reward": {"xp": 240, "gold": 120}},
-    {"key": "FAC_MOON_RITUAL_C", "title": "Ritual da Lua Cheia", "description": "Complete 3 rituais pessoais nesta semana.", "modality": "real", "category": "espiritual", "tab_origin": "faction", "rank": "c", "faction_key": "moon_clan", "target_value": 3, "reward": {"xp": 320, "gold": 160}},
-    {"key": "FAC_MOON_NOITE_D", "title": "Voz da Noite", "description": "Escreva no diário 5 noites desta semana.", "modality": "real", "category": "espiritual", "tab_origin": "faction", "rank": "d", "faction_key": "moon_clan", "target_value": 5, "reward": {"xp": 230, "gold": 115}},
-    {"key": "FAC_MOON_PROFUNDO_C", "title": "Mergulho Profundo", "description": "Complete 1 meditação longa (45+ min).", "modality": "real", "category": "espiritual", "tab_origin": "faction", "rank": "c", "faction_key": "moon_clan", "target_value": 45, "reward": {"xp": 290, "gold": 145}},
-    {"key": "FAC_MOON_PRESENCA_D", "title": "Presença Noturna", "description": "30 minutos sem dispositivos antes de dormir, 5 noites.", "modality": "real", "category": "espiritual", "tab_origin": "faction", "rank": "d", "faction_key": "moon_clan", "target_value": 5, "reward": {"xp": 220, "gold": 110}},
+  "moon_clan": [
+    {"id": "WK_MOON_1", "title": "Vigília Lunar", "description": "A constância silenciosa de quem se observa.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 4, "params": {"modalidade": "espiritual"}, "label": "4 missões espirituais na semana"},
+       {"sub_type": "diary_entry_window", "target": 4, "label": "4 entradas de diário na semana"},
+       {"sub_type": "streak_minimum", "target": 5, "label": "Streak de 5 dias"}
+     ]},
+    {"id": "WK_MOON_2", "title": "Marés Internas", "description": "Nenhum dia desperdiçado.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 4, "params": {"modalidade": "mental"}, "label": "4 missões mentais na semana"},
+       {"sub_type": "diary_entry_window", "target": 5, "label": "5 entradas de diário na semana"},
+       {"sub_type": "no_partial_day_window", "target": 3, "label": "3 dias sem missão parcial"}
+     ]},
+    {"id": "WK_MOON_3", "title": "Eclipse Pessoal", "description": "Escuridão como espelho.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 5, "params": {"modalidade": "espiritual"}, "label": "5 missões espirituais na semana"},
+       {"sub_type": "full_perfect_day_window", "target": 3, "label": "3 dias com 100% das dailies"},
+       {"sub_type": "streak_minimum", "target": 4, "label": "Streak de 4 dias"}
+     ]},
+    {"id": "WK_MOON_4", "title": "Silêncio das Fases", "description": "A palavra escrita à meia-luz.",
+     "sub_tasks": [
+       {"sub_type": "diary_entry_window", "target": 6, "label": "6 entradas de diário na semana"},
+       {"sub_type": "modality_count_window", "target": 3, "params": {"modalidade": "espiritual"}, "label": "3 missões espirituais na semana"},
+       {"sub_type": "modality_count_window", "target": 3, "params": {"modalidade": "mental"}, "label": "3 missões mentais na semana"}
+     ]},
+    {"id": "WK_MOON_5", "title": "Crescente Paciente", "description": "Cresce quem não tem pressa.",
+     "sub_tasks": [
+       {"sub_type": "streak_minimum", "target": 6, "label": "Streak de 6 dias"},
+       {"sub_type": "modality_count_window", "target": 4, "params": {"modalidade": "espiritual"}, "label": "4 missões espirituais na semana"},
+       {"sub_type": "diary_entry_window", "target": 4, "label": "4 entradas de diário na semana"}
+     ]}
+  ],
 
-    {"key": "FAC_SUN_FORCA_D", "title": "Força Solar", "description": "Complete 5 treinos físicos esta semana.", "modality": "internal", "category": "fisico", "tab_origin": "faction", "rank": "d", "faction_key": "sun_clan", "target_value": 5, "reward": {"xp": 260, "gold": 130}},
-    {"key": "FAC_SUN_BRILHO_C", "title": "Brilho Incansável", "description": "Complete todas diárias 6 dias esta semana.", "modality": "internal", "category": "fisico", "tab_origin": "faction", "rank": "c", "faction_key": "sun_clan", "target_value": 6, "reward": {"xp": 330, "gold": 165}},
-    {"key": "FAC_SUN_MANHA_D", "title": "Despertar Solar", "description": "Exercício físico nas manhãs, 5 dias.", "modality": "real", "category": "fisico", "tab_origin": "faction", "rank": "d", "faction_key": "sun_clan", "target_value": 5, "reward": {"xp": 240, "gold": 120}},
-    {"key": "FAC_SUN_CHAMA_D", "title": "Chama Interna", "description": "Corra 15 km total esta semana.", "modality": "real", "category": "fisico", "tab_origin": "faction", "rank": "d", "faction_key": "sun_clan", "target_value": 15, "reward": {"xp": 270, "gold": 135}},
-    {"key": "FAC_SUN_ARDENTE_C", "title": "Resistência Ardente", "description": "Treino intenso 4x esta semana.", "modality": "internal", "category": "fisico", "tab_origin": "faction", "rank": "c", "faction_key": "sun_clan", "target_value": 4, "reward": {"xp": 310, "gold": 155}},
+  "sun_clan": [
+    {"id": "WK_SUN_1", "title": "Chama Constante", "description": "O Sol não descansa.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 4, "params": {"modalidade": "fisico"}, "label": "4 missões físicas na semana"},
+       {"sub_type": "gold_earned_via_quests_window", "target": 80, "label": "Ouro ganho via quests na semana"},
+       {"sub_type": "streak_minimum", "target": 4, "label": "Streak de 4 dias"}
+     ]},
+    {"id": "WK_SUN_2", "title": "Forja do Corpo", "description": "Aço e músculo no mesmo fogo.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 5, "params": {"modalidade": "fisico"}, "label": "5 missões físicas na semana"},
+       {"sub_type": "full_perfect_day_window", "target": 3, "label": "3 dias com 100% das dailies"},
+       {"sub_type": "equipment_improved", "target": 1, "label": "Melhorar 1 equipamento"}
+     ]},
+    {"id": "WK_SUN_3", "title": "Aurora de Ferro", "description": "Levantar antes da dor.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 5, "params": {"modalidade": "fisico"}, "label": "5 missões físicas na semana"},
+       {"sub_type": "streak_minimum", "target": 5, "label": "Streak de 5 dias"},
+       {"sub_type": "no_partial_day_window", "target": 3, "label": "3 dias sem missão parcial"}
+     ]},
+    {"id": "WK_SUN_4", "title": "Brasa Viva", "description": "Queimar sem se apagar.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 6, "params": {"modalidade": "fisico"}, "label": "6 missões físicas na semana"},
+       {"sub_type": "gold_earned_via_quests_window", "target": 80, "label": "Ouro ganho via quests na semana"},
+       {"sub_type": "diary_entry_window", "target": 3, "label": "3 entradas de diário na semana"}
+     ]},
+    {"id": "WK_SUN_5", "title": "Resistência Solar", "description": "O brilho que não falha.",
+     "sub_tasks": [
+       {"sub_type": "full_perfect_day_window", "target": 4, "label": "4 dias com 100% das dailies"},
+       {"sub_type": "modality_count_window", "target": 4, "params": {"modalidade": "fisico"}, "label": "4 missões físicas na semana"},
+       {"sub_type": "streak_minimum", "target": 5, "label": "Streak de 5 dias"}
+     ]}
+  ],
 
-    {"key": "FAC_BLK_DISCIPLINA_D", "title": "Disciplina Negra", "description": "Sem falhas em missões diárias esta semana.", "modality": "internal", "category": "mental", "tab_origin": "faction", "rank": "d", "faction_key": "black_legion", "target_value": 1, "reward": {"xp": 280, "gold": 140}},
-    {"key": "FAC_BLK_FERRO_C", "title": "Punho de Ferro", "description": "Complete 3 missões de classe esta semana.", "modality": "internal", "category": "fisico", "tab_origin": "faction", "rank": "c", "faction_key": "black_legion", "target_value": 3, "reward": {"xp": 340, "gold": 170}},
-    {"key": "FAC_BLK_ORDEM_D", "title": "Ordem Absoluta", "description": "Organize ambiente de trabalho 5 dias seguidos.", "modality": "real", "category": "mental", "tab_origin": "faction", "rank": "d", "faction_key": "black_legion", "target_value": 5, "reward": {"xp": 240, "gold": 120}},
-    {"key": "FAC_BLK_SANGUE_C", "title": "Prova de Sangue", "description": "Treino físico todos os dias úteis.", "modality": "internal", "category": "fisico", "tab_origin": "faction", "rank": "c", "faction_key": "black_legion", "target_value": 5, "reward": {"xp": 320, "gold": 160}},
-    {"key": "FAC_BLK_LEAL_D", "title": "Lealdade à Causa", "description": "Complete 10 missões diárias com categoria físico.", "modality": "internal", "category": "fisico", "tab_origin": "faction", "rank": "d", "faction_key": "black_legion", "target_value": 10, "reward": {"xp": 260, "gold": 130}},
+  "black_legion": [
+    {"id": "WK_LEGION_1", "title": "Marcha de Ferro", "description": "O passo que não quebra.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 5, "params": {"modalidade": "fisico"}, "label": "5 missões físicas na semana"},
+       {"sub_type": "full_perfect_day_window", "target": 3, "label": "3 dias com 100% das dailies"},
+       {"sub_type": "equipment_improved", "target": 2, "label": "Melhorar 2 equipamentos"}
+     ]},
+    {"id": "WK_LEGION_2", "title": "Disciplina Negra", "description": "Tudo ou nada.",
+     "sub_tasks": [
+       {"sub_type": "no_partial_day_window", "target": 5, "label": "5 dias sem missão parcial"},
+       {"sub_type": "modality_count_window", "target": 4, "params": {"modalidade": "fisico"}, "label": "4 missões físicas na semana"},
+       {"sub_type": "streak_minimum", "target": 5, "label": "Streak de 5 dias"}
+     ]},
+    {"id": "WK_LEGION_3", "title": "Punho Cerrado", "description": "A guerra se prepara na bancada.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 6, "params": {"modalidade": "fisico"}, "label": "6 missões físicas na semana"},
+       {"sub_type": "equipment_improved", "target": 2, "label": "Melhorar 2 equipamentos"},
+       {"sub_type": "gold_earned_via_quests_window", "target": 80, "label": "Ouro ganho via quests na semana"}
+     ]},
+    {"id": "WK_LEGION_4", "title": "Prova de Sangue", "description": "Seis dias perfeitos, zero desculpas.",
+     "sub_tasks": [
+       {"sub_type": "full_perfect_day_window", "target": 4, "label": "4 dias com 100% das dailies"},
+       {"sub_type": "modality_count_window", "target": 5, "params": {"modalidade": "fisico"}, "label": "5 missões físicas na semana"},
+       {"sub_type": "streak_minimum", "target": 6, "label": "Streak de 6 dias"}
+     ]},
+    {"id": "WK_LEGION_5", "title": "Ordem Absoluta", "description": "A ordem antes do caos.",
+     "sub_tasks": [
+       {"sub_type": "no_partial_day_window", "target": 6, "label": "6 dias sem missão parcial"},
+       {"sub_type": "modality_count_window", "target": 4, "params": {"modalidade": "mental"}, "label": "4 missões mentais na semana"},
+       {"sub_type": "modality_count_window", "target": 4, "params": {"modalidade": "fisico"}, "label": "4 missões físicas na semana"}
+     ]}
+  ],
 
-    {"key": "FAC_NEW_ILUMINADO_D", "title": "Caminho Iluminado", "description": "Estude 3 horas total esta semana.", "modality": "real", "category": "mental", "tab_origin": "faction", "rank": "d", "faction_key": "new_order", "target_value": 180, "reward": {"xp": 250, "gold": 125}},
-    {"key": "FAC_NEW_BUSCA_C", "title": "Busca da Verdade", "description": "Resolva 3 problemas complexos esta semana.", "modality": "real", "category": "mental", "tab_origin": "faction", "rank": "c", "faction_key": "new_order", "target_value": 3, "reward": {"xp": 310, "gold": 155}},
-    {"key": "FAC_NEW_ESCRITO_D", "title": "Página Escrita", "description": "Escreva 1000 palavras totais esta semana.", "modality": "real", "category": "mental", "tab_origin": "faction", "rank": "d", "faction_key": "new_order", "target_value": 1000, "reward": {"xp": 260, "gold": 130}},
-    {"key": "FAC_NEW_REFORMA_C", "title": "Reforma Interna", "description": "Mude 1 hábito pequeno esta semana.", "modality": "real", "category": "mental", "tab_origin": "faction", "rank": "c", "faction_key": "new_order", "target_value": 1, "reward": {"xp": 300, "gold": 150}},
-    {"key": "FAC_NEW_DEBATE_D", "title": "Diálogo Construtivo", "description": "Tenha 2 conversas substanciais com amigos.", "modality": "real", "category": "mental", "tab_origin": "faction", "rank": "d", "faction_key": "new_order", "target_value": 2, "reward": {"xp": 230, "gold": 115}},
+  "new_order": [
+    {"id": "WK_ORDER_1", "title": "Doutrina Semanal", "description": "O manifesto se escreve sozinho.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 5, "params": {"modalidade": "mental"}, "label": "5 missões mentais na semana"},
+       {"sub_type": "diary_entry_window", "target": 5, "label": "5 entradas de diário na semana"},
+       {"sub_type": "modality_count_window", "target": 14, "label": "14 missões quaisquer na semana"}
+     ]},
+    {"id": "WK_ORDER_2", "title": "Busca da Verdade", "description": "Perguntar é o primeiro dever.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 6, "params": {"modalidade": "mental"}, "label": "6 missões mentais na semana"},
+       {"sub_type": "individual_completed_window", "target": 2, "label": "2 missões individuais completadas"},
+       {"sub_type": "diary_entry_window", "target": 4, "label": "4 entradas de diário na semana"}
+     ]},
+    {"id": "WK_ORDER_3", "title": "Manifesto Vivo", "description": "Registrar a transformação.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 5, "params": {"modalidade": "mental"}, "label": "5 missões mentais na semana"},
+       {"sub_type": "diary_entry_window", "target": 6, "label": "6 entradas de diário na semana"},
+       {"sub_type": "streak_minimum", "target": 4, "label": "Streak de 4 dias"}
+     ]},
+    {"id": "WK_ORDER_4", "title": "Reforma Interna", "description": "Mudar de dentro pra fora.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 4, "params": {"modalidade": "mental"}, "label": "4 missões mentais na semana"},
+       {"sub_type": "modality_count_window", "target": 12, "label": "12 missões quaisquer na semana"},
+       {"sub_type": "full_perfect_day_window", "target": 3, "label": "3 dias com 100% das dailies"}
+     ]},
+    {"id": "WK_ORDER_5", "title": "Códice Aberto", "description": "Uma página por dia.",
+     "sub_tasks": [
+       {"sub_type": "diary_entry_window", "target": 7, "label": "7 entradas de diário na semana"},
+       {"sub_type": "modality_count_window", "target": 4, "params": {"modalidade": "mental"}, "label": "4 missões mentais na semana"},
+       {"sub_type": "individual_completed_window", "target": 1, "label": "1 missão individual completada"}
+     ]}
+  ],
 
-    {"key": "FAC_TRI_UNIDADE_D", "title": "Unidade dos 3", "description": "Complete 1 missão de cada categoria (físico/mental/espiritual).", "modality": "internal", "category": "vitalismo", "tab_origin": "faction", "rank": "d", "faction_key": "trinity", "target_value": 3, "reward": {"xp": 270, "gold": 135}},
-    {"key": "FAC_TRI_EQUILIBRIO_C", "title": "Equilíbrio Tríplice", "description": "3 categorias ativas diariamente por 5 dias.", "modality": "internal", "category": "vitalismo", "tab_origin": "faction", "rank": "c", "faction_key": "trinity", "target_value": 5, "reward": {"xp": 340, "gold": 170}},
-    {"key": "FAC_TRI_TOTAL_D", "title": "Presença Total", "description": "Pratique 30 min diários de presença plena, 4 dias.", "modality": "real", "category": "vitalismo", "tab_origin": "faction", "rank": "d", "faction_key": "trinity", "target_value": 4, "reward": {"xp": 260, "gold": 130}},
-    {"key": "FAC_TRI_VITAL_C", "title": "Chama Vital", "description": "Complete 1 atividade integrada (corpo+mente+alma) de 45 min.", "modality": "real", "category": "vitalismo", "tab_origin": "faction", "rank": "c", "faction_key": "trinity", "target_value": 45, "reward": {"xp": 310, "gold": 155}},
-    {"key": "FAC_TRI_CICLO_D", "title": "Ciclo dos 3", "description": "Durma, se alimente e medite em 3 dias desta semana.", "modality": "internal", "category": "vitalismo", "tab_origin": "faction", "rank": "d", "faction_key": "trinity", "target_value": 3, "reward": {"xp": 240, "gold": 120}},
+  "trinity": [
+    {"id": "WK_TRINITY_1", "title": "Equilíbrio dos Três", "description": "Os três juntos.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 3, "params": {"modalidade": "fisico"}, "label": "3 missões físicas na semana"},
+       {"sub_type": "modality_count_window", "target": 3, "params": {"modalidade": "mental"}, "label": "3 missões mentais na semana"},
+       {"sub_type": "modality_count_window", "target": 3, "params": {"modalidade": "espiritual"}, "label": "3 missões espirituais na semana"}
+     ]},
+    {"id": "WK_TRINITY_2", "title": "Tríade Crescente", "description": "Os três sobem juntos.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 4, "params": {"modalidade": "fisico"}, "label": "4 missões físicas na semana"},
+       {"sub_type": "modality_count_window", "target": 4, "params": {"modalidade": "mental"}, "label": "4 missões mentais na semana"},
+       {"sub_type": "modality_count_window", "target": 4, "params": {"modalidade": "espiritual"}, "label": "4 missões espirituais na semana"}
+     ]},
+    {"id": "WK_TRINITY_3", "title": "Pilares Firmes", "description": "Nenhum pilar fraco.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 5, "params": {"modalidade": "fisico"}, "label": "5 missões físicas na semana"},
+       {"sub_type": "modality_count_window", "target": 5, "params": {"modalidade": "mental"}, "label": "5 missões mentais na semana"},
+       {"sub_type": "modality_count_window", "target": 5, "params": {"modalidade": "espiritual"}, "label": "5 missões espirituais na semana"}
+     ]},
+    {"id": "WK_TRINITY_4", "title": "Roda Perfeita", "description": "Dias inteiros, sem buraco.",
+     "sub_tasks": [
+       {"sub_type": "full_perfect_day_window", "target": 4, "label": "4 dias com 100% das dailies"},
+       {"sub_type": "modality_count_window", "target": 12, "label": "12 missões quaisquer na semana"},
+       {"sub_type": "streak_minimum", "target": 5, "label": "Streak de 5 dias"}
+     ]},
+    {"id": "WK_TRINITY_5", "title": "Sopro Único", "description": "Um só fôlego em três frentes.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 5, "params": {"modalidade": "espiritual"}, "label": "5 missões espirituais na semana"},
+       {"sub_type": "modality_count_window", "target": 4, "params": {"modalidade": "mental"}, "label": "4 missões mentais na semana"},
+       {"sub_type": "modality_count_window", "target": 4, "params": {"modalidade": "fisico"}, "label": "4 missões físicas na semana"}
+     ]}
+  ],
 
-    {"key": "FAC_REN_LIVRE_D", "title": "Caminho Livre", "description": "Crie e complete 2 missões individuais esta semana.", "modality": "internal", "category": "mental", "tab_origin": "faction", "rank": "d", "faction_key": "renegades", "target_value": 2, "reward": {"xp": 280, "gold": 140}},
-    {"key": "FAC_REN_ROMPE_C", "title": "Rompimento", "description": "Quebre 1 rotina antiga e substitua.", "modality": "real", "category": "mental", "tab_origin": "faction", "rank": "c", "faction_key": "renegades", "target_value": 1, "reward": {"xp": 320, "gold": 160}},
-    {"key": "FAC_REN_RISCO_D", "title": "Calcular o Risco", "description": "Faça 1 coisa fora da sua zona de conforto.", "modality": "real", "category": "mental", "tab_origin": "faction", "rank": "d", "faction_key": "renegades", "target_value": 1, "reward": {"xp": 270, "gold": 135}},
-    {"key": "FAC_REN_SOLO_C", "title": "Jornada Solo", "description": "Complete 1 projeto pessoal do início ao fim.", "modality": "real", "category": "mental", "tab_origin": "faction", "rank": "c", "faction_key": "renegades", "target_value": 1, "reward": {"xp": 330, "gold": 165}},
-    {"key": "FAC_REN_PRATICA_D", "title": "Prática Solitária", "description": "Treine habilidade pessoal 4 dias esta semana.", "modality": "real", "category": "mental", "tab_origin": "faction", "rank": "d", "faction_key": "renegades", "target_value": 4, "reward": {"xp": 250, "gold": 125}}
+  "renegades": [
+    {"id": "WK_RENEGADES_1", "title": "Lei Própria", "description": "Cofre cheio, projeto terminado.",
+     "sub_tasks": [
+       {"sub_type": "individual_completed_window", "target": 2, "label": "2 missões individuais completadas"},
+       {"sub_type": "gold_earned_via_quests_window", "target": 80, "label": "Ouro ganho via quests na semana"},
+       {"sub_type": "equipment_improved", "target": 1, "label": "Melhorar 1 equipamento"}
+     ]},
+    {"id": "WK_RENEGADES_2", "title": "Jornada Solo", "description": "Ninguém faz por você.",
+     "sub_tasks": [
+       {"sub_type": "individual_completed_window", "target": 3, "label": "3 missões individuais completadas"},
+       {"sub_type": "gold_earned_via_quests_window", "target": 80, "label": "Ouro ganho via quests na semana"},
+       {"sub_type": "streak_minimum", "target": 4, "label": "Streak de 4 dias"}
+     ]},
+    {"id": "WK_RENEGADES_3", "title": "Forja Livre", "description": "Suas mãos, suas armas.",
+     "sub_tasks": [
+       {"sub_type": "equipment_improved", "target": 2, "label": "Melhorar 2 equipamentos"},
+       {"sub_type": "gold_earned_via_quests_window", "target": 100, "label": "Ouro ganho via quests na semana"},
+       {"sub_type": "individual_completed_window", "target": 1, "label": "1 missão individual completada"}
+     ]},
+    {"id": "WK_RENEGADES_4", "title": "Cofre do Lobo", "description": "Liberdade tem preço.",
+     "sub_tasks": [
+       {"sub_type": "gold_earned_via_quests_window", "target": 120, "label": "Ouro ganho via quests na semana"},
+       {"sub_type": "individual_completed_window", "target": 2, "label": "2 missões individuais completadas"},
+       {"sub_type": "equipment_improved", "target": 1, "label": "Melhorar 1 equipamento"}
+     ]},
+    {"id": "WK_RENEGADES_5", "title": "Rota Alternativa", "description": "O caminho que ninguém trilhou.",
+     "sub_tasks": [
+       {"sub_type": "individual_completed_window", "target": 3, "label": "3 missões individuais completadas"},
+       {"sub_type": "modality_count_window", "target": 12, "label": "12 missões quaisquer na semana"},
+       {"sub_type": "gold_earned_via_quests_window", "target": 80, "label": "Ouro ganho via quests na semana"}
+     ]}
+  ],
+
+  "error": [
+    {"id": "WK_ERROR_1", "title": "Ciclo Anômalo", "description": "ERROR só nota o impossível.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 18, "label": "18 missões quaisquer na semana"},
+       {"sub_type": "streak_minimum", "target": 5, "label": "Streak de 5 dias"},
+       {"sub_type": "gold_earned_via_quests_window", "target": 120, "label": "Ouro ganho via quests na semana"}
+     ]},
+    {"id": "WK_ERROR_2", "title": "Paradoxo", "description": "Seis dias perfeitos não existem. faça.",
+     "sub_tasks": [
+       {"sub_type": "full_perfect_day_window", "target": 6, "label": "6 dias com 100% das dailies"},
+       {"sub_type": "modality_count_window", "target": 16, "label": "16 missões quaisquer na semana"},
+       {"sub_type": "equipment_improved", "target": 3, "label": "Melhorar 3 equipamentos"}
+     ]},
+    {"id": "WK_ERROR_3", "title": "Singularidade", "description": "Vinte de vinte e um.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 20, "label": "20 missões quaisquer na semana"},
+       {"sub_type": "streak_minimum", "target": 6, "label": "Streak de 6 dias"},
+       {"sub_type": "gold_earned_via_quests_window", "target": 150, "label": "Ouro ganho via quests na semana"}
+     ]},
+    {"id": "WK_ERROR_4", "title": "Erro Sistêmico", "description": "A semana inteira, sem rachadura.",
+     "sub_tasks": [
+       {"sub_type": "no_partial_day_window", "target": 7, "label": "7 dias sem missão parcial"},
+       {"sub_type": "modality_count_window", "target": 18, "label": "18 missões quaisquer na semana"},
+       {"sub_type": "gold_earned_via_quests_window", "target": 120, "label": "Ouro ganho via quests na semana"}
+     ]},
+    {"id": "WK_ERROR_5", "title": "Anomalia Total", "description": "A semana perfeita ou nada.",
+     "sub_tasks": [
+       {"sub_type": "full_perfect_day_window", "target": 7, "label": "7 dias com 100% das dailies"},
+       {"sub_type": "streak_minimum", "target": 7, "label": "Streak de 7 dias"},
+       {"sub_type": "modality_count_window", "target": 18, "label": "18 missões quaisquer na semana"}
+     ]}
+  ],
+
+  "guild": [
+    {"id": "WK_GUILD_1", "title": "Diligência da Guilda", "description": "O aventureiro consistente.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 12, "label": "12 missões quaisquer na semana"},
+       {"sub_type": "diary_entry_window", "target": 3, "label": "3 entradas de diário na semana"}
+     ]},
+    {"id": "WK_GUILD_2", "title": "Aventureiro Constante", "description": "Presença é reputação.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 14, "label": "14 missões quaisquer na semana"},
+       {"sub_type": "streak_minimum", "target": 5, "label": "Streak de 5 dias"},
+       {"sub_type": "diary_entry_window", "target": 3, "label": "3 entradas de diário na semana"}
+     ]},
+    {"id": "WK_GUILD_3", "title": "Trabalho Honesto", "description": "Suor e moeda.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 12, "label": "12 missões quaisquer na semana"},
+       {"sub_type": "gold_earned_via_quests_window", "target": 60, "label": "Ouro ganho via quests na semana"},
+       {"sub_type": "diary_entry_window", "target": 3, "label": "3 entradas de diário na semana"}
+     ]},
+    {"id": "WK_GUILD_4", "title": "Rotina de Caçada", "description": "O ofício diário.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 15, "label": "15 missões quaisquer na semana"},
+       {"sub_type": "full_perfect_day_window", "target": 3, "label": "3 dias com 100% das dailies"},
+       {"sub_type": "streak_minimum", "target": 4, "label": "Streak de 4 dias"}
+     ]},
+    {"id": "WK_GUILD_5", "title": "Mãos à Obra", "description": "Sempre há o que fazer.",
+     "sub_tasks": [
+       {"sub_type": "modality_count_window", "target": 13, "label": "13 missões quaisquer na semana"},
+       {"sub_type": "individual_completed_window", "target": 1, "label": "1 missão individual completada"},
+       {"sub_type": "gold_earned_via_quests_window", "target": 50, "label": "Ouro ganho via quests na semana"}
+     ]}
   ]
 }

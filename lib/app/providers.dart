@@ -30,6 +30,8 @@ import '../data/datasources/local/quest_reward_stats_service.dart';
 import '../domain/models/faction_buff_multipliers.dart';
 import '../domain/services/faction_admission_validator.dart';
 import '../domain/services/faction_buff_service.dart';
+import '../domain/services/weekly_faction_validator.dart';
+import '../domain/services/weekly_faction_progress_service.dart';
 import '../domain/services/player_screens_visited_service.dart';
 import '../data/database/daos/daily_missions_dao.dart';
 import '../data/database/daos/player_daily_mission_stats_dao.dart';
@@ -510,6 +512,14 @@ final factionAdmissionValidatorProvider =
   return FactionAdmissionValidator(ref.watch(appDatabaseProvider));
 });
 
+/// FATIA B1 — validador acumulativo do motor SEMANAL de facção.
+/// Stateless. Espelha as queries acumulativas da admissão com janela
+/// limitada `[weekStartMs, weekEndMs)`.
+final weeklyFactionValidatorProvider =
+    Provider<WeeklyFactionValidator>((ref) {
+  return WeeklyFactionValidator(ref.watch(appDatabaseProvider));
+});
+
 /// Sprint 3.4 Etapa C — service que combina catálogo + state do player
 /// e produz multipliers efetivos (xp/gold/gems + atributos virtuais).
 /// Stateless. Lazy-load do JSON no 1º acesso.
@@ -565,6 +575,42 @@ final factionAdmissionProgressServiceProvider =
     missionRepo: ref.watch(missionRepositoryProvider),
     factionRep: ref.watch(factionReputationServiceProvider),
     factionRepo: ref.watch(playerFactionReputationRepositoryProvider),
+    assignment: ref.watch(missionAssignmentServiceProvider),
+  );
+  service.start();
+  ref.onDispose(service.stop);
+  return service;
+});
+
+/// FATIA B2b — listener ACUMULATIVO do motor semanal de facção. Soma
+/// sub-tasks via eventos terminais (sem reject/-rep/lock), incrementa o
+/// contador `equipment_improved` em `ItemCrafted`/`ItemEnchanted`, e paga
+/// o reward cheio (com Insígnias — Fatia A) na conclusão antecipada.
+/// Eager bootstrap no `NoHeroesApp.build`.
+final weeklyFactionProgressServiceProvider =
+    Provider<WeeklyFactionProgressService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  final service = WeeklyFactionProgressService(
+    db: db,
+    bus: ref.watch(appEventBusProvider),
+    validator: ref.watch(weeklyFactionValidatorProvider),
+    missionRepo: ref.watch(missionRepositoryProvider),
+    resolver: ref.watch(rewardResolveServiceProvider),
+    granter: ref.watch(rewardGrantServiceProvider),
+    resolvePlayer: (playerId) async {
+      final row = await (db.select(db.playersTable)
+            ..where((t) => t.id.equals(playerId)))
+          .getSingle();
+      final rank = row.guildRank == 'none'
+          ? null
+          : RankCodec.fromString(row.guildRank.toLowerCase());
+      return PlayerSnapshot(
+        level: row.level,
+        rank: rank ?? GuildRank.e,
+        classKey: row.classType,
+        factionKey: row.factionType,
+      );
+    },
   );
   service.start();
   ref.onDispose(service.stop);

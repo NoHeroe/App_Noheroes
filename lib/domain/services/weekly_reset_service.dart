@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../core/config/faction_alliances.dart';
 import '../../core/events/app_event_bus.dart';
 import '../../core/events/mission_events.dart';
@@ -75,37 +77,86 @@ class WeeklyResetService {
       return const WeeklyResetResult.noop();
     }
 
-    // ── Fase 1: processa faction weekly ativas ──────────────────────
+    // ── Fase 1: expira faction weekly de SEMANAS PASSADAS ───────────
+    // FATIA B4 (Fix gatilho-JOIN) — só expira weeklies cuja janela ISO já
+    // fechou (`now >= week_end_ms`). Sem este guard, a weekly criada pelo
+    // gatilho de JOIN na semana corrente (lastWeeklyReset ainda null)
+    // seria expirada no 1º boot do Santuário e a Fase 2 não conseguiria
+    // recriá-la (UNIQUE do ledger + nenhuma progress row ativa pra reusar)
+    // → player PERDIA a weekly recém-atribuída. Com o guard, a weekly da
+    // semana corrente sobrevive e a Fase 2 a reusa idempotentemente.
+    // metaJson sem `week_end_ms` (legacy/'{}') → expira (comportamento
+    // pré-B2a preservado).
     final active = await _missionRepo.findActive(playerId);
     int processed = 0;
     for (final mission in active) {
       if (mission.tabOrigin != MissionTabOrigin.faction) continue;
+      if (!_isWeeklyWindowClosed(mission, now)) continue;
       await _markExpired(mission);
       processed++;
     }
 
-    await _playerDao.markWeeklyReset(playerId, now);
+    // FATIA B4 (Fix Hip.2) — `markWeeklyReset` foi MOVIDO pra DEPOIS da
+    // Fase 2, com guard self-healing: o timestamp de 7 dias só é gravado
+    // quando o ciclo fecha de fato. Antes, marcava aqui (antes do assign)
+    // e travava o player por 7d mesmo quando o assign retornava null
+    // (rank gating / catálogo), mascarando o fix e re-travando.
 
     // ── Fase 2: reassigna faction weekly se factionType válido ─────
     final factionId = _validFactionId(player.factionType);
     if (factionId == null) {
       // ignore: avoid_print
       print('[weekly-reset] factionType="${player.factionType}" não reconhecido — reassign skipado');
-      return WeeklyResetResult(applied: true, processed: processed);
+      // FATIA B4 (Fix noop-trap) — player SEM facção real: NÃO marca
+      // lastWeeklyReset. Marcar aqui (premissa antiga: "entrar na facção
+      // dispara o reset por outro caminho") travava por 7d quem entrava
+      // numa facção DEPOIS — o boot seguinte caía no noop (<7d) antes de
+      // chegar na Fase 2. A premissa era FALSA: nada no JOIN disparava o
+      // reset cíclico. Sem marca → re-tenta todo boot; quando o player
+      // entra numa facção, o próximo boot atribui (e o gatilho no JOIN
+      // atribui na hora). Re-rodar a Fase 1 sem facção é no-op (não há
+      // faction weekly ativa pra expirar).
+      return WeeklyResetResult(applied: false, processed: processed);
     }
 
     final rank = _rankOf(player.guildRank);
+    // FATIA B2a — baseline de ouro pro sub_task gold_earned_via_quests_window
+    // (o validator B1 subtrai esse snapshot do total corrente).
     final progressId = await _assignment.ensureWeeklyFactionQuest(
       playerId: playerId,
       factionKey: factionId,
       playerRank: rank,
+      baselineGoldEarned: player.totalGoldEarnedViaQuests,
       now: now,
     );
+    // Self-healing: só marca o timestamp se o assign de fato criou a
+    // missão. Se `progressId == null` (assign falhou por algum motivo),
+    // NÃO marca → re-tenta no próximo boot (destrava quem já travou).
+    if (progressId != null) {
+      await _playerDao.markWeeklyReset(playerId, now);
+    }
     return WeeklyResetResult(
       applied: true,
       processed: processed,
       reassigned: progressId != null,
     );
+  }
+
+  /// FATIA B4 (Fix gatilho-JOIN) — true se a janela ISO da weekly já
+  /// fechou (`now >= week_end_ms` do metaJson). metaJson sem
+  /// `week_end_ms` (legacy/'{}' ou inválido) → true (expira, preserva o
+  /// comportamento pré-B2a de varrer faction weekly antigas).
+  bool _isWeeklyWindowClosed(MissionProgress mission, DateTime now) {
+    try {
+      final meta = jsonDecode(mission.metaJson);
+      if (meta is Map) {
+        final endMs = meta['week_end_ms'];
+        if (endMs is int) return now.millisecondsSinceEpoch >= endMs;
+      }
+    } catch (_) {
+      // metaJson inválido → trata como legacy (expira).
+    }
+    return true;
   }
 
   Future<void> _markExpired(MissionProgress mission) async {

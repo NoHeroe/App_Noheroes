@@ -82,17 +82,20 @@ void main() {
       missionRepo: repo,
       catalogs: MissionCatalogsService(
         bundle: _FakeBundle({
+          // FATIA B4 — formato per-facção, SEM rank/reward (vêm do assign).
           'assets/data/missions_faction_weekly.json': jsonEncode({
-            'missions': [
+            'guild': [
               {
-                'key': 'FW_GUILD_1',
+                'id': 'WK_GUILD_1',
                 'title': 't',
                 'description': 'd',
-                'modality': 'internal',
-                'faction_key': 'guild',
-                'rank': 'e',
-                'target_value': 1,
-                'reward': {'xp': 100}
+                'sub_tasks': [
+                  {
+                    'sub_type': 'modality_count_window',
+                    'target': 12,
+                    'label': '12 quaisquer'
+                  },
+                ],
               },
             ],
           }),
@@ -135,18 +138,80 @@ void main() {
       expect(row.lastWeeklyReset, isNotNull);
     });
 
-    test('factionType="pending:X" → reassign skipado silencioso', () async {
-      final playerId = await _seedPlayer(db, factionType: 'pending:guild');
+    test('FATIA B4 self-healing: factionId válido + assign null → NÃO '
+        'marca timestamp (re-tenta no próximo boot)', () async {
+      // factionType válido (moon_clan ∈ kKnownFactions) MAS sem pool no
+      // fixture (só 'guild') → ensureWeeklyFactionQuest retorna null.
+      final playerId = await _seedPlayer(db, factionType: 'moon_clan');
       final result = await service.checkAndApply(playerId);
       expect(result.applied, isTrue);
-      expect(result.reassigned, isFalse,
-          reason: 'pending:X não reassigna');
+      expect(result.reassigned, isFalse, reason: 'assign retornou null');
+
+      final row = await (db.select(db.playersTable)
+            ..where((t) => t.id.equals(playerId)))
+          .getSingle();
+      expect(row.lastWeeklyReset, isNull,
+          reason: 'NÃO marca → destrava no próximo boot');
     });
 
-    test('factionType="none" → reassign skipado', () async {
+    test('factionType="pending:X" → reassign skipado + NÃO marca timestamp',
+        () async {
+      final playerId = await _seedPlayer(db, factionType: 'pending:guild');
+      final result = await service.checkAndApply(playerId);
+      // Fix noop-trap: branch sem facção real não completa ciclo nem marca.
+      expect(result.applied, isFalse);
+      expect(result.reassigned, isFalse,
+          reason: 'pending:X não reassigna');
+
+      final row = await (db.select(db.playersTable)
+            ..where((t) => t.id.equals(playerId)))
+          .getSingle();
+      expect(row.lastWeeklyReset, isNull,
+          reason: 'Fix noop-trap: sem facção → NÃO marca (re-tenta no boot)');
+    });
+
+    test('factionType="none" → reassign skipado + NÃO marca timestamp '
+        '(Fix noop-trap)', () async {
       final playerId = await _seedPlayer(db, factionType: 'none');
       final result = await service.checkAndApply(playerId);
+      expect(result.applied, isFalse);
       expect(result.reassigned, isFalse);
+
+      final row = await (db.select(db.playersTable)
+            ..where((t) => t.id.equals(playerId)))
+          .getSingle();
+      expect(row.lastWeeklyReset, isNull,
+          reason: 'sem facção → não trava o player por 7d');
+    });
+
+    test('Fix noop-trap REGRESSÃO: boot sem facção (null timestamp) → '
+        'entra na facção → próximo boot atribui + marca', () async {
+      // Boot #1: player SEM facção (fresh install antes de escolher facção).
+      final playerId = await _seedPlayer(db, factionType: 'none');
+      final r1 = await service.checkAndApply(playerId);
+      expect(r1.reassigned, isFalse);
+      var row = await (db.select(db.playersTable)
+            ..where((t) => t.id.equals(playerId)))
+          .getSingle();
+      expect(row.lastWeeklyReset, isNull,
+          reason: 'boot sem facção NÃO pode travar o timestamp');
+
+      // Player entra numa facção com pool ('guild' no fixture).
+      await db.customUpdate(
+        "UPDATE players SET faction_type = 'guild' WHERE id = ?",
+        variables: [Variable.withInt(playerId)],
+        updates: {db.playersTable},
+      );
+
+      // Boot #2: lastWeeklyReset ainda null → NÃO cai no noop → atribui.
+      final r2 = await service.checkAndApply(playerId);
+      expect(r2.reassigned, isTrue,
+          reason: 'destravou: weekly atribuída no boot após entrar na facção');
+      row = await (db.select(db.playersTable)
+            ..where((t) => t.id.equals(playerId)))
+          .getSingle();
+      expect(row.lastWeeklyReset, isNotNull,
+          reason: 'agora sim marca (ciclo fechou com facção válida)');
     });
 
     test('expira faction weekly ativas antigas', () async {

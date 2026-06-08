@@ -21,7 +21,10 @@ class MissionCatalogsService {
   final AssetBundle _bundle;
   List<Map<String, dynamic>>? _daily;
   List<Map<String, dynamic>>? _class;
-  List<Map<String, dynamic>>? _factionWeekly;
+  // FATIA B2a — o catálogo semanal mudou de `{"missions":[...]}` (plano)
+  // pra raiz PER-FACÇÃO (`{"moon_clan":[...], ...}`). Cacheamos o mapa
+  // raiz inteiro e indexamos por facção em `loadFactionWeekly`.
+  Map<String, dynamic>? _factionWeeklyMap;
   List<Map<String, dynamic>>? _ascension;
 
   MissionCatalogsService({AssetBundle? bundle})
@@ -44,11 +47,19 @@ class MissionCatalogsService {
         .toList(growable: false);
   }
 
+  /// FATIA B2a — formato PER-FACÇÃO. Lê `json[factionKey]` direto (lista
+  /// de missões semanais com `sub_tasks[]`/`reward`). Facção sem pool
+  /// (ex: `lone_wolf`/`none`, ou facção sem entry no JSON) → `[]`.
+  ///
+  /// NÃO usa `_loadArray` (que exige `{"missions":[...]}` — formato dos
+  /// outros catálogos, intocado).
   Future<List<Map<String, dynamic>>> loadFactionWeekly(
       String factionKey) async {
-    _factionWeekly ??= await _loadArray(_factionWeeklyPath);
-    return _factionWeekly!
-        .where((e) => e['faction_key'] == factionKey)
+    _factionWeeklyMap ??= await _loadObject(_factionWeeklyPath);
+    final list = _factionWeeklyMap![factionKey];
+    if (list is! List) return const [];
+    return list
+        .map((e) => (e as Map).cast<String, dynamic>())
         .toList(growable: false);
   }
 
@@ -81,11 +92,29 @@ class MissionCatalogsService {
         .toList(growable: false);
   }
 
+  /// FATIA B2a — carrega o mapa raiz de um catálogo cuja estrutura é um
+  /// objeto indexado por chave (ex: per-facção). Asset ausente = `{}`.
+  Future<Map<String, dynamic>> _loadObject(String path) async {
+    final String raw;
+    try {
+      raw = await _bundle.loadString(path);
+    } catch (_) {
+      // ignore: avoid_print
+      print('[mission-catalogs] asset $path ausente — ignorado');
+      return const {};
+    }
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map<String, dynamic>) {
+      throw FormatException("$path: raiz não é objeto");
+    }
+    return decoded;
+  }
+
   /// Testing-only: limpa cache pra re-carregar.
   void resetCacheForTesting() {
     _daily = null;
     _class = null;
-    _factionWeekly = null;
+    _factionWeeklyMap = null;
     _ascension = null;
   }
 }

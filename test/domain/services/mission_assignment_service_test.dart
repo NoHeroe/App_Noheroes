@@ -127,17 +127,25 @@ void main() {
         () async {
       final playerId = await _seedPlayer(db);
       final service = makeService(_FakeBundle({
+        // FATIA B4 — formato per-facção, SEM rank/reward (vêm do assign).
         'assets/data/missions_faction_weekly.json': jsonEncode({
-          'missions': [
+          'guild': [
             {
-              'key': 'FW_1',
+              'id': 'WK_GUILD_1',
               'title': 't',
               'description': 'd',
-              'modality': 'internal',
-              'faction_key': 'guild',
-              'rank': 'e',
-              'target_value': 1,
-              'reward': {'xp': 100}
+              'sub_tasks': [
+                {
+                  'sub_type': 'modality_count_window',
+                  'target': 12,
+                  'label': '12 quaisquer'
+                },
+                {
+                  'sub_type': 'diary_entry_window',
+                  'target': 3,
+                  'label': '3 diário'
+                },
+              ],
             },
           ],
         }),

@@ -46,6 +46,10 @@ class NoHeroesApp extends ConsumerWidget {
     // RewardGranted) + sequenciamento (missão N+1 desbloqueada quando
     // N completa) + reset em falha.
     ref.watch(factionAdmissionProgressServiceProvider);
+    // FATIA B2b — listener ACUMULATIVO do motor semanal de facção
+    // (soma sub-tasks via eventos terminais + ItemCrafted/ItemEnchanted,
+    // sem reject/lock; paga reward cheio na conclusão antecipada).
+    ref.watch(weeklyFactionProgressServiceProvider);
     return MaterialApp.router(
       title: 'NoHeroes',
       debugShowCheckedModeBanner: false,
