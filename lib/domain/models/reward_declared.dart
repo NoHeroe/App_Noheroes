@@ -86,6 +86,12 @@ class RewardDeclared {
   final int gold;
   final int gems;
   final int seivas;
+
+  /// FATIA A — Insígnias (moeda de facção). Valor **fixo declarado**:
+  /// NÃO passa pela fórmula 0-300% nem pelos multiplicadores SOULSLIKE
+  /// (diferente de xp/gold/gems/seivas). O resolver repassa intacto.
+  final int insignias;
+
   final List<RewardItemDeclared> items;
   final List<String> achievementsToCheck;
   final List<String> recipesToUnlock;
@@ -96,6 +102,7 @@ class RewardDeclared {
     this.gold = 0,
     this.gems = 0,
     this.seivas = 0,
+    this.insignias = 0,
     this.items = const [],
     this.achievementsToCheck = const [],
     this.recipesToUnlock = const [],
@@ -108,6 +115,7 @@ class RewardDeclared {
       gold: (json['gold'] as int?) ?? 0,
       gems: (json['gems'] as int?) ?? 0,
       seivas: (json['seivas'] as int?) ?? 0,
+      insignias: (json['insignias'] as int?) ?? 0,
       items: ((json['items'] as List?) ?? const [])
           .map((e) => RewardItemDeclared.fromJson(e as Map<String, dynamic>))
           .toList(growable: false),
@@ -142,6 +150,7 @@ class RewardDeclared {
       'gold': gold,
       'gems': gems,
       'seivas': seivas,
+      'insignias': insignias,
       'items': items.map((e) => e.toJson()).toList(growable: false),
       'achievements_to_check': achievementsToCheck,
       'recipes_to_unlock': recipesToUnlock,

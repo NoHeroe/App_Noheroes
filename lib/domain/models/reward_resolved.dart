@@ -42,6 +42,11 @@ class RewardResolved {
   final int gold;
   final int gems;
   final int seivas;
+
+  /// FATIA A — Insígnias (moeda de facção). Valor fixo: chega aqui
+  /// **intacto** do `RewardDeclared` (sem fórmula 0-300%, sem SOULSLIKE).
+  final int insignias;
+
   final List<RewardItemResolved> items;
 
   /// Chaves de achievement que devem ser checadas em cascata após grant
@@ -61,6 +66,7 @@ class RewardResolved {
     this.gold = 0,
     this.gems = 0,
     this.seivas = 0,
+    this.insignias = 0,
     this.items = const [],
     this.achievementsToCheck = const [],
     this.recipesToUnlock = const [],
@@ -82,6 +88,7 @@ class RewardResolved {
       gold: (json['gold'] as int?) ?? 0,
       gems: (json['gems'] as int?) ?? 0,
       seivas: (json['seivas'] as int?) ?? 0,
+      insignias: (json['insignias'] as int?) ?? 0,
       items: ((json['items'] as List?) ?? const [])
           .map((e) => RewardItemResolved.fromJson(e as Map<String, dynamic>))
           .toList(growable: false),
@@ -112,6 +119,7 @@ class RewardResolved {
       'gold': gold,
       'gems': gems,
       'seivas': seivas,
+      'insignias': insignias,
       'items': items.map((e) => e.toJson()).toList(growable: false),
       'achievements_to_check': achievementsToCheck,
       'recipes_to_unlock': recipesToUnlock,

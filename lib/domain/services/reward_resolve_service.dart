@@ -106,6 +106,10 @@ class RewardResolveService {
       gold: finalCurrency.gold,
       gems: finalCurrency.gems,
       seivas: finalCurrency.seivas,
+      // FATIA A — Insígnias (moeda de facção): valor FIXO declarado.
+      // NÃO passa pela fórmula 0-300% nem pelo multiplicador SOULSLIKE —
+      // repassa cru do declarado (intencionalmente fora dos passos 1 e 2).
+      insignias: declared.insignias,
       items: resolvedItems,
       // Ambos campos abaixo passam intactos — resolver não decide se
       // achievement dispara ou recipe desbloqueia, só repassa pro grant.

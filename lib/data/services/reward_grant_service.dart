@@ -169,6 +169,22 @@ class RewardGrantService {
         );
       }
 
+      // 3a-bis. FATIA A — Insígnias (moeda de facção). Crédito FIXO:
+      //   - NÃO passa por `_applyBuffs` (buffs só escalam xp/gold/gems).
+      //   - Valor já vem cru do resolver (sem 0-300%, sem SOULSLIKE).
+      // Mesmo padrão do welcome bonus de admissão (customUpdate na coluna
+      // players.insignias), porém dentro da transação atômica do grant.
+      if (resolved.insignias != 0) {
+        await _db.customUpdate(
+          'UPDATE players SET insignias = insignias + ? WHERE id = ?',
+          variables: [
+            Variable.withInt(resolved.insignias),
+            Variable.withInt(playerId),
+          ],
+          updates: {_db.playersTable},
+        );
+      }
+
       // 3b. Sprint 3.1 Bloco 7b — fix bug 4 (totalQuestsCompleted
       //     parcial). No legacy só class/faction/guild incrementavam
       //     esse contador. Agora CADA missão que grantou reward
@@ -325,6 +341,21 @@ class RewardGrantService {
         );
       }
 
+      // 2-bis. FATIA A — Insígnias fixas (mesma regra do `grant`: sem
+      // buff, sem SOULSLIKE). Achievement raramente paga insígnias, mas
+      // o contrato declarativo suporta — credita aqui pra paridade com o
+      // payload do `RewardGranted`.
+      if (resolved.insignias != 0) {
+        await _db.customUpdate(
+          'UPDATE players SET insignias = insignias + ? WHERE id = ?',
+          variables: [
+            Variable.withInt(resolved.insignias),
+            Variable.withInt(playerId),
+          ],
+          updates: {_db.playersTable},
+        );
+      }
+
       // 3. Items — delega pro PlayerInventoryService. SourceType.achievement
       //    alinha ADR 0010 (fonte canônica distinta de questReward).
       for (final item in resolved.items) {
@@ -428,6 +459,8 @@ class RewardGrantService {
       gold: buffed.gold,
       gems: buffed.gems,
       seivas: declared.seivas,
+      // FATIA A — insígnias preservadas crus no payload (não bufam).
+      insignias: declared.insignias,
       items: declared.items,
       achievementsToCheck: declared.achievementsToCheck,
       recipesToUnlock: declared.recipesToUnlock,
