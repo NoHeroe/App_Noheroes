@@ -1,8 +1,8 @@
 {
   "ascension": [
     {
-      "rank_from": "e",
-      "rank_to": "d",
+      "rank_from": "E",
+      "rank_to": "D",
       "missions": [
         {
           "step": 1,
@@ -148,8 +148,8 @@
       ]
     },
     {
-      "rank_from": "d",
-      "rank_to": "c",
+      "rank_from": "D",
+      "rank_to": "C",
       "missions": [
         {
           "step": 1,
@@ -292,8 +292,8 @@
       ]
     },
     {
-      "rank_from": "c",
-      "rank_to": "b",
+      "rank_from": "C",
+      "rank_to": "B",
       "missions": [
         {
           "step": 1,
@@ -436,8 +436,8 @@
       ]
     },
     {
-      "rank_from": "b",
-      "rank_to": "a",
+      "rank_from": "B",
+      "rank_to": "A",
       "missions": [
         {
           "step": 1,
@@ -580,8 +580,8 @@
       ]
     },
     {
-      "rank_from": "a",
-      "rank_to": "s",
+      "rank_from": "A",
+      "rank_to": "S",
       "missions": [
         {
           "step": 1,

@@ -17,7 +17,11 @@ final ascensionMissionsProvider =
   final player = ref.watch(currentPlayerProvider);
   if (player == null) return [];
   final rank = player.guildRank;
-  if (rank == 's' || rank == 'none') return [];
+  // A.1 — canon MAIÚSCULO; 'none'/vazio = sem rank. Comparações robustas
+  // a ambas as caixas (o service normaliza internamente).
+  if (rank.toUpperCase() == 'S' || rank.toLowerCase() == 'none' || rank.isEmpty) {
+    return [];
+  }
   final service = ref.read(ascensionServiceProvider);
   await service.initCycle(player.id, rank);
   return service.getMissions(player.id, rank);
@@ -44,14 +48,14 @@ class AscensionTab extends ConsumerWidget {
     final missionsAsync = ref.watch(ascensionMissionsProvider);
     final rank = player?.guildRank ?? 'none';
 
-    if (rank == 'none') {
+    if (rank.toLowerCase() == 'none' || rank.isEmpty) {
       return Center(
         child: Text('Entre na Guilda primeiro.',
             style: GoogleFonts.roboto(color: AppColors.textMuted)),
       );
     }
 
-    if (rank == 's') {
+    if (rank.toUpperCase() == 'S') {
       return Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           const Icon(Icons.star, color: Color(0xFFFFD700), size: 48),
@@ -81,8 +85,10 @@ class AscensionTab extends ConsumerWidget {
         }
 
         final nextRank = missions.first.rankTo;
-        final rankColor = _rankColors[rank] ?? AppColors.textMuted;
-        final nextColor = _rankColors[nextRank] ?? AppColors.gold;
+        // A.1 — mapas keyados em minúsculo; lookup normalizado (rank/rankTo
+        // chegam em MAIÚSCULO do canon/DB).
+        final rankColor = _rankColors[rank.toLowerCase()] ?? AppColors.textMuted;
+        final nextColor = _rankColors[nextRank.toLowerCase()] ?? AppColors.gold;
 
         // Verifica se todas completadas
         final allDone = missions.every((m) => m.completed);
@@ -111,7 +117,7 @@ class AscensionTab extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: rankColor.withValues(alpha: 0.5)),
                   ),
-                  child: Text(_rankLabels[rank] ?? rank.toUpperCase(),
+                  child: Text(_rankLabels[rank.toLowerCase()] ?? rank.toUpperCase(),
                       style: GoogleFonts.cinzelDecorative(
                           fontSize: 20, color: rankColor)),
                 ),
@@ -128,7 +134,7 @@ class AscensionTab extends ConsumerWidget {
                     border:
                         Border.all(color: nextColor.withValues(alpha: 0.5)),
                   ),
-                  child: Text(_rankLabels[nextRank] ?? nextRank.toUpperCase(),
+                  child: Text(_rankLabels[nextRank.toLowerCase()] ?? nextRank.toUpperCase(),
                       style: GoogleFonts.cinzelDecorative(
                           fontSize: 20, color: nextColor)),
                 ),
@@ -162,7 +168,7 @@ class AscensionTab extends ConsumerWidget {
                     children: [
                       Icon(Icons.arrow_circle_up, color: nextColor, size: 20),
                       const SizedBox(width: 8),
-                      Text('ASCENDER PARA RANK ${_rankLabels[nextRank]}',
+                      Text('ASCENDER PARA RANK ${_rankLabels[nextRank.toLowerCase()] ?? nextRank.toUpperCase()}',
                           style: GoogleFonts.cinzelDecorative(
                               fontSize: 11,
                               color: nextColor,

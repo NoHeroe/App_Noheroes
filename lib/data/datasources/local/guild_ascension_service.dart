@@ -2,29 +2,44 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/services.dart';
+import '../../../core/utils/guild_rank.dart';
 import '../../database/app_database.dart';
 import '../../database/tables/guild_ascension_table.dart';
+import 'player_rank_service.dart';
 
 class GuildAscensionService {
   final AppDatabase _db;
-  GuildAscensionService(this._db);
+  // A.1 — escrita de rank unificada: ascend() delega a PlayerRankService
+  // (grava o canon MAIÚSCULO + evolui o Colar da Guilda).
+  final PlayerRankService _rankService;
+  GuildAscensionService(this._db, {PlayerRankService? rankService})
+      : _rankService = rankService ?? PlayerRankService(_db);
 
-  static const _rankOrder = ['e', 'd', 'c', 'b', 'a', 's'];
+  /// A.1 — normaliza um rank cru pro canon MAIÚSCULO ('E'..'S'). `none`/
+  /// vazio é preservado como sentinela (não casa com nenhum ciclo).
+  /// `GuildRankSystem.fromString` tolera ambas as caixas (cobre legado).
+  String _canonRank(String raw) {
+    final r = raw.trim();
+    if (r.isEmpty || r.toLowerCase() == 'none') return 'none';
+    return GuildRankSystem.fromString(r).name.toUpperCase();
+  }
 
   // Retorna todas as missões do ciclo atual (rank_from = guildRank)
   Future<List<GuildAscensionTableData>> getMissions(
       int playerId, String currentRank) async {
+    final canon = _canonRank(currentRank);
     return (_db.select(_db.guildAscensionTable)
           ..where((t) =>
               t.playerId.equals(playerId) &
-              t.rankFrom.equals(currentRank))
+              t.rankFrom.equals(canon))
           ..orderBy([(t) => OrderingTerm.asc(t.step)]))
         .get();
   }
 
   // Inicializa as missões do ciclo atual se não existirem
   Future<void> initCycle(int playerId, String currentRank) async {
-    final existing = await getMissions(playerId, currentRank);
+    final canon = _canonRank(currentRank);
+    final existing = await getMissions(playerId, canon);
     if (existing.isNotEmpty) return;
 
     final raw = await rootBundle.loadString('assets/data/guild_ascension.json');
@@ -32,7 +47,7 @@ class GuildAscensionService {
     final cycles = (json['ascension'] as List).cast<Map<String, dynamic>>();
 
     final cycle = cycles.firstWhere(
-      (c) => c['rank_from'] == currentRank,
+      (c) => c['rank_from'] == canon,
       orElse: () => {},
     );
     if (cycle.isEmpty) return;
@@ -48,7 +63,7 @@ class GuildAscensionService {
       await _db.into(_db.guildAscensionTable).insert(
         GuildAscensionTableCompanion(
           playerId: Value(playerId),
-          rankFrom: Value(currentRank),
+          rankFrom: Value(canon),
           rankTo: Value(cycle['rank_to'] as String),
           step: Value(m['step'] as int),
           questKey: Value(chosen['key'] as String),
@@ -113,19 +128,18 @@ class GuildAscensionService {
   }
 
   Future<String?> ascend(int playerId, String currentRank) async {
-    if (!await canAscend(playerId, currentRank)) return null;
-    final idx = _rankOrder.indexOf(currentRank);
-    if (idx < 0 || idx >= _rankOrder.length - 1) return null;
-    final newRank = _rankOrder[idx + 1];
+    final canon = _canonRank(currentRank);
+    if (canon == 'none') return null;
+    if (!await canAscend(playerId, canon)) return null;
+    final next = GuildRankSystem.next(GuildRankSystem.fromString(canon));
+    if (next == null) return null; // já é S
 
-    // Sprint 3.4 Etapa A — `players.guild_rank` é canônico (ADR-0009).
-    // `guild_status` foi DROPPED — escrita dupla anterior era redundante.
-    await _db.customUpdate(
-      'UPDATE players SET guild_rank = ? WHERE id = ?',
-      variables: [Variable.withString(newRank), Variable.withInt(playerId)],
-      updates: {_db.playersTable},
-    );
-    return newRank;
+    // A.1 — escrita unificada: delega a PlayerRankService.setRank, que
+    // grava o canon MAIÚSCULO em players.guild_rank E evolui o Colar da
+    // Guilda (evolution_stage). Substitui o customUpdate direto anterior,
+    // que gravava minúsculo e NÃO evoluía o colar (ADR-0009).
+    await _rankService.setRank(playerId, next);
+    return next.name.toUpperCase();
   }
 
   Future<int> _calcProgress(String checkType, Map<String, dynamic> params,
