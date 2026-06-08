@@ -39,79 +39,106 @@ import '../presentation/enchant/screens/enchant_screen.dart';
 import '../data/database/tables/players_table_ext.dart';
 import 'providers.dart';
 
+/// Transição global de FADE (mesma sensação da Biblioteca) — substitui o
+/// slide padrão do `MaterialPage`. Só muda COMO a página é construída; a
+/// lógica de navegação (paths, params, redirects) fica intacta.
+CustomTransitionPage<void> _fadePage(GoRouterState state, Widget child) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 220),
+    reverseTransitionDuration: const Duration(milliseconds: 180),
+    transitionsBuilder: (ctx, anim, sec, child) {
+      final fade = CurvedAnimation(parent: anim, curve: Curves.easeOut);
+      // Opcional (CEO testar no flutter run): leve scale 0.98→1.0 junto do
+      // fade pra dar mais "vida". Descomentar pra ativar:
+      // return FadeTransition(
+      //   opacity: fade,
+      //   child: ScaleTransition(
+      //     scale: Tween<double>(begin: 0.98, end: 1.0).animate(fade),
+      //     child: child,
+      //   ),
+      // );
+      return FadeTransition(opacity: fade, child: child);
+    },
+  );
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     initialLocation: '/',
     routes: [
-      GoRoute(path: '/',             builder: (c, s) => const SplashScreen()),
-      GoRoute(path: '/login',        builder: (c, s) => const LoginScreen()),
-      GoRoute(path: '/register',     builder: (c, s) => const RegisterScreen()),
-      GoRoute(path: '/awakening',    builder: (c, s) => const AwakeningScreen()),
-      GoRoute(path: '/sanctuary',    builder: (c, s) => const SanctuaryScreen()),
+      GoRoute(path: '/',             pageBuilder: (c, s) => _fadePage(s, const SplashScreen())),
+      GoRoute(path: '/login',        pageBuilder: (c, s) => _fadePage(s, const LoginScreen())),
+      GoRoute(path: '/register',     pageBuilder: (c, s) => _fadePage(s, const RegisterScreen())),
+      GoRoute(path: '/awakening',    pageBuilder: (c, s) => _fadePage(s, const AwakeningScreen())),
+      GoRoute(path: '/sanctuary',    pageBuilder: (c, s) => _fadePage(s, const SanctuaryScreen())),
       // Sprint 3.1 Bloco 14.5 — rota legacy /habits removida (schema 25
       // resetou tudo; nenhum deep link conhecido dependia dela).
       // Sprint 3.1 Bloco 10a.1 — /quests virou tela real (6 abas + chips).
-      GoRoute(path: '/quests',       builder: (c, s) => const QuestsScreen()),
+      GoRoute(path: '/quests',       pageBuilder: (c, s) => _fadePage(s, const QuestsScreen())),
       // Sprint 3.1 Bloco 14.6b — criação de missão individual virou
       // BottomSheet embutido no `/quests` aba Extras. Rota antiga
       // removida; arquivo legacy fica em .bak.pre_14_6b como referência.
-      GoRoute(path: '/character',    builder: (c, s) => const CharacterScreen()),
-      GoRoute(path: '/regions',      builder: (c, s) => const RegionsScreen()),
+      GoRoute(path: '/character',    pageBuilder: (c, s) => _fadePage(s, const CharacterScreen())),
+      GoRoute(path: '/regions',      pageBuilder: (c, s) => _fadePage(s, const RegionsScreen())),
       // /shadow será refeita no Bloco 12 (migração de stats da Câmara pro Histórico).
-      GoRoute(path: '/shadow',       builder: (c, s) => const _UnderConstruction(feature: 'Câmara das Sombras', block: 'Bloco 12')),
-      GoRoute(path: '/inventory',    builder: (c, s) => const InventoryScreen()),
+      GoRoute(path: '/shadow',       pageBuilder: (c, s) => _fadePage(s, const _UnderConstruction(feature: 'Câmara das Sombras', block: 'Bloco 12'))),
+      GoRoute(path: '/inventory',    pageBuilder: (c, s) => _fadePage(s, const InventoryScreen())),
       GoRoute(
         path: '/playstyle',
-        builder: (context, state) => const PlaystyleScreen(),
+        pageBuilder: (context, state) => _fadePage(state, const PlaystyleScreen()),
       ),
       GoRoute(
         path: '/notifications',
-        builder: (context, state) => const NotificationsScreen(),
+        pageBuilder: (context, state) => _fadePage(state, const NotificationsScreen()),
       ),
       GoRoute(
         path: '/library',
-        builder: (context, state) => const LibraryScreen(),
+        pageBuilder: (context, state) => _fadePage(state, const LibraryScreen()),
       ),
       GoRoute(
         path: '/reputation',
-        builder: (context, state) => const ReputationScreen(),
+        pageBuilder: (context, state) => _fadePage(state, const ReputationScreen()),
       ),
       GoRoute(
         path: '/guild',
-        builder: (context, state) => const GuildScreen(),
+        pageBuilder: (context, state) => _fadePage(state, const GuildScreen()),
       ),
-      GoRoute(path: '/shops',        builder: (c, s) => const ShopsListScreen()),
-      GoRoute(path: '/forge',        builder: (c, s) => const ForgeScreen()),
-      GoRoute(path: '/enchant',      builder: (c, s) => const EnchantScreen()),
+      GoRoute(path: '/shops',        pageBuilder: (c, s) => _fadePage(s, const ShopsListScreen())),
+      GoRoute(path: '/forge',        pageBuilder: (c, s) => _fadePage(s, const ForgeScreen())),
+      GoRoute(path: '/enchant',      pageBuilder: (c, s) => _fadePage(s, const EnchantScreen())),
       GoRoute(
         path: '/shop/:shopKey',
-        builder: (c, s) => ShopScreen(shopKey: s.pathParameters['shopKey']!),
+        pageBuilder: (c, s) =>
+            _fadePage(s, ShopScreen(shopKey: s.pathParameters['shopKey']!)),
       ),
       // /shop (sem key) redireciona pra listagem — não quebrar navegação legada.
       GoRoute(path: '/shop', redirect: (_, __) => '/shops'),
       // Sprint 3.1 Bloco 14.6b — tela restaurada (JSON-driven via
       // AchievementsService.catalog + PlayerAchievementsRepository).
-      GoRoute(path: '/achievements',       builder: (c, s) => const AchievementsScreen()),
-      GoRoute(path: '/class-selection',    builder: (c, s) => const ClassSelectionScreen()),
-      GoRoute(path: '/faction-selection',  builder: (c, s) => const FactionSelectionScreen()),
+      GoRoute(path: '/achievements',       pageBuilder: (c, s) => _fadePage(s, const AchievementsScreen())),
+      GoRoute(path: '/class-selection',    pageBuilder: (c, s) => _fadePage(s, const ClassSelectionScreen())),
+      GoRoute(path: '/faction-selection',  pageBuilder: (c, s) => _fadePage(s, const FactionSelectionScreen())),
       // Sprint 3.4 Etapa E — ficha da facção atual do player. `id` é o
       // faction_type; a tela mostra a ficha de membro (ou fallback se o
       // player não é membro daquela facção).
       GoRoute(
         path: '/faction/:id',
-        builder: (c, s) => FactionScreen(factionId: s.pathParameters['id']!),
+        pageBuilder: (c, s) =>
+            _fadePage(s, FactionScreen(factionId: s.pathParameters['id']!)),
       ),
-      GoRoute(path: '/dev',                builder: (c, s) => const DevPanelScreen()),
-      GoRoute(path: '/battle',             builder: (c, s) => const BattleHubScreen()),
+      GoRoute(path: '/dev',                pageBuilder: (c, s) => _fadePage(s, const DevPanelScreen())),
+      GoRoute(path: '/battle',             pageBuilder: (c, s) => _fadePage(s, const BattleHubScreen())),
       // Sprint 3.1 Bloco 14.6c — /history vira rota dedicada (saiu
       // da aba chip de /quests no redesign).
-      GoRoute(path: '/history',            builder: (c, s) => const HistoryScreen()),
+      GoRoute(path: '/history',            pageBuilder: (c, s) => _fadePage(s, const HistoryScreen())),
       // Sprint 3.2 Etapa 1.0 — /perfil (identidade + dados físicos +
       // recomendações diárias). Acessível pelo SanctuaryDrawer.
-      GoRoute(path: '/perfil',             builder: (c, s) => const ProfileScreen()),
+      GoRoute(path: '/perfil',             pageBuilder: (c, s) => _fadePage(s, const ProfileScreen())),
       GoRoute(
         path: '/vitalism/void-ritual',
-        builder: (c, s) => const VoidRitualScreen(),
+        pageBuilder: (c, s) => _fadePage(s, const VoidRitualScreen()),
         redirect: (context, state) {
           final player = ref.read(currentPlayerProvider);
           if (player == null) return '/login';
@@ -122,7 +149,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/vitalism/crystal-ceremony',
-        builder: (c, s) => const CrystalCeremonyScreen(),
+        pageBuilder: (c, s) => _fadePage(s, const CrystalCeremonyScreen()),
         redirect: (context, state) {
           final player = ref.read(currentPlayerProvider);
           if (player == null) return '/login';
@@ -134,7 +161,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/vitalism',
-        builder: (c, s) => const VitalismHubScreen(),
+        pageBuilder: (c, s) => _fadePage(s, const VitalismHubScreen()),
         redirect: (context, state) {
           final player = ref.read(currentPlayerProvider);
           if (player == null) return '/login';
@@ -145,7 +172,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/magic',
-        builder: (c, s) => const MagicHubScreen(),
+        pageBuilder: (c, s) => _fadePage(s, const MagicHubScreen()),
         redirect: (context, state) {
           final player = ref.read(currentPlayerProvider);
           if (player == null) return '/login';
@@ -156,8 +183,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/vitalism/tree/:vitalismId',
-        builder: (c, s) => VitalismTreeScreen(
-          vitalismId: s.pathParameters['vitalismId']!,
+        pageBuilder: (c, s) => _fadePage(
+          s,
+          VitalismTreeScreen(vitalismId: s.pathParameters['vitalismId']!),
         ),
         redirect: (context, state) {
           final player = ref.read(currentPlayerProvider);
@@ -170,7 +198,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/vitalism/life-tree',
-        builder: (c, s) => const LifeTreeScreen(),
+        pageBuilder: (c, s) => _fadePage(s, const LifeTreeScreen()),
         redirect: (context, state) {
           final player = ref.read(currentPlayerProvider);
           if (player == null) return '/login';
