@@ -20,6 +20,7 @@ import '../widgets/internal_mission_card.dart';
 import '../widgets/mixed_mission_card.dart';
 import '../widgets/real_task_mission_card.dart';
 import '../widgets/section_accordion.dart';
+import '../widgets/weekly_faction_mission_card.dart';
 import '../../../domain/enums/mission_tab_origin.dart';
 
 /// Sprint 3.1 Bloco 14.6c — `/quests` reestruturada.
@@ -255,12 +256,19 @@ class _MissionCardDispatcher extends StatelessWidget {
   Widget build(BuildContext context) {
     // Sprint 3.4 Sub-Etapa B.2 — missões de admissão eliminatória têm
     // card próprio (sub-tasks listadas + countdown + locked
-    // placeholder pra sequenciamento). Outras categorias (class /
-    // faction weekly / individual / extras) seguem o dispatcher por
-    // modality original.
+    // placeholder pra sequenciamento).
     if (mission.tabOrigin == MissionTabOrigin.admission) {
       return AdmissionMissionCard(mission: mission);
     }
+    // FATIA B3 — a missão de facção SEMANAL agora é multi-sub-task
+    // (motor acumulativo B1/B2) e tem card próprio (sub-tasks ao vivo +
+    // countdown até a virada da semana, SEM lock). Antes caía no
+    // dispatcher por modality (missão plana).
+    if (mission.tabOrigin == MissionTabOrigin.faction) {
+      return WeeklyFactionMissionCard(mission: mission);
+    }
+    // Demais categorias (class / individual / extras) seguem o
+    // dispatcher por modality original.
     return switch (mission.modality) {
       MissionModality.internal => InternalMissionCard(mission: mission),
       MissionModality.real => RealTaskMissionCard(mission: mission),
