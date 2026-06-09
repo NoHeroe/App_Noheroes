@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../shared/widgets/app_snack.dart';
 
 class BattleHubScreen extends StatelessWidget {
   const BattleHubScreen({super.key});
@@ -92,6 +93,50 @@ class BattleHubScreen extends StatelessWidget {
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                     children: [
+                      // MODO CARTAS — ACDA (funcional)
+                      _sectionLabel('MODO CARTAS — ACDA'),
+                      const SizedBox(height: 10),
+                      _ModeCard(
+                        title: 'PvE — vs IA',
+                        subtitle: 'Solo — contra Caelum',
+                        description:
+                            'Batalha de cartas contra a inteligência de Caelum.',
+                        icon: Icons.smart_toy_outlined,
+                        color: AppColors.conceptCelestial,
+                        difficulty: 'Ajustável',
+                        tag: 'CARTAS',
+                        onTap: () =>
+                            context.go('/card-game/matchmaking?mode=pve'),
+                      ),
+                      const SizedBox(height: 10),
+                      _ModeCard(
+                        title: 'PvP — RANQUEADO',
+                        subtitle: 'Duelo classificatório',
+                        description:
+                            'Suba de elo contra outros invocadores. Requer servidor dedicado.',
+                        icon: Icons.leaderboard_outlined,
+                        color: AppColors.gold,
+                        difficulty: 'Alta',
+                        tag: 'PvP',
+                        onTap: () => AppSnack.info(context,
+                            'PvP ranqueado em breve — precisa do servidor online.'),
+                      ),
+                      const SizedBox(height: 10),
+                      _ModeCard(
+                        title: 'AMISTOSO',
+                        subtitle: 'Partida casual',
+                        description:
+                            'Desafie um amigo numa partida sem ranking. Em breve.',
+                        icon: Icons.handshake_outlined,
+                        color: AppColors.conceptChrysalis,
+                        difficulty: 'Livre',
+                        tag: 'CARTAS',
+                        onTap: () =>
+                            AppSnack.info(context, 'Modo amistoso em breve.'),
+                      ),
+
+                      const SizedBox(height: 20),
+
                       // PvE
                       _sectionLabel('PvE — SOLO & GRUPO'),
                       const SizedBox(height: 10),
@@ -226,6 +271,9 @@ class _ModeCard extends StatelessWidget {
   final String tag;
   final bool isHighlight;
 
+  /// Quando != null, o cartão fica tappável e o selo "EM BREVE" some.
+  final VoidCallback? onTap;
+
   const _ModeCard({
     required this.title,
     required this.subtitle,
@@ -235,10 +283,17 @@ class _ModeCard extends StatelessWidget {
     required this.difficulty,
     required this.tag,
     this.isHighlight = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final card = _buildCard(context);
+    if (onTap == null) return card;
+    return GestureDetector(onTap: onTap, child: card);
+  }
+
+  Widget _buildCard(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -333,22 +388,46 @@ class _ModeCard extends StatelessWidget {
             ),
           ),
 
-          // Selo EM BREVE
+          // Selo de status: "JOGAR" quando tappável, senão "EM BREVE".
           Positioned(
             top: 12, right: 12,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.black.withValues(alpha: 0.7),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Text('EM BREVE',
-                  style: GoogleFonts.roboto(
-                      fontSize: 9,
-                      color: AppColors.textMuted,
-                      letterSpacing: 1)),
-            ),
+            child: onTap != null
+                ? Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(6),
+                      border:
+                          Border.all(color: color.withValues(alpha: 0.5)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.play_arrow, color: color, size: 12),
+                        const SizedBox(width: 2),
+                        Text('JOGAR',
+                            style: GoogleFonts.roboto(
+                                fontSize: 9,
+                                color: color,
+                                letterSpacing: 1)),
+                      ],
+                    ),
+                  )
+                : Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppColors.black.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Text('EM BREVE',
+                        style: GoogleFonts.roboto(
+                            fontSize: 9,
+                            color: AppColors.textMuted,
+                            letterSpacing: 1)),
+                  ),
           ),
         ],
       ),

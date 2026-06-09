@@ -28,6 +28,8 @@ import '../presentation/profile/screens/profile_screen.dart';
 import '../presentation/quests/screens/quests_screen.dart';
 import '../presentation/dev/dev_panel_screen.dart';
 import '../presentation/battle/screens/battle_hub_screen.dart';
+import '../presentation/card_game/screens/card_matchmaking_screen.dart';
+import '../presentation/card_game/screens/card_match_screen.dart';
 import '../presentation/vitalism/screens/void_ritual_screen.dart';
 import '../presentation/vitalism/screens/crystal_ceremony_screen.dart';
 import '../presentation/vitalism/screens/vitalism_hub_screen.dart';
@@ -129,6 +131,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/dev',                pageBuilder: (c, s) => _fadePage(s, const DevPanelScreen())),
       GoRoute(path: '/battle',             pageBuilder: (c, s) => _fadePage(s, const BattleHubScreen())),
+      // Modo Cartas (ACDA) — fluxo de entrada funcional.
+      GoRoute(
+        path: '/card-game/matchmaking',
+        pageBuilder: (c, s) => _fadePage(
+          s,
+          CardMatchmakingScreen(mode: s.uri.queryParameters['mode'] ?? 'pve'),
+        ),
+      ),
+      GoRoute(
+        path: '/card-game/match',
+        pageBuilder: (c, s) => _fadePage(
+          s,
+          CardMatchScreen(mode: s.uri.queryParameters['mode'] ?? 'pve'),
+        ),
+      ),
       // Sprint 3.1 Bloco 14.6c — /history vira rota dedicada (saiu
       // da aba chip de /quests no redesign).
       GoRoute(path: '/history',            pageBuilder: (c, s) => _fadePage(s, const HistoryScreen())),
