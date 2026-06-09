@@ -10,7 +10,7 @@ import 'app_event.dart';
 /// classe pelo `QuestAdmissionService` refatorado (Bloco 7).
 class ClassSelected extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final String classId;
 
   ClassSelected({
@@ -28,7 +28,7 @@ class ClassSelected extends AppEvent {
 /// ou migração de `pending:X` pra `X` em `players.faction_type`).
 class FactionJoined extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final String factionId;
 
   FactionJoined({
@@ -46,7 +46,7 @@ class FactionJoined extends AppEvent {
 /// §Admissão). Pode cascatear em `FactionJoined` se troca imediata.
 class FactionLeft extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final String factionId;
 
   FactionLeft({
@@ -73,7 +73,7 @@ class FactionLeft extends AppEvent {
 /// `guild_rank` + Facção Guilda nível 2 com entry direta).
 class FactionAdmissionStarted extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final String factionId;
   final int totalQuests;
   final int attemptCount;
@@ -106,7 +106,7 @@ class FactionAdmissionStarted extends AppEvent {
 /// 4. Reverter `players.faction_type` pra estado anterior.
 class FactionAdmissionRejected extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final String factionId;
   final int attemptCount;
 
@@ -141,7 +141,7 @@ class FactionAdmissionRejected extends AppEvent {
 /// sequenciamento usa pra desbloquear a missão N+1 da sequência.
 class FactionAdmissionQuestCompleted extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final String factionId;
 
   /// 1-based. `questIndex == totalQuests` indica que a admissão
@@ -176,7 +176,7 @@ class FactionAdmissionQuestCompleted extends AppEvent {
 ///    retrocompatibilidade com listeners existentes.
 class FactionAdmissionApproved extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final String factionId;
   final int attemptCount;
 
@@ -201,7 +201,7 @@ class FactionAdmissionApproved extends AppEvent {
 /// é clamped 0-100 pelo repo.
 class FactionReputationChanged extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final String factionId;
   final int newValue;
   final int previousValue;

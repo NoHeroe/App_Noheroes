@@ -12,7 +12,7 @@ import 'app_event.dart';
 
 class StreakMaintained extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
 
   /// Streak atual após o incremento (em dias).
   final int currentStreak;
@@ -30,7 +30,7 @@ class StreakMaintained extends AppEvent {
 
 class StreakBroken extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
 
   /// Streak imediatamente antes da quebra (em dias). Útil pra badge "era
   /// 30 dias, quebrou".

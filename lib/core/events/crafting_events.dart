@@ -8,7 +8,7 @@ import 'app_event.dart';
 
 class ItemCrafted extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final String itemKey;
   final String recipeKey;
 
@@ -26,7 +26,7 @@ class ItemCrafted extends AppEvent {
 
 class ItemEnchanted extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
 
   /// Key do item base que recebeu a runa.
   final String itemKey;

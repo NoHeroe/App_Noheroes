@@ -11,7 +11,7 @@ import 'app_event.dart';
 /// (achievements de "X palavras totais", etc).
 class DiaryEntryCreated extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final int wordCount;
 
   /// `true` quando o evento representa a 1ª entrada do dia (insert

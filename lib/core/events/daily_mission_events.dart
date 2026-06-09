@@ -11,7 +11,7 @@ import 'app_event.dart';
 /// missões do dia. Um evento por missão (3 eventos por geração).
 class DailyMissionGenerated extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final int missionId;
   final MissionCategory modalidade;
 
@@ -32,7 +32,7 @@ class DailyMissionGenerated extends AppEvent {
 /// [DailyMissionCompleted] no lugar.
 class DailyMissionProgressed extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final int missionId;
   final String subTaskKey;
   final int novoProgresso;
@@ -55,7 +55,7 @@ class DailyMissionProgressed extends AppEvent {
 /// do evento subir.
 class DailyMissionCompleted extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final int missionId;
   final MissionCategory modalidade;
 
@@ -106,7 +106,7 @@ class DailyMissionCompleted extends AppEvent {
 /// reward.
 class DailyMissionFailed extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final int missionId;
   final String reason;
 
@@ -133,7 +133,7 @@ class DailyMissionFailed extends AppEvent {
 /// se subscrever sem refactor.
 class DailyStatsUpdated extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
 
   /// `'completed'` | `'failed'` | `'generated'`. Usado pra log/debug; o
   /// `AchievementsService` ignora o valor e itera todos os achievements

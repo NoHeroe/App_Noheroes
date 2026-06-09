@@ -91,7 +91,6 @@ class AscensionService {
   // Bridge uuid String -> int pra eventos legacy (GoldSpent/RewardGranted/
   // LevelUp ainda usam `int playerId`). Mesmo padrão da ShopsService/
   // EnchantService já migradas. Ver 'unresolved' do resumo de migração.
-  int _eventPlayerId(String playerUuid) => playerUuid.hashCode;
 
   Future<Map<String, dynamic>?> _readState(String playerId, String canon) {
     return _client
@@ -195,7 +194,7 @@ class AscensionService {
     }
     // Débito de fee (NÃO toca total_gold_earned_lifetime — é gasto).
     _bus.publish(GoldSpent(
-        playerId: _eventPlayerId(playerId),
+        playerId: playerId,
         amount: cost,
         source: GoldSink.ascension));
     return PayResult(ok: true, cost: cost);
@@ -250,7 +249,7 @@ class AscensionService {
     final resolvedJson =
         '{"xp":$rewardXp,"gold":$rewardGold,"insignias":$rewardIns}';
     _bus.publish(RewardGranted(
-        playerId: _eventPlayerId(playerId),
+        playerId: playerId,
         rewardResolvedJson: resolvedJson,
         fromAscension: true));
 
@@ -258,7 +257,7 @@ class AscensionService {
     final newLevel = (res['new_level'] as num?)?.toInt();
     if (prevLevel != null && newLevel != null && newLevel > prevLevel) {
       _bus.publish(LevelUp(
-        playerId: _eventPlayerId(playerId),
+        playerId: playerId,
         previousLevel: prevLevel,
         newLevel: newLevel,
       ));

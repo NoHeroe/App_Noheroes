@@ -270,14 +270,14 @@ class ShopsService {
     // quests "gaste X ouro") seguem recebendo o sinal.
     if (priceCoins != null && priceCoins > 0) {
       _eventBus.publish(GoldSpent(
-        playerId: _eventPlayerId(playerId),
+        playerId: playerId,
         amount: priceCoins,
         source: GoldSink.shop,
       ));
     }
     if (priceGems != null && priceGems > 0) {
       _eventBus.publish(GemsSpent(
-        playerId: _eventPlayerId(playerId),
+        playerId: playerId,
         amount: priceGems,
         source: GemSink.shop,
       ));
@@ -287,7 +287,6 @@ class ShopsService {
 
   // Bridge uuid String -> int pra eventos legacy (mesmo padrão da
   // EnchantService já migrada). Ver 'unresolved' do resumo de migração.
-  int _eventPlayerId(String playerUuid) => playerUuid.hashCode;
 
   bool _canPlayerEnterShop(ShopSpec shop, PlayerSnapshot player) {
     if (shop.acceptedRanks.isNotEmpty) {

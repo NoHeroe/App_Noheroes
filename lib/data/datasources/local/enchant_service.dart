@@ -94,13 +94,13 @@ class EnchantService {
       // NOTA: eventos ainda usam `int playerId` (ver 'unresolved' do resumo).
       if (gemsSpent > 0) {
         _eventBus.publish(GemsSpent(
-          playerId: _eventPlayerId(playerId),
+          playerId: playerId,
           amount: gemsSpent,
           source: GemSink.enchant,
         ));
       }
       _eventBus.publish(ItemEnchanted(
-        playerId: _eventPlayerId(playerId),
+        playerId: playerId,
         itemKey: itemKey,
         runeKey: runeKey,
       ));
@@ -161,5 +161,4 @@ class EnchantService {
   // GAP de migração: AppEvent.playerId ainda é int; o jogador agora é uuid
   // String. Placeholder via hashCode até a decisão de migrar eventos para
   // String (ver 'unresolved').
-  int _eventPlayerId(String playerUuid) => playerUuid.hashCode;
 }

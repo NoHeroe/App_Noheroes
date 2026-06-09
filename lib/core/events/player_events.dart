@@ -6,7 +6,7 @@ import 'app_event.dart';
 /// milestone popup quando passa de 24 pra 25 libera vitalismo avançado).
 class LevelUp extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final int newLevel;
   final int previousLevel;
 
@@ -39,7 +39,7 @@ class GoldSink {
 /// pra quests tipo "gaste 5000 ouro".
 class GoldSpent extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final int amount;
 
   /// Fonte canônica — ver [GoldSink].
@@ -68,7 +68,7 @@ class GemSink {
 
 class GemsSpent extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final int amount;
 
   /// Fonte canônica — ver [GemSink].
@@ -93,7 +93,7 @@ class GemsSpent extends AppEvent {
 /// (ADR 0016) — retorna o evento como dado, caller publica.
 class AttributePointSpent extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
 
   /// Atributo escolhido — string EN: `'strength'`, `'dexterity'`,
   /// `'intelligence'`, `'constitution'`, `'spirit'`, `'charisma'`.
@@ -123,7 +123,7 @@ class AttributePointSpent extends AppEvent {
 /// edições subsequentes via /perfil.
 class BodyMetricsUpdated extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final bool isFirstTime;
 
   BodyMetricsUpdated({
@@ -148,7 +148,7 @@ class BodyMetricsUpdated extends AppEvent {
 /// arquitetura.
 class CurrencyStatsUpdated extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
 
   /// `'gems_spent'` no MVP — strings adicionais quando expandirmos
   /// (ex: `'gold_spent'` se shell #5 entrar).

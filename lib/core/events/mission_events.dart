@@ -15,7 +15,7 @@ import 'app_event.dart';
 class MissionStarted extends AppEvent {
   final String missionKey;
   @override
-  final int playerId;
+  final String playerId;
 
   /// `internal` | `real` | `individual` | `mista` (ADR 0014).
   final String modality;
@@ -41,7 +41,7 @@ class MissionStarted extends AppEvent {
 class MissionProgressed extends AppEvent {
   final String missionKey;
   @override
-  final int playerId;
+  final String playerId;
   final int currentValue;
   final int targetValue;
 
@@ -64,7 +64,7 @@ class MissionProgressed extends AppEvent {
 class MissionCompleted extends AppEvent {
   final String missionKey;
   @override
-  final int playerId;
+  final String playerId;
 
   /// JSON da reward resolvida (após SOULSLIKE + rank resolver). Mantido como
   /// string pra evitar acoplar o evento ao tipo `RewardResolved` (Bloco 5).
@@ -88,7 +88,7 @@ class MissionCompleted extends AppEvent {
 class MissionPartial extends AppEvent {
   final String missionKey;
   @override
-  final int playerId;
+  final String playerId;
 
   /// Percentual final (25..299 inclusive — 300% é limite superior; 100 é
   /// exatamente total e usa [MissionCompleted]).
@@ -129,7 +129,7 @@ class MissionFailureReason {
 class MissionFailed extends AppEvent {
   final String missionKey;
   @override
-  final int playerId;
+  final String playerId;
   final String reason;
 
   MissionFailed({
@@ -154,7 +154,7 @@ class MissionFailed extends AppEvent {
 /// `domain/enums` — listeners parseiam via `MissionCategoryCodec`.
 class IndividualCreated extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final int missionProgressId;
   final String missionKey;
   final String categoria;

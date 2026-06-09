@@ -12,7 +12,7 @@ import 'app_event.dart';
 /// refactor.
 class ScreenVisited extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
 
   /// Path normalizado da rota visitada — leading slash, sem query
   /// params, sem fragment. Ex: `/perfil`, `/shops`, `/shop/blacksmith`.

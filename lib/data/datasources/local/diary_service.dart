@@ -29,7 +29,6 @@ class DiaryService {
   /// Bridge do uuid (String) pro `int playerId` do contrato de evento
   /// (`AppEvent.playerId` é `int?`, compartilhado por ~18 eventos). Mesma
   /// convenção dos demais services convertidos (ADR-0024).
-  int _eventPlayerId(String playerUuid) => playerUuid.hashCode;
 
   /// Retorna a entrada de hoje, ou null se não existe.
   Future<DiaryEntry?> getTodayEntry(String playerId) async {
@@ -73,7 +72,7 @@ class DiaryService {
     // FactionAdmissionProgressService re-avaliar sub-tasks
     // diary_entry_window em tempo real.
     _bus?.publish(DiaryEntryCreated(
-      playerId: _eventPlayerId(playerId),
+      playerId: playerId,
       wordCount: words,
       isNew: isNew,
     ));

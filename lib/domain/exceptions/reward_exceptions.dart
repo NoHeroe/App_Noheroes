@@ -74,7 +74,7 @@ class AchievementNotUnlockedException implements Exception {
 /// débitos futuros (shops premium, etc). Diferencia de erro real —
 /// UI/caller deve mostrar mensagem amigável.
 class InsufficientGemsException implements Exception {
-  final int playerId;
+  final String playerId;
   final int required;
   final int available;
 

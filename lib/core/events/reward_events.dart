@@ -12,7 +12,7 @@ import 'app_event.dart';
 /// (ADR 0013 + 0017) — ou seja, valores finais, não os declarados no JSON.
 class RewardGranted extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final String rewardResolvedJson;
 
   /// Bloco 8 — se `true`, o evento foi emitido dentro de
@@ -49,7 +49,7 @@ class RewardGranted extends AppEvent {
 /// garantida pela PK composta da tabela.
 class AchievementUnlocked extends AppEvent {
   @override
-  final int playerId;
+  final String playerId;
   final String achievementKey;
 
   AchievementUnlocked({

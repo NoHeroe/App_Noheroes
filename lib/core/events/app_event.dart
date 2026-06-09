@@ -9,7 +9,7 @@
 ///   sem vazar dados sensíveis (o stream é consumido em debug / testes).
 /// - **[playerId] abstrato (Bloco 7 pré-clean)**: todo evento concreto
 ///   expõe `playerId` via getter herdado. Nas subclasses basta declarar
-///   `final int playerId` como campo — Dart satisfaz o getter abstrato
+///   `final String playerId` como campo — Dart satisfaz o getter abstrato
 ///   automaticamente. Usado pelo `MissionProgressService` pra filtrar
 ///   eventos do jogador correto sem hacks com `as dynamic`.
 ///
@@ -24,5 +24,5 @@ abstract class AppEvent {
   /// Identificador do jogador associado ao evento. Nullable pra permitir
   /// eventos de sistema/global no futuro; todos os 18 eventos do Bloco 2
   /// implementam concretamente com `int playerId` (non-null).
-  int? get playerId;
+  String? get playerId;
 }

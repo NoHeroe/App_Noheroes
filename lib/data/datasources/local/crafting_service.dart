@@ -57,13 +57,13 @@ class CraftingService {
       // NOTA: eventos ainda usam `int playerId` (ver 'unresolved' do resumo).
       if (goldSpent > 0) {
         _eventBus.publish(GoldSpent(
-          playerId: _eventPlayerId(playerId),
+          playerId: playerId,
           amount: goldSpent,
           source: recipeType == RecipeType.forge ? GoldSink.forge : 'craft',
         ));
       }
       _eventBus.publish(ItemCrafted(
-        playerId: _eventPlayerId(playerId),
+        playerId: playerId,
         itemKey: itemKey,
         recipeKey: recipeKey,
       ));
@@ -109,5 +109,4 @@ class CraftingService {
   // pra manter o EventBus funcional até a decisão de migrar os eventos para
   // String (ver 'unresolved'). NÃO é o id real — só preserva igualdade/filtro
   // por ocorrência dentro de uma sessão.
-  int _eventPlayerId(String playerUuid) => playerUuid.hashCode;
 }
