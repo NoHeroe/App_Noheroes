@@ -35,19 +35,39 @@ class GuildAscensionService {
         .get();
   }
 
+  // B.2 — cache do catálogo parseado (rootBundle).
+  List<Map<String, dynamic>>? _cyclesCache;
+  Future<List<Map<String, dynamic>>> _loadCycles() async {
+    if (_cyclesCache != null) return _cyclesCache!;
+    final raw = await rootBundle.loadString('assets/data/guild_ascension.json');
+    final json = jsonDecode(raw) as Map<String, dynamic>;
+    return _cyclesCache =
+        (json['ascension'] as List).cast<Map<String, dynamic>>();
+  }
+
+  /// B.2 — config tipada do ciclo (gates/fee/janela/cooldown/reward) pro
+  /// rank canon. Null se rank S / sem ciclo.
+  Future<AscensionCycleConfig?> loadCycleConfig(String rankCanon) async {
+    final canon = _canonRank(rankCanon);
+    final cycles = await _loadCycles();
+    final cycle = cycles.firstWhere(
+      (c) => c['rank_from'] == canon,
+      orElse: () => const <String, dynamic>{},
+    );
+    if (cycle.isEmpty) return null;
+    return AscensionCycleConfig.fromJson(cycle);
+  }
+
   // Inicializa as missões do ciclo atual se não existirem
   Future<void> initCycle(int playerId, String currentRank) async {
     final canon = _canonRank(currentRank);
     final existing = await getMissions(playerId, canon);
     if (existing.isNotEmpty) return;
 
-    final raw = await rootBundle.loadString('assets/data/guild_ascension.json');
-    final json = jsonDecode(raw) as Map<String, dynamic>;
-    final cycles = (json['ascension'] as List).cast<Map<String, dynamic>>();
-
+    final cycles = await _loadCycles();
     final cycle = cycles.firstWhere(
       (c) => c['rank_from'] == canon,
-      orElse: () => {},
+      orElse: () => const <String, dynamic>{},
     );
     if (cycle.isEmpty) return;
 
@@ -244,5 +264,61 @@ class GuildAscensionService {
       default:
         return 0;
     }
+  }
+}
+
+/// B.2 — config tipada de um ciclo de ascensão (lida do guild_ascension.json).
+class AscensionCycleConfig {
+  final String rankFrom;
+  final String rankTo;
+  final int minLevel;
+  final int missionsCompleted;
+  final int goldEarnedLifetime;
+  final int cardWins;
+  final int feeBase;
+  final int windowHours;
+  final int cooldownHours;
+  final int rewardXp;
+  final int rewardGold;
+  final int rewardInsignias;
+  final List<Map<String, dynamic>> trials;
+
+  const AscensionCycleConfig({
+    required this.rankFrom,
+    required this.rankTo,
+    required this.minLevel,
+    required this.missionsCompleted,
+    required this.goldEarnedLifetime,
+    required this.cardWins,
+    required this.feeBase,
+    required this.windowHours,
+    required this.cooldownHours,
+    required this.rewardXp,
+    required this.rewardGold,
+    required this.rewardInsignias,
+    required this.trials,
+  });
+
+  factory AscensionCycleConfig.fromJson(Map<String, dynamic> c) {
+    final req = (c['unlock_requirements'] as Map?)?.cast<String, dynamic>() ??
+        const <String, dynamic>{};
+    final rw = (c['reward'] as Map?)?.cast<String, dynamic>() ??
+        const <String, dynamic>{};
+    return AscensionCycleConfig(
+      rankFrom: c['rank_from'] as String,
+      rankTo: c['rank_to'] as String,
+      minLevel: (req['min_level'] as int?) ?? 0,
+      missionsCompleted: (req['missions_completed'] as int?) ?? 0,
+      goldEarnedLifetime: (req['gold_earned_lifetime'] as int?) ?? 0,
+      cardWins: (req['card_wins'] as int?) ?? 0,
+      feeBase: (c['fee_base'] as int?) ?? 0,
+      windowHours: (c['window_hours'] as int?) ?? 0,
+      cooldownHours: (c['cooldown_hours'] as int?) ?? 4,
+      rewardXp: (rw['xp'] as int?) ?? 0,
+      rewardGold: (rw['gold'] as int?) ?? 0,
+      rewardInsignias: (rw['insignias'] as int?) ?? 0,
+      trials: (c['trials'] as List?)?.cast<Map<String, dynamic>>() ??
+          const <Map<String, dynamic>>[],
+    );
   }
 }

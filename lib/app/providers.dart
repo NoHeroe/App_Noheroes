@@ -6,6 +6,7 @@ import '../core/utils/guild_rank.dart';
 import '../data/database/app_database.dart';
 import '../data/datasources/local/auth_local_ds.dart';
 import '../data/datasources/local/class_quest_service.dart';
+import '../data/datasources/local/ascension_service.dart';
 import '../data/datasources/local/guild_ascension_progress_service.dart';
 import '../data/datasources/local/guild_ascension_service.dart';
 import '../data/datasources/local/diary_service.dart';
@@ -617,6 +618,33 @@ final weeklyFactionProgressServiceProvider =
   service.start();
   ref.onDispose(service.stop);
   return service;
+});
+
+/// B.2 — máquina de estados soulslike da ascensão (gates/pay/janela/
+/// deadline/ascend). NÃO wire na UI ainda (B.4). Nome distinto do
+/// `ascensionServiceProvider` (GuildAscensionService) da AscensionTab.
+final ascensionStateServiceProvider = Provider<AscensionService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  return AscensionService(
+    db: db,
+    bus: ref.watch(appEventBusProvider),
+    resolver: ref.watch(rewardResolveServiceProvider),
+    ascension: GuildAscensionService(db),
+    resolvePlayer: (playerId) async {
+      final row = await (db.select(db.playersTable)
+            ..where((t) => t.id.equals(playerId)))
+          .getSingle();
+      final rank = row.guildRank == 'none'
+          ? null
+          : RankCodec.fromString(row.guildRank.toLowerCase());
+      return PlayerSnapshot(
+        level: row.level,
+        rank: rank ?? GuildRank.e,
+        classKey: row.classType,
+        factionKey: row.factionType,
+      );
+    },
+  );
 });
 
 /// A.2 — ignição event-driven do motor de ascensão da Guilda. Escuta
