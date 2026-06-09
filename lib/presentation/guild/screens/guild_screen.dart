@@ -779,7 +779,7 @@ class GuildScreen extends ConsumerWidget {
               Text(
                   canAdmit
                       ? 'Missões completas'
-                      : 'Complete ${needed} missões',
+                      : 'Complete $needed missões',
                   style: GoogleFonts.roboto(
                       fontSize: 12,
                       color: canAdmit

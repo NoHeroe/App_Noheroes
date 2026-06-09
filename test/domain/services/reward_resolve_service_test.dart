@@ -19,7 +19,7 @@ import '../../core/utils/_item_spec_fixtures.dart';
 /// class. Super aceita AppDatabase in-memory que nunca é tocado.
 class _FakeItemsCatalog extends ItemsCatalogService {
   final List<ItemSpec> _items;
-  _FakeItemsCatalog(AppDatabase db, this._items) : super(db);
+  _FakeItemsCatalog(super.db, this._items);
 
   @override
   Future<List<ItemSpec>> findAll() async => _items;

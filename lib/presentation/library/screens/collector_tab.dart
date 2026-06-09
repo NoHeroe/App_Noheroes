@@ -5,7 +5,6 @@ import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/asset_loader.dart';
 import '../../../data/datasources/local/diary_service.dart';
-import '../../../data/database/app_database.dart';
 
 class CollectorTab extends ConsumerWidget {
   const CollectorTab({super.key});
@@ -28,7 +27,7 @@ class CollectorTab extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           children: [
             // Progresso de lore
-            _SectionTitle('LORE DESCOBERTA'),
+            const _SectionTitle('LORE DESCOBERTA'),
             const SizedBox(height: 10),
             _ProgressCard(
               label: 'Entradas de Lore',
@@ -48,7 +47,7 @@ class CollectorTab extends ConsumerWidget {
             const SizedBox(height: 20),
 
             // Estatísticas do diário
-            _SectionTitle('DIÁRIO PESSOAL'),
+            const _SectionTitle('DIÁRIO PESSOAL'),
             const SizedBox(height: 10),
             _StatRow('Entradas escritas',
                 '${stats['diary_entries']} dias'),
@@ -57,7 +56,7 @@ class CollectorTab extends ConsumerWidget {
             const SizedBox(height: 20),
 
             // Missões de lore
-            _SectionTitle('MISSÕES DE LORE'),
+            const _SectionTitle('MISSÕES DE LORE'),
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.all(14),

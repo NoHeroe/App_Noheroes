@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../shared/widgets/app_snack.dart';
 
 /// Substitui todos os SnackBars do app por um visual unificado dark/dourado.
 /// Mensagens longas ficam mais tempo na tela.

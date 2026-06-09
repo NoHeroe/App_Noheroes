@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:noheroes_app/core/events/app_event_bus.dart';
 import 'package:noheroes_app/core/events/faction_events.dart';
 import 'package:noheroes_app/data/database/app_database.dart';
-import 'package:drift/drift.dart' show Variable;
 
 import 'package:noheroes_app/data/repositories/drift/player_faction_reputation_repository_drift.dart';
 import 'package:noheroes_app/domain/services/faction_buff_service.dart';

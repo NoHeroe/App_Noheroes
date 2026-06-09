@@ -16,8 +16,6 @@ import 'package:noheroes_app/domain/services/reward_resolve_service.dart';
 /// Gates E→D (catálogo real): level>=10, missions>=100, gold_life>=10000,
 /// card_wins (mock satisfeito), fee_base 5000, window 24h. Trial auto x1.
 
-const int _hour = 3600000;
-
 Future<int> _seedPlayer(
   AppDatabase db, {
   int level = 1,

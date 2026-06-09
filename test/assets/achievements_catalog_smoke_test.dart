@@ -265,8 +265,8 @@ void main() {
       'coberta por cache _metaLikeAchievements (preventivo do bug que '
       'INIT_NIVEL_5 + INIT_CINCO_CONQUISTAS UNREACHABLE)', () {
     // Trigger types cobertos pelos caches dedicados.
-    final dailyPrefix = 'daily_';
-    final eventPrefix = 'event_';
+    const dailyPrefix = 'daily_';
+    const eventPrefix = 'event_';
     // Triggers legacy que precisam de cache metaLike.
     final metaLikeTypes = {'meta', 'threshold_stat', 'event_count'};
 

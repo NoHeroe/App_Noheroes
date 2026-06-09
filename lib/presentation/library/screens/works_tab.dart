@@ -156,15 +156,15 @@ class WorksTab extends ConsumerWidget {
                                   label: 'Nível $level',
                                   color: AppColors.textMuted)
                             else if (isFree)
-                              _Badge(
+                              const _Badge(
                                   label: 'Grátis',
                                   color: AppColors.shadowAscending)
                             else if (requiresPass)
-                              _Badge(
+                              const _Badge(
                                   label: 'Passe',
                                   color: AppColors.gold)
                             else
-                              _Badge(
+                              const _Badge(
                                   label: 'Comprar',
                                   color: AppColors.mp),
                           ]),

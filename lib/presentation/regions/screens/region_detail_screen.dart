@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../shared/widgets/npc_dialog_overlay.dart';
 
@@ -15,7 +13,6 @@ class RegionDetailScreen extends ConsumerWidget {
     final color = Color(region['color'] as int);
     final npcs = (region['npcs'] as List).cast<String>();
     final hasQuests = region['quests_available'] as bool? ?? false;
-    final player = ref.watch(currentPlayerProvider);
 
     return Scaffold(
       backgroundColor: AppColors.black,

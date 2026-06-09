@@ -3,7 +3,6 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/services.dart';
 import '../../../core/utils/guild_rank.dart';
 import '../../database/app_database.dart';
-import '../../database/tables/guild_ascension_table.dart';
 import 'player_rank_service.dart';
 
 class GuildAscensionService {

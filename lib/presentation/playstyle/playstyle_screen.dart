@@ -6,8 +6,6 @@ import 'package:drift/drift.dart' hide Column;
 import '../../app/providers.dart';
 import '../../data/database/app_database.dart';
 import '../../core/constants/app_colors.dart';
-import '../../data/database/tables/players_table.dart';
-import '../../data/database/daos/player_dao.dart';
 import '../shared/widgets/milestone_popup.dart';
 
 const _styles = [

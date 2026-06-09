@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 class GuildAscensionTable extends Table {
+  @override
   String get tableName => 'guild_ascension_progress';
   IntColumn get id => integer().autoIncrement()();
   IntColumn get playerId => integer()();

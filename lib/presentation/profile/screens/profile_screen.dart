@@ -335,7 +335,7 @@ class _PreferencesCard extends ConsumerWidget {
           style: GoogleFonts.roboto(
               fontSize: 11, color: AppColors.textMuted, height: 1.4),
         ),
-        activeColor: AppColors.gold,
+        activeThumbColor: AppColors.gold,
         value: player.autoConfirmEnabled,
         onChanged: (value) async {
           final db = ref.read(appDatabaseProvider);

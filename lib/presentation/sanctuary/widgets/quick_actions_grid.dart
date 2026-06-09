@@ -53,7 +53,7 @@ class _Action {
 
 class _ActionCard extends StatelessWidget {
   final _Action action;
-  const _ActionCard({super.key, required this.action});
+  const _ActionCard({required this.action});
 
   @override
   Widget build(BuildContext context) {

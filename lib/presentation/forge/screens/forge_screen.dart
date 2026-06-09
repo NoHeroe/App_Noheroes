@@ -797,8 +797,8 @@ class _ErrorView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: const [
+          const Row(
+            children: [
               Icon(Icons.error_outline, color: AppColors.hp, size: 24),
               SizedBox(width: 8),
               Text('DEBUG',

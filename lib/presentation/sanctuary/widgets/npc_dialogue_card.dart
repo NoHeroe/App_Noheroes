@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/asset_loader.dart';
-import '../../../data/datasources/local/npc_reputation_service.dart';
 
 class NpcDialogueOverlay extends StatefulWidget {
   final String shadowState;

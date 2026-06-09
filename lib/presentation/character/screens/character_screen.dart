@@ -693,19 +693,19 @@ class CharacterScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           ...attrs.map((a) {
             final base = a.$3 as int;
-            final color = a.$5 as Color;
+            final color = a.$5;
             final eff = a.$7 as int;
-            final delta = a.$8 as int;
+            final delta = a.$8;
             return Padding(
               padding: const EdgeInsets.only(bottom: 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(children: [
-                    Icon(a.$4 as IconData, color: color, size: 15),
+                    Icon(a.$4, color: color, size: 15),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(a.$1 as String,
+                      child: Text(a.$1,
                           style: GoogleFonts.roboto(
                               fontSize: 13, color: AppColors.textPrimary)),
                     ),
@@ -732,7 +732,7 @@ class CharacterScreen extends ConsumerWidget {
                       const SizedBox(width: 10),
                       GestureDetector(
                         onTap: () => _addPoint(
-                            context, ref, player!.id, a.$2 as String),
+                            context, ref, player!.id, a.$2),
                         child: Container(
                           width: 28,
                           height: 28,
@@ -758,7 +758,7 @@ class CharacterScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Text(a.$6 as String,
+                  Text(a.$6,
                       style: GoogleFonts.roboto(
                           fontSize: 10, color: AppColors.textMuted)),
                 ],

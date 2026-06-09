@@ -8,7 +8,6 @@ import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/datasources/local/class_bonus_service.dart';
 // Sprint 3.1 Bloco 1 — QuestAdmissionService .bakado (volta no Bloco 7).
-import '../../shared/widgets/app_snack.dart';
 
 class ClassSelectionScreen extends ConsumerStatefulWidget {
   const ClassSelectionScreen({super.key});
@@ -100,10 +99,10 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
       setState(() => _loading = false);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Classe confirmada! Suas missões de classe diárias estão ativas.'),
           backgroundColor: AppColors.shadowAscending,
-          duration: const Duration(seconds: 3),
+          duration: Duration(seconds: 3),
         ),
       );
       context.go('/sanctuary');
@@ -112,7 +111,7 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
       setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erro ao confirmar classe: ${e}'),
+          content: Text('Erro ao confirmar classe: $e'),
           backgroundColor: AppColors.hp,
         ),
       );

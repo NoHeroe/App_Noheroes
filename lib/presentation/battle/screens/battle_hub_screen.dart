@@ -95,7 +95,7 @@ class BattleHubScreen extends StatelessWidget {
                       // PvE
                       _sectionLabel('PvE — SOLO & GRUPO'),
                       const SizedBox(height: 10),
-                      _ModeCard(
+                      const _ModeCard(
                         title: 'DUNGEONS',
                         subtitle: '1 a 5 jogadores',
                         description: 'Enfrente criaturas de Caelum em masmorras procedurais. Cada run é única.',
@@ -105,7 +105,7 @@ class BattleHubScreen extends StatelessWidget {
                         tag: 'PvE',
                       ),
                       const SizedBox(height: 10),
-                      _ModeCard(
+                      const _ModeCard(
                         title: 'RAIDS',
                         subtitle: '1 a 5 jogadores',
                         description: 'Batalhas épicas contra bosses de Caelum. Recompensas lendárias.',
@@ -115,7 +115,7 @@ class BattleHubScreen extends StatelessWidget {
                         tag: 'PvE',
                       ),
                       const SizedBox(height: 10),
-                      _ModeCard(
+                      const _ModeCard(
                         title: 'TOWERS',
                         subtitle: 'Solo — Infinito',
                         description: 'Suba andares de uma torre dimensional. Quanto mais alto, mais poderoso o inimigo.',
@@ -125,7 +125,7 @@ class BattleHubScreen extends StatelessWidget {
                         tag: 'PvE',
                       ),
                       const SizedBox(height: 10),
-                      _ModeCard(
+                      const _ModeCard(
                         title: 'SHADOW BOSS',
                         subtitle: 'Solo — Pessoal',
                         description: 'Enfrente a manifestação da sua própria sombra. O maior inimigo é você mesmo.',
@@ -141,7 +141,7 @@ class BattleHubScreen extends StatelessWidget {
                       // PvP
                       _sectionLabel('PvP — CONFRONTO'),
                       const SizedBox(height: 10),
-                      _ModeCard(
+                      const _ModeCard(
                         title: '1v1 ARENA',
                         subtitle: 'Duelo direto',
                         description: 'Confronto de build, habilidade e estratégia. Sem equipe para salvar você.',
@@ -151,7 +151,7 @@ class BattleHubScreen extends StatelessWidget {
                         tag: 'PvP',
                       ),
                       const SizedBox(height: 10),
-                      _ModeCard(
+                      const _ModeCard(
                         title: '2v2 ARENA',
                         subtitle: 'Dupla coordenada',
                         description: 'Coordene com um aliado para derrotar a dupla adversária.',
@@ -161,7 +161,7 @@ class BattleHubScreen extends StatelessWidget {
                         tag: 'PvP',
                       ),
                       const SizedBox(height: 10),
-                      _ModeCard(
+                      const _ModeCard(
                         title: '5v5 ARENA',
                         subtitle: 'Batalha em time',
                         description: 'O modo mais estratégico. Composição, sinergia e execução definem o vencedor.',
@@ -176,7 +176,7 @@ class BattleHubScreen extends StatelessWidget {
                       // Fendas
                       _sectionLabel('FENDAS DIMENSIONAIS'),
                       const SizedBox(height: 10),
-                      _ModeCard(
+                      const _ModeCard(
                         title: 'FENDA DO VAZIO',
                         subtitle: 'Evento — Temporário',
                         description: 'Fendas que abrem espontaneamente em Caelum. Entrar tem risco real. Loot exclusivo.',
@@ -186,7 +186,7 @@ class BattleHubScreen extends StatelessWidget {
                         tag: 'EVENTO',
                       ),
                       const SizedBox(height: 10),
-                      _ModeCard(
+                      const _ModeCard(
                         title: 'FENDA DE CHRYSALIS',
                         subtitle: 'Evento — Raro',
                         description: 'Fendas biológicas. Mutantes e corrupções N1–N6. Fonte de seiva pura.',
