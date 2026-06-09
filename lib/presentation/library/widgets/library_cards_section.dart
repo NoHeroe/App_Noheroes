@@ -1,229 +1,196 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../domain/card_game/card_catalog.dart';
+import '../../../domain/card_game/card_models.dart';
+import '../../card_game/card_ownership.dart';
 
-/// Fatia 2 — Coleção de cartas (CASCA visual com dados MOCK). Sem pipeline
-/// de dados real; isto é só a integração visual do card game. Vive como
-/// seção dentro de `/library` (back volta pro hub).
+/// Fatia 2 — Coleção de cartas. Casca visual ORIGINAL preservada (tabs/busca/
+/// filtros por conceito/grid), mas a FONTE DE DADOS agora é o catálogo REAL do
+/// ACDA (`CardCatalog.load()`: 80 criaturas + 176 relíquias) em vez do mock.
+///
+/// Estados: desbloqueado (colorido) vs bloqueado (dessaturado + cadeado), com
+/// inspeção sempre liberada (tap abre detalhe). Vive como seção dentro de
+/// `/library` (back volta pro hub).
 
 enum _CardKind { creature, relic }
 
-class _CardConcept {
-  final String key;
+// ── Mapeamento conceito → cor/label (cores reais de AppColors) ───────────────
+class _ConceptStyle {
   final String label;
   final Color color;
-  const _CardConcept(this.key, this.label, this.color);
+  const _ConceptStyle(this.label, this.color);
 }
 
-const _conceptVita = _CardConcept('vita', 'Vita', AppColors.conceptVita);
-const _conceptNeutro =
-    _CardConcept('neutro', 'Neutro', AppColors.conceptNeutro);
-const _conceptChrysalis =
-    _CardConcept('chrysalis', 'Chrysalis', AppColors.conceptChrysalis);
-const _conceptCelestial =
-    _CardConcept('celestial', 'Celestial', AppColors.conceptCelestial);
-const _conceptMagico =
-    _CardConcept('magico', 'Mágico', AppColors.conceptMagico);
-const _conceptCorrompido =
-    _CardConcept('corrompido', 'Corrompido', AppColors.conceptCorrompido);
+const Map<CardConcept, _ConceptStyle> _conceptStyles = {
+  CardConcept.vitalismo: _ConceptStyle('Vita', AppColors.conceptVita),
+  CardConcept.neutro: _ConceptStyle('Neutro', AppColors.conceptNeutro),
+  CardConcept.chrysalis: _ConceptStyle('Chrysalis', AppColors.conceptChrysalis),
+  CardConcept.celestial: _ConceptStyle('Celestial', AppColors.conceptCelestial),
+  CardConcept.magico: _ConceptStyle('Mágico', AppColors.conceptMagico),
+  CardConcept.corrompido:
+      _ConceptStyle('Corrompido', AppColors.conceptCorrompido),
+};
 
-const _allConcepts = <_CardConcept>[
-  _conceptVita,
-  _conceptNeutro,
-  _conceptChrysalis,
-  _conceptCelestial,
-  _conceptMagico,
-  _conceptCorrompido,
-];
+_ConceptStyle _styleOf(CardConcept c) =>
+    _conceptStyles[c] ?? const _ConceptStyle('?', AppColors.conceptNeutro);
 
-class _MockCard {
+Color _conceptColor(List<CardConcept> concepts) =>
+    concepts.isEmpty ? AppColors.conceptNeutro : _styleOf(concepts.first).color;
+
+// ── Mapeamento raridade → cor/label ──────────────────────────────────────────
+Color _rarityColor(Rarity r) {
+  switch (r) {
+    case Rarity.comum:
+      return AppColors.cardComum;
+    case Rarity.rara:
+      return AppColors.cardRara;
+    case Rarity.epica:
+      return AppColors.cardEpica;
+    case Rarity.lendaria:
+      return AppColors.cardLendaria;
+    case Rarity.elite:
+      return AppColors.cardElite;
+  }
+}
+
+String _rarityLabel(Rarity r) {
+  switch (r) {
+    case Rarity.comum:
+      return 'Comum';
+    case Rarity.rara:
+      return 'Rara';
+    case Rarity.epica:
+      return 'Épica';
+    case Rarity.lendaria:
+      return 'Lendária';
+    case Rarity.elite:
+      return 'Elite';
+  }
+}
+
+// ── Mapeamento tipo de dano → ícone/label ────────────────────────────────────
+IconData _damageIcon(DamageType t) {
+  switch (t) {
+    case DamageType.corpoACorpo:
+      return Icons.sports_martial_arts;
+    case DamageType.aDistancia:
+      return Icons.gps_fixed;
+    case DamageType.magico:
+      return Icons.auto_fix_high;
+    case DamageType.vitalismo:
+      return Icons.bloodtype;
+    case DamageType.cura:
+      return Icons.healing;
+  }
+}
+
+String _damageLabel(DamageType t) {
+  switch (t) {
+    case DamageType.corpoACorpo:
+      return 'Corpo a corpo';
+    case DamageType.aDistancia:
+      return 'À distância';
+    case DamageType.magico:
+      return 'Mágico';
+    case DamageType.vitalismo:
+      return 'Vitalismo (dano verdadeiro)';
+    case DamageType.cura:
+      return 'Cura';
+  }
+}
+
+/// View-model unificado: adapta `CreatureCard`/`RelicCard` para a casca de UI.
+class _CardVM {
+  final String id;
   final String name;
   final _CardKind kind;
-  final _CardConcept concept;
-  final Color rarity;
+  final List<CardConcept> concepts;
+  final Rarity rarity;
   final int cost;
-  final int owned;
-  final bool isNew;
   final IconData icon;
   // Criatura
   final int atk;
   final int pv;
+  final DamageType? damageType;
+  final int relicSlots;
+  final List<String> abilities;
   // Relíquia
   final String relicTag; // "Equipamento" | "Flash"
+  final RelicGrants? grants;
+  final bool isUniversal;
 
-  const _MockCard({
+  const _CardVM({
+    required this.id,
     required this.name,
     required this.kind,
-    required this.concept,
+    required this.concepts,
     required this.rarity,
     required this.cost,
-    required this.owned,
     required this.icon,
-    this.isNew = false,
     this.atk = 0,
     this.pv = 0,
+    this.damageType,
+    this.relicSlots = 0,
+    this.abilities = const [],
     this.relicTag = '',
+    this.grants,
+    this.isUniversal = false,
   });
+
+  Color get conceptColor => _conceptColor(concepts);
+  Color get rarityColor => _rarityColor(rarity);
+
+  factory _CardVM.fromCreature(CreatureCard c) => _CardVM(
+        id: c.id,
+        name: c.nome,
+        kind: _CardKind.creature,
+        concepts: c.concepts,
+        rarity: c.rarity,
+        cost: c.cost,
+        icon: _damageIcon(c.damageType),
+        atk: c.atk,
+        pv: c.hp,
+        damageType: c.damageType,
+        relicSlots: c.relicSlots,
+        abilities: c.abilities,
+      );
+
+  factory _CardVM.fromRelic(RelicCard r) => _CardVM(
+        id: r.id,
+        name: r.nome,
+        kind: _CardKind.relic,
+        concepts: r.concepts,
+        rarity: r.rarity,
+        // Relíquias não têm custo no modelo — exibimos 0 (sem custo de mana).
+        cost: 0,
+        icon: r.isFlash ? Icons.bolt : Icons.shield_outlined,
+        relicTag: r.isFlash ? 'Flash' : 'Equipamento',
+        grants: r.grants,
+        isUniversal: r.isUniversal,
+      );
 }
 
-const _creatures = <_MockCard>[
-  _MockCard(
-      name: 'Azuos',
-      kind: _CardKind.creature,
-      concept: _conceptVita,
-      rarity: AppColors.cardElite,
-      cost: 6,
-      owned: 2,
-      icon: Icons.pets,
-      atk: 5,
-      pv: 6),
-  _MockCard(
-      name: 'Koda Feet',
-      kind: _CardKind.creature,
-      concept: _conceptVita,
-      rarity: AppColors.cardElite,
-      cost: 4,
-      owned: 1,
-      icon: Icons.cruelty_free,
-      isNew: true,
-      atk: 4,
-      pv: 5),
-  _MockCard(
-      name: 'Cerverus',
-      kind: _CardKind.creature,
-      concept: _conceptCorrompido,
-      rarity: AppColors.cardLendaria,
-      cost: 7,
-      owned: 1,
-      icon: Icons.whatshot,
-      atk: 6,
-      pv: 7),
-  _MockCard(
-      name: 'Voidrin',
-      kind: _CardKind.creature,
-      concept: _conceptCorrompido,
-      rarity: AppColors.cardEpica,
-      cost: 3,
-      owned: 3,
-      icon: Icons.blur_on,
-      atk: 3,
-      pv: 4),
-  _MockCard(
-      name: 'Dríade',
-      kind: _CardKind.creature,
-      concept: _conceptChrysalis,
-      rarity: AppColors.cardRara,
-      cost: 2,
-      owned: 2,
-      icon: Icons.eco,
-      atk: 2,
-      pv: 4),
-  _MockCard(
-      name: 'Sereia',
-      kind: _CardKind.creature,
-      concept: _conceptCelestial,
-      rarity: AppColors.cardRara,
-      cost: 3,
-      owned: 1,
-      icon: Icons.water,
-      atk: 3,
-      pv: 2),
-  _MockCard(
-      name: 'Elfo',
-      kind: _CardKind.creature,
-      concept: _conceptNeutro,
-      rarity: AppColors.cardComum,
-      cost: 1,
-      owned: 4,
-      icon: Icons.person,
-      atk: 2,
-      pv: 2),
-  _MockCard(
-      name: 'Sakura Anaoji',
-      kind: _CardKind.creature,
-      concept: _conceptMagico,
-      rarity: AppColors.cardLendaria,
-      cost: 5,
-      owned: 1,
-      icon: Icons.local_florist,
-      atk: 4,
-      pv: 5),
-];
-
-const _relics = <_MockCard>[
-  _MockCard(
-      name: 'Dragon Slayer',
-      kind: _CardKind.relic,
-      concept: _conceptCorrompido,
-      rarity: AppColors.cardLendaria,
-      cost: 5,
-      owned: 1,
-      icon: Icons.sports_martial_arts,
-      relicTag: 'Equipamento'),
-  _MockCard(
-      name: 'Espada Curta',
-      kind: _CardKind.relic,
-      concept: _conceptNeutro,
-      rarity: AppColors.cardComum,
-      cost: 1,
-      owned: 2,
-      icon: Icons.sports_martial_arts,
-      relicTag: 'Equipamento'),
-  _MockCard(
-      name: 'Poção de Cura',
-      kind: _CardKind.relic,
-      concept: _conceptNeutro,
-      rarity: AppColors.cardComum,
-      cost: 1,
-      owned: 3,
-      icon: Icons.local_drink,
-      relicTag: 'Flash'),
-  _MockCard(
-      name: 'Cajado Rachado',
-      kind: _CardKind.relic,
-      concept: _conceptMagico,
-      rarity: AppColors.cardComum,
-      cost: 2,
-      owned: 1,
-      icon: Icons.auto_fix_high,
-      relicTag: 'Equipamento'),
-  _MockCard(
-      name: 'Manto de Sombras',
-      kind: _CardKind.relic,
-      concept: _conceptCorrompido,
-      rarity: AppColors.cardRara,
-      cost: 3,
-      owned: 1,
-      icon: Icons.checkroom,
-      isNew: true,
-      relicTag: 'Equipamento'),
-  _MockCard(
-      name: 'Caco de Cristal',
-      kind: _CardKind.relic,
-      concept: _conceptMagico,
-      rarity: AppColors.cardComum,
-      cost: 1,
-      owned: 2,
-      icon: Icons.diamond_outlined,
-      relicTag: 'Flash'),
-];
-
-class LibraryCardsSection extends StatefulWidget {
+class LibraryCardsSection extends ConsumerStatefulWidget {
   final VoidCallback onBack;
   const LibraryCardsSection({super.key, required this.onBack});
 
   @override
-  State<LibraryCardsSection> createState() => _LibraryCardsSectionState();
+  ConsumerState<LibraryCardsSection> createState() =>
+      _LibraryCardsSectionState();
 }
 
-class _LibraryCardsSectionState extends State<LibraryCardsSection> {
+class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
   int _tab = 0; // 0 = criaturas, 1 = relíquias
   String _query = '';
-  String? _conceptFilter; // null = Todos
+  CardConcept? _conceptFilter; // null = Todos
   final _searchCtrl = TextEditingController();
+
+  late final Future<CardCatalog> _catalogFuture = CardCatalog.load();
 
   @override
   void dispose() {
@@ -231,22 +198,20 @@ class _LibraryCardsSectionState extends State<LibraryCardsSection> {
     super.dispose();
   }
 
-  List<_MockCard> get _source => _tab == 0 ? _creatures : _relics;
+  List<_CardVM> _sourceFor(CardCatalog catalog) => _tab == 0
+      ? catalog.creatures.map(_CardVM.fromCreature).toList()
+      : catalog.relics.map(_CardVM.fromRelic).toList();
 
-  List<_MockCard> get _filtered => _source.where((c) {
+  List<_CardVM> _filter(List<_CardVM> source) => source.where((c) {
         final byQuery = _query.isEmpty ||
             c.name.toLowerCase().contains(_query.toLowerCase());
         final byConcept =
-            _conceptFilter == null || c.concept.key == _conceptFilter;
+            _conceptFilter == null || c.concepts.contains(_conceptFilter);
         return byQuery && byConcept;
       }).toList();
 
   @override
   Widget build(BuildContext context) {
-    final cards = _filtered;
-    final owned = _source.where((c) => c.owned > 0).length;
-    final total = _source.length;
-
     return SafeArea(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -266,52 +231,124 @@ class _LibraryCardsSectionState extends State<LibraryCardsSection> {
           _buildFilters(),
           const SizedBox(height: 12),
           Expanded(
-            child: cards.isEmpty
-                ? Center(
-                    child: Text('Nenhuma carta encontrada.',
-                        style: GoogleFonts.roboto(color: AppColors.txtMut)),
-                  )
-                : GridView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 14,
-                      childAspectRatio: 142 / 206,
-                    ),
-                    itemCount: cards.length,
-                    itemBuilder: (_, i) => _CardTile(card: cards[i]),
-                  ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
-            child: Text.rich(
-              TextSpan(
-                text: _tab == 0
-                    ? 'Criaturas coletadas '
-                    : 'Relíquias coletadas ',
-                style: GoogleFonts.roboto(
-                    fontSize: 11,
-                    letterSpacing: 1.5,
-                    color: AppColors.txtMut),
-                children: [
-                  TextSpan(
-                    text: '$owned',
-                    style: GoogleFonts.roboto(
-                        fontSize: 11,
-                        letterSpacing: 1.5,
-                        color: AppColors.gold,
-                        fontWeight: FontWeight.w700),
-                  ),
-                  TextSpan(text: ' / $total'),
-                ],
-              ),
-              textAlign: TextAlign.center,
+            child: FutureBuilder<CardCatalog>(
+              future: _catalogFuture,
+              builder: (context, snap) {
+                if (snap.connectionState != ConnectionState.done) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                        color: AppColors.purpleLt, strokeWidth: 2.4),
+                  );
+                }
+                if (snap.hasError || !snap.hasData) {
+                  return _buildError();
+                }
+                return _buildBody(snap.data!);
+              },
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildError() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline,
+                color: AppColors.conceptCorrompido, size: 36),
+            const SizedBox(height: 10),
+            Text(
+              'Não foi possível carregar a coleção.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.roboto(fontSize: 13, color: AppColors.txt2),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody(CardCatalog catalog) {
+    final owned = ref.watch(cardOwnershipProvider);
+    final source = _sourceFor(catalog);
+    final cards = _filter(source);
+
+    final ownedCount = source
+        .where((c) =>
+            isCardUnlocked(id: c.id, rarity: c.rarity, owned: owned))
+        .length;
+    final total = source.length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: cards.isEmpty
+              ? Center(
+                  child: Text('Nenhuma carta encontrada.',
+                      style: GoogleFonts.roboto(color: AppColors.txtMut)),
+                )
+              : GridView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 14,
+                    mainAxisSpacing: 14,
+                    childAspectRatio: 142 / 206,
+                  ),
+                  itemCount: cards.length,
+                  itemBuilder: (_, i) {
+                    final card = cards[i];
+                    final unlocked = isCardUnlocked(
+                        id: card.id, rarity: card.rarity, owned: owned);
+                    return _CardTile(
+                      card: card,
+                      unlocked: unlocked,
+                      onTap: () => _openDetail(card, unlocked),
+                    );
+                  },
+                ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+          child: Text.rich(
+            TextSpan(
+              text: _tab == 0
+                  ? 'Criaturas desbloqueadas '
+                  : 'Relíquias desbloqueadas ',
+              style: GoogleFonts.roboto(
+                  fontSize: 11, letterSpacing: 1.5, color: AppColors.txtMut),
+              children: [
+                TextSpan(
+                  text: '$ownedCount',
+                  style: GoogleFonts.roboto(
+                      fontSize: 11,
+                      letterSpacing: 1.5,
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.w700),
+                ),
+                TextSpan(text: ' / $total'),
+              ],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _openDetail(_CardVM card, bool unlocked) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _CardDetailSheet(card: card, unlocked: unlocked),
     );
   }
 
@@ -507,13 +544,13 @@ class _LibraryCardsSectionState extends State<LibraryCardsSection> {
           _chip(label: 'Todos', selected: _conceptFilter == null, onTap: () {
             setState(() => _conceptFilter = null);
           }),
-          for (final concept in _allConcepts) ...[
+          for (final entry in _conceptStyles.entries) ...[
             const SizedBox(width: 8),
             _chip(
-              label: concept.label,
-              dot: concept.color,
-              selected: _conceptFilter == concept.key,
-              onTap: () => setState(() => _conceptFilter = concept.key),
+              label: entry.value.label,
+              dot: entry.value.color,
+              selected: _conceptFilter == entry.key,
+              onTap: () => setState(() => _conceptFilter = entry.key),
             ),
           ],
         ],
@@ -574,12 +611,57 @@ class _LibraryCardsSectionState extends State<LibraryCardsSection> {
 
 // ── Card tile ──────────────────────────────────────────────────────────
 class _CardTile extends StatelessWidget {
-  final _MockCard card;
-  const _CardTile({required this.card});
+  final _CardVM card;
+  final bool unlocked;
+  final VoidCallback onTap;
+  const _CardTile({
+    required this.card,
+    required this.unlocked,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final c = card.concept.color;
+    final tile = _buildTile(context);
+    // Bloqueado: dessatura o tile inteiro (saturação 0) + cadeado sobreposto.
+    return GestureDetector(
+      onTap: onTap,
+      child: unlocked
+          ? tile
+          : Stack(
+              children: [
+                ColorFiltered(
+                  colorFilter: const ColorFilter.matrix(<double>[
+                    0.2126, 0.7152, 0.0722, 0, 0, //
+                    0.2126, 0.7152, 0.0722, 0, 0, //
+                    0.2126, 0.7152, 0.0722, 0, 0, //
+                    0, 0, 0, 1, 0, //
+                  ]),
+                  child: Opacity(opacity: 0.85, child: tile),
+                ),
+                Positioned.fill(
+                  child: Center(
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xCC0B0810),
+                        border: Border.all(
+                            color: AppColors.borderViolet, width: 1.4),
+                      ),
+                      child: const Icon(Icons.lock,
+                          size: 20, color: AppColors.txt2),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildTile(BuildContext context) {
+    final c = card.conceptColor;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
@@ -643,50 +725,33 @@ class _CardTile extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Custo (losango top-left)
-                  Positioned(top: 0, left: 0, child: _CostDiamond(card.cost)),
-                  // Owned (top-right)
-                  Positioned(
-                    top: 2,
-                    right: 2,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 5, vertical: 1),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(6),
-                        color: const Color(0xCC0B0810),
-                        border: Border.all(color: AppColors.goldDk),
-                      ),
-                      child: Text('×${card.owned}',
-                          style: GoogleFonts.roboto(
-                              fontSize: 10.5,
-                              color: AppColors.goldLt,
-                              fontWeight: FontWeight.w600)),
-                    ),
-                  ),
-                  // NOVO badge
-                  if (card.isNew)
+                  // Custo (losango top-left) — só criaturas têm custo no modelo
+                  if (card.kind == _CardKind.creature)
                     Positioned(
-                      top: 24,
-                      right: 2,
-                      child: Transform.rotate(
-                        angle: 0.08,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(4),
-                            gradient: const LinearGradient(
-                              colors: [AppColors.goldLt, AppColors.gold],
+                        top: 0, left: 0, child: _CostDiamond(card.cost)),
+                  // Multi-conceito: pontos dos conceitos extras (top-right)
+                  if (card.concepts.length > 1)
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Row(
+                        children: [
+                          for (final extra in card.concepts.skip(1))
+                            Padding(
+                              padding: const EdgeInsets.only(left: 3),
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: _styleOf(extra).color,
+                                  border: Border.all(
+                                      color: const Color(0xCC0B0810),
+                                      width: 1),
+                                ),
+                              ),
                             ),
-                          ),
-                          child: Text('NOVO',
-                              style: GoogleFonts.roboto(
-                                  fontSize: 8,
-                                  letterSpacing: 1,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF1A1206))),
-                        ),
+                        ],
                       ),
                     ),
                 ],
@@ -701,10 +766,10 @@ class _CardTile extends StatelessWidget {
                   height: 12,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: card.rarity,
+                    color: card.rarityColor,
                     boxShadow: [
                       BoxShadow(
-                          color: card.rarity.withValues(alpha: 0.6),
+                          color: card.rarityColor.withValues(alpha: 0.6),
                           blurRadius: 6),
                     ],
                   ),
@@ -831,4 +896,313 @@ class _DiamondClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+// ── Detalhe (BottomSheet) — inspeção sempre liberada ─────────────────────────
+class _CardDetailSheet extends StatelessWidget {
+  final _CardVM card;
+  final bool unlocked;
+  const _CardDetailSheet({required this.card, required this.unlocked});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = card.conceptColor;
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.82,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF181221), Color(0xFF0A0810)],
+        ),
+        border: Border.all(color: c.withValues(alpha: 0.35)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // grip
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(2),
+                    color: AppColors.borderViolet,
+                  ),
+                ),
+              ),
+              // Cabeçalho: ícone + nome + raridade
+              Row(
+                children: [
+                  Container(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: RadialGradient(
+                        colors: [
+                          c.withValues(alpha: 0.5),
+                          const Color(0xFF0B0810),
+                        ],
+                      ),
+                      border: Border.all(color: c.withValues(alpha: 0.5)),
+                    ),
+                    child: Icon(card.icon,
+                        size: 28, color: Colors.white.withValues(alpha: 0.85)),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          card.name,
+                          style: GoogleFonts.cinzelDecorative(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.goldLt,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: card.rarityColor,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '${_rarityLabel(card.rarity)} · '
+                              '${card.kind == _CardKind.creature ? 'Criatura' : 'Relíquia'}',
+                              style: GoogleFonts.roboto(
+                                  fontSize: 12, color: AppColors.txt2),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Aviso de bloqueio (mas exibe tudo)
+              if (!unlocked)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: const Color(0x33D8323F),
+                    border: Border.all(
+                        color: AppColors.conceptCorrompido
+                            .withValues(alpha: 0.5)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.lock,
+                          size: 16, color: AppColors.conceptCorrompido),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Bloqueada — não pode ser usada no deck',
+                          style: GoogleFonts.roboto(
+                              fontSize: 12.5,
+                              color: AppColors.txt,
+                              fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              // Conceitos
+              Text('CONCEITOS',
+                  style: GoogleFonts.roboto(
+                      fontSize: 10,
+                      letterSpacing: 1.5,
+                      color: AppColors.txtMut)),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final concept in card.concepts)
+                    _conceptPill(_styleOf(concept)),
+                  if (card.kind == _CardKind.relic && card.isUniversal)
+                    _tagPill('Universal', AppColors.conceptNeutro),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Stats grid
+              ..._buildStatRows(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildStatRows() {
+    final rows = <Widget>[];
+
+    if (card.kind == _CardKind.creature) {
+      rows.add(_statRow('Custo', '${card.cost}', Icons.local_fire_department));
+      rows.add(_statRow('Ataque', '${card.atk}', Icons.colorize));
+      rows.add(_statRow('PV', '${card.pv}', Icons.favorite));
+      if (card.damageType != null) {
+        rows.add(_statRow('Tipo de dano', _damageLabel(card.damageType!),
+            _damageIcon(card.damageType!)));
+      }
+      rows.add(_statRow(
+          'Slots de relíquia', '${card.relicSlots}', Icons.add_box_outlined));
+      if (card.abilities.isNotEmpty) {
+        rows.add(_statRow(
+            'Habilidades', card.abilities.join(', '), Icons.auto_awesome));
+      }
+    } else {
+      rows.add(_statRow('Tipo', card.relicTag,
+          card.relicTag == 'Flash' ? Icons.bolt : Icons.shield_outlined));
+      final g = card.grants;
+      if (g != null) {
+        if (g.atkBonus != null) {
+          rows.add(_statRow(
+              'Bônus de ataque', '+${g.atkBonus}', Icons.colorize));
+        }
+        if (g.hpBonus != null) {
+          rows.add(_statRow('Bônus de PV', '+${g.hpBonus}', Icons.favorite));
+        }
+        if (g.armor != null) {
+          rows.add(_statRow('Armadura', '${g.armor}', Icons.security));
+        }
+        if (g.heal != null) {
+          rows.add(_statRow('Cura', '${g.heal}', Icons.healing));
+        }
+        if (g.attackType != null) {
+          rows.add(_statRow('Tipo de ataque concedido',
+              _damageLabel(g.attackType!), _damageIcon(g.attackType!)));
+        }
+        if (g.abilities.isNotEmpty) {
+          rows.add(_statRow(
+              'Habilidades', g.abilities.join(', '), Icons.auto_awesome));
+        }
+        if (g.rawEffect.isNotEmpty) {
+          rows.add(const SizedBox(height: 6));
+          rows.add(_effectBlock(g.rawEffect));
+        }
+      }
+    }
+
+    return rows;
+  }
+
+  Widget _statRow(String label, String value, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: AppColors.txtMut),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 130,
+            child: Text(label,
+                style: GoogleFonts.roboto(
+                    fontSize: 12.5, color: AppColors.txt2)),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: GoogleFonts.roboto(
+                  fontSize: 12.5,
+                  color: AppColors.txt,
+                  fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _effectBlock(String text) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: const Color(0x33100C15),
+        border: Border.all(color: AppColors.borderViolet),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('EFEITO',
+              style: GoogleFonts.roboto(
+                  fontSize: 10,
+                  letterSpacing: 1.5,
+                  color: AppColors.txtMut)),
+          const SizedBox(height: 6),
+          Text(text,
+              style: GoogleFonts.roboto(
+                  fontSize: 13, height: 1.4, color: AppColors.txt)),
+        ],
+      ),
+    );
+  }
+
+  Widget _conceptPill(_ConceptStyle s) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: s.color.withValues(alpha: 0.16),
+        border: Border.all(color: s.color.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 9,
+            height: 9,
+            decoration: BoxDecoration(shape: BoxShape.circle, color: s.color),
+          ),
+          const SizedBox(width: 6),
+          Text(s.label,
+              style: GoogleFonts.roboto(
+                  fontSize: 12,
+                  color: AppColors.txt,
+                  fontWeight: FontWeight.w500)),
+        ],
+      ),
+    );
+  }
+
+  Widget _tagPill(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: color.withValues(alpha: 0.16),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Text(label,
+          style: GoogleFonts.roboto(
+              fontSize: 12, color: AppColors.txt, fontWeight: FontWeight.w500)),
+    );
+  }
 }
