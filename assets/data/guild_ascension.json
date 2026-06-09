@@ -62,19 +62,19 @@
             {
               "key": "ed2a",
               "title": "Sem Falhas",
-              "description": "Sem niet por 5 dias consecutivos.",
-              "check_type": "no_niet_days",
+              "description": "Mantenha streak de 5 dias.",
+              "check_type": "streak_days",
               "check_params": {
                 "days": 5
               }
             },
             {
               "key": "ed2b",
-              "title": "Arsenal Básico",
-              "description": "Gaste 300 de ouro na loja.",
-              "check_type": "spend_gold",
+              "title": "Primeiros Passos",
+              "description": "Complete 5 missões de qualquer categoria.",
+              "check_type": "complete_any_total",
               "check_params": {
-                "amount": 300
+                "count": 5
               }
             },
             {
@@ -116,11 +116,11 @@
             },
             {
               "key": "ed3b",
-              "title": "Investidor",
-              "description": "Gaste 500 de ouro na loja total.",
-              "check_type": "spend_gold_total",
+              "title": "Persistente",
+              "description": "Complete 15 missões no total.",
+              "check_type": "complete_any_total",
               "check_params": {
-                "amount": 500
+                "count": 15
               }
             },
             {
@@ -169,19 +169,19 @@
             {
               "key": "dc1b",
               "title": "Disciplina de Operador",
-              "description": "Sem niet por 10 dias consecutivos.",
-              "check_type": "no_niet_days",
+              "description": "Mantenha streak de 10 dias.",
+              "check_type": "streak_days",
               "check_params": {
                 "days": 10
               }
             },
             {
               "key": "dc1c",
-              "title": "Acumulador",
-              "description": "Gaste 1000 de ouro na loja.",
-              "check_type": "spend_gold_total",
+              "title": "Constante",
+              "description": "Complete 30 missões no total.",
+              "check_type": "complete_any_total",
               "check_params": {
-                "amount": 1000
+                "count": 30
               }
             },
             {
@@ -223,20 +223,21 @@
             },
             {
               "key": "dc2c",
-              "title": "Comprador de Elite",
-              "description": "Compre 10 itens na loja.",
-              "check_type": "buy_items_total",
+              "title": "Operário Dedicado",
+              "description": "Complete 40 missões no total.",
+              "check_type": "complete_any_total",
               "check_params": {
-                "count": 10
+                "count": 40
               }
             },
             {
               "key": "dc2d",
               "title": "Equilibrado",
-              "description": "Complete missões de todas as 4 categorias em uma semana.",
-              "check_type": "complete_all_categories_week",
+              "description": "Complete 12 missões físicas.",
+              "check_type": "complete_category_total",
               "check_params": {
-                "count": 4
+                "category": "physical",
+                "count": 12
               }
             }
           ],
@@ -260,11 +261,11 @@
             },
             {
               "key": "dc3b",
-              "title": "Arsenal Avançado",
-              "description": "Gaste 2000 de ouro na loja.",
-              "check_type": "spend_gold_total",
+              "title": "Veterano em Marcha",
+              "description": "Complete 70 missões no total.",
+              "check_type": "complete_any_total",
               "check_params": {
-                "amount": 2000
+                "count": 70
               }
             },
             {
@@ -279,8 +280,8 @@
             {
               "key": "dc3d",
               "title": "Implacável",
-              "description": "Sem niet por 14 dias consecutivos.",
-              "check_type": "no_niet_days",
+              "description": "Mantenha streak de 14 dias.",
+              "check_type": "streak_days",
               "check_params": {
                 "days": 14
               }
@@ -349,18 +350,18 @@
           "options": [
             {
               "key": "cb2a",
-              "title": "Investimento Total",
-              "description": "Gaste 5000 de ouro na loja.",
-              "check_type": "spend_gold_total",
+              "title": "Dedicação Total",
+              "description": "Complete 250 missões no total.",
+              "check_type": "complete_any_total",
               "check_params": {
-                "amount": 5000
+                "count": 250
               }
             },
             {
               "key": "cb2b",
               "title": "Sem Sombra",
-              "description": "Sem niet por 21 dias consecutivos.",
-              "check_type": "no_niet_days",
+              "description": "Mantenha streak de 21 dias.",
+              "check_type": "streak_days",
               "check_params": {
                 "days": 21
               }
@@ -396,9 +397,10 @@
             {
               "key": "cb3a",
               "title": "Arsenal Completo",
-              "description": "Compre 25 itens na loja.",
-              "check_type": "buy_items_total",
+              "description": "Complete 25 missões mentais.",
+              "check_type": "complete_category_total",
               "check_params": {
+                "category": "mental",
                 "count": 25
               }
             },
@@ -474,11 +476,12 @@
             },
             {
               "key": "ba1d",
-              "title": "Grande Investidor",
-              "description": "Gaste 10000 de ouro na loja.",
-              "check_type": "spend_gold_total",
+              "title": "Veterano Incansável",
+              "description": "Complete 100 missões espirituais.",
+              "check_type": "complete_category_total",
               "check_params": {
-                "amount": 10000
+                "category": "spiritual",
+                "count": 100
               }
             }
           ],
@@ -503,8 +506,8 @@
             {
               "key": "ba2b",
               "title": "Implacável Total",
-              "description": "Sem niet por 30 dias consecutivos.",
-              "check_type": "no_niet_days",
+              "description": "Mantenha streak de 30 dias.",
+              "check_type": "streak_days",
               "check_params": {
                 "days": 30
               }
@@ -566,11 +569,11 @@
             },
             {
               "key": "ba3d",
-              "title": "Patrimônio",
-              "description": "Gaste 25000 de ouro na loja.",
-              "check_type": "spend_gold_total",
+              "title": "Lenda em Marcha",
+              "description": "Complete 250 missões no total.",
+              "check_type": "complete_any_total",
               "check_params": {
-                "amount": 25000
+                "count": 250
               }
             }
           ],
@@ -618,11 +621,11 @@
             },
             {
               "key": "as1d",
-              "title": "Arsenal Lendário",
-              "description": "Gaste 50000 de ouro na loja.",
-              "check_type": "spend_gold_total",
+              "title": "Lenda Incansável",
+              "description": "Complete 500 missões no total.",
+              "check_type": "complete_any_total",
               "check_params": {
-                "amount": 50000
+                "count": 500
               }
             }
           ],
@@ -638,8 +641,8 @@
             {
               "key": "as2a",
               "title": "Implacável Absoluto",
-              "description": "Sem niet por 60 dias consecutivos.",
-              "check_type": "no_niet_days",
+              "description": "Mantenha streak de 60 dias.",
+              "check_type": "streak_days",
               "check_params": {
                 "days": 60
               }
@@ -664,11 +667,11 @@
             },
             {
               "key": "as2d",
-              "title": "Patrimônio Máximo",
-              "description": "Gaste 100000 de ouro na loja.",
-              "check_type": "spend_gold_total",
+              "title": "Dedicação Máxima",
+              "description": "Complete 1000 missões no total.",
+              "check_type": "complete_any_total",
               "check_params": {
-                "amount": 100000
+                "count": 1000
               }
             }
           ],
@@ -711,8 +714,8 @@
             {
               "key": "as3d",
               "title": "Implacável Extremo",
-              "description": "Sem niet por 90 dias consecutivos.",
-              "check_type": "no_niet_days",
+              "description": "Mantenha streak de 90 dias.",
+              "check_type": "streak_days",
               "check_params": {
                 "days": 90
               }
@@ -748,20 +751,19 @@
             {
               "key": "as4c",
               "title": "Coleção Absoluta",
-              "description": "Desbloqueie todas as conquistas e escreva 100000 palavras.",
-              "check_type": "achievements_and_diary",
+              "description": "Desbloqueie todas as conquistas (100).",
+              "check_type": "achievements_count",
               "check_params": {
-                "achievements": 100,
-                "words": 100000
+                "count": 100
               }
             },
             {
               "key": "as4d",
-              "title": "Patrimônio Absoluto",
-              "description": "Gaste 500000 de ouro na loja. O custo da lenda.",
-              "check_type": "spend_gold_total",
+              "title": "Lenda Eterna",
+              "description": "Complete 5000 missões no total.",
+              "check_type": "complete_any_total",
               "check_params": {
-                "amount": 500000
+                "count": 5000
               }
             }
           ],

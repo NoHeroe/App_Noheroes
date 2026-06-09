@@ -80,10 +80,16 @@ class GuildAscensionService {
     }
   }
 
-  // Verifica e completa missão atual, retorna true se completou
-  Future<bool> checkCurrentMission(
-      int playerId, String currentRank, Map<String, dynamic> ctx) async {
-    final missions = await getMissions(playerId, currentRank);
+  /// A.2 — avalia a missão de menor `step` incompleta do ciclo via DADOS
+  /// VIVOS (sem `ctx`): grava `progress` e marca `completed` ao bater o
+  /// target. Retorna true se completou (o caller pode re-chamar pra
+  /// avançar o próximo step que já esteja satisfeito por contador
+  /// lifetime). NÃO ascende (o `ascend()` continua manual no botão) e
+  /// NÃO incrementa `total_quests_completed` (evita feedback-loop com
+  /// `complete_any_total`, que LÊ esse contador).
+  Future<bool> checkCurrentMission(int playerId, String currentRank) async {
+    final canon = _canonRank(currentRank);
+    final missions = await getMissions(playerId, canon);
     final current = missions
         .where((m) => !m.completed)
         .fold<GuildAscensionTableData?>(null, (acc, m) {
@@ -93,8 +99,7 @@ class GuildAscensionService {
     if (current == null) return false;
 
     final params = jsonDecode(current.checkParamsJson) as Map<String, dynamic>;
-    final progress = await _calcProgress(
-        current.checkType, params, playerId, ctx);
+    final progress = await _calcProgress(current.checkType, params, playerId);
 
     if (progress >= current.progressTarget) {
       await (_db.update(_db.guildAscensionTable)
@@ -103,12 +108,6 @@ class GuildAscensionService {
         completed: const Value(true),
         progress: Value(current.progressTarget),
       ));
-      await _db.customUpdate(
-        'UPDATE players SET total_quests_completed = '
-        'total_quests_completed + 1 WHERE id = ?',
-        variables: [Variable.withInt(playerId)],
-        updates: {_db.playersTable},
-      );
       return true;
     }
 
@@ -142,13 +141,28 @@ class GuildAscensionService {
     return next.name.toUpperCase();
   }
 
-  Future<int> _calcProgress(String checkType, Map<String, dynamic> params,
-      int playerId, Map<String, dynamic> ctx) async {
+  /// A.2 — mapeia a `category` do catálogo (inglês) pra grafia REAL da
+  /// `daily_missions.modalidade` (PT-BR). Sem este mapa, a query contaria
+  /// 0 silenciosamente.
+  static const Map<String, String> _categoryToModalidade = {
+    'physical': 'fisico',
+    'mental': 'mental',
+    'spiritual': 'espiritual',
+  };
+
+  /// A.2 — progresso contra DADOS VIVOS (sem `ctx`, sem `habit_logs`):
+  ///  - complete_any_total      → players.total_quests_completed
+  ///  - complete_category_total → COUNT(daily_missions) por modalidade
+  ///  - streak_days             → players.streak_days
+  ///  - achievements_count      → COUNT(player_achievements)
+  ///  - diary_total_words       → SUM de palavras em diary_entries
+  Future<int> _calcProgress(
+      String checkType, Map<String, dynamic> params, int playerId) async {
     switch (checkType) {
       case 'complete_any_total':
         final count = params['count'] as int;
         final rows = await _db.customSelect(
-          'SELECT COUNT(*) as c FROM habit_logs WHERE player_id = ?',
+          'SELECT total_quests_completed AS c FROM players WHERE id = ?',
           variables: [Variable.withInt(playerId)],
         ).get();
         final found = (rows.first.data['c'] as int?) ?? 0;
@@ -157,39 +171,34 @@ class GuildAscensionService {
       case 'complete_category_total':
         final count = params['count'] as int;
         final cat = params['category'] as String;
+        final modalidade = _categoryToModalidade[cat];
+        if (modalidade == null) return 0;
         final rows = await _db.customSelect(
-          'SELECT COUNT(*) as c FROM habit_logs hl '
-          'JOIN habits h ON hl.habit_id = h.id '
-          'WHERE hl.player_id = ? AND h.category = ?',
-          variables: [Variable.withInt(playerId), Variable.withString(cat)],
+          "SELECT COUNT(*) AS c FROM daily_missions "
+          "WHERE player_id = ? AND completed_at IS NOT NULL "
+          "AND status IN ('completed', 'partial') AND modalidade = ?",
+          variables: [
+            Variable.withInt(playerId),
+            Variable.withString(modalidade),
+          ],
         ).get();
         final found = (rows.first.data['c'] as int?) ?? 0;
         return found.clamp(0, count);
 
       case 'streak_days':
         final days = params['days'] as int;
-        final streak = ctx['streak'] as int? ?? 0;
+        final rows = await _db.customSelect(
+          'SELECT streak_days AS s FROM players WHERE id = ?',
+          variables: [Variable.withInt(playerId)],
+        ).get();
+        final streak = (rows.first.data['s'] as int?) ?? 0;
         return streak.clamp(0, days);
-
-      case 'no_niet_days':
-        final days = params['days'] as int;
-        final nf = ctx['niet_free_days'] as int? ?? 0;
-        return nf.clamp(0, days);
-
-      case 'spend_gold_total':
-        final amount = params['amount'] as int;
-        final spent = ctx['gold_spent_total'] as int? ?? 0;
-        return spent.clamp(0, amount);
-
-      case 'buy_items_total':
-        final count = params['count'] as int;
-        final bought = ctx['items_bought_total'] as int? ?? 0;
-        return bought.clamp(0, count);
 
       case 'achievements_count':
         final count = params['count'] as int;
         final rows = await _db.customSelect(
-          'SELECT COUNT(*) as c FROM player_achievements WHERE player_id = ?',
+          'SELECT COUNT(*) AS c FROM player_achievements_completed '
+          'WHERE player_id = ?',
           variables: [Variable.withInt(playerId)],
         ).get();
         final found = (rows.first.data['c'] as int?) ?? 0;
@@ -198,22 +207,12 @@ class GuildAscensionService {
       case 'diary_total_words':
         final words = params['words'] as int;
         final rows = await _db.customSelect(
-          'SELECT SUM(LENGTH(content) - LENGTH(REPLACE(content," ","")) + 1) as w '
-          'FROM diary_entries WHERE player_id = ?',
+          "SELECT SUM(LENGTH(content) - LENGTH(REPLACE(content, ' ', '')) + 1) "
+          'AS w FROM diary_entries WHERE player_id = ?',
           variables: [Variable.withInt(playerId)],
         ).get();
         final found = (rows.first.data['w'] as int?) ?? 0;
         return found.clamp(0, words);
-
-      case 'achievements_and_diary':
-        // Conta conquistas apenas (simplificado)
-        final targetAch = params['achievements'] as int;
-        final rows = await _db.customSelect(
-          'SELECT COUNT(*) as c FROM player_achievements WHERE player_id = ?',
-          variables: [Variable.withInt(playerId)],
-        ).get();
-        final found = (rows.first.data['c'] as int?) ?? 0;
-        return found.clamp(0, targetAch);
 
       default:
         return 0;
@@ -225,12 +224,8 @@ class GuildAscensionService {
       case 'complete_any_total': return params['count'] as int;
       case 'complete_category_total': return params['count'] as int;
       case 'streak_days': return params['days'] as int;
-      case 'no_niet_days': return params['days'] as int;
-      case 'spend_gold_total': return params['amount'] as int;
-      case 'buy_items_total': return params['count'] as int;
       case 'achievements_count': return params['count'] as int;
       case 'diary_total_words': return params['words'] as int;
-      case 'achievements_and_diary': return params['achievements'] as int;
       default: return 1;
     }
   }
