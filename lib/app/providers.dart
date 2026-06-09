@@ -6,6 +6,8 @@ import '../core/utils/guild_rank.dart';
 import '../data/database/app_database.dart';
 import '../data/datasources/local/auth_local_ds.dart';
 import '../data/datasources/local/class_quest_service.dart';
+import '../data/datasources/local/guild_ascension_progress_service.dart';
+import '../data/datasources/local/guild_ascension_service.dart';
 import '../data/datasources/local/diary_service.dart';
 import '../data/datasources/local/faction_quest_service.dart';
 import '../data/datasources/local/quest_admission_service.dart';
@@ -611,6 +613,23 @@ final weeklyFactionProgressServiceProvider =
         factionKey: row.factionType,
       );
     },
+  );
+  service.start();
+  ref.onDispose(service.stop);
+  return service;
+});
+
+/// A.2 — ignição event-driven do motor de ascensão da Guilda. Escuta
+/// eventos terminais e avança o progresso dos steps do ciclo (NÃO
+/// ascende — o ascend() é manual no botão da AscensionTab). Eager
+/// bootstrap no `NoHeroesApp.build`.
+final guildAscensionProgressServiceProvider =
+    Provider<GuildAscensionProgressService>((ref) {
+  final db = ref.watch(appDatabaseProvider);
+  final service = GuildAscensionProgressService(
+    db: db,
+    bus: ref.watch(appEventBusProvider),
+    ascension: GuildAscensionService(db),
   );
   service.start();
   ref.onDispose(service.stop);

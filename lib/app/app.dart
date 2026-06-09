@@ -50,6 +50,9 @@ class NoHeroesApp extends ConsumerWidget {
     // (soma sub-tasks via eventos terminais + ItemCrafted/ItemEnchanted,
     // sem reject/lock; paga reward cheio na conclusão antecipada).
     ref.watch(weeklyFactionProgressServiceProvider);
+    // A.2 — ignição do motor de ascensão: escuta eventos terminais e
+    // avança o progresso dos steps do ciclo (ascend continua manual).
+    ref.watch(guildAscensionProgressServiceProvider);
     return MaterialApp.router(
       title: 'NoHeroes',
       debugShowCheckedModeBanner: false,

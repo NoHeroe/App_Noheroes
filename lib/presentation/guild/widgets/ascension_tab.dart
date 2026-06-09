@@ -23,7 +23,10 @@ final ascensionMissionsProvider =
     return [];
   }
   final service = ref.read(ascensionServiceProvider);
-  await service.initCycle(player.id, rank);
+  // A.2 — ignição on-demand: inicializa o ciclo e avança o progresso dos
+  // steps via dados vivos antes de listar (espelha o que o QuestsScreen
+  // faz pra weekly). `evaluatePlayer` já chama `initCycle` internamente.
+  await ref.read(guildAscensionProgressServiceProvider).evaluatePlayer(player.id);
   return service.getMissions(player.id, rank);
 });
 
