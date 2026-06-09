@@ -244,15 +244,26 @@ void main() {
     }
 
     for (final rank in ['E', 'D', 'C', 'B', 'A']) {
-      test('ciclo rank $rank → canAscend após maxar contadores vivos',
-          () async {
+      test('ciclo rank $rank → canAscend (auto por gameplay + manual/mock '
+          'simulados)', () async {
         final p = await _seedPlayer(db, guildRank: rank);
         await maxOut(p);
-        // Ignição on-demand: initCycle (catálogo real) + avança todos os
-        // steps satisfeitos pelos contadores maxados.
+        // Cria as rows dos trials do ciclo real (catálogo B.1).
+        await ascension.initCycle(p, rank);
+        // B.1: trials manual/mock ainda NÃO auto-progridem (avanço = B.3).
+        // Simula a conclusão deles aqui pra validar a completabilidade do
+        // ciclo inteiro (e desbloqueia o loop pra alcançar os trials auto).
+        await db.customStatement(
+          'UPDATE guild_ascension_progress SET completed = 1 '
+          'WHERE player_id = ? AND check_type IN '
+          "('manual_proof', 'card_wins', 'boss_win')",
+          [p],
+        );
+        // Ignição: avança os trials AUTO satisfeitos pelos contadores maxados.
         await progress.evaluatePlayer(p);
         expect(await ascension.canAscend(p, rank), isTrue,
-            reason: 'todos os steps do ciclo $rank completáveis por gameplay');
+            reason: 'ciclo $rank completável (auto via gameplay; manual/mock '
+                'pendentes de B.3)');
       });
     }
   });

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/services.dart';
 import '../../../core/utils/guild_rank.dart';
@@ -52,31 +51,59 @@ class GuildAscensionService {
     );
     if (cycle.isEmpty) return;
 
-    final missions = (cycle['missions'] as List).cast<Map<String, dynamic>>();
-    for (final m in missions) {
-      final options = (m['options'] as List).cast<Map<String, dynamic>>();
-      options.shuffle(Random());
-      final chosen = options.first;
-      final params = chosen['check_params'] as Map<String, dynamic>;
-      final target = _extractTarget(chosen['check_type'] as String, params);
-
+    // Fase B.1 — estrutura nova: `trials[]` (sem options/sorteio). Cada
+    // trial vira uma row de step. `unlock_level`/reward viraram nivel-ciclo
+    // (`unlock_requirements`/`reward`) — consumidos pela maquina de estados
+    // soulslike (B.2/B.3); aqui materializamos so o progresso dos trials.
+    final reqs =
+        (cycle['unlock_requirements'] as Map?)?.cast<String, dynamic>();
+    final minLevel = (reqs?['min_level'] as int?) ?? 0;
+    final trials = (cycle['trials'] as List).cast<Map<String, dynamic>>();
+    var step = 1;
+    for (final t in trials) {
+      final target = (t['target'] as int?) ?? 1;
       await _db.into(_db.guildAscensionTable).insert(
         GuildAscensionTableCompanion(
           playerId: Value(playerId),
           rankFrom: Value(canon),
           rankTo: Value(cycle['rank_to'] as String),
-          step: Value(m['step'] as int),
-          questKey: Value(chosen['key'] as String),
-          title: Value(chosen['title'] as String),
-          description: Value(chosen['description'] as String),
-          checkType: Value(chosen['check_type'] as String),
-          checkParamsJson: Value(jsonEncode(params)),
-          unlockLevel: Value(m['unlock_level'] as int),
-          xpReward: Value(m['xp'] as int),
-          goldReward: Value(m['gold'] as int),
+          step: Value(step++),
+          questKey: Value(t['key'] as String),
+          title: Value(t['title'] as String? ?? t['key'] as String),
+          description: Value(t['title'] as String? ?? ''),
+          checkType: Value(t['check_type'] as String),
+          checkParamsJson: Value(jsonEncode(_trialParams(t))),
+          unlockLevel: Value(minLevel),
+          xpReward: const Value(0),
+          goldReward: const Value(0),
           progressTarget: Value(target),
         ),
       );
+    }
+  }
+
+  /// Fase B.1 — converte um trial do catalogo novo pro formato de params
+  /// que o `_calcProgress` (motor A.2) ja espera por check_type. Trials
+  /// manual/mock guardam so `type`+`target` (avanco wired na B.3).
+  Map<String, dynamic> _trialParams(Map<String, dynamic> t) {
+    final ct = t['check_type'] as String;
+    final target = (t['target'] as int?) ?? 1;
+    final type = t['type'];
+    switch (ct) {
+      case 'complete_any_total':
+      case 'complete_category_total':
+      case 'achievements_count':
+        return {
+          'count': target,
+          if (t['category'] != null) 'category': t['category'],
+          'type': type,
+        };
+      case 'streak_days':
+        return {'days': target, 'type': type};
+      case 'diary_total_words':
+        return {'words': target, 'type': type};
+      default: // manual_proof / card_wins / boss_win — sem auto-progresso
+        return {'target': target, 'type': type};
     }
   }
 
@@ -216,17 +243,6 @@ class GuildAscensionService {
 
       default:
         return 0;
-    }
-  }
-
-  int _extractTarget(String checkType, Map<String, dynamic> params) {
-    switch (checkType) {
-      case 'complete_any_total': return params['count'] as int;
-      case 'complete_category_total': return params['count'] as int;
-      case 'streak_days': return params['days'] as int;
-      case 'achievements_count': return params['count'] as int;
-      case 'diary_total_words': return params['words'] as int;
-      default: return 1;
     }
   }
 }
