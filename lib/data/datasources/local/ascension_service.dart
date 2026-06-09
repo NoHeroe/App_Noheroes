@@ -123,13 +123,13 @@ class AscensionService {
     final cost = _currentCost(config.feeBase, failures);
 
     final row = await (_db.customSelect(
-      'SELECT level, total_quests_completed AS mc, '
-      'total_gold_earned_lifetime AS gl, guild_rank AS gr '
+      'SELECT level, total_gold_earned_lifetime AS gl, guild_rank AS gr '
       'FROM players WHERE id = ? LIMIT 1',
       variables: [Variable.withInt(playerId)],
     )).getSingleOrNull();
     final level = (row?.data['level'] as int?) ?? 0;
-    final missions = (row?.data['mc'] as int?) ?? 0;
+    // B.3 — gate `missions_completed` usa a UNIÃO (daily + pmp), lifetime.
+    final missions = await _ascension.countMissionsCompleted(playerId);
     final goldLife = (row?.data['gl'] as int?) ?? 0;
     final guildRank = (row?.data['gr'] as String?) ?? 'none';
 
@@ -268,6 +268,39 @@ class AscensionService {
         [playerId, canon],
       );
     });
+  }
+
+  /// B.3 — marca um trial MANUAL (`manual_proof`) como concluído (auto-
+  /// report físico). Guard: status active + janela não vencida. Retorna
+  /// true se marcou. UI = B.4.
+  Future<bool> confirmManualTrial(
+      int playerId, String rankFrom, String trialKey) async {
+    final canon = _canon(rankFrom);
+    final state = await _readState(playerId, canon);
+    if (state == null || state.status != 'active') return false;
+    if (state.windowDeadlineMs == null || _now() >= state.windowDeadlineMs!) {
+      return false;
+    }
+    var updated = false;
+    await _db.transaction(() async {
+      final rows = await (_db.select(_db.guildAscensionTable)
+            ..where((t) =>
+                t.playerId.equals(playerId) &
+                t.rankFrom.equals(canon) &
+                t.questKey.equals(trialKey)))
+          .get();
+      if (rows.isEmpty) return;
+      final row = rows.first;
+      if (row.checkType != 'manual_proof' || row.completed) return;
+      await (_db.update(_db.guildAscensionTable)
+            ..where((t) => t.id.equals(row.id)))
+          .write(GuildAscensionTableCompanion(
+        completed: const Value(true),
+        progress: Value(row.progressTarget),
+      ));
+      updated = true;
+    });
+    return updated;
   }
 
   /// (d) Sobe de rank. Precondição: status active, janela não vencida,

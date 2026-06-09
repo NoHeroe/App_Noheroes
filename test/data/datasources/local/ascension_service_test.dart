@@ -42,10 +42,30 @@ Future<int> _seedPlayer(
   );
 }
 
+/// Insere [n] missões completadas em player_mission_progress (bulk) —
+/// alimenta o gate `missions_completed` (união daily+pmp). completed_at=1.
+Future<void> _insertCompletions(AppDatabase db, int playerId, int n,
+    {int completedAt = 1}) async {
+  if (n <= 0) return;
+  final values = List.generate(
+      n,
+      (i) =>
+          "($playerId, 'M$completedAt-$i', 'internal', 'class', 'E', 1, "
+          "'{}', 0, $completedAt)").join(',');
+  await db.customStatement(
+    'INSERT INTO player_mission_progress (player_id, mission_key, modality, '
+    'tab_origin, rank, target_value, reward_json, started_at, completed_at) '
+    'VALUES $values',
+  );
+}
+
 /// Player com todos os gates do ciclo E→D atendidos + ouro pra fee.
-Future<int> _seedEligible(AppDatabase db, {int gold = 10000}) {
-  return _seedPlayer(db,
-      level: 15, missions: 150, goldLifetime: 20000, gold: gold, guildRank: 'E');
+/// E→D (recalibrado): missions_completed 150, gold_life 10000, level 10.
+Future<int> _seedEligible(AppDatabase db, {int gold = 10000}) async {
+  final p = await _seedPlayer(db,
+      level: 15, goldLifetime: 20000, gold: gold, guildRank: 'E');
+  await _insertCompletions(db, p, 160); // >= 150 (gate E→D)
+  return p;
 }
 
 Future<void> _seedCollar(AppDatabase db, int playerId) async {
@@ -125,20 +145,22 @@ void main() {
       expect((await svc.evaluateGates(p, 'E')).state,
           AscensionViewState.locked);
 
-      // Atinge os gates.
+      // Atinge os gates (missions via UNIÃO de completions, não o contador).
       await db.customStatement(
-        'UPDATE players SET level = 15, total_quests_completed = 150, '
-        'total_gold_earned_lifetime = 20000 WHERE id = ?',
+        'UPDATE players SET level = 15, total_gold_earned_lifetime = 20000 '
+        'WHERE id = ?',
         [p],
       );
+      await _insertCompletions(db, p, 160); // >= 150
       expect((await svc.evaluateGates(p, 'E')).state,
           AscensionViewState.payable);
     });
 
     test('cadeia sequencial: só o rank atual é elegível', () async {
-      // Player rank D, todos os números altos.
+      // Player rank D, gates do D→C atendidos (missions 600, gold 60000).
       final p = await _seedPlayer(db,
-          level: 30, missions: 500, goldLifetime: 100000, guildRank: 'D');
+          level: 30, goldLifetime: 100000, guildRank: 'D');
+      await _insertCompletions(db, p, 650); // >= 600 (gate D→C)
       // Avaliar o ciclo E→D NÃO é elegível (rank atual != E).
       expect((await svc.evaluateGates(p, 'E')).state,
           AscensionViewState.locked);
@@ -324,6 +346,30 @@ void main() {
       } finally {
         await stats.stop();
       }
+    });
+  });
+
+  group('confirmManualTrial', () {
+    test('marca trial manual dentro da janela ativa', () async {
+      // Player rank D elegível pro ciclo D→C (gate 600, fee 20000).
+      final p = await _seedPlayer(db,
+          level: 25, goldLifetime: 100000, gold: 30000, guildRank: 'D');
+      await _insertCompletions(db, p, 650);
+      expect((await svc.pay(p, 'D')).ok, isTrue);
+
+      // dc_t2 é o trial manual (manual_proof) do ciclo D→C.
+      expect(await svc.confirmManualTrial(p, 'D', 'dc_t2'), isTrue);
+      final row = await db.customSelect(
+          'SELECT completed FROM guild_ascension_progress '
+          "WHERE player_id = ? AND quest_key = 'dc_t2'",
+          variables: [Variable.withInt(p)]).getSingle();
+      final c = row.data['completed'];
+      expect(c == 1 || c == true, isTrue);
+    });
+
+    test('fora de active → rejeita', () async {
+      final p = await _seedPlayer(db, guildRank: 'D');
+      expect(await svc.confirmManualTrial(p, 'D', 'dc_t2'), isFalse);
     });
   });
 }

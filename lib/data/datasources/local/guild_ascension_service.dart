@@ -82,6 +82,10 @@ class GuildAscensionService {
     var step = 1;
     for (final t in trials) {
       final target = (t['target'] as int?) ?? 1;
+      // B.3 — trials `mock` (card_wins/boss_win) são auto-satisfeitos na
+      // materialização (card-game/boss inexistentes). Quando existirem,
+      // troca-se por um check real.
+      final isMock = t['type'] == 'mock';
       await _db.into(_db.guildAscensionTable).insert(
         GuildAscensionTableCompanion(
           playerId: Value(playerId),
@@ -97,6 +101,8 @@ class GuildAscensionService {
           xpReward: const Value(0),
           goldReward: const Value(0),
           progressTarget: Value(target),
+          completed: Value(isMock),
+          progress: isMock ? Value(target) : const Value(0),
         ),
       );
     }
@@ -145,8 +151,19 @@ class GuildAscensionService {
     });
     if (current == null) return false;
 
+    // B.3 — janela do ciclo (se houver state com janela). Ausente = lifetime.
+    final st = await (_db.select(_db.guildAscensionStateTable)
+          ..where((t) =>
+              t.playerId.equals(playerId) & t.rankFrom.equals(canon)))
+        .getSingleOrNull();
     final params = jsonDecode(current.checkParamsJson) as Map<String, dynamic>;
-    final progress = await _calcProgress(current.checkType, params, playerId);
+    final progress = await _calcProgress(
+      current.checkType,
+      params,
+      playerId,
+      windowStartMs: st?.windowStartedMs,
+      windowDeadlineMs: st?.windowDeadlineMs,
+    );
 
     if (progress >= current.progressTarget) {
       await (_db.update(_db.guildAscensionTable)
@@ -197,22 +214,55 @@ class GuildAscensionService {
     'spiritual': 'espiritual',
   };
 
-  /// A.2 — progresso contra DADOS VIVOS (sem `ctx`, sem `habit_logs`):
-  ///  - complete_any_total      → players.total_quests_completed
+  /// B.3 — UNIÃO de missões completadas (daily_missions + player_mission_
+  /// progress), com janela opcional `[startMs, deadlineMs)`. Sem janela =
+  /// lifetime. Fonte ÚNICA pro gate `missions_completed` (lifetime) E pro
+  /// trial `complete_any_total` (windowed quando dentro de uma janela ativa).
+  Future<int> countMissionsCompleted(int playerId,
+      {int? startMs, int? deadlineMs}) async {
+    final windowed = startMs != null && deadlineMs != null;
+    final dailyWhere = StringBuffer(
+        "player_id = ? AND completed_at IS NOT NULL "
+        "AND status = 'completed'");
+    final pmpWhere =
+        StringBuffer('player_id = ? AND completed_at IS NOT NULL');
+    final dVars = <Variable>[Variable.withInt(playerId)];
+    final pVars = <Variable>[Variable.withInt(playerId)];
+    if (windowed) {
+      dailyWhere.write(' AND completed_at >= ? AND completed_at < ?');
+      pmpWhere.write(' AND completed_at >= ? AND completed_at < ?');
+      dVars.addAll([Variable.withInt(startMs), Variable.withInt(deadlineMs)]);
+      pVars.addAll([Variable.withInt(startMs), Variable.withInt(deadlineMs)]);
+    }
+    final dr = await _db.customSelect(
+      'SELECT COUNT(*) AS c FROM daily_missions WHERE $dailyWhere',
+      variables: dVars,
+    ).get();
+    final pr = await _db.customSelect(
+      'SELECT COUNT(*) AS c FROM player_mission_progress WHERE $pmpWhere',
+      variables: pVars,
+    ).get();
+    return ((dr.first.data['c'] as int?) ?? 0) +
+        ((pr.first.data['c'] as int?) ?? 0);
+  }
+
+  /// Progresso contra DADOS VIVOS por check_type:
+  ///  - complete_any_total      → countMissionsCompleted (UNIÃO daily+pmp;
+  ///                              windowed se janela presente, senão lifetime)
   ///  - complete_category_total → COUNT(daily_missions) por modalidade
+  ///                              (+ bound de janela; só daily tem pilar)
   ///  - streak_days             → players.streak_days
-  ///  - achievements_count      → COUNT(player_achievements)
+  ///  - achievements_count      → COUNT(player_achievements_completed)
   ///  - diary_total_words       → SUM de palavras em diary_entries
+  /// "Completada" = `status = 'completed'` (partial NÃO conta).
   Future<int> _calcProgress(
-      String checkType, Map<String, dynamic> params, int playerId) async {
+      String checkType, Map<String, dynamic> params, int playerId,
+      {int? windowStartMs, int? windowDeadlineMs}) async {
     switch (checkType) {
       case 'complete_any_total':
         final count = params['count'] as int;
-        final rows = await _db.customSelect(
-          'SELECT total_quests_completed AS c FROM players WHERE id = ?',
-          variables: [Variable.withInt(playerId)],
-        ).get();
-        final found = (rows.first.data['c'] as int?) ?? 0;
+        final found = await countMissionsCompleted(playerId,
+            startMs: windowStartMs, deadlineMs: windowDeadlineMs);
         return found.clamp(0, count);
 
       case 'complete_category_total':
@@ -220,14 +270,28 @@ class GuildAscensionService {
         final cat = params['category'] as String;
         final modalidade = _categoryToModalidade[cat];
         if (modalidade == null) return 0;
+        // Categoria só existe em daily_missions.modalidade (pmp não tem
+        // pilar). Bound de janela quando presente.
+        final where = <String>[
+          'player_id = ?',
+          'completed_at IS NOT NULL',
+          "status = 'completed'",
+          'modalidade = ?',
+        ];
+        final vars = <Variable>[
+          Variable.withInt(playerId),
+          Variable.withString(modalidade),
+        ];
+        if (windowStartMs != null && windowDeadlineMs != null) {
+          where.add('completed_at >= ?');
+          where.add('completed_at < ?');
+          vars.add(Variable.withInt(windowStartMs));
+          vars.add(Variable.withInt(windowDeadlineMs));
+        }
         final rows = await _db.customSelect(
-          "SELECT COUNT(*) AS c FROM daily_missions "
-          "WHERE player_id = ? AND completed_at IS NOT NULL "
-          "AND status IN ('completed', 'partial') AND modalidade = ?",
-          variables: [
-            Variable.withInt(playerId),
-            Variable.withString(modalidade),
-          ],
+          'SELECT COUNT(*) AS c FROM daily_missions '
+          'WHERE ${where.join(' AND ')}',
+          variables: vars,
         ).get();
         final found = (rows.first.data['c'] as int?) ?? 0;
         return found.clamp(0, count);

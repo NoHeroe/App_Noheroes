@@ -100,10 +100,27 @@ class GuildAscensionProgressService {
       return;
     }
 
-    await _ascension.initCycle(playerId, rank);
-    // Avança quantos steps estiverem satisfeitos pelos contadores
-    // lifetime (ex: player veterano entra num ciclo e completa vários de
-    // uma vez). Cap = nº de steps + 1 → evita loop infinito.
+    // B.3 — só avança trials com JANELA ATIVA não vencida. A
+    // materialização dos trials é responsabilidade do `pay()` (não
+    // inicializa aqui). Fora de `active` → no-op (evita auto-completar por
+    // contador lifetime antes de pagar).
+    final stRows = await _db.customSelect(
+      'SELECT status, window_deadline_ms AS dl FROM guild_ascension_state '
+      'WHERE player_id = ? AND rank_from = ? LIMIT 1',
+      variables: [
+        Variable.withInt(playerId),
+        Variable.withString(rank.toUpperCase()),
+      ],
+    ).get();
+    if (stRows.isEmpty) return;
+    if ((stRows.first.data['status'] as String?) != 'active') return;
+    final deadline = stRows.first.data['dl'] as int?;
+    if (deadline == null || DateTime.now().millisecondsSinceEpoch >= deadline) {
+      return;
+    }
+
+    // Avança quantos trials estiverem satisfeitos pelos contadores dentro
+    // da janela. Cap = nº de trials + 1 → evita loop infinito.
     final missions = await _ascension.getMissions(playerId, rank);
     var guard = missions.length + 1;
     while (guard-- > 0) {

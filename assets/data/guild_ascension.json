@@ -5,7 +5,7 @@
     {
       "rank_from": "E",
       "rank_to": "D",
-      "unlock_requirements": { "min_level": 10, "missions_completed": 100, "gold_earned_lifetime": 10000, "card_wins": 5 },
+      "unlock_requirements": { "min_level": 10, "missions_completed": 150, "gold_earned_lifetime": 10000, "card_wins": 5 },
       "fee_base": 5000,
       "window_hours": 24,
       "cooldown_hours": 4,
@@ -17,7 +17,7 @@
     {
       "rank_from": "D",
       "rank_to": "C",
-      "unlock_requirements": { "min_level": 20, "missions_completed": 350, "gold_earned_lifetime": 60000, "card_wins": 15 },
+      "unlock_requirements": { "min_level": 20, "missions_completed": 600, "gold_earned_lifetime": 60000, "card_wins": 15 },
       "fee_base": 20000,
       "window_hours": 48,
       "cooldown_hours": 4,
@@ -30,7 +30,7 @@
     {
       "rank_from": "C",
       "rank_to": "B",
-      "unlock_requirements": { "min_level": 35, "missions_completed": 800, "gold_earned_lifetime": 200000, "card_wins": 35 },
+      "unlock_requirements": { "min_level": 35, "missions_completed": 1800, "gold_earned_lifetime": 200000, "card_wins": 35 },
       "fee_base": 60000,
       "window_hours": 72,
       "cooldown_hours": 4,
@@ -44,13 +44,13 @@
     {
       "rank_from": "B",
       "rank_to": "A",
-      "unlock_requirements": { "min_level": 50, "missions_completed": 1800, "gold_earned_lifetime": 600000, "card_wins": 70 },
+      "unlock_requirements": { "min_level": 50, "missions_completed": 5000, "gold_earned_lifetime": 600000, "card_wins": 70 },
       "fee_base": 150000,
       "window_hours": 96,
       "cooldown_hours": 4,
       "trials": [
         { "key": "ba_t1", "title": "conclua 40 missões", "type": "auto", "check_type": "complete_any_total", "target": 40 },
-        { "key": "ba_t2", "title": "conclua 15 missões espirituais", "type": "auto", "check_type": "complete_category_total", "category": "spiritual", "target": 15 },
+        { "key": "ba_t2", "title": "conclua 3 missões espirituais", "type": "auto", "check_type": "complete_category_total", "category": "spiritual", "target": 3 },
         { "key": "ba_t3", "title": "Prova de Corpo — 300 de cada", "type": "manual", "check_type": "manual_proof", "target": 1 },
         { "key": "ba_t4", "title": "Duelo — vença 5 partidas sem perder", "type": "mock", "check_type": "card_wins", "target": 5 }
       ],
@@ -59,7 +59,7 @@
     {
       "rank_from": "A",
       "rank_to": "S",
-      "unlock_requirements": { "min_level": 70, "missions_completed": 4000, "gold_earned_lifetime": 2000000, "card_wins": 150 },
+      "unlock_requirements": { "min_level": 70, "missions_completed": 12000, "gold_earned_lifetime": 2000000, "card_wins": 150 },
       "fee_base": 400000,
       "window_hours": 120,
       "cooldown_hours": 4,
