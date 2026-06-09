@@ -18,7 +18,7 @@ import '../../../domain/repositories/mission_repository.dart';
 /// missão sem pagar — ver nota em [markCompleted].
 ///
 /// CONFLITO playerId (ver 'unresolved' da Fase 3): a interface ainda
-/// declara `int playerId`, mas a coluna é uuid. [_pid] faz a ponte
+/// declara `String playerId`, mas a coluna é uuid. [_pid] faz a ponte
 /// stringificando; só funciona de verdade quando o caller passar o uuid
 /// real (interface migrada pra String, como PlayerAchievements já está).
 class MissionRepositorySupabase implements MissionRepository {
@@ -28,7 +28,6 @@ class MissionRepositorySupabase implements MissionRepository {
   static const _table = 'player_mission_progress';
 
   /// Ponte int->uuid enquanto a interface não migra pra String playerId.
-  String _pid(int playerId) => playerId.toString();
 
   @override
   Future<MissionProgress?> findById(int id) async {
@@ -38,11 +37,11 @@ class MissionRepositorySupabase implements MissionRepository {
   }
 
   @override
-  Future<List<MissionProgress>> findActive(int playerId) async {
+  Future<List<MissionProgress>> findActive(String playerId) async {
     final rows = await _client
         .from(_table)
         .select()
-        .eq('player_id', _pid(playerId))
+        .eq('player_id', playerId)
         .isFilter('completed_at', null)
         .isFilter('failed_at', null)
         .order('started_at', ascending: true);
@@ -53,13 +52,13 @@ class MissionRepositorySupabase implements MissionRepository {
 
   @override
   Future<List<MissionProgress>> findByTab(
-    int playerId,
+    String playerId,
     MissionTabOrigin tab,
   ) async {
     final rows = await _client
         .from(_table)
         .select()
-        .eq('player_id', _pid(playerId))
+        .eq('player_id', playerId)
         .eq('tab_origin', tab.storage)
         .order('started_at', ascending: false);
     return rows
@@ -68,14 +67,14 @@ class MissionRepositorySupabase implements MissionRepository {
   }
 
   @override
-  Future<List<MissionProgress>> findHistorical(int playerId) async {
+  Future<List<MissionProgress>> findHistorical(String playerId) async {
     // Não-ativas (completadas OU falhadas) de todas as abas, ordenadas
     // DESC por COALESCE(completed_at, failed_at). PostgREST não expõe
     // COALESCE no .order(); ordenamos client-side após filtrar.
     final rows = await _client
         .from(_table)
         .select()
-        .eq('player_id', _pid(playerId))
+        .eq('player_id', playerId)
         .or('completed_at.not.is.null,failed_at.not.is.null');
     final list = rows
         .map((r) => MissionProgress.fromMap(r))
@@ -86,7 +85,7 @@ class MissionRepositorySupabase implements MissionRepository {
 
   @override
   Future<List<MissionProgress>> findCompletedInWindow(
-    int playerId, {
+    String playerId, {
     required DateTime from,
     required DateTime to,
   }) async {
@@ -98,7 +97,7 @@ class MissionRepositorySupabase implements MissionRepository {
     final rows = await _client
         .from(_table)
         .select()
-        .eq('player_id', _pid(playerId))
+        .eq('player_id', playerId)
         .or('completed_at.not.is.null,failed_at.not.is.null');
     final list = rows
         .map((r) => MissionProgress.fromMap(r))
@@ -112,13 +111,13 @@ class MissionRepositorySupabase implements MissionRepository {
   }
 
   @override
-  Stream<List<MissionProgress>> watchActive(int playerId) {
+  Stream<List<MissionProgress>> watchActive(String playerId) {
     // Realtime stream das rows do jogador; filtramos ativas + ordenamos
     // client-side (o .stream do supabase aceita só eq + order simples).
     return _client
         .from(_table)
         .stream(primaryKey: ['id'])
-        .eq('player_id', _pid(playerId))
+        .eq('player_id', playerId)
         .order('started_at')
         .map((rows) {
           return rows
@@ -135,7 +134,7 @@ class MissionRepositorySupabase implements MissionRepository {
     // (bigserial gerado pelo banco).
     final payload = progress.toJson()
       ..remove('id')
-      ..['player_id'] = _pid(progress.playerId);
+      ..['player_id'] = progress.playerId;
     payload.removeWhere((k, v) => v == null); // não enviar completed/failed null
     final row =
         await _client.from(_table).insert(payload).select('id').single();

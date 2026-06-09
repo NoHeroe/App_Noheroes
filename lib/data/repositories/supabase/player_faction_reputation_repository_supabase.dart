@@ -12,7 +12,7 @@ import '../../../domain/repositories/player_faction_reputation_repository.dart';
 /// semântica de clamp/default. As leituras e o [setAbsolute] são writes
 /// simples de linha via PostgREST.
 ///
-/// CONFLITO playerId (ver 'unresolved'): interface declara `int playerId`,
+/// CONFLITO playerId (ver 'unresolved'): interface declara `String playerId`,
 /// coluna é uuid. [_pid] stringifica; só correto com uuid real.
 class PlayerFactionReputationRepositorySupabase
     implements PlayerFactionReputationRepository {
@@ -22,7 +22,6 @@ class PlayerFactionReputationRepositorySupabase
   static const _table = 'player_faction_reputation';
   static const int _neutralDefault = 50;
 
-  String _pid(int playerId) => playerId.toString();
 
   int _clamp(int value) {
     if (value < 0) return 0;
@@ -31,22 +30,22 @@ class PlayerFactionReputationRepositorySupabase
   }
 
   @override
-  Future<int> getOrDefault(int playerId, String factionId) async {
+  Future<int> getOrDefault(String playerId, String factionId) async {
     final row = await _client
         .from(_table)
         .select('reputation')
-        .eq('player_id', _pid(playerId))
+        .eq('player_id', playerId)
         .eq('faction_id', factionId)
         .maybeSingle();
     return row == null ? _neutralDefault : row['reputation'] as int;
   }
 
   @override
-  Future<Map<String, int>> findAllByPlayer(int playerId) async {
+  Future<Map<String, int>> findAllByPlayer(String playerId) async {
     final rows = await _client
         .from(_table)
         .select('faction_id, reputation')
-        .eq('player_id', _pid(playerId));
+        .eq('player_id', playerId);
     return {
       for (final r in rows)
         r['faction_id'] as String: r['reputation'] as int,
@@ -55,7 +54,7 @@ class PlayerFactionReputationRepositorySupabase
 
   @override
   Future<void> setAbsolute(
-    int playerId,
+    String playerId,
     String factionId,
     int reputation,
   ) async {
@@ -66,7 +65,7 @@ class PlayerFactionReputationRepositorySupabase
     final now = DateTime.now().millisecondsSinceEpoch;
     await _client.from(_table).upsert(
       {
-        'player_id': _pid(playerId),
+        'player_id': playerId,
         'faction_id': factionId,
         'reputation': clamped,
         'updated_at': now,
@@ -76,12 +75,12 @@ class PlayerFactionReputationRepositorySupabase
   }
 
   @override
-  Future<void> delta(int playerId, String factionId, int delta) async {
+  Future<void> delta(String playerId, String factionId, int delta) async {
     // Atômico: getOrDefault(50) + clamp + upsert dentro de 1 transação.
     await _client.rpc(
       'faction_reputation_delta',
       params: {
-        'p_player': _pid(playerId),
+        'p_player': playerId,
         'p_faction': factionId,
         'p_delta': delta,
       },

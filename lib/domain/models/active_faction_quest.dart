@@ -13,7 +13,7 @@
 /// contrato transacional.
 class ActiveFactionQuest {
   final int id;
-  final int playerId;
+  final String playerId;
   final String factionId;
   final String missionKey;
 
@@ -32,21 +32,10 @@ class ActiveFactionQuest {
   });
 
   /// Época 2 full-online (ADR-0024) — constrói a partir de uma row Supabase
-  /// (Map snake_case do PostgREST). `player_id` chega como uuid (String) e é
-  /// normalizado pra int via [_playerIdToInt] enquanto o campo `playerId`
-  /// continuar `int` (Stage A não migrou esta classe — ver 'unresolved').
-  factory ActiveFactionQuest.fromMap(Map<String, dynamic> row) {
-    final patched = Map<String, dynamic>.from(row);
-    patched['player_id'] = _playerIdToInt(row['player_id']);
-    return ActiveFactionQuest.fromJson(patched);
-  }
-
-  /// Ponte temporária uuid(String) -> int pro campo `playerId` legacy.
-  static int _playerIdToInt(dynamic raw) {
-    if (raw is int) return raw;
-    if (raw is String) return int.tryParse(raw) ?? raw.hashCode;
-    throw FormatException("ActiveFactionQuest.player_id inválido ($raw)");
-  }
+  /// (Map snake_case do PostgREST). `player_id` chega como uuid (String).
+  /// Delega a [fromJson].
+  factory ActiveFactionQuest.fromMap(Map<String, dynamic> row) =>
+      ActiveFactionQuest.fromJson(row);
 
   factory ActiveFactionQuest.fromJson(Map<String, dynamic> json) {
     final id = json['id'];
@@ -54,7 +43,7 @@ class ActiveFactionQuest {
       throw FormatException("ActiveFactionQuest.id inválido ($id)");
     }
     final playerId = json['player_id'];
-    if (playerId is! int) {
+    if (playerId is! String) {
       throw FormatException(
           "ActiveFactionQuest.player_id inválido em id=$id");
     }

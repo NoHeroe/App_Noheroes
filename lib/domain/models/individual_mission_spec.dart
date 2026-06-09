@@ -39,7 +39,7 @@ extension IndividualMissionFrequencyCodec on IndividualMissionFrequency {
 /// construção.
 class IndividualMissionSpec {
   final int id;
-  final int playerId;
+  final String playerId;
   final String name;
   final String? description;
   final MissionCategory category;
@@ -71,22 +71,10 @@ class IndividualMissionSpec {
   bool get isDeleted => deletedAt != null;
 
   /// Época 2 full-online (ADR-0024) — constrói a partir de uma row Supabase
-  /// (Map snake_case do PostgREST). `player_id` chega como uuid (String) e é
-  /// normalizado pra int via [_playerIdToInt] enquanto o campo `playerId`
-  /// continuar `int` (Stage A não migrou esta classe — ver 'unresolved').
-  /// `repeats` chega como bool nativo.
-  factory IndividualMissionSpec.fromMap(Map<String, dynamic> row) {
-    final patched = Map<String, dynamic>.from(row);
-    patched['player_id'] = _playerIdToInt(row['player_id']);
-    return IndividualMissionSpec.fromJson(patched);
-  }
-
-  /// Ponte temporária uuid(String) -> int pro campo `playerId` legacy.
-  static int _playerIdToInt(dynamic raw) {
-    if (raw is int) return raw;
-    if (raw is String) return int.tryParse(raw) ?? raw.hashCode;
-    throw FormatException("IndividualMissionSpec.player_id inválido ($raw)");
-  }
+  /// (Map snake_case do PostgREST). `player_id` chega como uuid (String);
+  /// `repeats` como bool nativo. Delega a [fromJson].
+  factory IndividualMissionSpec.fromMap(Map<String, dynamic> row) =>
+      IndividualMissionSpec.fromJson(row);
 
   factory IndividualMissionSpec.fromJson(Map<String, dynamic> json) {
     final id = json['id'];
@@ -94,7 +82,7 @@ class IndividualMissionSpec {
       throw FormatException("IndividualMissionSpec.id inválido ($id)");
     }
     final playerId = json['player_id'];
-    if (playerId is! int) {
+    if (playerId is! String) {
       throw FormatException(
           "IndividualMissionSpec.player_id inválido em id=$id");
     }

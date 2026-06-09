@@ -19,7 +19,7 @@ import '../../../domain/repositories/player_individual_missions_repository.dart'
 /// repositório, que persiste o catálogo de specs em
 /// `player_individual_missions`.
 ///
-/// CONFLITO playerId (ver 'unresolved'): interface declara `int playerId`,
+/// CONFLITO playerId (ver 'unresolved'): interface declara `String playerId`,
 /// coluna é uuid. [_pid] stringifica; só correto com uuid real.
 class PlayerIndividualMissionsRepositorySupabase
     implements PlayerIndividualMissionsRepository {
@@ -28,14 +28,13 @@ class PlayerIndividualMissionsRepositorySupabase
 
   static const _table = 'player_individual_missions';
 
-  String _pid(int playerId) => playerId.toString();
 
   @override
-  Future<List<IndividualMissionSpec>> findActive(int playerId) async {
+  Future<List<IndividualMissionSpec>> findActive(String playerId) async {
     final rows = await _client
         .from(_table)
         .select()
-        .eq('player_id', _pid(playerId))
+        .eq('player_id', playerId)
         .isFilter('deleted_at', null)
         .order('created_at', ascending: false);
     return rows
@@ -58,7 +57,7 @@ class PlayerIndividualMissionsRepositorySupabase
     // campos nulos (description/deleted_at).
     final payload = mission.toJson()
       ..remove('id')
-      ..['player_id'] = _pid(mission.playerId);
+      ..['player_id'] = mission.playerId;
     payload.removeWhere((k, v) => v == null);
     final row =
         await _client.from(_table).insert(payload).select('id').single();
@@ -86,11 +85,11 @@ class PlayerIndividualMissionsRepositorySupabase
   }
 
   @override
-  Future<int> countActive(int playerId) async {
+  Future<int> countActive(String playerId) async {
     final res = await _client
         .from(_table)
         .select('id')
-        .eq('player_id', _pid(playerId))
+        .eq('player_id', playerId)
         .isFilter('deleted_at', null)
         .count(CountOption.exact);
     return res.count;

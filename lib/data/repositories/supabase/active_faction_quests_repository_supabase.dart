@@ -14,7 +14,7 @@ import '../../../domain/repositories/active_faction_quests_repository.dart';
 /// `{ledger_id, progress_id}`. [findActiveFor] e [deleteExpiredBefore] são
 /// read/delete simples via PostgREST.
 ///
-/// CONFLITO playerId (ver 'unresolved'): interface declara `int playerId`,
+/// CONFLITO playerId (ver 'unresolved'): interface declara `String playerId`,
 /// coluna é uuid. [_pid] stringifica; só correto com uuid real.
 class ActiveFactionQuestsRepositorySupabase
     implements ActiveFactionQuestsRepository {
@@ -23,18 +23,17 @@ class ActiveFactionQuestsRepositorySupabase
 
   static const _table = 'active_faction_quests';
 
-  String _pid(int playerId) => playerId.toString();
 
   @override
   Future<ActiveFactionQuest?> findActiveFor(
-    int playerId,
+    String playerId,
     String factionId,
     String weekStart,
   ) async {
     final row = await _client
         .from(_table)
         .select()
-        .eq('player_id', _pid(playerId))
+        .eq('player_id', playerId)
         .eq('faction_id', factionId)
         .eq('week_start', weekStart)
         .maybeSingle();
@@ -43,7 +42,7 @@ class ActiveFactionQuestsRepositorySupabase
 
   @override
   Future<FactionWeeklyAssignment> upsertAtomic({
-    required int playerId,
+    required String playerId,
     required String factionId,
     required String missionKey,
     required String weekStart,
@@ -56,7 +55,7 @@ class ActiveFactionQuestsRepositorySupabase
     final result = await _client.rpc(
       'assign_weekly_faction_quest',
       params: {
-        'p_player': _pid(playerId),
+        'p_player': playerId,
         'p_faction_id': factionId,
         'p_mission_key': missionKey,
         'p_week_start': weekStart,

@@ -15,7 +15,7 @@ abstract class ActiveFactionQuestsRepository {
   /// Existe ledger pra esta tripla (jogador, facção, semana)?
   /// `null` se não foi assignado ainda.
   Future<ActiveFactionQuest?> findActiveFor(
-    int playerId,
+    String playerId,
     String factionId,
     String weekStart,
   );
@@ -39,7 +39,7 @@ abstract class ActiveFactionQuestsRepository {
   /// do ledger + [progressSeedJson] que o repo usa pra materializar a
   /// row de progresso dentro da mesma transação.
   Future<FactionWeeklyAssignment> upsertAtomic({
-    required int playerId,
+    required String playerId,
     required String factionId,
     required String missionKey,
     required String weekStart,

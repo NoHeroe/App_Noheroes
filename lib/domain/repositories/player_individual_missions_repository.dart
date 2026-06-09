@@ -8,7 +8,7 @@ import '../models/individual_mission_spec.dart';
 abstract class PlayerIndividualMissionsRepository {
   /// Missões ativas do jogador (`deleted_at IS NULL`), ordenadas por
   /// `created_at` desc (mais recentes no topo).
-  Future<List<IndividualMissionSpec>> findActive(int playerId);
+  Future<List<IndividualMissionSpec>> findActive(String playerId);
 
   /// Missão por id (mesmo deletada — útil pro histórico).
   Future<IndividualMissionSpec?> findById(int id);
@@ -30,5 +30,5 @@ abstract class PlayerIndividualMissionsRepository {
   Future<void> softDelete(int id, {required DateTime at});
 
   /// Total de missões ativas — enforce do limite FREE=5.
-  Future<int> countActive(int playerId);
+  Future<int> countActive(String playerId);
 }

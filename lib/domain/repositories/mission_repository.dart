@@ -14,13 +14,13 @@ abstract class MissionRepository {
 
   /// Todas as missões em andamento do jogador
   /// (completed_at IS NULL AND failed_at IS NULL).
-  Future<List<MissionProgress>> findActive(int playerId);
+  Future<List<MissionProgress>> findActive(String playerId);
 
   /// Missões do jogador numa aba específica, em qualquer estado
   /// (ativa, completa, falha) — ordenação temporal reversa por
   /// started_at.
   Future<List<MissionProgress>> findByTab(
-    int playerId,
+    String playerId,
     MissionTabOrigin tab,
   );
 
@@ -29,7 +29,7 @@ abstract class MissionRepository {
   /// refina integração com drawer Santuário). Ordenação DESC pelo
   /// timestamp de conclusão/falha — `coalesce(completed_at, failed_at)`
   /// garante que missões falhadas também entrem, mais recentes primeiro.
-  Future<List<MissionProgress>> findHistorical(int playerId);
+  Future<List<MissionProgress>> findHistorical(String playerId);
 
   /// Sprint 3.1 Bloco 12 — missões não-ativas cujo encerramento
   /// (`completed_at` OU `failed_at`) caiu na janela `[from, to]`
@@ -42,14 +42,14 @@ abstract class MissionRepository {
   ///
   /// Ordenação DESC por `COALESCE(completed_at, failed_at)`.
   Future<List<MissionProgress>> findCompletedInWindow(
-    int playerId, {
+    String playerId, {
     required DateTime from,
     required DateTime to,
   });
 
   /// Stream reativa das missões ativas — consumida pela UI do Bloco 10
   /// pra animar barras e popups. Emite nova lista em cada mudança de row.
-  Stream<List<MissionProgress>> watchActive(int playerId);
+  Stream<List<MissionProgress>> watchActive(String playerId);
 
   /// Insere nova missão em progresso. Retorna o id gerado.
   Future<int> insert(MissionProgress progress);
