@@ -19,6 +19,9 @@ import '../../card_game/card_ownership.dart';
 
 enum _CardKind { creature, relic }
 
+/// Filtro de visão da coleção (combina com tab/busca/conceito).
+enum _OwnershipView { all, owned, locked }
+
 // ── Mapeamento conceito → cor/label (cores reais de AppColors) ───────────────
 class _ConceptStyle {
   final String label;
@@ -188,6 +191,7 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
   int _tab = 0; // 0 = criaturas, 1 = relíquias
   String _query = '';
   CardConcept? _conceptFilter; // null = Todos
+  _OwnershipView _view = _OwnershipView.all; // default = Todas
   final _searchCtrl = TextEditingController();
 
   late final Future<CardCatalog> _catalogFuture = CardCatalog.load();
@@ -202,12 +206,19 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
       ? catalog.creatures.map(_CardVM.fromCreature).toList()
       : catalog.relics.map(_CardVM.fromRelic).toList();
 
-  List<_CardVM> _filter(List<_CardVM> source) => source.where((c) {
+  List<_CardVM> _filter(List<_CardVM> source, Set<String> owned) =>
+      source.where((c) {
         final byQuery = _query.isEmpty ||
             c.name.toLowerCase().contains(_query.toLowerCase());
         final byConcept =
             _conceptFilter == null || c.concepts.contains(_conceptFilter);
-        return byQuery && byConcept;
+        final unlocked = isCardUnlocked(id: c.id, owned: owned);
+        final byView = switch (_view) {
+          _OwnershipView.all => true,
+          _OwnershipView.owned => unlocked,
+          _OwnershipView.locked => !unlocked,
+        };
+        return byQuery && byConcept && byView;
       }).toList();
 
   @override
@@ -229,6 +240,11 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
           ),
           const SizedBox(height: 12),
           _buildFilters(),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildViewSelector(),
+          ),
           const SizedBox(height: 12),
           Expanded(
             child: FutureBuilder<CardCatalog>(
@@ -274,14 +290,16 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
   }
 
   Widget _buildBody(CardCatalog catalog) {
-    final owned = ref.watch(cardOwnershipProvider);
+    // Posse REAL é assíncrona: enquanto carrega/erro, trata como "nada
+    // desbloqueado" (não crasha; UI mostra tudo bloqueado). Sem player
+    // logado o provider já devolve set vazio.
+    final owned =
+        ref.watch(cardOwnershipProvider).value ?? const <String>{};
     final source = _sourceFor(catalog);
-    final cards = _filter(source);
+    final cards = _filter(source, owned);
 
-    final ownedCount = source
-        .where((c) =>
-            isCardUnlocked(id: c.id, rarity: c.rarity, owned: owned))
-        .length;
+    final ownedCount =
+        source.where((c) => isCardUnlocked(id: c.id, owned: owned)).length;
     final total = source.length;
 
     return Column(
@@ -305,8 +323,8 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
                   itemCount: cards.length,
                   itemBuilder: (_, i) {
                     final card = cards[i];
-                    final unlocked = isCardUnlocked(
-                        id: card.id, rarity: card.rarity, owned: owned);
+                    final unlocked =
+                        isCardUnlocked(id: card.id, owned: owned);
                     return _CardTile(
                       card: card,
                       unlocked: unlocked,
@@ -600,6 +618,73 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
               style: GoogleFonts.roboto(
                 fontSize: 11.5,
                 color: selected ? AppColors.goldLt : AppColors.txt2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Seletor de visão (Adquiridas · Bloqueadas · Todas) ──────────────
+  Widget _buildViewSelector() {
+    return Row(
+      children: [
+        Expanded(
+          child: _viewSeg(_OwnershipView.owned, 'ADQUIRIDAS', Icons.check_circle_outline),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _viewSeg(_OwnershipView.locked, 'BLOQUEADAS', Icons.lock_outline),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _viewSeg(_OwnershipView.all, 'TODAS', Icons.grid_view),
+        ),
+      ],
+    );
+  }
+
+  Widget _viewSeg(_OwnershipView view, String label, IconData icon) {
+    final selected = _view == view;
+    return GestureDetector(
+      onTap: () => setState(() => _view = view),
+      child: Container(
+        height: 34,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: selected
+              ? AppColors.purple.withValues(alpha: 0.18)
+              : const Color(0xB3100C15),
+          border: Border.all(
+            color: selected
+                ? AppColors.purple.withValues(alpha: 0.5)
+                : AppColors.borderViolet,
+          ),
+          boxShadow: selected
+              ? const [BoxShadow(color: AppColors.purpleGlow45, blurRadius: 8)]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon,
+                size: 13,
+                color: selected ? AppColors.purpleLt : AppColors.txt2),
+            const SizedBox(width: 5),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.roboto(
+                  fontSize: 10.5,
+                  letterSpacing: 0.8,
+                  fontWeight: FontWeight.w600,
+                  color: selected ? AppColors.purpleLt : AppColors.txt2,
+                ),
               ),
             ),
           ],
