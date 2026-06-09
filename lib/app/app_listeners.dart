@@ -52,15 +52,14 @@ class PlayerStateSyncService {
   }
 
   Future<void> _onLevelUp(LevelUp evt) async {
-    final db = _ref.read(appDatabaseProvider);
-    final fresh = await PlayerDao(db).findById(evt.playerId);
-    if (fresh == null) return;
-    // Idempotência: só atualiza se realmente mudou (evita rebuild
-    // desnecessário). Comparamos level + xp + xpToNext — campos que
-    // addXp toca de uma vez só.
+    // Época 2 (full-online): refetch do currentPlayer no Supabase pelo seu
+    // próprio id (uuid). Ignora evt.playerId (a sync é sempre do jogador da
+    // sessão). Idempotência preservada: só seta se level/xp/xpToNext mudaram.
     final current = _ref.read(currentPlayerProvider);
-    if (current != null &&
-        current.level == fresh.level &&
+    if (current == null) return;
+    final fresh = await _ref.read(playerRepositoryProvider).fetchById(current.id);
+    if (fresh == null) return;
+    if (current.level == fresh.level &&
         current.xp == fresh.xp &&
         current.xpToNext == fresh.xpToNext) {
       return;

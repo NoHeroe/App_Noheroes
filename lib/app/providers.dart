@@ -74,12 +74,31 @@ import '../data/datasources/local/player_recipes_service.dart';
 import '../data/datasources/local/crafting_service.dart';
 import '../data/datasources/local/enchant_service.dart';
 import '../data/database/daos/player_dao.dart';
+// Época 2 (full-online — ADR-0024): raiz Supabase.
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../domain/entities/player.dart';
+import '../domain/repositories/player_repository.dart';
+import '../data/repositories/supabase/player_repository_supabase.dart';
+import '../data/datasources/remote/supabase_auth_service.dart';
 
-// Banco singleton
+// Banco singleton.
+// NOTA (Época 2): mantido VIVO durante o cutover — os services ainda em Drift
+// dependem dele até serem migrados (Fase 3). Removido no fim do cutover.
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
   ref.onDispose(() => db.close());
   return db;
+});
+
+// Época 2 — cliente Supabase (fonte única full-online). Já inicializado em
+// main.dart (Supabase.initialize). Sem onDispose (lifecycle é do app).
+final supabaseClientProvider = Provider<SupabaseClient>((ref) {
+  return Supabase.instance.client;
+});
+
+// Época 2 — repositório do jogador (tabela players via PostgREST).
+final playerRepositoryProvider = Provider<PlayerRepository>((ref) {
+  return PlayerRepositorySupabase(ref.watch(supabaseClientProvider));
 });
 
 // Sprint 3.1 Bloco 2 — EventBus local singleton. Consumidores do bus
@@ -181,26 +200,29 @@ final enchantServiceProvider = Provider<EnchantService>((ref) {
   );
 });
 
-// Auth datasource
-final authDsProvider = Provider<AuthLocalDs>((ref) {
-  return AuthLocalDs(ref.watch(appDatabaseProvider));
+// Auth — Supabase Auth (Época 2). Mantém o nome `authDsProvider` pra reduzir
+// churn nos call sites; os métodos (register/login/currentSession/logout/
+// completeOnboarding) têm a mesma assinatura de antes, mas retornam Player?.
+final authDsProvider = Provider<SupabaseAuthService>((ref) {
+  return SupabaseAuthService(
+    ref.watch(supabaseClientProvider),
+    ref.watch(playerRepositoryProvider),
+  );
 });
 
-// Jogador atual — StateProvider simples
-final currentPlayerProvider = StateProvider<PlayersTableData?>((ref) => null);
+// Jogador atual — agora Player (id String/uuid). Setado via refetch após login
+// e após eventos que mudam o player (LevelUp, etc. — ver PlayerStateSyncService).
+final currentPlayerProvider = StateProvider<Player?>((ref) => null);
 
 // Loading de auth
 final authLoadingProvider = StateProvider<bool>((ref) => false);
 
-// Stream reativo do jogador — atualiza automaticamente quando banco muda
-final playerStreamProvider = StreamProvider<PlayersTableData?>((ref) {
-  final db = ref.watch(appDatabaseProvider);
-  final player = ref.watch(currentPlayerProvider);
-  if (player == null) return Stream.value(null);
-
-  return (db.select(db.playersTable)
-        ..where((t) => t.id.equals(player.id)))
-      .watchSingleOrNull();
+// Reatividade do jogador (modelo REFETCH, decisão Época 2 — sem Realtime por
+// ora). Espelha o currentPlayerProvider: quem dependia do stream (XP bar)
+// reage quando o currentPlayer é refetchado. Migrável p/ Supabase Realtime
+// depois sem mudar os consumidores.
+final playerStreamProvider = StreamProvider<Player?>((ref) {
+  return Stream.value(ref.watch(currentPlayerProvider));
 });
 
 /// Sprint 3.4 Sub-Etapa B.2 hotfix — stream reativo de uma row de
