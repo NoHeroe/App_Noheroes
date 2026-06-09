@@ -47,7 +47,7 @@ class MissionProgressService {
   final RewardGrantService _granter;
   final AppEventBus _eventBus;
   final Map<MissionModality, MissionStrategy> _strategies;
-  final Future<PlayerSnapshot> Function(int playerId) _resolvePlayer;
+  final Future<PlayerSnapshot> Function(String playerId) _resolvePlayer;
 
   late final StreamSubscription<AppEvent> _subscription;
   bool _disposed = false;
@@ -58,7 +58,7 @@ class MissionProgressService {
     required RewardGrantService granter,
     required AppEventBus eventBus,
     required Map<MissionModality, MissionStrategy> strategies,
-    required Future<PlayerSnapshot> Function(int playerId) resolvePlayer,
+    required Future<PlayerSnapshot> Function(String playerId) resolvePlayer,
   })  : _repo = repo,
         _resolver = resolver,
         _granter = granter,
@@ -89,11 +89,11 @@ class MissionProgressService {
   }
 
   /// Missões ativas do jogador — delega pra repo.
-  Future<List<MissionProgress>> getActive(int playerId) =>
+  Future<List<MissionProgress>> getActive(String playerId) =>
       _repo.findActive(playerId);
 
   /// Stream reativa — delega pra repo.
-  Stream<List<MissionProgress>> watchActive(int playerId) =>
+  Stream<List<MissionProgress>> watchActive(String playerId) =>
       _repo.watchActive(playerId);
 
   /// Fecha a subscription e marca service como descartado. Idempotente.

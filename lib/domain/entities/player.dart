@@ -1,3 +1,5 @@
+import '../enums/class_type.dart';
+
 /// Modelo de jogador full-online (Época 2, S2 — ADR-0024).
 ///
 /// Substitui o `PlayersTableData` (Drift) como o objeto em memória carregado
@@ -136,6 +138,16 @@ class Player {
     this.totalGoldEarnedViaQuests = 0,
     this.totalGoldEarnedLifetime = 0,
   });
+
+  /// Enum da classe (null se sem classe). Espelha o antigo PlayersTableDataX.
+  ClassType? get classTypeEnum {
+    final raw = classType;
+    if (raw == null || raw.isEmpty) return null;
+    return ClassType.values.asNameMap()[raw];
+  }
+
+  /// True se a classe tem vitalismo (usado por router + telas vitalistas).
+  bool get isVitalist => classTypeEnum?.hasVitalism ?? false;
 
   static int _int(Object? v, [int fallback = 0]) =>
       v == null ? fallback : (v as num).toInt();

@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/events/player_events.dart';
-import '../data/database/app_database.dart';
-import '../data/database/daos/player_dao.dart';
 import 'providers.dart';
 
 /// Sprint 3.4 Etapa A hotfix — sincronização global de `LevelUp` events
@@ -84,24 +82,5 @@ final playerStateSyncServiceProvider =
   return svc;
 });
 
-/// Sprint 3.4 Etapa A hotfix — backfill defensivo do `xpToNext` legacy.
-///
-/// Players criados antes do fix têm `xpToNext=100` (DB default) mas
-/// `XpCalculator.xpToNextLevel(1)=200`. O bug não impede progressão
-/// (próximo `addXp` recalcula via XpCalculator quando newLevel é 2+),
-/// mas faz a XP bar parecer "max=100" no early game.
-///
-/// Backfill: pra players com `level=1 AND xpToNext=100`, atualiza pra
-/// 200. Idempotente (depois de rodar uma vez, condição não bate mais).
-///
-/// Documenta como "fix preventivo Sprint 3.4 hotfix" no log pra
-/// rastreio futuro caso apareça em postmortem.
-Future<void> applyXpToNextBackfill(
-    PlayerDao dao, PlayersTableData player) async {
-  if (player.level == 1 && player.xpToNext == 100) {
-    await dao.setXpToNext(player.id, 200);
-    // ignore: avoid_print
-    print('[xp-backfill] player=${player.id} xpToNext 100 → 200 '
-        '(fix preventivo Sprint 3.4 hotfix Etapa A)');
-  }
-}
+// Época 2 (full-online): applyXpToNextBackfill removido — era backfill de
+// dados locais legacy; "começar do zero" no Supabase não tem esse caso.

@@ -295,7 +295,7 @@ final missionProgressServiceProvider =
     },
     resolvePlayer: (playerId) async {
       // Época 2 (ADR-0024): lê o Player via PostgREST (PlayerRepository).
-      final player = await playerRepo.fetchById(playerId.toString());
+      final player = await playerRepo.fetchById(playerId);
       final rank = (player == null || player.guildRank == 'none')
           ? null
           : RankCodec.fromString(player.guildRank.toLowerCase());
