@@ -113,10 +113,10 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
 
   List<String> _levelUnlocks(int level) {
     final unlocks = <String>[];
-    if (level == 2)  unlocks.add('📚 Biblioteca desbloqueada');
-    if (level == 5)  unlocks.add('⚔️ Seleção de Classe disponível');
-    if (level == 6)  unlocks.add('🛡️ Guilda de Aventureiros desbloqueada');
-    if (level == 7)  unlocks.add('🏴 Facções disponíveis');
+    if (level == 2) unlocks.add('📚 Biblioteca desbloqueada');
+    if (level == 5) unlocks.add('⚔️ Seleção de Classe disponível');
+    if (level == 6) unlocks.add('🛡️ Guilda de Aventureiros desbloqueada');
+    if (level == 7) unlocks.add('🏴 Facções disponíveis');
     if (level == 10) unlocks.add('🗺️ Regiões médias desbloqueadas');
     if (level == 25) unlocks.add('✨ Vitalismo avançado desbloqueado');
     if (level == 15) unlocks.add('⚔️ Estilo de Jogo disponível');
@@ -132,16 +132,15 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
   Future<void> _checkNpcDialog() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
-    final show = await NpcSession.shouldShow(
-        player.caelumDay, player.shadowState);
+    final show =
+        await NpcSession.shouldShow(player.caelumDay, player.shadowState);
     if (show && mounted) {
       setState(() => _showNpc = true);
       await NpcSession.markShown(player.caelumDay, player.shadowState);
       // Ganha +2 rep com NPC da facção ao ver diálogo
       final client = ref.read(supabaseClientProvider);
       final npcId = AssetLoader.npcIdForFaction(player.factionType);
-      await NpcReputationService(client)
-          .addReputation(player.id, npcId, 2);
+      await NpcReputationService(client).addReputation(player.id, npcId, 2);
     }
   }
 
@@ -175,10 +174,11 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     // boot-check manual deixou de existir aqui.
 
     final hasClass = (player.classType?.isNotEmpty ?? false);
-    final hasFaction = (player.factionType?.isNotEmpty ?? false)
-        && player.factionType != 'none'
-        && !(player.factionType?.startsWith('pending:') ?? false);
-    final hasPlaystyle = player.playStyle.isNotEmpty && player.playStyle != 'none';
+    final hasFaction = (player.factionType?.isNotEmpty ?? false) &&
+        player.factionType != 'none' &&
+        !(player.factionType?.startsWith('pending:') ?? false);
+    final hasPlaystyle =
+        player.playStyle.isNotEmpty && player.playStyle != 'none';
 
     // Fase 10 só dispara a cerimônia do Cristal pra vitalistas sem afinidade.
     // Consulta ao banco é feita apenas se o player já atingiu o nível 25.
@@ -228,8 +228,7 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Sair',
-                style: GoogleFonts.roboto(color: AppColors.hp)),
+            child: Text('Sair', style: GoogleFonts.roboto(color: AppColors.hp)),
           ),
         ],
       ),
@@ -291,56 +290,58 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Row 1 — perfil + carteira
-                    const Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: SanctuaryMiniProfile()),
-                        SizedBox(width: 16),
-                        SanctuaryWalletPills(),
-                      ],
-                    )
-                        .animate()
-                        .fadeIn(duration: 400.ms)
-                        .slideY(begin: -0.06, curve: Curves.easeOut),
-                    const SizedBox(height: 16),
-                    // Row 2 — utilitários
-                    SanctuaryUtilRow(
-                      onMenu: () => _scaffoldKey.currentState?.openDrawer(),
-                      onInbox: () => AppSnack.warning(
-                          context, 'Caixa de entrada em breve.'),
-                      onFriends: () =>
-                          AppSnack.warning(context, 'Amigos em breve.'),
-                      onBell: () => context.go('/notifications'),
-                    ).animate(delay: 80.ms).fadeIn(duration: 400.ms),
-                    const SizedBox(height: 20),
-                    const CaelumDayBanner()
-                        .animate(delay: 140.ms)
-                        .fadeIn(duration: 400.ms),
-                    const SizedBox(height: 20),
-                    const ShadowStatusCard()
-                        .animate(delay: 200.ms)
-                        .fadeIn(duration: 450.ms)
-                        .slideY(begin: 0.08, curve: Curves.easeOut),
-                    const SizedBox(height: 24),
-                    SanctuaryCombatHex(onTap: () => context.go('/battle'))
-                        .animate(delay: 280.ms)
-                        .fadeIn(duration: 450.ms)
-                        .slideY(begin: 0.1, curve: Curves.easeOut),
-                    const SizedBox(height: 28),
-                    _buildMedallions(context, level, isVitalist)
-                        .animate(delay: 360.ms)
-                        .fadeIn(duration: 500.ms),
-                    const Spacer(),
-                    // TEMP DEV — remover no release. Acesso ao Dev Panel
-                    // (saiu do topbar no restyle da Fatia 1).
-                    Center(child: _devChip(context)),
-                    const SizedBox(height: 16),
-                    const SizedBox(height: 88), // respiro acima da navbar
-                  ],
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Row 1 — perfil + carteira
+                      const Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: SanctuaryMiniProfile()),
+                          SizedBox(width: 16),
+                          SanctuaryWalletPills(),
+                        ],
+                      )
+                          .animate()
+                          .fadeIn(duration: 400.ms)
+                          .slideY(begin: -0.06, curve: Curves.easeOut),
+                      const SizedBox(height: 16),
+                      // Row 2 — utilitários
+                      SanctuaryUtilRow(
+                        onMenu: () => _scaffoldKey.currentState?.openDrawer(),
+                        onInbox: () => AppSnack.warning(
+                            context, 'Caixa de entrada em breve.'),
+                        onFriends: () =>
+                            AppSnack.warning(context, 'Amigos em breve.'),
+                        onBell: () => context.go('/notifications'),
+                      ).animate(delay: 80.ms).fadeIn(duration: 400.ms),
+                      const SizedBox(height: 20),
+                      const CaelumDayBanner()
+                          .animate(delay: 140.ms)
+                          .fadeIn(duration: 400.ms),
+                      const SizedBox(height: 20),
+                      const ShadowStatusCard()
+                          .animate(delay: 200.ms)
+                          .fadeIn(duration: 450.ms)
+                          .slideY(begin: 0.08, curve: Curves.easeOut),
+                      const SizedBox(height: 24),
+                      SanctuaryCombatHex(onTap: () => context.go('/battle'))
+                          .animate(delay: 280.ms)
+                          .fadeIn(duration: 450.ms)
+                          .slideY(begin: 0.1, curve: Curves.easeOut),
+                      const SizedBox(height: 28),
+                      _buildMedallions(context, level, isVitalist)
+                          .animate(delay: 360.ms)
+                          .fadeIn(duration: 500.ms),
+                      const SizedBox(height: 32),
+                      // TEMP DEV — remover no release. Acesso ao Dev Panel
+                      // (saiu do topbar no restyle da Fatia 1).
+                      Center(child: _devChip(context)),
+                      const SizedBox(height: 16),
+                      const SizedBox(height: 88), // respiro acima da navbar
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -350,7 +351,8 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
             ),
             if (_showNpc)
               NpcDialogueOverlay(
-                shadowState: ref.read(currentPlayerProvider)?.shadowState ?? 'stable',
+                shadowState:
+                    ref.read(currentPlayerProvider)?.shadowState ?? 'stable',
                 caelumDay: ref.read(currentPlayerProvider)?.caelumDay ?? 1,
                 factionType: ref.read(currentPlayerProvider)?.factionType,
                 onDismiss: () => setState(() => _showNpc = false),
