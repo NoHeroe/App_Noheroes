@@ -118,4 +118,95 @@ void main() {
       expect(inPlay.armor, 1);
     });
   });
+
+  group('relíquia custa cristais', () {
+    /// Loadout com criaturas custo 1 e relíquias com [relicCost].
+    CardLoadout loadoutWithRelicCost(String prefix, int relicCost,
+        {bool flash = false}) {
+      return CardLoadout(
+        creatures: List.generate(
+            9, (i) => creature(id: '${prefix}_c$i', cost: 1)),
+        relics: List.generate(
+            9,
+            (i) => relic(
+                id: '${prefix}_r$i',
+                cost: relicCost,
+                armor: flash ? null : 1,
+                heal: flash ? 2 : null,
+                flash: flash)),
+      );
+    }
+
+    test('equipar debita o custo dos cristais', () {
+      var s = engine.start(loadoutWithRelicCost('A', 2),
+          loadoutWithRelicCost('B', 2), seed: 1);
+      final activeId = s.activeSide;
+      final creatureId = s.active.poolCreatures.first.id;
+      s = engine.apply(s, PlayCreature(creatureId)); // 3 - 1 = 2
+      final relicId = s.active.poolRelics.first.id;
+      s = engine.apply(s, PlayRelic(relicId, creatureId)); // 2 - 2 = 0
+
+      final side = s.sideOf(activeId);
+      expect(side.lanes[0]!.relics.length, 1);
+      expect(side.crystals, kCrystalsPerTurn - 1 - 2);
+      expect(side.poolRelics.any((r) => r.id == relicId), isFalse);
+    });
+
+    test('flash também debita o custo', () {
+      var s = engine.start(loadoutWithRelicCost('A', 1, flash: true),
+          loadoutWithRelicCost('B', 1, flash: true), seed: 1);
+      final activeId = s.activeSide;
+      final creatureId = s.active.poolCreatures.first.id;
+      s = engine.apply(s, PlayCreature(creatureId)); // 3 - 1 = 2
+      final relicId = s.active.poolRelics.first.id;
+      s = engine.apply(s, PlayRelic(relicId, creatureId)); // 2 - 1 = 1
+
+      final side = s.sideOf(activeId);
+      // Flash não fica equipada, mas o custo foi cobrado.
+      expect(side.lanes[0]!.relics, isEmpty);
+      expect(side.crystals, kCrystalsPerTurn - 1 - 1);
+      expect(side.poolRelics.any((r) => r.id == relicId), isFalse);
+    });
+
+    test('sem cristais suficientes = no-op', () {
+      var s = engine.start(loadoutWithRelicCost('A', 3),
+          loadoutWithRelicCost('B', 3), seed: 1);
+      final creatureId = s.active.poolCreatures.first.id;
+      s = engine.apply(s, PlayCreature(creatureId)); // 3 - 1 = 2 < custo 3
+      final relicId = s.active.poolRelics.first.id;
+      final before = s;
+      s = engine.apply(s, PlayRelic(relicId, creatureId));
+
+      expect(identical(s, before), isTrue, reason: 'deve ser no-op');
+      expect(s.active.lanes[0]!.relics, isEmpty);
+      expect(s.active.poolRelics.any((r) => r.id == relicId), isTrue);
+      expect(s.active.crystals, kCrystalsPerTurn - 1);
+    });
+
+    test('bot não propõe relíquia impagável', () {
+      final s = engine.start(loadoutWithRelicCost('A', 99),
+          loadoutWithRelicCost('B', 99), seed: 1);
+      final actions = engine.botActions(s);
+
+      expect(actions.whereType<PlayRelic>(), isEmpty,
+          reason: 'relíquias custo 99 nunca cabem nos cristais');
+      // E toda ação proposta é aplicável (nenhum no-op).
+      var sim = s;
+      for (final a in actions) {
+        if (a is Pass) continue;
+        final after = engine.apply(sim, a);
+        expect(identical(after, sim), isFalse,
+            reason: 'bot propôs ação inválida: $a');
+        sim = after;
+      }
+    });
+
+    test('bot equipa relíquia pagável normalmente', () {
+      // Relíquias custo 0: sempre pagáveis → o bot deve propor PlayRelic.
+      final s = engine.start(loadoutWithRelicCost('A', 0),
+          loadoutWithRelicCost('B', 0), seed: 1);
+      final actions = engine.botActions(s);
+      expect(actions.whereType<PlayRelic>(), isNotEmpty);
+    });
+  });
 }

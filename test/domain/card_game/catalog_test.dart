@@ -108,6 +108,15 @@ void main() {
       expect(flash, 47);
     });
 
+    test('toda relíquia tem cost >= 0 (custo em cristais do frontmatter)', () {
+      final relics = _loadRelics();
+      for (final r in relics) {
+        expect(r.cost, greaterThanOrEqualTo(0), reason: r.id);
+      }
+      // Os custos vêm dos dados reais — a maioria é > 0 (não default fabricado).
+      expect(relics.where((r) => r.cost > 0).length, greaterThan(100));
+    });
+
     test('rawEffect sempre preservado em toda relíquia', () {
       for (final r in _loadRelics()) {
         // Toda carta real tem uma linha de Efeito não-vazia.

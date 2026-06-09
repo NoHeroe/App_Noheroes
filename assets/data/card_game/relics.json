@@ -5,6 +5,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 4,
     "grants": {
       "raw_effect": "Dano mágico de gelo + chance de Silêncio (a refinar)",
       "abilities": [
@@ -20,6 +21,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+1 de ataque (corpo a corpo)",
       "atk_bonus": 1,
@@ -34,6 +36,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+1 de ataque (corpo a corpo)",
       "atk_bonus": 1,
@@ -48,6 +51,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+1 de ataque (corpo a corpo)",
       "atk_bonus": 1,
@@ -62,6 +66,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+1 de ataque (corpo a corpo)",
       "atk_bonus": 1,
@@ -76,6 +81,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+1 de ataque (corpo a corpo)",
       "atk_bonus": 1,
@@ -90,6 +96,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+1 de ataque (corpo a corpo)",
       "atk_bonus": 1,
@@ -104,6 +111,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 4,
     "grants": {
       "raw_effect": "Regen de PV (Cura) + Escudo Sagrado de última hora (a refinar)",
       "armor": 1,
@@ -118,6 +126,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 4,
     "grants": {
       "raw_effect": "Alcance + Ataque Duplo (a refinar)",
       "attack_type": "a_distancia",
@@ -134,6 +143,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Alcance + Ataque Duplo",
       "attack_type": "a_distancia",
@@ -150,6 +160,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Alcance + Ataque Duplo",
       "attack_type": "a_distancia",
@@ -166,6 +177,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Alcance + Ataque Duplo",
       "attack_type": "a_distancia",
@@ -182,6 +194,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Alcance + Ataque Duplo",
       "attack_type": "a_distancia",
@@ -198,6 +211,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Alcance + Ataque Duplo",
       "attack_type": "a_distancia",
@@ -214,6 +228,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Alcance + Ataque Duplo",
       "attack_type": "a_distancia",
@@ -230,6 +245,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Armazenamento dimensional — utilitário (a refinar)",
       "abilities": []
@@ -243,6 +259,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)",
       "abilities": []
@@ -256,6 +273,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)",
       "abilities": []
@@ -269,6 +287,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)",
       "abilities": []
@@ -282,6 +301,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)",
       "abilities": []
@@ -295,6 +315,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)",
       "abilities": []
@@ -308,6 +329,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)",
       "abilities": []
@@ -321,6 +343,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Remove Silêncio/efeito negativo de 1 criatura (a refinar)",
       "abilities": []
@@ -334,6 +357,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 6,
     "grants": {
       "raw_effect": "IA tática — efeito lendário (a refinar)",
       "abilities": []
@@ -347,6 +371,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Imobiliza (Silêncio) 1 criatura (a refinar)",
       "abilities": [
@@ -362,6 +387,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 5,
     "grants": {
       "raw_effect": "Explosão Mágica: dano alto em área (a refinar)",
       "abilities": []
@@ -375,6 +401,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Concede Furtividade a 1 criatura",
       "abilities": [
@@ -390,6 +417,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Concede Furtividade a 1 criatura",
       "abilities": [
@@ -405,6 +433,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Concede Furtividade a 1 criatura",
       "abilities": [
@@ -420,6 +449,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Concede Furtividade a 1 criatura",
       "abilities": [
@@ -435,6 +465,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Concede Furtividade a 1 criatura",
       "abilities": [
@@ -450,6 +481,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Concede Furtividade a 1 criatura",
       "abilities": [
@@ -465,6 +497,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Investida",
       "abilities": [
@@ -480,6 +513,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Investida",
       "abilities": [
@@ -495,6 +529,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Investida",
       "abilities": [
@@ -510,6 +545,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Investida",
       "abilities": [
@@ -525,6 +561,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Investida",
       "abilities": [
@@ -540,6 +577,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Investida",
       "abilities": [
@@ -555,6 +593,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Escudo Vitalista pequeno (bloqueia dano verdadeiro)",
       "armor": 1,
@@ -569,6 +608,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 5,
     "grants": {
       "raw_effect": "+todos os atributos, mas impede outra armadura (a refinar)",
       "abilities": []
@@ -582,6 +622,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 4,
     "grants": {
       "raw_effect": "Atributos balanceados + utilitário aquático (a refinar)",
       "abilities": []
@@ -595,6 +636,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 4,
     "grants": {
       "raw_effect": "Punição (ponto fraco) + cresce a cada morte (a refinar)",
       "abilities": []
@@ -608,6 +650,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 0,
     "grants": {
       "raw_effect": "+1 cristal neste turno",
       "abilities": []
@@ -621,6 +664,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Concede Ataque Duplo a uma criatura à distância (a refinar)",
       "abilities": [
@@ -636,6 +680,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+1 de ataque mágico",
       "atk_bonus": 1,
@@ -650,6 +695,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 6,
     "grants": {
       "raw_effect": "Acumula sangue → invulnerabilidade temporária + crescimento permanente (a refinar)",
       "abilities": []
@@ -663,6 +709,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+1 PV",
       "hp_bonus": 1,
@@ -677,6 +724,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+1 PV",
       "hp_bonus": 1,
@@ -691,6 +739,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+1 PV",
       "hp_bonus": 1,
@@ -705,6 +754,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+1 PV",
       "hp_bonus": 1,
@@ -719,6 +769,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+1 PV",
       "hp_bonus": 1,
@@ -733,6 +784,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+1 PV",
       "hp_bonus": 1,
@@ -747,6 +799,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+drop de moedas/sorte — economia (a refinar)",
       "abilities": []
@@ -760,6 +813,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+drop de moedas/sorte — economia (a refinar)",
       "abilities": []
@@ -773,6 +827,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+drop de moedas/sorte — economia (a refinar)",
       "abilities": []
@@ -786,6 +841,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+drop de moedas/sorte — economia (a refinar)",
       "abilities": []
@@ -799,6 +855,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+drop de moedas/sorte — economia (a refinar)",
       "abilities": []
@@ -812,6 +869,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+drop de moedas/sorte — economia (a refinar)",
       "abilities": []
@@ -825,6 +883,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 5,
     "grants": {
       "raw_effect": "Escudo Espelhado: reflete dano recebido (a refinar)",
       "armor": 1,
@@ -839,6 +898,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+2 PV",
       "hp_bonus": 2,
@@ -853,6 +913,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+2 PV",
       "hp_bonus": 2,
@@ -867,6 +928,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+2 PV",
       "hp_bonus": 2,
@@ -881,6 +943,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+2 PV",
       "hp_bonus": 2,
@@ -895,6 +958,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+2 PV",
       "hp_bonus": 2,
@@ -909,6 +973,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+2 PV",
       "hp_bonus": 2,
@@ -923,6 +988,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 5,
     "grants": {
       "raw_effect": "Roubo de PV + amplifica Cura + reduz Escudo inimigo (a refinar)",
       "abilities": []
@@ -936,6 +1002,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Sangramento (roadmap) + perfura armadura (a refinar)",
       "abilities": []
@@ -950,6 +1017,7 @@
       "corrompido",
       "magico"
     ],
+    "cost": 5,
     "grants": {
       "raw_effect": "+ATK alto + Punição",
       "abilities": []
@@ -963,6 +1031,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 4,
     "grants": {
       "raw_effect": "Escudo automático a 20% de PV + resistência adaptativa (a refinar)",
       "armor": 1,
@@ -977,6 +1046,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Escudo + 1 PV",
       "hp_bonus": 1,
@@ -992,6 +1062,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Escudo + 1 PV",
       "hp_bonus": 1,
@@ -1007,6 +1078,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Escudo + 1 PV",
       "hp_bonus": 1,
@@ -1022,6 +1094,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Escudo + 1 PV",
       "hp_bonus": 1,
@@ -1037,6 +1110,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Escudo + 1 PV",
       "hp_bonus": 1,
@@ -1052,6 +1126,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Escudo + 1 PV",
       "hp_bonus": 1,
@@ -1067,6 +1142,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Escudo: bloqueia 1 dano físico",
       "armor": 1,
@@ -1081,6 +1157,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Escudo: bloqueia 1 dano físico",
       "armor": 1,
@@ -1095,6 +1172,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Escudo: bloqueia 1 dano físico",
       "armor": 1,
@@ -1109,6 +1187,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Escudo: bloqueia 1 dano físico",
       "armor": 1,
@@ -1123,6 +1202,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Escudo: bloqueia 1 dano físico",
       "armor": 1,
@@ -1137,6 +1217,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Escudo: bloqueia 1 dano físico",
       "armor": 1,
@@ -1151,6 +1232,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+2 de ataque (corpo a corpo)",
       "atk_bonus": 2,
@@ -1165,6 +1247,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+2 de ataque (corpo a corpo)",
       "atk_bonus": 2,
@@ -1179,6 +1262,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+2 de ataque (corpo a corpo)",
       "atk_bonus": 2,
@@ -1193,6 +1277,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+2 de ataque (corpo a corpo)",
       "atk_bonus": 2,
@@ -1207,6 +1292,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+2 de ataque (corpo a corpo)",
       "atk_bonus": 2,
@@ -1221,6 +1307,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+2 de ataque (corpo a corpo)",
       "atk_bonus": 2,
@@ -1235,6 +1322,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 4,
     "grants": {
       "raw_effect": "Cria ilusão + Furtividade temporária (a refinar)",
       "abilities": [
@@ -1250,6 +1338,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Inspirar (buff pequeno aos aliados)",
       "abilities": [
@@ -1265,6 +1354,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Inspirar (buff pequeno aos aliados)",
       "abilities": [
@@ -1280,6 +1370,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Inspirar (buff pequeno aos aliados)",
       "abilities": [
@@ -1295,6 +1386,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Inspirar (buff pequeno aos aliados)",
       "abilities": [
@@ -1310,6 +1402,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Inspirar (buff pequeno aos aliados)",
       "abilities": [
@@ -1325,6 +1418,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Inspirar (buff pequeno aos aliados)",
       "abilities": [
@@ -1340,6 +1434,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+1 de ataque (corpo a corpo)",
       "atk_bonus": 1,
@@ -1354,6 +1449,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Cura pequena",
       "heal": 2,
@@ -1369,6 +1465,7 @@
       "corrompido",
       "magico"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Sintetiza poções — Cura/utilitário (a refinar)",
       "abilities": []
@@ -1382,6 +1479,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Pequeno dano de fogo a 1 criatura",
       "abilities": []
@@ -1395,6 +1493,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Pequeno dano de fogo a 1 criatura",
       "abilities": []
@@ -1408,6 +1507,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Pequeno dano de fogo a 1 criatura",
       "abilities": []
@@ -1421,6 +1521,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Pequeno dano de fogo a 1 criatura",
       "abilities": []
@@ -1434,6 +1535,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Pequeno dano de fogo a 1 criatura",
       "abilities": []
@@ -1447,6 +1549,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Pequeno dano de fogo a 1 criatura",
       "abilities": []
@@ -1460,6 +1563,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Imunidade a medo/controle — anti-Silêncio/Provocar (a refinar)",
       "abilities": []
@@ -1473,6 +1577,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Alcance: +1 de ataque à distância",
       "atk_bonus": 1,
@@ -1488,6 +1593,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Alcance: +1 de ataque à distância",
       "atk_bonus": 1,
@@ -1503,6 +1609,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Alcance: +1 de ataque à distância",
       "atk_bonus": 1,
@@ -1518,6 +1625,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Alcance: +1 de ataque à distância",
       "atk_bonus": 1,
@@ -1533,6 +1641,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Alcance: +1 de ataque à distância",
       "atk_bonus": 1,
@@ -1548,6 +1657,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Alcance: +1 de ataque à distância",
       "atk_bonus": 1,
@@ -1563,6 +1673,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Alcance + Ataque Duplo",
       "attack_type": "a_distancia",
@@ -1579,6 +1690,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Concede Furtividade",
       "abilities": [
@@ -1594,6 +1706,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Dano em área a criaturas inimigas (a refinar)",
       "abilities": []
@@ -1607,6 +1720,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 4,
     "grants": {
       "raw_effect": "Amplifica à noite + Furtividade reforçada (a refinar)",
       "abilities": [
@@ -1622,6 +1736,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "+3 de ataque (corpo a corpo)",
       "atk_bonus": 3,
@@ -1636,6 +1751,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "+2 PV",
       "hp_bonus": 2,
@@ -1650,6 +1766,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Cura média",
       "heal": 4,
@@ -1664,6 +1781,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 5,
     "grants": {
       "raw_effect": "Regen contínua (Cura) + Escudo (a refinar)",
       "armor": 1,
@@ -1678,6 +1796,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 4,
     "grants": {
       "raw_effect": "Amplia potência de poções + sorte (a refinar)",
       "abilities": []
@@ -1691,6 +1810,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "+dano mágico, mas +custo (a refinar)",
       "abilities": []
@@ -1704,6 +1824,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "+3 de ataque",
       "atk_bonus": 3,
@@ -1718,6 +1839,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "+3 de ataque",
       "atk_bonus": 3,
@@ -1732,6 +1854,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "+3 de ataque",
       "atk_bonus": 3,
@@ -1746,6 +1869,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "+3 de ataque",
       "atk_bonus": 3,
@@ -1760,6 +1884,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "+3 de ataque",
       "atk_bonus": 3,
@@ -1774,6 +1899,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "+3 de ataque",
       "atk_bonus": 3,
@@ -1789,6 +1915,7 @@
       "corrompido",
       "vitalismo"
     ],
+    "cost": 5,
     "grants": {
       "raw_effect": "+ATK alto + Alcance + Roubo de PV + Sangramento (roadmap)",
       "attack_type": "a_distancia",
@@ -1803,6 +1930,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Silêncio em 1 criatura",
       "abilities": [
@@ -1818,6 +1946,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 4,
     "grants": {
       "raw_effect": "Alcance + Ataque Duplo (a refinar)",
       "attack_type": "a_distancia",
@@ -1834,6 +1963,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 5,
     "grants": {
       "raw_effect": "Controle: transforma vítima em marionete; antídoto Manalium (a refinar)",
       "abilities": []
@@ -1847,6 +1977,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Furtividade",
       "abilities": [
@@ -1862,6 +1993,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Furtividade",
       "abilities": [
@@ -1877,6 +2009,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Furtividade",
       "abilities": [
@@ -1892,6 +2025,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Furtividade",
       "abilities": [
@@ -1907,6 +2041,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Furtividade",
       "abilities": [
@@ -1922,6 +2057,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Furtividade",
       "abilities": [
@@ -1937,6 +2073,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 4,
     "grants": {
       "raw_effect": "Durabilidade/longevidade — mantém vivo (a refinar)",
       "abilities": []
@@ -1950,6 +2087,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 4,
     "grants": {
       "raw_effect": "+intelecto + conjuração mais barata + magia grátis (a refinar)",
       "abilities": []
@@ -1963,6 +2101,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Dano de fogo + chamas persistentes a 1 criatura (a refinar)",
       "abilities": []
@@ -1976,6 +2115,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 5,
     "grants": {
       "raw_effect": "+atk/def sustentado + progresso (a refinar)",
       "abilities": []
@@ -1989,6 +2129,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 5,
     "grants": {
       "raw_effect": "Explosão Mágica: incineração em área + chamas persistentes (a refinar)",
       "abilities": []
@@ -2003,6 +2144,7 @@
       "corrompido",
       "vitalismo"
     ],
+    "cost": 4,
     "grants": {
       "raw_effect": "Corrupção Drakkai progressiva ao contato (a refinar)",
       "abilities": []
@@ -2016,6 +2158,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+ataque numa criatura neste turno",
       "abilities": []
@@ -2029,6 +2172,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+ataque numa criatura neste turno",
       "abilities": []
@@ -2042,6 +2186,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+ataque numa criatura neste turno",
       "abilities": []
@@ -2055,6 +2200,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+ataque numa criatura neste turno",
       "abilities": []
@@ -2068,6 +2214,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+ataque numa criatura neste turno",
       "abilities": []
@@ -2081,6 +2228,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "+ataque numa criatura neste turno",
       "abilities": []
@@ -2094,6 +2242,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Escape/teleporte — utilitário (a refinar)",
       "abilities": []
@@ -2107,6 +2256,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Alcance: +1 de ataque à distância",
       "atk_bonus": 1,
@@ -2122,6 +2272,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Cura média",
       "heal": 4,
@@ -2136,6 +2287,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Cura média",
       "heal": 4,
@@ -2150,6 +2302,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Cura média",
       "heal": 4,
@@ -2164,6 +2317,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Cura média",
       "heal": 4,
@@ -2178,6 +2332,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Cura média",
       "heal": 4,
@@ -2192,6 +2347,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Cura média",
       "heal": 4,
@@ -2206,6 +2362,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Cura pequena",
       "heal": 2,
@@ -2220,6 +2377,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Cura pequena",
       "heal": 2,
@@ -2234,6 +2392,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Cura pequena",
       "heal": 2,
@@ -2248,6 +2407,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Cura pequena",
       "heal": 2,
@@ -2262,6 +2422,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Cura pequena",
       "heal": 2,
@@ -2276,6 +2437,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Cura pequena",
       "heal": 2,
@@ -2291,6 +2453,7 @@
       "celestial",
       "magico"
     ],
+    "cost": 5,
     "grants": {
       "raw_effect": "+ATK alto (3x atributos físicos) (a refinar)",
       "abilities": []
@@ -2304,6 +2467,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 4,
     "grants": {
       "raw_effect": "Teletransporte + regen acelerada (Cura) (a refinar)",
       "abilities": []
@@ -2318,6 +2482,7 @@
       "celestial",
       "corrompido"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Maldição: penaliza o portador (a refinar)",
       "abilities": []
@@ -2331,6 +2496,7 @@
     "concepts": [
       "celestial"
     ],
+    "cost": 5,
     "grants": {
       "raw_effect": "Ressuscita um vitalista (a refinar)",
       "abilities": []
@@ -2344,6 +2510,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Alcance: +2 de ataque à distância",
       "atk_bonus": 2,
@@ -2359,6 +2526,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Escudo Espelhado (+defesa mágica) + bênção (a refinar)",
       "armor": 1,
@@ -2373,6 +2541,7 @@
     "concepts": [
       "neutro"
     ],
+    "cost": 4,
     "grants": {
       "raw_effect": "Aprisiona inimigo (Silêncio/remove temporário) (a refinar)",
       "abilities": [
@@ -2388,6 +2557,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Buff temporário de ataque com risco de corrupção (a refinar)",
       "abilities": []
@@ -2401,6 +2571,7 @@
     "concepts": [
       "vitalismo"
     ],
+    "cost": 5,
     "grants": {
       "raw_effect": "Mantém Yato em corpo mortal-imortal (a refinar)",
       "abilities": []
@@ -2414,6 +2585,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 2,
     "grants": {
       "raw_effect": "Concede Furtividade",
       "abilities": [
@@ -2429,6 +2601,7 @@
     "concepts": [
       "chrysalis"
     ],
+    "cost": 1,
     "grants": {
       "raw_effect": "Utilitário: revela/coordena (a refinar)",
       "abilities": []
@@ -2442,6 +2615,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Escudo Sagrado: +def + chance de anular ataque letal (a refinar)",
       "armor": 1,
@@ -2456,6 +2630,7 @@
     "concepts": [
       "corrompido"
     ],
+    "cost": 4,
     "grants": {
       "raw_effect": "Disfarce/ilusão — Furtividade (a refinar)",
       "abilities": [
@@ -2471,6 +2646,7 @@
     "concepts": [
       "magico"
     ],
+    "cost": 3,
     "grants": {
       "raw_effect": "Aeronave — utilitário (a refinar)",
       "abilities": []

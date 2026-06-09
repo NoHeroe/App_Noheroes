@@ -9,6 +9,7 @@ import 'dart:math';
 import 'card_models.dart';
 import 'engine_config.dart';
 import 'game_action.dart';
+import 'match_events.dart';
 import 'match_state.dart';
 
 class CardBattleEngine {
@@ -116,6 +117,7 @@ class CardBattleEngine {
     if (idx < 0) return s;
 
     final relic = side.poolRelics[idx];
+    if (relic.cost > side.crystals) return s; // cristais insuficientes
 
     // Encontra a criatura alvo (própria, em jogo).
     final laneIdx =
@@ -157,7 +159,12 @@ class CardBattleEngine {
     final newLanes = List<CreatureInPlay?>.from(side.lanes);
     newLanes[laneIdx] = updated;
 
-    final newSide = side.copyWith(lanes: newLanes, poolRelics: newPool);
+    // Cobra o custo em cristais (vale para equipamento E flash).
+    final newSide = side.copyWith(
+      lanes: newLanes,
+      poolRelics: newPool,
+      crystals: side.crystals - relic.cost,
+    );
     return s.withSide(side.id, newSide);
   }
 
@@ -198,37 +205,53 @@ class CardBattleEngine {
 
   /// Encerra a Fase de Jogo do lado ativo, resolve a Fase de Ataque automática,
   /// aplica penalidade de "sem criaturas", checa vitória/stall e passa o turno.
+  ///
+  /// Os eventos gerados durante a resolução (ataques, curas, penalidade,
+  /// stall) são devolvidos em `lastTurnEvents` — substituindo (não acumulando)
+  /// os do `endTurn` anterior.
   MatchState endTurn(MatchState s) {
     if (s.isOver) return s;
 
+    // Log estruturado da resolução deste endTurn.
+    final events = <MatchEvent>[];
+
     // Fase de Ataque automática.
-    var state = _resolveAttackPhase(s);
+    var state = _resolveAttackPhase(s, events);
     final winAfterAttack = _checkVictory(state);
     if (winAfterAttack != null) {
-      return state.copyWith(phase: MatchPhase.fim, winner: winAfterAttack);
+      return state.copyWith(
+        phase: MatchPhase.fim,
+        winner: winAfterAttack,
+        lastTurnEvents: List.unmodifiable(events),
+      );
     }
 
     // Penalidade: terminar o turno sem criaturas no tabuleiro.
-    state = _applyNoCreaturePenalty(state);
+    state = _applyNoCreaturePenalty(state, events);
     final winAfterPenalty = _checkVictory(state);
     if (winAfterPenalty != null) {
-      return state.copyWith(phase: MatchPhase.fim, winner: winAfterPenalty);
+      return state.copyWith(
+        phase: MatchPhase.fim,
+        winner: winAfterPenalty,
+        lastTurnEvents: List.unmodifiable(events),
+      );
     }
 
     // Trava anti-stall.
     if (state.turn >= kStallTurnLimit) {
-      return _resolveStall(state);
+      return _resolveStall(state, events);
     }
 
     // Passa o turno para o oponente e inicia o turno dele.
     final next = state.activeSide == SideId.a ? SideId.b : SideId.a;
     state = state.copyWith(activeSide: next, turn: state.turn + 1);
     state = _beginTurn(state);
-    return state;
+    return state.copyWith(lastTurnEvents: List.unmodifiable(events));
   }
 
   /// Resolve a Fase de Ataque do lado ativo contra o oponente.
-  MatchState _resolveAttackPhase(MatchState s) {
+  /// Acumula em [events] um evento por ataque/cura efetivamente resolvido.
+  MatchState _resolveAttackPhase(MatchState s, List<MatchEvent> events) {
     var attacker = s.active;
     var defender = s.opponent;
 
@@ -249,14 +272,14 @@ class CardBattleEngine {
       final type = creature.effectiveDamageType;
 
       if (type == DamageType.cura) {
-        attacker = _resolveHeal(attacker, creature);
+        attacker = _resolveHeal(attacker, creature, events);
         continue;
       }
 
       final targetId = _selectTarget(defender, type);
       if (targetId == null) continue;
 
-      defender = _applyDamage(defender, targetId, creature.atk, type);
+      defender = _applyDamage(defender, targetId, creature, type, events);
     }
 
     var state = s.withSide(attacker.id, attacker);
@@ -265,7 +288,9 @@ class CardBattleEngine {
   }
 
   /// Cura: alvo = própria criatura mais ferida (não cura acima do hp máx).
-  BoardSide _resolveHeal(BoardSide side, CreatureInPlay healer) {
+  /// Emite `HealResolved` em [events] apenas se curou de fato (>0).
+  BoardSide _resolveHeal(
+      BoardSide side, CreatureInPlay healer, List<MatchEvent> events) {
     CreatureInPlay? target;
     var bestMissing = 0;
     for (final c in side.creaturesInPlay) {
@@ -282,6 +307,18 @@ class CardBattleEngine {
     if (laneIdx < 0) return side;
 
     final healed = (target.currentHp + healer.atk).clamp(0, target.maxHp);
+    final amount = healed - target.currentHp;
+    if (amount <= 0) return side; // atk 0 / sem efeito: nem muda, nem narra.
+
+    events.add(HealResolved(
+      side: side.id,
+      healerCardId: healer.instanceId,
+      healerName: healer.card.nome,
+      targetCardId: target.instanceId,
+      targetName: target.card.nome,
+      amount: amount,
+    ));
+
     final newLanes = List<CreatureInPlay?>.from(side.lanes);
     newLanes[laneIdx] = target.copyWith(currentHp: healed);
     return side.copyWith(lanes: newLanes);
@@ -314,14 +351,15 @@ class CardBattleEngine {
   }
 
   /// Aplica dano a uma criatura do lado [side], respeitando armadura por tipo,
-  /// e remove (avança lanes) se morrer.
-  BoardSide _applyDamage(
-      BoardSide side, String targetId, int rawDamage, DamageType type) {
+  /// e remove (avança lanes) se morrer. Emite `AttackResolved` em [events].
+  BoardSide _applyDamage(BoardSide side, String targetId,
+      CreatureInPlay attacker, DamageType type, List<MatchEvent> events) {
     final laneIdx =
         side.lanes.indexWhere((c) => c != null && c.instanceId == targetId);
     if (laneIdx < 0) return side;
     final target = side.lanes[laneIdx]!;
 
+    final rawDamage = attacker.atk;
     var damage = rawDamage;
     final ignoresArmor =
         type == DamageType.magico || type == DamageType.vitalismo;
@@ -337,6 +375,20 @@ class CardBattleEngine {
     } else {
       newLanes[laneIdx] = target.copyWith(currentHp: newHp);
     }
+
+    // O lado dono do atacante é o oposto do lado defensor [side].
+    events.add(AttackResolved(
+      attackerSide: side.id == SideId.a ? SideId.b : SideId.a,
+      attackerCardId: attacker.instanceId,
+      attackerName: attacker.card.nome,
+      targetCardId: target.instanceId,
+      targetName: target.card.nome,
+      damageType: type,
+      rawDamage: rawDamage,
+      damageDealt: damage,
+      targetHpAfter: newHp <= 0 ? 0 : newHp,
+      targetDied: newHp <= 0,
+    ));
 
     var newSide = side.copyWith(lanes: newLanes);
     if (newHp <= 0) {
@@ -363,7 +415,8 @@ class CardBattleEngine {
 
   /// Penalidade: se o lado ATIVO terminou o turno sem criaturas em jogo, perde
   /// `kNoCreaturePenaltyCards` carta(s) aleatória(s) do pool (rng).
-  MatchState _applyNoCreaturePenalty(MatchState s) {
+  /// Emite `NoCreaturePenaltyApplied` em [events] por carta perdida.
+  MatchState _applyNoCreaturePenalty(MatchState s, List<MatchEvent> events) {
     final side = s.active;
     if (side.hasCreatureInPlay) return s;
 
@@ -375,9 +428,21 @@ class CardBattleEngine {
       if (total == 0) break;
       final pick = s.rng.nextInt(total);
       if (pick < poolCreatures.length) {
-        poolCreatures.removeAt(pick);
+        final lost = poolCreatures.removeAt(pick);
+        events.add(NoCreaturePenaltyApplied(
+          side: side.id,
+          lostCardId: lost.id,
+          lostCardName: lost.nome,
+          wasCreature: true,
+        ));
       } else {
-        poolRelics.removeAt(pick - poolCreatures.length);
+        final lost = poolRelics.removeAt(pick - poolCreatures.length);
+        events.add(NoCreaturePenaltyApplied(
+          side: side.id,
+          lostCardId: lost.id,
+          lostCardName: lost.nome,
+          wasCreature: false,
+        ));
       }
     }
 
@@ -406,9 +471,15 @@ class CardBattleEngine {
 
   /// Trava do turno 40: encerra. Desempate MVP: mais criaturas vivas; se igual,
   /// mais HP total em jogo; se ainda igual, quem começou (sideA) — sem empate.
-  MatchState _resolveStall(MatchState s) {
+  /// Emite `StallLimitReached` em [events].
+  MatchState _resolveStall(MatchState s, List<MatchEvent> events) {
     final winner = _stallWinner(s);
-    return s.copyWith(phase: MatchPhase.fim, winner: winner);
+    events.add(StallLimitReached(winner: winner));
+    return s.copyWith(
+      phase: MatchPhase.fim,
+      winner: winner,
+      lastTurnEvents: List.unmodifiable(events),
+    );
   }
 
   SideId _stallWinner(MatchState s) {
@@ -486,7 +557,8 @@ class CardBattleEngine {
       final inPlay = side.creaturesInPlay;
       if (inPlay.isEmpty) break;
 
-      // Procura uma relíquia que case com o conceito de alguma criatura.
+      // Procura uma relíquia PAGÁVEL (cristais da simulação local) que case
+      // com o conceito de alguma criatura — nunca propõe ação inválida.
       PlayRelic? candidate;
       // Criatura mais forte (maior atk) elegível primeiro.
       final ordered = List<CreatureInPlay>.from(inPlay)
@@ -494,7 +566,8 @@ class CardBattleEngine {
 
       for (final creature in ordered) {
         final relic = side.poolRelics
-            .where((r) => r.isCompatibleWith(creature.card))
+            .where((r) =>
+                r.cost <= side.crystals && r.isCompatibleWith(creature.card))
             .firstOrNull;
         if (relic != null) {
           candidate = PlayRelic(relic.id, creature.instanceId);

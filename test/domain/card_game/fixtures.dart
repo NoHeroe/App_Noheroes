@@ -37,6 +37,7 @@ RelicCard relic({
   required String id,
   CardConcept concept = CardConcept.vitalismo,
   List<CardConcept>? concepts,
+  int cost = 0,
   int? atkBonus,
   int? hpBonus,
   int? armor,
@@ -49,6 +50,7 @@ RelicCard relic({
     id: id,
     nome: id,
     concepts: concepts ?? <CardConcept>[concept],
+    cost: cost,
     grants: RelicGrants(
       atkBonus: atkBonus,
       hpBonus: hpBonus,

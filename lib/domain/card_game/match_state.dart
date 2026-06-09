@@ -9,6 +9,7 @@ import 'dart:math';
 
 import 'card_models.dart';
 import 'engine_config.dart';
+import 'match_events.dart';
 
 /// Fase atual da partida.
 enum MatchPhase { jogo, ataque, fim }
@@ -187,6 +188,7 @@ class MatchState {
     required this.phase,
     required this.rng,
     this.winner,
+    this.lastTurnEvents = const <MatchEvent>[],
   });
 
   final BoardSide sideA;
@@ -195,6 +197,11 @@ class MatchState {
   final int turn;
   final MatchPhase phase;
   final SideId? winner;
+
+  /// Eventos gerados pelo ÚLTIMO `endTurn` (Fase de Ataque, penalidade,
+  /// stall). Substituído (não acumulado) a cada `endTurn`. Ações da Fase de
+  /// Jogo (apply) não geram eventos.
+  final List<MatchEvent> lastTurnEvents;
 
   /// Fonte determinística de aleatoriedade (injetada por seed).
   final Random rng;
@@ -214,6 +221,7 @@ class MatchState {
     MatchPhase? phase,
     SideId? winner,
     bool clearWinner = false,
+    List<MatchEvent>? lastTurnEvents,
   }) {
     return MatchState(
       sideA: sideA ?? this.sideA,
@@ -222,6 +230,7 @@ class MatchState {
       turn: turn ?? this.turn,
       phase: phase ?? this.phase,
       winner: clearWinner ? null : (winner ?? this.winner),
+      lastTurnEvents: lastTurnEvents ?? this.lastTurnEvents,
       rng: rng,
     );
   }

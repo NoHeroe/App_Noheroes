@@ -261,12 +261,18 @@ class RelicCard {
     required this.concepts,
     required this.grants,
     required this.rarity,
+    this.cost = 0,
     this.isFlash = false,
   });
 
   final String id;
   final String nome;
   final List<CardConcept> concepts;
+
+  /// Custo em cristais para jogar (equipar/usar) a relíquia. Vem do
+  /// frontmatter `custo:` das cartas reais (default 0 só para fixtures).
+  final int cost;
+
   final RelicGrants grants;
   final Rarity rarity;
   final bool isFlash;
@@ -291,6 +297,7 @@ class RelicCard {
       concepts: (json['concepts'] as List<dynamic>)
           .map((e) => cardConceptFromString(e as String))
           .toList(growable: false),
+      cost: json['cost'] as int? ?? 0,
       grants: RelicGrants.fromJson(json['grants'] as Map<String, dynamic>),
       rarity: rarityFromString(json['rarity'] as String),
       isFlash: json['is_flash'] as bool? ?? false,
@@ -301,14 +308,15 @@ class RelicCard {
         'id': id,
         'nome': nome,
         'concepts': concepts.map(cardConceptToString).toList(),
+        'cost': cost,
         'grants': grants.toJson(),
         'rarity': rarityToString(rarity),
         'is_flash': isFlash,
       };
 
   @override
-  String toString() =>
-      'RelicCard($id, $nome, $concepts, flash=$isFlash, $rarity, $grants)';
+  String toString() => 'RelicCard($id, $nome, $concepts, cost=$cost, '
+      'flash=$isFlash, $rarity, $grants)';
 }
 
 /// Conjunto de cartas de um jogador: exatamente 9 criaturas + 9 relíquias.

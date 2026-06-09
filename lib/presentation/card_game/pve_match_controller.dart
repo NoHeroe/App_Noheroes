@@ -1,0 +1,562 @@
+/// Orquestrador da PARTIDA PvE do Card Game "Modo Cartas ACDA".
+///
+/// Camada fina e testável entre o `CardBattleEngine` (puro, em
+/// `lib/domain/card_game/`) e a tela interativa (`card_match_screen.dart`):
+///
+///   - O JOGADOR é sempre o lado A; o BOT é sempre o lado B.
+///   - Ações do jogador só são processadas em `PveMatchPhase.playerTurn`;
+///     ação inválida (engine devolve o MESMO estado) → retorna `false` e
+///     loga um aviso, sem alterar a partida.
+///   - O turno do bot roda com pacing injetável (`botStepDelay`) para a UI
+///     conseguir narrar passo a passo; nos testes usa `Duration.zero`.
+///   - Eventos do `endTurn` (`MatchState.lastTurnEvents`) viram entradas de
+///     log PT-BR legíveis (`MatchLogKind.combat`).
+///
+/// Sem Flame, sem widgets: este arquivo não importa Flutter (apenas
+/// flutter_riverpod pelo StateNotifier), então os testes rodam puros.
+library;
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../domain/card_game/card_game.dart';
+
+/// Fase da PARTIDA do ponto de vista da UI (não confundir com `MatchPhase`
+/// do engine, que é jogo/ataque/fim).
+enum PveMatchPhase { idle, playerTurn, resolving, botTurn, finished }
+
+/// Categoria de uma entrada do log da partida (cor/ícone na UI).
+enum MatchLogKind { system, player, bot, combat }
+
+/// Uma linha do log narrado da partida.
+class MatchLogEntry {
+  const MatchLogEntry({
+    required this.text,
+    required this.kind,
+    required this.turn,
+  });
+
+  final String text;
+  final MatchLogKind kind;
+
+  /// Turno em que a entrada foi gerada (turno do engine no momento).
+  final int turn;
+
+  @override
+  String toString() => '[T$turn][${kind.name}] $text';
+}
+
+/// Estado imutável consumido pela tela. `match == null` apenas em `idle`.
+class PveMatchUiState {
+  const PveMatchUiState({
+    this.match,
+    this.phase = PveMatchPhase.idle,
+    this.log = const <MatchLogEntry>[],
+    this.selectedCardId,
+    this.playerSide = SideId.a,
+    this.playerWon,
+  });
+
+  final MatchState? match;
+  final PveMatchPhase phase;
+  final List<MatchLogEntry> log;
+
+  /// Carta do pool do jogador atualmente selecionada (fluxo de 2 toques).
+  final String? selectedCardId;
+
+  /// O jogador humano é SEMPRE o lado A (o bot é o B).
+  final SideId playerSide;
+
+  /// null enquanto a partida não terminou.
+  final bool? playerWon;
+
+  SideId get botSideId => playerSide == SideId.a ? SideId.b : SideId.a;
+
+  BoardSide? get playerBoard => match?.sideOf(playerSide);
+  BoardSide? get botBoard => match?.sideOf(botSideId);
+
+  bool get isPlayerTurn => phase == PveMatchPhase.playerTurn;
+  bool get isFinished => phase == PveMatchPhase.finished;
+
+  PveMatchUiState copyWith({
+    MatchState? match,
+    PveMatchPhase? phase,
+    List<MatchLogEntry>? log,
+    String? selectedCardId,
+    bool clearSelectedCard = false,
+    bool? playerWon,
+  }) {
+    return PveMatchUiState(
+      match: match ?? this.match,
+      phase: phase ?? this.phase,
+      log: log ?? this.log,
+      selectedCardId:
+          clearSelectedCard ? null : (selectedCardId ?? this.selectedCardId),
+      playerSide: playerSide,
+      playerWon: playerWon ?? this.playerWon,
+    );
+  }
+}
+
+/// Controller da partida PvE. Toda mutação passa por aqui; a tela só lê o
+/// `PveMatchUiState` e dispara métodos.
+class PveMatchController extends StateNotifier<PveMatchUiState> {
+  PveMatchController({CardBattleEngine engine = const CardBattleEngine()})
+      : _engine = engine,
+        super(const PveMatchUiState());
+
+  final CardBattleEngine _engine;
+
+  Duration _botStepDelay = const Duration(milliseconds: 450);
+
+  /// Guard de reentrância: cobre `startMatch` e `endPlayerTurn` (pipelines
+  /// async). Ações síncronas do jogador também respeitam.
+  bool _busy = false;
+
+  /// Aborta pipelines async se o notifier foi descartado (tela saiu) ou a
+  /// partida foi encerrada por fora (forfeit durante o pacing do bot).
+  bool get _aborted => !mounted || state.phase == PveMatchPhase.finished;
+
+  // ---------------------------------------------------------------------------
+  // Ciclo de vida da partida
+  // ---------------------------------------------------------------------------
+
+  /// Inicia (ou reinicia) a partida. O engine joga a moeda via [seed]; se o
+  /// bot começar, o turno dele roda já aqui (com pacing) e a vez volta ao
+  /// jogador antes do Future completar.
+  Future<void> startMatch(
+    CardLoadout player,
+    CardLoadout bot, {
+    int seed = 0,
+    Duration botStepDelay = const Duration(milliseconds: 450),
+  }) async {
+    if (_busy) return;
+    _busy = true;
+    try {
+      _botStepDelay = botStepDelay;
+      final match = _engine.start(player, bot, seed: seed);
+      final youStart = match.activeSide == SideId.a;
+
+      state = PveMatchUiState(
+        match: match,
+        phase: youStart ? PveMatchPhase.playerTurn : PveMatchPhase.botTurn,
+        log: <MatchLogEntry>[
+          MatchLogEntry(
+            text: youStart
+                ? 'Cara ou coroa: você começa!'
+                : 'Cara ou coroa: a IA começa.',
+            kind: MatchLogKind.system,
+            turn: match.turn,
+          ),
+        ],
+      );
+
+      if (!youStart) {
+        await _runBotTurn();
+      }
+    } finally {
+      _busy = false;
+    }
+  }
+
+  /// Desiste da partida: derrota imediata do jogador.
+  void forfeit() {
+    if (state.match == null ||
+        state.phase == PveMatchPhase.idle ||
+        state.phase == PveMatchPhase.finished) {
+      return;
+    }
+    state = state.copyWith(
+      phase: PveMatchPhase.finished,
+      playerWon: false,
+      clearSelectedCard: true,
+      log: _appended(MatchLogEntry(
+        text: 'Você desistiu da partida. Derrota.',
+        kind: MatchLogKind.system,
+        turn: state.match!.turn,
+      )),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Ações do jogador (Fase de Jogo) — só em playerTurn
+  // ---------------------------------------------------------------------------
+
+  /// Joga uma criatura do pool do jogador. `lane` null = engine escolhe a
+  /// lane livre mais à frente. Retorna false se não for a vez do jogador ou
+  /// se o engine recusar (no-op).
+  bool playCreature(String cardId, {int? lane}) {
+    return _playerAction(
+      PlayCreature(cardId, lane: lane),
+      onApplied: (before, after) {
+        final name = _creatureName(before, cardId);
+        final placed = _findCreature(after.sideOf(state.playerSide), cardId);
+        final laneLabel = placed == null ? '' : ' na ${_laneLabel(placed.lane)}';
+        return 'Você jogou $name$laneLabel.';
+      },
+      invalidText: () =>
+          'Jogada inválida: ${_creatureName(state.match!, cardId)} '
+          'não pôde ser jogada.',
+    );
+  }
+
+  /// Equipa/usa uma relíquia numa criatura própria em jogo.
+  bool playRelic(String cardId, String targetCreatureId) {
+    return _playerAction(
+      PlayRelic(cardId, targetCreatureId),
+      onApplied: (before, after) {
+        final side = before.sideOf(state.playerSide);
+        final relic = _relicInPool(side, cardId);
+        final target = _findCreature(side, targetCreatureId);
+        final verb = (relic?.isFlash ?? false) ? 'usou' : 'equipou';
+        return 'Você $verb ${relic?.nome ?? cardId} '
+            'em ${target?.card.nome ?? targetCreatureId}.';
+      },
+      invalidText: () =>
+          'Jogada inválida: ${_relicName(state.match!, cardId)} '
+          'não pôde ser equipada nesse alvo.',
+    );
+  }
+
+  /// Sacrifica uma carta do pool por cristais (máx 1/turno).
+  bool sacrifice(String cardId) {
+    return _playerAction(
+      Sacrifice(cardId),
+      onApplied: (before, after) {
+        final side = before.sideOf(state.playerSide);
+        final relic = _relicInPool(side, cardId);
+        if (relic != null) {
+          return 'Você sacrificou ${relic.nome} '
+              '(+$kSacrificeRelicCrystals cristal).';
+        }
+        final name = _creatureName(before, cardId);
+        return 'Você sacrificou $name (+$kSacrificeCreatureCrystals cristais).';
+      },
+      invalidText: () => 'Sacrifício inválido (já sacrificou neste turno?).',
+    );
+  }
+
+  /// Seleciona/deseleciona uma carta do pool (fluxo de 2 toques da UI).
+  void selectCard(String? cardId) {
+    if (state.phase != PveMatchPhase.playerTurn) return;
+    if (cardId == null || cardId == state.selectedCardId) {
+      state = state.copyWith(clearSelectedCard: true);
+    } else {
+      state = state.copyWith(selectedCardId: cardId);
+    }
+  }
+
+  /// Núcleo comum das ações do jogador: valida fase, aplica no engine,
+  /// detecta no-op por identidade e loga.
+  bool _playerAction(
+    GameAction action, {
+    required String Function(MatchState before, MatchState after) onApplied,
+    required String Function() invalidText,
+  }) {
+    if (_busy || state.phase != PveMatchPhase.playerTurn) return false;
+    final before = state.match;
+    if (before == null ||
+        before.isOver ||
+        before.activeSide != state.playerSide) {
+      return false;
+    }
+
+    final after = _engine.apply(before, action);
+    if (identical(after, before)) {
+      // Ação inválida = no-op do engine. Loga aviso, não muda a partida.
+      state = state.copyWith(
+        log: _appended(MatchLogEntry(
+          text: invalidText(),
+          kind: MatchLogKind.system,
+          turn: before.turn,
+        )),
+      );
+      return false;
+    }
+
+    state = state.copyWith(
+      match: after,
+      clearSelectedCard: true,
+      log: _appended(MatchLogEntry(
+        text: onApplied(before, after),
+        kind: MatchLogKind.player,
+        turn: before.turn,
+      )),
+    );
+    return true;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Fim do turno do jogador → ataque → turno do bot → vez do jogador
+  // ---------------------------------------------------------------------------
+
+  /// Encerra o turno do jogador: resolve a Fase de Ataque dele, narra os
+  /// eventos, e roda o turno completo do bot (com pacing). Reentrância é
+  /// bloqueada (`_busy`).
+  Future<void> endPlayerTurn() async {
+    if (_busy || state.phase != PveMatchPhase.playerTurn) return;
+    final match = state.match;
+    if (match == null || match.isOver) return;
+
+    _busy = true;
+    try {
+      state = state.copyWith(
+        phase: PveMatchPhase.resolving,
+        clearSelectedCard: true,
+      );
+
+      // Fase de Ataque do jogador.
+      final resolvedTurn = match.turn;
+      final afterPlayer = _engine.endTurn(match);
+      state = state.copyWith(
+        match: afterPlayer,
+        log: _appendedAll(_eventEntries(afterPlayer, resolvedTurn)),
+      );
+
+      if (afterPlayer.isOver) {
+        _finish(afterPlayer);
+        return;
+      }
+
+      await _runBotTurn();
+    } finally {
+      _busy = false;
+    }
+  }
+
+  /// Roda o turno COMPLETO do bot (lado ativo deve ser o bot): ações da Fase
+  /// de Jogo com pacing + endTurn (Fase de Ataque do bot). Aborta em silêncio
+  /// se o notifier for descartado ou a partida encerrada no meio.
+  Future<void> _runBotTurn() async {
+    if (_aborted) return;
+    var match = state.match!;
+    if (match.activeSide != state.botSideId) {
+      // Defesa: nunca rodar o bot na vez do jogador.
+      state = state.copyWith(phase: PveMatchPhase.playerTurn);
+      return;
+    }
+    state = state.copyWith(phase: PveMatchPhase.botTurn);
+
+    final actions = _engine.botActions(match);
+    for (final action in actions) {
+      if (action is Pass) continue;
+      final before = match;
+      match = _engine.apply(match, action);
+      if (identical(match, before)) continue; // bot tentou algo inválido: pula
+
+      state = state.copyWith(
+        match: match,
+        log: _appended(MatchLogEntry(
+          text: _botActionText(before, match, action),
+          kind: MatchLogKind.bot,
+          turn: match.turn,
+        )),
+      );
+
+      if (_botStepDelay > Duration.zero) {
+        await Future<void>.delayed(_botStepDelay);
+      }
+      if (_aborted) return;
+    }
+
+    // Fase de Ataque do bot.
+    final resolvedTurn = match.turn;
+    match = _engine.endTurn(match);
+    if (_aborted) return;
+    state = state.copyWith(
+      match: match,
+      log: _appendedAll(_eventEntries(match, resolvedTurn)),
+    );
+
+    if (match.isOver) {
+      _finish(match);
+    } else {
+      state = state.copyWith(phase: PveMatchPhase.playerTurn);
+    }
+  }
+
+  void _finish(MatchState match) {
+    final won = match.winner == state.playerSide;
+    state = state.copyWith(
+      phase: PveMatchPhase.finished,
+      playerWon: won,
+      clearSelectedCard: true,
+      log: _appended(MatchLogEntry(
+        text: won
+            ? '— FIM — Vitória! A IA ficou sem criaturas.'
+            : '— FIM — Derrota. Você ficou sem criaturas.',
+        kind: MatchLogKind.system,
+        turn: match.turn,
+      )),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helpers de UI (puros, leem o estado atual)
+  // ---------------------------------------------------------------------------
+
+  SideId get playerSide => state.playerSide;
+  SideId get botSide => state.botSideId;
+
+  /// O jogador tem cristais para pagar [card]?
+  bool canAfford(CreatureCard card) =>
+      (state.playerBoard?.crystals ?? 0) >= card.cost;
+
+  /// O jogador tem cristais para pagar a relíquia [relic]?
+  bool canAffordRelic(RelicCard relic) =>
+      (state.playerBoard?.crystals ?? 0) >= relic.cost;
+
+  /// Índices das lanes LIVRES do jogador (0 = frente).
+  List<int> freeLanes() {
+    final board = state.playerBoard;
+    if (board == null) return const <int>[];
+    return <int>[
+      for (var i = 0; i < board.lanes.length; i++)
+        if (board.lanes[i] == null) i,
+    ];
+  }
+
+  /// A criatura [card] pode ser jogada agora (vez do jogador, custo ok,
+  /// lane livre)?
+  bool canPlayCreature(CreatureCard card) =>
+      state.phase == PveMatchPhase.playerTurn &&
+      canAfford(card) &&
+      freeLanes().isNotEmpty;
+
+  /// Criaturas PRÓPRIAS em jogo compatíveis com a relíquia [relic].
+  List<CreatureInPlay> compatibleTargets(RelicCard relic) {
+    final board = state.playerBoard;
+    if (board == null) return const <CreatureInPlay>[];
+    return board.creaturesInPlay
+        .where((c) => relic.isCompatibleWith(c.card))
+        .toList(growable: false);
+  }
+
+  /// A relíquia [relic] pode ser jogada agora (vez do jogador, custo ok,
+  /// pelo menos um alvo compatível em jogo)?
+  bool canPlayRelic(RelicCard relic) =>
+      state.phase == PveMatchPhase.playerTurn &&
+      canAffordRelic(relic) &&
+      compatibleTargets(relic).isNotEmpty;
+
+  /// O jogador ainda pode sacrificar neste turno?
+  bool get canSacrifice =>
+      state.phase == PveMatchPhase.playerTurn &&
+      !(state.playerBoard?.sacrificedThisTurn ?? true);
+
+  // ---------------------------------------------------------------------------
+  // Narração PT-BR
+  // ---------------------------------------------------------------------------
+
+  String _botActionText(MatchState before, MatchState after, GameAction action) {
+    final side = before.sideOf(state.botSideId);
+    switch (action) {
+      case PlayCreature(:final cardId):
+        final name = _creatureNameInPool(side, cardId) ?? cardId;
+        final placed = _findCreature(after.sideOf(state.botSideId), cardId);
+        final laneLabel = placed == null ? '' : ' na ${_laneLabel(placed.lane)}';
+        return 'A IA jogou $name$laneLabel.';
+      case PlayRelic(:final cardId, :final targetCreatureId):
+        final relic = _relicInPool(side, cardId);
+        final target = _findCreature(side, targetCreatureId);
+        final verb = (relic?.isFlash ?? false) ? 'usou' : 'equipou';
+        return 'A IA $verb ${relic?.nome ?? cardId} '
+            'em ${target?.card.nome ?? targetCreatureId}.';
+      case Sacrifice(:final cardId):
+        final relic = _relicInPool(side, cardId);
+        if (relic != null) {
+          return 'A IA sacrificou ${relic.nome} '
+              '(+$kSacrificeRelicCrystals cristal).';
+        }
+        final name = _creatureNameInPool(side, cardId) ?? cardId;
+        return 'A IA sacrificou $name (+$kSacrificeCreatureCrystals cristais).';
+      case Pass():
+        return 'A IA passou.';
+    }
+  }
+
+  /// Converte `lastTurnEvents` de [match] em entradas de log de combate.
+  List<MatchLogEntry> _eventEntries(MatchState match, int turn) {
+    return <MatchLogEntry>[
+      for (final e in match.lastTurnEvents)
+        MatchLogEntry(text: _eventText(e), kind: MatchLogKind.combat, turn: turn),
+    ];
+  }
+
+  String _eventText(MatchEvent e) {
+    switch (e) {
+      case AttackResolved():
+        final b = StringBuffer(
+            '${e.attackerName} atacou ${e.targetName}: ${e.rawDamage} de dano');
+        if (e.damageDealt != e.rawDamage) {
+          b.write(' (${e.damageDealt} após armadura)');
+        }
+        if (e.targetDied) {
+          b.write(' — ${e.targetName} morreu!');
+        } else {
+          b.write(' — restou ${e.targetHpAfter} PV.');
+        }
+        return b.toString();
+      case HealResolved():
+        return '${e.healerName} curou ${e.targetName}: +${e.amount} PV.';
+      case NoCreaturePenaltyApplied():
+        final who = e.side == state.playerSide ? 'Você terminou' : 'A IA terminou';
+        final kind = e.wasCreature ? 'criatura' : 'relíquia';
+        return '$who o turno sem criaturas e perdeu ${e.lostCardName} ($kind).';
+      case StallLimitReached():
+        final who = e.winner == state.playerSide ? 'você' : 'a IA';
+        return 'Limite de turnos atingido — desempate favorece $who.';
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Lookups de nomes/cartas
+  // ---------------------------------------------------------------------------
+
+  String _laneLabel(int lane) =>
+      lane == 0 ? 'linha de frente' : 'linha ${lane + 1}';
+
+  String _creatureName(MatchState match, String cardId) {
+    final side = match.sideOf(state.playerSide);
+    return _creatureNameInPool(side, cardId) ?? cardId;
+  }
+
+  String _relicName(MatchState match, String cardId) {
+    final side = match.sideOf(state.playerSide);
+    return _relicInPool(side, cardId)?.nome ?? cardId;
+  }
+
+  String? _creatureNameInPool(BoardSide side, String cardId) {
+    for (final c in side.poolCreatures) {
+      if (c.id == cardId) return c.nome;
+    }
+    final inPlay = _findCreature(side, cardId);
+    return inPlay?.card.nome;
+  }
+
+  RelicCard? _relicInPool(BoardSide side, String cardId) {
+    for (final r in side.poolRelics) {
+      if (r.id == cardId) return r;
+    }
+    return null;
+  }
+
+  CreatureInPlay? _findCreature(BoardSide side, String instanceId) {
+    for (final c in side.lanes) {
+      if (c != null && c.instanceId == instanceId) return c;
+    }
+    return null;
+  }
+
+  List<MatchLogEntry> _appended(MatchLogEntry entry) =>
+      List<MatchLogEntry>.unmodifiable(<MatchLogEntry>[...state.log, entry]);
+
+  List<MatchLogEntry> _appendedAll(List<MatchLogEntry> entries) =>
+      List<MatchLogEntry>.unmodifiable(<MatchLogEntry>[...state.log, ...entries]);
+}
+
+/// Provider da partida PvE. `autoDispose`: sair da tela descarta a partida
+/// (o pacing do bot aborta via `mounted`).
+final pveMatchControllerProvider =
+    StateNotifierProvider.autoDispose<PveMatchController, PveMatchUiState>(
+  (ref) => PveMatchController(),
+);

@@ -170,8 +170,7 @@ class _CardVM {
         kind: _CardKind.relic,
         concepts: r.concepts,
         rarity: r.rarity,
-        // Relíquias não têm custo no modelo — exibimos 0 (sem custo de mana).
-        cost: 0,
+        cost: r.cost,
         icon: r.isFlash ? Icons.bolt : Icons.shield_outlined,
         relicTag: r.isFlash ? 'Flash' : 'Equipamento',
         grants: r.grants,
@@ -912,10 +911,8 @@ class _CardTile extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Custo (losango top-left) — só criaturas têm custo no modelo
-                  if (card.kind == _CardKind.creature)
-                    Positioned(
-                        top: 0, left: 0, child: _CostDiamond(card.cost)),
+                  // Custo (losango top-left) — criaturas E relíquias têm custo.
+                  Positioned(top: 0, left: 0, child: _CostDiamond(card.cost)),
                   // Multi-conceito: pontos dos conceitos extras (top-right)
                   if (card.concepts.length > 1)
                     Positioned(
@@ -1263,6 +1260,7 @@ class _CardDetailSheet extends StatelessWidget {
             'Habilidades', card.abilities.join(', '), Icons.auto_awesome));
       }
     } else {
+      rows.add(_statRow('Custo', '${card.cost}', Icons.local_fire_department));
       rows.add(_statRow('Tipo', card.relicTag,
           card.relicTag == 'Flash' ? Icons.bolt : Icons.shield_outlined));
       final g = card.grants;

@@ -356,7 +356,7 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
           concepts: r.concepts,
           rarity: r.rarity,
           icon: r.isFlash ? Icons.bolt : Icons.shield_outlined,
-          cost: null,
+          cost: r.cost,
           atk: null,
           pv: null,
           relicTag: r.isFlash ? 'Flash' : 'Equip.',

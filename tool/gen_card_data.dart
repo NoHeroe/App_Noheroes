@@ -192,6 +192,7 @@ Map<String, dynamic> _parseRelic(File f) {
     'id': _idFromFile(f),
     'nome': _unquote(fm['nome_canonico'] ?? _idFromFile(f)),
     'concepts': concepts,
+    'cost': int.parse(fm['custo']!.trim()),
     'grants': grants,
     'rarity': fm['raridade']!.trim(),
     'is_flash': isFlash,
