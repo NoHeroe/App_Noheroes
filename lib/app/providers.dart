@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/events/app_event_bus.dart';
 import '../core/utils/guild_rank.dart';
 import '../data/database/app_database.dart';
-import '../data/datasources/local/auth_local_ds.dart';
 import '../data/datasources/local/class_quest_service.dart';
 import '../data/datasources/local/ascension_service.dart';
 import '../data/datasources/local/guild_ascension_progress_service.dart';
@@ -36,9 +35,6 @@ import '../domain/services/faction_buff_service.dart';
 import '../domain/services/weekly_faction_validator.dart';
 import '../domain/services/weekly_faction_progress_service.dart';
 import '../domain/services/player_screens_visited_service.dart';
-import '../data/database/daos/daily_missions_dao.dart';
-import '../data/database/daos/player_daily_mission_stats_dao.dart';
-import '../data/database/daos/player_daily_subtask_volume_dao.dart';
 import '../domain/services/daily_reset_service.dart';
 import '../domain/services/faction_reputation_service.dart';
 import '../domain/services/mission_assignment_service.dart';
@@ -53,11 +49,12 @@ import '../domain/strategies/internal_modality_strategy.dart';
 import '../domain/strategies/mission_strategy.dart';
 import '../domain/strategies/mixed_modality_strategy.dart';
 import '../domain/strategies/real_task_modality_strategy.dart';
-import '../data/repositories/drift/active_faction_quests_repository_drift.dart';
-import '../data/repositories/drift/mission_repository_drift.dart';
-import '../data/repositories/drift/player_achievements_repository_drift.dart';
-import '../data/repositories/drift/player_faction_reputation_repository_drift.dart';
-import '../data/repositories/drift/player_individual_missions_repository_drift.dart';
+import '../data/repositories/supabase/active_faction_quests_repository_supabase.dart';
+import '../data/repositories/supabase/mission_repository_supabase.dart';
+import '../data/repositories/supabase/player_achievements_repository_supabase.dart';
+import '../data/repositories/supabase/player_faction_reputation_repository_supabase.dart';
+import '../data/repositories/supabase/player_individual_missions_repository_supabase.dart';
+import '../domain/models/mission_progress.dart';
 import '../domain/repositories/active_faction_quests_repository.dart';
 import '../domain/repositories/mission_repository.dart';
 import '../domain/repositories/player_achievements_repository.dart';
@@ -117,7 +114,7 @@ final appEventBusProvider = Provider<AppEventBus>((ref) {
 
 // Vitalismos Únicos — orquestra pool, despertar, ritual e stubs de PvP.
 final vitalismUniqueServiceProvider = Provider<VitalismUniqueService>((ref) {
-  return VitalismUniqueService(ref.watch(appDatabaseProvider));
+  return VitalismUniqueService(ref.watch(supabaseClientProvider));
 });
 
 // Sprint 3.4 Etapa G.2 (D15) — DiaryService COM bus injetado. Sem o bus,
@@ -127,38 +124,38 @@ final vitalismUniqueServiceProvider = Provider<VitalismUniqueService>((ref) {
 // devem usar este provider (não `DiaryService(db)` direto).
 final diaryServiceProvider = Provider<DiaryService>((ref) {
   return DiaryService(
-    ref.watch(appDatabaseProvider),
+    ref.watch(supabaseClientProvider),
     bus: ref.watch(appEventBusProvider),
   );
 });
 
 // Sprint 2.1 — catálogo, inventário, equipamento e rank do jogador.
 final itemsCatalogServiceProvider = Provider<ItemsCatalogService>((ref) {
-  return ItemsCatalogService(ref.watch(appDatabaseProvider));
+  return ItemsCatalogService(ref.watch(supabaseClientProvider));
 });
 
 final playerInventoryServiceProvider = Provider<PlayerInventoryService>((ref) {
   return PlayerInventoryService(
-    ref.watch(appDatabaseProvider),
+    ref.watch(supabaseClientProvider),
     ref.watch(itemsCatalogServiceProvider),
   );
 });
 
 final playerEquipmentServiceProvider = Provider<PlayerEquipmentService>((ref) {
   return PlayerEquipmentService(
-    ref.watch(appDatabaseProvider),
+    ref.watch(supabaseClientProvider),
     ref.watch(itemsCatalogServiceProvider),
   );
 });
 
 final playerRankServiceProvider = Provider<PlayerRankService>((ref) {
-  return PlayerRankService(ref.watch(appDatabaseProvider));
+  return PlayerRankService(ref.watch(supabaseClientProvider));
 });
 
 // Sprint 2.1 Bloco 7 — lojas (shops.json + validações ADR 0010).
 final shopsServiceProvider = Provider<ShopsService>((ref) {
   return ShopsService(
-    ref.watch(appDatabaseProvider),
+    ref.watch(supabaseClientProvider),
     ref.watch(itemsCatalogServiceProvider),
     ref.watch(playerInventoryServiceProvider),
     ref.watch(appEventBusProvider),
@@ -167,25 +164,19 @@ final shopsServiceProvider = Provider<ShopsService>((ref) {
 
 // Sprint 2.2 — receitas e forja.
 final recipesCatalogServiceProvider = Provider<RecipesCatalogService>((ref) {
-  return RecipesCatalogService(ref.watch(appDatabaseProvider));
+  return RecipesCatalogService(ref.watch(supabaseClientProvider));
 });
 
 final playerRecipesServiceProvider = Provider<PlayerRecipesService>((ref) {
   return PlayerRecipesService(
-    ref.watch(appDatabaseProvider),
+    ref.watch(supabaseClientProvider),
     ref.watch(recipesCatalogServiceProvider),
   );
 });
 
 final craftingServiceProvider = Provider<CraftingService>((ref) {
-  final db = ref.watch(appDatabaseProvider);
   return CraftingService(
-    db,
-    ref.watch(recipesCatalogServiceProvider),
-    ref.watch(playerRecipesServiceProvider),
-    ref.watch(itemsCatalogServiceProvider),
-    ref.watch(playerInventoryServiceProvider),
-    PlayerDao(db),
+    ref.watch(supabaseClientProvider),
     ref.watch(appEventBusProvider),
   );
 });
@@ -193,9 +184,8 @@ final craftingServiceProvider = Provider<CraftingService>((ref) {
 // Sprint 2.3 fix (D.2) — runas migradas pra items_catalog como ItemType.rune.
 final enchantServiceProvider = Provider<EnchantService>((ref) {
   return EnchantService(
-    ref.watch(appDatabaseProvider),
+    ref.watch(supabaseClientProvider),
     ref.watch(itemsCatalogServiceProvider),
-    ref.watch(playerInventoryServiceProvider),
     ref.watch(appEventBusProvider),
   );
 });
@@ -232,11 +222,19 @@ final playerStreamProvider = StreamProvider<Player?>((ref) {
 /// is_unlocked promovido por sequenciamento). Sem isso, card só
 /// rebuilda quando o widget é remontado — UI fica stale.
 final missionProgressStreamProvider =
-    StreamProvider.family<PlayerMissionProgressData?, int>((ref, missionId) {
-  final db = ref.watch(appDatabaseProvider);
-  return (db.select(db.playerMissionProgressTable)
-        ..where((t) => t.id.equals(missionId)))
-      .watchSingleOrNull();
+    StreamProvider.family<MissionProgress?, int>((ref, missionId) {
+  final client = ref.watch(supabaseClientProvider);
+  // Época 2 (ADR-0024): modelo REFETCH — fetch único da row por id via
+  // PostgREST (sem Realtime por ora). O StreamProvider emite 1 valor; o
+  // card é re-disparado quando o provider é invalidado/reassistido.
+  return Stream.fromFuture(
+    client
+        .from('player_mission_progress')
+        .select()
+        .eq('id', missionId)
+        .maybeSingle()
+        .then((row) => row == null ? null : MissionProgress.fromMap(row)),
+  );
 });
 
 // Sprint 3.1 Bloco 7b — quest services reescritos (Class, Faction,
@@ -254,7 +252,7 @@ final factionQuestServiceProvider = Provider<FactionQuestService>((ref) {
 
 final questAdmissionServiceProvider = Provider<QuestAdmissionService>((ref) {
   return QuestAdmissionService(
-    ref.watch(appDatabaseProvider),
+    ref.watch(supabaseClientProvider),
     ref.watch(missionRepositoryProvider),
     ref.watch(classQuestServiceProvider),
     ref.watch(appEventBusProvider),
@@ -282,7 +280,7 @@ final mixedModalityStrategyProvider =
 
 final missionProgressServiceProvider =
     Provider<MissionProgressService>((ref) {
-  final db = ref.watch(appDatabaseProvider);
+  final playerRepo = ref.watch(playerRepositoryProvider);
   final service = MissionProgressService(
     repo: ref.watch(missionRepositoryProvider),
     resolver: ref.watch(rewardResolveServiceProvider),
@@ -296,17 +294,16 @@ final missionProgressServiceProvider =
       MissionModality.mixed: ref.watch(mixedModalityStrategyProvider),
     },
     resolvePlayer: (playerId) async {
-      final row = await (db.select(db.playersTable)
-            ..where((t) => t.id.equals(playerId)))
-          .getSingle();
-      final rank = row.guildRank == 'none'
+      // Época 2 (ADR-0024): lê o Player via PostgREST (PlayerRepository).
+      final player = await playerRepo.fetchById(playerId.toString());
+      final rank = (player == null || player.guildRank == 'none')
           ? null
-          : RankCodec.fromString(row.guildRank.toLowerCase());
+          : RankCodec.fromString(player.guildRank.toLowerCase());
       return PlayerSnapshot(
-        level: row.level,
+        level: player?.level ?? 1,
         rank: rank ?? GuildRank.e,
-        classKey: row.classType,
-        factionKey: row.factionType,
+        classKey: player?.classType,
+        factionKey: player?.factionType,
       );
     },
   );
@@ -326,12 +323,7 @@ final rewardResolveServiceProvider = Provider<RewardResolveService>((ref) {
 
 final rewardGrantServiceProvider = Provider<RewardGrantService>((ref) {
   return RewardGrantService(
-    db: ref.watch(appDatabaseProvider),
-    missionRepo: ref.watch(missionRepositoryProvider),
-    achievementsRepo: ref.watch(playerAchievementsRepositoryProvider),
-    inventory: ref.watch(playerInventoryServiceProvider),
-    recipes: ref.watch(playerRecipesServiceProvider),
-    factionRep: ref.watch(playerFactionReputationRepositoryProvider),
+    client: ref.watch(supabaseClientProvider),
     eventBus: ref.watch(appEventBusProvider),
     factionBuff: ref.watch(factionBuffServiceProvider),
   );
@@ -346,37 +338,36 @@ final rewardGrantServiceProvider = Provider<RewardGrantService>((ref) {
 // carregamento completar (trata como "conquistas not-yet-loaded" →
 // noop + log). Em produção o bus começa silencioso até o jogador agir.
 final achievementsServiceProvider = Provider<AchievementsService>((ref) {
-  final db = ref.watch(appDatabaseProvider);
+  final client = ref.watch(supabaseClientProvider);
+  final playerRepo = ref.watch(playerRepositoryProvider);
   final service = AchievementsService(
     achievementsRepo: ref.watch(playerAchievementsRepositoryProvider),
     rewardResolve: ref.watch(rewardResolveServiceProvider),
     rewardGrant: ref.watch(rewardGrantServiceProvider),
     bus: ref.watch(appEventBusProvider),
-    // Sprint 3.3 Etapa 2.1b — DAOs novos pros 15 triggers daily.
-    statsDao: ref.watch(playerDailyMissionStatsDaoProvider),
-    volumeDao: ref.watch(playerDailySubtaskVolumeDaoProvider),
-    // Sprint 3.3 Etapa 2.1c-α — PlayerDao pros 5 triggers event_*.
-    playerDao: PlayerDao(db),
+    // Época 2 (ADR-0024): cliente Supabase pros triggers daily (antes
+    // statsDao/volumeDao). PlayerDao agora Supabase-backed pros event_*.
+    client: client,
+    playerDao: PlayerDao(client),
     // Sprint 3.3 Etapa 2.1c-γ — service pro trigger event_screen_visited.
     screensVisitedService:
         ref.watch(playerScreensVisitedServiceProvider),
     resolvePlayerFacts: (playerId) async {
-      final row = await (db.select(db.playersTable)
-            ..where((t) => t.id.equals(playerId)))
-          .getSingle();
-      final rank = row.guildRank == 'none'
+      // Época 2 (ADR-0024): lê o Player via PostgREST (PlayerRepository).
+      final player = await playerRepo.fetchById(playerId);
+      final rank = (player == null || player.guildRank == 'none')
           ? null
-          : RankCodec.fromString(row.guildRank.toLowerCase());
+          : RankCodec.fromString(player.guildRank.toLowerCase());
       return PlayerFacts(
-        level: row.level,
-        totalQuestsCompleted: row.totalQuestsCompleted,
+        level: player?.level ?? 1,
+        totalQuestsCompleted: player?.totalQuestsCompleted ?? 0,
         // Sprint 3.3 Etapa 2.1b — alimenta trigger `daily_mission_streak`.
-        dailyMissionsStreak: row.dailyMissionsStreak,
+        dailyMissionsStreak: player?.dailyMissionsStreak ?? 0,
         snapshot: PlayerSnapshot(
-          level: row.level,
+          level: player?.level ?? 1,
           rank: rank ?? GuildRank.e,
-          classKey: row.classType,
-          factionKey: row.factionType,
+          classKey: player?.classType,
+          factionKey: player?.factionType,
         ),
       );
     },
@@ -425,9 +416,8 @@ final achievementsServiceProvider = Provider<AchievementsService>((ref) {
 // Lê/escreve weight_kg + height_cm em players via PlayerDao.
 // Sprint 3.3 Etapa 2.1c-α — bus injetado pra publicar BodyMetricsUpdated.
 final bodyMetricsServiceProvider = Provider<BodyMetricsService>((ref) {
-  final db = ref.watch(appDatabaseProvider);
   return BodyMetricsService(
-    dao: PlayerDao(db),
+    dao: PlayerDao(ref.watch(supabaseClientProvider)),
     bus: ref.watch(appEventBusProvider),
   );
 });
@@ -437,10 +427,10 @@ final bodyMetricsServiceProvider = Provider<BodyMetricsService>((ref) {
 // listener em routerProvider. Sem bootstrap eager — writer-on-demand.
 final playerScreensVisitedServiceProvider =
     Provider<PlayerScreensVisitedService>((ref) {
-  final db = ref.watch(appDatabaseProvider);
+  final client = ref.watch(supabaseClientProvider);
   return PlayerScreensVisitedService(
-    db: db,
-    playerDao: PlayerDao(db),
+    client: client,
+    playerDao: PlayerDao(client),
     bus: ref.watch(appEventBusProvider),
   );
 });
@@ -452,7 +442,7 @@ final playerScreensVisitedServiceProvider =
 final playerCurrencyStatsServiceProvider =
     Provider<PlayerCurrencyStatsService>((ref) {
   final service = PlayerCurrencyStatsService(
-    db: ref.watch(appDatabaseProvider),
+    client: ref.watch(supabaseClientProvider),
     bus: ref.watch(appEventBusProvider),
   );
   service.start();
@@ -473,35 +463,18 @@ final dailyPoolServiceProvider = Provider<DailyPoolService>((ref) {
   return service;
 });
 
-// Sprint 3.2 Etapa 1.2 — services das missões diárias (geração, progresso,
-// rollover). DAO compartilhado entre os 3 serviços.
-final dailyMissionsDaoProvider = Provider<DailyMissionsDao>((ref) {
-  return DailyMissionsDao(ref.watch(appDatabaseProvider));
-});
-
-// Sprint 3.3 Etapa 2.1a — DAOs + service de stats agregadas.
-// Foundation pros triggers de conquista (Etapa 2.1b).
-final playerDailyMissionStatsDaoProvider =
-    Provider<PlayerDailyMissionStatsDao>((ref) {
-  return PlayerDailyMissionStatsDao(ref.watch(appDatabaseProvider));
-});
-
-final playerDailySubtaskVolumeDaoProvider =
-    Provider<PlayerDailySubtaskVolumeDao>((ref) {
-  return PlayerDailySubtaskVolumeDao(ref.watch(appDatabaseProvider));
-});
+// Época 2 (ADR-0024): DAOs Drift `dailyMissionsDaoProvider`,
+// `playerDailyMissionStatsDaoProvider` e `playerDailySubtaskVolumeDaoProvider`
+// REMOVIDOS — os services daily (generator/progress/rollover/stats) e o
+// AchievementsService passaram a falar PostgREST direto via SupabaseClient.
 
 /// Eager-init: bootstrap chama `ref.watch(...)` em `NoHeroesApp.build`
 /// pra forçar inicialização no boot da árvore Riverpod (sem isso o
 /// service só ouviria eventos depois que algo o lesse).
 final dailyMissionStatsServiceProvider =
     Provider<DailyMissionStatsService>((ref) {
-  final db = ref.watch(appDatabaseProvider);
   final service = DailyMissionStatsService(
-    statsDao: ref.watch(playerDailyMissionStatsDaoProvider),
-    volumeDao: ref.watch(playerDailySubtaskVolumeDaoProvider),
-    playerDao: PlayerDao(db),
-    missionsDao: ref.watch(dailyMissionsDaoProvider),
+    client: ref.watch(supabaseClientProvider),
     bus: ref.watch(appEventBusProvider),
   );
   service.start();
@@ -521,7 +494,7 @@ final dailyMissionStatsServiceProvider =
 final questRewardStatsServiceProvider =
     Provider<QuestRewardStatsService>((ref) {
   final service = QuestRewardStatsService(
-    db: ref.watch(appDatabaseProvider),
+    client: ref.watch(supabaseClientProvider),
     bus: ref.watch(appEventBusProvider),
   );
   service.start();
@@ -534,7 +507,7 @@ final questRewardStatsServiceProvider =
 /// pra cada sub-task ativa em listeners de eventos terminais.
 final factionAdmissionValidatorProvider =
     Provider<FactionAdmissionValidator>((ref) {
-  return FactionAdmissionValidator(ref.watch(appDatabaseProvider));
+  return FactionAdmissionValidator(ref.watch(supabaseClientProvider));
 });
 
 /// FATIA B1 — validador acumulativo do motor SEMANAL de facção.
@@ -542,14 +515,14 @@ final factionAdmissionValidatorProvider =
 /// limitada `[weekStartMs, weekEndMs)`.
 final weeklyFactionValidatorProvider =
     Provider<WeeklyFactionValidator>((ref) {
-  return WeeklyFactionValidator(ref.watch(appDatabaseProvider));
+  return WeeklyFactionValidator(ref.watch(supabaseClientProvider));
 });
 
 /// Sprint 3.4 Etapa C — service que combina catálogo + state do player
 /// e produz multipliers efetivos (xp/gold/gems + atributos virtuais).
 /// Stateless. Lazy-load do JSON no 1º acesso.
 final factionBuffServiceProvider = Provider<FactionBuffService>((ref) {
-  return FactionBuffService(ref.watch(appDatabaseProvider));
+  return FactionBuffService(ref.watch(supabaseClientProvider));
 });
 
 /// Sprint 3.4 Etapa C hotfix #2 (P1-C) — promovido pra escopo global.
@@ -582,7 +555,7 @@ final effectiveAttributesProvider =
 /// é chamado on-demand pela UI.
 final leaveFactionServiceProvider = Provider<LeaveFactionService>((ref) {
   return LeaveFactionService(
-    db: ref.watch(appDatabaseProvider),
+    client: ref.watch(supabaseClientProvider),
     bus: ref.watch(appEventBusProvider),
     factionRep: ref.watch(factionReputationServiceProvider),
   );
@@ -594,7 +567,7 @@ final leaveFactionServiceProvider = Provider<LeaveFactionService>((ref) {
 final factionAdmissionProgressServiceProvider =
     Provider<FactionAdmissionProgressService>((ref) {
   final service = FactionAdmissionProgressService(
-    db: ref.watch(appDatabaseProvider),
+    client: ref.watch(supabaseClientProvider),
     bus: ref.watch(appEventBusProvider),
     validator: ref.watch(factionAdmissionValidatorProvider),
     missionRepo: ref.watch(missionRepositoryProvider),
@@ -614,26 +587,25 @@ final factionAdmissionProgressServiceProvider =
 /// Eager bootstrap no `NoHeroesApp.build`.
 final weeklyFactionProgressServiceProvider =
     Provider<WeeklyFactionProgressService>((ref) {
-  final db = ref.watch(appDatabaseProvider);
+  final playerRepo = ref.watch(playerRepositoryProvider);
   final service = WeeklyFactionProgressService(
-    db: db,
+    client: ref.watch(supabaseClientProvider),
     bus: ref.watch(appEventBusProvider),
     validator: ref.watch(weeklyFactionValidatorProvider),
     missionRepo: ref.watch(missionRepositoryProvider),
     resolver: ref.watch(rewardResolveServiceProvider),
     granter: ref.watch(rewardGrantServiceProvider),
     resolvePlayer: (playerId) async {
-      final row = await (db.select(db.playersTable)
-            ..where((t) => t.id.equals(playerId)))
-          .getSingle();
-      final rank = row.guildRank == 'none'
+      // Época 2 (ADR-0024): lê o Player via PostgREST (PlayerRepository).
+      final player = await playerRepo.fetchById(playerId);
+      final rank = (player == null || player.guildRank == 'none')
           ? null
-          : RankCodec.fromString(row.guildRank.toLowerCase());
+          : RankCodec.fromString(player.guildRank.toLowerCase());
       return PlayerSnapshot(
-        level: row.level,
+        level: player?.level ?? 1,
         rank: rank ?? GuildRank.e,
-        classKey: row.classType,
-        factionKey: row.factionType,
+        classKey: player?.classType,
+        factionKey: player?.factionType,
       );
     },
   );
@@ -646,26 +618,11 @@ final weeklyFactionProgressServiceProvider =
 /// deadline/ascend). NÃO wire na UI ainda (B.4). Nome distinto do
 /// `ascensionServiceProvider` (GuildAscensionService) da AscensionTab.
 final ascensionStateServiceProvider = Provider<AscensionService>((ref) {
-  final db = ref.watch(appDatabaseProvider);
+  final client = ref.watch(supabaseClientProvider);
   return AscensionService(
-    db: db,
+    client: client,
     bus: ref.watch(appEventBusProvider),
-    resolver: ref.watch(rewardResolveServiceProvider),
-    ascension: GuildAscensionService(db),
-    resolvePlayer: (playerId) async {
-      final row = await (db.select(db.playersTable)
-            ..where((t) => t.id.equals(playerId)))
-          .getSingle();
-      final rank = row.guildRank == 'none'
-          ? null
-          : RankCodec.fromString(row.guildRank.toLowerCase());
-      return PlayerSnapshot(
-        level: row.level,
-        rank: rank ?? GuildRank.e,
-        classKey: row.classType,
-        factionKey: row.factionType,
-      );
-    },
+    ascension: GuildAscensionService(client),
   );
 });
 
@@ -675,11 +632,11 @@ final ascensionStateServiceProvider = Provider<AscensionService>((ref) {
 /// bootstrap no `NoHeroesApp.build`.
 final guildAscensionProgressServiceProvider =
     Provider<GuildAscensionProgressService>((ref) {
-  final db = ref.watch(appDatabaseProvider);
+  final client = ref.watch(supabaseClientProvider);
   final service = GuildAscensionProgressService(
-    db: db,
+    client: client,
     bus: ref.watch(appEventBusProvider),
-    ascension: GuildAscensionService(db),
+    ascension: GuildAscensionService(client),
   );
   service.start();
   ref.onDispose(service.stop);
@@ -688,23 +645,18 @@ final guildAscensionProgressServiceProvider =
 
 final dailyMissionGeneratorServiceProvider =
     Provider<DailyMissionGeneratorService>((ref) {
-  final db = ref.watch(appDatabaseProvider);
   return DailyMissionGeneratorService(
+    client: ref.watch(supabaseClientProvider),
     pools: ref.watch(dailyPoolServiceProvider),
     bodyMetrics: ref.watch(bodyMetricsServiceProvider),
-    playerDao: PlayerDao(db),
-    missionsDao: ref.watch(dailyMissionsDaoProvider),
     bus: ref.watch(appEventBusProvider),
   );
 });
 
 final dailyMissionProgressServiceProvider =
     Provider<DailyMissionProgressService>((ref) {
-  final db = ref.watch(appDatabaseProvider);
   return DailyMissionProgressService(
-    db: db,
-    missionsDao: ref.watch(dailyMissionsDaoProvider),
-    playerDao: PlayerDao(db),
+    client: ref.watch(supabaseClientProvider),
     bus: ref.watch(appEventBusProvider),
     factionBuff: ref.watch(factionBuffServiceProvider),
   );
@@ -712,11 +664,8 @@ final dailyMissionProgressServiceProvider =
 
 final dailyMissionRolloverServiceProvider =
     Provider<DailyMissionRolloverService>((ref) {
-  final db = ref.watch(appDatabaseProvider);
   return DailyMissionRolloverService(
-    missionsDao: ref.watch(dailyMissionsDaoProvider),
-    playerDao: PlayerDao(db),
-    progress: ref.watch(dailyMissionProgressServiceProvider),
+    client: ref.watch(supabaseClientProvider),
   );
 });
 
@@ -724,7 +673,7 @@ final dailyMissionRolloverServiceProvider =
 final individualDeleteServiceProvider =
     Provider<IndividualDeleteService>((ref) {
   return IndividualDeleteService(
-    db: ref.watch(appDatabaseProvider),
+    client: ref.watch(supabaseClientProvider),
     missionRepo: ref.watch(missionRepositoryProvider),
     bus: ref.watch(appEventBusProvider),
   );
@@ -738,8 +687,7 @@ final missionBalancerServiceProvider =
 final individualCreationServiceProvider =
     Provider<IndividualCreationService>((ref) {
   return IndividualCreationService(
-    db: ref.watch(appDatabaseProvider),
-    missionRepo: ref.watch(missionRepositoryProvider),
+    client: ref.watch(supabaseClientProvider),
     balancer: ref.watch(missionBalancerServiceProvider),
     bus: ref.watch(appEventBusProvider),
   );
@@ -757,9 +705,8 @@ final missionCatalogsServiceProvider =
 final missionAssignmentServiceProvider =
     Provider<MissionAssignmentService>((ref) {
   return MissionAssignmentService(
-    missionRepo: ref.watch(missionRepositoryProvider),
+    client: ref.watch(supabaseClientProvider),
     catalogs: ref.watch(missionCatalogsServiceProvider),
-    factionRepo: ref.watch(activeFactionQuestsRepositoryProvider),
     bus: ref.watch(appEventBusProvider),
   );
 });
@@ -768,32 +715,34 @@ final missionAssignmentServiceProvider =
 final factionReputationServiceProvider =
     Provider<FactionReputationService>((ref) {
   return FactionReputationService(
-    repo: ref.watch(playerFactionReputationRepositoryProvider),
+    client: ref.watch(supabaseClientProvider),
     bus: ref.watch(appEventBusProvider),
-    db: ref.watch(appDatabaseProvider),
     factionBuff: ref.watch(factionBuffServiceProvider),
   );
 });
 
+// NOTA (Época 2 — ADR-0024): DailyResetService ainda NÃO foi convertido pra
+// Supabase (ctor pede `AppDatabase db` + `int playerId`). Por isso este
+// provider segue híbrido: `db` lê o `appDatabaseProvider` (Drift, vivo só por
+// causa deste service), e `playerDao` usa a PlayerDao já Supabase-backed.
+// Converter quando DailyResetService migrar.
 final dailyResetServiceProvider = Provider<DailyResetService>((ref) {
-  final db = ref.watch(appDatabaseProvider);
   return DailyResetService(
-    db: db,
+    db: ref.watch(appDatabaseProvider),
     missionRepo: ref.watch(missionRepositoryProvider),
     resolver: ref.watch(rewardResolveServiceProvider),
     granter: ref.watch(rewardGrantServiceProvider),
     assignment: ref.watch(missionAssignmentServiceProvider),
-    playerDao: PlayerDao(db),
+    playerDao: PlayerDao(ref.watch(supabaseClientProvider)),
     bus: ref.watch(appEventBusProvider),
   );
 });
 
 final weeklyResetServiceProvider = Provider<WeeklyResetService>((ref) {
-  final db = ref.watch(appDatabaseProvider);
   return WeeklyResetService(
     missionRepo: ref.watch(missionRepositoryProvider),
     assignment: ref.watch(missionAssignmentServiceProvider),
-    playerDao: PlayerDao(db),
+    client: ref.watch(supabaseClientProvider),
     bus: ref.watch(appEventBusProvider),
   );
 });
@@ -805,29 +754,31 @@ final weeklyResetServiceProvider = Provider<WeeklyResetService>((ref) {
 // (strategies Bloco 6, services Bloco 7+) fazem `ref.read(...)` sem
 // conhecer a impl concreta.
 final missionRepositoryProvider = Provider<MissionRepository>((ref) {
-  return MissionRepositoryDrift(ref.watch(appDatabaseProvider));
+  return MissionRepositorySupabase(ref.watch(supabaseClientProvider));
 });
 
 final playerAchievementsRepositoryProvider =
     Provider<PlayerAchievementsRepository>((ref) {
-  return PlayerAchievementsRepositoryDrift(ref.watch(appDatabaseProvider));
+  return PlayerAchievementsRepositorySupabase(
+      ref.watch(supabaseClientProvider));
 });
 
 final playerFactionReputationRepositoryProvider =
     Provider<PlayerFactionReputationRepository>((ref) {
-  return PlayerFactionReputationRepositoryDrift(
-      ref.watch(appDatabaseProvider));
+  return PlayerFactionReputationRepositorySupabase(
+      ref.watch(supabaseClientProvider));
 });
 
 final playerIndividualMissionsRepositoryProvider =
     Provider<PlayerIndividualMissionsRepository>((ref) {
-  return PlayerIndividualMissionsRepositoryDrift(
-      ref.watch(appDatabaseProvider));
+  return PlayerIndividualMissionsRepositorySupabase(
+      ref.watch(supabaseClientProvider));
 });
 
 final activeFactionQuestsRepositoryProvider =
     Provider<ActiveFactionQuestsRepository>((ref) {
-  return ActiveFactionQuestsRepositoryDrift(ref.watch(appDatabaseProvider));
+  return ActiveFactionQuestsRepositorySupabase(
+      ref.watch(supabaseClientProvider));
 });
 
 // ─── Sprint 3.1 (v0.29.0) ─────────────────────────────────────────────────
