@@ -104,7 +104,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
     if (result.isOk) {
       // Refresca player no provider pra refletir o ouro debitado.
-      final updated = await PlayerDao(ref.read(appDatabaseProvider))
+      final updated = await PlayerDao(ref.read(supabaseClientProvider))
           .findById(player.id);
       if (!mounted) return;
       ref.read(currentPlayerProvider.notifier).state = updated;

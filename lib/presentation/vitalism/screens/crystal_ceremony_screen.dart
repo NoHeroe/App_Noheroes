@@ -32,7 +32,7 @@ enum _Phase {
 class _CrystalCeremonyScreenState
     extends ConsumerState<CrystalCeremonyScreen> {
   _Phase _phase = _Phase.loading;
-  int? _playerId;
+  String? _playerId;
   OwnedAffinity? _awakened;
   bool _emptyPool = false;
 

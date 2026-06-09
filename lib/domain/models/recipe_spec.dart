@@ -1,6 +1,6 @@
 import 'dart:convert';
 import '../../core/utils/guild_rank.dart';
-import '../../data/database/app_database.dart';
+// Época 2 (ADR-0024): Drift retirado — RecipeSpec.fromRow removido; use fromMap/fromJson.
 import '../enums/recipe_type.dart';
 import 'item_spec.dart' show SourceSpec;
 import 'material_requirement.dart';
@@ -92,25 +92,6 @@ class RecipeSpec {
       'duration_sec': m['duration_sec'],
       'unlock_sources': _decodeJson(m['unlock_sources']) ?? const [],
       'icon': m['icon'],
-    });
-  }
-
-  factory RecipeSpec.fromRow(RecipesCatalogTableData row) {
-    return RecipeSpec.fromJson({
-      'key': row.key,
-      'name': row.name,
-      'description': row.description,
-      'type': row.type,
-      'required_rank': row.requiredRank,
-      'required_level': row.requiredLevel,
-      'required_station': row.requiredStation,
-      'result_item_key': row.resultItemKey,
-      'result_quantity': row.resultQuantity,
-      'materials': jsonDecode(row.materials),
-      'cost_coins': row.costCoins,
-      'duration_sec': row.durationSec,
-      'unlock_sources': jsonDecode(row.unlockSources),
-      'icon': row.icon,
     });
   }
 

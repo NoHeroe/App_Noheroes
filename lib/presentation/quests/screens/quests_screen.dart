@@ -135,7 +135,7 @@ class _QuestsScreenState extends ConsumerState<QuestsScreen> {
 
 class _Body extends ConsumerWidget {
   final QuestsScreenState state;
-  final int playerId;
+  final String playerId;
   final String rankLabel;
   final int rewardXp;
   final int rewardGold;

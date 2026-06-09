@@ -25,7 +25,7 @@ import '../../../domain/services/body_metrics_service.dart';
 ///   → Calibração do Sistema: peso + altura (passo técnico separado)
 ///
 /// ## Efeitos colaterais no finish
-///   - `AuthLocalDs.completeOnboarding` (name + narrativeMode='longa')
+///   - `SupabaseAuthService.completeOnboarding` (name + narrativeMode='longa')
 ///   - `BodyMetricsService.save` (peso + altura, na Calibração)
 ///   - `TutorialService.markDone(phase0_onboarding)`
 ///   - `context.go('/sanctuary')`
@@ -191,14 +191,20 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
         : _nameCtrl.text.trim();
 
     final authDs = ref.read(authDsProvider);
-    await authDs.completeOnboarding(player.id, name, 'longa');
+    try {
+      await authDs.completeOnboarding(player.id, name, 'longa');
 
-    await TutorialService.markDone(TutorialPhase.phase0_onboarding);
+      await TutorialService.markDone(TutorialPhase.phase0_onboarding);
 
-    final updated = await authDs.currentSession();
-    if (!mounted) return;
-    ref.read(currentPlayerProvider.notifier).state = updated;
-    context.go('/sanctuary');
+      final updated = await authDs.currentSession();
+      if (!mounted) return;
+      ref.read(currentPlayerProvider.notifier).state = updated;
+      context.go('/sanctuary');
+    } catch (_) {
+      // Erro de rede ao finalizar o onboarding — permite nova tentativa.
+      if (!mounted) return;
+      setState(() => _finishing = false);
+    }
   }
 
   @override

@@ -4,20 +4,20 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/datasources/local/diary_service.dart';
-import '../../../data/database/app_database.dart';
+import '../../../domain/entities/diary_entry.dart';
 
 final _diaryTodayProvider =
-    FutureProvider.autoDispose<DiaryEntriesTableData?>((ref) async {
+    FutureProvider.autoDispose<DiaryEntry?>((ref) async {
   final player = ref.watch(currentPlayerProvider);
   if (player == null) return null;
-  return DiaryService(ref.read(appDatabaseProvider)).getTodayEntry(player.id);
+  return ref.read(diaryServiceProvider).getTodayEntry(player.id);
 });
 
 final _diaryHistoryProvider =
-    FutureProvider.autoDispose<List<DiaryEntriesTableData>>((ref) async {
+    FutureProvider.autoDispose<List<DiaryEntry>>((ref) async {
   final player = ref.watch(currentPlayerProvider);
   if (player == null) return [];
-  return DiaryService(ref.read(appDatabaseProvider)).getHistory(player.id);
+  return ref.read(diaryServiceProvider).getHistory(player.id);
 });
 
 class DiaryTab extends ConsumerStatefulWidget {
@@ -48,10 +48,7 @@ class _DiaryTabState extends ConsumerState<DiaryTab> {
     setState(() => _saving = true);
     // Sprint 3.4 Sub-Etapa B.2 — bus injetado pra emitir
     // DiaryEntryCreated (consumido pelo FactionAdmissionProgressService).
-    await DiaryService(
-      ref.read(appDatabaseProvider),
-      bus: ref.read(appEventBusProvider),
-    ).saveEntry(player.id, _ctrl.text.trim());
+    await ref.read(diaryServiceProvider).saveEntry(player.id, _ctrl.text.trim());
     setState(() => _saving = false);
     ref.invalidate(_diaryTodayProvider);
     ref.invalidate(_diaryHistoryProvider);

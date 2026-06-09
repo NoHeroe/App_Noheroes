@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../data/database/daos/player_dao.dart';
 import '../../../core/utils/item_equip_policy.dart';
 import '../../../domain/enums/item_type.dart';
 import '../../../domain/models/enchant_result.dart';
@@ -172,10 +173,8 @@ class _EnchantScreenState extends ConsumerState<EnchantScreen>
 
     if (result.allowed) {
       // Refresca player pra gemas atualizadas.
-      final db = ref.read(appDatabaseProvider);
-      final updated = await db.managers.playersTable
-          .filter((f) => f.id(player.id))
-          .getSingleOrNull();
+      final updated = await PlayerDao(ref.read(supabaseClientProvider))
+          .findById(player.id);
       if (!mounted) return;
       ref.read(currentPlayerProvider.notifier).state = updated;
 

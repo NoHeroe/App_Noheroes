@@ -77,7 +77,7 @@ class InternalModalityStrategy implements MissionStrategy {
 
   /// Extrai `playerId` do evento (todos do Bloco 2 têm o campo) e
   /// compara. Missão do jogador X só avança por evento do jogador X.
-  bool _eventPlayerMatches(AppEvent event, int expectedPlayerId) {
+  bool _eventPlayerMatches(AppEvent event, String expectedPlayerId) {
     return switch (event) {
       ItemCrafted(:final playerId) => playerId == expectedPlayerId,
       ItemEnchanted(:final playerId) => playerId == expectedPlayerId,

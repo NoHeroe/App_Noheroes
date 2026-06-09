@@ -8,8 +8,8 @@ import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/guild_rank.dart';
 import '../../../core/widgets/animated_bg.dart';
-import '../../../data/database/app_database.dart';
 import '../../../data/database/daos/player_dao.dart';
+import '../../../domain/entities/player.dart';
 import '../../../domain/services/body_metrics_service.dart';
 import '../../shared/widgets/player_stats_counter.dart';
 
@@ -118,7 +118,7 @@ String _classLabel(String? c) => switch (c) {
     };
 
 class _IdentityCard extends StatelessWidget {
-  final PlayersTableData player;
+  final Player player;
   const _IdentityCard({required this.player});
 
   @override
@@ -162,7 +162,7 @@ class _IdentityCard extends StatelessWidget {
 }
 
 class _BodyMetricsCard extends ConsumerWidget {
-  final PlayersTableData player;
+  final Player player;
   final BodyMetricsService service;
   const _BodyMetricsCard({required this.player, required this.service});
 
@@ -251,11 +251,11 @@ class _BodyMetricsCard extends ConsumerWidget {
       weightKg: isWeight ? newValue : null,
       heightCm: isWeight ? null : newValue,
     );
-    final db = ref.read(appDatabaseProvider);
-    final fresh = await (db.select(db.playersTable)
-          ..where((t) => t.id.equals(player.id)))
-        .getSingle();
-    ref.read(currentPlayerProvider.notifier).state = fresh;
+    final fresh =
+        await PlayerDao(ref.read(supabaseClientProvider)).findById(player.id);
+    if (fresh != null) {
+      ref.read(currentPlayerProvider.notifier).state = fresh;
+    }
   }
 
   Color _categoryColor(String c) => switch (c) {
@@ -270,7 +270,7 @@ class _BodyMetricsCard extends ConsumerWidget {
 enum _Field { weight, height }
 
 class _RecommendationsCard extends StatelessWidget {
-  final PlayersTableData player;
+  final Player player;
   final BodyMetricsService service;
   const _RecommendationsCard({required this.player, required this.service});
 
@@ -314,7 +314,7 @@ class _RecommendationsCard extends StatelessWidget {
 /// auto-completadas no rollover diário (sem exigir clique manual no ✓).
 /// Default: false. Persistência via [PlayerDao.setAutoConfirmEnabled].
 class _PreferencesCard extends ConsumerWidget {
-  final PlayersTableData player;
+  final Player player;
   const _PreferencesCard({required this.player});
 
   @override
@@ -338,10 +338,10 @@ class _PreferencesCard extends ConsumerWidget {
         activeThumbColor: AppColors.gold,
         value: player.autoConfirmEnabled,
         onChanged: (value) async {
-          final db = ref.read(appDatabaseProvider);
-          await PlayerDao(db).setAutoConfirmEnabled(player.id, value);
+          final client = ref.read(supabaseClientProvider);
+          await PlayerDao(client).setAutoConfirmEnabled(player.id, value);
           // Refresca currentPlayerProvider pra UI reagir.
-          final fresh = await PlayerDao(db).findById(player.id);
+          final fresh = await PlayerDao(client).findById(player.id);
           if (fresh != null) {
             ref.read(currentPlayerProvider.notifier).state = fresh;
           }

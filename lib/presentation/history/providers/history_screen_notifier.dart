@@ -63,9 +63,9 @@ class HistoryScreenState {
 }
 
 class HistoryScreenNotifier
-    extends AutoDisposeFamilyAsyncNotifier<HistoryScreenState, int> {
+    extends AutoDisposeFamilyAsyncNotifier<HistoryScreenState, String> {
   @override
-  Future<HistoryScreenState> build(int playerId) async {
+  Future<HistoryScreenState> build(String playerId) async {
     final bus = ref.read(appEventBusProvider);
     final repo = ref.read(missionRepositoryProvider);
 
@@ -119,6 +119,6 @@ class HistoryScreenNotifier
 }
 
 final historyScreenNotifierProvider = AutoDisposeAsyncNotifierProviderFamily<
-    HistoryScreenNotifier, HistoryScreenState, int>(
+    HistoryScreenNotifier, HistoryScreenState, String>(
   HistoryScreenNotifier.new,
 );

@@ -38,7 +38,7 @@ class _VoidRitualScreenState extends ConsumerState<VoidRitualScreen> {
   List<OwnedAffinity> _rares = const [];
   final Set<String> _selected = {};
   int _pointsGained = 0;
-  int? _playerId;
+  String? _playerId;
 
   @override
   void initState() {

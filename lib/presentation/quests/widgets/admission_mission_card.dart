@@ -210,7 +210,7 @@ class _AdmissionMissionCardState
 
 class _SubTaskRow extends ConsumerWidget {
   final Map<String, dynamic> data;
-  final int playerId;
+  final String playerId;
 
   const _SubTaskRow({required this.data, required this.playerId});
 

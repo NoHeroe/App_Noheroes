@@ -62,11 +62,13 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
     final pending = (await repo.listPendingClaims(player.id)).toSet();
 
     // Snapshot pra calcular progress sem N queries por card.
-    final db = ref.read(appDatabaseProvider);
-    final freshPlayer = await PlayerDao(db).findById(player.id) ?? player;
-    final statsDao = ref.read(playerDailyMissionStatsDaoProvider);
-    final PlayerDailyMissionStats? stats =
-        await statsDao.findByPlayerId(player.id);
+    final client = ref.read(supabaseClientProvider);
+    final freshPlayer = await PlayerDao(client).findById(player.id) ?? player;
+    // Época 2 (ADR-0024): playerDailyMissionStatsDao foi removido; o
+    // DailyMissionStatsService não expõe read público. Progresso de
+    // conquistas baseado em stats diárias fica oculto (stats == null é
+    // tolerado pelo AchievementProgressCalculator).
+    const PlayerDailyMissionStats? stats = null;
     final totalCompleted = await repo.countCompleted(player.id);
 
     return _AchievementsViewData(
@@ -95,8 +97,8 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
     final ok = await svc.claimReward(player.id, key);
 
     // Refresh player no provider (XP/gold/gems podem ter subido).
-    final db = ref.read(appDatabaseProvider);
-    final updated = await PlayerDao(db).findById(player.id);
+    final client = ref.read(supabaseClientProvider);
+    final updated = await PlayerDao(client).findById(player.id);
     if (!mounted) return;
     if (updated != null) {
       ref.read(currentPlayerProvider.notifier).state = updated;

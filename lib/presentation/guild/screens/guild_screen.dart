@@ -9,7 +9,6 @@ import '../../../core/utils/faction_theme.dart';
 import '../../../domain/enums/source_type.dart';
 import '../../../domain/models/player_snapshot.dart';
 import '../../../domain/models/faction_buff_multipliers.dart';
-import 'package:drift/drift.dart' hide Column;
 import '../../shared/widgets/npc_dialog_overlay.dart';
 import '../../shared/widgets/reward_toast.dart';
 import '../../shared/widgets/app_snack.dart';
@@ -42,31 +41,26 @@ final guildStatusProvider =
     FutureProvider.autoDispose<GuildMembershipSnapshot?>((ref) async {
   final player = ref.watch(currentPlayerProvider);
   if (player == null) return null;
-  final db = ref.read(appDatabaseProvider);
+
+  // Época 2 full-online (ADR-0024) — lê DADOS VIVOS via PostgREST em vez
+  // das queries Drift cruas (player.id agora é uuid String).
+  final client = ref.read(supabaseClientProvider);
 
   // Membership row pra factionId='guild' (lazy: pode não existir ainda).
-  final memRows = await db.customSelect(
-    "SELECT joined_at FROM player_faction_membership "
-    "WHERE player_id = ? AND faction_id = 'guild' "
-    "LIMIT 1",
-    variables: [Variable.withInt(player.id)],
-  ).get();
+  final memRow = await client
+      .from('player_faction_membership')
+      .select('joined_at')
+      .eq('player_id', player.id)
+      .eq('faction_id', 'guild')
+      .maybeSingle();
   DateTime? joinedAt;
-  if (memRows.isNotEmpty) {
-    final raw = memRows.first.data['joined_at'];
-    if (raw is int) joinedAt = DateTime.fromMillisecondsSinceEpoch(raw);
-  }
+  final raw = memRow?['joined_at'];
+  if (raw is int) joinedAt = DateTime.fromMillisecondsSinceEpoch(raw);
 
   // Reputação pra factionId='guild' (lazy default 50 se não existe).
-  final repRows = await db.customSelect(
-    "SELECT reputation FROM player_faction_reputation "
-    "WHERE player_id = ? AND faction_id = 'guild' "
-    "LIMIT 1",
-    variables: [Variable.withInt(player.id)],
-  ).get();
-  final reputation = repRows.isNotEmpty
-      ? repRows.first.read<int>('reputation')
-      : 50;
+  final reputation = await ref
+      .read(playerFactionReputationRepositoryProvider)
+      .getOrDefault(player.id, 'guild');
 
   return GuildMembershipSnapshot(
     admitted: player.guildRank != 'none',
@@ -1074,7 +1068,7 @@ class GuildScreen extends ConsumerWidget {
 
   Future<void> _confirmAdmission(
       BuildContext context, WidgetRef ref, dynamic player) async {
-    final db = ref.read(appDatabaseProvider);
+    final client = ref.read(supabaseClientProvider);
     final invService = ref.read(playerInventoryServiceProvider);
     final eqService = ref.read(playerEquipmentServiceProvider);
     final rankService = ref.read(playerRankServiceProvider);
@@ -1095,24 +1089,19 @@ class GuildScreen extends ConsumerWidget {
       return;
     }
 
-    // Sprint 3.4 Etapa A — registra membership na tabela nova
-    // (factionId='guild'). Substitui o `dao.completeAdmission` legacy
-    // que escrevia em `guild_status` (DROPPED). `INSERT OR IGNORE`
-    // mantém idempotência caso a row já exista.
+    // Época 2 full-online (ADR-0024) — registra membership na tabela nova
+    // (factionId='guild') via PostgREST em vez do INSERT/UPDATE Drift crus.
+    // PK composta (player_id, faction_id) → upsert idempotente. O guard
+    // `alreadyHasCollar` acima já barra membros existentes, então setar
+    // joined_at aqui equivale a promover o registro pendente.
     final nowMs = DateTime.now().millisecondsSinceEpoch;
-    await db.customStatement(
-      'INSERT OR IGNORE INTO player_faction_membership '
-      '(player_id, faction_id, joined_at, left_at, locked_until, '
-      ' debuff_until, admission_attempts) '
-      'VALUES (?, ?, ?, NULL, NULL, NULL, 0)',
-      [player.id, 'guild', nowMs],
-    );
-    // Caso já exista mas com joined_at NULL (pendente), promove agora.
-    await db.customStatement(
-      'UPDATE player_faction_membership SET joined_at = ? '
-      "WHERE player_id = ? AND faction_id = 'guild' "
-      'AND joined_at IS NULL',
-      [nowMs, player.id],
+    await client.from('player_faction_membership').upsert(
+      {
+        'player_id': player.id,
+        'faction_id': 'guild',
+        'joined_at': nowMs,
+      },
+      onConflict: 'player_id,faction_id',
     );
 
     // Rank canônico em players.guildRank (normalizado 'E') via service novo.

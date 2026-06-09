@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:drift/drift.dart' show Variable;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/faction_theme.dart';
+import '../../../data/datasources/local/class_bonus_service.dart';
 import '../../shared/widgets/app_snack.dart';
 
 /// Sprint 3.4 Etapa E — ficha da facção ATUAL do player (`/faction/<id>`).
@@ -655,12 +655,8 @@ class FactionScreen extends ConsumerWidget {
     );
     if (confirmed != true || !context.mounted) return;
 
-    final db = ref.read(appDatabaseProvider);
-    await db.customUpdate(
-      'UPDATE players SET faction_type = ? WHERE id = ?',
-      variables: [Variable.withString('none'), Variable.withInt(player.id)],
-      updates: {db.playersTable},
-    );
+    await ClassBonusService(ref.read(supabaseClientProvider))
+        .applyFactionChoice(player.id, 'none');
     final updated = await ref.read(authDsProvider).currentSession();
     ref.read(currentPlayerProvider.notifier).state = updated;
     ref.invalidate(factionBuffSnapshotProvider);

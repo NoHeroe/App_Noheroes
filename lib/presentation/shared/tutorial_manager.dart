@@ -283,7 +283,7 @@ class TutorialManager {
   static Future<void> phase12Enchanter(
     BuildContext ctx, {
     required WidgetRef ref,
-    required int playerId,
+    required String playerId,
   }) async {
     if (!await TutorialService.shouldShow(TutorialPhase.phase12_enchanter)) {
       return;
@@ -366,7 +366,7 @@ class TutorialManager {
   static Future<void> runAll(
     BuildContext ctx, {
     required WidgetRef ref,
-    required int playerId,
+    required String playerId,
     required int level,
     required bool hasClass,
     required bool hasFaction,

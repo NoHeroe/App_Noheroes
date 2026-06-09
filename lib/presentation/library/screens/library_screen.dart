@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../data/database/app_database.dart';
+import '../../../domain/entities/diary_entry.dart';
 import '../widgets/library_atmosphere.dart';
 import '../widgets/library_cards_section.dart';
 import '../../shared/widgets/nh_medallion.dart';
@@ -177,8 +177,8 @@ class _DiarySection extends ConsumerStatefulWidget {
 }
 
 class _DiarySectionState extends ConsumerState<_DiarySection> {
-  List<DiaryEntriesTableData> _entries = [];
-  DiaryEntriesTableData? _selected;
+  List<DiaryEntry> _entries = [];
+  DiaryEntry? _selected;
   final _ctrl = TextEditingController();
   bool _writing = false;
 

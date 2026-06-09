@@ -25,7 +25,7 @@ class VitalismTreeScreen extends ConsumerStatefulWidget {
 class _VitalismTreeScreenState extends ConsumerState<VitalismTreeScreen> {
   bool _loading = true;
   int _playerLevel = 1;
-  int? _playerId;
+  String? _playerId;
   OwnedAffinity? _catalogEntry;
   bool _isActive = false;
   Map<String, bool> _unlockedById = const {};

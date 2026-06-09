@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
 import '../../../app/providers.dart';
 import '../../../core/widgets/animated_bg.dart';
 import '../../../core/widgets/glass_container.dart';
@@ -35,25 +36,47 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _error = null);
     ref.read(authLoadingProvider.notifier).state = true;
 
-    final player = await ref.read(authDsProvider).login(
-      email: _emailCtrl.text,
-      password: _passwordCtrl.text,
-    );
+    try {
+      final player = await ref.read(authDsProvider).login(
+        email: _emailCtrl.text,
+        password: _passwordCtrl.text,
+      );
 
-    ref.read(authLoadingProvider.notifier).state = false;
+      if (!mounted) return;
 
-    if (!mounted) return;
-
-    if (player != null) {
-      ref.read(currentPlayerProvider.notifier).state = player;
-      if (player.onboardingDone) {
-        context.go('/sanctuary');
+      if (player != null) {
+        ref.read(currentPlayerProvider.notifier).state = player;
+        if (player.onboardingDone) {
+          context.go('/sanctuary');
+        } else {
+          context.go('/awakening');
+        }
       } else {
-        context.go('/awakening');
+        setState(() => _error = 'Email ou senha incorretos.');
       }
-    } else {
-      setState(() => _error = 'Email ou senha incorretos.');
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() => _error = _friendlyAuthError(e));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _error = 'Não foi possível conectar. Tente novamente.');
+    } finally {
+      if (mounted) ref.read(authLoadingProvider.notifier).state = false;
     }
+  }
+
+  String _friendlyAuthError(AuthException e) {
+    final msg = e.message.toLowerCase();
+    if (msg.contains('invalid login') || msg.contains('credentials')) {
+      return 'Email ou senha incorretos.';
+    }
+    if (msg.contains('not confirmed') || msg.contains('confirm')) {
+      return 'Confirme seu email antes de entrar.';
+    }
+    if (msg.contains('network') || msg.contains('connection')) {
+      return 'Sem conexão. Verifique sua internet.';
+    }
+    return 'Não foi possível entrar. Tente novamente.';
   }
 
   @override

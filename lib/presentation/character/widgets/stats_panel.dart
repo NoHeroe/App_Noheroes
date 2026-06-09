@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/xp_calculator.dart';
-import '../../../data/database/app_database.dart';
-import '../../../data/database/tables/players_table_ext.dart';
+import '../../../domain/entities/player.dart';
 
 class StatsPanel extends StatelessWidget {
-  final PlayersTableData player;
+  final Player player;
 
   /// Sprint 3.4 Etapa G.2 (D16) — % de bônus de XP/Ouro vindo do buff de
   /// FACÇÃO (FactionBuffService), passado pelo character_screen (que assiste

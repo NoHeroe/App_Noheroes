@@ -21,7 +21,7 @@ import 'reward_declared.dart';
 /// acoplamento com estruturas internas de cada strategy.
 class MissionContext {
   final int missionProgressId;
-  final int playerId;
+  final String playerId;
   final String missionKey;
   final MissionModality modality;
   final MissionTabOrigin tabOrigin;
@@ -49,7 +49,7 @@ class MissionContext {
           "MissionContext.mission_progress_id inválido ($mpid)");
     }
     final playerId = json['player_id'];
-    if (playerId is! int) {
+    if (playerId is! String) {
       throw FormatException(
           "MissionContext.player_id inválido ($playerId) em mpid=$mpid");
     }

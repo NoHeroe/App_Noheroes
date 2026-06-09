@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../data/database/app_database.dart';
 import '../../../data/datasources/local/vitalism_unique_service.dart';
 import '../../../domain/enums/affinity_tier.dart';
 import '../../shared/widgets/app_snack.dart';
@@ -25,7 +24,7 @@ class _VitalismHubScreenState extends ConsumerState<VitalismHubScreen> {
   List<OwnedAffinity> _active = const [];
   List<OwnedAffinity> _dormant = const [];
   bool _isVida = false;
-  LifeVitalismPointsTableData? _lifePoints;
+  LifeVitalismPoints? _lifePoints;
 
   @override
   void initState() {
@@ -298,7 +297,7 @@ class _DormantTab extends StatelessWidget {
 }
 
 class _LifePointsTab extends StatelessWidget {
-  final LifeVitalismPointsTableData? data;
+  final LifeVitalismPoints? data;
   const _LifePointsTab({required this.data});
 
   @override

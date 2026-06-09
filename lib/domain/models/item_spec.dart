@@ -1,6 +1,6 @@
 import 'dart:convert';
 import '../../core/utils/guild_rank.dart';
-import '../../data/database/app_database.dart';
+// Época 2 (ADR-0024): Drift retirado — ItemSpec.fromRow removido; use fromMap/fromJson.
 import '../enums/equipment_slot.dart';
 import '../enums/item_rarity.dart';
 import '../enums/item_type.dart';
@@ -197,49 +197,6 @@ class ItemSpec {
       'evolution_stages': _decodeJson(m['evolution_stages']),
       'image': m['image'],
       'icon': m['icon'],
-    });
-  }
-
-  factory ItemSpec.fromRow(ItemsCatalogTableData row) {
-    return ItemSpec.fromJson({
-      'key': row.key,
-      'name': row.name,
-      'description': row.description,
-      'type': row.type,
-      'subtype': row.subtype,
-      'slot': row.slot,
-      'rank': row.rank,
-      'required_rank': row.requiredRank,
-      'rarity': row.rarity,
-      'is_secret':   row.isSecret,
-      'is_unique':   row.isUnique,
-      'is_dark_item': row.isDarkItem,
-      'is_evolving': row.isEvolving,
-      'required_level':   row.requiredLevel,
-      'allowed_classes':  jsonDecode(row.allowedClasses),
-      'allowed_factions': jsonDecode(row.allowedFactions),
-      'stats':   jsonDecode(row.stats),
-      'effects': jsonDecode(row.effects),
-      'sources': jsonDecode(row.sources),
-      'shop_price_coins':     row.shopPriceCoins,
-      'shop_price_gems':      row.shopPriceGems,
-      'stack_max':            row.stackMax,
-      'durability_max':       row.durabilityMax,
-      'durability_breaks_to': row.durabilityBreaksTo,
-      'is_stackable':  row.isStackable,
-      'is_consumable': row.isConsumable,
-      'is_equippable': row.isEquippable,
-      'is_tradable':   row.isTradable,
-      'is_sellable':   row.isSellable,
-      'bind_on_pickup': row.bindOnPickup,
-      'craft_recipe_id': row.craftRecipeId,
-      'forge_recipe_id': row.forgeRecipeId,
-      'enchant_allowed':    row.enchantAllowed,
-      'sombrio_content_id': row.sombrioContentId,
-      'evolution_stages':
-          row.evolutionStages == null ? null : jsonDecode(row.evolutionStages!),
-      'image': row.image,
-      'icon':  row.icon,
     });
   }
 

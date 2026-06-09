@@ -36,7 +36,6 @@ import '../presentation/vitalism/screens/life_tree_screen.dart';
 import '../presentation/magic/screens/magic_hub_screen.dart';
 import '../presentation/forge/screens/forge_screen.dart';
 import '../presentation/enchant/screens/enchant_screen.dart';
-import '../data/database/tables/players_table_ext.dart';
 import 'providers.dart';
 
 /// Transição global de FADE (mesma sensação da Biblioteca) — substitui o

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
 import '../../../app/providers.dart';
 import '../../../core/widgets/animated_bg.dart';
 import '../../../core/widgets/glass_container.dart';
@@ -42,21 +43,48 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     setState(() => _error = null);
     ref.read(authLoadingProvider.notifier).state = true;
 
-    final player = await ref.read(authDsProvider).register(
-      email: _emailCtrl.text,
-      password: _passwordCtrl.text,
-    );
+    try {
+      final player = await ref.read(authDsProvider).register(
+        email: _emailCtrl.text,
+        password: _passwordCtrl.text,
+      );
 
-    ref.read(authLoadingProvider.notifier).state = false;
+      if (!mounted) return;
 
-    if (!mounted) return;
-
-    if (player != null) {
-      ref.read(currentPlayerProvider.notifier).state = player;
-      context.go('/awakening');
-    } else {
-      setState(() => _error = 'Este email já está em uso.');
+      if (player != null) {
+        ref.read(currentPlayerProvider.notifier).state = player;
+        context.go('/awakening');
+      } else {
+        setState(() => _error = 'Este email já está em uso.');
+      }
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() => _error = _friendlyAuthError(e));
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _error = 'Não foi possível conectar. Tente novamente.');
+    } finally {
+      if (mounted) ref.read(authLoadingProvider.notifier).state = false;
     }
+  }
+
+  String _friendlyAuthError(AuthException e) {
+    final msg = e.message.toLowerCase();
+    if (msg.contains('already registered') ||
+        msg.contains('already in use') ||
+        msg.contains('user already')) {
+      return 'Este email já está cadastrado.';
+    }
+    if (msg.contains('password') || msg.contains('weak')) {
+      return 'Senha muito fraca. Use ao menos 6 caracteres.';
+    }
+    if (msg.contains('invalid') && msg.contains('email')) {
+      return 'Email inválido.';
+    }
+    if (msg.contains('network') || msg.contains('connection')) {
+      return 'Sem conexão. Verifique sua internet.';
+    }
+    return 'Não foi possível criar a conta. Tente novamente.';
   }
 
   @override

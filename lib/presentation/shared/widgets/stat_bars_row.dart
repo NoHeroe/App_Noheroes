@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/vitalism_calculator.dart';
-import '../../../data/database/tables/players_table_ext.dart';
 
 /// Barras de status do jogador (HP / VT|MP / XP).
 ///

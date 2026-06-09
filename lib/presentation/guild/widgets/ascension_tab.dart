@@ -7,23 +7,23 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/guild_rank.dart';
-import '../../../data/database/app_database.dart';
 import '../../../data/datasources/local/ascension_service.dart';
 import '../../../data/datasources/local/guild_ascension_service.dart';
+import '../../../domain/models/guild_ascension_trial.dart';
 import '../../shared/widgets/milestone_popup.dart';
 
 /// B.4 — GuildAscensionService LOCAL: usado SÓ pra `getMissions` (leitura
 /// dos trials). A ascensão em si (gates/pay/janela/ascend) vai pela
 /// máquina de estados B.2 (`ascensionStateServiceProvider`).
 final ascensionServiceProvider = Provider<GuildAscensionService>((ref) {
-  return GuildAscensionService(ref.read(appDatabaseProvider));
+  return GuildAscensionService(ref.read(supabaseClientProvider));
 });
 
 /// Pacote leve consumido pela tab.
 class _AscensionData {
   final AscensionView view;
   final String rankTo;
-  final List<GuildAscensionTableData> trials;
+  final List<GuildAscensionTrial> trials;
   const _AscensionData(this.view, this.rankTo, this.trials);
 }
 
@@ -46,7 +46,7 @@ final ascensionViewProvider =
   final nextEnum = GuildRankSystem.next(GuildRankSystem.fromString(rank));
   final rankTo = (nextEnum?.name ?? rank).toUpperCase();
 
-  var trials = <GuildAscensionTableData>[];
+  var trials = <GuildAscensionTrial>[];
   if (view.state == AscensionViewState.active) {
     // Avança os trials AUTO satisfeitos dentro da janela (motor A.2/B.3).
     await ref.read(guildAscensionProgressServiceProvider).evaluatePlayer(player.id);
@@ -240,7 +240,7 @@ class AscensionTab extends ConsumerWidget {
   }
 
   // ─── payable ───────────────────────────────────────────────────────
-  List<Widget> _payable(BuildContext context, WidgetRef ref, int playerId,
+  List<Widget> _payable(BuildContext context, WidgetRef ref, String playerId,
       String rank, AscensionView view, Color color) {
     return [
       Container(
@@ -282,7 +282,7 @@ class AscensionTab extends ConsumerWidget {
   }
 
   // ─── active ────────────────────────────────────────────────────────
-  List<Widget> _active(BuildContext context, WidgetRef ref, int playerId,
+  List<Widget> _active(BuildContext context, WidgetRef ref, String playerId,
       String rank, _AscensionData d, Color color) {
     final view = d.view;
     final trials = d.trials;
@@ -344,8 +344,8 @@ class AscensionTab extends ConsumerWidget {
     return widgets;
   }
 
-  Widget _trialCard(WidgetRef ref, int playerId, String rank,
-      GuildAscensionTableData t, Color color) {
+  Widget _trialCard(WidgetRef ref, String playerId, String rank,
+      GuildAscensionTrial t, Color color) {
     final kind = _trialKind(t.checkType);
     final pct = t.progressTarget > 0
         ? (t.progress / t.progressTarget).clamp(0.0, 1.0)
@@ -511,7 +511,7 @@ class AscensionTab extends ConsumerWidget {
     ref.invalidate(ascensionViewProvider);
   }
 
-  Future<void> _pay(BuildContext context, WidgetRef ref, int playerId,
+  Future<void> _pay(BuildContext context, WidgetRef ref, String playerId,
       String rank, int cost) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -552,7 +552,7 @@ class AscensionTab extends ConsumerWidget {
     }
   }
 
-  Future<void> _confirmManual(WidgetRef ref, int playerId, String rank,
+  Future<void> _confirmManual(WidgetRef ref, String playerId, String rank,
       String trialKey) async {
     final ok = await ref
         .read(ascensionStateServiceProvider)
@@ -560,7 +560,7 @@ class AscensionTab extends ConsumerWidget {
     if (ok) await _refresh(ref);
   }
 
-  Future<void> _ascend(BuildContext context, WidgetRef ref, int playerId,
+  Future<void> _ascend(BuildContext context, WidgetRef ref, String playerId,
       String rank) async {
     final res = await ref.read(ascensionStateServiceProvider).ascend(playerId, rank);
     if (res.ok && res.newRank != null) {

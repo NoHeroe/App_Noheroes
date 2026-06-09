@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
-import 'package:drift/drift.dart' show Value, Variable;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -15,7 +14,6 @@ import '../../core/events/app_event.dart';
 import '../../core/events/faction_events.dart';
 import '../../core/events/reward_events.dart';
 import '../../core/utils/guild_rank.dart';
-import '../../data/database/app_database.dart';
 import '../../data/database/daos/player_dao.dart';
 import '../../domain/enums/mission_tab_origin.dart';
 import '../../domain/models/achievement_definition.dart';
@@ -94,7 +92,7 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
   /// telas vistas em sequência (dev → quests → achievements) reflitam
   /// o DB atualizado. Dev panel — preferimos super-invalidar a perder
   /// alguma tela.
-  void _invalidateAll(int playerId) {
+  void _invalidateAll(String playerId) {
     ref.invalidate(questsScreenNotifierProvider(playerId));
     ref.invalidate(playerStreamProvider);
   }
@@ -106,33 +104,22 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
     if (player == null) return;
     setState(() => _saving = true);
 
-    final db = ref.read(appDatabaseProvider);
-    final dao = PlayerDao(db);
-
-    final newLevel = int.tryParse(_levelCtrl.text) ?? player.level;
-    final newGold = int.tryParse(_goldCtrl.text) ?? player.gold;
-    final newXp = int.tryParse(_xpCtrl.text) ?? player.xp;
-    final newGems = int.tryParse(_gemsCtrl.text) ?? player.gems;
-
-    await (db.update(db.playersTable)
-          ..where((t) => t.id.equals(player.id)))
-        .write(PlayersTableCompanion(
-      level: Value(newLevel),
-      gold: Value(newGold),
-      xp: Value(newXp),
-      gems: Value(newGems),
-    ));
-
-    final updated = await dao.findById(player.id);
+    // TODO dev (Época 2 — ADR-0024): set direto de level/gold/xp/gems era
+    // write Drift cru em players. Não há RPC/service equivalente pra setar
+    // valores absolutos (apenas add_gold/add_xp incrementais). Controle
+    // desabilitado até existir um setter no backend. Mantemos só o refresh
+    // do player pra UI não mentir.
+    final client = ref.read(supabaseClientProvider);
+    final updated = await PlayerDao(client).findById(player.id);
     if (!mounted) return;
     ref.read(currentPlayerProvider.notifier).state = updated;
     _invalidateAll(player.id);
     setState(() => _saving = false);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text(
-            'Aplicado: Lv$newLevel | ${newGold}g | ${newXp}xp | $newGems💎'),
-        backgroundColor: AppColors.shadowAscending,
+            'Set direto desabilitado nesta versão (sem RPC). Use os atalhos de XP.'),
+        backgroundColor: AppColors.shadowObsessive,
       ),
     );
   }
@@ -142,18 +129,12 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
   Future<void> _resetClass() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
-    final db = ref.read(appDatabaseProvider);
-    await (db.update(db.playersTable)
-          ..where((t) => t.id.equals(player.id)))
-        .write(const PlayersTableCompanion(
-      classType: Value(null),
-      factionType: Value(null),
-    ));
-    final updated = await PlayerDao(db).findById(player.id);
+    // TODO dev (Época 2 — ADR-0024): limpar class_type/faction_type era
+    // write Drift cru. Sem RPC/service equivalente pra zerar esses campos.
+    // Controle desabilitado até existir um endpoint de reset no backend.
     if (!mounted) return;
-    ref.read(currentPlayerProvider.notifier).state = updated;
-    _invalidateAll(player.id);
-    AppSnack.success(context, 'Classe e facção resetadas');
+    AppSnack.info(context,
+        'Reset de classe/facção desabilitado nesta versão (sem RPC).');
   }
 
   // ─── PROGRESSO (Sprint 3.4 Etapa A hotfix P2) ─────────────────────
@@ -170,8 +151,7 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
   Future<void> _addXpRaw(int amount) async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
-    final db = ref.read(appDatabaseProvider);
-    final dao = PlayerDao(db);
+    final dao = PlayerDao(ref.read(supabaseClientProvider));
     final levelUp = await dao.addXp(player.id, amount);
     if (levelUp != null) {
       // Publica no bus pra exercitar `PlayerStateSyncService` E os
@@ -206,8 +186,8 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
   Future<void> _levelUpOnce() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
-    final db = ref.read(appDatabaseProvider);
-    final fresh = await PlayerDao(db).findById(player.id);
+    final fresh =
+        await PlayerDao(ref.read(supabaseClientProvider)).findById(player.id);
     if (fresh == null) return;
     final needed = (fresh.xpToNext - fresh.xp + 1).clamp(1, 1 << 30);
     await _addXpRaw(needed);
@@ -285,7 +265,6 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
   Future<void> _unlockGuildInstantly() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
-    final db = ref.read(appDatabaseProvider);
 
     if (player.guildRank != 'none' && player.guildRank.isNotEmpty) {
       if (!mounted) return;
@@ -298,23 +277,10 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
     final rankService = ref.read(playerRankServiceProvider);
     await rankService.setRank(player.id, GuildRank.e);
 
-    // 2. Membership row pra factionId='guild'. Idempotente via
-    //    INSERT OR IGNORE; se já existia (ex: pending), promovemos
-    //    `joined_at` se ainda for null.
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-    await db.customStatement(
-      'INSERT OR IGNORE INTO player_faction_membership '
-      '(player_id, faction_id, joined_at, left_at, locked_until, '
-      ' debuff_until, admission_attempts) '
-      'VALUES (?, ?, ?, NULL, NULL, NULL, 0)',
-      [player.id, 'guild', nowMs],
-    );
-    await db.customStatement(
-      'UPDATE player_faction_membership SET joined_at = ? '
-      "WHERE player_id = ? AND faction_id = 'guild' "
-      'AND joined_at IS NULL',
-      [nowMs, player.id],
-    );
+    // 2. TODO dev (Época 2 — ADR-0024): inserir/promover a row em
+    //    player_faction_membership era write Drift cru (customStatement).
+    //    Sem RPC/service equivalente pra membership manual — omitido. O
+    //    rank canônico acima já libera o gate principal da Guilda.
 
     // 3. Fecha quests admissão pendentes da Guilda (markCompleted),
     //    pra remover ruído visual de cards "ADMISSION_GUILD_*" parados.
@@ -333,14 +299,15 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
       closed++;
     }
 
-    final updated = await PlayerDao(db).findById(player.id);
+    final updated =
+        await PlayerDao(ref.read(supabaseClientProvider)).findById(player.id);
     if (!mounted) return;
     if (updated != null) {
       ref.read(currentPlayerProvider.notifier).state = updated;
     }
     _invalidateAll(player.id);
     AppSnack.success(context,
-        'Guilda liberada (rank=E + membership + $closed quests fechadas).');
+        'Guilda liberada (rank=E + $closed quests fechadas).');
   }
 
   // ─── Sub-Etapa B.2 — atalhos pra testar admissão eliminatória ─
@@ -417,8 +384,8 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
 
     // Refresh do currentPlayerProvider pra UI refletir faction_type
     // novo imediatamente.
-    final db = ref.read(appDatabaseProvider);
-    final fresh = await PlayerDao(db).findById(player.id);
+    final fresh =
+        await PlayerDao(ref.read(supabaseClientProvider)).findById(player.id);
     if (!mounted) return;
     if (fresh != null) {
       ref.read(currentPlayerProvider.notifier).state = fresh;
@@ -495,58 +462,13 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
   Future<void> _advanceAdmissionTime() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
-    final raw = player.factionType ?? '';
-    if (raw.isEmpty || raw == 'none') {
-      if (!mounted) return;
-      AppSnack.error(context, 'Nenhuma admissão ativa.');
-      return;
-    }
-    final factionId = raw.startsWith('pending:')
-        ? raw.substring('pending:'.length)
-        : raw;
-
-    final db = ref.read(appDatabaseProvider);
-    final missionRepo = ref.read(missionRepositoryProvider);
-    final all = await missionRepo.findByTab(
-        player.id, MissionTabOrigin.admission);
-    const shift = 24 * 60 * 60 * 1000;
-    var modified = 0;
-    for (final m in all) {
-      if (m.completedAt != null || m.failedAt != null) continue;
-      Map<String, dynamic> meta;
-      try {
-        meta = jsonDecode(m.metaJson) as Map<String, dynamic>;
-      } catch (_) {
-        continue;
-      }
-      if (meta['faction_id'] != factionId) continue;
-      final ws = (meta['window_start_ms'] as int?) ?? 0;
-      if (ws > 0) {
-        meta['window_start_ms'] = ws - shift;
-        final subs = (meta['sub_tasks'] as List?) ?? const [];
-        final updated = subs.map((s) {
-          final mp = (s as Map).cast<String, dynamic>();
-          if ((mp['window_start_ms'] as int?) != null) {
-            mp['window_start_ms'] = (mp['window_start_ms'] as int) - shift;
-          }
-          return mp;
-        }).toList();
-        meta['sub_tasks'] = updated;
-        await db.customUpdate(
-          'UPDATE player_mission_progress SET meta_json = ? WHERE id = ?',
-          variables: [
-            Variable.withString(jsonEncode(meta)),
-            Variable.withInt(m.id),
-          ],
-          updates: {db.playerMissionProgressTable},
-        );
-        modified++;
-      }
-    }
+    // TODO dev (Época 2 — ADR-0024): avançar window_start_ms das sub-tasks
+    // era write Drift cru (customUpdate em player_mission_progress.meta_json).
+    // Sem RPC/service equivalente pra mexer no metaJson — controle
+    // desabilitado até existir um endpoint no backend.
     if (!mounted) return;
-    _invalidateAll(player.id);
-    AppSnack.success(
-        context, '$modified missões avançadas em 24h.');
+    AppSnack.info(context,
+        'Avançar tempo +24h desabilitado nesta versão (sem RPC).');
   }
 
   /// Sprint 3.4 Etapa C — exibe `FactionBuffSnapshot` formatado:
@@ -613,33 +535,13 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
   Future<void> _triggerDebuff48h() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
-    final db = ref.read(appDatabaseProvider);
-
-    // Procura row da facção atual; se faction_type='none', pega a row
-    // mais recente (ordem por joined_at DESC NULLS LAST).
-    final rows = await db.customSelect(
-      'SELECT faction_id FROM player_faction_membership '
-      'WHERE player_id = ? '
-      'ORDER BY (joined_at IS NULL), joined_at DESC LIMIT 1',
-      variables: [Variable.withInt(player.id)],
-    ).get();
-    if (rows.isEmpty) {
-      if (!mounted) return;
-      AppSnack.error(context,
-          'Sem membership row pra debuffar — entre em uma facção primeiro.');
-      return;
-    }
-    final factionId = rows.first.read<String>('faction_id');
-    final until =
-        DateTime.now().add(const Duration(hours: 48)).millisecondsSinceEpoch;
-
-    await db.customStatement(
-      'UPDATE player_faction_membership SET debuff_until = ? '
-      'WHERE player_id = ? AND faction_id = ?',
-      [until, player.id, factionId],
-    );
+    // TODO dev (Época 2 — ADR-0024): setar debuff_until em
+    // player_faction_membership era query/write Drift cru (customSelect +
+    // customStatement). Sem RPC/service equivalente — controle desabilitado
+    // até existir um endpoint no backend.
     if (!mounted) return;
-    AppSnack.success(context, 'Debuff 48h ativado em "$factionId".');
+    AppSnack.info(context,
+        'Forçar debuff 48h desabilitado nesta versão (sem RPC).');
   }
 
   /// Lista rows de `player_faction_membership` + `player_faction_reputation`
@@ -647,38 +549,16 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
   Future<void> _listMembership() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
-    final db = ref.read(appDatabaseProvider);
-    final memRows = await db.customSelect(
-      'SELECT faction_id, joined_at, left_at, locked_until, debuff_until, '
-      ' admission_attempts FROM player_faction_membership '
-      'WHERE player_id = ? ORDER BY faction_id',
-      variables: [Variable.withInt(player.id)],
-    ).get();
-    final repRows = await db.customSelect(
-      'SELECT faction_id, reputation FROM player_faction_reputation '
-      'WHERE player_id = ? ORDER BY faction_id',
-      variables: [Variable.withInt(player.id)],
-    ).get();
+    // TODO dev (Época 2 — ADR-0024): listar memberships/reputations era
+    // leitura Drift crua (customSelect em player_faction_membership /
+    // player_faction_reputation). Sem query/service equivalente exposto —
+    // mostramos só o faction_type atual do player até ter um endpoint.
     if (!mounted) return;
-    String fmtMs(int? ms) =>
-        ms == null ? '-' : DateTime.fromMillisecondsSinceEpoch(ms)
-            .toIso8601String()
-            .substring(0, 16);
     final lines = <String>[
       'faction_type atual: ${player.factionType ?? "(null)"}',
       '',
-      'MEMBERSHIPS (${memRows.length}):',
-      ...memRows.map((r) =>
-          '  ${r.read<String>('faction_id')} '
-          'joined=${fmtMs(r.data['joined_at'] as int?)} '
-          'left=${fmtMs(r.data['left_at'] as int?)} '
-          'lock=${fmtMs(r.data['locked_until'] as int?)} '
-          'debuff=${fmtMs(r.data['debuff_until'] as int?)} '
-          'attempts=${r.read<int>('admission_attempts')}'),
-      '',
-      'REPUTATIONS (${repRows.length}):',
-      ...repRows.map((r) =>
-          '  ${r.read<String>('faction_id')} = ${r.read<int>('reputation')}'),
+      '(Listagem de memberships/reputations desabilitada nesta versão — '
+          'sem query exposta. TODO dev.)',
     ];
     await showDialog<void>(
       context: context,
@@ -710,20 +590,18 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
   Future<void> _forceDailyReset() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
-    final db = ref.read(appDatabaseProvider);
-    await db.customUpdate(
-      'UPDATE players SET last_daily_reset = NULL WHERE id = ?',
-      variables: [Variable.withInt(player.id)],
-      updates: {db.playersTable},
-    );
-    final result =
-        await ref.read(dailyResetServiceProvider).checkAndApply(player.id);
+    // Época 2 (ADR-0024): DailyResetService é LEGACY e será removido — o
+    // rollover diário agora é automático (DailyMissionRolloverService). O
+    // bypass do flag `last_daily_reset` era write Drift cru. Apenas
+    // regeramos as diárias de hoje via generator (force) pra exercitar o
+    // caminho atual.
+    final generated = await ref
+        .read(dailyMissionGeneratorServiceProvider)
+        .generateForToday(player.id, force: true);
     if (!mounted) return;
     _invalidateAll(player.id);
     AppSnack.success(
-        context,
-        'Daily reset: ${result.processed} processadas / '
-        '${result.reassignedDaily} novas daily / ${result.reassignedClass} novas classe');
+        context, 'Daily regeradas: ${generated.length} novas missões.');
   }
 
   Future<void> _forceCompleteFirst() async {
@@ -796,51 +674,33 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
 
     final today = DateTime.now();
     final yesterday = today.subtract(const Duration(days: 1));
-    final todayStr = _isoDate(today);
-    final yesterdayStr = _isoDate(yesterday);
 
-    final dao = ref.read(dailyMissionsDaoProvider);
+    // TODO dev (Época 2 — ADR-0024): mover as diárias de hoje pra ontem
+    // (dailyMissionsDao.findByPlayerAndDate + updateMissionDate) não tem
+    // service/RPC equivalente — o DAO Drift foi removido. Simulamos a
+    // passagem de dia só recuando o flag de rollover (markDailyMissionRollover)
+    // + rodando o rollover automático + regerando as diárias de hoje.
+    final client = ref.read(supabaseClientProvider);
+    final dao = PlayerDao(client);
 
-    final yesterdayExisting =
-        await dao.findByPlayerAndDate(player.id, yesterdayStr);
-    if (yesterdayExisting.isNotEmpty) {
-      if (!mounted) return;
-      AppSnack.error(context,
-          'Já tem missões em ontem ($yesterdayStr). Use "Resetar" em vez disso.');
-      return;
-    }
-
-    final todays = await dao.findByPlayerAndDate(player.id, todayStr);
-    for (final m in todays) {
-      await dao.updateMissionDate(m.id, yesterdayStr);
-    }
-
-    final db = ref.read(appDatabaseProvider);
     final yesterday2359 =
         DateTime(yesterday.year, yesterday.month, yesterday.day, 23, 59);
-    await db.customUpdate(
-      'UPDATE players SET last_daily_mission_rollover = ? WHERE id = ?',
-      variables: [
-        Variable.withInt(yesterday2359.millisecondsSinceEpoch),
-        Variable.withInt(player.id),
-      ],
-      updates: {db.playersTable},
-    );
+    await dao.markDailyMissionRollover(player.id, yesterday2359);
 
     await ref
         .read(dailyMissionRolloverServiceProvider)
         .processRollover(player.id);
     final generated = await ref
         .read(dailyMissionGeneratorServiceProvider)
-        .generateForToday(player.id);
+        .generateForToday(player.id, force: true);
 
-    final updated = await PlayerDao(db).findById(player.id);
+    final updated = await dao.findById(player.id);
     if (!mounted) return;
     ref.read(currentPlayerProvider.notifier).state = updated;
     _invalidateAll(player.id);
     AppSnack.success(
         context,
-        'Pulou pra amanhã. ${todays.length} pendentes fechadas, '
+        'Pulou pra amanhã. Rollover aplicado, '
         '${generated.length} novas geradas.');
   }
 
@@ -884,11 +744,6 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
         context, 'Resetou. ${generated.length} novas missões geradas.');
   }
 
-  String _isoDate(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-'
-      '${d.month.toString().padLeft(2, '0')}-'
-      '${d.day.toString().padLeft(2, '0')}';
-
   // ─── CONQUISTAS ───────────────────────────────────────────────────
 
   Future<void> _resetAllAchievements() async {
@@ -924,15 +779,13 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
     );
     if (ok != true || !mounted) return;
 
-    final db = ref.read(appDatabaseProvider);
-    final deleted = await db.customUpdate(
-      'DELETE FROM player_achievements_completed WHERE player_id = ?',
-      variables: [Variable.withInt(player.id)],
-      updates: {db.playerAchievementsCompletedTable},
-    );
+    // TODO dev (Época 2 — ADR-0024): apagar player_achievements_completed
+    // era DELETE Drift cru (customUpdate). O repository não expõe um método
+    // de reset/clear — controle desabilitado até existir um endpoint no
+    // backend.
     if (!mounted) return;
-    _invalidateAll(player.id);
-    AppSnack.success(context, '$deleted conquistas resetadas.');
+    AppSnack.info(context,
+        'Reset de conquistas desabilitado nesta versão (sem endpoint).');
   }
 
   Future<void> _listAchievements() async {
@@ -1061,7 +914,7 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
       }
     }
 
-    final updated = await PlayerDao(ref.read(appDatabaseProvider))
+    final updated = await PlayerDao(ref.read(supabaseClientProvider))
         .findById(player.id);
     if (!mounted) return;
     ref.read(currentPlayerProvider.notifier).state = updated;
@@ -1347,7 +1200,7 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
     );
   }
 
-  Widget _buildReputationCompactRow(int? playerId) {
+  Widget _buildReputationCompactRow(String? playerId) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

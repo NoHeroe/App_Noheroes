@@ -15,10 +15,10 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'dart:convert';
 import '../../shared/widgets/app_snack.dart';
 import '../../../data/datasources/local/npc_reputation_service.dart';
+import '../../../data/datasources/local/class_bonus_service.dart';
 import '../../../core/utils/asset_loader.dart';
 import '../../../core/utils/guild_rank.dart';
 import '../faction_selection_gate.dart';
-import 'package:drift/drift.dart' show Variable;
 
 class FactionSelectionScreen extends ConsumerStatefulWidget {
   const FactionSelectionScreen({super.key});
@@ -210,7 +210,7 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
     if (confirm != true || !mounted) return;
 
     setState(() => _loading = true);
-    final db = ref.read(appDatabaseProvider);
+    final client = ref.read(supabaseClientProvider);
 
     // Sprint 3.4 Sub-Etapa B.2 — modelo dual da Guilda. Player que
     // chega aqui já é Aventureiro nível 1 (filtro em _loadFactions
@@ -233,10 +233,9 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
     // que cria N quests em `player_mission_progress` (tabOrigin=
     // admission). Sub-Etapa B.2 popula `metaJson` com sub-tasks
     // automáticas + escala de dificuldade.
-    await db.customStatement(
-      "UPDATE players SET faction_type = ? WHERE id = ?",
-      ['pending:$factionId', player.id],
-    );
+    await client
+        .from('players')
+        .update({'faction_type': 'pending:$factionId'}).eq('id', player.id);
 
     final admissionService = ref.read(questAdmissionServiceProvider);
     final created = await admissionService.startFactionAdmission(
@@ -245,12 +244,10 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
     // +5 reputação com NPC da facção ao iniciar admissão
     try {
       final npcId = AssetLoader.npcIdForFaction(factionId);
-      await NpcReputationService(db).addReputation(player.id, npcId, 5);
+      await NpcReputationService(client).addReputation(player.id, npcId, 5);
     } catch (_) {}
 
-    final updated = await db.managers.playersTable
-        .filter((f) => f.id(player.id))
-        .getSingleOrNull();
+    final updated = await ref.read(authDsProvider).currentSession();
     if (mounted) {
       ref.read(currentPlayerProvider.notifier).state = updated;
       if (context.mounted) {
@@ -456,43 +453,34 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
   /// (modelo dual: Aventureiro nível 1 = `guild_rank in ['e'..'s']`,
   /// já garantido pelo filtro de `_loadFactions`; este flow concede
   /// nível 2 = `faction_type='guild'`).
-  Future<void> _confirmGuildDirect(int playerId) async {
-    final db = ref.read(appDatabaseProvider);
+  Future<void> _confirmGuildDirect(String playerId) async {
+    final client = ref.read(supabaseClientProvider);
     final nowMs = DateTime.now().millisecondsSinceEpoch;
 
-    await db.customStatement(
-      "UPDATE players SET faction_type = 'guild' WHERE id = ?",
-      [playerId],
-    );
-    // Sprint 3.4 Etapa H — bônus de boas-vindas em Insígnias (fonte interina
-    // da moeda de facção até D18). Ver DESIGN_DOC_ECONOMIA_FACCOES.md.
-    await db.customStatement(
-      'UPDATE players SET insignias = insignias + 100 WHERE id = ?',
-      [playerId],
-    );
-    await db.customStatement(
-      'INSERT OR IGNORE INTO player_faction_membership '
-      '(player_id, faction_id, joined_at, left_at, locked_until, '
-      ' debuff_until, admission_attempts) '
-      'VALUES (?, ?, ?, NULL, NULL, NULL, 0)',
-      [playerId, 'guild', nowMs],
-    );
-    await db.customStatement(
-      'UPDATE player_faction_membership SET joined_at = ?, '
-      'left_at = NULL '
-      "WHERE player_id = ? AND faction_id = 'guild' "
-      'AND joined_at IS NULL',
-      [nowMs, playerId],
-    );
+    // Época 2 (ADR-0024) — escrita single-table via PostgREST.
+    await client
+        .from('players')
+        .update({'faction_type': 'guild'}).eq('id', playerId);
+    // TODO dev (Época 2): bônus de boas-vindas de 100 Insígnias (Etapa H)
+    // dependia de UPDATE incremental Drift cru. Sem RPC atômica de
+    // incremento equivalente ainda — religar quando `add_insignias` existir.
+    // upsert da membership (idempotente por PK composta player_id+faction_id).
+    await client.from('player_faction_membership').upsert({
+      'player_id': playerId,
+      'faction_id': 'guild',
+      'joined_at': nowMs,
+      'left_at': null,
+      'locked_until': null,
+      'debuff_until': null,
+      'admission_attempts': 0,
+    });
 
     // Emite FactionJoined diretamente (cascata pra listeners
     // existentes — achievements `event_faction_joined`, etc).
     ref.read(appEventBusProvider).publish(
         FactionJoined(playerId: playerId, factionId: 'guild'));
 
-    final updated = await db.managers.playersTable
-        .filter((f) => f.id(playerId))
-        .getSingleOrNull();
+    final updated = await ref.read(authDsProvider).currentSession();
     if (mounted) {
       ref.read(currentPlayerProvider.notifier).state = updated;
       if (context.mounted) {
@@ -551,18 +539,11 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
     if (confirmed != true || !mounted) return;
     final player = ref.read(currentPlayerProvider);
     if (player != null) {
-      final db = ref.read(appDatabaseProvider);
       // Sprint 3.4 Etapa F — opt-in seta o sentinel 'lone_wolf' (antes era
       // 'none'). Ativa os bônus +5% XP/ouro/gemas via FactionBuffService
       // (catalog['lone_wolf']). NÃO passa pelo lock 7d (virar Lobo é livre).
-      await db.customUpdate(
-        'UPDATE players SET faction_type = ? WHERE id = ?',
-        variables: [
-          Variable.withString('lone_wolf'),
-          Variable.withInt(player.id),
-        ],
-        updates: {db.playersTable},
-      );
+      await ClassBonusService(ref.read(supabaseClientProvider))
+          .applyFactionChoice(player.id, 'lone_wolf');
 
       // ERROR unlock: concede SECRET_LOBO_SOLITARIO SÓ se o player nunca
       // fez uma escolha de facção do lvl 7 (facção ideológica OU Facção
@@ -584,15 +565,18 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
   /// escolheu": qualquer membership de facção ideológica (faction_id !=
   /// 'guild') OU guild row que foi abandonada (left_at != null = ex-Facção
   /// Guilda nível 2). NÃO conta: Aventureiro nível 1 (guild row sem left_at).
-  Future<void> _grantLoneWolfAchievementIfFirstChoice(int playerId) async {
-    final db = ref.read(appDatabaseProvider);
-    final rows = await db.customSelect(
-      'SELECT COUNT(*) AS c FROM player_faction_membership '
-      'WHERE player_id = ? AND joined_at IS NOT NULL '
-      "AND (faction_id != 'guild' OR left_at IS NOT NULL)",
-      variables: [Variable.withInt(playerId)],
-    ).get();
-    final everChoseFaction = (rows.first.read<int>('c')) > 0;
+  Future<void> _grantLoneWolfAchievementIfFirstChoice(String playerId) async {
+    final client = ref.read(supabaseClientProvider);
+    // Memberships com joined_at != null; "já escolheu" = qualquer facção
+    // ideológica OU guild abandonada (left_at != null). Filtro do faction_id
+    // == 'guild' com left_at null é aplicado client-side.
+    final rows = await client
+        .from('player_faction_membership')
+        .select('faction_id, left_at')
+        .eq('player_id', playerId)
+        .not('joined_at', 'is', null);
+    final everChoseFaction = rows.any((r) =>
+        r['faction_id'] != 'guild' || r['left_at'] != null);
     if (everChoseFaction) return;
 
     const key = 'SECRET_LOBO_SOLITARIO';
@@ -609,17 +593,19 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
 
   /// D20 — lê o `locked_until` ativo (> now) da membership mais recente.
   /// Retorna a data se ainda bloqueado, senão null.
-  Future<DateTime?> _readActiveFactionLock(int playerId) async {
-    final db = ref.read(appDatabaseProvider);
+  Future<DateTime?> _readActiveFactionLock(String playerId) async {
+    final client = ref.read(supabaseClientProvider);
     final nowMs = DateTime.now().millisecondsSinceEpoch;
-    final rows = await db.customSelect(
-      'SELECT locked_until FROM player_faction_membership '
-      'WHERE player_id = ? AND locked_until IS NOT NULL '
-      'ORDER BY locked_until DESC LIMIT 1',
-      variables: [Variable.withInt(playerId)],
-    ).get();
-    if (rows.isEmpty) return null;
-    final ms = rows.first.read<int?>('locked_until');
+    final row = await client
+        .from('player_faction_membership')
+        .select('locked_until')
+        .eq('player_id', playerId)
+        .not('locked_until', 'is', null)
+        .order('locked_until', ascending: false)
+        .limit(1)
+        .maybeSingle();
+    if (row == null) return null;
+    final ms = (row['locked_until'] as num?)?.toInt();
     if (ms == null || ms <= nowMs) return null;
     return DateTime.fromMillisecondsSinceEpoch(ms);
   }

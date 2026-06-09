@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../data/database/app_database.dart';
+import '../../../data/datasources/local/vitalism_unique_service.dart';
 
 // Tela dedicada do Vitalismo da Vida. Árvore dinâmica real fica pra sprint
 // de conteúdo futura — aqui mostra pontos acumulados e histórico do sourceLog.
@@ -19,7 +19,7 @@ class LifeTreeScreen extends ConsumerStatefulWidget {
 
 class _LifeTreeScreenState extends ConsumerState<LifeTreeScreen> {
   bool _loading = true;
-  LifeVitalismPointsTableData? _data;
+  LifeVitalismPoints? _data;
 
   @override
   void initState() {

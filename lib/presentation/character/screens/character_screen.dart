@@ -937,12 +937,13 @@ class CharacterScreen extends ConsumerWidget {
   ///
   /// Substituiu o `customUpdate` direto que bypassava contador all-time.
   Future<void> _addPoint(
-      BuildContext context, WidgetRef ref, int playerId, String attr) async {
-    final db = ref.read(appDatabaseProvider);
+      BuildContext context, WidgetRef ref, String playerId, String attr) async {
+    final client = ref.read(supabaseClientProvider);
     final player = ref.read(currentPlayerProvider);
     if (player == null || player.attributePoints <= 0) return;
 
-    final result = await PlayerDao(db).distributePointWithEvent(playerId, attr);
+    final result =
+        await PlayerDao(client).distributePointWithEvent(playerId, attr);
     if (!result.isOk) {
       if (context.mounted) {
         AppSnack.success(context, result.error ?? 'Erro ao distribuir ponto');

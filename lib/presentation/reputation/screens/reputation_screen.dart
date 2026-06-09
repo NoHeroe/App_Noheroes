@@ -5,14 +5,14 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/datasources/local/npc_reputation_service.dart';
-import '../../../data/database/app_database.dart';
+import '../../../domain/entities/npc_reputation.dart';
 
 final reputationProvider =
-    FutureProvider.autoDispose<List<NpcReputationTableData>>((ref) async {
+    FutureProvider.autoDispose<List<NpcReputation>>((ref) async {
   final player = ref.watch(currentPlayerProvider);
   if (player == null) return [];
-  final db = ref.read(appDatabaseProvider);
-  return NpcReputationService(db).getAll(player.id);
+  final client = ref.read(supabaseClientProvider);
+  return NpcReputationService(client).getAll(player.id);
 });
 
 const _npcMeta = {

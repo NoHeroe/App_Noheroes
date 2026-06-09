@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:drift/drift.dart' hide Column;
 import '../../app/providers.dart';
-import '../../data/database/app_database.dart';
 import '../../core/constants/app_colors.dart';
 import '../shared/widgets/milestone_popup.dart';
 
@@ -160,10 +158,9 @@ class PlaystyleScreen extends ConsumerWidget {
       String styleId, Color color) async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
-    final db = ref.read(appDatabaseProvider);
-    await (db.update(db.playersTable)
-          ..where((t) => t.id.equals(player.id)))
-        .write(PlayersTableCompanion(playStyle: Value(styleId)));
+    await ref
+        .read(playerRepositoryProvider)
+        .updateFields(player.id, {'play_style': styleId});
     final updated = await ref.read(authDsProvider).currentSession();
     ref.read(currentPlayerProvider.notifier).state = updated;
 

@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/asset_loader.dart';
-import '../../../data/datasources/local/diary_service.dart';
 
 class CollectorTab extends ConsumerWidget {
   const CollectorTab({super.key});
@@ -14,7 +13,7 @@ class CollectorTab extends ConsumerWidget {
     final player = ref.watch(currentPlayerProvider);
 
     return FutureBuilder(
-      future: _loadStats(ref, player?.id ?? 0, player?.level ?? 1,
+      future: _loadStats(ref, player?.id, player?.level ?? 1,
           player?.caelumDay ?? 1),
       builder: (context, snap) {
         if (!snap.hasData) {
@@ -81,9 +80,8 @@ class CollectorTab extends ConsumerWidget {
   }
 
   Future<Map<String, dynamic>> _loadStats(
-      WidgetRef ref, int playerId, int level, int caelumDay) async {
-    final db = ref.read(appDatabaseProvider);
-    final diaryService = DiaryService(db);
+      WidgetRef ref, String? playerId, int level, int caelumDay) async {
+    final diaryService = ref.read(diaryServiceProvider);
 
     final allLore = await AssetLoader.getAllLoreEntries();
     final unlockedLore = await AssetLoader.getAvailableLoreEntries(
@@ -92,8 +90,10 @@ class CollectorTab extends ConsumerWidget {
     final ownedWorks =
         allWorks.where((w) => w['is_free'] == true).length;
 
-    final diaryEntries = await diaryService.getTotalEntries(playerId);
-    final diaryWords = await diaryService.getTotalWords(playerId);
+    final diaryEntries =
+        playerId == null ? 0 : await diaryService.getTotalEntries(playerId);
+    final diaryWords =
+        playerId == null ? 0 : await diaryService.getTotalWords(playerId);
 
     return {
       'lore_unlocked': unlockedLore.length,

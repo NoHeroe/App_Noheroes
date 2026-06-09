@@ -83,17 +83,15 @@ class _ClassSelectionScreenState extends ConsumerState<ClassSelectionScreen> {
 
     setState(() => _loading = true);
     try {
-      final db = ref.read(appDatabaseProvider);
-      await ClassBonusService(db).applyClassBonus(player.id, cls['id'] as String);
+      final client = ref.read(supabaseClientProvider);
+      await ClassBonusService(client).applyClassBonus(player.id, cls['id'] as String);
 
       // Sprint 3.1 Bloco 1 — ClassQuestService .bakado. O assignment de
       // missões de classe do dia (3 aleatórias) volta no Bloco 7 via
       // QuestAdmissionService refatorado, já disparando o evento
       // `ClassSelected` consumido pela calibração (Bloco 9).
 
-      final updated = await db.managers.playersTable
-          .filter((f) => f.id(player.id))
-          .getSingleOrNull();
+      final updated = await ref.read(authDsProvider).currentSession();
       if (!mounted) return;
       ref.read(currentPlayerProvider.notifier).state = updated;
       setState(() => _loading = false);

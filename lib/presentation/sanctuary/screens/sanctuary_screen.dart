@@ -17,7 +17,6 @@ import '../../shared/widgets/milestone_popup.dart';
 import '../../shared/widgets/npc_dialog_overlay.dart';
 import '../../shared/widgets/app_snack.dart';
 import '../../shared/tutorial_manager.dart';
-import '../../../data/database/tables/players_table_ext.dart';
 import '../widgets/caelum_day_banner.dart';
 import '../widgets/shadow_status_card.dart';
 import '../widgets/npc_dialogue_card.dart';
@@ -139,9 +138,9 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
       setState(() => _showNpc = true);
       await NpcSession.markShown(player.caelumDay, player.shadowState);
       // Ganha +2 rep com NPC da facção ao ver diálogo
-      final db = ref.read(appDatabaseProvider);
+      final client = ref.read(supabaseClientProvider);
       final npcId = AssetLoader.npcIdForFaction(player.factionType);
-      await NpcReputationService(db)
+      await NpcReputationService(client)
           .addReputation(player.id, npcId, 2);
     }
   }
@@ -170,16 +169,10 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
     final player = ref.read(currentPlayerProvider);
     if (player == null || !mounted) return;
 
-    // Sprint 3.1 Bloco 13b — boot-check de daily/weekly reset.
-    // Silencioso (erros logados no service, não propagados). Fire-and-forget
-    // pra não bloquear UI. Reset services retornam DailyResetResult/
-    // WeeklyResetResult — ignoramos o retorno aqui.
-    unawaited(
-      ref.read(dailyResetServiceProvider).checkAndApply(player.id),
-    );
-    unawaited(
-      ref.read(weeklyResetServiceProvider).checkAndApply(player.id),
-    );
+    // Época 2 (ADR-0024) — DailyResetService/WeeklyResetService legados
+    // removidos. O rollover diário/semanal agora é automático via
+    // DailyMissionRolloverService (camada de dados full-online), então o
+    // boot-check manual deixou de existir aqui.
 
     final hasClass = (player.classType?.isNotEmpty ?? false);
     final hasFaction = (player.factionType?.isNotEmpty ?? false)

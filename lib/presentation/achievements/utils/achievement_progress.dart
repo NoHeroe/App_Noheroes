@@ -1,4 +1,4 @@
-import '../../../data/database/app_database.dart';
+import '../../../domain/entities/player.dart';
 import '../../../domain/models/achievement_definition.dart';
 import '../../../domain/models/player_daily_mission_stats.dart';
 import '../../../domain/services/achievement_trigger_types.dart';
@@ -29,7 +29,7 @@ class AchievementProgress {
 /// ainda — `findByPlayerId` retorna null nesse caso). Triggers daily
 /// retornam null (sem progresso visível) quando stats é null.
 class AchievementProgressContext {
-  final PlayersTableData player;
+  final Player player;
   final PlayerDailyMissionStats? stats;
   final int totalCompletedAchievements;
 

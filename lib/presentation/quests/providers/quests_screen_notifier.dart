@@ -109,9 +109,9 @@ class QuestsScreenState {
 }
 
 class QuestsScreenNotifier
-    extends AutoDisposeFamilyAsyncNotifier<QuestsScreenState, int> {
+    extends AutoDisposeFamilyAsyncNotifier<QuestsScreenState, String> {
   @override
-  Future<QuestsScreenState> build(int playerId) async {
+  Future<QuestsScreenState> build(String playerId) async {
     final bus = ref.read(appEventBusProvider);
     final repo = ref.read(missionRepositoryProvider);
     final extrasService = ref.read(extrasCatalogServiceProvider);
@@ -251,10 +251,7 @@ class QuestsScreenNotifier
     // currentPlayerProvider é StateProvider manual. Refetch + set garante
     // que /quests header counter, /santuario topBar e /perfil reflitam o
     // novo saldo. Padrão idêntico ao usado em profile_screen e dev_panel.
-    final db = ref.read(appDatabaseProvider);
-    final fresh = await (db.select(db.playersTable)
-          ..where((t) => t.id.equals(arg)))
-        .getSingleOrNull();
+    final fresh = await ref.read(playerRepositoryProvider).fetchById(arg);
     if (fresh != null) {
       ref.read(currentPlayerProvider.notifier).state = fresh;
     }
@@ -262,6 +259,6 @@ class QuestsScreenNotifier
 }
 
 final questsScreenNotifierProvider = AutoDisposeAsyncNotifierProviderFamily<
-    QuestsScreenNotifier, QuestsScreenState, int>(
+    QuestsScreenNotifier, QuestsScreenState, String>(
   QuestsScreenNotifier.new,
 );

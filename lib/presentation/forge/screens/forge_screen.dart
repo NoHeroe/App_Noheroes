@@ -136,7 +136,7 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
 
     if (result.isOk) {
       // Refresca player pra refletir gold debitado.
-      final updated = await PlayerDao(ref.read(appDatabaseProvider))
+      final updated = await PlayerDao(ref.read(supabaseClientProvider))
           .findById(player.id);
       if (!mounted) return;
       ref.read(currentPlayerProvider.notifier).state = updated;

@@ -162,7 +162,7 @@ class _WeeklyFactionMissionCardState
 
 class _WeeklySubTaskRow extends ConsumerWidget {
   final Map<String, dynamic> data;
-  final int playerId;
+  final String playerId;
   final int weekStartMs;
   final int weekEndMs;
 

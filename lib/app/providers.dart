@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/events/app_event_bus.dart';
 import '../core/utils/guild_rank.dart';
-import '../data/database/app_database.dart';
 import '../data/datasources/local/class_quest_service.dart';
 import '../data/datasources/local/ascension_service.dart';
 import '../data/datasources/local/guild_ascension_progress_service.dart';
@@ -35,7 +34,6 @@ import '../domain/services/faction_buff_service.dart';
 import '../domain/services/weekly_faction_validator.dart';
 import '../domain/services/weekly_faction_progress_service.dart';
 import '../domain/services/player_screens_visited_service.dart';
-import '../domain/services/daily_reset_service.dart';
 import '../domain/services/faction_reputation_service.dart';
 import '../domain/services/mission_assignment_service.dart';
 import '../domain/services/individual_creation_service.dart';
@@ -78,14 +76,8 @@ import '../domain/repositories/player_repository.dart';
 import '../data/repositories/supabase/player_repository_supabase.dart';
 import '../data/datasources/remote/supabase_auth_service.dart';
 
-// Banco singleton.
-// NOTA (Época 2): mantido VIVO durante o cutover — os services ainda em Drift
-// dependem dele até serem migrados (Fase 3). Removido no fim do cutover.
-final appDatabaseProvider = Provider<AppDatabase>((ref) {
-  final db = AppDatabase();
-  ref.onDispose(() => db.close());
-  return db;
-});
+// Época 2 (ADR-0024): Drift APOSENTADO — appDatabaseProvider removido.
+// Fonte única é o Supabase (supabaseClientProvider abaixo).
 
 // Época 2 — cliente Supabase (fonte única full-online). Já inicializado em
 // main.dart (Supabase.initialize). Sem onDispose (lifecycle é do app).
@@ -721,22 +713,9 @@ final factionReputationServiceProvider =
   );
 });
 
-// NOTA (Época 2 — ADR-0024): DailyResetService ainda NÃO foi convertido pra
-// Supabase (ctor pede `AppDatabase db` + `int playerId`). Por isso este
-// provider segue híbrido: `db` lê o `appDatabaseProvider` (Drift, vivo só por
-// causa deste service), e `playerDao` usa a PlayerDao já Supabase-backed.
-// Converter quando DailyResetService migrar.
-final dailyResetServiceProvider = Provider<DailyResetService>((ref) {
-  return DailyResetService(
-    db: ref.watch(appDatabaseProvider),
-    missionRepo: ref.watch(missionRepositoryProvider),
-    resolver: ref.watch(rewardResolveServiceProvider),
-    granter: ref.watch(rewardGrantServiceProvider),
-    assignment: ref.watch(missionAssignmentServiceProvider),
-    playerDao: PlayerDao(ref.watch(supabaseClientProvider)),
-    bus: ref.watch(appEventBusProvider),
-  );
-});
+// Época 2 (ADR-0024): DailyResetService (legacy, operava o player_mission_progress
+// antigo) APOSENTADO junto com o Drift — o rollover diário roda via
+// DailyMissionRolloverService (schema 37).
 
 final weeklyResetServiceProvider = Provider<WeeklyResetService>((ref) {
   return WeeklyResetService(
