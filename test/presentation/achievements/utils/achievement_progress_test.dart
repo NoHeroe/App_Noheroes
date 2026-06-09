@@ -58,6 +58,7 @@ PlayersTableData _player({
       autoConfirmEnabled: false,
       screensVisitedKeys: '',
       totalGoldEarnedViaQuests: 0,
+      totalGoldEarnedLifetime: 0,
     );
 
 PlayerDailyMissionStats _stats({

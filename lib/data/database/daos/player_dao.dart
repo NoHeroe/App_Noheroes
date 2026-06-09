@@ -240,8 +240,14 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
   Future<void> addGold(int id, int amount) async {
     final player = await findById(id);
     if (player == null) return;
+    // B.1 — lifetime conta só ouro GANHO (não-negativo).
+    final lifeGold = amount > 0 ? amount : 0;
     await (update(playersTable)..where((t) => t.id.equals(id)))
-        .write(PlayersTableCompanion(gold: Value(player.gold + amount)));
+        .write(PlayersTableCompanion(
+      gold: Value(player.gold + amount),
+      totalGoldEarnedLifetime:
+          Value(player.totalGoldEarnedLifetime + lifeGold),
+    ));
   }
 
   Future<void> updateShadow(int id, int shadowImpact) async {

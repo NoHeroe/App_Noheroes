@@ -207,8 +207,11 @@ class DailyMissionProgressService {
       }
       if (buffed.gold > 0) {
         await _db.customUpdate(
-          'UPDATE players SET gold = gold + ? WHERE id = ?',
+          'UPDATE players SET gold = gold + ?, '
+          'total_gold_earned_lifetime = total_gold_earned_lifetime + ? '
+          'WHERE id = ?',
           variables: [
+            Variable.withInt(buffed.gold),
             Variable.withInt(buffed.gold),
             Variable.withInt(mission.playerId),
           ],
@@ -402,8 +405,11 @@ class DailyMissionProgressService {
     }
     if (buffed.gold > 0) {
       await _db.customUpdate(
-        'UPDATE players SET gold = gold + ? WHERE id = ?',
+        'UPDATE players SET gold = gold + ?, '
+        'total_gold_earned_lifetime = total_gold_earned_lifetime + ? '
+        'WHERE id = ?',
         variables: [
+          Variable.withInt(buffed.gold),
           Variable.withInt(buffed.gold),
           Variable.withInt(mission.playerId),
         ],
@@ -462,8 +468,11 @@ class DailyMissionProgressService {
     }
     if (buffed.gold > 0) {
       await _db.customUpdate(
-        'UPDATE players SET gold = gold + ? WHERE id = ?',
+        'UPDATE players SET gold = gold + ?, '
+        'total_gold_earned_lifetime = total_gold_earned_lifetime + ? '
+        'WHERE id = ?',
         variables: [
+          Variable.withInt(buffed.gold),
           Variable.withInt(buffed.gold),
           Variable.withInt(mission.playerId),
         ],

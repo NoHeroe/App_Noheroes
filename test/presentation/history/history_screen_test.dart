@@ -107,6 +107,7 @@ PlayersTableData _fakePlayer({int totalQuests = 0}) {
     autoConfirmEnabled: false,
     screensVisitedKeys: '',
     totalGoldEarnedViaQuests: 0,
+    totalGoldEarnedLifetime: 0,
   );
 }
 

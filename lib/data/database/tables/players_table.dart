@@ -148,4 +148,12 @@ class PlayersTable extends Table {
   /// + `DailyMissionCompleted`). Schema 35 adiciona via `m.addColumn`.
   IntColumn get totalGoldEarnedViaQuests =>
       integer().withDefault(const Constant(0))();
+
+  /// Fase B.1 — contador all-time de ouro ganho de QUALQUER fonte (quest,
+  /// loot, gift, etc.). Diferente de [totalGoldEarnedViaQuests] (só quest).
+  /// Gate "ouro acumulado lifetime" da ascensão soulslike. Schema 38
+  /// adiciona via `m.addColumn` + backfill (= total_gold_earned_via_quests,
+  /// única fonte de ouro hoje). Incremento inline em cada crédito de ouro.
+  IntColumn get totalGoldEarnedLifetime =>
+      integer().withDefault(const Constant(0))();
 }

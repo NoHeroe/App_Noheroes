@@ -57,6 +57,7 @@ PlayersTableData _player({required int charisma}) {
     autoConfirmEnabled: false,
     screensVisitedKeys: '',
     totalGoldEarnedViaQuests: 0,
+    totalGoldEarnedLifetime: 0,
   );
 }
 

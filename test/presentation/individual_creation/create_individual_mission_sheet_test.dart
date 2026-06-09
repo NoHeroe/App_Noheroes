@@ -78,6 +78,7 @@ PlayersTableData _player() {
     autoConfirmEnabled: false,
     screensVisitedKeys: '',
     totalGoldEarnedViaQuests: 0,
+    totalGoldEarnedLifetime: 0,
   );
 }
 

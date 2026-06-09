@@ -22,6 +22,7 @@ import '../datasources/local/recipes_catalog_seeder.dart';
 // não eram usados em runtime crítico, só display cosmético em
 // guild_screen.dart linha 352 (simplificado pra mostrar só rank).
 import 'tables/guild_ascension_table.dart';
+import 'tables/guild_ascension_state_table.dart';
 import 'tables/npc_reputation_table.dart';
 import 'tables/diary_entries_table.dart';
 import 'tables/vitalism_unique_catalog_table.dart';
@@ -63,6 +64,7 @@ part 'app_database.g.dart';
     NpcReputationTable,
     DiaryEntriesTable,
     GuildAscensionTable,
+    GuildAscensionStateTable,
     VitalismUniqueCatalogTable,
     PlayerVitalismAffinitiesTable,
     PlayerVitalismTreesTable,
@@ -101,7 +103,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 37;
+  int get schemaVersion => 38;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -774,6 +776,34 @@ class AppDatabase extends _$AppDatabase {
         } catch (e, st) {
           // ignore: avoid_print
           print('[migration 36→37] drop failed: $e\n$st');
+        }
+      }
+      if (from < 38) {
+        // Fase B.1 — ascensão soulslike. Nova tabela de estado cíclico
+        // `guild_ascension_state` + contador `players.total_gold_earned_lifetime`
+        // (gate "ouro acumulado"). Migration MANUAL (sem step gerado).
+        // Pattern ADR-0019: SQL bruto no backfill, nunca data class.
+        try {
+          await m.createTable(guildAscensionStateTable);
+          // ignore: avoid_print
+          print('[migration 37→38] created guild_ascension_state');
+        } catch (e, st) {
+          // ignore: avoid_print
+          print('[migration 37→38] createTable failed: $e\n$st');
+        }
+        try {
+          await m.addColumn(
+              playersTable, playersTable.totalGoldEarnedLifetime);
+          // Backfill: lifetime parte do total já contabilizado de quests
+          // (única fonte de ouro hoje). Players legacy ficam consistentes.
+          await customStatement(
+              'UPDATE players SET total_gold_earned_lifetime = '
+              'total_gold_earned_via_quests');
+          // ignore: avoid_print
+          print('[migration 37→38] added+backfilled total_gold_earned_lifetime');
+        } catch (e, st) {
+          // ignore: avoid_print
+          print('[migration 37→38] addColumn/backfill failed: $e\n$st');
         }
       }
     },

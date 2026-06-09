@@ -159,6 +159,7 @@ PlayersTableData _fakePlayer({int dailyStreak = 0, String rank = 'E'}) {
     autoConfirmEnabled: false,
     screensVisitedKeys: '',
     totalGoldEarnedViaQuests: 0,
+    totalGoldEarnedLifetime: 0,
   );
 }
 

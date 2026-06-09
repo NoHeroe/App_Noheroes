@@ -157,11 +157,15 @@ class RewardGrantService {
             await PlayerDao(_db).addXp(playerId, buffed.xp);
       }
       if (buffed.gold != 0 || buffed.gems != 0) {
+        // B.1 — lifetime conta só ouro GANHO (não-negativo).
+        final lifeGold = buffed.gold > 0 ? buffed.gold : 0;
         await _db.customUpdate(
-          'UPDATE players SET gold = gold + ?, gems = gems + ? '
-          'WHERE id = ?',
+          'UPDATE players SET gold = gold + ?, '
+          'total_gold_earned_lifetime = total_gold_earned_lifetime + ?, '
+          'gems = gems + ? WHERE id = ?',
           variables: [
             Variable.withInt(buffed.gold),
+            Variable.withInt(lifeGold),
             Variable.withInt(buffed.gems),
             Variable.withInt(playerId),
           ],
@@ -329,11 +333,15 @@ class RewardGrantService {
             await PlayerDao(_db).addXp(playerId, buffed.xp);
       }
       if (buffed.gold != 0 || buffed.gems != 0) {
+        // B.1 — lifetime conta só ouro GANHO (não-negativo).
+        final lifeGold = buffed.gold > 0 ? buffed.gold : 0;
         await _db.customUpdate(
-          'UPDATE players SET gold = gold + ?, gems = gems + ? '
-          'WHERE id = ?',
+          'UPDATE players SET gold = gold + ?, '
+          'total_gold_earned_lifetime = total_gold_earned_lifetime + ?, '
+          'gems = gems + ? WHERE id = ?',
           variables: [
             Variable.withInt(buffed.gold),
+            Variable.withInt(lifeGold),
             Variable.withInt(buffed.gems),
             Variable.withInt(playerId),
           ],

@@ -386,6 +386,14 @@ class $PlayersTableTable extends PlayersTable
           type: DriftSqlType.int,
           requiredDuringInsert: false,
           defaultValue: const Constant(0));
+  static const VerificationMeta _totalGoldEarnedLifetimeMeta =
+      const VerificationMeta('totalGoldEarnedLifetime');
+  @override
+  late final GeneratedColumn<int> totalGoldEarnedLifetime =
+      GeneratedColumn<int>('total_gold_earned_lifetime', aliasedName, false,
+          type: DriftSqlType.int,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0));
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -437,7 +445,8 @@ class $PlayersTableTable extends PlayersTable
         totalAttributePointsSpent,
         autoConfirmEnabled,
         screensVisitedKeys,
-        totalGoldEarnedViaQuests
+        totalGoldEarnedViaQuests,
+        totalGoldEarnedLifetime
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -704,6 +713,13 @@ class $PlayersTableTable extends PlayersTable
               data['total_gold_earned_via_quests']!,
               _totalGoldEarnedViaQuestsMeta));
     }
+    if (data.containsKey('total_gold_earned_lifetime')) {
+      context.handle(
+          _totalGoldEarnedLifetimeMeta,
+          totalGoldEarnedLifetime.isAcceptableOrUnknown(
+              data['total_gold_earned_lifetime']!,
+              _totalGoldEarnedLifetimeMeta));
+    }
     return context;
   }
 
@@ -816,6 +832,9 @@ class $PlayersTableTable extends PlayersTable
       totalGoldEarnedViaQuests: attachedDatabase.typeMapping.read(
           DriftSqlType.int,
           data['${effectivePrefix}total_gold_earned_via_quests'])!,
+      totalGoldEarnedLifetime: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}total_gold_earned_lifetime'])!,
     );
   }
 
@@ -904,6 +923,13 @@ class PlayersTableData extends DataClass
   /// Single writer: `QuestRewardStatsService` (listener de `RewardGranted`
   /// + `DailyMissionCompleted`). Schema 35 adiciona via `m.addColumn`.
   final int totalGoldEarnedViaQuests;
+
+  /// Fase B.1 — contador all-time de ouro ganho de QUALQUER fonte (quest,
+  /// loot, gift, etc.). Diferente de [totalGoldEarnedViaQuests] (só quest).
+  /// Gate "ouro acumulado lifetime" da ascensão soulslike. Schema 38
+  /// adiciona via `m.addColumn` + backfill (= total_gold_earned_via_quests,
+  /// única fonte de ouro hoje). Incremento inline em cada crédito de ouro.
+  final int totalGoldEarnedLifetime;
   const PlayersTableData(
       {required this.id,
       required this.email,
@@ -954,7 +980,8 @@ class PlayersTableData extends DataClass
       required this.totalAttributePointsSpent,
       required this.autoConfirmEnabled,
       required this.screensVisitedKeys,
-      required this.totalGoldEarnedViaQuests});
+      required this.totalGoldEarnedViaQuests,
+      required this.totalGoldEarnedLifetime});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1027,6 +1054,7 @@ class PlayersTableData extends DataClass
     map['screens_visited_keys'] = Variable<String>(screensVisitedKeys);
     map['total_gold_earned_via_quests'] =
         Variable<int>(totalGoldEarnedViaQuests);
+    map['total_gold_earned_lifetime'] = Variable<int>(totalGoldEarnedLifetime);
     return map;
   }
 
@@ -1098,6 +1126,7 @@ class PlayersTableData extends DataClass
       autoConfirmEnabled: Value(autoConfirmEnabled),
       screensVisitedKeys: Value(screensVisitedKeys),
       totalGoldEarnedViaQuests: Value(totalGoldEarnedViaQuests),
+      totalGoldEarnedLifetime: Value(totalGoldEarnedLifetime),
     );
   }
 
@@ -1161,6 +1190,8 @@ class PlayersTableData extends DataClass
           serializer.fromJson<String>(json['screensVisitedKeys']),
       totalGoldEarnedViaQuests:
           serializer.fromJson<int>(json['totalGoldEarnedViaQuests']),
+      totalGoldEarnedLifetime:
+          serializer.fromJson<int>(json['totalGoldEarnedLifetime']),
     );
   }
   @override
@@ -1220,6 +1251,8 @@ class PlayersTableData extends DataClass
       'screensVisitedKeys': serializer.toJson<String>(screensVisitedKeys),
       'totalGoldEarnedViaQuests':
           serializer.toJson<int>(totalGoldEarnedViaQuests),
+      'totalGoldEarnedLifetime':
+          serializer.toJson<int>(totalGoldEarnedLifetime),
     };
   }
 
@@ -1273,7 +1306,8 @@ class PlayersTableData extends DataClass
           int? totalAttributePointsSpent,
           bool? autoConfirmEnabled,
           String? screensVisitedKeys,
-          int? totalGoldEarnedViaQuests}) =>
+          int? totalGoldEarnedViaQuests,
+          int? totalGoldEarnedLifetime}) =>
       PlayersTableData(
         id: id ?? this.id,
         email: email ?? this.email,
@@ -1333,6 +1367,8 @@ class PlayersTableData extends DataClass
         screensVisitedKeys: screensVisitedKeys ?? this.screensVisitedKeys,
         totalGoldEarnedViaQuests:
             totalGoldEarnedViaQuests ?? this.totalGoldEarnedViaQuests,
+        totalGoldEarnedLifetime:
+            totalGoldEarnedLifetime ?? this.totalGoldEarnedLifetime,
       );
   PlayersTableData copyWithCompanion(PlayersTableCompanion data) {
     return PlayersTableData(
@@ -1432,6 +1468,9 @@ class PlayersTableData extends DataClass
       totalGoldEarnedViaQuests: data.totalGoldEarnedViaQuests.present
           ? data.totalGoldEarnedViaQuests.value
           : this.totalGoldEarnedViaQuests,
+      totalGoldEarnedLifetime: data.totalGoldEarnedLifetime.present
+          ? data.totalGoldEarnedLifetime.value
+          : this.totalGoldEarnedLifetime,
     );
   }
 
@@ -1487,7 +1526,8 @@ class PlayersTableData extends DataClass
           ..write('totalAttributePointsSpent: $totalAttributePointsSpent, ')
           ..write('autoConfirmEnabled: $autoConfirmEnabled, ')
           ..write('screensVisitedKeys: $screensVisitedKeys, ')
-          ..write('totalGoldEarnedViaQuests: $totalGoldEarnedViaQuests')
+          ..write('totalGoldEarnedViaQuests: $totalGoldEarnedViaQuests, ')
+          ..write('totalGoldEarnedLifetime: $totalGoldEarnedLifetime')
           ..write(')'))
         .toString();
   }
@@ -1543,7 +1583,8 @@ class PlayersTableData extends DataClass
         totalAttributePointsSpent,
         autoConfirmEnabled,
         screensVisitedKeys,
-        totalGoldEarnedViaQuests
+        totalGoldEarnedViaQuests,
+        totalGoldEarnedLifetime
       ]);
   @override
   bool operator ==(Object other) =>
@@ -1598,7 +1639,8 @@ class PlayersTableData extends DataClass
           other.totalAttributePointsSpent == this.totalAttributePointsSpent &&
           other.autoConfirmEnabled == this.autoConfirmEnabled &&
           other.screensVisitedKeys == this.screensVisitedKeys &&
-          other.totalGoldEarnedViaQuests == this.totalGoldEarnedViaQuests);
+          other.totalGoldEarnedViaQuests == this.totalGoldEarnedViaQuests &&
+          other.totalGoldEarnedLifetime == this.totalGoldEarnedLifetime);
 }
 
 class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
@@ -1652,6 +1694,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
   final Value<bool> autoConfirmEnabled;
   final Value<String> screensVisitedKeys;
   final Value<int> totalGoldEarnedViaQuests;
+  final Value<int> totalGoldEarnedLifetime;
   const PlayersTableCompanion({
     this.id = const Value.absent(),
     this.email = const Value.absent(),
@@ -1703,6 +1746,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.autoConfirmEnabled = const Value.absent(),
     this.screensVisitedKeys = const Value.absent(),
     this.totalGoldEarnedViaQuests = const Value.absent(),
+    this.totalGoldEarnedLifetime = const Value.absent(),
   });
   PlayersTableCompanion.insert({
     this.id = const Value.absent(),
@@ -1755,6 +1799,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     this.autoConfirmEnabled = const Value.absent(),
     this.screensVisitedKeys = const Value.absent(),
     this.totalGoldEarnedViaQuests = const Value.absent(),
+    this.totalGoldEarnedLifetime = const Value.absent(),
   })  : email = Value(email),
         passwordHash = Value(passwordHash);
   static Insertable<PlayersTableData> custom({
@@ -1808,6 +1853,7 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
     Expression<bool>? autoConfirmEnabled,
     Expression<String>? screensVisitedKeys,
     Expression<int>? totalGoldEarnedViaQuests,
+    Expression<int>? totalGoldEarnedLifetime,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1867,6 +1913,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
         'screens_visited_keys': screensVisitedKeys,
       if (totalGoldEarnedViaQuests != null)
         'total_gold_earned_via_quests': totalGoldEarnedViaQuests,
+      if (totalGoldEarnedLifetime != null)
+        'total_gold_earned_lifetime': totalGoldEarnedLifetime,
     });
   }
 
@@ -1920,7 +1968,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       Value<int>? totalAttributePointsSpent,
       Value<bool>? autoConfirmEnabled,
       Value<String>? screensVisitedKeys,
-      Value<int>? totalGoldEarnedViaQuests}) {
+      Value<int>? totalGoldEarnedViaQuests,
+      Value<int>? totalGoldEarnedLifetime}) {
     return PlayersTableCompanion(
       id: id ?? this.id,
       email: email ?? this.email,
@@ -1975,6 +2024,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       screensVisitedKeys: screensVisitedKeys ?? this.screensVisitedKeys,
       totalGoldEarnedViaQuests:
           totalGoldEarnedViaQuests ?? this.totalGoldEarnedViaQuests,
+      totalGoldEarnedLifetime:
+          totalGoldEarnedLifetime ?? this.totalGoldEarnedLifetime,
     );
   }
 
@@ -2134,6 +2185,10 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
       map['total_gold_earned_via_quests'] =
           Variable<int>(totalGoldEarnedViaQuests.value);
     }
+    if (totalGoldEarnedLifetime.present) {
+      map['total_gold_earned_lifetime'] =
+          Variable<int>(totalGoldEarnedLifetime.value);
+    }
     return map;
   }
 
@@ -2189,7 +2244,8 @@ class PlayersTableCompanion extends UpdateCompanion<PlayersTableData> {
           ..write('totalAttributePointsSpent: $totalAttributePointsSpent, ')
           ..write('autoConfirmEnabled: $autoConfirmEnabled, ')
           ..write('screensVisitedKeys: $screensVisitedKeys, ')
-          ..write('totalGoldEarnedViaQuests: $totalGoldEarnedViaQuests')
+          ..write('totalGoldEarnedViaQuests: $totalGoldEarnedViaQuests, ')
+          ..write('totalGoldEarnedLifetime: $totalGoldEarnedLifetime')
           ..write(')'))
         .toString();
   }
@@ -5167,6 +5223,514 @@ class GuildAscensionTableCompanion
           ..write('completed: $completed, ')
           ..write('progress: $progress, ')
           ..write('progressTarget: $progressTarget')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $GuildAscensionStateTableTable extends GuildAscensionStateTable
+    with
+        TableInfo<$GuildAscensionStateTableTable,
+            GuildAscensionStateTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GuildAscensionStateTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _playerIdMeta =
+      const VerificationMeta('playerId');
+  @override
+  late final GeneratedColumn<int> playerId = GeneratedColumn<int>(
+      'player_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _rankFromMeta =
+      const VerificationMeta('rankFrom');
+  @override
+  late final GeneratedColumn<String> rankFrom = GeneratedColumn<String>(
+      'rank_from', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _attemptsMeta =
+      const VerificationMeta('attempts');
+  @override
+  late final GeneratedColumn<int> attempts = GeneratedColumn<int>(
+      'attempts', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _failuresMeta =
+      const VerificationMeta('failures');
+  @override
+  late final GeneratedColumn<int> failures = GeneratedColumn<int>(
+      'failures', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _paidCostMeta =
+      const VerificationMeta('paidCost');
+  @override
+  late final GeneratedColumn<int> paidCost = GeneratedColumn<int>(
+      'paid_cost', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _cooldownUntilMsMeta =
+      const VerificationMeta('cooldownUntilMs');
+  @override
+  late final GeneratedColumn<int> cooldownUntilMs = GeneratedColumn<int>(
+      'cooldown_until_ms', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _windowStartedMsMeta =
+      const VerificationMeta('windowStartedMs');
+  @override
+  late final GeneratedColumn<int> windowStartedMs = GeneratedColumn<int>(
+      'window_started_ms', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _windowDeadlineMsMeta =
+      const VerificationMeta('windowDeadlineMs');
+  @override
+  late final GeneratedColumn<int> windowDeadlineMs = GeneratedColumn<int>(
+      'window_deadline_ms', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('locked'));
+  @override
+  List<GeneratedColumn> get $columns => [
+        playerId,
+        rankFrom,
+        attempts,
+        failures,
+        paidCost,
+        cooldownUntilMs,
+        windowStartedMs,
+        windowDeadlineMs,
+        status
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'guild_ascension_state';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<GuildAscensionStateTableData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('player_id')) {
+      context.handle(_playerIdMeta,
+          playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta));
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('rank_from')) {
+      context.handle(_rankFromMeta,
+          rankFrom.isAcceptableOrUnknown(data['rank_from']!, _rankFromMeta));
+    } else if (isInserting) {
+      context.missing(_rankFromMeta);
+    }
+    if (data.containsKey('attempts')) {
+      context.handle(_attemptsMeta,
+          attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta));
+    }
+    if (data.containsKey('failures')) {
+      context.handle(_failuresMeta,
+          failures.isAcceptableOrUnknown(data['failures']!, _failuresMeta));
+    }
+    if (data.containsKey('paid_cost')) {
+      context.handle(_paidCostMeta,
+          paidCost.isAcceptableOrUnknown(data['paid_cost']!, _paidCostMeta));
+    }
+    if (data.containsKey('cooldown_until_ms')) {
+      context.handle(
+          _cooldownUntilMsMeta,
+          cooldownUntilMs.isAcceptableOrUnknown(
+              data['cooldown_until_ms']!, _cooldownUntilMsMeta));
+    }
+    if (data.containsKey('window_started_ms')) {
+      context.handle(
+          _windowStartedMsMeta,
+          windowStartedMs.isAcceptableOrUnknown(
+              data['window_started_ms']!, _windowStartedMsMeta));
+    }
+    if (data.containsKey('window_deadline_ms')) {
+      context.handle(
+          _windowDeadlineMsMeta,
+          windowDeadlineMs.isAcceptableOrUnknown(
+              data['window_deadline_ms']!, _windowDeadlineMsMeta));
+    }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {playerId, rankFrom};
+  @override
+  GuildAscensionStateTableData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GuildAscensionStateTableData(
+      playerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}player_id'])!,
+      rankFrom: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}rank_from'])!,
+      attempts: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}attempts'])!,
+      failures: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}failures'])!,
+      paidCost: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}paid_cost'])!,
+      cooldownUntilMs: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}cooldown_until_ms']),
+      windowStartedMs: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}window_started_ms']),
+      windowDeadlineMs: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}window_deadline_ms']),
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+    );
+  }
+
+  @override
+  $GuildAscensionStateTableTable createAlias(String alias) {
+    return $GuildAscensionStateTableTable(attachedDatabase, alias);
+  }
+}
+
+class GuildAscensionStateTableData extends DataClass
+    implements Insertable<GuildAscensionStateTableData> {
+  final int playerId;
+
+  /// Rank perseguido (rank_from do ciclo), canon MAIÚSCULO 'E'..'A'.
+  final String rankFrom;
+
+  /// Tentativas pagas (incrementa a cada `pay`).
+  final int attempts;
+
+  /// Falhas (deadline vencido sem completar). Escala o custo: +10% por falha.
+  final int failures;
+
+  /// Custo (ouro) pago na tentativa corrente.
+  final int paidCost;
+
+  /// Bloqueio pós-falha (ms epoch). Null = sem cooldown ativo.
+  final int? cooldownUntilMs;
+
+  /// Início da janela das provas (= momento do pagamento, ms epoch).
+  final int? windowStartedMs;
+
+  /// Prazo das provas (ms epoch). Vencido sem completar → falha.
+  final int? windowDeadlineMs;
+
+  /// Máquina de estados: locked | payable | active | cooldown | done.
+  final String status;
+  const GuildAscensionStateTableData(
+      {required this.playerId,
+      required this.rankFrom,
+      required this.attempts,
+      required this.failures,
+      required this.paidCost,
+      this.cooldownUntilMs,
+      this.windowStartedMs,
+      this.windowDeadlineMs,
+      required this.status});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['player_id'] = Variable<int>(playerId);
+    map['rank_from'] = Variable<String>(rankFrom);
+    map['attempts'] = Variable<int>(attempts);
+    map['failures'] = Variable<int>(failures);
+    map['paid_cost'] = Variable<int>(paidCost);
+    if (!nullToAbsent || cooldownUntilMs != null) {
+      map['cooldown_until_ms'] = Variable<int>(cooldownUntilMs);
+    }
+    if (!nullToAbsent || windowStartedMs != null) {
+      map['window_started_ms'] = Variable<int>(windowStartedMs);
+    }
+    if (!nullToAbsent || windowDeadlineMs != null) {
+      map['window_deadline_ms'] = Variable<int>(windowDeadlineMs);
+    }
+    map['status'] = Variable<String>(status);
+    return map;
+  }
+
+  GuildAscensionStateTableCompanion toCompanion(bool nullToAbsent) {
+    return GuildAscensionStateTableCompanion(
+      playerId: Value(playerId),
+      rankFrom: Value(rankFrom),
+      attempts: Value(attempts),
+      failures: Value(failures),
+      paidCost: Value(paidCost),
+      cooldownUntilMs: cooldownUntilMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cooldownUntilMs),
+      windowStartedMs: windowStartedMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(windowStartedMs),
+      windowDeadlineMs: windowDeadlineMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(windowDeadlineMs),
+      status: Value(status),
+    );
+  }
+
+  factory GuildAscensionStateTableData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GuildAscensionStateTableData(
+      playerId: serializer.fromJson<int>(json['playerId']),
+      rankFrom: serializer.fromJson<String>(json['rankFrom']),
+      attempts: serializer.fromJson<int>(json['attempts']),
+      failures: serializer.fromJson<int>(json['failures']),
+      paidCost: serializer.fromJson<int>(json['paidCost']),
+      cooldownUntilMs: serializer.fromJson<int?>(json['cooldownUntilMs']),
+      windowStartedMs: serializer.fromJson<int?>(json['windowStartedMs']),
+      windowDeadlineMs: serializer.fromJson<int?>(json['windowDeadlineMs']),
+      status: serializer.fromJson<String>(json['status']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'playerId': serializer.toJson<int>(playerId),
+      'rankFrom': serializer.toJson<String>(rankFrom),
+      'attempts': serializer.toJson<int>(attempts),
+      'failures': serializer.toJson<int>(failures),
+      'paidCost': serializer.toJson<int>(paidCost),
+      'cooldownUntilMs': serializer.toJson<int?>(cooldownUntilMs),
+      'windowStartedMs': serializer.toJson<int?>(windowStartedMs),
+      'windowDeadlineMs': serializer.toJson<int?>(windowDeadlineMs),
+      'status': serializer.toJson<String>(status),
+    };
+  }
+
+  GuildAscensionStateTableData copyWith(
+          {int? playerId,
+          String? rankFrom,
+          int? attempts,
+          int? failures,
+          int? paidCost,
+          Value<int?> cooldownUntilMs = const Value.absent(),
+          Value<int?> windowStartedMs = const Value.absent(),
+          Value<int?> windowDeadlineMs = const Value.absent(),
+          String? status}) =>
+      GuildAscensionStateTableData(
+        playerId: playerId ?? this.playerId,
+        rankFrom: rankFrom ?? this.rankFrom,
+        attempts: attempts ?? this.attempts,
+        failures: failures ?? this.failures,
+        paidCost: paidCost ?? this.paidCost,
+        cooldownUntilMs: cooldownUntilMs.present
+            ? cooldownUntilMs.value
+            : this.cooldownUntilMs,
+        windowStartedMs: windowStartedMs.present
+            ? windowStartedMs.value
+            : this.windowStartedMs,
+        windowDeadlineMs: windowDeadlineMs.present
+            ? windowDeadlineMs.value
+            : this.windowDeadlineMs,
+        status: status ?? this.status,
+      );
+  GuildAscensionStateTableData copyWithCompanion(
+      GuildAscensionStateTableCompanion data) {
+    return GuildAscensionStateTableData(
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      rankFrom: data.rankFrom.present ? data.rankFrom.value : this.rankFrom,
+      attempts: data.attempts.present ? data.attempts.value : this.attempts,
+      failures: data.failures.present ? data.failures.value : this.failures,
+      paidCost: data.paidCost.present ? data.paidCost.value : this.paidCost,
+      cooldownUntilMs: data.cooldownUntilMs.present
+          ? data.cooldownUntilMs.value
+          : this.cooldownUntilMs,
+      windowStartedMs: data.windowStartedMs.present
+          ? data.windowStartedMs.value
+          : this.windowStartedMs,
+      windowDeadlineMs: data.windowDeadlineMs.present
+          ? data.windowDeadlineMs.value
+          : this.windowDeadlineMs,
+      status: data.status.present ? data.status.value : this.status,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GuildAscensionStateTableData(')
+          ..write('playerId: $playerId, ')
+          ..write('rankFrom: $rankFrom, ')
+          ..write('attempts: $attempts, ')
+          ..write('failures: $failures, ')
+          ..write('paidCost: $paidCost, ')
+          ..write('cooldownUntilMs: $cooldownUntilMs, ')
+          ..write('windowStartedMs: $windowStartedMs, ')
+          ..write('windowDeadlineMs: $windowDeadlineMs, ')
+          ..write('status: $status')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(playerId, rankFrom, attempts, failures,
+      paidCost, cooldownUntilMs, windowStartedMs, windowDeadlineMs, status);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GuildAscensionStateTableData &&
+          other.playerId == this.playerId &&
+          other.rankFrom == this.rankFrom &&
+          other.attempts == this.attempts &&
+          other.failures == this.failures &&
+          other.paidCost == this.paidCost &&
+          other.cooldownUntilMs == this.cooldownUntilMs &&
+          other.windowStartedMs == this.windowStartedMs &&
+          other.windowDeadlineMs == this.windowDeadlineMs &&
+          other.status == this.status);
+}
+
+class GuildAscensionStateTableCompanion
+    extends UpdateCompanion<GuildAscensionStateTableData> {
+  final Value<int> playerId;
+  final Value<String> rankFrom;
+  final Value<int> attempts;
+  final Value<int> failures;
+  final Value<int> paidCost;
+  final Value<int?> cooldownUntilMs;
+  final Value<int?> windowStartedMs;
+  final Value<int?> windowDeadlineMs;
+  final Value<String> status;
+  final Value<int> rowid;
+  const GuildAscensionStateTableCompanion({
+    this.playerId = const Value.absent(),
+    this.rankFrom = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.failures = const Value.absent(),
+    this.paidCost = const Value.absent(),
+    this.cooldownUntilMs = const Value.absent(),
+    this.windowStartedMs = const Value.absent(),
+    this.windowDeadlineMs = const Value.absent(),
+    this.status = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  GuildAscensionStateTableCompanion.insert({
+    required int playerId,
+    required String rankFrom,
+    this.attempts = const Value.absent(),
+    this.failures = const Value.absent(),
+    this.paidCost = const Value.absent(),
+    this.cooldownUntilMs = const Value.absent(),
+    this.windowStartedMs = const Value.absent(),
+    this.windowDeadlineMs = const Value.absent(),
+    this.status = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : playerId = Value(playerId),
+        rankFrom = Value(rankFrom);
+  static Insertable<GuildAscensionStateTableData> custom({
+    Expression<int>? playerId,
+    Expression<String>? rankFrom,
+    Expression<int>? attempts,
+    Expression<int>? failures,
+    Expression<int>? paidCost,
+    Expression<int>? cooldownUntilMs,
+    Expression<int>? windowStartedMs,
+    Expression<int>? windowDeadlineMs,
+    Expression<String>? status,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (playerId != null) 'player_id': playerId,
+      if (rankFrom != null) 'rank_from': rankFrom,
+      if (attempts != null) 'attempts': attempts,
+      if (failures != null) 'failures': failures,
+      if (paidCost != null) 'paid_cost': paidCost,
+      if (cooldownUntilMs != null) 'cooldown_until_ms': cooldownUntilMs,
+      if (windowStartedMs != null) 'window_started_ms': windowStartedMs,
+      if (windowDeadlineMs != null) 'window_deadline_ms': windowDeadlineMs,
+      if (status != null) 'status': status,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  GuildAscensionStateTableCompanion copyWith(
+      {Value<int>? playerId,
+      Value<String>? rankFrom,
+      Value<int>? attempts,
+      Value<int>? failures,
+      Value<int>? paidCost,
+      Value<int?>? cooldownUntilMs,
+      Value<int?>? windowStartedMs,
+      Value<int?>? windowDeadlineMs,
+      Value<String>? status,
+      Value<int>? rowid}) {
+    return GuildAscensionStateTableCompanion(
+      playerId: playerId ?? this.playerId,
+      rankFrom: rankFrom ?? this.rankFrom,
+      attempts: attempts ?? this.attempts,
+      failures: failures ?? this.failures,
+      paidCost: paidCost ?? this.paidCost,
+      cooldownUntilMs: cooldownUntilMs ?? this.cooldownUntilMs,
+      windowStartedMs: windowStartedMs ?? this.windowStartedMs,
+      windowDeadlineMs: windowDeadlineMs ?? this.windowDeadlineMs,
+      status: status ?? this.status,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (playerId.present) {
+      map['player_id'] = Variable<int>(playerId.value);
+    }
+    if (rankFrom.present) {
+      map['rank_from'] = Variable<String>(rankFrom.value);
+    }
+    if (attempts.present) {
+      map['attempts'] = Variable<int>(attempts.value);
+    }
+    if (failures.present) {
+      map['failures'] = Variable<int>(failures.value);
+    }
+    if (paidCost.present) {
+      map['paid_cost'] = Variable<int>(paidCost.value);
+    }
+    if (cooldownUntilMs.present) {
+      map['cooldown_until_ms'] = Variable<int>(cooldownUntilMs.value);
+    }
+    if (windowStartedMs.present) {
+      map['window_started_ms'] = Variable<int>(windowStartedMs.value);
+    }
+    if (windowDeadlineMs.present) {
+      map['window_deadline_ms'] = Variable<int>(windowDeadlineMs.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GuildAscensionStateTableCompanion(')
+          ..write('playerId: $playerId, ')
+          ..write('rankFrom: $rankFrom, ')
+          ..write('attempts: $attempts, ')
+          ..write('failures: $failures, ')
+          ..write('paidCost: $paidCost, ')
+          ..write('cooldownUntilMs: $cooldownUntilMs, ')
+          ..write('windowStartedMs: $windowStartedMs, ')
+          ..write('windowDeadlineMs: $windowDeadlineMs, ')
+          ..write('status: $status, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -15611,6 +16175,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $DiaryEntriesTableTable(this);
   late final $GuildAscensionTableTable guildAscensionTable =
       $GuildAscensionTableTable(this);
+  late final $GuildAscensionStateTableTable guildAscensionStateTable =
+      $GuildAscensionStateTableTable(this);
   late final $VitalismUniqueCatalogTableTable vitalismUniqueCatalogTable =
       $VitalismUniqueCatalogTableTable(this);
   late final $PlayerVitalismAffinitiesTableTable playerVitalismAffinitiesTable =
@@ -15670,6 +16236,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         npcReputationTable,
         diaryEntriesTable,
         guildAscensionTable,
+        guildAscensionStateTable,
         vitalismUniqueCatalogTable,
         playerVitalismAffinitiesTable,
         playerVitalismTreesTable,
@@ -15746,6 +16313,7 @@ typedef $$PlayersTableTableCreateCompanionBuilder = PlayersTableCompanion
   Value<bool> autoConfirmEnabled,
   Value<String> screensVisitedKeys,
   Value<int> totalGoldEarnedViaQuests,
+  Value<int> totalGoldEarnedLifetime,
 });
 typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
     Function({
@@ -15799,6 +16367,7 @@ typedef $$PlayersTableTableUpdateCompanionBuilder = PlayersTableCompanion
   Value<bool> autoConfirmEnabled,
   Value<String> screensVisitedKeys,
   Value<int> totalGoldEarnedViaQuests,
+  Value<int> totalGoldEarnedLifetime,
 });
 
 class $$PlayersTableTableFilterComposer
@@ -15973,6 +16542,10 @@ class $$PlayersTableTableFilterComposer
 
   ColumnFilters<int> get totalGoldEarnedViaQuests => $composableBuilder(
       column: $table.totalGoldEarnedViaQuests,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get totalGoldEarnedLifetime => $composableBuilder(
+      column: $table.totalGoldEarnedLifetime,
       builder: (column) => ColumnFilters(column));
 }
 
@@ -16154,6 +16727,10 @@ class $$PlayersTableTableOrderingComposer
   ColumnOrderings<int> get totalGoldEarnedViaQuests => $composableBuilder(
       column: $table.totalGoldEarnedViaQuests,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get totalGoldEarnedLifetime => $composableBuilder(
+      column: $table.totalGoldEarnedLifetime,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$PlayersTableTableAnnotationComposer
@@ -16314,6 +16891,9 @@ class $$PlayersTableTableAnnotationComposer
 
   GeneratedColumn<int> get totalGoldEarnedViaQuests => $composableBuilder(
       column: $table.totalGoldEarnedViaQuests, builder: (column) => column);
+
+  GeneratedColumn<int> get totalGoldEarnedLifetime => $composableBuilder(
+      column: $table.totalGoldEarnedLifetime, builder: (column) => column);
 }
 
 class $$PlayersTableTableTableManager extends RootTableManager<
@@ -16392,6 +16972,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<bool> autoConfirmEnabled = const Value.absent(),
             Value<String> screensVisitedKeys = const Value.absent(),
             Value<int> totalGoldEarnedViaQuests = const Value.absent(),
+            Value<int> totalGoldEarnedLifetime = const Value.absent(),
           }) =>
               PlayersTableCompanion(
             id: id,
@@ -16444,6 +17025,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             autoConfirmEnabled: autoConfirmEnabled,
             screensVisitedKeys: screensVisitedKeys,
             totalGoldEarnedViaQuests: totalGoldEarnedViaQuests,
+            totalGoldEarnedLifetime: totalGoldEarnedLifetime,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -16496,6 +17078,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             Value<bool> autoConfirmEnabled = const Value.absent(),
             Value<String> screensVisitedKeys = const Value.absent(),
             Value<int> totalGoldEarnedViaQuests = const Value.absent(),
+            Value<int> totalGoldEarnedLifetime = const Value.absent(),
           }) =>
               PlayersTableCompanion.insert(
             id: id,
@@ -16548,6 +17131,7 @@ class $$PlayersTableTableTableManager extends RootTableManager<
             autoConfirmEnabled: autoConfirmEnabled,
             screensVisitedKeys: screensVisitedKeys,
             totalGoldEarnedViaQuests: totalGoldEarnedViaQuests,
+            totalGoldEarnedLifetime: totalGoldEarnedLifetime,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -18028,6 +18612,252 @@ typedef $$GuildAscensionTableTableProcessedTableManager = ProcessedTableManager<
     ),
     GuildAscensionTableData,
     PrefetchHooks Function()>;
+typedef $$GuildAscensionStateTableTableCreateCompanionBuilder
+    = GuildAscensionStateTableCompanion Function({
+  required int playerId,
+  required String rankFrom,
+  Value<int> attempts,
+  Value<int> failures,
+  Value<int> paidCost,
+  Value<int?> cooldownUntilMs,
+  Value<int?> windowStartedMs,
+  Value<int?> windowDeadlineMs,
+  Value<String> status,
+  Value<int> rowid,
+});
+typedef $$GuildAscensionStateTableTableUpdateCompanionBuilder
+    = GuildAscensionStateTableCompanion Function({
+  Value<int> playerId,
+  Value<String> rankFrom,
+  Value<int> attempts,
+  Value<int> failures,
+  Value<int> paidCost,
+  Value<int?> cooldownUntilMs,
+  Value<int?> windowStartedMs,
+  Value<int?> windowDeadlineMs,
+  Value<String> status,
+  Value<int> rowid,
+});
+
+class $$GuildAscensionStateTableTableFilterComposer
+    extends Composer<_$AppDatabase, $GuildAscensionStateTableTable> {
+  $$GuildAscensionStateTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get rankFrom => $composableBuilder(
+      column: $table.rankFrom, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get attempts => $composableBuilder(
+      column: $table.attempts, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get failures => $composableBuilder(
+      column: $table.failures, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get paidCost => $composableBuilder(
+      column: $table.paidCost, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get cooldownUntilMs => $composableBuilder(
+      column: $table.cooldownUntilMs,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get windowStartedMs => $composableBuilder(
+      column: $table.windowStartedMs,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get windowDeadlineMs => $composableBuilder(
+      column: $table.windowDeadlineMs,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
+}
+
+class $$GuildAscensionStateTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $GuildAscensionStateTableTable> {
+  $$GuildAscensionStateTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get playerId => $composableBuilder(
+      column: $table.playerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get rankFrom => $composableBuilder(
+      column: $table.rankFrom, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get attempts => $composableBuilder(
+      column: $table.attempts, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get failures => $composableBuilder(
+      column: $table.failures, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get paidCost => $composableBuilder(
+      column: $table.paidCost, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get cooldownUntilMs => $composableBuilder(
+      column: $table.cooldownUntilMs,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get windowStartedMs => $composableBuilder(
+      column: $table.windowStartedMs,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get windowDeadlineMs => $composableBuilder(
+      column: $table.windowDeadlineMs,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+}
+
+class $$GuildAscensionStateTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GuildAscensionStateTableTable> {
+  $$GuildAscensionStateTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get playerId =>
+      $composableBuilder(column: $table.playerId, builder: (column) => column);
+
+  GeneratedColumn<String> get rankFrom =>
+      $composableBuilder(column: $table.rankFrom, builder: (column) => column);
+
+  GeneratedColumn<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => column);
+
+  GeneratedColumn<int> get failures =>
+      $composableBuilder(column: $table.failures, builder: (column) => column);
+
+  GeneratedColumn<int> get paidCost =>
+      $composableBuilder(column: $table.paidCost, builder: (column) => column);
+
+  GeneratedColumn<int> get cooldownUntilMs => $composableBuilder(
+      column: $table.cooldownUntilMs, builder: (column) => column);
+
+  GeneratedColumn<int> get windowStartedMs => $composableBuilder(
+      column: $table.windowStartedMs, builder: (column) => column);
+
+  GeneratedColumn<int> get windowDeadlineMs => $composableBuilder(
+      column: $table.windowDeadlineMs, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+}
+
+class $$GuildAscensionStateTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $GuildAscensionStateTableTable,
+    GuildAscensionStateTableData,
+    $$GuildAscensionStateTableTableFilterComposer,
+    $$GuildAscensionStateTableTableOrderingComposer,
+    $$GuildAscensionStateTableTableAnnotationComposer,
+    $$GuildAscensionStateTableTableCreateCompanionBuilder,
+    $$GuildAscensionStateTableTableUpdateCompanionBuilder,
+    (
+      GuildAscensionStateTableData,
+      BaseReferences<_$AppDatabase, $GuildAscensionStateTableTable,
+          GuildAscensionStateTableData>
+    ),
+    GuildAscensionStateTableData,
+    PrefetchHooks Function()> {
+  $$GuildAscensionStateTableTableTableManager(
+      _$AppDatabase db, $GuildAscensionStateTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GuildAscensionStateTableTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GuildAscensionStateTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GuildAscensionStateTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> playerId = const Value.absent(),
+            Value<String> rankFrom = const Value.absent(),
+            Value<int> attempts = const Value.absent(),
+            Value<int> failures = const Value.absent(),
+            Value<int> paidCost = const Value.absent(),
+            Value<int?> cooldownUntilMs = const Value.absent(),
+            Value<int?> windowStartedMs = const Value.absent(),
+            Value<int?> windowDeadlineMs = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              GuildAscensionStateTableCompanion(
+            playerId: playerId,
+            rankFrom: rankFrom,
+            attempts: attempts,
+            failures: failures,
+            paidCost: paidCost,
+            cooldownUntilMs: cooldownUntilMs,
+            windowStartedMs: windowStartedMs,
+            windowDeadlineMs: windowDeadlineMs,
+            status: status,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required int playerId,
+            required String rankFrom,
+            Value<int> attempts = const Value.absent(),
+            Value<int> failures = const Value.absent(),
+            Value<int> paidCost = const Value.absent(),
+            Value<int?> cooldownUntilMs = const Value.absent(),
+            Value<int?> windowStartedMs = const Value.absent(),
+            Value<int?> windowDeadlineMs = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              GuildAscensionStateTableCompanion.insert(
+            playerId: playerId,
+            rankFrom: rankFrom,
+            attempts: attempts,
+            failures: failures,
+            paidCost: paidCost,
+            cooldownUntilMs: cooldownUntilMs,
+            windowStartedMs: windowStartedMs,
+            windowDeadlineMs: windowDeadlineMs,
+            status: status,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$GuildAscensionStateTableTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $GuildAscensionStateTableTable,
+        GuildAscensionStateTableData,
+        $$GuildAscensionStateTableTableFilterComposer,
+        $$GuildAscensionStateTableTableOrderingComposer,
+        $$GuildAscensionStateTableTableAnnotationComposer,
+        $$GuildAscensionStateTableTableCreateCompanionBuilder,
+        $$GuildAscensionStateTableTableUpdateCompanionBuilder,
+        (
+          GuildAscensionStateTableData,
+          BaseReferences<_$AppDatabase, $GuildAscensionStateTableTable,
+              GuildAscensionStateTableData>
+        ),
+        GuildAscensionStateTableData,
+        PrefetchHooks Function()>;
 typedef $$VitalismUniqueCatalogTableTableCreateCompanionBuilder
     = VitalismUniqueCatalogTableCompanion Function({
   required String id,
@@ -22985,6 +23815,9 @@ class $AppDatabaseManager {
       $$DiaryEntriesTableTableTableManager(_db, _db.diaryEntriesTable);
   $$GuildAscensionTableTableTableManager get guildAscensionTable =>
       $$GuildAscensionTableTableTableManager(_db, _db.guildAscensionTable);
+  $$GuildAscensionStateTableTableTableManager get guildAscensionStateTable =>
+      $$GuildAscensionStateTableTableTableManager(
+          _db, _db.guildAscensionStateTable);
   $$VitalismUniqueCatalogTableTableTableManager
       get vitalismUniqueCatalogTable =>
           $$VitalismUniqueCatalogTableTableTableManager(
