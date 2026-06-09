@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../core/config/rank_pools.dart';
 import '../../core/events/app_event_bus.dart';
 import '../../core/events/mission_events.dart';
@@ -8,10 +10,8 @@ import '../../core/utils/guild_rank.dart';
 import '../../data/datasources/local/mission_catalogs_service.dart';
 import '../enums/mission_modality.dart';
 import '../enums/mission_tab_origin.dart';
-import '../models/mission_progress.dart';
+import '../enums/rank_codec.dart';
 import '../models/reward_declared.dart';
-import '../repositories/active_faction_quests_repository.dart';
-import '../repositories/mission_repository.dart';
 import 'weekly_faction_validator.dart' show WeeklyFactionSubTaskTypes;
 
 /// Sprint 3.1 Bloco 13a — assignment pool-based (ADR 0017 + DESIGN_DOC §8).
@@ -32,21 +32,18 @@ import 'weekly_faction_validator.dart' show WeeklyFactionSubTaskTypes;
 /// (modelo fixo). Restam **missões de classe** (`assignClassDaily`) e
 /// **facção semanal** (`ensureWeeklyFactionQuest`).
 class MissionAssignmentService {
-  final MissionRepository _missionRepo;
+  final SupabaseClient _client;
   final MissionCatalogsService _catalogs;
-  final ActiveFactionQuestsRepository _factionRepo;
   final AppEventBus _bus;
   final Random _random;
 
   MissionAssignmentService({
-    required MissionRepository missionRepo,
+    required SupabaseClient client,
     required MissionCatalogsService catalogs,
-    required ActiveFactionQuestsRepository factionRepo,
     required AppEventBus bus,
     Random? random,
-  })  : _missionRepo = missionRepo,
+  })  : _client = client,
         _catalogs = catalogs,
-        _factionRepo = factionRepo,
         _bus = bus,
         _random = random ?? Random();
 
@@ -77,7 +74,7 @@ class MissionAssignmentService {
   /// ou Rogue guest) não recebe class missions. DailyResetService
   /// chama com `player.classType` direto sem precisar validar.
   Future<List<int>> assignClassDaily({
-    required int playerId,
+    required String playerId,
     required String? classKey,
     required GuildRank playerRank,
   }) async {
@@ -112,7 +109,7 @@ class MissionAssignmentService {
   /// esse baseline). O caller (`WeeklyResetService`) injeta; default 0
   /// pra testes/callers sem o snapshot.
   Future<int?> ensureWeeklyFactionQuest({
-    required int playerId,
+    required String playerId,
     required String factionKey,
     required GuildRank playerRank,
     int baselineGoldEarned = 0,
@@ -140,20 +137,27 @@ class MissionAssignmentService {
       playerRank: playerRank,
       baselineGoldEarned: baselineGoldEarned,
     );
-    final result = await _factionRepo.upsertAtomic(
-      playerId: playerId,
-      factionId: factionKey,
-      missionKey: missionId,
-      weekStart: weekStart,
-      progressSeedJson: seedJson,
-    );
+    // Upsert atômico+idempotente (ledger active_faction_quests + row de
+    // progresso) delegado à RPC assign_weekly_faction_quest. O seed já vem
+    // no shape esperado pela RPC (modality/tab_origin/rank/target_value/
+    // reward_json/meta_json). NÃO reimplementamos a atomicidade no cliente.
+    final result = await _client.rpc('assign_weekly_faction_quest', params: {
+      'p_player': playerId,
+      'p_faction_id': factionKey,
+      'p_mission_key': missionId,
+      'p_week_start': weekStart,
+      'p_seed': seedJson,
+    });
+    final map = (result as Map).cast<String, dynamic>();
+    final progressId = (map['progress_id'] as num?)?.toInt();
+
     _bus.publish(MissionStarted(
       missionKey: missionId,
       playerId: playerId,
       modality: MissionModality.internal.storage,
       tabOrigin: MissionTabOrigin.faction.storage,
     ));
-    return result.progressId;
+    return progressId;
   }
 
   // ─── helpers privados ──────────────────────────────────────────────
@@ -172,47 +176,58 @@ class MissionAssignmentService {
   }
 
   Future<List<int>> _persistAndEmit(
-    int playerId,
+    String playerId,
     List<Map<String, dynamic>> picked,
     MissionTabOrigin tab,
   ) async {
     final ids = <int>[];
     for (final entry in picked) {
-      final mp = _toMissionProgress(playerId, entry, tab);
-      final id = await _missionRepo.insert(mp);
+      final row = _toInsertRow(playerId, entry, tab);
+      // Insert simples (single-row, sem atomicidade multi-tabela) — não há
+      // RPC dedicada pra class daily; persiste direto via PostgREST e lê o
+      // id (bigserial) de volta.
+      final inserted = await _client
+          .from('player_mission_progress')
+          .insert(row)
+          .select('id')
+          .single();
+      final id = (inserted['id'] as num).toInt();
       ids.add(id);
       _bus.publish(MissionStarted(
-        missionKey: mp.missionKey,
+        missionKey: row['mission_key'] as String,
         playerId: playerId,
-        modality: mp.modality.storage,
-        tabOrigin: mp.tabOrigin.storage,
+        modality: row['modality'] as String,
+        tabOrigin: row['tab_origin'] as String,
       ));
     }
     return ids;
   }
 
-  MissionProgress _toMissionProgress(
-    int playerId,
+  /// Monta a row (snake_case) de `player_mission_progress` pra insert
+  /// direto. `id` é omitido (bigserial). `started_at`/`completed_at`/
+  /// `failed_at` são bigint ms-epoch no schema.
+  Map<String, dynamic> _toInsertRow(
+    String playerId,
     Map<String, dynamic> entry,
     MissionTabOrigin tab,
   ) {
     final rewardJson = entry['reward'] as Map<String, dynamic>?;
-    return MissionProgress(
-      id: 0,
-      playerId: playerId,
-      missionKey: entry['key'] as String,
-      modality: _modalityOf(entry),
-      tabOrigin: tab,
-      rank: _rankOf(entry),
-      targetValue: entry['target_value'] as int? ?? 1,
-      currentValue: 0,
-      reward: rewardJson == null
-          ? const RewardDeclared()
-          : RewardDeclared.fromJson(rewardJson),
-      startedAt: DateTime.now(),
-      rewardClaimed: false,
-      metaJson: _buildMetaJson(entry),
-    );
+    final reward = rewardJson == null
+        ? const RewardDeclared()
+        : RewardDeclared.fromJson(rewardJson);
+    return {
+      'player_id': playerId,
+      'mission_key': entry['key'] as String,
+      'modality': _modalityOf(entry).storage,
+      'tab_origin': tab.storage,
+      'rank': RankCodec.storage(_rankOf(entry)),
+      'target_value': entry['target_value'] as int? ?? 1,
+      'current_value': 0,
+      'reward_json': reward.toJsonString(),
+      'started_at': DateTime.now().millisecondsSinceEpoch,
+      'reward_claimed': false,
+      'meta_json': _buildMetaJson(entry),
+    };
   }
 
   /// FATIA B2a — materializa `progress_seed_json` pro

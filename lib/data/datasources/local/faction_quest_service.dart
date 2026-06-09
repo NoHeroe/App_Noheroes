@@ -46,7 +46,7 @@ class FactionQuestService {
   /// Retorna o ledger da quest ativa desta semana (se já foi assignada),
   /// ou null caso contrário.
   Future<ActiveFactionQuest?> getActiveQuest(
-    int playerId,
+    String playerId,
     String factionId,
   ) async {
     return _repo.findActiveFor(playerId, factionId, weekStart());
@@ -57,7 +57,7 @@ class FactionQuestService {
   ///
   /// Retorna o ledger — tanto recém-criado quanto existente.
   Future<ActiveFactionQuest?> ensureWeeklyQuest(
-    int playerId,
+    String playerId,
     String factionId, {
     DateTime? now,
   }) async {

@@ -1,24 +1,22 @@
 import 'dart:convert';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../core/events/app_event_bus.dart';
 import '../../core/events/mission_events.dart';
 import '../../core/utils/guild_rank.dart';
 import '../../core/utils/requirements_helper.dart';
-import '../../data/database/app_database.dart';
 import '../balance/individual_creation_balance.dart';
 import '../enums/intensity.dart';
 import '../enums/mission_category.dart';
-import '../enums/mission_modality.dart';
-import '../enums/mission_tab_origin.dart';
-import '../models/mission_progress.dart';
-import '../repositories/mission_repository.dart';
+import '../enums/rank_codec.dart';
 import 'mission_balancer_service.dart';
 
 /// Lançada quando o jogador atinge o limite de missões individuais ativas
 /// do tier (FREE=5). ADR 0014 §Família Individual. UI consome pra mostrar
 /// mensagem amigável + upgrade prompt futuro.
 class IndividualLimitExceededException implements Exception {
-  final int playerId;
+  final String playerId;
   final int limit;
   final int current;
   const IndividualLimitExceededException({
@@ -61,7 +59,7 @@ extension IndividualFrequencyExt on IndividualFrequency {
 /// (fidelidade v0.28.2). Campo `quantityTarget` único vira lista de
 /// [RequirementItem]. `targetValue` da row é `sum(requirements.target)`.
 class IndividualCreationParams {
-  final int playerId;
+  final String playerId;
   final String name;
 
   /// Descrição pessoal livre do jogador (opcional). v0.28.2 era livre
@@ -129,20 +127,17 @@ class IndividualCreationParams {
 ///
 /// Emite `IndividualCreated` pós-commit.
 class IndividualCreationService {
-  final AppDatabase _db;
-  final MissionRepository _missionRepo;
+  final SupabaseClient _client;
   final MissionBalancerService _balancer;
   final AppEventBus _bus;
 
   int _keyCounter = 0;
 
   IndividualCreationService({
-    required AppDatabase db,
-    required MissionRepository missionRepo,
+    required SupabaseClient client,
     required MissionBalancerService balancer,
     required AppEventBus bus,
-  })  : _db = db,
-        _missionRepo = missionRepo,
+  })  : _client = client,
         _balancer = balancer,
         _bus = bus;
 
@@ -186,38 +181,39 @@ class IndividualCreationService {
       'is_repetivel': params.isRepetivel,
       'user_created': true,
       'category': params.categoria.storage,
+      // rank embutido no meta_json: a RPC create_individual_mission lê
+      // `meta_json->>'rank'` pra persistir o rank da row (a assinatura
+      // canônica não expõe rank como param dedicado).
+      'rank': RankCodec.storage(params.rank),
       'requirements': RequirementsHelper.serialize(params.requirements),
     });
 
-    final missionProgressId = await _db.transaction(() async {
-      final active = await _missionRepo.findActive(params.playerId);
-      final individualsAtivas = active
-          .where((m) => m.modality == MissionModality.individual)
-          .length;
-      if (individualsAtivas >=
-          IndividualCreationBalance.kMaxActiveIndividualsFree) {
+    // Operação atômica (count-guard de limite + insert) delegada à RPC
+    // create_individual_mission — NÃO reimplementamos o limite no cliente.
+    // A RPC conta individuais ativas e lança se >= 5 (espelha
+    // IndividualLimitExceededException).
+    final int missionProgressId;
+    try {
+      final result = await _client.rpc('create_individual_mission', params: {
+        'p_player': params.playerId,
+        'p_mission_key': missionKey,
+        'p_reward_json': reward.toJsonString(),
+        'p_target': targetSum,
+        'p_meta_json': metaJson,
+      });
+      missionProgressId = (result as num).toInt();
+    } on PostgrestException catch (e) {
+      // A RPC sinaliza limite via raise_exception com mensagem
+      // 'IndividualLimitExceeded(...)'. Remapeia pra exception de domínio.
+      if (e.message.contains('IndividualLimitExceeded')) {
         throw IndividualLimitExceededException(
           playerId: params.playerId,
           limit: IndividualCreationBalance.kMaxActiveIndividualsFree,
-          current: individualsAtivas,
+          current: IndividualCreationBalance.kMaxActiveIndividualsFree,
         );
       }
-
-      return _missionRepo.insert(MissionProgress(
-        id: 0,
-        playerId: params.playerId,
-        missionKey: missionKey,
-        modality: MissionModality.individual,
-        tabOrigin: MissionTabOrigin.extras,
-        rank: params.rank,
-        targetValue: targetSum,
-        currentValue: 0,
-        reward: reward,
-        startedAt: now,
-        rewardClaimed: false,
-        metaJson: metaJson,
-      ));
-    });
+      rethrow;
+    }
 
     _bus.publish(IndividualCreated(
       playerId: params.playerId,

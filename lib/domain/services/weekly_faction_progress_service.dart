@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:drift/drift.dart' show Variable;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/events/app_event.dart';
 import '../../core/events/app_event_bus.dart';
@@ -10,7 +10,6 @@ import '../../core/events/daily_mission_events.dart';
 import '../../core/events/diary_events.dart';
 import '../../core/events/mission_events.dart';
 import '../../core/events/reward_events.dart';
-import '../../data/database/app_database.dart';
 import '../../data/services/reward_grant_service.dart';
 import '../enums/mission_tab_origin.dart';
 import '../exceptions/reward_exceptions.dart';
@@ -23,9 +22,12 @@ import 'weekly_faction_validator.dart';
 
 /// FATIA B2b — listener ACUMULATIVO do motor semanal de facção.
 ///
-/// Espelha a ESTRUTURA do `FactionAdmissionProgressService`, mas é
-/// **acumulativo**: soma sub-tasks completas e **nunca** rejeita.
-/// Diferenças explícitas vs admissão:
+/// Época 2 (ADR-0024) — full-online Supabase. Espelha a ESTRUTURA do
+/// `FactionAdmissionProgressService`, mas é **acumulativo**: soma
+/// sub-tasks completas e **nunca** rejeita. A única escrita de DB
+/// (persistência do metaJson) vira um `update` PostgREST single-write;
+/// não há multi-write atômico aqui (cada missão é processada
+/// isoladamente). Diferenças vs admissão:
 /// - SEM reject, SEM penalidade de reputação, SEM lock, SEM
 ///   `is_unlocked`/sequenciamento (a semanal tem 1 missão, todas as
 ///   sub-tasks abertas desde o assign).
@@ -56,17 +58,15 @@ import 'weekly_faction_validator.dart';
 ///
 /// É o ÚNICO sub-type que **não reconcilia com o DB** — não há tabela
 /// timestampada de forja/encanto. O contador depende de capturar cada
-/// `ItemCrafted`/`ItemEnchanted` enquanto o service está ativo. Crafts
-/// ocorridos com o app fechado/service parado NÃO são contados. Os
-/// demais sub-types re-queryam o banco (auto-reconciliam).
+/// `ItemCrafted`/`ItemEnchanted` enquanto o service está ativo.
 class WeeklyFactionProgressService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
   final AppEventBus _bus;
   final WeeklyFactionValidator _validator;
   final MissionRepository _missionRepo;
   final RewardResolveService _resolver;
   final RewardGrantService _granter;
-  final Future<PlayerSnapshot> Function(int playerId) _resolvePlayer;
+  final Future<PlayerSnapshot> Function(String playerId) _resolvePlayer;
 
   final List<StreamSubscription> _subs = [];
 
@@ -75,14 +75,14 @@ class WeeklyFactionProgressService {
   Future<void> _tail = Future<void>.value();
 
   WeeklyFactionProgressService({
-    required AppDatabase db,
+    required SupabaseClient client,
     required AppEventBus bus,
     required WeeklyFactionValidator validator,
     required MissionRepository missionRepo,
     required RewardResolveService resolver,
     required RewardGrantService granter,
-    required Future<PlayerSnapshot> Function(int playerId) resolvePlayer,
-  })  : _db = db,
+    required Future<PlayerSnapshot> Function(String playerId) resolvePlayer,
+  })  : _client = client,
         _bus = bus,
         _validator = validator,
         _missionRepo = missionRepo,
@@ -135,13 +135,13 @@ class WeeklyFactionProgressService {
 
   /// Re-avaliação on-demand (ex: `QuestsScreenNotifier.build`). Vai pela
   /// mesma fila serial.
-  Future<void> evaluatePlayer(int playerId) =>
+  Future<void> evaluatePlayer(String playerId) =>
       _enqueue(() => _evaluatePlayer(playerId));
 
   /// Registra UMA melhoria de equipamento (forja/encanto) on-demand —
   /// mesmo caminho dos handlers de `ItemCrafted`/`ItemEnchanted`, pela
   /// fila serial. Exposto pra callers/testes.
-  Future<void> registerEquipmentImprovement(int playerId) =>
+  Future<void> registerEquipmentImprovement(String playerId) =>
       _enqueue(() => _registerEquipmentImprovement(playerId));
 
   /// Future que resolve quando a fila atual esvazia (testes).
@@ -149,7 +149,7 @@ class WeeklyFactionProgressService {
 
   // ─── núcleo ────────────────────────────────────────────────────────
 
-  Future<void> _evaluatePlayer(int playerId) async {
+  Future<void> _evaluatePlayer(String playerId) async {
     final all =
         await _missionRepo.findByTab(playerId, MissionTabOrigin.faction);
     final active =
@@ -165,7 +165,7 @@ class WeeklyFactionProgressService {
   }
 
   Future<void> _processMission(
-      MissionProgress mission, int playerId) async {
+      MissionProgress mission, String playerId) async {
     Map<String, dynamic> meta;
     try {
       meta = jsonDecode(mission.metaJson) as Map<String, dynamic>;
@@ -229,7 +229,7 @@ class WeeklyFactionProgressService {
   /// Incrementa o contador `equipment_improved` (+1) em cada missão
   /// faction ativa com essa sub-task !completed, persiste, e re-avalia
   /// (o validator lê o `current` → marca completed ao bater target).
-  Future<void> _registerEquipmentImprovement(int playerId) async {
+  Future<void> _registerEquipmentImprovement(String playerId) async {
     final all =
         await _missionRepo.findByTab(playerId, MissionTabOrigin.faction);
     final active =
@@ -267,16 +267,16 @@ class WeeklyFactionProgressService {
   /// Resolve+concede o reward CHEIO (progressPct=100) da missão semanal.
   ///
   /// Idempotência: `RewardGrantService.grant` faz `markCompleted`
-  /// (`rewardClaimed=true`) DENTRO da própria transação e checa
+  /// (`rewardClaimed=true`) DENTRO da própria operação e checa
   /// `rewardClaimed` — uma 2ª chamada lança `RewardAlreadyGrantedException`
   /// (capturada). Como `_evaluatePlayer` só itera missões ATIVAS
   /// (`completedAt == null`), o `RewardGranted` emitido pós-commit
   /// re-dispara a avaliação mas a missão já está completa → não re-paga.
   Future<void> _grantWeeklyReward(
-      MissionProgress mission, Map<String, dynamic> meta, int playerId) async {
-    final rewardMap =
-        (meta['reward'] as Map?)?.cast<String, dynamic>() ??
-            const <String, dynamic>{};
+      MissionProgress mission, Map<String, dynamic> meta,
+      String playerId) async {
+    final rewardMap = (meta['reward'] as Map?)?.cast<String, dynamic>() ??
+        const <String, dynamic>{};
     final declared = RewardDeclared.fromJson(rewardMap);
     final snapshot = await _resolvePlayer(playerId);
     final resolved =
@@ -292,15 +292,11 @@ class WeeklyFactionProgressService {
     }
   }
 
-  Future<void> _persistMeta(
-      int missionId, Map<String, dynamic> meta) async {
-    await _db.customUpdate(
-      'UPDATE player_mission_progress SET meta_json = ? WHERE id = ?',
-      variables: [
-        Variable.withString(jsonEncode(meta)),
-        Variable.withInt(missionId),
-      ],
-      updates: {_db.playerMissionProgressTable},
-    );
+  /// Single-write do metaJson via PostgREST. `missionId` é PK de linha
+  /// (bigserial = int) — NÃO é o playerId.
+  Future<void> _persistMeta(int missionId, Map<String, dynamic> meta) async {
+    await _client
+        .from('player_mission_progress')
+        .update({'meta_json': jsonEncode(meta)}).eq('id', missionId);
   }
 }

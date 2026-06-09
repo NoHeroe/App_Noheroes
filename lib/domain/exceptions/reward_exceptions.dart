@@ -9,7 +9,7 @@
 /// (Bloco 1).
 class RewardAlreadyGrantedException implements Exception {
   final int missionProgressId;
-  final int playerId;
+  final String playerId;
 
   const RewardAlreadyGrantedException({
     required this.missionProgressId,
@@ -37,7 +37,7 @@ class MissionNotFoundException implements Exception {
 /// grant de conquista. Idempotência via
 /// `player_achievements_completed.reward_claimed`.
 class AchievementRewardAlreadyGrantedException implements Exception {
-  final int playerId;
+  final String playerId;
   final String achievementKey;
 
   const AchievementRewardAlreadyGrantedException({
@@ -55,7 +55,7 @@ class AchievementRewardAlreadyGrantedException implements Exception {
 /// Erro de programação — fluxo normal no `AchievementsService` sempre
 /// marca antes de grantar.
 class AchievementNotUnlockedException implements Exception {
-  final int playerId;
+  final String playerId;
   final String achievementKey;
 
   const AchievementNotUnlockedException({

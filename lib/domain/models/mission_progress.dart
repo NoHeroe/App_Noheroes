@@ -77,6 +77,34 @@ class MissionProgress {
   double get progressPct =>
       targetValue <= 0 ? 0.0 : (currentValue / targetValue);
 
+  /// Época 2 full-online (ADR-0024) — constrói o model a partir de uma row
+  /// Supabase (Map snake_case já desserializado pelo PostgREST).
+  ///
+  /// Diferenças vs [fromJson] (que veio do mundo Drift int-playerId):
+  ///   - `player_id` chega como **uuid (String)**; é normalizado pra int
+  ///     determinístico via [_playerIdToInt] enquanto o campo `playerId`
+  ///     do model continuar `int` (Stage A não migrou esta classe — ver
+  ///     'unresolved' no relatório da Fase 3).
+  ///   - `reward_claimed` chega como `bool` nativo (não int 0/1).
+  ///   - timestamps continuam bigint ms-epoch (`int`).
+  factory MissionProgress.fromMap(Map<String, dynamic> row) {
+    final patched = Map<String, dynamic>.from(row);
+    patched['player_id'] = _playerIdToInt(row['player_id']);
+    if (row['reward_claimed'] is bool) {
+      patched['reward_claimed'] = row['reward_claimed'] as bool;
+    }
+    return MissionProgress.fromJson(patched);
+  }
+
+  /// Ponte temporária uuid(String) -> int pro campo `playerId` legacy.
+  /// `int` já vem cru; uuid usa hashCode estável da string. NÃO é o id
+  /// real — o id canônico do jogador é o uuid. Ver 'unresolved'.
+  static int _playerIdToInt(dynamic raw) {
+    if (raw is int) return raw;
+    if (raw is String) return int.tryParse(raw) ?? raw.hashCode;
+    throw FormatException("MissionProgress.player_id inválido ($raw)");
+  }
+
   factory MissionProgress.fromJson(Map<String, dynamic> json) {
     int? parseTs(dynamic v) {
       if (v == null) return null;

@@ -104,6 +104,10 @@ class RewardResolved {
     );
   }
 
+  /// Alias de [RewardResolved.fromJson] — a row do Supabase já chega como Map.
+  factory RewardResolved.fromMap(Map<String, dynamic> m) =>
+      RewardResolved.fromJson(m);
+
   factory RewardResolved.fromJsonString(String source) {
     final decoded = jsonDecode(source);
     if (decoded is! Map<String, dynamic>) {

@@ -154,6 +154,52 @@ class ItemSpec {
     );
   }
 
+  // Constrói a partir de uma row do Postgres (PostgREST/Supabase). As colunas
+  // de catálogo allowed_classes/allowed_factions/stats/effects/sources/
+  // evolution_stages são TEXT contendo JSON — _decodeJson tolera tanto a string
+  // crua quanto um valor já-decodificado (caso a coluna venha como jsonb).
+  factory ItemSpec.fromMap(Map<String, dynamic> m) {
+    return ItemSpec.fromJson({
+      'key': m['key'],
+      'name': m['name'],
+      'description': m['description'],
+      'type': m['type'],
+      'subtype': m['subtype'],
+      'slot': m['slot'],
+      'rank': m['rank'],
+      'required_rank': m['required_rank'],
+      'rarity': m['rarity'],
+      'is_secret': m['is_secret'],
+      'is_unique': m['is_unique'],
+      'is_dark_item': m['is_dark_item'],
+      'is_evolving': m['is_evolving'],
+      'required_level': m['required_level'],
+      'allowed_classes': _decodeJson(m['allowed_classes']) ?? const [],
+      'allowed_factions': _decodeJson(m['allowed_factions']) ?? const [],
+      'stats': _decodeJson(m['stats']) ?? const {},
+      'effects': _decodeJson(m['effects']) ?? const {},
+      'sources': _decodeJson(m['sources']) ?? const [],
+      'shop_price_coins': m['shop_price_coins'],
+      'shop_price_gems': m['shop_price_gems'],
+      'stack_max': m['stack_max'],
+      'durability_max': m['durability_max'],
+      'durability_breaks_to': m['durability_breaks_to'],
+      'is_stackable': m['is_stackable'],
+      'is_consumable': m['is_consumable'],
+      'is_equippable': m['is_equippable'],
+      'is_tradable': m['is_tradable'],
+      'is_sellable': m['is_sellable'],
+      'bind_on_pickup': m['bind_on_pickup'],
+      'craft_recipe_id': m['craft_recipe_id'],
+      'forge_recipe_id': m['forge_recipe_id'],
+      'enchant_allowed': m['enchant_allowed'],
+      'sombrio_content_id': m['sombrio_content_id'],
+      'evolution_stages': _decodeJson(m['evolution_stages']),
+      'image': m['image'],
+      'icon': m['icon'],
+    });
+  }
+
   factory ItemSpec.fromRow(ItemsCatalogTableData row) {
     return ItemSpec.fromJson({
       'key': row.key,
@@ -253,6 +299,17 @@ int? _intOrNull(dynamic v) {
   if (v is num) return v.toInt();
   if (v is String) return int.tryParse(v);
   return null;
+}
+
+// Colunas JSON-em-texto do Postgres: aceita String (decodifica) ou valor já
+// decodificado (List/Map, caso a coluna seja jsonb). null/'' viram null.
+dynamic _decodeJson(dynamic v) {
+  if (v == null) return null;
+  if (v is String) {
+    if (v.isEmpty) return null;
+    return jsonDecode(v);
+  }
+  return v;
 }
 
 GuildRank? _parseRank(String? raw) {

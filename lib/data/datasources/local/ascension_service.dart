@@ -1,16 +1,11 @@
 import 'dart:math' as math;
 
-import 'package:drift/drift.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/events/app_event_bus.dart';
 import '../../../core/events/player_events.dart';
 import '../../../core/events/reward_events.dart';
 import '../../../core/utils/guild_rank.dart';
-import '../../../domain/models/player_snapshot.dart';
-import '../../../domain/models/reward_declared.dart';
-import '../../../domain/services/reward_resolve_service.dart';
-import '../../database/app_database.dart';
-import '../../database/daos/player_dao.dart';
 import 'guild_ascension_service.dart';
 
 /// B.2 — view derivada do estado da ascensão (pra UI B.4).
@@ -56,34 +51,31 @@ class AscendResult {
   const AscendResult({required this.ok, this.newRank, this.reason});
 }
 
-/// B.2 — máquina de estados (soulslike) do Teste de Ascensão da Guilda.
+/// B.2 — máquina de estados (soulslike) do Teste de Ascensão da Guilda
+/// (Época 2, full-online — ADR-0024).
 ///
-/// Estados persistidos em `guild_ascension_state.status` ∈
-/// {idle (ausente), active, cooldown, done}. A VIEW (locked/payable/active/
-/// cooldown/done) é derivada em [evaluateGates] (read-only) a partir do
-/// status + gates.
+/// As transições ATÔMICAS (pay/ascend/checkDeadline/confirmManualTrial) são
+/// portadas pras RPCs Postgres `ascension_pay`/`ascension_ascend`/
+/// `ascension_check_deadline`/`ascension_confirm_manual_trial` — read-modify-
+/// write + multi-write rodam no servidor numa única transação. Este service
+/// só monta os params, despacha a RPC e propaga os eventos client-side a
+/// partir dos deltas retornados.
 ///
-/// NÃO faz windowing dos trials (lifetime por ora — B.3). NÃO toca UI (B.4).
+/// [evaluateGates] continua client-side (read-only): deriva a VIEW
+/// (locked/payable/active/cooldown/done) + gates + custo a partir de
+/// leituras PostgREST (state + players + contadores).
 class AscensionService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
   final AppEventBus _bus;
-  final RewardResolveService _resolver;
   final GuildAscensionService _ascension;
-  final Future<PlayerSnapshot> Function(int playerId) _resolvePlayer;
 
   AscensionService({
-    required AppDatabase db,
+    required SupabaseClient client,
     required AppEventBus bus,
-    required RewardResolveService resolver,
     required GuildAscensionService ascension,
-    required Future<PlayerSnapshot> Function(int playerId) resolvePlayer,
-  })  : _db = db,
+  })  : _client = client,
         _bus = bus,
-        _resolver = resolver,
-        _ascension = ascension,
-        _resolvePlayer = resolvePlayer;
-
-  static const int _hourMs = 3600000;
+        _ascension = ascension;
 
   String _canon(String raw) {
     final r = raw.trim();
@@ -96,19 +88,26 @@ class AscensionService {
 
   int _now() => DateTime.now().millisecondsSinceEpoch;
 
-  Future<GuildAscensionStateTableData?> _readState(int playerId, String canon) {
-    return (_db.select(_db.guildAscensionStateTable)
-          ..where((t) =>
-              t.playerId.equals(playerId) & t.rankFrom.equals(canon)))
-        .getSingleOrNull();
+  // Bridge uuid String -> int pra eventos legacy (GoldSpent/RewardGranted/
+  // LevelUp ainda usam `int playerId`). Mesmo padrão da ShopsService/
+  // EnchantService já migradas. Ver 'unresolved' do resumo de migração.
+  int _eventPlayerId(String playerUuid) => playerUuid.hashCode;
+
+  Future<Map<String, dynamic>?> _readState(String playerId, String canon) {
+    return _client
+        .from('guild_ascension_state')
+        .select()
+        .eq('player_id', playerId)
+        .eq('rank_from', canon)
+        .maybeSingle();
   }
 
   /// (a) READ-ONLY — deriva a view + gates + custo corrente. Não escreve.
-  Future<AscensionView> evaluateGates(int playerId, String rankFrom) async {
+  Future<AscensionView> evaluateGates(String playerId, String rankFrom) async {
     final config = await _ascension.loadCycleConfig(rankFrom);
     final canon = config?.rankFrom ?? _canon(rankFrom);
     final state = await _readState(playerId, canon);
-    final failures = state?.failures ?? 0;
+    final failures = (state?['failures'] as num?)?.toInt() ?? 0;
 
     // Rank S / sem ciclo → nada a ascender.
     if (config == null) {
@@ -122,16 +121,17 @@ class AscensionService {
 
     final cost = _currentCost(config.feeBase, failures);
 
-    final row = await (_db.customSelect(
-      'SELECT level, total_gold_earned_lifetime AS gl, guild_rank AS gr '
-      'FROM players WHERE id = ? LIMIT 1',
-      variables: [Variable.withInt(playerId)],
-    )).getSingleOrNull();
-    final level = (row?.data['level'] as int?) ?? 0;
+    final row = await _client
+        .from('players')
+        .select('level, total_gold_earned_lifetime, guild_rank')
+        .eq('id', playerId)
+        .maybeSingle();
+    final level = (row?['level'] as num?)?.toInt() ?? 0;
     // B.3 — gate `missions_completed` usa a UNIÃO (daily + pmp), lifetime.
     final missions = await _ascension.countMissionsCompleted(playerId);
-    final goldLife = (row?.data['gl'] as int?) ?? 0;
-    final guildRank = (row?.data['gr'] as String?) ?? 'none';
+    final goldLife =
+        (row?['total_gold_earned_lifetime'] as num?)?.toInt() ?? 0;
+    final guildRank = (row?['guild_rank'] as String?) ?? 'none';
 
     // Cadeia sequencial: só elegível se o rank atual == rank_from do ciclo.
     final sequentialOk = guildRank.toUpperCase() == canon;
@@ -147,18 +147,20 @@ class AscensionService {
     ];
     final gatesOk = sequentialOk && gates.every((g) => g.met);
 
-    final status = state?.status ?? 'idle';
+    final status = (state?['status'] as String?) ?? 'idle';
+    final deadlineMs = (state?['window_deadline_ms'] as num?)?.toInt();
+    final cooldownMs = (state?['cooldown_until_ms'] as num?)?.toInt();
     final now = _now();
     AscensionViewState view;
     if (status == 'done') {
       view = AscensionViewState.done;
     } else if (status == 'cooldown' &&
-        state?.cooldownUntilMs != null &&
-        now < state!.cooldownUntilMs!) {
+        cooldownMs != null &&
+        now < cooldownMs) {
       view = AscensionViewState.cooldown;
     } else if (status == 'active' &&
-        state?.windowDeadlineMs != null &&
-        now < state!.windowDeadlineMs!) {
+        deadlineMs != null &&
+        now < deadlineMs) {
       view = AscensionViewState.active;
     } else if (gatesOk) {
       // idle OU cooldown expirado.
@@ -171,226 +173,96 @@ class AscensionService {
       state: view,
       currentCost: cost,
       gates: gates,
-      deadlineMs: state?.windowDeadlineMs,
-      cooldownUntilMs: state?.cooldownUntilMs,
+      deadlineMs: deadlineMs,
+      cooldownUntilMs: cooldownMs,
       failures: failures,
     );
   }
 
-  /// (b) Paga a fee e abre a janela. Precondição: view == payable.
-  Future<PayResult> pay(int playerId, String rankFrom) async {
-    final view = await evaluateGates(playerId, rankFrom);
-    if (view.state != AscensionViewState.payable) {
-      return PayResult(ok: false, reason: 'not_payable', cost: view.currentCost);
-    }
-    final config = await _ascension.loadCycleConfig(rankFrom);
-    if (config == null) return const PayResult(ok: false, reason: 'no_cycle');
-    final canon = config.rankFrom;
-    final cost = view.currentCost;
+  /// (b) Paga a fee e abre a janela. RPC `ascension_pay` (revalida payable +
+  /// gates + ouro, debita, abre janela e materializa os trials atomicamente).
+  Future<PayResult> pay(String playerId, String rankFrom) async {
+    final res = await _client.rpc('ascension_pay', params: {
+      'p_player': playerId,
+      'p_rank_from': rankFrom,
+    }) as Map<String, dynamic>;
 
-    var insufficient = false;
-    await _db.transaction(() async {
-      final pr = await (_db.customSelect(
-        'SELECT gold FROM players WHERE id = ? LIMIT 1',
-        variables: [Variable.withInt(playerId)],
-      )).getSingle();
-      final gold = pr.read<int>('gold');
-      if (gold < cost) {
-        insufficient = true;
-        return;
-      }
-      final now = _now();
-      await _db.customUpdate(
-        'UPDATE players SET gold = gold - ? WHERE id = ?',
-        variables: [Variable.withInt(cost), Variable.withInt(playerId)],
-        updates: {_db.playersTable},
-      );
-      final state = await _readState(playerId, canon);
-      await _db
-          .into(_db.guildAscensionStateTable)
-          .insertOnConflictUpdate(GuildAscensionStateTableCompanion(
-        playerId: Value(playerId),
-        rankFrom: Value(canon),
-        attempts: Value((state?.attempts ?? 0) + 1),
-        failures: Value(state?.failures ?? 0),
-        paidCost: Value(cost),
-        cooldownUntilMs: const Value(null),
-        windowStartedMs: Value(now),
-        windowDeadlineMs: Value(now + config.windowHours * _hourMs),
-        status: const Value('active'),
-      ));
-      // Materializa os trials (motor A.2 avança o progresso por evento).
-      await _ascension.initCycle(playerId, canon);
-    });
-
-    if (insufficient) {
-      return PayResult(ok: false, reason: 'insufficient_gold', cost: cost);
+    final ok = res['ok'] == true;
+    final cost = (res['cost'] as num?)?.toInt() ?? 0;
+    if (!ok) {
+      return PayResult(
+          ok: false, reason: res['reason'] as String?, cost: cost);
     }
     // Débito de fee (NÃO toca total_gold_earned_lifetime — é gasto).
     _bus.publish(GoldSpent(
-        playerId: playerId, amount: cost, source: GoldSink.ascension));
+        playerId: _eventPlayerId(playerId),
+        amount: cost,
+        source: GoldSink.ascension));
     return PayResult(ok: true, cost: cost);
   }
 
-  /// (c) Boot + abertura da tab: se a janela venceu sem completar → falha
-  /// (cooldown + failures++ + reset dos trials).
-  Future<void> checkDeadline(int playerId, String rankFrom) async {
-    final canon = _canon(rankFrom);
-    final state = await _readState(playerId, canon);
-    if (state == null || state.status != 'active') return;
-    final deadline = state.windowDeadlineMs;
-    if (deadline == null) return;
-    if (_now() < deadline) return;
-    // Vencido — se já completou os trials, deixa pro ascend (não falha).
-    if (await _ascension.canAscend(playerId, canon)) return;
-
-    final config = await _ascension.loadCycleConfig(canon);
-    final cooldownH = config?.cooldownHours ?? 4;
-    final now = _now();
-    await _db.transaction(() async {
-      await _db
-          .into(_db.guildAscensionStateTable)
-          .insertOnConflictUpdate(GuildAscensionStateTableCompanion(
-        playerId: Value(playerId),
-        rankFrom: Value(canon),
-        attempts: Value(state.attempts),
-        failures: Value(state.failures + 1),
-        paidCost: Value(state.paidCost),
-        cooldownUntilMs: Value(now + cooldownH * _hourMs),
-        windowStartedMs: const Value(null),
-        windowDeadlineMs: const Value(null),
-        status: const Value('cooldown'),
-      ));
-      // Reset dos trials — próxima tentativa recomeça do zero.
-      await _db.customStatement(
-        'DELETE FROM guild_ascension_progress '
-        'WHERE player_id = ? AND rank_from = ?',
-        [playerId, canon],
-      );
+  /// (c) Boot + abertura da tab: RPC `ascension_check_deadline` (se a janela
+  /// venceu sem completar → cooldown + failures++ + reset dos trials).
+  Future<void> checkDeadline(String playerId, String rankFrom) async {
+    await _client.rpc('ascension_check_deadline', params: {
+      'p_player': playerId,
+      'p_rank_from': rankFrom,
     });
   }
 
-  /// B.3 — marca um trial MANUAL (`manual_proof`) como concluído (auto-
-  /// report físico). Guard: status active + janela não vencida. Retorna
-  /// true se marcou. UI = B.4.
+  /// B.3 — marca um trial MANUAL (`manual_proof`) como concluído. RPC
+  /// `ascension_confirm_manual_trial` (guards: active + janela vigente +
+  /// trial manual_proof não completo). Retorna true se marcou.
   Future<bool> confirmManualTrial(
-      int playerId, String rankFrom, String trialKey) async {
-    final canon = _canon(rankFrom);
-    final state = await _readState(playerId, canon);
-    if (state == null || state.status != 'active') return false;
-    if (state.windowDeadlineMs == null || _now() >= state.windowDeadlineMs!) {
-      return false;
-    }
-    var updated = false;
-    await _db.transaction(() async {
-      final rows = await (_db.select(_db.guildAscensionTable)
-            ..where((t) =>
-                t.playerId.equals(playerId) &
-                t.rankFrom.equals(canon) &
-                t.questKey.equals(trialKey)))
-          .get();
-      if (rows.isEmpty) return;
-      final row = rows.first;
-      if (row.checkType != 'manual_proof' || row.completed) return;
-      await (_db.update(_db.guildAscensionTable)
-            ..where((t) => t.id.equals(row.id)))
-          .write(GuildAscensionTableCompanion(
-        completed: const Value(true),
-        progress: Value(row.progressTarget),
-      ));
-      updated = true;
+      String playerId, String rankFrom, String trialKey) async {
+    final res = await _client.rpc('ascension_confirm_manual_trial', params: {
+      'p_player': playerId,
+      'p_rank_from': rankFrom,
+      'p_trial_key': trialKey,
     });
-    return updated;
+    return res == true;
   }
 
-  /// (d) Sobe de rank. Precondição: status active, janela não vencida,
-  /// canAscend. Idempotente (2ª chamada após done = no-op).
-  Future<AscendResult> ascend(int playerId, String rankFrom) async {
-    final canon = _canon(rankFrom);
-    final state = await _readState(playerId, canon);
-    if (state == null || state.status != 'active') {
-      return const AscendResult(ok: false, reason: 'not_active');
+  /// (d) Sobe de rank. RPC `ascension_ascend` (guards active/janela/canAscend,
+  /// resolve reward, credita xp/gold/gems/insígnias, sobe rank + Colar, marca
+  /// done — tudo atômico e idempotente). Propaga RewardGranted + LevelUp a
+  /// partir dos deltas retornados.
+  Future<AscendResult> ascend(String playerId, String rankFrom) async {
+    final res = await _client.rpc('ascension_ascend', params: {
+      'p_player': playerId,
+      'p_rank_from': rankFrom,
+    }) as Map<String, dynamic>;
+
+    final ok = res['ok'] == true;
+    if (!ok) {
+      return AscendResult(
+          ok: false, newRank: null, reason: res['reason'] as String?);
     }
-    if (state.windowDeadlineMs == null || _now() >= state.windowDeadlineMs!) {
-      return const AscendResult(ok: false, reason: 'window_expired');
-    }
-    if (!await _ascension.canAscend(playerId, canon)) {
-      return const AscendResult(ok: false, reason: 'trials_incomplete');
-    }
-    final config = await _ascension.loadCycleConfig(canon);
-    if (config == null) return const AscendResult(ok: false, reason: 'no_cycle');
+    final newRank = res['new_rank'] as String?;
 
-    final snapshot = await _resolvePlayer(playerId);
-    final declared = RewardDeclared.fromJson({
-      'xp': config.rewardXp,
-      'gold': config.rewardGold,
-      'insignias': config.rewardInsignias,
-    });
-    final resolved = await _resolver.resolve(declared, snapshot, progressPct: 100);
-
-    LevelUp? levelUp;
-    String? newRank;
-    await _db.transaction(() async {
-      // Idempotência: relê status DENTRO da tx.
-      final fresh = await _readState(playerId, canon);
-      if (fresh == null || fresh.status == 'done') return; // no-op
-
-      // Crédito DIRETO (sem total_quests_completed — não é quest).
-      if (resolved.xp != 0) {
-        levelUp = await PlayerDao(_db).addXp(playerId, resolved.xp);
-      }
-      if (resolved.gold != 0 || resolved.gems != 0) {
-        final lifeGold = resolved.gold > 0 ? resolved.gold : 0;
-        await _db.customUpdate(
-          'UPDATE players SET gold = gold + ?, '
-          'total_gold_earned_lifetime = total_gold_earned_lifetime + ?, '
-          'gems = gems + ? WHERE id = ?',
-          variables: [
-            Variable.withInt(resolved.gold),
-            Variable.withInt(lifeGold),
-            Variable.withInt(resolved.gems),
-            Variable.withInt(playerId),
-          ],
-          updates: {_db.playersTable},
-        );
-      }
-      if (resolved.insignias != 0) {
-        await _db.customUpdate(
-          'UPDATE players SET insignias = insignias + ? WHERE id = ?',
-          variables: [
-            Variable.withInt(resolved.insignias),
-            Variable.withInt(playerId),
-          ],
-          updates: {_db.playersTable},
-        );
-      }
-
-      // Rank↑ + colar (mesma tx) via GuildAscensionService → setRank.
-      newRank = await _ascension.ascend(playerId, canon);
-
-      await _db
-          .into(_db.guildAscensionStateTable)
-          .insertOnConflictUpdate(GuildAscensionStateTableCompanion(
-        playerId: Value(playerId),
-        rankFrom: Value(canon),
-        attempts: Value(fresh.attempts),
-        failures: Value(fresh.failures),
-        paidCost: Value(fresh.paidCost),
-        cooldownUntilMs: const Value(null),
-        windowStartedMs: const Value(null),
-        windowDeadlineMs: const Value(null),
-        status: const Value('done'),
-      ));
-    });
-
-    if (newRank == null) {
-      return const AscendResult(ok: false, reason: 'noop');
-    }
+    // O servidor já creditou xp/gold/gems/insígnias e subiu o rank. Propaga
+    // os eventos client-side (analytics/quests/UI) a partir dos deltas.
+    // NOTA: RewardGranted carrega o JSON resolvido — aqui reconstruímos um
+    // payload mínimo com os deltas (xp/gold/insignias) devolvidos pela RPC.
+    final rewardXp = (res['reward_xp'] as num?)?.toInt() ?? 0;
+    final rewardGold = (res['reward_gold'] as num?)?.toInt() ?? 0;
+    final rewardIns = (res['reward_insignias'] as num?)?.toInt() ?? 0;
+    final resolvedJson =
+        '{"xp":$rewardXp,"gold":$rewardGold,"insignias":$rewardIns}';
     _bus.publish(RewardGranted(
-        playerId: playerId,
-        rewardResolvedJson: resolved.toJsonString(),
+        playerId: _eventPlayerId(playerId),
+        rewardResolvedJson: resolvedJson,
         fromAscension: true));
-    if (levelUp != null) _bus.publish(levelUp!);
-    return AscendResult(ok: true, newRank: newRank);
+
+    final prevLevel = (res['previous_level'] as num?)?.toInt();
+    final newLevel = (res['new_level'] as num?)?.toInt();
+    if (prevLevel != null && newLevel != null && newLevel > prevLevel) {
+      _bus.publish(LevelUp(
+        playerId: _eventPlayerId(playerId),
+        previousLevel: prevLevel,
+        newLevel: newLevel,
+      ));
+    }
+    return AscendResult(ok: true, newRank: newRank, reason: null);
   }
 }

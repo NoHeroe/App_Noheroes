@@ -1,21 +1,28 @@
 import 'dart:convert';
-import 'package:drift/drift.dart' hide Column;
+
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../core/utils/guild_rank.dart';
-import '../../database/app_database.dart';
+import '../../../domain/models/guild_ascension_trial.dart';
 import 'player_rank_service.dart';
 
+/// Época 2 (full-online — ADR-0024). Leitura/avanço dos trials do ciclo de
+/// ascensão da Guilda contra DADOS VIVOS (PostgREST). Operações ATÔMICAS
+/// (materializar ciclo, subir rank + evoluir Colar) vivem em RPCs Postgres —
+/// `pay`/`ascend` da máquina de estados chamam `ascension_pay`/
+/// `ascension_ascend`, que internamente materializam/ascendem. Este service
+/// expõe só leituras + avanço single-row (idempotente) do progresso.
 class GuildAscensionService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
   // A.1 — escrita de rank unificada: ascend() delega a PlayerRankService
-  // (grava o canon MAIÚSCULO + evolui o Colar da Guilda).
+  // (RPC set_guild_rank: grava canon MAIÚSCULO + evolui o Colar da Guilda).
   final PlayerRankService _rankService;
-  GuildAscensionService(this._db, {PlayerRankService? rankService})
-      : _rankService = rankService ?? PlayerRankService(_db);
+  GuildAscensionService(this._client, {PlayerRankService? rankService})
+      : _rankService = rankService ?? PlayerRankService(_client);
 
   /// A.1 — normaliza um rank cru pro canon MAIÚSCULO ('E'..'S'). `none`/
   /// vazio é preservado como sentinela (não casa com nenhum ciclo).
-  /// `GuildRankSystem.fromString` tolera ambas as caixas (cobre legado).
   String _canonRank(String raw) {
     final r = raw.trim();
     if (r.isEmpty || r.toLowerCase() == 'none') return 'none';
@@ -23,18 +30,21 @@ class GuildAscensionService {
   }
 
   // Retorna todas as missões do ciclo atual (rank_from = guildRank)
-  Future<List<GuildAscensionTableData>> getMissions(
-      int playerId, String currentRank) async {
+  Future<List<GuildAscensionTrial>> getMissions(
+      String playerId, String currentRank) async {
     final canon = _canonRank(currentRank);
-    return (_db.select(_db.guildAscensionTable)
-          ..where((t) =>
-              t.playerId.equals(playerId) &
-              t.rankFrom.equals(canon))
-          ..orderBy([(t) => OrderingTerm.asc(t.step)]))
-        .get();
+    final rows = await _client
+        .from('guild_ascension_progress')
+        .select()
+        .eq('player_id', playerId)
+        .eq('rank_from', canon)
+        .order('step', ascending: true);
+    return rows.map(GuildAscensionTrial.fromMap).toList();
   }
 
-  // B.2 — cache do catálogo parseado (rootBundle).
+  // B.2 — cache do catálogo parseado (rootBundle). O catálogo continua
+  // client-side (asset) pra a VIEW/gates; o servidor tem um espelho IMMUTABLE
+  // (_ascension_cycle) usado pelas RPCs atômicas.
   List<Map<String, dynamic>>? _cyclesCache;
   Future<List<Map<String, dynamic>>> _loadCycles() async {
     if (_cyclesCache != null) return _cyclesCache!;
@@ -57,156 +67,80 @@ class GuildAscensionService {
     return AscensionCycleConfig.fromJson(cycle);
   }
 
-  // Inicializa as missões do ciclo atual se não existirem
-  Future<void> initCycle(int playerId, String currentRank) async {
-    final canon = _canonRank(currentRank);
-    final existing = await getMissions(playerId, canon);
-    if (existing.isNotEmpty) return;
-
-    final cycles = await _loadCycles();
-    final cycle = cycles.firstWhere(
-      (c) => c['rank_from'] == canon,
-      orElse: () => const <String, dynamic>{},
-    );
-    if (cycle.isEmpty) return;
-
-    // Fase B.1 — estrutura nova: `trials[]` (sem options/sorteio). Cada
-    // trial vira uma row de step. `unlock_level`/reward viraram nivel-ciclo
-    // (`unlock_requirements`/`reward`) — consumidos pela maquina de estados
-    // soulslike (B.2/B.3); aqui materializamos so o progresso dos trials.
-    final reqs =
-        (cycle['unlock_requirements'] as Map?)?.cast<String, dynamic>();
-    final minLevel = (reqs?['min_level'] as int?) ?? 0;
-    final trials = (cycle['trials'] as List).cast<Map<String, dynamic>>();
-    var step = 1;
-    for (final t in trials) {
-      final target = (t['target'] as int?) ?? 1;
-      // B.3 — trials `mock` (card_wins/boss_win) são auto-satisfeitos na
-      // materialização (card-game/boss inexistentes). Quando existirem,
-      // troca-se por um check real.
-      final isMock = t['type'] == 'mock';
-      await _db.into(_db.guildAscensionTable).insert(
-        GuildAscensionTableCompanion(
-          playerId: Value(playerId),
-          rankFrom: Value(canon),
-          rankTo: Value(cycle['rank_to'] as String),
-          step: Value(step++),
-          questKey: Value(t['key'] as String),
-          title: Value(t['title'] as String? ?? t['key'] as String),
-          description: Value(t['title'] as String? ?? ''),
-          checkType: Value(t['check_type'] as String),
-          checkParamsJson: Value(jsonEncode(_trialParams(t))),
-          unlockLevel: Value(minLevel),
-          xpReward: const Value(0),
-          goldReward: const Value(0),
-          progressTarget: Value(target),
-          completed: Value(isMock),
-          progress: isMock ? Value(target) : const Value(0),
-        ),
-      );
-    }
-  }
-
-  /// Fase B.1 — converte um trial do catalogo novo pro formato de params
-  /// que o `_calcProgress` (motor A.2) ja espera por check_type. Trials
-  /// manual/mock guardam so `type`+`target` (avanco wired na B.3).
-  Map<String, dynamic> _trialParams(Map<String, dynamic> t) {
-    final ct = t['check_type'] as String;
-    final target = (t['target'] as int?) ?? 1;
-    final type = t['type'];
-    switch (ct) {
-      case 'complete_any_total':
-      case 'complete_category_total':
-      case 'achievements_count':
-        return {
-          'count': target,
-          if (t['category'] != null) 'category': t['category'],
-          'type': type,
-        };
-      case 'streak_days':
-        return {'days': target, 'type': type};
-      case 'diary_total_words':
-        return {'words': target, 'type': type};
-      default: // manual_proof / card_wins / boss_win — sem auto-progresso
-        return {'target': target, 'type': type};
-    }
-  }
-
   /// A.2 — avalia a missão de menor `step` incompleta do ciclo via DADOS
   /// VIVOS (sem `ctx`): grava `progress` e marca `completed` ao bater o
-  /// target. Retorna true se completou (o caller pode re-chamar pra
-  /// avançar o próximo step que já esteja satisfeito por contador
-  /// lifetime). NÃO ascende (o `ascend()` continua manual no botão) e
-  /// NÃO incrementa `total_quests_completed` (evita feedback-loop com
-  /// `complete_any_total`, que LÊ esse contador).
-  Future<bool> checkCurrentMission(int playerId, String currentRank) async {
+  /// target. Retorna true se completou. Single-row update (read-modify-write
+  /// de UMA row) → PostgREST direto. NÃO ascende e NÃO incrementa
+  /// total_quests_completed.
+  Future<bool> checkCurrentMission(
+      String playerId, String currentRank) async {
     final canon = _canonRank(currentRank);
     final missions = await getMissions(playerId, canon);
     final current = missions
         .where((m) => !m.completed)
-        .fold<GuildAscensionTableData?>(null, (acc, m) {
+        .fold<GuildAscensionTrial?>(null, (acc, m) {
       if (acc == null) return m;
       return m.step < acc.step ? m : acc;
     });
     if (current == null) return false;
 
     // B.3 — janela do ciclo (se houver state com janela). Ausente = lifetime.
-    final st = await (_db.select(_db.guildAscensionStateTable)
-          ..where((t) =>
-              t.playerId.equals(playerId) & t.rankFrom.equals(canon)))
-        .getSingleOrNull();
-    final params = jsonDecode(current.checkParamsJson) as Map<String, dynamic>;
+    final st = await _client
+        .from('guild_ascension_state')
+        .select('window_started_ms, window_deadline_ms')
+        .eq('player_id', playerId)
+        .eq('rank_from', canon)
+        .maybeSingle();
+    final params =
+        jsonDecode(current.checkParamsJson) as Map<String, dynamic>;
     final progress = await _calcProgress(
       current.checkType,
       params,
       playerId,
-      windowStartMs: st?.windowStartedMs,
-      windowDeadlineMs: st?.windowDeadlineMs,
+      windowStartMs: (st?['window_started_ms'] as num?)?.toInt(),
+      windowDeadlineMs: (st?['window_deadline_ms'] as num?)?.toInt(),
     );
 
     if (progress >= current.progressTarget) {
-      await (_db.update(_db.guildAscensionTable)
-            ..where((t) => t.id.equals(current.id)))
-          .write(GuildAscensionTableCompanion(
-        completed: const Value(true),
-        progress: Value(current.progressTarget),
-      ));
+      await _client.from('guild_ascension_progress').update({
+        'completed': true,
+        'progress': current.progressTarget,
+      }).eq('id', current.id);
       return true;
     }
 
     if (progress != current.progress) {
-      await (_db.update(_db.guildAscensionTable)
-            ..where((t) => t.id.equals(current.id)))
-          .write(GuildAscensionTableCompanion(progress: Value(progress)));
+      await _client
+          .from('guild_ascension_progress')
+          .update({'progress': progress}).eq('id', current.id);
     }
     return false;
   }
 
-  // Verifica se todas missões do ciclo estão completas → sobe o rank
-  Future<bool> canAscend(int playerId, String currentRank) async {
+  // Verifica se todas missões do ciclo estão completas → pode subir o rank.
+  Future<bool> canAscend(String playerId, String currentRank) async {
     final missions = await getMissions(playerId, currentRank);
     if (missions.isEmpty) return false;
     return missions.every((m) => m.completed);
   }
 
-  Future<String?> ascend(int playerId, String currentRank) async {
+  /// A.1 — sobe o rank (canon → next) + evolui o Colar. Multi-write atômico
+  /// delegado a `set_guild_rank` (via PlayerRankService). NOTA: no fluxo
+  /// full-online o ascend ATÔMICO completo (reward + rank + status) é a RPC
+  /// `ascension_ascend`; este método é mantido como helper de rank puro
+  /// (guard canAscend + cálculo do próximo) pra paridade com o legado.
+  Future<String?> ascend(String playerId, String currentRank) async {
     final canon = _canonRank(currentRank);
     if (canon == 'none') return null;
     if (!await canAscend(playerId, canon)) return null;
     final next = GuildRankSystem.next(GuildRankSystem.fromString(canon));
     if (next == null) return null; // já é S
-
-    // A.1 — escrita unificada: delega a PlayerRankService.setRank, que
-    // grava o canon MAIÚSCULO em players.guild_rank E evolui o Colar da
-    // Guilda (evolution_stage). Substitui o customUpdate direto anterior,
-    // que gravava minúsculo e NÃO evoluía o colar (ADR-0009).
     await _rankService.setRank(playerId, next);
     return next.name.toUpperCase();
   }
 
   /// A.2 — mapeia a `category` do catálogo (inglês) pra grafia REAL da
-  /// `daily_missions.modalidade` (PT-BR). Sem este mapa, a query contaria
-  /// 0 silenciosamente.
+  /// `daily_missions.modalidade` (PT-BR).
   static const Map<String, String> _categoryToModalidade = {
     'physical': 'fisico',
     'mental': 'mental',
@@ -215,47 +149,41 @@ class GuildAscensionService {
 
   /// B.3 — UNIÃO de missões completadas (daily_missions + player_mission_
   /// progress), com janela opcional `[startMs, deadlineMs)`. Sem janela =
-  /// lifetime. Fonte ÚNICA pro gate `missions_completed` (lifetime) E pro
-  /// trial `complete_any_total` (windowed quando dentro de uma janela ativa).
-  Future<int> countMissionsCompleted(int playerId,
+  /// lifetime. Duas COUNTs read-only via PostgREST (count exato no head).
+  Future<int> countMissionsCompleted(String playerId,
       {int? startMs, int? deadlineMs}) async {
     final windowed = startMs != null && deadlineMs != null;
-    final dailyWhere = StringBuffer(
-        "player_id = ? AND completed_at IS NOT NULL "
-        "AND status = 'completed'");
-    final pmpWhere =
-        StringBuffer('player_id = ? AND completed_at IS NOT NULL');
-    final dVars = <Variable>[Variable.withInt(playerId)];
-    final pVars = <Variable>[Variable.withInt(playerId)];
+
+    var dailyQ = _client
+        .from('daily_missions')
+        .select()
+        .eq('player_id', playerId)
+        .not('completed_at', 'is', null)
+        .eq('status', 'completed');
     if (windowed) {
-      dailyWhere.write(' AND completed_at >= ? AND completed_at < ?');
-      pmpWhere.write(' AND completed_at >= ? AND completed_at < ?');
-      dVars.addAll([Variable.withInt(startMs), Variable.withInt(deadlineMs)]);
-      pVars.addAll([Variable.withInt(startMs), Variable.withInt(deadlineMs)]);
+      dailyQ = dailyQ
+          .gte('completed_at', startMs)
+          .lt('completed_at', deadlineMs);
     }
-    final dr = await _db.customSelect(
-      'SELECT COUNT(*) AS c FROM daily_missions WHERE $dailyWhere',
-      variables: dVars,
-    ).get();
-    final pr = await _db.customSelect(
-      'SELECT COUNT(*) AS c FROM player_mission_progress WHERE $pmpWhere',
-      variables: pVars,
-    ).get();
-    return ((dr.first.data['c'] as int?) ?? 0) +
-        ((pr.first.data['c'] as int?) ?? 0);
+    final dailyRes = await dailyQ.count(CountOption.exact);
+
+    var pmpQ = _client
+        .from('player_mission_progress')
+        .select()
+        .eq('player_id', playerId)
+        .not('completed_at', 'is', null);
+    if (windowed) {
+      pmpQ = pmpQ.gte('completed_at', startMs).lt('completed_at', deadlineMs);
+    }
+    final pmpRes = await pmpQ.count(CountOption.exact);
+
+    return dailyRes.count + pmpRes.count;
   }
 
-  /// Progresso contra DADOS VIVOS por check_type:
-  ///  - complete_any_total      → countMissionsCompleted (UNIÃO daily+pmp;
-  ///                              windowed se janela presente, senão lifetime)
-  ///  - complete_category_total → COUNT(daily_missions) por modalidade
-  ///                              (+ bound de janela; só daily tem pilar)
-  ///  - streak_days             → players.streak_days
-  ///  - achievements_count      → COUNT(player_achievements_completed)
-  ///  - diary_total_words       → SUM de palavras em diary_entries
-  /// "Completada" = `status = 'completed'` (partial NÃO conta).
+  /// Progresso contra DADOS VIVOS por check_type. "Completada" =
+  /// `status = 'completed'` (partial NÃO conta).
   Future<int> _calcProgress(
-      String checkType, Map<String, dynamic> params, int playerId,
+      String checkType, Map<String, dynamic> params, String playerId,
       {int? windowStartMs, int? windowDeadlineMs}) async {
     switch (checkType) {
       case 'complete_any_total':
@@ -269,59 +197,55 @@ class GuildAscensionService {
         final cat = params['category'] as String;
         final modalidade = _categoryToModalidade[cat];
         if (modalidade == null) return 0;
-        // Categoria só existe em daily_missions.modalidade (pmp não tem
-        // pilar). Bound de janela quando presente.
-        final where = <String>[
-          'player_id = ?',
-          'completed_at IS NOT NULL',
-          "status = 'completed'",
-          'modalidade = ?',
-        ];
-        final vars = <Variable>[
-          Variable.withInt(playerId),
-          Variable.withString(modalidade),
-        ];
+        // Categoria só existe em daily_missions.modalidade (pmp não tem pilar).
+        var q = _client
+            .from('daily_missions')
+            .select()
+            .eq('player_id', playerId)
+            .not('completed_at', 'is', null)
+            .eq('status', 'completed')
+            .eq('modalidade', modalidade);
         if (windowStartMs != null && windowDeadlineMs != null) {
-          where.add('completed_at >= ?');
-          where.add('completed_at < ?');
-          vars.add(Variable.withInt(windowStartMs));
-          vars.add(Variable.withInt(windowDeadlineMs));
+          q = q
+              .gte('completed_at', windowStartMs)
+              .lt('completed_at', windowDeadlineMs);
         }
-        final rows = await _db.customSelect(
-          'SELECT COUNT(*) AS c FROM daily_missions '
-          'WHERE ${where.join(' AND ')}',
-          variables: vars,
-        ).get();
-        final found = (rows.first.data['c'] as int?) ?? 0;
-        return found.clamp(0, count);
+        final res = await q.count(CountOption.exact);
+        return res.count.clamp(0, count);
 
       case 'streak_days':
         final days = params['days'] as int;
-        final rows = await _db.customSelect(
-          'SELECT streak_days AS s FROM players WHERE id = ?',
-          variables: [Variable.withInt(playerId)],
-        ).get();
-        final streak = (rows.first.data['s'] as int?) ?? 0;
+        final row = await _client
+            .from('players')
+            .select('streak_days')
+            .eq('id', playerId)
+            .maybeSingle();
+        final streak = (row?['streak_days'] as num?)?.toInt() ?? 0;
         return streak.clamp(0, days);
 
       case 'achievements_count':
         final count = params['count'] as int;
-        final rows = await _db.customSelect(
-          'SELECT COUNT(*) AS c FROM player_achievements_completed '
-          'WHERE player_id = ?',
-          variables: [Variable.withInt(playerId)],
-        ).get();
-        final found = (rows.first.data['c'] as int?) ?? 0;
-        return found.clamp(0, count);
+        final res = await _client
+            .from('player_achievements_completed')
+            .select()
+            .eq('player_id', playerId)
+            .count(CountOption.exact);
+        return res.count.clamp(0, count);
 
       case 'diary_total_words':
         final words = params['words'] as int;
-        final rows = await _db.customSelect(
-          "SELECT SUM(LENGTH(content) - LENGTH(REPLACE(content, ' ', '')) + 1) "
-          'AS w FROM diary_entries WHERE player_id = ?',
-          variables: [Variable.withInt(playerId)],
-        ).get();
-        final found = (rows.first.data['w'] as int?) ?? 0;
+        // SUM de palavras (LENGTH - LENGTH(replace ' ') + 1) não é expressável
+        // em PostgREST puro → agrega no cliente lendo o conteúdo das entradas.
+        final rows = await _client
+            .from('diary_entries')
+            .select('content')
+            .eq('player_id', playerId);
+        var found = 0;
+        for (final r in rows) {
+          final content = (r['content'] as String?) ?? '';
+          final spaces = content.length - content.replaceAll(' ', '').length;
+          found += spaces + 1;
+        }
         return found.clamp(0, words);
 
       default:

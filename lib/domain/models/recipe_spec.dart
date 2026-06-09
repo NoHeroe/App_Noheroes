@@ -73,6 +73,28 @@ class RecipeSpec {
     );
   }
 
+  // Constrói a partir de uma row do Postgres (PostgREST/Supabase). materials e
+  // unlock_sources são TEXT com JSON — _decodeJson tolera string crua ou valor
+  // já-decodificado (jsonb).
+  factory RecipeSpec.fromMap(Map<String, dynamic> m) {
+    return RecipeSpec.fromJson({
+      'key': m['key'],
+      'name': m['name'],
+      'description': m['description'],
+      'type': m['type'],
+      'required_rank': m['required_rank'],
+      'required_level': m['required_level'],
+      'required_station': m['required_station'],
+      'result_item_key': m['result_item_key'],
+      'result_quantity': m['result_quantity'],
+      'materials': _decodeJson(m['materials']) ?? const [],
+      'cost_coins': m['cost_coins'],
+      'duration_sec': m['duration_sec'],
+      'unlock_sources': _decodeJson(m['unlock_sources']) ?? const [],
+      'icon': m['icon'],
+    });
+  }
+
   factory RecipeSpec.fromRow(RecipesCatalogTableData row) {
     return RecipeSpec.fromJson({
       'key': row.key,
@@ -106,6 +128,17 @@ int? _intOrNull(dynamic v) {
   if (v is num) return v.toInt();
   if (v is String) return int.tryParse(v);
   return null;
+}
+
+// Colunas JSON-em-texto do Postgres: aceita String (decodifica) ou valor já
+// decodificado (List/Map, caso a coluna seja jsonb). null/'' viram null.
+dynamic _decodeJson(dynamic v) {
+  if (v == null) return null;
+  if (v is String) {
+    if (v.isEmpty) return null;
+    return jsonDecode(v);
+  }
+  return v;
 }
 
 GuildRank? _parseRank(String? raw) {

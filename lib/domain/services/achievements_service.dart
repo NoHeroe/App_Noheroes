@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/services.dart' show AssetBundle, rootBundle;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/events/app_event_bus.dart';
 import '../../core/events/daily_mission_events.dart';
@@ -11,8 +12,6 @@ import '../../core/events/player_events.dart';
 import '../../core/events/reward_events.dart';
 import '../../core/utils/day_format.dart';
 import '../../data/database/daos/player_dao.dart';
-import '../../data/database/daos/player_daily_mission_stats_dao.dart';
-import '../../data/database/daos/player_daily_subtask_volume_dao.dart';
 import '../../data/services/reward_grant_service.dart';
 import '../exceptions/reward_exceptions.dart';
 import '../models/achievement_definition.dart';
@@ -48,50 +47,27 @@ class PlayerFacts {
 }
 
 /// Callback que resolve `PlayerFacts` pro id dado. Injetado — prod lê do
-/// `AppDatabase`, testes fornecem stub determinístico.
-typedef PlayerFactsResolver = Future<PlayerFacts> Function(int playerId);
+/// Supabase, testes fornecem stub determinístico.
+///
+/// Época 2 (ADR-0024): [playerId] virou uuid (String).
+typedef PlayerFactsResolver = Future<PlayerFacts> Function(String playerId);
 
 /// Sprint 3.1 Bloco 8 — serviço central das conquistas. Carrega o catálogo
 /// JSON em memória, escuta `RewardGranted` no `AppEventBus` e desbloqueia
 /// conquistas cujas triggers estejam satisfeitas.
 ///
+/// Época 2 full-online (ADR-0024): leituras de stats/volume diário e do
+/// jogador vão direto ao Supabase (`from(...)`) — não há mais DAOs Drift.
+/// Operações de unlock/claim continuam via repository (writes simples) e
+/// via RPC `grant_achievement_reward` (grant atômico, no `RewardGrantService`).
+///
 /// ## Contratos
 ///
 /// - **Idempotente**: desbloquear uma key já completada vira noop silencioso
 ///   (via `PlayerAchievementsRepository.isCompleted`).
-/// - **Cascata controlada**: `reward.achievementsToCheck` das próprias
-///   conquistas é processado síncronamente com `depth+1`. Limite dura de 3
-///   níveis; atingiu → log warning e skip (fail-safe, nunca lança).
-/// - **Ordem de emissão**: `AchievementUnlocked` é publicado APÓS o grant
-///   da reward (quando houver), espelhando o pattern `commit-then-publish`
-///   do `RewardGrantService` (Bloco 5). Se reward é `null`, o evento é
-///   publicado logo após `markCompleted`.
-/// - **Re-entry do listener**: o próprio `grantAchievement` emite
-///   `RewardGranted`, que volta pro handler. A idempotência via
-///   `isCompleted` torna esse ciclo benigno (noop em ~1 check), então
-///   não aplicamos flags de supressão.
-///
-/// ## Triggers suportados no MVP (Bloco 8)
-///
-/// | Tipo             | Resolve contra                                     |
-/// |------------------|----------------------------------------------------|
-/// | `event_count`    | `MissionCompleted` → `total_quests_completed`      |
-/// |                  | `AchievementUnlocked` → `countCompleted()`         |
-/// | `threshold_stat` | `stat: level` → `players.level`                    |
-/// | `meta`           | `countCompleted() >= target_count`                 |
-///
-/// Qualquer outro par (`event_count` com event desconhecido, `threshold_stat`
-/// com stat != `level`, trigger `sequence`, etc.) cai em **fail-safe**:
-/// retorna `false` + log warn. Bloco 14 expande mapeamentos.
-///
-/// ## Lifecycle
-///
-/// ```dart
-/// final service = AchievementsService(...);
-/// final sub = await service.attach();  // carrega + subscreve
-/// // ...
-/// await sub.cancel();
-/// ```
+/// - **Cascata controlada**: limite duro de 3 níveis.
+/// - **Ordem de emissão**: `AchievementUnlocked` publicado APÓS `markCompleted`.
+/// - **Re-entry do listener**: idempotência via `isCompleted` torna benigno.
 class AchievementsService {
   final PlayerAchievementsRepository _achievementsRepo;
   final RewardResolveService _rewardResolve;
@@ -100,23 +76,19 @@ class AchievementsService {
   final PlayerFactsResolver _resolvePlayerFacts;
   final AssetBundle _assetBundle;
 
-  /// Sprint 3.3 Etapa 2.1b — DAOs opcionais pros 15 triggers daily.
-  /// Quando `null`, qualquer `DailyMissionTrigger` cai em fail-safe
-  /// (warn + return false) — preserva backwards-compat de testes que
-  /// não constroem o pipeline de stats.
-  final PlayerDailyMissionStatsDao? _statsDao;
-  final PlayerDailySubtaskVolumeDao? _volumeDao;
+  /// Época 2 (ADR-0024) — client Supabase opcional pros triggers daily
+  /// (stats + subtask volume). Quando `null`, qualquer `DailyMissionTrigger`
+  /// cai em fail-safe (warn + return false) — preserva backwards-compat de
+  /// testes que não constroem o pipeline de stats.
+  final SupabaseClient? _client;
 
-  /// Sprint 3.3 Etapa 2.1c-α — PlayerDao opcional pra triggers
-  /// `event_*` que precisam ler players (class_type, faction_type,
-  /// peak_level, total_gems_spent, etc.). Null em modo degradado
-  /// de testes legacy.
+  /// Sprint 3.3 Etapa 2.1c-α — PlayerDao opcional pra triggers `event_*`
+  /// que precisam ler players (class_type, faction_type, peak_level,
+  /// total_gems_spent, etc.). Null em modo degradado de testes legacy.
   final PlayerDao? _playerDao;
 
   /// Sprint 3.3 Etapa 2.1c-γ — service opcional pro trigger
-  /// `event_screen_visited` (lê telas visitadas via CSV em
-  /// `players.screens_visited_keys`). Null → fail-safe degradado
-  /// (warn + return false).
+  /// `event_screen_visited`. Null → fail-safe degradado (warn + return false).
   final PlayerScreensVisitedService? _screensVisitedService;
 
   /// Path do catálogo — exposto como `static const` pra facilitar override
@@ -124,33 +96,19 @@ class AchievementsService {
   static const String catalogAssetPath = 'assets/data/achievements.json';
 
   /// Limite duro de profundidade da cascata (conta em níveis encadeados).
-  /// Depth 0 = unlock direto do `RewardGranted` externo; 1 = 1º nested;
-  /// 2 = 2º nested; >=3 = log warn + skip.
   static const int maxCascadeDepth = 3;
 
   final Map<String, AchievementDefinition> _catalog = {};
 
-  /// Cache pré-filtrado dos achievements com trigger daily — evita varrer
-  /// o catálogo inteiro a cada `DailyStatsUpdated`. Populado em `_doLoad`.
-  /// Filtra `disabled=true` (Sprint 3.3 Etapa 2.1c-α).
+  /// Cache pré-filtrado dos achievements com trigger daily. Filtra
+  /// `disabled=true`.
   List<AchievementDefinition> _dailyAchievements = const [];
 
-  /// Sprint 3.3 Etapa 2.1c-α — cache pré-filtrado dos achievements com
-  /// trigger event_* (não-daily). Filtra `disabled=true`.
+  /// Cache pré-filtrado dos achievements com trigger event_* (não-daily).
   List<AchievementDefinition> _eventAchievements = const [];
 
-  /// Sprint 3.3 Etapa 2.2 hotfix — cache pré-filtrado dos achievements
-  /// com trigger MetaTrigger / ThresholdStatTrigger / EventCountTrigger
-  /// (3 tipos legacy não cobertos pelos caches `_dailyAchievements` e
-  /// `_eventAchievements`). Filtra `disabled=true`.
-  ///
-  /// Re-checados via [attachMetaLikeListeners] em resposta a
-  /// `AchievementUnlocked` (cobre meta + event_count) e `LevelUp`
-  /// (cobre threshold_stat com `stat='level'`). Sem este cache, conquistas
-  /// como `INIT_NIVEL_5` (threshold) e `INIT_CINCO_CONQUISTAS` (meta)
-  /// ficavam UNREACHABLE no formato JSON da Etapa 2.2 — `_resolveTier`
-  /// não preserva `achievements_to_check` (cascata explícita) que era o
-  /// único caminho legacy de re-checagem desses triggers.
+  /// Cache pré-filtrado dos achievements com trigger MetaTrigger /
+  /// ThresholdStatTrigger / EventCountTrigger. Filtra `disabled=true`.
   List<AchievementDefinition> _metaLikeAchievements = const [];
 
   bool _loaded = false;
@@ -162,8 +120,7 @@ class AchievementsService {
     required RewardGrantService rewardGrant,
     required AppEventBus bus,
     required PlayerFactsResolver resolvePlayerFacts,
-    PlayerDailyMissionStatsDao? statsDao,
-    PlayerDailySubtaskVolumeDao? volumeDao,
+    SupabaseClient? client,
     PlayerDao? playerDao,
     PlayerScreensVisitedService? screensVisitedService,
     AssetBundle? assetBundle,
@@ -172,27 +129,12 @@ class AchievementsService {
         _rewardGrant = rewardGrant,
         _bus = bus,
         _resolvePlayerFacts = resolvePlayerFacts,
-        _statsDao = statsDao,
-        _volumeDao = volumeDao,
+        _client = client,
         _playerDao = playerDao,
         _screensVisitedService = screensVisitedService,
         _assetBundle = assetBundle ?? rootBundle;
 
-  /// Lê o catálogo em memória (idempotente). Chamado explicitamente pelo
-  /// caller em startup ou lazy no primeiro evento. Re-chamar é noop.
-  ///
-  /// Em catálogo malformado lança `FormatException` — Bloco 8 assume que
-  /// o arquivo ou é válido ou é ausente; ausência de asset deixa o service
-  /// com `_catalog` vazio (handler fica noop sem ruído).
-  ///
-  /// ## Race-free (Hotfix v0.29.1)
-  ///
-  /// Dois callers concorrentes (provider inicializa via `attach()` em
-  /// fire-and-forget + tela `/achievements` chama ao montar) podiam
-  /// entrar ambos no corpo antes de `_loaded=true`, preenchendo
-  /// `_catalog` duas vezes e estourando "key duplicada" no 2º loop.
-  /// Guardamos a Future da carga em andamento e fazemos callers
-  /// subsequentes awaitarem a mesma — uma só execução do loop.
+  /// Lê o catálogo em memória (idempotente). Race-free via Future guardada.
   Future<void> ensureLoaded() async {
     if (_loaded) return;
     _loadingFuture ??= _doLoad();
@@ -204,9 +146,6 @@ class AchievementsService {
     try {
       raw = await _assetBundle.loadString(catalogAssetPath);
     } catch (_) {
-      // Asset não empacotado / não existe. Deixa _loaded=true + catálogo
-      // vazio pro handler virar noop em vez de tentar carregar a cada
-      // evento.
       _loaded = true;
       // ignore: avoid_print
       print('[achievements] catálogo $catalogAssetPath ausente — service '
@@ -215,14 +154,8 @@ class AchievementsService {
     }
     final decoded = jsonDecode(raw);
     if (decoded is! Map<String, dynamic>) {
-      throw const FormatException(
-          "achievements.json: raiz não é objeto");
+      throw const FormatException("achievements.json: raiz não é objeto");
     }
-    // Sprint 3.3 Etapa 2.2 — `tier_definitions` opcional no root permite
-    // referência via `reward_tier: "comum"` em cada entry. Resolução é
-    // pre-processamento aqui (mantém AchievementDefinition.fromJson puro).
-    // Compat: catálogos sem tier_definitions continuam funcionando com
-    // `reward` inline tradicional.
     final tierDefsRaw = decoded['tier_definitions'];
     final Map<String, Map<String, dynamic>> tierDefs = {};
     if (tierDefsRaw is Map<String, dynamic>) {
@@ -250,17 +183,12 @@ class AchievementsService {
       }
       _catalog[def.key] = def;
     }
-    // Sprint 3.3 Etapa 2.1b — cache pré-filtrado de daily triggers.
-    // Sprint 3.3 Etapa 2.1c-α — também filtra `disabled=true`.
     _dailyAchievements = _catalog.values
         .where((d) => d.trigger is DailyMissionTrigger && !d.disabled)
         .toList(growable: false);
-    // Sprint 3.3 Etapa 2.1c-α — cache pré-filtrado de event_* triggers.
     _eventAchievements = _catalog.values
         .where((d) => d.trigger is EventTrigger && !d.disabled)
         .toList(growable: false);
-    // Sprint 3.3 Etapa 2.2 hotfix — cache de meta-like (3 trigger types
-    // legacy: MetaTrigger, ThresholdStatTrigger, EventCountTrigger).
     _metaLikeAchievements = _catalog.values
         .where((d) =>
             !d.disabled &&
@@ -272,27 +200,12 @@ class AchievementsService {
   }
 
   /// Sprint 3.3 Etapa 2.2 — converte um entry do catálogo no formato com
-  /// `reward_tier` (string ref) ou `reward_tier_custom` (inline com schema
-  /// `xp/gold/gems/baus_*`) pra estrutura `reward` que `RewardDeclared`
-  /// entende. Idempotente: entries com `reward` inline tradicional passam
-  /// direto sem mudança.
-  ///
-  /// Conversões aplicadas:
-  /// - `reward_tier: "comum"` → lookup em [tierDefs], extrai xp/gold/gems
-  /// - `reward_tier_custom: {...}` → usa direto como tier
-  /// - `baus_secretos: N` (N>0) → adiciona ao items array como
-  ///   `{key: 'CHEST_SECRET', quantity: N, chance_pct: 100}`
-  /// - `baus_derrotado: N` (N>0) → idem com `CHEST_DEFEATED`
-  ///
-  /// Tier ref inexistente → lança FormatException (catálogo malformado
-  /// é fatal — diferente de trigger desconhecido que cai em fail-safe).
+  /// `reward_tier` (string ref) ou `reward_tier_custom` (inline). Idempotente.
   Map<String, dynamic> _resolveTier(
     Map<String, dynamic> entry,
     Map<String, Map<String, dynamic>> tierDefs,
   ) {
-    // Já tem `reward` inline → passa direto.
     if (entry.containsKey('reward')) return entry;
-    // Lookup ou custom inline.
     Map<String, dynamic>? tierMap;
     if (entry.containsKey('reward_tier_custom')) {
       final raw = entry['reward_tier_custom'];
@@ -314,9 +227,8 @@ class AchievementsService {
             "(em '${entry['key']}')");
       }
     }
-    if (tierMap == null) return entry; // Conquista sem reward — válido.
+    if (tierMap == null) return entry;
 
-    // Constrói reward a partir do tier.
     final items = <Map<String, dynamic>>[];
     final bausSecretos = (tierMap['baus_secretos'] as int?) ?? 0;
     if (bausSecretos > 0) {
@@ -341,24 +253,17 @@ class AchievementsService {
       if (items.isNotEmpty) 'items': items,
     };
 
-    // Retorna shallow-copy do entry com `reward` adicionado (não muta
-    // o original — defesa contra parser ser chamado em loop).
     return {...entry, 'reward': reward};
   }
 
   /// Carrega catálogo e assina o listener de `RewardGranted`. Retorna a
-  /// subscription — caller deve cancelar em dispose (provider faz isso
-  /// via `ref.onDispose`).
+  /// subscription — caller deve cancelar em dispose.
   Future<StreamSubscription<RewardGranted>> attach() async {
     await ensureLoaded();
     return _bus.on<RewardGranted>().listen(_handleRewardGranted);
   }
 
-  /// Sprint 3.3 Etapa 2.1b — assina o listener de `DailyStatsUpdated`,
-  /// evento publicado pelo `DailyMissionStatsService` APÓS commit das
-  /// stats. Retorna lista de subscriptions — caller deve cancelar todas
-  /// em dispose. Hoje há só 1 (o evento agrega completed/failed/generated)
-  /// mas devolve lista pra facilitar adição futura sem mudar contrato.
+  /// Sprint 3.3 Etapa 2.1b — assina o listener de `DailyStatsUpdated`.
   Future<List<StreamSubscription>> attachDailyListeners() async {
     await ensureLoaded();
     return [
@@ -366,63 +271,33 @@ class AchievementsService {
     ];
   }
 
-  /// Sprint 3.3 Etapa 2.2 hotfix — assina 2 listeners pros 3 trigger
-  /// types legacy não cobertos pelos caches daily/event:
-  ///   - [AchievementUnlocked] → re-checa todos os
-  ///     `_metaLikeAchievements` (cobre [MetaTrigger.targetCount] que
-  ///     conta total de unlocks E [EventCountTrigger] com event=
-  ///     `AchievementUnlocked`)
-  ///   - [LevelUp] → re-checa todos os `_metaLikeAchievements` (cobre
-  ///     [ThresholdStatTrigger] com `stat='level'`)
-  ///
-  /// Idempotência via `isCompleted` previne loop:
-  ///   AchievementUnlocked → re-check → unlock outro → AchievementUnlocked
-  ///   → re-check → todos isCompleted → noop.
-  ///
-  /// Listener escuta `AchievementUnlocked` SEMPRE (independente de
-  /// fromAchievementCascade do RewardGranted) — ao contrário do
-  /// [_handleRewardGranted] que ignora cascata, este listener QUER
-  /// re-disparar pra propagar meta unlocks.
+  /// Sprint 3.3 Etapa 2.2 hotfix — assina listeners de `AchievementUnlocked`
+  /// e `LevelUp` pros triggers meta/threshold/event_count.
   Future<List<StreamSubscription>> attachMetaLikeListeners() async {
     await ensureLoaded();
     return [
-      _bus.on<AchievementUnlocked>().listen(
-          (e) => _checkMetaLikeTriggers(e.playerId)),
-      _bus.on<LevelUp>().listen(
-          (e) => _checkMetaLikeTriggers(e.playerId)),
+      _bus
+          .on<AchievementUnlocked>()
+          .listen((e) => _checkMetaLikeTriggers(e.playerId)),
+      _bus.on<LevelUp>().listen((e) => _checkMetaLikeTriggers(e.playerId)),
     ];
   }
 
-  /// Sprint 3.3 Etapa 2.1c-α — assina os 5 listeners pros triggers
-  /// `event_*`:
-  ///   - [ClassSelected] → `event_class_selected`
-  ///   - [FactionJoined] → `event_faction_joined`
-  ///   - [AttributePointSpent] → `event_attribute_point_spent`
-  ///   - [BodyMetricsUpdated] → `event_body_metrics_updated`
-  ///   - [CurrencyStatsUpdated] → `event_gems_spent_total` (escuta o
-  ///     evento de coordenação publicado pelo `PlayerCurrencyStatsService`
-  ///     pós-commit, NÃO o `GemsSpent` cru — evita race condition)
-  ///
-  /// Cada handler delega ao mesmo método interno [_checkEventTriggers]
-  /// que itera o cache `_eventAchievements` e tenta unlock.
+  /// Sprint 3.3 Etapa 2.1c-α — assina os listeners pros triggers `event_*`.
   Future<List<StreamSubscription>> attachEventListeners() async {
     await ensureLoaded();
     return [
-      _bus.on<ClassSelected>().listen(
-          (e) => _checkEventTriggers(e.playerId)),
-      _bus.on<FactionJoined>().listen(
-          (e) => _checkEventTriggers(e.playerId)),
-      _bus.on<AttributePointSpent>().listen(
-          (e) => _checkEventTriggers(e.playerId)),
+      _bus.on<ClassSelected>().listen((e) => _checkEventTriggers(e.playerId)),
+      _bus.on<FactionJoined>().listen((e) => _checkEventTriggers(e.playerId)),
+      _bus
+          .on<AttributePointSpent>()
+          .listen((e) => _checkEventTriggers(e.playerId)),
       _bus.on<BodyMetricsUpdated>().listen(
           (e) => _checkEventTriggers(e.playerId, bodyMetricsEvent: e)),
-      _bus.on<CurrencyStatsUpdated>().listen(
-          (e) => _checkEventTriggers(e.playerId)),
-      // Sprint 3.3 Etapa 2.1c-γ — escuta SEMPRE (isFirstVisit true OU
-      // false). Conquista pode ter sido adicionada após a 1ª visita;
-      // a 2ª visita é a primeira chance de unlock.
-      _bus.on<ScreenVisited>().listen(
-          (e) => _checkEventTriggers(e.playerId)),
+      _bus
+          .on<CurrencyStatsUpdated>()
+          .listen((e) => _checkEventTriggers(e.playerId)),
+      _bus.on<ScreenVisited>().listen((e) => _checkEventTriggers(e.playerId)),
     ];
   }
 
@@ -432,9 +307,6 @@ class AchievementsService {
 
   // ─── handler + cascata ─────────────────────────────────────────────
 
-  /// Sprint 3.3 Etapa 2.1b — handler de [DailyStatsUpdated]. Itera o
-  /// cache pré-filtrado e tenta unlock de cada achievement daily. Stats
-  /// já está commitado quando este handler roda (publish é pós-commit).
   Future<void> _onDailyStatsUpdated(DailyStatsUpdated evt) async {
     await ensureLoaded();
     if (_dailyAchievements.isEmpty) return;
@@ -443,12 +315,7 @@ class AchievementsService {
     }
   }
 
-  /// Sprint 3.3 Etapa 2.2 hotfix — handler de `AchievementUnlocked` /
-  /// `LevelUp` que re-checa o cache `_metaLikeAchievements`. Para meta-
-  /// triggers, idempotência via `isCompleted` é o que evita loop infinito
-  /// (cada unlock dispara o evento, listener re-itera, mas conquistas já
-  /// completadas caem em early-return em `_tryUnlock`).
-  Future<void> _checkMetaLikeTriggers(int playerId) async {
+  Future<void> _checkMetaLikeTriggers(String playerId) async {
     await ensureLoaded();
     if (_metaLikeAchievements.isEmpty) return;
     for (final def in _metaLikeAchievements) {
@@ -456,12 +323,8 @@ class AchievementsService {
     }
   }
 
-  /// Sprint 3.3 Etapa 2.1c-α — handler unificado pros 5 listeners de
-  /// event_*. Itera `_eventAchievements`. [bodyMetricsEvent] é
-  /// passado adiante pra `_validateEventTrigger` quando o evento fonte
-  /// é `BodyMetricsUpdated` (precisa do `isFirstTime` no validador).
   Future<void> _checkEventTriggers(
-    int playerId, {
+    String playerId, {
     BodyMetricsUpdated? bodyMetricsEvent,
   }) async {
     await ensureLoaded();
@@ -473,13 +336,10 @@ class AchievementsService {
   }
 
   Future<void> _handleRewardGranted(RewardGranted evt) async {
-    // Eventos gerados pelo próprio `grantAchievement` não entram no
-    // fluxo de cascata pelo listener — a cascata já foi processada
-    // síncronamente pelo caller com depth correto. Ignorar aqui evita
-    // que o listener contorne o limite de profundidade.
+    // Eventos gerados pelo próprio grantAchievement não entram no fluxo de
+    // cascata pelo listener — a cascata já foi processada síncronamente.
     if (evt.fromAchievementCascade) return;
 
-    // Lazy guard: se ninguém chamou attach/ensureLoaded ainda.
     await ensureLoaded();
 
     final RewardResolved resolved;
@@ -497,16 +357,8 @@ class AchievementsService {
 
   /// Tentativa de desbloqueio com controle de idempotência, trigger e
   /// cascata. Ver docstring da classe pro fluxo canônico.
-  ///
-  /// Exposto como `@visibleForTesting` implícito (não tem decoração por
-  /// enquanto — adicionar se testes começarem a exigir) pra permitir
-  /// testes unitários sem passar pelo bus.
-  ///
-  /// Sprint 3.3 Etapa 2.1c-α — [bodyMetricsEvent] passado adiante pra
-  /// `_validateEventTrigger` quando trigger é `event_body_metrics_updated`
-  /// com `must_be_first_time=true`.
   Future<void> _tryUnlock(
-    int playerId,
+    String playerId,
     String key, {
     required int depth,
     BodyMetricsUpdated? bodyMetricsEvent,
@@ -527,9 +379,6 @@ class AchievementsService {
           'achievements_to_check não existe no catálogo — skip');
       return;
     }
-    // Sprint 3.3 Etapa 2.1c-α — shell achievements (mecânica subjacente
-    // ainda não pronta) ficam carregadas mas nunca unlock. Cobre também
-    // referências em cascata via `achievements_to_check`.
     if (def.disabled) {
       return;
     }
@@ -539,13 +388,7 @@ class AchievementsService {
     }
 
     // Sprint 3.3 Etapa Final-A — coleta manual: unlock só marca completed
-    // e publica AchievementUnlocked. Grant da reward é responsabilidade
-    // de [claimReward] (chamado quando jogador clica "RECEBER RECOMPENSA"
-    // na tela). Cascata via meta/threshold/event_count continua funcionando
-    // automaticamente porque `attachMetaLikeListeners` escuta
-    // AchievementUnlocked direto — não depende de RewardGranted nem de
-    // achievements_to_check declarado em reward.
-    //
+    // e publica AchievementUnlocked. Grant da reward é de [claimReward].
     // Ver ADR-0020-coleta-manual-recompensas-conquistas.
     await _achievementsRepo.markCompleted(
       playerId,
@@ -558,24 +401,10 @@ class AchievementsService {
 
   /// Sprint 3.3 Etapa Final-A — coleta manual de recompensa de conquista.
   ///
-  /// Pré-condições (todas verificadas antes do grant):
-  ///   - `key` existe no catálogo
-  ///   - conquista NÃO está `disabled` (shell)
-  ///   - conquista está marcada como completed (unlock prévio)
-  ///   - rewardClaimed ainda é false
-  ///
-  /// Comportamento:
-  ///   - Se `def.reward == null`: marca rewardClaimed=true direto (estado
-  ///     "vista" pra UI parar de mostrar como pendente). Retorna true.
-  ///   - Se `def.reward != null`: resolve reward via SOULSLIKE multipliers
-  ///     (ADR 0013) e grant via [RewardGrantService.grantAchievement]
-  ///     (que internamente marca rewardClaimed=true + publica
-  ///     RewardGranted com fromAchievementCascade=true).
-  ///
   /// Race condition tolerada: 2 calls concorrentes na mesma key — o 2º
-  /// recebe [AchievementRewardAlreadyGrantedException] do grant service e
-  /// retorna false silenciosamente.
-  Future<bool> claimReward(int playerId, String key) async {
+  /// recebe [AchievementRewardAlreadyGrantedException] do grant e retorna
+  /// false silenciosamente.
+  Future<bool> claimReward(String playerId, String key) async {
     await ensureLoaded();
     final def = _catalog[key];
     if (def == null) return false;
@@ -585,8 +414,6 @@ class AchievementsService {
       return false;
     }
     if (def.reward == null) {
-      // Sem reward declarada — marca claimed direto pra UI tirar do
-      // estado "pendente". Não publica RewardGranted (não há reward).
       await _achievementsRepo.markRewardClaimed(playerId, key);
       return true;
     }
@@ -601,7 +428,6 @@ class AchievementsService {
       );
       return true;
     } on AchievementRewardAlreadyGrantedException {
-      // Race entre 2 claimReward simultâneos — 2º perde, sem efeito.
       return false;
     }
   }
@@ -609,7 +435,7 @@ class AchievementsService {
   // ─── validators de trigger ─────────────────────────────────────────
 
   Future<bool> _validateTrigger(
-    int playerId,
+    String playerId,
     AchievementDefinition def, {
     BodyMetricsUpdated? bodyMetricsEvent,
   }) async {
@@ -656,41 +482,115 @@ class AchievementsService {
     }
   }
 
+  // ─── leitura de stats/volume diário (Supabase, Época 2) ─────────────
+
+  /// Lê a row de `player_daily_mission_stats` do jogador. Retorna `null`
+  /// se não existe (sem auto-create: validação de trigger é read-only e
+  /// row ausente vira zeros via [_emptyStats]). Substitui o antigo
+  /// `PlayerDailyMissionStatsDao.findOrCreate` (que criava em escrita —
+  /// desnecessário num caminho de leitura).
+  Future<PlayerDailyMissionStats> _readStats(String playerId) async {
+    final row = await _client!
+        .from('player_daily_mission_stats')
+        .select()
+        .eq('player_id', playerId)
+        .maybeSingle();
+    if (row == null) return _emptyStats(playerId);
+    return PlayerDailyMissionStats.fromMap(row);
+  }
+
+  /// Stats default (todos zeros) pra jogador sem row ainda — espelha o
+  /// estado recém-criado do `findOrCreate` legacy.
+  PlayerDailyMissionStats _emptyStats(String playerId) =>
+      PlayerDailyMissionStats(
+        playerId: playerId,
+        totalCompleted: 0,
+        totalFailed: 0,
+        totalPartial: 0,
+        totalPerfect: 0,
+        totalSuperPerfect: 0,
+        totalGenerated: 0,
+        totalConfirmed: 0,
+        bestStreak: 0,
+        daysWithoutFailing: 0,
+        bestDaysWithoutFailing: 0,
+        consecutiveFailsCount: 0,
+        maxConsecutiveFails: 0,
+        consecutiveActiveDays: 0,
+        bestConsecutiveActiveDays: 0,
+        totalSubTasksCompleted: 0,
+        totalSubTasksOvershoot: 0,
+        totalConfirmedBefore8AM: 0,
+        totalConfirmedAfter10PM: 0,
+        totalConfirmedOnWeekend: 0,
+        daysOfWeekCompletedBitmask: 0,
+        totalZeroProgressConfirms: 0,
+        totalDaysAllPilars: 0,
+        totalSpeedrunCompletions: 0,
+        totalAutoConfirmCompletions: 0,
+        totalZeroProgressManualConfirms: 0,
+        dailyTodayCount: 0,
+        lastTodayCountDate: null,
+        firstCompletedAt: null,
+        lastCompletedAt: null,
+        lastPilarBalanceDay: null,
+        lastActiveDay: null,
+        updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+      );
+
+  /// Volume de uma sub-task específica. 0 se não há row.
+  Future<int> _readSubtaskVolume(String playerId, String subTaskKey) async {
+    final row = await _client!
+        .from('player_daily_subtask_volume')
+        .select('total_units')
+        .eq('player_id', playerId)
+        .eq('sub_task_key', subTaskKey)
+        .maybeSingle();
+    if (row == null) return 0;
+    return (row['total_units'] as num?)?.toInt() ?? 0;
+  }
+
+  /// Soma de `total_units` de todas as sub-tasks do jogador. 0 se nenhuma.
+  Future<int> _readSubtaskTotalVolume(String playerId) async {
+    final rows = await _client!
+        .from('player_daily_subtask_volume')
+        .select('total_units')
+        .eq('player_id', playerId);
+    var total = 0;
+    for (final r in rows) {
+      total += (r['total_units'] as num?)?.toInt() ?? 0;
+    }
+    return total;
+  }
+
   // ─── validators de daily trigger (Sprint 3.3 Etapa 2.1b) ───────────
 
-  /// Resolve um [DailyMissionTrigger] contra a foundation da Etapa 2.1a
-  /// (`PlayerDailyMissionStatsDao` + `PlayerDailySubtaskVolumeDao` +
-  /// `players.daily_missions_streak`).
-  ///
-  /// Sub-types com `params` malformado (ex: window faltando) caem em
-  /// fail-safe (warn + return false). Idem se DAOs forem `null` (modo
-  /// degradado de testes legacy).
   Future<bool> _validateDailyTrigger(
-    int playerId,
+    String playerId,
     AchievementDefinition def,
     DailyMissionTrigger trigger,
   ) async {
-    final statsDao = _statsDao;
-    if (statsDao == null && trigger.subType != AchievementTriggerTypes.dailyMissionStreak) {
-      // Triggers que dependem de stats precisam do DAO. Streak é único
+    if (_client == null &&
+        trigger.subType != AchievementTriggerTypes.dailyMissionStreak) {
+      // Triggers que dependem de stats precisam do client. Streak é único
       // que lê de PlayerFacts (players.daily_missions_streak).
       // ignore: avoid_print
       print('[achievements] daily trigger "${trigger.subType}" em '
-          '"${def.key}" requer statsDao — skip (modo degradado)');
+          '"${def.key}" requer client Supabase — skip (modo degradado)');
       return false;
     }
 
     switch (trigger.subType) {
       case AchievementTriggerTypes.dailyMissionCount:
-        final stats = await statsDao!.findOrCreate(playerId);
+        final stats = await _readStats(playerId);
         return stats.totalCompleted >= trigger.target;
 
       case AchievementTriggerTypes.dailyMissionFailedCount:
-        final stats = await statsDao!.findOrCreate(playerId);
+        final stats = await _readStats(playerId);
         return stats.totalFailed >= trigger.target;
 
       case AchievementTriggerTypes.dailyMissionPartialCount:
-        final stats = await statsDao!.findOrCreate(playerId);
+        final stats = await _readStats(playerId);
         return stats.totalPartial >= trigger.target;
 
       case AchievementTriggerTypes.dailyMissionStreak:
@@ -698,19 +598,19 @@ class AchievementsService {
         return facts.dailyMissionsStreak >= trigger.target;
 
       case AchievementTriggerTypes.dailyMissionBestStreak:
-        final stats = await statsDao!.findOrCreate(playerId);
+        final stats = await _readStats(playerId);
         return stats.bestStreak >= trigger.target;
 
       case AchievementTriggerTypes.dailyMissionPerfectCount:
-        final stats = await statsDao!.findOrCreate(playerId);
+        final stats = await _readStats(playerId);
         return stats.totalPerfect >= trigger.target;
 
       case AchievementTriggerTypes.dailyMissionSuperPerfectCount:
-        final stats = await statsDao!.findOrCreate(playerId);
+        final stats = await _readStats(playerId);
         return stats.totalSuperPerfect >= trigger.target;
 
       case AchievementTriggerTypes.dailyNoFailStreak:
-        final stats = await statsDao!.findOrCreate(playerId);
+        final stats = await _readStats(playerId);
         final useBest = trigger.params?['use_best'] == true;
         final value = useBest
             ? stats.bestDaysWithoutFailing
@@ -718,13 +618,6 @@ class AchievementsService {
         return value >= trigger.target;
 
       case AchievementTriggerTypes.dailySubtaskVolume:
-        final volumeDao = _volumeDao;
-        if (volumeDao == null) {
-          // ignore: avoid_print
-          print('[achievements] daily_subtask_volume em "${def.key}" '
-              'requer volumeDao — skip');
-          return false;
-        }
         final key = trigger.params?['sub_task_key'];
         if (key is! String || key.isEmpty) {
           // ignore: avoid_print
@@ -732,22 +625,15 @@ class AchievementsService {
               'sem params.sub_task_key — fail-safe');
           return false;
         }
-        final volume = await volumeDao.getVolume(playerId, key);
+        final volume = await _readSubtaskVolume(playerId, key);
         return volume >= trigger.target;
 
       case AchievementTriggerTypes.dailySubtaskTotalVolume:
-        final volumeDao = _volumeDao;
-        if (volumeDao == null) {
-          // ignore: avoid_print
-          print('[achievements] daily_subtask_total_volume em "${def.key}" '
-              'requer volumeDao — skip');
-          return false;
-        }
-        final total = await volumeDao.getTotalVolume(playerId);
+        final total = await _readSubtaskTotalVolume(playerId);
         return total >= trigger.target;
 
       case AchievementTriggerTypes.dailyConfirmedTimeWindow:
-        final stats = await statsDao!.findOrCreate(playerId);
+        final stats = await _readStats(playerId);
         final window = trigger.params?['window'];
         switch (window) {
           case 'before_8am':
@@ -762,15 +648,15 @@ class AchievementsService {
         }
 
       case AchievementTriggerTypes.dailyConfirmedOnWeekend:
-        final stats = await statsDao!.findOrCreate(playerId);
+        final stats = await _readStats(playerId);
         return stats.totalConfirmedOnWeekend >= trigger.target;
 
       case AchievementTriggerTypes.dailyPilarBalance:
-        final stats = await statsDao!.findOrCreate(playerId);
+        final stats = await _readStats(playerId);
         return stats.totalDaysAllPilars >= trigger.target;
 
       case AchievementTriggerTypes.dailyConsecutiveDaysActive:
-        final stats = await statsDao!.findOrCreate(playerId);
+        final stats = await _readStats(playerId);
         final useBest = trigger.params?['use_best'] == true;
         final value = useBest
             ? stats.bestConsecutiveActiveDays
@@ -778,27 +664,21 @@ class AchievementsService {
         return value >= trigger.target;
 
       case AchievementTriggerTypes.dailySpeedrun:
-        final stats = await statsDao!.findOrCreate(playerId);
+        final stats = await _readStats(playerId);
         return stats.totalSpeedrunCompletions >= trigger.target;
 
       case AchievementTriggerTypes.dailyAutoConfirmCount:
-        final stats = await statsDao!.findOrCreate(playerId);
+        final stats = await _readStats(playerId);
         return stats.totalAutoConfirmCompletions >= trigger.target;
 
       case AchievementTriggerTypes.dailyZeroProgressManualCount:
-        final stats = await statsDao!.findOrCreate(playerId);
+        final stats = await _readStats(playerId);
         return stats.totalZeroProgressManualConfirms >= trigger.target;
 
       case AchievementTriggerTypes.dailyTodayCount:
-        // Sprint 3.3 Etapa 2.1c-δ. STALE GUARD: contador é tocado pelo
-        // listener `_onCompleted` no `DailyMissionStatsService`. Se o
-        // jogador completou X missões ontem e ainda não completou
-        // nenhuma hoje, `dailyTodayCount` continua no valor de ontem
-        // até a próxima `incrementTodayCount` zerar (via reset lazy).
-        // Sem este guard, validador acharia que conta de ontem é de
-        // hoje. Comparação YYYY-MM-DD device local — sistema PARALELO
-        // ao caelum_day (intocado).
-        final stats = await statsDao!.findOrCreate(playerId);
+        // STALE GUARD: contador é tocado pós-completion. Se a data não é
+        // hoje (device local), o valor é de ontem — rejeita.
+        final stats = await _readStats(playerId);
         final today = formatDay(DateTime.now());
         if (stats.lastTodayCountDate != today) {
           return false;
@@ -806,9 +686,6 @@ class AchievementsService {
         return stats.dailyTodayCount >= trigger.target;
 
       default:
-        // Não deveria acontecer — o parser só cria DailyMissionTrigger
-        // pra subtypes em AchievementTriggerTypes.allDaily. Defesa pra
-        // caso alguém estenda a constants list sem atualizar este switch.
         // ignore: avoid_print
         print('[achievements] daily subType "${trigger.subType}" em '
             '"${def.key}" sem mapeamento — fail-safe');
@@ -818,16 +695,8 @@ class AchievementsService {
 
   // ─── validators de event trigger (Sprint 3.3 Etapa 2.1c-α) ─────────
 
-  /// Resolve um [EventTrigger] contra players + total_gems_spent +
-  /// PlayerFacts (streak/level). Sub-types com schema malformado caem
-  /// em fail-safe (warn + return false).
-  ///
-  /// [bodyMetricsEvent] é passado quando o evento fonte é
-  /// [BodyMetricsUpdated] — usado por `event_body_metrics_updated`
-  /// com `params.must_be_first_time=true` pra distinguir 1ª calibração
-  /// de edição posterior.
   Future<bool> _validateEventTrigger(
-    int playerId,
+    String playerId,
     AchievementDefinition def,
     EventTrigger trigger,
     BodyMetricsUpdated? bodyMetricsEvent,
@@ -846,7 +715,6 @@ class AchievementsService {
         final player = await playerDao.findById(playerId);
         if (player == null) return false;
         if (expectedClass == null) {
-          // Sem param: qualquer classe selecionada conta.
           return player.classType != null && player.classType!.isNotEmpty;
         }
         return player.classType == expectedClass;
@@ -860,13 +728,9 @@ class AchievementsService {
             ft.isEmpty ||
             ft.startsWith('pending:') ||
             ft == 'lone_wolf') {
-          // Pending = ainda em admissão; lone_wolf = anti-facção (Etapa F).
-          // Nenhum dos dois conta como "entrou em facção". (Literal pra não
-          // puxar dep de Flutter — FactionTheme importa material.)
           return false;
         }
         if (expectedFaction == null) {
-          // Sem param: qualquer facção final conta.
           return true;
         }
         return ft == expectedFaction;
@@ -885,12 +749,8 @@ class AchievementsService {
         final mustBeFirstTime =
             trigger.param<bool>('must_be_first_time') ?? false;
         if (mustBeFirstTime) {
-          // Só unlock quando o evento que disparou este check carrega
-          // `isFirstTime=true`. Cascata via `achievements_to_check` ou
-          // disparo por outro trigger não satisfaz.
           return bodyMetricsEvent?.isFirstTime ?? false;
         }
-        // Default: qualquer save (1ª ou edição) conta.
         return true;
 
       case AchievementTriggerTypes.eventGemsSpentTotal:
@@ -908,14 +768,11 @@ class AchievementsService {
         }
         final expectedKey = trigger.param<String>('screen_key');
         if (expectedKey == null) {
-          // Sem param: target = N telas distintas visitadas.
           return await svc.visitedCount(playerId) >= trigger.target;
         }
-        // Com param: específica (one-shot, target geralmente 1).
         return await svc.hasVisited(playerId, expectedKey);
 
       default:
-        // Defesa contra extensão de constants sem update neste switch.
         // ignore: avoid_print
         print('[achievements] event subType "${trigger.subType}" em '
             '"${def.key}" sem mapeamento — fail-safe');
@@ -923,24 +780,22 @@ class AchievementsService {
     }
   }
 
-  /// Read-only acessor pro cache pré-filtrado — facilita inspeção em
-  /// testes pra verificar que o load detectou os daily triggers corretos.
+  /// Read-only acessor pro cache pré-filtrado de daily triggers.
   List<AchievementDefinition> get dailyAchievements =>
       List.unmodifiable(_dailyAchievements);
 
-  /// Sprint 3.3 Etapa 2.1c-α — read-only acessor pro cache pré-filtrado
-  /// dos event_* triggers. Útil pra introspection em testes e UI.
+  /// Read-only acessor pro cache pré-filtrado dos event_* triggers.
   List<AchievementDefinition> get eventAchievements =>
       List.unmodifiable(_eventAchievements);
 
-  /// Sprint 3.3 Etapa 2.2 hotfix — read-only acessor pro cache de
-  /// triggers meta/threshold_stat/event_count.
+  /// Read-only acessor pro cache de meta/threshold_stat/event_count.
   List<AchievementDefinition> get metaLikeAchievements =>
       List.unmodifiable(_metaLikeAchievements);
 
-  /// Read-only — utilizado por testes pra forçar leitura sob estado
-  /// arbitrário sem precisar publicar evento.
-  Future<PlayerDailyMissionStats?> debugReadStats(int playerId) async {
-    return _statsDao?.findByPlayerId(playerId);
+  /// Read-only — leitura direta de stats pra testes/inspeção. `null` se não
+  /// há client configurado.
+  Future<PlayerDailyMissionStats?> debugReadStats(String playerId) async {
+    if (_client == null) return null;
+    return _readStats(playerId);
   }
 }

@@ -8,31 +8,33 @@
 abstract class PlayerAchievementsRepository {
   /// Já desbloqueou esta conquista? Idempotência — evita emitir evento
   /// `AchievementUnlocked` 2x.
-  Future<bool> isCompleted(int playerId, String achievementKey);
+  ///
+  /// Época 2 (ADR-0024): [playerId] virou uuid (String).
+  Future<bool> isCompleted(String playerId, String achievementKey);
 
   /// Keys de todas as conquistas desbloqueadas pelo jogador, ordenadas
   /// por `completed_at` desc (mais recentes primeiro).
-  Future<List<String>> listCompletedKeys(int playerId);
+  Future<List<String>> listCompletedKeys(String playerId);
 
   /// Registra desbloqueio em [at]. Falha silenciosamente se já existe
   /// (INSERT OR IGNORE semântico — PK composta garante idempotência).
   Future<void> markCompleted(
-    int playerId,
+    String playerId,
     String achievementKey, {
     required DateTime at,
   });
 
   /// Marca `reward_claimed = 1`. Chamado após grant bem-sucedido.
-  Future<void> markRewardClaimed(int playerId, String achievementKey);
+  Future<void> markRewardClaimed(String playerId, String achievementKey);
 
   /// `true` se a row existe **e** já teve reward creditada. Usado pelo
   /// `RewardGrantService.grantAchievement` (Bloco 8) como guard de
   /// idempotência dentro da transação.
-  Future<bool> isRewardClaimed(int playerId, String achievementKey);
+  Future<bool> isRewardClaimed(String playerId, String achievementKey);
 
   /// Total de conquistas desbloqueadas — consumido por conquistas
   /// meta (`trigger: meta`, completar N outras — Bloco 8).
-  Future<int> countCompleted(int playerId);
+  Future<int> countCompleted(String playerId);
 
   /// Sprint 3.3 Etapa Final-A — keys de conquistas desbloqueadas mas
   /// com reward AINDA NÃO coletada (`completed=true && reward_claimed=false`).
@@ -41,5 +43,5 @@ abstract class PlayerAchievementsRepository {
   ///
   /// Ordenação: por `completed_at` desc (mais recente primeiro). Coerente
   /// com [listCompletedKeys] pra UI mostrar unlocks recentes no topo.
-  Future<List<String>> listPendingClaims(int playerId);
+  Future<List<String>> listPendingClaims(String playerId);
 }

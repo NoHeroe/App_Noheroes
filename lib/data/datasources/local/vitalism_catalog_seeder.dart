@@ -1,35 +1,14 @@
-import 'dart:convert';
-import 'package:drift/drift.dart';
-import 'package:flutter/services.dart';
-import '../../database/app_database.dart';
-
-// Popula vitalism_unique_catalog com os 31 Vitalismos Únicos a partir do JSON.
-// Idempotente via insertOrIgnore — rodar várias vezes não duplica.
+// OBSOLETO (Época 2 — full-online Supabase, ADR-0024).
+//
+// O catálogo de Vitalismos Únicos (public.vitalism_unique_catalog) agora vive no
+// servidor e é re-seedado lá a partir do JSON via service_role (bypassa RLS).
+// O cliente NÃO popula mais catálogos localmente — eles são leitura pública.
+//
+// Stub mantido só para não quebrar wiring/imports legados. `seed()` é no-op.
+// Pode ser removido junto com o provider quando o boot for limpo.
 class VitalismCatalogSeeder {
-  final AppDatabase _db;
-  VitalismCatalogSeeder(this._db);
+  VitalismCatalogSeeder();
 
-  Future<void> seed() async {
-    try {
-      final raw = await rootBundle
-          .loadString('assets/data/vitalismos_unicos.json');
-      final data = json.decode(raw) as Map<String, dynamic>;
-      final list = (data['vitalismos'] as List).cast<Map<String, dynamic>>();
-      for (final v in list) {
-        await _db.into(_db.vitalismUniqueCatalogTable).insert(
-          VitalismUniqueCatalogTableCompanion(
-            id:               Value(v['id'] as String),
-            name:             Value(v['name'] as String),
-            carrierName:      Value(v['carrierName'] as String),
-            tier:             Value(v['tier'] as String),
-            themeDescription: Value(v['themeDescription'] as String),
-          ),
-          mode: InsertMode.insertOrIgnore,
-        );
-      }
-    } catch (_) {
-      // Fallback silencioso — padrão dos outros seeders do projeto
-      // (asset ainda não carregado em certos momentos do boot).
-    }
-  }
+  // No-op: catálogo é server-side no full-online.
+  Future<void> seed() async {}
 }

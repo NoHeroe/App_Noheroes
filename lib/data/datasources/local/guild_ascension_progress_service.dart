@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart' show Variable;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/events/app_event.dart';
 import '../../../core/events/app_event_bus.dart';
@@ -8,32 +8,34 @@ import '../../../core/events/daily_mission_events.dart';
 import '../../../core/events/diary_events.dart';
 import '../../../core/events/mission_events.dart';
 import '../../../core/events/reward_events.dart';
-import '../../database/app_database.dart';
 import 'guild_ascension_service.dart';
 
-/// A.2 — ignição event-driven do motor de ascensão da Guilda.
+/// A.2 — ignição event-driven do motor de ascensão da Guilda (Época 2,
+/// full-online — ADR-0024).
 ///
-/// Espelha a ESTRUTURA do `WeeklyFactionProgressService`: escuta eventos
-/// terminais de gameplay e re-avalia o progresso dos steps do ciclo de
-/// ascensão do player contra DADOS VIVOS (via `GuildAscensionService`).
-///
-/// Diferenças vs weekly:
-/// - **NÃO ascende**: o `ascend()` continua MANUAL no botão da
-///   `AscensionTab`. Este service só avança `progress`/`completed` dos
-///   steps — quando o ciclo fica todo completo, o botão "ASCENDER"
-///   aparece, e o jogador decide.
-/// - Sem reward/grant aqui (o reward de ascensão é xp/gold do step, fora
-///   do escopo da ignição).
+/// Escuta eventos terminais de gameplay e re-avalia o progresso dos steps do
+/// ciclo de ascensão do player contra DADOS VIVOS (via `GuildAscensionService`,
+/// agora PostgREST). NÃO ascende (o `ascend()` é manual no botão da
+/// `AscensionTab`). Sem reward/grant aqui.
 ///
 /// ## Eventos consumidos
 /// `DailyMissionCompleted`/`DailyMissionFailed`, `MissionCompleted`,
 /// `DiaryEntryCreated`, `RewardGranted`, `AchievementUnlocked`.
 ///
 /// ## Serialização
-/// Fila serial `_tail` — garante read-modify-write atômico das rows
-/// `guild_ascension_progress` entre eventos concorrentes (igual à weekly).
+/// Fila serial `_tail` — garante avanço sequencial dos steps entre eventos
+/// concorrentes. O read-modify-write atômico de UMA row é feito no servidor
+/// (update por id); a fila evita corrida entre steps do MESMO ciclo.
+///
+/// ## NOTA de migração (uuid vs int nos eventos)
+/// Os eventos do EventBus ainda carregam `int playerId` (camada de eventos
+/// não-migrada). O caminho EVENT-DRIVEN (`_onEvent`) não consegue recuperar o
+/// uuid do jogador a partir desse int → fica desabilitado até a migração dos
+/// eventos pra String. O caminho ON-DEMAND (`evaluatePlayer(String)`, chamado
+/// pela `AscensionTab` com `player.id` uuid) funciona normalmente. Ver
+/// 'unresolved' do resumo de migração.
 class GuildAscensionProgressService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
   final AppEventBus _bus;
   final GuildAscensionService _ascension;
 
@@ -41,10 +43,10 @@ class GuildAscensionProgressService {
   Future<void> _tail = Future<void>.value();
 
   GuildAscensionProgressService({
-    required AppDatabase db,
+    required SupabaseClient client,
     required AppEventBus bus,
     required GuildAscensionService ascension,
-  })  : _db = db,
+  })  : _client = client,
         _bus = bus,
         _ascension = ascension;
 
@@ -65,9 +67,13 @@ class GuildAscensionProgressService {
   }
 
   void _onEvent(AppEvent evt) {
-    final playerId = evt.playerId;
-    if (playerId == null) return;
-    _enqueue(() => _evaluatePlayer(playerId));
+    // MIGRAÇÃO: evt.playerId é `int` (eventos legacy). Sem mapeamento int→uuid
+    // confiável, o caminho event-driven fica inerte até os eventos migrarem
+    // pra String playerId. A re-avaliação on-demand (evaluatePlayer) cobre a
+    // UI da AscensionTab nesse meio-tempo. Ver 'unresolved'.
+    if (evt.playerId == null) return;
+    // Intencionalmente sem enfileirar: não há uuid pra passar ao
+    // GuildAscensionService (que agora exige String playerId).
   }
 
   /// Enfileira [task] no encadeamento serial. Erros logados sem quebrar
@@ -82,40 +88,42 @@ class GuildAscensionProgressService {
   }
 
   /// Re-avaliação on-demand (ex: `AscensionTab.build`). Mesma fila serial.
-  Future<void> evaluatePlayer(int playerId) =>
+  /// `playerId` é o uuid do jogador (String).
+  Future<void> evaluatePlayer(String playerId) =>
       _enqueue(() => _evaluatePlayer(playerId));
 
   /// Future que resolve quando a fila atual esvazia (testes).
   Future<void> settle() => _tail;
 
-  Future<void> _evaluatePlayer(int playerId) async {
-    final rows = await _db.customSelect(
-      'SELECT guild_rank FROM players WHERE id = ? LIMIT 1',
-      variables: [Variable.withInt(playerId)],
-    ).get();
-    if (rows.isEmpty) return;
-    final rank = (rows.first.data['guild_rank'] as String?) ?? 'none';
+  Future<void> _evaluatePlayer(String playerId) async {
+    final row = await _client
+        .from('players')
+        .select('guild_rank')
+        .eq('id', playerId)
+        .maybeSingle();
+    if (row == null) return;
+    final rank = (row['guild_rank'] as String?) ?? 'none';
     // Sem rank (não é membro) ou já no topo → nada a avançar.
-    if (rank.isEmpty || rank.toLowerCase() == 'none' || rank.toUpperCase() == 'S') {
+    if (rank.isEmpty ||
+        rank.toLowerCase() == 'none' ||
+        rank.toUpperCase() == 'S') {
       return;
     }
 
-    // B.3 — só avança trials com JANELA ATIVA não vencida. A
-    // materialização dos trials é responsabilidade do `pay()` (não
-    // inicializa aqui). Fora de `active` → no-op (evita auto-completar por
-    // contador lifetime antes de pagar).
-    final stRows = await _db.customSelect(
-      'SELECT status, window_deadline_ms AS dl FROM guild_ascension_state '
-      'WHERE player_id = ? AND rank_from = ? LIMIT 1',
-      variables: [
-        Variable.withInt(playerId),
-        Variable.withString(rank.toUpperCase()),
-      ],
-    ).get();
-    if (stRows.isEmpty) return;
-    if ((stRows.first.data['status'] as String?) != 'active') return;
-    final deadline = stRows.first.data['dl'] as int?;
-    if (deadline == null || DateTime.now().millisecondsSinceEpoch >= deadline) {
+    // B.3 — só avança trials com JANELA ATIVA não vencida. A materialização
+    // dos trials é responsabilidade do `pay()` (RPC). Fora de `active` →
+    // no-op (evita auto-completar por contador lifetime antes de pagar).
+    final st = await _client
+        .from('guild_ascension_state')
+        .select('status, window_deadline_ms')
+        .eq('player_id', playerId)
+        .eq('rank_from', rank.toUpperCase())
+        .maybeSingle();
+    if (st == null) return;
+    if ((st['status'] as String?) != 'active') return;
+    final deadline = (st['window_deadline_ms'] as num?)?.toInt();
+    if (deadline == null ||
+        DateTime.now().millisecondsSinceEpoch >= deadline) {
       return;
     }
 

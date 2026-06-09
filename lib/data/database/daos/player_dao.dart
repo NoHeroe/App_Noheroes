@@ -1,362 +1,179 @@
-import 'package:drift/drift.dart';
-import '../app_database.dart';
-import '../tables/players_table.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../core/events/player_events.dart';
-import '../../../core/utils/xp_calculator.dart';
+import '../../../domain/entities/player.dart';
 
-part 'player_dao.g.dart';
+/// Wrapper fino full-online (Época 2 — ADR-0024) que substitui o antigo
+/// `PlayerDao` (Drift). Mantém a MESMA API de métodos pra que callers
+/// compilem sem mudança, mas delega TUDO ao Supabase: leituras viram
+/// PostgREST (`from('players')...`) e operações atômicas (read-modify-write,
+/// multi-write) viram RPCs Postgres (`rpc(...)`).
+///
+/// Diferenças de assinatura vs. versão Drift:
+///   - `id` que refere o JOGADOR agora é `String` (uuid = auth.users.id),
+///     não mais `int`.
+///   - `findById`/`findByEmail` retornam [Player] (`fromMap`) em vez de
+///     `PlayersTableData`.
+///   - `createPlayer` saiu — criação de jogador é responsabilidade do
+///     fluxo de auth/onboarding (signup do Supabase), não deste wrapper.
+class PlayerDao {
+  final SupabaseClient _client;
+  PlayerDao(this._client);
 
-@DriftAccessor(tables: [PlayersTable])
-class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
-  PlayerDao(super.db);
-
-  Future<PlayersTableData?> findByEmail(String email) {
-    return (select(playersTable)
-          ..where((t) => t.email.equals(email)))
-        .getSingleOrNull();
+  Future<Player?> findByEmail(String email) async {
+    final row = await _client
+        .from('players')
+        .select()
+        .eq('email', email)
+        .maybeSingle();
+    return row == null ? null : Player.fromMap(row);
   }
 
-  Future<PlayersTableData?> findById(int id) {
-    return (select(playersTable)
-          ..where((t) => t.id.equals(id)))
-        .getSingleOrNull();
+  Future<Player?> findById(String id) async {
+    final row =
+        await _client.from('players').select().eq('id', id).maybeSingle();
+    return row == null ? null : Player.fromMap(row);
   }
 
-  Future<int> createPlayer(PlayersTableCompanion player) {
-    return into(playersTable).insert(player);
-  }
-
-  Future<void> touchLastLogin(int id) async {
-    final player = await findById(id);
-    if (player == null) return;
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final lastLogin = player.lastLoginAt;
-    final lastLoginDay = DateTime(lastLogin.year, lastLogin.month, lastLogin.day);
-
-    if (lastLoginDay == today) return;
-
-    int newStreak = player.streakDays;
-    final lastStreak = player.lastStreakDate;
-    if (XpCalculator.isStreakValid(lastStreak)) {
-      newStreak++;
-    } else {
-      newStreak = 1;
-    }
-
-    await (update(playersTable)..where((t) => t.id.equals(id)))
-        .write(PlayersTableCompanion(
-      lastLoginAt: Value(now),
-      lastStreakDate: Value(today),
-      streakDays: Value(newStreak),
-      caelumDay: Value(player.caelumDay + 1),
-    ));
+  /// Atômico — RPC `touch_last_login` (streak + caelum_day + last_login_at).
+  Future<void> touchLastLogin(String id) async {
+    await _client.rpc('touch_last_login', params: {'p_player': id});
   }
 
   Future<void> completeOnboarding(
-      int id, String shadowName, String narrativeMode) {
-    return (update(playersTable)..where((t) => t.id.equals(id)))
-        .write(PlayersTableCompanion(
-      onboardingDone: const Value(true),
-      shadowName: Value(shadowName),
-      narrativeMode: Value(narrativeMode),
-    ));
+      String id, String shadowName, String narrativeMode) async {
+    await _client.from('players').update({
+      'onboarding_done': true,
+      'shadow_name': shadowName,
+      'narrative_mode': narrativeMode,
+    }).eq('id', id);
   }
 
-  /// Credita XP ao jogador, recalculando level / xpToNext / HP máximo /
-  /// attribute points conforme marcos de scaling (10,15,20,25,30,40,50,
-  /// 60,70,80,99 — varia por classe).
-  ///
-  /// Sprint 3.1 Bloco 7a — retorna `LevelUp` event (não publicado) quando
-  /// o level mudou; caller publica no [AppEventBus] se houver.
-  /// Exemplo canônico:
-  /// ```dart
-  /// final evt = await playerDao.addXp(id, 100);
-  /// if (evt != null) eventBus.publish(evt);
-  /// ```
-  /// PlayerDao fica desacoplado do EventBus — camada data não conhece
-  /// camada core/events (ADR 0016).
-  ///
-  /// Nenhum caller vivo chama addXp hoje (callers antigos foram .bakados
-  /// no Bloco 1). `LevelUp` event fica dormente até Bloco 14 (assignment)
-  /// e Bloco 15.5 (fix do RewardGrantService usar addXp dentro da
-  /// transaction) ligarem.
-  Future<LevelUp?> addXp(int id, int xpAmount) async {
-    final player = await findById(id);
-    if (player == null) return null;
-
-    int newXp = player.xp + xpAmount;
-    int newLevel = player.level;
-    int newXpToNext = player.xpToNext;
-    int newAttrPoints = player.attributePoints;
-
-    final oldLevel = player.level;
-    while (newXp >= newXpToNext) {
-      newXp -= newXpToNext;
-      newLevel++;
-      newAttrPoints++;
-      newXpToNext = XpCalculator.xpToNextLevel(newLevel);
-    }
-    // Bônus de scaling nos marcos (10,15,20,25,30,40,50,60,70,80,99)
-    final scalingMarcos = [10,15,20,25,30,40,50,60,70,80,99];
-    for (final marco in scalingMarcos) {
-      if (oldLevel < marco && newLevel >= marco) {
-        newAttrPoints += _scalingBonusPoints(player.classType, marco);
-      }
-    }
-    // Bônus de scaling nos marcos (10,15,20,25,30,40,50,60,70,80,99)
-
-
-    final newMaxHp = XpCalculator.calcMaxHp(player.constitution, newLevel);
-    final newMaxMp = XpCalculator.calcMaxMp(player.spirit, player.constitution, newLevel);
-
-    // Sprint 3.3 Etapa 2.1c-α — peak_level all-time. Foundation pra
-    // shell #4 (Queda do Vidente) detectar retorno de level superior.
-    // Só sobe; nunca decresce mesmo que sistema futuro reduza level.
-    final newPeakLevel = newLevel > player.peakLevel
-        ? newLevel
-        : player.peakLevel;
-
-    await (update(playersTable)..where((t) => t.id.equals(id)))
-        .write(PlayersTableCompanion(
-      xp: Value(newXp),
-      level: Value(newLevel),
-      xpToNext: Value(newXpToNext),
-      attributePoints: Value(newAttrPoints),
-      maxHp: Value(newMaxHp),
-      maxMp: Value(newMaxMp),
-      peakLevel: Value(newPeakLevel),
-    ));
-
-    // Sprint 3.1 Bloco 7a — retorna LevelUp quando level mudou.
-    // Caller publica no bus (PlayerDao é camada data — desacoplada
-    // do EventBus por ADR 0016).
-    if (newLevel > oldLevel) {
-      return LevelUp(
-        playerId: id,
-        newLevel: newLevel,
-        previousLevel: oldLevel,
-      );
+  /// Credita XP via RPC `add_xp` (level loop + scaling + max_hp/mp + peak).
+  /// A RPC retorna `{previous_level, new_level}` (ou null se player ausente).
+  /// Reconstrói o `LevelUp?` que o caller publica no [AppEventBus] (a borda
+  /// data segue desacoplada de events — ADR 0016).
+  Future<LevelUp?> addXp(String id, int xpAmount) async {
+    final res = await _client.rpc('add_xp', params: {
+      'p_player': id,
+      'p_amount': xpAmount,
+    });
+    if (res == null) return null;
+    final map = res as Map<String, dynamic>;
+    final prev = (map['previous_level'] as num).toInt();
+    final next = (map['new_level'] as num).toInt();
+    if (next > prev) {
+      return LevelUp(playerId: id, newLevel: next, previousLevel: prev);
     }
     return null;
   }
 
-  // Pontos de atributo extras nos marcos de nível por classe
-  int _scalingBonusPoints(String? classType, int marco) {
-    // Tecelão evolui mais lento — menos bônus
-    if (classType == 'shadowWeaver') return 1;
-    // Marcos maiores dão mais bônus
-    if (marco >= 50) return 3;
-    if (marco >= 25) return 2;
-    return 1;
+  /// Setter direto pra `xp_to_next` (backfill defensivo de players legacy).
+  Future<void> setXpToNext(String id, int value) async {
+    await _client.from('players').update({'xp_to_next': value}).eq('id', id);
   }
 
-  // Pontos de atributo extras nos marcos de nível por classe
-
-
-  /// Sprint 3.4 Etapa A hotfix — setter direto pra `xpToNext`. Usado
-  /// pelo backfill defensivo `applyXpToNextBackfill` (em `app_listeners.
-  /// dart`) que corrige players legacy criados com `xpToNext=100` (DB
-  /// default antigo) pra `200` (`XpCalculator.xpToNextLevel(1)`).
-  /// Idempotente — caller checa condição antes de chamar.
-  Future<void> setXpToNext(int id, int value) async {
-    await (update(playersTable)..where((t) => t.id.equals(id)))
-        .write(PlayersTableCompanion(xpToNext: Value(value)));
+  /// Marca timestamp (ms epoch) do último daily reset.
+  Future<void> markDailyReset(String id, DateTime at) async {
+    await _client
+        .from('players')
+        .update({'last_daily_reset': at.millisecondsSinceEpoch})
+        .eq('id', id);
   }
 
-  /// Sprint 3.1 Bloco 13b — marca timestamp do último daily reset.
-  /// `DailyResetService` chama dentro da transação de reset.
-  Future<void> markDailyReset(int id, DateTime at) async {
-    await (update(playersTable)..where((t) => t.id.equals(id))).write(
-        PlayersTableCompanion(lastDailyReset: Value(at.millisecondsSinceEpoch)));
+  /// Análogo pro weekly.
+  Future<void> markWeeklyReset(String id, DateTime at) async {
+    await _client
+        .from('players')
+        .update({'last_weekly_reset': at.millisecondsSinceEpoch})
+        .eq('id', id);
   }
 
-  /// Sprint 3.1 Bloco 13b — análogo pro weekly.
-  Future<void> markWeeklyReset(int id, DateTime at) async {
-    await (update(playersTable)..where((t) => t.id.equals(id))).write(
-        PlayersTableCompanion(lastWeeklyReset: Value(at.millisecondsSinceEpoch)));
+  /// Persiste peso/altura (ranges validados pelo BodyMetricsService antes).
+  Future<void> updateBodyMetrics(String id,
+      {int? weightKg, int? heightCm}) async {
+    final patch = <String, dynamic>{};
+    if (weightKg != null) patch['weight_kg'] = weightKg;
+    if (heightCm != null) patch['height_cm'] = heightCm;
+    if (patch.isEmpty) return;
+    await _client.from('players').update(patch).eq('id', id);
   }
 
-  /// Sprint 3.2 Etapa 1.0 — persiste peso/altura coletados na Calibração do
-  /// Sistema (onboarding) ou via edição inline na tela /perfil.
-  /// Ranges validados pelo BodyMetricsService antes de chegar aqui:
-  /// 20-300kg, 100-250cm.
-  Future<void> updateBodyMetrics(int id, {int? weightKg, int? heightCm}) async {
-    await (update(playersTable)..where((t) => t.id.equals(id)))
-        .write(PlayersTableCompanion(
-      weightKg: weightKg == null ? const Value.absent() : Value(weightKg),
-      heightCm: heightCm == null ? const Value.absent() : Value(heightCm),
-    ));
+  /// Marca timestamp (ms epoch) do último rollover de missões diárias.
+  Future<void> markDailyMissionRollover(String id, DateTime at) async {
+    await _client
+        .from('players')
+        .update({'last_daily_mission_rollover': at.millisecondsSinceEpoch})
+        .eq('id', id);
   }
 
-  /// Sprint 3.2 Etapa 1.2 — marca timestamp do último rollover de
-  /// missões diárias. Independente de `lastDailyReset`.
-  Future<void> markDailyMissionRollover(int id, DateTime at) async {
-    await (update(playersTable)..where((t) => t.id.equals(id))).write(
-        PlayersTableCompanion(
-            lastDailyMissionRollover: Value(at.millisecondsSinceEpoch)));
+  /// Incremento atômico do streak de missões diárias — RPC.
+  Future<void> incrementDailyMissionsStreak(String id) async {
+    await _client
+        .rpc('increment_daily_missions_streak', params: {'p_player': id});
   }
 
-  /// Incrementa streak de missões diárias 100%. Chamado pelo rollover
-  /// quando todas as 3 missões do dia anterior fecharam `completed`.
-  Future<void> incrementDailyMissionsStreak(int id) async {
-    final p = await findById(id);
-    if (p == null) return;
-    await (update(playersTable)..where((t) => t.id.equals(id))).write(
-        PlayersTableCompanion(
-            dailyMissionsStreak: Value(p.dailyMissionsStreak + 1)));
+  /// Reset atômico do streak de missões diárias — RPC.
+  Future<void> resetDailyMissionsStreak(String id) async {
+    await _client
+        .rpc('reset_daily_missions_streak', params: {'p_player': id});
   }
 
-  /// Reseta streak de missões diárias a 0. Qualquer falha ou parcial
-  /// quebra a sequência.
-  Future<void> resetDailyMissionsStreak(int id) async {
-    await (update(playersTable)..where((t) => t.id.equals(id)))
-        .write(const PlayersTableCompanion(dailyMissionsStreak: Value(0)));
+  Future<void> setAutoConfirmEnabled(String id, bool value) async {
+    await _client
+        .from('players')
+        .update({'auto_confirm_enabled': value})
+        .eq('id', id);
   }
 
-  /// Sprint 3.3 Etapa 2.1c-β — toggle de modo automático.
-  ///
-  /// Persiste preferência do jogador. Quando `true`,
-  /// `DailyMissionRolloverService` auto-completa missões com 100% em
-  /// todas as sub-tarefas no rollover diário sem exigir clique manual.
-  /// Caller deve atualizar `currentPlayerProvider` após chamar este
-  /// método pra UI reagir imediatamente.
-  Future<void> setAutoConfirmEnabled(int id, bool value) async {
-    await (update(playersTable)..where((t) => t.id.equals(id)))
-        .write(PlayersTableCompanion(autoConfirmEnabled: Value(value)));
+  /// Persiste CSV de paths visitados. O read-modify-write atômico vive na
+  /// RPC `record_screen_visit` (usada via PlayerScreensVisitedService); este
+  /// setter só sobrescreve o valor recebido.
+  Future<void> setScreensVisitedKeys(String id, String csv) async {
+    await _client
+        .from('players')
+        .update({'screens_visited_keys': csv})
+        .eq('id', id);
   }
 
-  /// Sprint 3.3 Etapa 2.1c-γ — persiste CSV de paths visitados.
-  ///
-  /// Chamado pelo `PlayerScreensVisitedService.recordVisit` dentro de
-  /// uma transação atômica (read-modify-write em CSV). Caller controla
-  /// formato; este método só persiste o valor recebido.
-  Future<void> setScreensVisitedKeys(int id, String csv) async {
-    await (update(playersTable)..where((t) => t.id.equals(id)))
-        .write(PlayersTableCompanion(screensVisitedKeys: Value(csv)));
+  /// Crédito de gold atômico (gold + lifetime) — RPC `add_gold`.
+  Future<void> addGold(String id, int amount) async {
+    await _client.rpc('add_gold', params: {
+      'p_player': id,
+      'p_amount': amount,
+    });
   }
 
-  Future<void> addGold(int id, int amount) async {
-    final player = await findById(id);
-    if (player == null) return;
-    // B.1 — lifetime conta só ouro GANHO (não-negativo).
-    final lifeGold = amount > 0 ? amount : 0;
-    await (update(playersTable)..where((t) => t.id.equals(id)))
-        .write(PlayersTableCompanion(
-      gold: Value(player.gold + amount),
-      totalGoldEarnedLifetime:
-          Value(player.totalGoldEarnedLifetime + lifeGold),
-    ));
+  /// Atualiza corrupção/estado da sombra atomicamente — RPC `update_shadow`.
+  Future<void> updateShadow(String id, int shadowImpact) async {
+    await _client.rpc('update_shadow', params: {
+      'p_player': id,
+      'p_shadow_impact': shadowImpact,
+    });
   }
 
-  Future<void> updateShadow(int id, int shadowImpact) async {
-    final player = await findById(id);
-    if (player == null) return;
-    int newCorruption = (player.shadowCorruption - shadowImpact).clamp(0, 100);
-    final newState = XpCalculator.calcShadowState(newCorruption);
-    await (update(playersTable)..where((t) => t.id.equals(id)))
-        .write(PlayersTableCompanion(
-      shadowCorruption: Value(newCorruption),
-      shadowState: Value(newState),
-    ));
-  }
-
-  /// Distribui 1 ponto de atributo. Retorna `null` em sucesso ou string
-  /// de erro em falha.
-  ///
-  /// **OBRIGAÇÃO DO CALLER (Sprint 3.3 Etapa 2.1c-α):** após receber
-  /// resultado `null` (sucesso), publicar `AttributePointSpent` no
-  /// AppEventBus. Veja [distributePointWithEvent] que retorna o evento
-  /// pronto pra publicar — preferir esse helper em código novo. Esta
-  /// função é mantida pra callers legacy.
-  ///
-  /// PlayerDao não conhece AppEventBus por contrato (ADR 0016 — camada
-  /// data desacoplada de events). Mesmo padrão do `addXp` retornando
-  /// `LevelUp?`.
-  Future<String?> distributePoint(int id, String attribute) async {
+  /// Distribui 1 ponto de atributo via RPC `distribute_point`. Retorna `null`
+  /// em sucesso ou a string de erro em falha (legacy callers).
+  Future<String?> distributePoint(String id, String attribute) async {
     final result = await distributePointWithEvent(id, attribute);
     return result.error;
   }
 
-  /// Sprint 3.3 Etapa 2.1c-α — variante que retorna o `AttributePointSpent`
-  /// pré-construído pra caller publicar. Em sucesso, `error == null` e
-  /// `event != null`. Em falha, vice-versa.
-  ///
-  /// Incrementa `total_attribute_points_spent` atomicamente junto com
-  /// o write — alimenta o trigger `event_attribute_point_spent`.
+  /// Variante que reconstrói o `AttributePointSpent` pra caller publicar.
+  /// A RPC `distribute_point` faz o spend + incrementa
+  /// `total_attribute_points_spent` atomicamente e retorna `{error, new_value}`.
   Future<DistributePointResult> distributePointWithEvent(
-      int id, String attribute) async {
-    final player = await findById(id);
-    if (player == null) {
-      return const DistributePointResult.error('Jogador não encontrado');
+      String id, String attribute) async {
+    final res = await _client.rpc('distribute_point', params: {
+      'p_player': id,
+      'p_attribute': attribute,
+    });
+    final map = (res as Map<String, dynamic>?) ?? const {};
+    final error = map['error'] as String?;
+    if (error != null) {
+      return DistributePointResult.error(error);
     }
-    if (player.attributePoints <= 0) {
-      return const DistributePointResult.error('Sem pontos disponíveis');
-    }
-
-    final pts = player.attributePoints - 1;
-    final newTotalSpent = player.totalAttributePointsSpent + 1;
-    PlayersTableCompanion data;
-    int newValue;
-
-    switch (attribute) {
-      case 'strength':
-        newValue = player.strength + 1;
-        data = PlayersTableCompanion(
-            strength: Value(newValue),
-            attributePoints: Value(pts),
-            totalAttributePointsSpent: Value(newTotalSpent));
-        break;
-      case 'dexterity':
-        newValue = player.dexterity + 1;
-        data = PlayersTableCompanion(
-            dexterity: Value(newValue),
-            attributePoints: Value(pts),
-            totalAttributePointsSpent: Value(newTotalSpent));
-        break;
-      case 'intelligence':
-        newValue = player.intelligence + 1;
-        data = PlayersTableCompanion(
-            intelligence: Value(newValue),
-            attributePoints: Value(pts),
-            totalAttributePointsSpent: Value(newTotalSpent));
-        break;
-      case 'constitution':
-        final newCon = player.constitution + 1;
-        newValue = newCon;
-        final newMaxHp = XpCalculator.calcMaxHp(newCon, player.level);
-        final newMaxMp = XpCalculator.calcMaxMp(player.spirit, newCon, player.level);
-        data = PlayersTableCompanion(
-            constitution: Value(newCon),
-            maxHp: Value(newMaxHp),
-            maxMp: Value(newMaxMp),
-            hp: Value(newMaxHp),
-            attributePoints: Value(pts),
-            totalAttributePointsSpent: Value(newTotalSpent));
-        break;
-      case 'spirit':
-        final newSpi = player.spirit + 1;
-        newValue = newSpi;
-        final newMaxMp = XpCalculator.calcMaxMp(newSpi, player.constitution, player.level);
-        data = PlayersTableCompanion(
-            spirit: Value(newSpi),
-            maxMp: Value(newMaxMp),
-            attributePoints: Value(pts),
-            totalAttributePointsSpent: Value(newTotalSpent));
-        break;
-      case 'charisma':
-        newValue = player.charisma + 1;
-        data = PlayersTableCompanion(
-            charisma: Value(newValue),
-            attributePoints: Value(pts),
-            totalAttributePointsSpent: Value(newTotalSpent));
-        break;
-      default:
-        return const DistributePointResult.error('Atributo inválido');
-    }
-
-    await (db.update(db.playersTable)..where((t) => t.id.equals(id))).write(data);
+    final newValue = (map['new_value'] as num?)?.toInt() ?? 0;
     return DistributePointResult.ok(AttributePointSpent(
       playerId: id,
       attributeKey: attribute,
@@ -364,27 +181,19 @@ class PlayerDao extends DatabaseAccessor<AppDatabase> with _$PlayerDaoMixin {
     ));
   }
 
-  Future<void> resetLevelAttributes(int id, int level, int goldCost) async {
-    final player = await findById(id);
-    if (player == null) return;
-    final pointsFromLevel = level - 1;
-    await (db.update(db.playersTable)..where((t) => t.id.equals(id)))
-        .write(PlayersTableCompanion(
-      strength:        const Value(1),
-      dexterity:       const Value(1),
-      intelligence:    const Value(1),
-      constitution:    const Value(1),
-      spirit:          const Value(1),
-      charisma:        const Value(1),
-      attributePoints: Value(pointsFromLevel),
-      gold:            Value(player.gold - goldCost),
-    ));
+  /// Reset de atributos de nível atômico — RPC `reset_level_attributes`.
+  Future<void> resetLevelAttributes(
+      String id, int level, int goldCost) async {
+    await _client.rpc('reset_level_attributes', params: {
+      'p_player': id,
+      'p_level': level,
+      'p_gold_cost': goldCost,
+    });
   }
 }
 
-/// Sprint 3.3 Etapa 2.1c-α — resultado imutável de
-/// [PlayerDao.distributePointWithEvent]. Em sucesso, [event] é non-null
-/// e [error] é null. Em falha, vice-versa.
+/// Resultado imutável de [PlayerDao.distributePointWithEvent]. Em sucesso,
+/// [event] é non-null e [error] é null. Em falha, vice-versa.
 class DistributePointResult {
   final AttributePointSpent? event;
   final String? error;

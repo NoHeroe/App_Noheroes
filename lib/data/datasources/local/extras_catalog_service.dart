@@ -72,7 +72,7 @@ class ExtrasCatalogService {
   /// Sprint 14.5 — lista completa pro jogador: estáticas + awakening
   /// extra (se existir). Consumido pelo `QuestsScreenNotifier` no redesign
   /// 14.6c pra renderizar a seção EXTRAS.
-  Future<List<ExtrasMissionSpec>> loadAllForPlayer(int playerId) async {
+  Future<List<ExtrasMissionSpec>> loadAllForPlayer(String playerId) async {
     final statics = await loadAll();
     final dynamicSpec = await _loadAwakeningExtra(playerId);
     if (dynamicSpec == null) return statics;
@@ -85,7 +85,7 @@ class ExtrasCatalogService {
   /// Persiste a spec do Awakening pro jogador. Idempotente: sobrescreve
   /// se já existe (caso jogador faça onboarding 2x — edge case).
   Future<void> saveAwakeningExtra(
-    int playerId,
+    String playerId,
     ExtrasMissionSpec spec,
   ) async {
     final prefs = await SharedPreferences.getInstance();
@@ -95,7 +95,7 @@ class ExtrasCatalogService {
     );
   }
 
-  Future<ExtrasMissionSpec?> _loadAwakeningExtra(int playerId) async {
+  Future<ExtrasMissionSpec?> _loadAwakeningExtra(String playerId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString('$awakeningExtraKeyPrefix$playerId');

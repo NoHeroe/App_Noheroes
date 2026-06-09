@@ -1,10 +1,10 @@
 import 'dart:math';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../core/events/app_event_bus.dart';
 import '../../core/events/daily_mission_events.dart';
-import '../../data/database/app_database.dart';
-import '../../data/database/daos/daily_missions_dao.dart';
-import '../../data/database/daos/player_dao.dart';
+import '../entities/player.dart';
 import '../enums/mission_category.dart';
 import '../models/daily_mission.dart';
 import '../models/daily_mission_status.dart';
@@ -32,24 +32,21 @@ import 'daily_pool_service.dart';
 /// check-and-insert (TOCTOU). Combinado com o guard idempotente
 /// `findByPlayerAndDate`, o resultado é exatamente 3, nunca 9.
 class DailyMissionGeneratorService {
+  final SupabaseClient _client;
   final DailyPoolService _pools;
   final BodyMetricsService _bodyMetrics;
-  final PlayerDao _playerDao;
-  final DailyMissionsDao _missionsDao;
   final AppEventBus _bus;
   final Random _random;
 
   DailyMissionGeneratorService({
+    required SupabaseClient client,
     required DailyPoolService pools,
     required BodyMetricsService bodyMetrics,
-    required PlayerDao playerDao,
-    required DailyMissionsDao missionsDao,
     required AppEventBus bus,
     Random? random,
-  })  : _pools = pools,
+  })  : _client = client,
+        _pools = pools,
         _bodyMetrics = bodyMetrics,
-        _playerDao = playerDao,
-        _missionsDao = missionsDao,
         _bus = bus,
         _random = random ?? Random();
 
@@ -75,7 +72,7 @@ class DailyMissionGeneratorService {
   /// Se [force] for `true` e já existirem missões do dia, elas são
   /// apagadas antes de gerar 3 novas. Usado pelo dev tool "Resetar
   /// missões diárias de hoje" — não usar em prod path.
-  Future<List<DailyMission>> generateForToday(int playerId,
+  Future<List<DailyMission>> generateForToday(String playerId,
       {DateTime? date, bool force = false}) {
     final now = date ?? DateTime.now();
     final dateStr = _dateStr(now);
@@ -100,17 +97,20 @@ class DailyMissionGeneratorService {
   }
 
   Future<List<DailyMission>> _generate(
-      int playerId, DateTime now, String dateStr, bool force) async {
-    final existing =
-        await _missionsDao.findByPlayerAndDate(playerId, dateStr);
+      String playerId, DateTime now, String dateStr, bool force) async {
+    final existing = await _findByPlayerAndDate(playerId, dateStr);
     if (existing.isNotEmpty) {
       if (!force) return existing;
-      await _missionsDao.deleteByPlayerAndDate(playerId, dateStr);
+      await _client
+          .from('daily_missions')
+          .delete()
+          .eq('player_id', playerId)
+          .eq('data', dateStr);
     }
 
     await _pools.loadAll();
 
-    final player = await _playerDao.findById(playerId);
+    final player = await _findPlayer(playerId);
     if (player == null) {
       throw StateError('Player $playerId não existe');
     }
@@ -135,7 +135,7 @@ class DailyMissionGeneratorService {
       ));
     }
 
-    final saved = await _missionsDao.insertAll(drafts);
+    final saved = await _insertAll(drafts);
     for (final m in saved) {
       _bus.publish(DailyMissionGenerated(
         playerId: m.playerId,
@@ -146,25 +146,69 @@ class DailyMissionGeneratorService {
     return saved;
   }
 
-  Future<List<DailyMission>> getTodayMissions(int playerId) async {
+  Future<List<DailyMission>> getTodayMissions(String playerId) async {
     final dateStr = _dateStr(DateTime.now());
-    final existing =
-        await _missionsDao.findByPlayerAndDate(playerId, dateStr);
+    final existing = await _findByPlayerAndDate(playerId, dateStr);
     if (existing.isNotEmpty) return existing;
     return generateForToday(playerId);
   }
 
-  Future<DailyMission?> getMissionById(int id) => _missionsDao.findById(id);
+  Future<DailyMission?> getMissionById(int id) async {
+    final row = await _client
+        .from('daily_missions')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
+    return row == null ? null : DailyMission.fromMap(row);
+  }
+
+  // ─── persistência (Supabase) ─────────────────────────────────────────
+
+  Future<List<DailyMission>> _findByPlayerAndDate(
+      String playerId, String dateStr) async {
+    final rows = await _client
+        .from('daily_missions')
+        .select()
+        .eq('player_id', playerId)
+        .eq('data', dateStr);
+    return (rows as List)
+        .map((r) => DailyMission.fromMap(r as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<Player?> _findPlayer(String playerId) async {
+    final row = await _client
+        .from('players')
+        .select()
+        .eq('id', playerId)
+        .maybeSingle();
+    return row == null ? null : Player.fromMap(row);
+  }
+
+  /// Insere os drafts e devolve as rows persistidas (com `id` bigserial
+  /// preenchido). `.insert().select()` retorna as linhas criadas na
+  /// mesma ordem da entrada.
+  Future<List<DailyMission>> _insertAll(List<DailyMission> drafts) async {
+    if (drafts.isEmpty) return const [];
+    final payload = drafts.map((m) => m.toInsertMap()).toList();
+    final rows = await _client
+        .from('daily_missions')
+        .insert(payload)
+        .select();
+    return (rows as List)
+        .map((r) => DailyMission.fromMap(r as Map<String, dynamic>))
+        .toList();
+  }
 
   // ─── construção da missão (mono-modalidade) ──────────────────────────
 
   DailyMission _buildModalidadeMission({
-    required int playerId,
+    required String playerId,
     required String dateStr,
     required DateTime now,
     required MissionCategory modalidade,
     required String rank,
-    required PlayersTableData player,
+    required Player player,
     required Set<String> usedKeys,
     required Set<String> usedTitulos,
   }) {
@@ -225,7 +269,7 @@ class DailyMissionGeneratorService {
   }
 
   DailyMission _assembleMono({
-    required int playerId,
+    required String playerId,
     required String dateStr,
     required DateTime now,
     required MissionCategory modalidade,
@@ -233,7 +277,7 @@ class DailyMissionGeneratorService {
     required DailyModalidadePool pool,
     required List<DailySubTaskSpec> candidatas,
     required String rank,
-    required PlayersTableData player,
+    required Player player,
     required Set<String> usedKeys,
     required Set<String> usedTitulos,
   }) {
@@ -303,7 +347,7 @@ class DailyMissionGeneratorService {
   }
 
   int _resolveScale(
-          DailySubTaskSpec spec, String rank, PlayersTableData player) =>
+          DailySubTaskSpec spec, String rank, Player player) =>
       _pools.resolveScale(
           spec: spec,
           rank: rank,

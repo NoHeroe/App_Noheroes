@@ -10,7 +10,10 @@ import 'daily_sub_task_instance.dart';
 /// pra TEXT em `sub_tarefas_json` — cardinalidade fixa em 3 por missão.
 class DailyMission {
   final int id;
-  final int playerId;
+
+  /// Época 2 (ADR-0024) — uuid do jogador (auth.users.id). Era `int` no
+  /// modelo Drift; PK de LINHA ([id]) continua `int` (bigserial).
+  final String playerId;
   final String data; // YYYY-MM-DD
   final MissionCategory modalidade;
 
@@ -82,6 +85,49 @@ class DailyMission {
       subTarefas.isNotEmpty &&
       subTarefas.every((s) =>
           s.escalaAlvo > 0 && s.progressoAtual >= s.escalaAlvo);
+
+  /// Época 2 (ADR-0024) — constrói a partir de uma row do Postgres
+  /// (chaves snake_case via PostgREST/Supabase). `player_id` é uuid
+  /// (String). `created_at`/`completed_at` são bigint em ms epoch.
+  /// `sub_tarefas_json` é TEXT contendo um array JSON.
+  factory DailyMission.fromMap(Map<String, dynamic> m) => DailyMission(
+        id: (m['id'] as num).toInt(),
+        playerId: m['player_id'] as String,
+        data: m['data'] as String,
+        modalidade: MissionCategoryCodec.fromStorage(m['modalidade'] as String),
+        subCategoria: m['sub_categoria'] as String?,
+        tituloKey: m['titulo_key'] as String,
+        tituloResolvido: m['titulo_resolvido'] as String,
+        quoteResolvida: m['quote_resolvida'] as String,
+        subTarefas: decodeSubTarefas(m['sub_tarefas_json'] as String),
+        status: DailyMissionStatusCodec.fromStorage(m['status'] as String),
+        createdAt:
+            DateTime.fromMillisecondsSinceEpoch((m['created_at'] as num).toInt()),
+        completedAt: m['completed_at'] == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(
+                (m['completed_at'] as num).toInt()),
+        rewardClaimed: (m['reward_claimed'] as bool?) ?? false,
+        wasAutoConfirmed: (m['was_auto_confirmed'] as bool?) ?? false,
+      );
+
+  /// Serializa pra INSERT no Postgres (snake_case). `id` é omitido
+  /// (bigserial gerado pelo banco). `created_at`/`completed_at` em ms.
+  Map<String, dynamic> toInsertMap() => {
+        'player_id': playerId,
+        'data': data,
+        'modalidade': modalidade.storage,
+        'sub_categoria': subCategoria,
+        'titulo_key': tituloKey,
+        'titulo_resolvido': tituloResolvido,
+        'quote_resolvida': quoteResolvida,
+        'sub_tarefas_json': encodeSubTarefas(),
+        'status': status.storage,
+        'created_at': createdAt.millisecondsSinceEpoch,
+        'completed_at': completedAt?.millisecondsSinceEpoch,
+        'reward_claimed': rewardClaimed,
+        'was_auto_confirmed': wasAutoConfirmed,
+      };
 
   /// Serializa só as sub-tarefas (campo TEXT no schema).
   String encodeSubTarefas() =>

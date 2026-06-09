@@ -38,7 +38,7 @@ class ClassQuestService {
   /// se já existe rows de classe tab hoje, retorna as existentes sem
   /// recriar.
   Future<List<MissionProgress>> assignDailyQuests(
-    int playerId,
+    String playerId,
     String classId, {
     DateTime? now,
   }) async {
@@ -82,7 +82,7 @@ class ClassQuestService {
 
   MissionProgress _fromJson(
     Map<String, dynamic> q,
-    int playerId,
+    String playerId,
     DateTime now,
   ) {
     final checkType = q['check_type'] as String?;

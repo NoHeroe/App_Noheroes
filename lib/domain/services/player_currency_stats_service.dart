@@ -1,35 +1,34 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart' show Variable;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/events/app_event_bus.dart';
 import '../../core/events/player_events.dart';
-import '../../data/database/app_database.dart';
 
 /// Sprint 3.3 Etapa 2.1c-α — agregador de gasto de moedas all-time.
 ///
 /// **Single writer** de `players.total_gems_spent`. Listener de
 /// `GemsSpent` (publicado por 4 sinks: shop, enchant, recalibration,
-/// individual_delete) e atualiza o contador atomicamente.
+/// individual_delete) e atualiza o contador atomicamente via RPC
+/// `increment_gems_spent` (incremento atômico col = col + x).
 ///
 /// Após commit, publica [CurrencyStatsUpdated] — `AchievementsService`
 /// escuta esse evento (não o `GemsSpent` cru) pra resolver o trigger
-/// `event_gems_spent_total` sem race condition. Mesmo padrão do
-/// `DailyMissionStatsService` da Etapa 2.1a/b.
+/// `event_gems_spent_total` sem race condition.
 ///
 /// MVP escope: só gems. Gold spent pode entrar em sprint futura
-/// reusando esta classe (adicionar coluna + segundo listener).
+/// reusando esta classe.
 class PlayerCurrencyStatsService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
   final AppEventBus _bus;
 
   StreamSubscription<GemsSpent>? _gemsSub;
   bool _started = false;
 
   PlayerCurrencyStatsService({
-    required AppDatabase db,
+    required SupabaseClient client,
     required AppEventBus bus,
-  })  : _db = db,
+  })  : _client = client,
         _bus = bus;
 
   /// Subscreve `GemsSpent`. Idempotente — `start()` 2× vira noop.
@@ -48,15 +47,10 @@ class PlayerCurrencyStatsService {
 
   Future<void> _onGemsSpent(GemsSpent evt) async {
     try {
-      await _db.customUpdate(
-        'UPDATE players SET total_gems_spent = total_gems_spent + ? '
-        'WHERE id = ?',
-        variables: [
-          Variable.withInt(evt.amount),
-          Variable.withInt(evt.playerId),
-        ],
-        updates: {_db.playersTable},
-      );
+      await _client.rpc('increment_gems_spent', params: {
+        'p_player': evt.playerId,
+        'p_amount': evt.amount,
+      });
       _bus.publish(CurrencyStatsUpdated(
         playerId: evt.playerId,
         currencyKind: 'gems_spent',

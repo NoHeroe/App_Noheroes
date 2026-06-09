@@ -1,7 +1,7 @@
 import '../../core/events/app_event_bus.dart';
 import '../../core/events/player_events.dart';
-import '../../data/database/app_database.dart';
 import '../../data/database/daos/player_dao.dart';
+import '../entities/player.dart';
 
 /// Sprint 3.2 Etapa 1.0 — IMC + recomendações diárias (água/proteína).
 ///
@@ -13,8 +13,8 @@ import '../../data/database/daos/player_dao.dart';
 /// - Proteína: 1.6g × peso_kg (perfil ativo, padrão pra usuários do app)
 ///
 /// Todos os métodos retornam null/`"Incompleto"` quando peso ou altura
-/// faltam — jogadores pré-3.2 que não passaram pela Calibração do Sistema
-/// caem nesse caminho até preencherem os dados em /perfil.
+/// faltam — jogadores que não passaram pela Calibração do Sistema caem
+/// nesse caminho até preencherem os dados em /perfil.
 ///
 /// Validação de range é feita aqui antes de delegar pro PlayerDao:
 /// - peso: 20–300 kg
@@ -23,9 +23,8 @@ class BodyMetricsService {
   final PlayerDao _dao;
   final AppEventBus _bus;
 
-  /// Sprint 3.3 Etapa 2.1c-α — bus injetado pra publicar
-  /// [BodyMetricsUpdated] após save bem-sucedido. `isFirstTime` é
-  /// detectado lendo player ANTES do save: ambos `weightKg` e
+  /// `bus` injetado pra publicar [BodyMetricsUpdated] após save bem-sucedido.
+  /// `isFirstTime` é detectado lendo player ANTES do save: ambos `weightKg` e
   /// `heightCm` null = primeira calibração.
   BodyMetricsService({required PlayerDao dao, required AppEventBus bus})
       : _dao = dao,
@@ -46,7 +45,7 @@ class BodyMetricsService {
   bool isValidHeight(int cm) => cm >= minHeightCm && cm <= maxHeightCm;
 
   /// IMC arredondado pra 1 casa decimal. Null se peso ou altura faltam.
-  double? bmi(PlayersTableData player) {
+  double? bmi(Player player) {
     final w = player.weightKg;
     final h = player.heightCm;
     if (w == null || h == null) return null;
@@ -57,7 +56,7 @@ class BodyMetricsService {
   }
 
   /// Categoria OMS. Retorna "Incompleto" quando IMC não pode ser calculado.
-  String bmiCategory(PlayersTableData player) {
+  String bmiCategory(Player player) {
     final value = bmi(player);
     if (value == null) return categoryIncomplete;
     if (value < 18.5) return categoryUnderweight;
@@ -67,14 +66,14 @@ class BodyMetricsService {
   }
 
   /// Água recomendada em ml/dia. Null se peso falta.
-  int? recommendedWaterMl(PlayersTableData player) {
+  int? recommendedWaterMl(Player player) {
     final w = player.weightKg;
     if (w == null) return null;
     return w * 35;
   }
 
   /// Proteína recomendada em g/dia (perfil ativo). Null se peso falta.
-  int? recommendedProteinG(PlayersTableData player) {
+  int? recommendedProteinG(Player player) {
     final w = player.weightKg;
     if (w == null) return null;
     return (w * 1.6).round();
@@ -83,11 +82,11 @@ class BodyMetricsService {
   /// Persiste peso/altura. Lança ArgumentError se algum valor estiver
   /// fora do range — UI valida antes mas defesa em profundidade.
   ///
-  /// Sprint 3.3 Etapa 2.1c-α — publica [BodyMetricsUpdated] pós-save.
-  /// `isFirstTime=true` quando ambos os campos estavam null antes
-  /// (primeira calibração — onboarding); `false` em edições.
+  /// Publica [BodyMetricsUpdated] pós-save. `isFirstTime=true` quando ambos
+  /// os campos estavam null antes (primeira calibração — onboarding);
+  /// `false` em edições.
   Future<void> save({
-    required int playerId,
+    required String playerId,
     int? weightKg,
     int? heightCm,
   }) async {

@@ -1,9 +1,8 @@
-import 'package:drift/drift.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/events/app_event_bus.dart';
 import '../../core/events/mission_events.dart';
 import '../../core/events/player_events.dart';
-import '../../data/database/app_database.dart';
 import '../balance/individual_delete_cost.dart';
 import '../enums/mission_modality.dart';
 import '../exceptions/reward_exceptions.dart';
@@ -30,7 +29,7 @@ class NotIndividualMissionException implements Exception {
 /// de delete. `InsufficientGemsException` é o caso análogo pra gemas
 /// (reusada do Bloco 9).
 class InsufficientGoldException implements Exception {
-  final int playerId;
+  final String playerId;
   final int required;
   final int available;
   const InsufficientGoldException({
@@ -79,15 +78,15 @@ class InsufficientGoldException implements Exception {
 /// único passo pós-delete é fechar o dialog de confirmação (Navigator
 /// pop), não navegar entre rotas. O bus carrega o refresh de UI.
 class IndividualDeleteService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
   final MissionRepository _missionRepo;
   final AppEventBus _bus;
 
   IndividualDeleteService({
-    required AppDatabase db,
+    required SupabaseClient client,
     required MissionRepository missionRepo,
     required AppEventBus bus,
-  })  : _db = db,
+  })  : _client = client,
         _missionRepo = missionRepo,
         _bus = bus;
 
@@ -99,11 +98,12 @@ class IndividualDeleteService {
 
   /// Apaga a missão. Ver docstring da classe pros contratos.
   Future<void> deleteIndividual({
-    required int playerId,
+    required String playerId,
     required int missionProgressId,
   }) async {
-    // Lê fora da transaction pra pegar o rank e rejeitar cedo em caso
-    // de modality errada — evita abrir transaction desnecessária.
+    // Lê o rank/modality pra rejeitar cedo em caso de modality errada
+    // (evita roundtrip à RPC) e calcular o custo a publicar nos eventos.
+    // A RPC delete_individual_mission revalida modality/saldos server-side.
     final mission = await _missionRepo.findById(missionProgressId);
     if (mission == null) {
       throw MissionNotFoundException(missionProgressId);
@@ -116,50 +116,43 @@ class IndividualDeleteService {
     }
     final cost = IndividualDeleteCost.forRank(mission.rank);
 
-    await _db.transaction(() async {
-      // 1. Check saldos DENTRO da tx pra evitar race entre leitura e
-      //    debit (outro gasto concorrente poderia esvaziar saldo).
-      final row = await (_db.select(_db.playersTable)
-            ..where((t) => t.id.equals(playerId)))
-          .getSingleOrNull();
-      if (row == null) {
+    // Operação atômica (valida saldos gold+gems, debita ambos, markFailed)
+    // delegada à RPC — NÃO reimplementamos a atomicidade no cliente.
+    try {
+      await _client.rpc('delete_individual_mission', params: {
+        'p_player': playerId,
+        'p_mission_progress_id': missionProgressId,
+        'p_gold_cost': cost.gold,
+        'p_gems_cost': cost.gems,
+      });
+    } on PostgrestException catch (e) {
+      // A RPC sinaliza saldo insuficiente via raise_exception. Remapeia
+      // pras exceptions de domínio que a UI já diferencia.
+      if (e.message.contains('InsufficientGold')) {
         throw InsufficientGoldException(
           playerId: playerId,
           required: cost.gold,
           available: 0,
         );
       }
-      if (row.gold < cost.gold) {
-        throw InsufficientGoldException(
-          playerId: playerId,
-          required: cost.gold,
-          available: row.gold,
-        );
-      }
-      if (row.gems < cost.gems) {
+      if (e.message.contains('InsufficientGems')) {
         throw InsufficientGemsException(
           playerId: playerId,
           required: cost.gems,
-          available: row.gems,
+          available: 0,
         );
       }
-
-      // 2. Debita currencies — customUpdate com updates: {playersTable}
-      //    invalida o playerStreamProvider downstream.
-      await _db.customUpdate(
-        'UPDATE players SET gold = gold - ?, gems = gems - ? '
-        'WHERE id = ?',
-        variables: [
-          Variable.withInt(cost.gold),
-          Variable.withInt(cost.gems),
-          Variable.withInt(playerId),
-        ],
-        updates: {_db.playersTable},
-      );
-
-      // 3. Marca failed_at — reusa markFailed do repo (Bloco 4).
-      await _missionRepo.markFailed(missionProgressId, at: DateTime.now());
-    });
+      if (e.message.contains('MissionNotFound')) {
+        throw MissionNotFoundException(missionProgressId);
+      }
+      if (e.message.contains('NotIndividualMission')) {
+        throw NotIndividualMissionException(
+          missionProgressId: missionProgressId,
+          actualModality: mission.modality,
+        );
+      }
+      rethrow;
+    }
 
     // Eventos pós-commit. Ordem: spends → failure pra alinhar
     // observadores que logam economia antes de estado de missão.

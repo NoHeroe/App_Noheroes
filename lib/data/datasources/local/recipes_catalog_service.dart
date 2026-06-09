@@ -1,23 +1,28 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../core/utils/guild_rank.dart';
 import '../../../core/utils/item_equip_policy.dart';
 import '../../../domain/enums/recipe_type.dart';
 import '../../../domain/models/player_snapshot.dart';
 import '../../../domain/models/recipe_spec.dart';
-import '../../database/app_database.dart';
 
-// Leitura do recipes_catalog. Catálogo é imutável após seed → cache em memória
-// na primeira chamada, mesmo pattern do ItemsCatalogService.
+// Leitura do recipes_catalog (Época 2 — full-online Supabase, ADR-0024).
+// Catálogo é imutável após seed → cache em memória na primeira chamada, mesmo
+// pattern do ItemsCatalogService. Rows vêm como Map<String,dynamic> do
+// PostgREST e são construídas via RecipeSpec.fromMap.
 class RecipesCatalogService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
   Future<List<RecipeSpec>>? _cacheFuture;
 
-  RecipesCatalogService(this._db);
+  RecipesCatalogService(this._client);
 
   Future<List<RecipeSpec>> findAll() => _cacheFuture ??= _loadAll();
 
   Future<List<RecipeSpec>> _loadAll() async {
-    final rows = await _db.select(_db.recipesCatalogTable).get();
-    return List<RecipeSpec>.unmodifiable(rows.map(RecipeSpec.fromRow));
+    final rows = await _client.from('recipes_catalog').select();
+    return List<RecipeSpec>.unmodifiable(
+      rows.map((r) => RecipeSpec.fromMap(r)),
+    );
   }
 
   Future<RecipeSpec?> findByKey(String key) async {

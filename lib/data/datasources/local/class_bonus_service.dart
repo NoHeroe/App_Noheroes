@@ -1,14 +1,16 @@
-import 'package:drift/drift.dart';
-import '../../database/app_database.dart';
-import '../../database/daos/player_dao.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../core/utils/vitalism_calculator.dart';
 import '../../../domain/enums/class_type.dart';
 
+/// Aplica bônus de atributos por classe / escolha de facção (Época 2 —
+/// Supabase). `applyClassBonus` é um read-modify-write single-table (lê
+/// o nível atual, deriva HP/MP/vitalismo, escreve a row) — não há RPC
+/// dedicada e a escrita é numa só tabela (`players`), então persiste
+/// direto via PostgREST. RLS (`auth.uid() = id`) protege cross-player.
 class ClassBonusService {
-  final AppDatabase _db;
-  ClassBonusService(this._db);
-
-  PlayerDao get _dao => PlayerDao(_db);
+  final SupabaseClient _client;
+  ClassBonusService(this._client);
 
   static const _bonuses = {
     'warrior':      {'strength': 4, 'constitution': 3, 'dexterity': 2, 'intelligence': 1, 'spirit': 1, 'charisma': 1},
@@ -21,14 +23,19 @@ class ClassBonusService {
     'shadowWeaver': {'strength': 2, 'constitution': 2, 'dexterity': 2, 'intelligence': 2, 'spirit': 2, 'charisma': 2},
   };
 
-  Future<void> applyClassBonus(int playerId, String classId) async {
-    final player = await _dao.findById(playerId);
-    if (player == null) return;
+  Future<void> applyClassBonus(String playerId, String classId) async {
+    final row = await _client
+        .from('players')
+        .select('level')
+        .eq('id', playerId)
+        .maybeSingle();
+    if (row == null) return;
+    final level = (row['level'] as num?)?.toInt() ?? 1;
 
     final bonus = _bonuses[classId];
     if (bonus == null) return;
 
-    final maxHp = 100 + (bonus['constitution']! * 10) + (player.level * 5);
+    final maxHp = 100 + (bonus['constitution']! * 10) + (level * 5);
     final maxMp = (maxHp * 0.9).round();
 
     final parsedClass = ClassType.values.asNameMap()[classId];
@@ -36,31 +43,29 @@ class ClassBonusService {
         ? VitalismCalculator.calculateMaxVitalism(
             hp: maxHp,
             classType: parsedClass,
-            level: player.level,
+            level: level,
           )
         : 0;
 
-    await (_db.update(_db.playersTable)
-          ..where((t) => t.id.equals(playerId)))
-        .write(PlayersTableCompanion(
-      classType:        Value(classId),
-      strength:         Value(bonus['strength']!),
-      constitution:     Value(bonus['constitution']!),
-      dexterity:        Value(bonus['dexterity']!),
-      intelligence:     Value(bonus['intelligence']!),
-      spirit:           Value(bonus['spirit']!),
-      charisma:         Value(bonus['charisma']!),
-      maxHp:            Value(maxHp),
-      hp:               Value(maxHp),
-      maxMp:            Value(maxMp),
-      mp:               Value(maxMp),
-      currentVitalism:  Value(maxVitalism),
-    ));
+    await _client.from('players').update({
+      'class_type': classId,
+      'strength': bonus['strength']!,
+      'constitution': bonus['constitution']!,
+      'dexterity': bonus['dexterity']!,
+      'intelligence': bonus['intelligence']!,
+      'spirit': bonus['spirit']!,
+      'charisma': bonus['charisma']!,
+      'max_hp': maxHp,
+      'hp': maxHp,
+      'max_mp': maxMp,
+      'mp': maxMp,
+      'current_vitalism': maxVitalism,
+    }).eq('id', playerId);
   }
 
-  Future<void> applyFactionChoice(int playerId, String factionId) async {
-    await (_db.update(_db.playersTable)
-          ..where((t) => t.id.equals(playerId)))
-        .write(PlayersTableCompanion(factionType: Value(factionId)));
+  Future<void> applyFactionChoice(String playerId, String factionId) async {
+    await _client
+        .from('players')
+        .update({'faction_type': factionId}).eq('id', playerId);
   }
 }

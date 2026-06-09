@@ -1,194 +1,165 @@
-import 'package:drift/drift.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../core/events/app_event_bus.dart';
 import '../../../core/events/crafting_events.dart';
 import '../../../core/events/player_events.dart';
-import '../../../core/utils/enchant_policy.dart';
 import '../../../domain/models/enchant_result.dart';
 import '../../../domain/models/enchant_spec.dart';
 import '../../../domain/models/player_snapshot.dart';
-import '../../database/app_database.dart';
 import 'items_catalog_service.dart';
-import 'player_inventory_service.dart';
 
-// Aplica encantamento em item equipável do inventário. Transação atômica
-// espelhando CraftingService (Sprint 2.2):
-//   - Policy pura valida antes da escrita
-//   - _db.transaction<T> envolve debit + consume + update
-//   - Qualquer throw interno desfaz TODAS as mudanças
+// Aplica encantamento em item equipável (Época 2 — full-online Supabase,
+// ADR-0024).
 //
-// Sprint 2.3 fix (D.2): runas agora vivem no items_catalog como ItemType.rune.
-// Service lê via ItemsCatalogService + converte ItemSpec → EnchantSpec via
-// EnchantSpec.fromItemSpec. Consumo usa PlayerInventoryService.consumeOneByKey
-// (substitui o antigo PlayerEnchantsService.consumeOne).
+// A atomicidade (EnchantPolicy.canApply + débito de gems + consumo de 1 runa +
+// set applied_rune_key) vive agora 100% na RPC Postgres public.apply_enchant(
+// p_player, p_inventory_item_id, p_enchant_key, p_confirm_replacement). Qualquer
+// RAISE no servidor faz rollback completo.
 //
-// Soft-gate de substituição: se item já tem runa e confirmReplacement=false,
-// retorna alreadyEnchantedSameSlot pra UI interceptar. Com confirmação, a
-// policy é re-consultada com currentRuneOnItem=null (simula slot vazio) e,
-// se aprovada, a runa anterior é perdida implicitamente (não volta pro
-// inventário — decisão Sprint 2.3).
+// Soft-gate de substituição: se o item já tem runa e confirmReplacement=false,
+// a RPC retorna {applied:false, needs_confirmation:true,
+// reason:'alreadyEnchantedSameSlot'} SEM escrever nada -> traduzimos para
+// EnchantResult.rejected(alreadyEnchantedSameSlot) pra UI interceptar e
+// re-chamar com confirmação.
+//
+// A RPC só devolve as KEYS das runas (applied/replaced). Pra reconstruir os
+// EnchantSpec do EnchantResult (contrato da UI), relemos via
+// ItemsCatalogService (runas vivem no items_catalog como type='rune') e
+// convertemos com EnchantSpec.fromItemSpec.
 class EnchantService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
   final ItemsCatalogService _items;
-  final PlayerInventoryService _playerInventory;
   final AppEventBus _eventBus;
 
-  EnchantService(
-      this._db, this._items, this._playerInventory, this._eventBus);
+  EnchantService(this._client, this._items, this._eventBus);
 
-  // Resolve um item do catálogo e devolve como EnchantSpec. Retorna null
-  // se a key não existe OU o item não é do tipo runa (defensivo — protege
-  // contra chamadas com key arbitrária).
-  Future<EnchantSpec?> _loadRuneSpec(String key) async {
+  // Resolve um item do catálogo e devolve como EnchantSpec. Retorna null se a
+  // key for nula/vazia, não existir, OU não for do tipo runa (defensivo).
+  Future<EnchantSpec?> _loadRuneSpec(String? key) async {
+    if (key == null || key.isEmpty) return null;
     final item = await _items.findByKey(key);
     if (item == null) return null;
-    // Enquanto seivas não chegam (Sprint 2.4), aceita só type: rune.
-    // Usar .name evita import de ItemType só pra comparação.
     if (item.type.name != 'rune') return null;
     return EnchantSpec.fromItemSpec(item);
   }
 
-  // `player` + `playerGems` vêm do call-site (UI ou service orquestrador) —
-  // mesmo contrato de CraftingService.craft. Evita dependência de PlayerDao
-  // aqui e mantém service focado na orquestração atômica.
+  // playerId é o jogador (uuid) -> String. inventoryItemId é PK de linha
+  // (bigserial) -> continua int. `player`/`playerGems` não são mais
+  // necessários (validação roda no servidor com estado autoritativo); mantidos
+  // opcionais pra compat de call-sites.
   Future<EnchantResult> applyEnchantToItem({
-    required int playerId,
+    required String playerId,
     required int inventoryItemId,
     required String enchantKey,
-    required PlayerSnapshot player,
-    required int playerGems,
+    PlayerSnapshot? player,
+    int? playerGems,
     bool confirmReplacement = false,
   }) async {
-    // 1. Spec da runa.
-    final enchant = await _loadRuneSpec(enchantKey);
-    if (enchant == null) {
-      return EnchantResult.rejected(EnchantRejectReason.enchantNotFound);
-    }
-
-    // 2. Row do item no inventário do jogador.
-    final invRow = await (_db.select(_db.playerInventoryTable)
-          ..where((t) =>
-              t.id.equals(inventoryItemId) &
-              t.playerId.equals(playerId)))
-        .getSingleOrNull();
-    if (invRow == null) {
-      return EnchantResult.rejected(EnchantRejectReason.itemNotFound);
-    }
-
-    // 3. Spec do item alvo.
-    final itemSpec = await _items.findByKey(invRow.itemKey);
-    if (itemSpec == null) {
-      return EnchantResult.rejected(EnchantRejectReason.itemNotFound);
-    }
-
-    // 4. Jogador possui a runa? (runa é item consumível no player_inventory).
-    final hasEnchant =
-        await _playerInventory.hasItem(playerId, enchantKey);
-
-    // 5. Runa atualmente aplicada (se houver).
-    EnchantSpec? currentRune;
-    if (invRow.appliedRuneKey != null) {
-      currentRune = await _loadRuneSpec(invRow.appliedRuneKey!);
-    }
-
-    // 6. Policy valida.
-    var check = EnchantPolicy.canApply(
-      enchant: enchant,
-      item: itemSpec,
-      player: player,
-      playerGems: playerGems,
-      enchantInInventory: hasEnchant,
-      currentRuneOnItem: currentRune,
-    );
-
-    // 7. Soft-gate de substituição.
-    if (!check.allowed &&
-        check.reason == EnchantRejectReason.alreadyEnchantedSameSlot) {
-      if (!confirmReplacement) {
-        return check; // UI intercepta, pergunta, re-chama com confirmação
-      }
-      // Re-valida como se slot estivesse vazio. Se outro gate falhar,
-      // retorna essa nova razão.
-      check = EnchantPolicy.canApply(
-        enchant: enchant,
-        item: itemSpec,
-        player: player,
-        playerGems: playerGems,
-        enchantInInventory: hasEnchant,
-        currentRuneOnItem: null,
-      );
-      if (!check.allowed) return check;
-    } else if (!check.allowed) {
-      return check;
-    }
-
-    // 8. Transação atômica — debit gems + consume runa + set applied_rune_key.
-    // Sprint 3.1 Bloco 7a — vars capturadas dentro da transação pra emit
-    // pós-commit. Rollback deixa as vars originais (0/'') e o publish
-    // vive fora do try; não alcançado se exception propagar.
-    var capturedCost = 0;
-    var capturedTargetItemKey = '';
     try {
-      final result = await _db.transaction<EnchantResult>(() async {
-        final cost = enchant.costGems ?? 0;
-        if (cost > 0) {
-          await _db.customUpdate(
-            'UPDATE players SET gems = gems - ? WHERE id = ?',
-            variables: [
-              Variable.withInt(cost),
-              Variable.withInt(playerId),
-            ],
-            updates: {_db.playersTable},
-          );
-        }
+      final res = await _client.rpc(
+        'apply_enchant',
+        params: {
+          'p_player': playerId,
+          'p_inventory_item_id': inventoryItemId,
+          'p_enchant_key': enchantKey,
+          'p_confirm_replacement': confirmReplacement,
+        },
+      );
 
-        // Consome 1 unidade da runa no inventário do jogador (item_key).
-        // StateError aqui força rollback da transação.
-        await _playerInventory.consumeOneByKey(
-          playerId: playerId,
-          itemKey: enchantKey,
-        );
+      final map = (res as Map).cast<String, dynamic>();
+      final applied = map['applied'] as bool? ?? false;
 
-        // Grava runa aplicada no item. Runa anterior (currentRune) é perdida
-        // implicitamente — decisão Sprint 2.3: substituir = perder anterior.
-        await (_db.update(_db.playerInventoryTable)
-              ..where((t) => t.id.equals(inventoryItemId)))
-            .write(PlayerInventoryTableCompanion(
-          appliedRuneKey: Value(enchantKey),
-        ));
+      // Soft-gate: item já encantado e sem confirmação. UI intercepta.
+      if (!applied) {
+        return EnchantResult.rejected(
+            EnchantRejectReason.alreadyEnchantedSameSlot);
+      }
 
-        capturedCost = cost;
-        capturedTargetItemKey = invRow.itemKey;
+      final itemKey = map['item_key'] as String;
+      final runeKey = map['rune_key'] as String;
+      final replacedKey = map['replaced_rune_key'] as String?;
+      final gemsSpent = (map['gems_spent'] as num?)?.toInt() ?? 0;
 
-        return EnchantResult.allowed(
-          applied: enchant,
-          replaced: currentRune,
-        );
-      });
+      final appliedSpec = await _loadRuneSpec(runeKey);
+      final replacedSpec = await _loadRuneSpec(replacedKey);
 
-      // Emit pós-commit.
-      if (result.allowed) {
-        if (capturedCost > 0) {
-          _eventBus.publish(GemsSpent(
-            playerId: playerId,
-            amount: capturedCost,
-            source: GemSink.enchant,
-          ));
-        }
-        _eventBus.publish(ItemEnchanted(
-          playerId: playerId,
-          itemKey: capturedTargetItemKey,
-          runeKey: enchantKey,
+      // appliedSpec não deveria ser null em sucesso (a RPC já validou type=rune),
+      // mas é defensivo: se sumiu do catálogo local, ainda confirmamos o sucesso.
+      if (appliedSpec == null) {
+        // ignore: avoid_print
+        print('[enchant_service] applied rune $runeKey not resolvable locally');
+      }
+
+      // Emit pós-sucesso (transação já commitou no servidor).
+      // NOTA: eventos ainda usam `int playerId` (ver 'unresolved' do resumo).
+      if (gemsSpent > 0) {
+        _eventBus.publish(GemsSpent(
+          playerId: _eventPlayerId(playerId),
+          amount: gemsSpent,
+          source: GemSink.enchant,
         ));
       }
-      return result;
+      _eventBus.publish(ItemEnchanted(
+        playerId: _eventPlayerId(playerId),
+        itemKey: itemKey,
+        runeKey: runeKey,
+      ));
+
+      return EnchantResult.allowed(
+        applied: appliedSpec ??
+            // fallback minimalista pra não perder o sucesso
+            EnchantSpec.fromJson({'key': runeKey, 'name': runeKey}),
+        replaced: replacedSpec,
+      );
+    } on PostgrestException catch (e) {
+      // ignore: avoid_print
+      print('[enchant_service] applyEnchantToItem(playerId=$playerId, '
+          'inventoryItemId=$inventoryItemId, enchantKey=$enchantKey) '
+          'failed: ${e.code} ${e.message}');
+      return EnchantResult.rejected(_mapError(e));
     } catch (e) {
       // ignore: avoid_print
       print('[enchant_service] applyEnchantToItem(playerId=$playerId, '
           'inventoryItemId=$inventoryItemId, enchantKey=$enchantKey) '
           'failed: $e');
-      // Falha de DB → mesmo padrão de CraftingService (reusa reason
-      // itemNotFound pra não introduzir dbError no enum nesta sprint).
       return EnchantResult.rejected(EnchantRejectReason.itemNotFound);
     }
   }
+
+  // Traduz o erro da RPC apply_enchant() -> EnchantRejectReason. Discrimina
+  // pelo prefixo da mensagem do RAISE (errcode é compartilhado).
+  EnchantRejectReason _mapError(PostgrestException e) {
+    final msg = e.message.toLowerCase();
+    if (msg.contains('not found / not a rune') ||
+        msg.contains('not a rune')) {
+      return EnchantRejectReason.enchantNotFound;
+    }
+    if (msg.contains('inventory item') && msg.contains('not found')) {
+      return EnchantRejectReason.itemNotFound;
+    }
+    if (msg.contains('not in catalog')) {
+      return EnchantRejectReason.itemNotFound;
+    }
+    if (msg.contains('not enchantable') || msg.contains('unenchantable')) {
+      return EnchantRejectReason.itemNotEnchantable;
+    }
+    if (msg.contains('not in inventory')) {
+      return EnchantRejectReason.enchantNotInInventory;
+    }
+    if (msg.contains('rank') && msg.contains('insufficient')) {
+      return EnchantRejectReason.rankInsufficient;
+    }
+    if (msg.contains('class') && msg.contains('restricted')) {
+      return EnchantRejectReason.classRestricted;
+    }
+    if (msg.contains('insufficient gems')) {
+      return EnchantRejectReason.insufficientGems;
+    }
+    return EnchantRejectReason.itemNotFound;
+  }
+
+  // GAP de migração: AppEvent.playerId ainda é int; o jogador agora é uuid
+  // String. Placeholder via hashCode até a decisão de migrar eventos para
+  // String (ver 'unresolved').
+  int _eventPlayerId(String playerUuid) => playerUuid.hashCode;
 }

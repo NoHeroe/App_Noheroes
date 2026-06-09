@@ -1,18 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:drift/drift.dart' show Variable;
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../data/database/app_database.dart';
 import '../models/faction_buff_multipliers.dart';
 
 /// Sprint 3.4 Etapa C — buffs de facção em runtime.
 ///
-/// Stateless. Lê catálogo de `assets/data/faction_buffs.json` (lazy, 1×
-/// por instância) + state do player (`players.faction_type` +
-/// `player_faction_membership.debuff_until`) e produz multipliers
-/// efetivos.
+/// Época 2 (ADR-0024) — full-online Supabase. Stateless. Lê catálogo de
+/// `assets/data/faction_buffs.json` (lazy, 1× por instância) + state do
+/// player (`players.faction_type` + `player_faction_membership.debuff_until`)
+/// via PostgREST e produz multipliers efetivos. Todas as leituras são
+/// puras (sem mutação) — nenhuma RPC necessária.
 ///
 /// **Aplicação dos multipliers:**
 /// - **Econômicos** (xp/gold/gems) → `RewardGrantService` aplica antes
@@ -28,12 +28,12 @@ import '../models/faction_buff_multipliers.dart';
 /// - Override completo: `xpMult = 0.7`, `goldMult = 0.7`.
 /// - `gemsMult` e atributos = `1.0` (não afetados pelo debuff).
 class FactionBuffService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
 
   Map<String, dynamic>? _catalogCache;
   Future<Map<String, dynamic>>? _loadFuture;
 
-  FactionBuffService(this._db);
+  FactionBuffService(this._client);
 
   /// Path do catálogo. Override em testes via construtor secundário.
   static const _catalogAsset = 'assets/data/faction_buffs.json';
@@ -53,6 +53,18 @@ class FactionBuffService {
     _loadFuture = null;
   }
 
+  /// Lê `players.faction_type` do player (null se player não existe).
+  Future<({bool exists, String? factionType})> _readFactionType(
+      String playerId) async {
+    final row = await _client
+        .from('players')
+        .select('faction_type')
+        .eq('id', playerId)
+        .maybeSingle();
+    if (row == null) return (exists: false, factionType: null);
+    return (exists: true, factionType: row['faction_type'] as String?);
+  }
+
   /// Retorna multipliers efetivos pro player.
   ///
   /// Combina:
@@ -65,14 +77,11 @@ class FactionBuffService {
   /// - `faction_type` começa com `'pending:'` (admissão em curso — sem buff
   ///   até admissão completar)
   /// - Catálogo não tem entry pra essa facção
-  Future<FactionBuffMultipliers> getActiveMultipliers(int playerId) async {
-    final playerRows = await _db.customSelect(
-      'SELECT faction_type FROM players WHERE id = ? LIMIT 1',
-      variables: [Variable.withInt(playerId)],
-    ).get();
-    if (playerRows.isEmpty) return FactionBuffMultipliers.neutral;
+  Future<FactionBuffMultipliers> getActiveMultipliers(String playerId) async {
+    final info = await _readFactionType(playerId);
+    if (!info.exists) return FactionBuffMultipliers.neutral;
 
-    final factionType = playerRows.first.read<String?>('faction_type');
+    final factionType = info.factionType;
     if (factionType == null ||
         factionType.isEmpty ||
         factionType == 'none' ||
@@ -122,22 +131,25 @@ class FactionBuffService {
   /// `base` é neutral (player não tem facção atual), então atributos
   /// ficam em 1.0 naturalmente — sem override extra.
   Future<FactionBuffMultipliers> _withDebuffIfActive(
-    int playerId,
+    String playerId,
     FactionBuffMultipliers base,
     String? factionType,
   ) async {
     final nowMs = DateTime.now().millisecondsSinceEpoch;
 
     // Busca debuff ativo em qualquer membership do player.
-    final rows = await _db.customSelect(
-      'SELECT debuff_until FROM player_faction_membership '
-      'WHERE player_id = ? AND debuff_until IS NOT NULL '
-      'ORDER BY debuff_until DESC LIMIT 1',
-      variables: [Variable.withInt(playerId)],
-    ).get();
+    final rows = await _client
+        .from('player_faction_membership')
+        .select('debuff_until')
+        .eq('player_id', playerId)
+        .not('debuff_until', 'is', null)
+        .order('debuff_until', ascending: false)
+        .limit(1);
 
-    if (rows.isEmpty) return base;
-    final debuffUntilMs = rows.first.read<int?>('debuff_until');
+    final list = rows as List;
+    if (list.isEmpty) return base;
+    final debuffUntilMs =
+        ((list.first as Map)['debuff_until'] as num?)?.toInt();
     if (debuffUntilMs == null || debuffUntilMs <= nowMs) return base;
 
     // Debuff ATIVO. Override SÓ econômico (xp/gold). Atributos +
@@ -162,14 +174,11 @@ class FactionBuffService {
   }
 
   /// Snapshot pra UI/dev panel — applied (runtime) + pending (futuros).
-  Future<FactionBuffSnapshot> getBuffSnapshot(int playerId) async {
+  Future<FactionBuffSnapshot> getBuffSnapshot(String playerId) async {
     final mults = await getActiveMultipliers(playerId);
 
-    final playerRows = await _db.customSelect(
-      'SELECT faction_type FROM players WHERE id = ? LIMIT 1',
-      variables: [Variable.withInt(playerId)],
-    ).get();
-    if (playerRows.isEmpty) {
+    final info = await _readFactionType(playerId);
+    if (!info.exists) {
       return FactionBuffSnapshot(
         applied: const [],
         pending: const [],
@@ -177,7 +186,7 @@ class FactionBuffService {
       );
     }
 
-    final factionType = playerRows.first.read<String?>('faction_type');
+    final factionType = info.factionType;
     if (factionType == null ||
         factionType.isEmpty ||
         factionType == 'none' ||
@@ -309,20 +318,19 @@ class FactionBuffService {
   ///
   /// Arredondamento: floor (CEO confirmou — conservador. strength 12 ×
   /// 1.10 = 13.2 → 13).
-  Future<EffectiveAttributes> getEffectiveAttributes(int playerId) async {
-    final rows = await _db.customSelect(
-      'SELECT strength, dexterity, intelligence, max_hp '
-      'FROM players WHERE id = ? LIMIT 1',
-      variables: [Variable.withInt(playerId)],
-    ).get();
-    if (rows.isEmpty) return EffectiveAttributes.empty;
+  Future<EffectiveAttributes> getEffectiveAttributes(String playerId) async {
+    final row = await _client
+        .from('players')
+        .select('strength, dexterity, intelligence, max_hp')
+        .eq('id', playerId)
+        .maybeSingle();
+    if (row == null) return EffectiveAttributes.empty;
 
     final mults = await getActiveMultipliers(playerId);
-    final r = rows.first;
-    final s = r.read<int>('strength');
-    final d = r.read<int>('dexterity');
-    final i = r.read<int>('intelligence');
-    final h = r.read<int>('max_hp');
+    final s = (row['strength'] as num?)?.toInt() ?? 0;
+    final d = (row['dexterity'] as num?)?.toInt() ?? 0;
+    final i = (row['intelligence'] as num?)?.toInt() ?? 0;
+    final h = (row['max_hp'] as num?)?.toInt() ?? 0;
 
     return EffectiveAttributes(
       strengthBase: s,

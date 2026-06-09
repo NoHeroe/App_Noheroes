@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:drift/drift.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/events/app_event.dart';
 import '../../../core/events/app_event_bus.dart';
@@ -19,61 +19,42 @@ import '../../../domain/services/faction_admission_sub_task_types.dart';
 import '../../../domain/services/faction_admission_validator.dart';
 import '../../../domain/services/faction_reputation_service.dart';
 import '../../../domain/services/mission_assignment_service.dart';
-import '../../database/app_database.dart';
 
 /// Sprint 3.4 Sub-Etapa B.2 — listener que re-avalia sub-tasks de
 /// admissão eliminatória ao receber eventos terminais. Single point
 /// of truth pro lifecycle: progresso, sequenciamento (missão N+1
 /// desbloqueada quando N completar), reset em falha.
 ///
+/// Época 2 (ADR-0024) — full-online Supabase. As operações ATÔMICAS
+/// multi-write (aprovação e rejeição) viram RPCs
+/// (`approve_faction_admission`, `reject_faction_admission`) — não
+/// reimplementamos a atomicidade no cliente. Os reads de `players` e
+/// `player_faction_membership` e a persistência single-write do
+/// metaJson viram chamadas PostgREST.
+///
 /// ## Eventos consumidos
 ///
 /// | Evento | Sub-types afetados |
 /// |---|---|
-/// | `DailyMissionCompleted` | daily_count_window, full_perfect_day, no_partial_day, exact_daily_count, zero_failed (status=failed), zero_category (modalidade alvo) |
+/// | `DailyMissionCompleted` | daily_count_window, full_perfect_day, no_partial_day, exact_daily_count, zero_failed, zero_category |
 /// | `MissionCompleted` (modality=individual) | individual_completed_window |
 /// | `DiaryEntryCreated` | diary_entry_window |
 /// | `RewardGranted` | gold_earned_via_quests_window, gold_balance_threshold |
 ///
-/// Re-avaliação é via `FactionAdmissionValidator.evaluate` — service
-/// puro stateless. Esta camada **persiste** o resultado em metaJson da
-/// MissionProgress (via re-encode JSON).
+/// ## Reset em falha (RPC `reject_faction_admission`)
 ///
-/// ## Fluxo
-///
-/// 1. Evento terminal chega.
-/// 2. Lê todas as MissionProgress com `tabOrigin=admission` ativas
-///    (status pending E `is_unlocked=true` em metaJson) do player.
-///    Ignora missões com factionId='guild' (defesa em profundidade).
-/// 3. Pra cada missão, pra cada sub-task ainda incompleta:
-///    a. Verifica se a janela expirou — se sim, dispara
-///       `FactionAdmissionRejected` reason=window_expired.
-///    b. Re-avalia via validator. Se `achieved` → marca `completed=true`
-///       em metaJson. Se `failed` (irrecuperável) → dispara
-///       `FactionAdmissionRejected` reason=sub_task_failed:<sub_type>
-///       ou `exact_count_overshoot:<missionId>`.
-/// 4. Se TODAS as sub-tasks da missão estão `completed=true` → marca
-///    missão como completed (via `MissionRepository.markCompleted`),
-///    dispara `FactionAdmissionQuestCompleted`. Promove próxima missão
-///    da sequência (atualiza `is_unlocked=true` + `window_start_ms=now`
-///    + recaptura snapshot_rank).
-/// 5. Se a missão completada era a última, dispara
-///    `FactionAdmissionApproved` → cascateia `FactionJoined`.
-///
-/// ## Reset em falha
-///
-/// Handler de `FactionAdmissionRejected` (cascata interna):
-/// - Marca todas as missões da admissão (factionId+playerId,
-///   tabOrigin=admission, status=pending) como failed.
-/// - Aplica -10 reputação na facção via `FactionReputationService`.
-/// - Set `lockedUntil = now + 48h` em `player_faction_membership`.
+/// - markFailed em todas as missões da admissão (factionId+playerId).
+/// - Aplica -10 reputação na facção (sem propagação — paridade com Dart).
+/// - Set `locked_until = now + 48h` em `player_faction_membership`.
 /// - Reverte `players.faction_type` pra 'none'.
 class FactionAdmissionProgressService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
   final AppEventBus _bus;
   final FactionAdmissionValidator _validator;
   final MissionRepository _missionRepo;
+  // ignore: unused_field
   final FactionReputationService _factionRep;
+  // ignore: unused_field
   final PlayerFactionReputationRepository _factionRepo;
   // FATIA B4 (Fix gatilho-JOIN) — atribui a semanal de facção na hora da
   // aprovação, sem esperar o boot do Santuário.
@@ -82,14 +63,14 @@ class FactionAdmissionProgressService {
   final List<StreamSubscription> _subs = [];
 
   FactionAdmissionProgressService({
-    required AppDatabase db,
+    required SupabaseClient client,
     required AppEventBus bus,
     required FactionAdmissionValidator validator,
     required MissionRepository missionRepo,
     required FactionReputationService factionRep,
     required PlayerFactionReputationRepository factionRepo,
     required MissionAssignmentService assignment,
-  })  : _db = db,
+  })  : _client = client,
         _bus = bus,
         _validator = validator,
         _missionRepo = missionRepo,
@@ -106,25 +87,14 @@ class FactionAdmissionProgressService {
   void start() {
     _subs.add(_bus.on<DailyMissionCompleted>().listen(_onAnyEvent));
     // Sprint 3.4 Etapa C hotfix #2 (P0-E) — DailyMissionFailed também
-    // dispara re-avaliação. Sub-tasks `zero_failed_window` /
-    // `zero_category_window` precisam detectar a falha imediatamente
-    // pra rejeitar admissão. Sem este listener, rejection só acontecia
-    // por timing aleatório (próxima `DailyMissionCompleted` re-avalia
-    // todas e captura a falha tardiamente).
+    // dispara re-avaliação (zero_failed_window / zero_category_window).
     _subs.add(_bus.on<DailyMissionFailed>().listen(_onAnyEvent));
     _subs.add(_bus.on<MissionCompleted>().listen(_onAnyEvent));
     _subs.add(_bus.on<DiaryEntryCreated>().listen(_onAnyEvent));
     _subs.add(_bus.on<RewardGranted>().listen(_onAnyEvent));
-    _subs.add(
-        _bus.on<FactionAdmissionRejected>().listen(_handleRejection));
-    // Sprint 3.4 hotfix B.2 — handler externo de
-    // FactionAdmissionApproved. No flow normal, `_approveAdmission`
-    // (chamado por `_completeMissionAndPromoteNext`) já faz a
-    // promoção INTERNAMENTE antes de emitir o evento — handler aqui
-    // é idempotente (no-op se já promovido). No flow do dev panel
-    // (`_forceCompleteAdmission` reescrito), o evento é emitido
-    // externamente sem `_approveAdmission` rodar — handler aqui
-    // detecta e promove.
+    _subs.add(_bus.on<FactionAdmissionRejected>().listen(_handleRejection));
+    // Sprint 3.4 hotfix B.2 — handler externo de FactionAdmissionApproved
+    // (idempotente; cobre flow do dev panel).
     _subs.add(_bus.on<FactionAdmissionApproved>().listen(_handleApproved));
   }
 
@@ -136,11 +106,8 @@ class FactionAdmissionProgressService {
   }
 
   /// Handler unificado pra qualquer evento terminal — re-avalia todas
-  /// as missões ativas do player. Pattern simples; performance OK pra
-  /// MVP (max 2-5 missões × 1-3 sub-tasks ativas por player).
+  /// as missões ativas do player.
   Future<void> _onAnyEvent(AppEvent evt) async {
-    // AppEvent.playerId é nullable na base abstract; subtypes
-    // concretos override pra non-null. Defensivo guard.
     final playerId = evt.playerId;
     if (playerId == null) return;
     try {
@@ -153,26 +120,17 @@ class FactionAdmissionProgressService {
 
   /// Sprint 3.4 Etapa C hotfix #3 (P0-F) — exposto público pra que
   /// callers (ex: `QuestsScreenNotifier.build`) possam disparar
-  /// re-avaliação on-demand. Necessário porque expiração de janela é
-  /// passiva (não emite evento) — sem trigger explícito ao carregar
-  /// `/quests`, admissão com janela expirada ficava zumbi.
-  Future<void> evaluatePlayer(int playerId) => _evaluatePlayer(playerId);
+  /// re-avaliação on-demand (expiração de janela é passiva).
+  Future<void> evaluatePlayer(String playerId) => _evaluatePlayer(playerId);
 
-  Future<void> _evaluatePlayer(int playerId) async {
+  Future<void> _evaluatePlayer(String playerId) async {
     final all =
         await _missionRepo.findByTab(playerId, MissionTabOrigin.admission);
-    final active = all.where((m) =>
-        m.completedAt == null && m.failedAt == null);
+    final active =
+        all.where((m) => m.completedAt == null && m.failedAt == null);
 
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     for (final mission in active) {
-      // Sprint 3.4 hotfix B.2 — try/catch envolvendo TODA a iteração
-      // de UMA missão. Se uma missão tem metaJson corrompido, sub-task
-      // com sub_type desconhecido, ou validator lança, isolamos o
-      // erro pra esta missão (continua processando as próximas).
-      // Mitigação Bug 4 (independente da causa raiz que provavelmente
-      // foi corrigida pelo Fix 2 — RewardGranted no-op não dispara
-      // mais reentrada problemática).
       try {
         await _processMission(mission, playerId, nowMs);
       } catch (e, st) {
@@ -184,11 +142,10 @@ class FactionAdmissionProgressService {
     }
   }
 
-  /// Processa UMA missão isoladamente — separar permite try/catch
-  /// granular em [_evaluatePlayer]. Retorna early sem persistir nada
+  /// Processa UMA missão isoladamente. Retorna early sem persistir nada
   /// quando metaJson é inválido / missão não aplicável.
   Future<void> _processMission(
-      MissionProgress mission, int playerId, int nowMs) async {
+      MissionProgress mission, String playerId, int nowMs) async {
     Map<String, dynamic> meta;
     try {
       meta = jsonDecode(mission.metaJson) as Map<String, dynamic>;
@@ -204,22 +161,12 @@ class FactionAdmissionProgressService {
     if (factionId == null) return;
 
     // Janela expirada?
-    //
-    // Sprint 3.4 Etapa C hotfix #1 — antes de rejeitar admissão por
-    // janela expirada, re-avalia sub-tasks com `expired=true`. Sub-types
-    // não-monotônicos (zero_failed_window, zero_category_window) só
-    // declaram sucesso na expiração — antes não era possível distinguir
-    // "ainda em janela com 0 falhas" de "janela fechada com 0 falhas".
-    // Se TODAS sub-tasks ficam achieved no fechamento → completa a
-    // missão normalmente. Caso contrário → rejeita por janela expirada.
     final windowStartMs = (meta['window_start_ms'] as int?) ?? 0;
     final windowDurationMs =
         (meta['window_duration_ms'] as int?) ?? (48 * 60 * 60 * 1000);
     final expired =
         windowStartMs > 0 && nowMs > windowStartMs + windowDurationMs;
 
-    // Re-avalia sub-tasks (`expired` controla declaração de sucesso pra
-    // sub-types não-monotônicos).
     final rawSubs = (meta['sub_tasks'] as List?) ?? const [];
     final subs = <Map<String, dynamic>>[];
     var anyChanged = false;
@@ -231,9 +178,6 @@ class FactionAdmissionProgressService {
         subs.add(m);
         continue;
       }
-      // Constrói FactionAdmissionSubTask pra avaliação.
-      // Try/catch interno protege contra sub_type inválido em
-      // metaJson legacy (pré-hotfix Fix 1).
       FactionAdmissionSubTask subTask;
       try {
         subTask = FactionAdmissionSubTask.fromJson(m);
@@ -251,8 +195,7 @@ class FactionAdmissionProgressService {
         await _rejectAdmission(
           playerId: playerId,
           factionId: factionId,
-          missionId:
-              meta['mission_id'] as String? ?? mission.missionKey,
+          missionId: meta['mission_id'] as String? ?? mission.missionKey,
           reason: subTask.subType ==
                   FactionAdmissionSubTaskTypes.exactDailyCountWindow
               ? 'exact_count_overshoot:${meta['mission_id']}'
@@ -269,23 +212,19 @@ class FactionAdmissionProgressService {
       subs.add(m);
     }
 
-    // Sprint 3.4 Etapa C hotfix #1 — se janela expirou E nem todas
-    // sub-tasks ficaram achieved no fechamento, rejeita admissão.
-    // Persistência do estado parcial é descartada (rejection limpa
-    // tudo) — não precisamos chamar _persistMeta nesse path.
+    // Sprint 3.4 Etapa C hotfix #1 — janela expirou E nem todas as
+    // sub-tasks ficaram achieved → rejeita admissão.
     if (expired && !allCompleted) {
       await _rejectAdmission(
         playerId: playerId,
         factionId: factionId,
         missionId: meta['mission_id'] as String? ?? mission.missionKey,
-        reason:
-            'window_expired:${meta['mission_id'] ?? mission.missionKey}',
+        reason: 'window_expired:${meta['mission_id'] ?? mission.missionKey}',
       );
       return;
     }
 
     if (anyChanged) {
-      // Persiste estado atualizado em metaJson.
       meta['sub_tasks'] = subs;
       await _persistMeta(mission.id, meta);
     }
@@ -293,41 +232,33 @@ class FactionAdmissionProgressService {
     if (allCompleted && rawSubs.isNotEmpty) {
       await _completeMissionAndPromoteNext(
           mission: mission, meta: meta, playerId: playerId);
-      // Re-avalia depois pra cobrir cascata (próxima missão pode
-      // ter sub-task achievable já no estado atual — raro mas
-      // possível com snapshot_rank).
     }
   }
 
+  /// Single-write do metaJson via PostgREST. `missionId` é PK de linha
+  /// (bigserial = int) — NÃO é o playerId.
   Future<void> _persistMeta(int missionId, Map<String, dynamic> meta) async {
-    await _db.customUpdate(
-      'UPDATE player_mission_progress SET meta_json = ? WHERE id = ?',
-      variables: [
-        Variable.withString(jsonEncode(meta)),
-        Variable.withInt(missionId),
-      ],
-      updates: {_db.playerMissionProgressTable},
-    );
+    await _client
+        .from('player_mission_progress')
+        .update({'meta_json': jsonEncode(meta)}).eq('id', missionId);
   }
 
   Future<void> _completeMissionAndPromoteNext({
     required MissionProgress mission,
     required Map<String, dynamic> meta,
-    required int playerId,
+    required String playerId,
   }) async {
     final factionId = meta['faction_id'] as String;
-    final missionId =
-        meta['mission_id'] as String? ?? mission.missionKey;
+    final missionId = meta['mission_id'] as String? ?? mission.missionKey;
 
     // 1. Marca missão como completed.
     await _missionRepo.markCompleted(mission.id,
         at: DateTime.now(), rewardClaimed: true);
 
     // 2. Lista todas as missões dessa admissão (factionId, playerId)
-    //    em ordem (autoincrement id reflete ordem de criação que
-    //    bate com o catálogo).
-    final all = await _missionRepo.findByTab(
-        playerId, MissionTabOrigin.admission);
+    //    em ordem (id reflete ordem de criação que bate com o catálogo).
+    final all =
+        await _missionRepo.findByTab(playerId, MissionTabOrigin.admission);
     final ofFaction = all.where((m) {
       try {
         final dec = jsonDecode(m.metaJson);
@@ -360,7 +291,7 @@ class FactionAdmissionProgressService {
     }
   }
 
-  Future<void> _unlockMission(MissionProgress mission, int playerId) async {
+  Future<void> _unlockMission(MissionProgress mission, String playerId) async {
     Map<String, dynamic> meta;
     try {
       meta = jsonDecode(mission.metaJson) as Map<String, dynamic>;
@@ -369,20 +300,19 @@ class FactionAdmissionProgressService {
     }
     if (meta['is_unlocked'] == true) return; // já desbloqueada
 
-    // Recaptura snapshot_rank no momento do unlock (player pode ter
-    // subido durante missão anterior).
-    final playerRow = await (_db.select(_db.playersTable)
-          ..where((t) => t.id.equals(playerId)))
-        .getSingleOrNull();
-    final newSnapshotRank = playerRow?.guildRank ?? 'none';
+    // Recaptura snapshot_rank no momento do unlock.
+    final playerRow = await _client
+        .from('players')
+        .select('guild_rank')
+        .eq('id', playerId)
+        .maybeSingle();
+    final newSnapshotRank = (playerRow?['guild_rank'] as String?) ?? 'none';
 
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     meta['is_unlocked'] = true;
     meta['window_start_ms'] = nowMs;
     meta['snapshot_rank'] = newSnapshotRank;
 
-    // Atualiza windowStartMs e snapshotRank de cada sub-task pra que
-    // o validator use a janela nova.
     final rawSubs = (meta['sub_tasks'] as List?) ?? const [];
     final updatedSubs = <Map<String, dynamic>>[];
     for (final raw in rawSubs) {
@@ -396,47 +326,20 @@ class FactionAdmissionProgressService {
     await _persistMeta(mission.id, meta);
   }
 
-  Future<void> _approveAdmission(int playerId, String factionId) async {
-    // Promove faction_type pra X (de pending:X).
-    await _db.customUpdate(
-      'UPDATE players SET faction_type = ? WHERE id = ?',
-      variables: [
-        Variable.withString(factionId),
-        Variable.withInt(playerId),
-      ],
-      updates: {_db.playersTable},
-    );
+  /// Aprovação atômica via RPC `approve_faction_admission` (promove
+  /// faction_type + welcome bonus +100 insígnias idempotente + upsert
+  /// da membership). Depois atribui a semanal de facção (domínio
+  /// Missions, fora da RPC) e emite os eventos client-side.
+  Future<void> _approveAdmission(String playerId, String factionId) async {
+    await _client.rpc('approve_faction_admission', params: {
+      'p_player': playerId,
+      'p_faction': factionId,
+    });
 
-    // Sprint 3.4 Etapa H — bônus de boas-vindas em Insígnias (fonte
-    // interina da moeda de facção até missões de facção D18 existirem).
-    // Ver .vault/App/docs/DESIGN_DOC_ECONOMIA_FACCOES.md.
-    await _db.customUpdate(
-      'UPDATE players SET insignias = insignias + 100 WHERE id = ?',
-      variables: [Variable.withInt(playerId)],
-      updates: {_db.playersTable},
-    );
-
-    // Cria/promove membership row.
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-    await _db.customStatement(
-      'INSERT OR IGNORE INTO player_faction_membership '
-      '(player_id, faction_id, joined_at, left_at, locked_until, '
-      ' debuff_until, admission_attempts) '
-      'VALUES (?, ?, ?, NULL, NULL, NULL, 0)',
-      [playerId, factionId, nowMs],
-    );
-    await _db.customStatement(
-      'UPDATE player_faction_membership SET joined_at = ? '
-      'WHERE player_id = ? AND faction_id = ? AND joined_at IS NULL',
-      [nowMs, playerId, factionId],
-    );
-
-    // FATIA B4 (Fix gatilho-JOIN) — atribui a semanal de facção AGORA
-    // (não espera o próximo boot do Santuário). Idempotente.
+    // FATIA B4 (Fix gatilho-JOIN) — atribui a semanal AGORA. Idempotente.
     await _assignWeeklyOnJoin(playerId, factionId);
 
-    final attemptCount =
-        await _readAttemptCount(playerId, factionId);
+    final attemptCount = await _readAttemptCount(playerId, factionId);
 
     _bus.publish(FactionAdmissionApproved(
       playerId: playerId,
@@ -448,31 +351,20 @@ class FactionAdmissionProgressService {
   }
 
   /// FATIA B4 (Fix gatilho-JOIN) — atribui a semanal de facção no momento
-  /// em que o player entra numa facção (aprovação real OU dev tool),
-  /// sem esperar o boot do Santuário rodar o `WeeklyResetService`.
-  ///
-  /// Idempotente: o upsert por (player, faction, weekStart) no
-  /// `ActiveFactionQuestsRepository` (dentro de `ensureWeeklyFactionQuest`)
-  /// não duplica se o reset cíclico rodar depois na mesma semana.
-  ///
-  /// NÃO mexe em `players.last_weekly_reset` — isto é JOIN, não ciclo de
-  /// reset. O timestamp continua sendo responsabilidade exclusiva do
-  /// `WeeklyResetService` (renovação a cada 7d). Erros são logados, nunca
-  /// propagados (não pode derrubar a aprovação).
-  Future<void> _assignWeeklyOnJoin(int playerId, String factionId) async {
+  /// em que o player entra numa facção (aprovação real OU dev tool).
+  /// Idempotente. Erros logados, nunca propagados.
+  Future<void> _assignWeeklyOnJoin(String playerId, String factionId) async {
     try {
-      final rows = await _db.customSelect(
-        'SELECT guild_rank, total_gold_earned_via_quests FROM players '
-        'WHERE id = ? LIMIT 1',
-        variables: [Variable.withInt(playerId)],
-      ).get();
-      if (rows.isEmpty) return;
-      final guildRankRaw = rows.first.read<String?>('guild_rank') ?? 'e';
+      final row = await _client
+          .from('players')
+          .select('guild_rank, total_gold_earned_via_quests')
+          .eq('id', playerId)
+          .maybeSingle();
+      if (row == null) return;
+      final guildRankRaw = (row['guild_rank'] as String?) ?? 'e';
       final baselineGold =
-          rows.first.read<int>('total_gold_earned_via_quests');
+          (row['total_gold_earned_via_quests'] as num?)?.toInt() ?? 0;
       final rank = GuildRankSystem.fromString(guildRankRaw);
-      // Idempotente (upsert por player+faction+weekStart). progressId
-      // (null = facção sem pool, ex: guild) não é usado aqui.
       await _assignment.ensureWeeklyFactionQuest(
         playerId: playerId,
         factionKey: factionId,
@@ -485,25 +377,20 @@ class FactionAdmissionProgressService {
     }
   }
 
-  Future<int> _readAttemptCount(int playerId, String factionId) async {
-    final rows = await _db.customSelect(
-      'SELECT admission_attempts FROM player_faction_membership '
-      'WHERE player_id = ? AND faction_id = ? LIMIT 1',
-      variables: [
-        Variable.withInt(playerId),
-        Variable.withString(factionId),
-      ],
-    ).get();
-    return rows.isNotEmpty
-        ? rows.first.read<int>('admission_attempts')
-        : 1;
+  Future<int> _readAttemptCount(String playerId, String factionId) async {
+    final row = await _client
+        .from('player_faction_membership')
+        .select('admission_attempts')
+        .eq('player_id', playerId)
+        .eq('faction_id', factionId)
+        .maybeSingle();
+    return (row?['admission_attempts'] as num?)?.toInt() ?? 1;
   }
 
-  /// Dispara reject — primeiro emite o evento (pra outros listeners
-  /// reagirem). [_handleRejection] cuida do reset (lock + reputação +
-  /// faction_type).
+  /// Dispara reject — emite o evento. [_handleRejection] cuida do reset
+  /// atômico via RPC.
   Future<void> _rejectAdmission({
-    required int playerId,
+    required String playerId,
     required String factionId,
     required String missionId,
     required String reason,
@@ -520,59 +407,31 @@ class FactionAdmissionProgressService {
 
   /// Sprint 3.4 hotfix B.2 — handler idempotente de
   /// `FactionAdmissionApproved`. Cobre o caso onde o evento é emitido
-  /// externamente (ex: dev panel `_forceCompleteAdmission`) sem
-  /// `_approveAdmission` ter rodado internamente.
+  /// externamente (ex: dev panel) sem `_approveAdmission` interno.
   ///
-  /// Idempotente: se `players.faction_type` já está em `factionId`
-  /// (promovido pelo flow normal), no-op. Se está em `pending:X` ou
-  /// outro valor, promove agora + emite `FactionJoined` cascateado.
+  /// `approve_faction_admission` é idempotente no servidor (guard de
+  /// welcome bonus + upsert da membership), então podemos chamá-la sem
+  /// re-checar `faction_type` aqui.
   Future<void> _handleApproved(FactionAdmissionApproved evt) async {
     try {
-      final rows = await _db.customSelect(
-        'SELECT faction_type FROM players WHERE id = ? LIMIT 1',
-        variables: [Variable.withInt(evt.playerId)],
-      ).get();
-      if (rows.isEmpty) return;
-      final current = rows.first.read<String?>('faction_type');
+      final row = await _client
+          .from('players')
+          .select('faction_type')
+          .eq('id', evt.playerId)
+          .maybeSingle();
+      if (row == null) return;
+      final current = row['faction_type'] as String?;
       // Já promovido pelo flow normal (_approveAdmission rodou).
       if (current == evt.factionId) return;
 
-      // Promove agora (cobre flow externo do dev panel).
-      await _db.customUpdate(
-        'UPDATE players SET faction_type = ? WHERE id = ?',
-        variables: [
-          Variable.withString(evt.factionId),
-          Variable.withInt(evt.playerId),
-        ],
-        updates: {_db.playersTable},
-      );
-      // ITEM 6 — welcome bonus +100 Insígnias. No flow normal o
-      // `_approveAdmission` já creditou (e o guard acima deu early-return);
-      // este path só roda quando a aprovação veio EXTERNA (dev panel
-      // `_forceCompleteAdmission`), que antes pulava o bônus. Mantém
-      // paridade com o fluxo real.
-      await _db.customUpdate(
-        'UPDATE players SET insignias = insignias + 100 WHERE id = ?',
-        variables: [Variable.withInt(evt.playerId)],
-        updates: {_db.playersTable},
-      );
-      final nowMs = DateTime.now().millisecondsSinceEpoch;
-      await _db.customStatement(
-        'INSERT OR IGNORE INTO player_faction_membership '
-        '(player_id, faction_id, joined_at, left_at, locked_until, '
-        ' debuff_until, admission_attempts) '
-        'VALUES (?, ?, ?, NULL, NULL, NULL, 0)',
-        [evt.playerId, evt.factionId, nowMs],
-      );
-      await _db.customStatement(
-        'UPDATE player_faction_membership SET joined_at = ? '
-        'WHERE player_id = ? AND faction_id = ? AND joined_at IS NULL',
-        [nowMs, evt.playerId, evt.factionId],
-      );
+      // Promove agora (cobre flow externo do dev panel). RPC idempotente
+      // — não recredita welcome bonus se já era membro.
+      await _client.rpc('approve_faction_admission', params: {
+        'p_player': evt.playerId,
+        'p_faction': evt.factionId,
+      });
 
-      // FATIA B4 (Fix gatilho-JOIN) — cobre o caminho EXTERNO (dev tool
-      // `_forceCompleteAdmission`), que não passa por `_approveAdmission`.
-      // Atribui a semanal na hora. Idempotente.
+      // FATIA B4 (Fix gatilho-JOIN) — atribui a semanal na hora.
       await _assignWeeklyOnJoin(evt.playerId, evt.factionId);
 
       _bus.publish(
@@ -583,51 +442,18 @@ class FactionAdmissionProgressService {
     }
   }
 
+  /// Reset atômico via RPC `reject_faction_admission` (markFailed das
+  /// missões + -10 rep sem propagação + lock 48h + faction_type='none').
   Future<void> _handleRejection(FactionAdmissionRejected evt) async {
     try {
-      // 1. Marca todas as missões da admissão como failed.
-      final all = await _missionRepo.findByTab(
-          evt.playerId, MissionTabOrigin.admission);
-      final ofFaction = all.where((m) {
-        if (m.completedAt != null || m.failedAt != null) return false;
-        try {
-          final dec = jsonDecode(m.metaJson);
-          return dec is Map && dec['faction_id'] == evt.factionId;
-        } catch (_) {
-          return false;
-        }
+      final lockUntilMs =
+          DateTime.now().add(_rejectLock).millisecondsSinceEpoch;
+      await _client.rpc('reject_faction_admission', params: {
+        'p_player': evt.playerId,
+        'p_faction': evt.factionId,
+        'p_lock_until_ms': lockUntilMs,
+        'p_rep_delta': _rejectRepDelta,
       });
-      for (final mission in ofFaction) {
-        await _missionRepo.markFailed(mission.id, at: DateTime.now());
-      }
-
-      // 2. -10 reputação (D1: niet=failed; reset=falha).
-      await _factionRepo.delta(
-          evt.playerId, evt.factionId, _rejectRepDelta);
-      // Sem propagação aliada/rival neste delta (admission reject
-      // afeta apenas a facção tentada). Se for desejável, futuro
-      // sprint pode usar `_factionRep.adjustReputation` em vez do
-      // repo direto.
-      // ignore: unused_local_variable
-      final _ = _factionRep;
-
-      // 3. Lock 48h em player_faction_membership.
-      final lockUntilMs = DateTime.now()
-          .add(_rejectLock)
-          .millisecondsSinceEpoch;
-      await _db.customStatement(
-        'UPDATE player_faction_membership SET locked_until = ? '
-        'WHERE player_id = ? AND faction_id = ?',
-        [lockUntilMs, evt.playerId, evt.factionId],
-      );
-
-      // 4. Reverte faction_type pra 'none' (player pode tentar outras
-      //    facções imediatamente; só esta facção fica em cooldown).
-      await _db.customUpdate(
-        "UPDATE players SET faction_type = 'none' WHERE id = ?",
-        variables: [Variable.withInt(evt.playerId)],
-        updates: {_db.playersTable},
-      );
     } catch (e, st) {
       // ignore: avoid_print
       print('[admission-progress] _handleRejection falhou: $e\n$st');

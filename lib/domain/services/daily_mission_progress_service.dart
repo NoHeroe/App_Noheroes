@@ -1,72 +1,52 @@
-import 'package:drift/drift.dart' show Variable;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/events/app_event_bus.dart';
 import '../../core/events/daily_mission_events.dart';
 import '../../core/events/player_events.dart';
-import '../../data/database/app_database.dart';
-import '../../data/database/daos/daily_missions_dao.dart';
-import '../../data/database/daos/player_dao.dart';
+import '../enums/mission_category.dart';
 import '../models/daily_mission.dart';
 import '../models/daily_mission_status.dart';
 import '../models/daily_sub_task_instance.dart';
 import 'faction_buff_service.dart';
 
-/// Sprint 3.2 Etapa 1.3.A Hotfix-2 — acumulador, cap individual, fechamento
-/// manual e fórmula linear de reward.
+/// Época 2 (ADR-0024) — port full-online (Supabase) do progress service.
 ///
-/// **Reward (regra final, linear):**
-/// ```
-/// factor_sub_i = min(progresso_i / alvo_i, 3.0)         // cap 300% por sub
-/// factor       = (factor_sub_1 + factor_sub_2 + factor_sub_3) / 3
-/// mult         = factor                  if factor <= 1.0
-///              = 1 + 0.45 × (factor - 1) if factor >  1.0
-/// streak       = 1.5 se status==completed AND dailyMissionsStreak >= 10
-/// xp           = floor(base_xp × mult × streak)
-/// gold         = floor(base_gold × mult × streak)
-/// ```
-/// `failed` e `pending` retornam zero. Streak NÃO aplica em partial.
+/// **Operações atômicas viram RPCs** (`confirm_daily_mission`,
+/// `apply_partial_daily_reward`, `apply_auto_completed_daily`). Essas
+/// RPCs encapsulam: resolve status + computa reward (fórmula linear
+/// hotfix-2) + credita xp/gold (add_xp/add_gold) + fecha a missão, tudo
+/// numa transação server-side. O cliente só lê o JSON de retorno e
+/// publica os eventos client-side.
 ///
-/// **Cap individual (incrementSubTask):** progresso de uma sub-tarefa é
-/// limitado a `escalaAlvo × 3` (excedência permitida até 300%).
+/// **Reward (regra final, linear)** — vive agora em `_daily_compute_reward`
+/// no Postgres (rpc_daily.sql). Os helpers estáticos [missionFactor] /
+/// [partialFactor] / [computeReward] / [previewStatus] permanecem aqui
+/// porque a UI/notifier os consomem pra preview SEM tocar o servidor.
+///
+/// **FACTION BUFFS:** o path Drift aplicava `_applyBuffs` (xpMult/goldMult)
+/// por cima do reward. As RPCs creditam o reward BASE — o buff de facção
+/// NÃO é mais aplicado no path de dailies nesta conversão (ver 'risks'
+/// no resumo). `_factionBuff` é mantido opcional só pra compat de
+/// religação de providers; não é usado.
+///
+/// **`incrementSubTask` e `markFailed`** não têm RPC dedicada — são
+/// read-modify-write client-side (ver 'unresolved').
 class DailyMissionProgressService {
-  final AppDatabase _db;
-  final DailyMissionsDao _missionsDao;
-  final PlayerDao _playerDao;
+  final SupabaseClient _client;
   final AppEventBus _bus;
 
-  /// Sprint 3.4 Etapa C hotfix #1 — buffs de facção aplicam em XP/gold de
-  /// daily missions também. Path histórico (Sprint 3.2 1.3.A) credita XP
-  /// via `_playerDao.addXp` + `customUpdate gold` diretamente, sem passar
-  /// por `RewardGrantService`. Sub-Etapa C original cobria apenas o
-  /// caminho do RewardGrantService (rewards de classe/individual/extras/
-  /// admissão), deixando dailies sem buff.
-  ///
-  /// Opcional pra retrocompat de testes legacy (path null = neutral).
+  /// Mantido por compat de providers — NÃO usado no path full-online (as
+  /// RPCs creditam reward base; buff de facção fica fora). Ver 'risks'.
+  // ignore: unused_field
   final FactionBuffService? _factionBuff;
 
   DailyMissionProgressService({
-    required AppDatabase db,
-    required DailyMissionsDao missionsDao,
-    required PlayerDao playerDao,
+    required SupabaseClient client,
     required AppEventBus bus,
     FactionBuffService? factionBuff,
-  })  : _db = db,
-        _missionsDao = missionsDao,
-        _playerDao = playerDao,
+  })  : _client = client,
         _bus = bus,
         _factionBuff = factionBuff;
-
-  /// Aplica xpMult + goldMult em (xp, gold). Round em ambos (CEO confirmou
-  /// hotfix #1). Path neutral quando service nulo (testes legacy).
-  Future<({int xp, int gold})> _applyBuffs(
-      int playerId, int xp, int gold) async {
-    if (_factionBuff == null) return (xp: xp, gold: gold);
-    final mults = await _factionBuff.getActiveMultipliers(playerId);
-    return (
-      xp: (xp * mults.xpMult).round(),
-      gold: (gold * mults.goldMult).round(),
-    );
-  }
 
   static const Map<String, DailyRankReward> rewardByRank = {
     'E': DailyRankReward(xp: 8, gold: 5),
@@ -99,177 +79,121 @@ class DailyMissionProgressService {
   /// missão** mesmo que 3/3 batam — o jogador precisa clicar ✓ pra
   /// confirmar via [confirmCompletion].
   ///
-  /// Sub-tarefa individual marca `completed=true` quando
-  /// `progressoAtual >= escalaAlvo` (a flag fica visível na UI). Excesso
-  /// (`progresso > alvo`) é acumulado e ativa o bônus de excedência no
-  /// [confirmCompletion].
+  /// Época 2: read-modify-write client-side (sem RPC dedicada). RLS
+  /// garante que só o dono escreve. Risco de lost-update sob escrita
+  /// concorrente (ver 'unresolved' — falta RPC `increment_daily_subtask`).
   Future<void> incrementSubTask({
     required int missionId,
     required String subTaskKey,
     required int delta,
   }) async {
-    int? newProgresso;
-    int? affectedPlayerId;
-
-    await _db.transaction(() async {
-      final mission = await _missionsDao.findById(missionId);
-      if (mission == null) {
-        throw StateError('Missão $missionId não existe');
-      }
-      if (mission.rewardClaimed) {
-        // Já fechada — incrementos extras viram noop.
-        return;
-      }
-
-      final subs = mission.subTarefas;
-      final idx = subs.indexWhere((s) => s.subTaskKey == subTaskKey);
-      if (idx == -1) {
-        throw StateError(
-            'Sub-tarefa "$subTaskKey" não pertence à missão $missionId');
-      }
-
-      final current = subs[idx];
-      final maxProgresso = current.escalaAlvo <= 0
-          ? 0
-          : (current.escalaAlvo * subTaskMaxFactor).floor();
-      final progresso =
-          (current.progressoAtual + delta).clamp(0, maxProgresso);
-      final updatedSub = current.copyWith(
-        progressoAtual: progresso,
-        completed: progresso >= current.escalaAlvo,
-      );
-
-      final newSubs = List<DailySubTaskInstance>.from(subs);
-      newSubs[idx] = updatedSub;
-
-      await _missionsDao.updateMission(mission.copyWith(subTarefas: newSubs));
-      newProgresso = progresso;
-      affectedPlayerId = mission.playerId;
-    });
-
-    if (newProgresso != null && affectedPlayerId != null) {
-      _bus.publish(DailyMissionProgressed(
-        playerId: affectedPlayerId!,
-        missionId: missionId,
-        subTaskKey: subTaskKey,
-        novoProgresso: newProgresso!,
-      ));
+    final mission = await _findMissionById(missionId);
+    if (mission == null) {
+      throw StateError('Missão $missionId não existe');
     }
+    if (mission.rewardClaimed) {
+      // Já fechada — incrementos extras viram noop.
+      return;
+    }
+
+    final subs = mission.subTarefas;
+    final idx = subs.indexWhere((s) => s.subTaskKey == subTaskKey);
+    if (idx == -1) {
+      throw StateError(
+          'Sub-tarefa "$subTaskKey" não pertence à missão $missionId');
+    }
+
+    final current = subs[idx];
+    final maxProgresso = current.escalaAlvo <= 0
+        ? 0
+        : (current.escalaAlvo * subTaskMaxFactor).floor();
+    final progresso = (current.progressoAtual + delta).clamp(0, maxProgresso);
+    final updatedSub = current.copyWith(
+      progressoAtual: progresso,
+      completed: progresso >= current.escalaAlvo,
+    );
+
+    final newSubs = List<DailySubTaskInstance>.from(subs);
+    newSubs[idx] = updatedSub;
+    final updated = mission.copyWith(subTarefas: newSubs);
+
+    await _client.from('daily_missions').update({
+      'sub_tarefas_json': updated.encodeSubTarefas(),
+    }).eq('id', missionId);
+
+    _bus.publish(DailyMissionProgressed(
+      playerId: mission.playerId,
+      missionId: missionId,
+      subTaskKey: subTaskKey,
+      novoProgresso: progresso,
+    ));
   }
 
   // ─── confirm ────────────────────────────────────────────────────────
 
-  /// Fecha a missão manualmente (clique no ✓). Calcula status final,
-  /// aplica reward correspondente e emite [DailyMissionCompleted].
+  /// Fecha a missão manualmente (clique no ✓) via RPC
+  /// `confirm_daily_mission`. A RPC resolve status, credita reward e
+  /// fecha atomicamente. Aqui só publicamos os eventos client-side a
+  /// partir do JSON de retorno.
   ///
-  /// Status:
-  /// - `completed` se TODAS 3 sub-tarefas têm `progresso ≥ alvo`.
-  /// - `failed` se TODAS 3 têm `progresso < 25% do alvo`.
-  /// - `partial` em qualquer outra combinação.
-  ///
-  /// Idempotência: lança [RewardAlreadyGrantedException] se a missão já
-  /// foi fechada (status != pending OU rewardClaimed).
+  /// Idempotência: a RPC lança `unique_violation` se a missão já foi
+  /// fechada → traduzimos em [RewardAlreadyGrantedException].
   Future<void> confirmCompletion({required int missionId}) async {
-    LevelUp? levelUp;
-    DailyMission? closedMission;
-    int goldEarned = 0;
-
-    await _db.transaction(() async {
-      final mission = await _missionsDao.findById(missionId);
-      if (mission == null) {
-        throw StateError('Missão $missionId não existe');
-      }
-      if (mission.rewardClaimed ||
-          mission.status != DailyMissionStatus.pending) {
+    final Map<String, dynamic> res;
+    try {
+      res = (await _client.rpc('confirm_daily_mission', params: {
+        'p_mission_id': missionId,
+      })) as Map<String, dynamic>;
+    } on PostgrestException catch (e) {
+      // RPC: errcode unique_violation (23505) => já fechada.
+      if (e.code == '23505') {
         throw RewardAlreadyGrantedException(missionId: missionId);
       }
-
-      final status = _resolveStatus(mission);
-      final player = await _playerDao.findById(mission.playerId);
-      if (player == null) {
-        throw StateError('Player ${mission.playerId} sumiu mid-flight');
-      }
-
-      final reward = computeReward(
-        rank: _normalizeRank(player.guildRank),
-        mission: mission,
-        status: status,
-        dailyMissionsStreak: player.dailyMissionsStreak,
-      );
-      // Sprint 3.4 Etapa C hotfix #1 — aplica buffs de facção (xpMult +
-      // goldMult) ou debuff de saída (-30%). Tudo via _applyBuffs.
-      final buffed = await _applyBuffs(
-          mission.playerId, reward.xp, reward.gold);
-      goldEarned = buffed.gold;
-
-      if (buffed.xp > 0) {
-        levelUp = await _playerDao.addXp(mission.playerId, buffed.xp);
-      }
-      if (buffed.gold > 0) {
-        await _db.customUpdate(
-          'UPDATE players SET gold = gold + ?, '
-          'total_gold_earned_lifetime = total_gold_earned_lifetime + ? '
-          'WHERE id = ?',
-          variables: [
-            Variable.withInt(buffed.gold),
-            Variable.withInt(buffed.gold),
-            Variable.withInt(mission.playerId),
-          ],
-          updates: {_db.playersTable},
-        );
-      }
-
-      final updated = mission.copyWith(
-        status: status,
-        completedAt: DateTime.now(),
-        rewardClaimed: true,
-      );
-      await _missionsDao.updateMission(updated);
-      closedMission = updated;
-    });
-
-    if (closedMission != null) {
-      final m = closedMission!;
-      if (m.status == DailyMissionStatus.failed) {
-        _bus.publish(DailyMissionFailed(
-          playerId: m.playerId,
-          missionId: m.id,
-          reason: 'manual-confirm-zero',
-        ));
-      } else {
-        _bus.publish(DailyMissionCompleted(
-          playerId: m.playerId,
-          missionId: m.id,
-          modalidade: m.modalidade,
-          fullCompleted: m.status == DailyMissionStatus.completed,
-          partial: m.status == DailyMissionStatus.partial,
-          goldEarned: goldEarned,
-        ));
-      }
+      rethrow;
     }
-    if (levelUp != null) {
-      _bus.publish(levelUp!);
+
+    final status = DailyMissionStatusCodec.fromStorage(res['status'] as String);
+    final playerId = res['player_id'] as String;
+    final modalidade =
+        MissionCategoryCodec.fromStorage(res['modalidade'] as String);
+    final goldEarned = (res['gold_earned'] as num?)?.toInt() ?? 0;
+
+    if (status == DailyMissionStatus.failed) {
+      _bus.publish(DailyMissionFailed(
+        playerId: playerId,
+        missionId: missionId,
+        reason: 'manual-confirm-zero',
+      ));
+    } else {
+      _bus.publish(DailyMissionCompleted(
+        playerId: playerId,
+        missionId: missionId,
+        modalidade: modalidade,
+        fullCompleted: status == DailyMissionStatus.completed,
+        partial: status == DailyMissionStatus.partial,
+        goldEarned: goldEarned,
+      ));
     }
+    _publishLevelUp(res, playerId);
   }
 
-  /// Marca como `failed` administrativamente (sem reward). O rollover
-  /// usa lógica própria via [applyPartialReward] / [forceFailedRollover]
-  /// — esse método fica como utilitário.
+  /// Marca como `failed` administrativamente (sem reward). Sem RPC
+  /// dedicada — guard + update client-side. RLS protege a linha.
   Future<void> markFailed({
     required int missionId,
     required String reason,
   }) async {
-    final mission = await _missionsDao.findById(missionId);
+    final mission = await _findMissionById(missionId);
     if (mission == null) return;
     if (mission.rewardClaimed || mission.status == DailyMissionStatus.failed) {
       return;
     }
-    final updated = mission.copyWith(
-      status: DailyMissionStatus.failed,
-      completedAt: DateTime.now(),
-      rewardClaimed: false,
-    );
-    await _missionsDao.updateMission(updated);
+    await _client.from('daily_missions').update({
+      'status': DailyMissionStatus.failed.storage,
+      'completed_at': DateTime.now().millisecondsSinceEpoch,
+      'reward_claimed': false,
+    }).eq('id', missionId);
+
     _bus.publish(DailyMissionFailed(
       playerId: mission.playerId,
       missionId: mission.id,
@@ -277,9 +201,11 @@ class DailyMissionProgressService {
     ));
   }
 
-  // ─── reward calc ────────────────────────────────────────────────────
+  // ─── reward calc (preview client-side — espelha _daily_compute_reward) ─
 
   /// Cálculo público de reward por status (fórmula linear hotfix-2).
+  /// Usado pela UI/notifier pra preview SEM tocar o servidor. O crédito
+  /// real é feito pelas RPCs (`_daily_compute_reward` no Postgres).
   ///
   /// - `failed` / `pending`: zero.
   /// - `completed` / `partial`: usa [missionFactor] (cap 3.0 por sub).
@@ -301,9 +227,8 @@ class DailyMissionProgressService {
     }
 
     final factor = missionFactor(mission);
-    final mult = factor <= 1.0
-        ? factor
-        : 1.0 + overshootSlope * (factor - 1.0);
+    final mult =
+        factor <= 1.0 ? factor : 1.0 + overshootSlope * (factor - 1.0);
     final streakBonus = (status == DailyMissionStatus.completed &&
             dailyMissionsStreak >= streakBonusThreshold)
         ? streakBonusFactor
@@ -351,7 +276,7 @@ class DailyMissionProgressService {
   }
 
   /// Decide o status final pra confirmação manual / rollover, baseado
-  /// no progresso atual de cada sub-tarefa.
+  /// no progresso atual de cada sub-tarefa. Espelha `_daily_resolve_status`.
   static DailyMissionStatus _resolveStatus(DailyMission mission) {
     final subs = mission.subTarefas;
     if (subs.isEmpty) return DailyMissionStatus.failed;
@@ -375,134 +300,82 @@ class DailyMissionProgressService {
   static DailyMissionStatus previewStatus(DailyMission mission) =>
       _resolveStatus(mission);
 
-  // ─── rollover hook ──────────────────────────────────────────────────
+  // ─── rollover hooks (via RPC) ────────────────────────────────────────
 
-  /// Aplica reward proporcional + marca `partial`. Chamado pelo
-  /// rollover (DailyMissionRolloverService) quando ≥1 sub-tarefa fechou.
+  /// Aplica reward proporcional + marca `partial` via RPC
+  /// `apply_partial_daily_reward`. Chamado pelo rollover.
   ///
-  /// Mantém assinatura por compat — `subCompletas` virou opcional/legacy
-  /// (a fórmula nova usa `partialFactor` internamente).
+  /// Mantém assinatura por compat — `subCompletas` virou legacy/ignorado
+  /// (a RPC computa o factor internamente). Idempotente server-side
+  /// (`applied:false` se já claimed).
   Future<void> applyPartialReward({
     required DailyMission mission,
     required int subCompletas,
   }) async {
-    if (mission.rewardClaimed) return;
-    final player = await _playerDao.findById(mission.playerId);
-    if (player == null) return;
+    final res = (await _client.rpc('apply_partial_daily_reward', params: {
+      'p_mission_id': mission.id,
+    })) as Map<String, dynamic>;
 
-    final reward = computeReward(
-      rank: _normalizeRank(player.guildRank),
-      mission: mission,
-      status: DailyMissionStatus.partial,
-      dailyMissionsStreak: player.dailyMissionsStreak,
-    );
-    // Sprint 3.4 Etapa C hotfix #1 — buffs de facção em rollover partial.
-    final buffed = await _applyBuffs(mission.playerId, reward.xp, reward.gold);
+    if (res['applied'] != true) return;
 
-    LevelUp? levelUp;
-    if (buffed.xp > 0) {
-      levelUp = await _playerDao.addXp(mission.playerId, buffed.xp);
-    }
-    if (buffed.gold > 0) {
-      await _db.customUpdate(
-        'UPDATE players SET gold = gold + ?, '
-        'total_gold_earned_lifetime = total_gold_earned_lifetime + ? '
-        'WHERE id = ?',
-        variables: [
-          Variable.withInt(buffed.gold),
-          Variable.withInt(buffed.gold),
-          Variable.withInt(mission.playerId),
-        ],
-        updates: {_db.playersTable},
-      );
-    }
-
-    final updated = mission.copyWith(
-      status: DailyMissionStatus.partial,
-      completedAt: DateTime.now(),
-      rewardClaimed: true,
-    );
-    await _missionsDao.updateMission(updated);
-
+    final playerId = res['player_id'] as String;
     _bus.publish(DailyMissionCompleted(
-      playerId: mission.playerId,
+      playerId: playerId,
       missionId: mission.id,
       modalidade: mission.modalidade,
       fullCompleted: false,
       partial: true,
-      goldEarned: buffed.gold,
+      goldEarned: (res['gold_earned'] as num?)?.toInt() ?? 0,
     ));
-    if (levelUp != null) _bus.publish(levelUp);
+    _publishLevelUp(res, playerId);
   }
 
-  /// Sprint 3.3 Etapa 2.1c-β — fecha missão como `completed` com flag
-  /// `was_auto_confirmed=true`, sem exigir clique manual no ✓.
-  ///
-  /// Chamado pelo `DailyMissionRolloverService` quando detecta:
-  ///   1. `players.auto_confirm_enabled = true`
-  ///   2. `mission.allSubsAtTarget == true` (todas as 3 subs em 100%+)
-  ///
-  /// Espelho de [applyPartialReward] mas com status `completed`. Reward
-  /// calc inclui streak bonus (×1.5 se `dailyMissionsStreak >= 10`) —
-  /// auto-confirm CONTA pra streak (decisão consciente: jogador
-  /// completou 100% das sub-tarefas; clicar ✓ é só burocracia).
-  ///
-  /// Idempotente: noop se `mission.rewardClaimed == true`.
+  /// Fecha como `completed` (com streak bonus) e `was_auto_confirmed=true`
+  /// via RPC `apply_auto_completed_daily`. Idempotente server-side.
   Future<void> applyAutoCompleted({required DailyMission mission}) async {
-    if (mission.rewardClaimed) return;
-    final player = await _playerDao.findById(mission.playerId);
-    if (player == null) return;
+    final res = (await _client.rpc('apply_auto_completed_daily', params: {
+      'p_mission_id': mission.id,
+    })) as Map<String, dynamic>;
 
-    final reward = computeReward(
-      rank: _normalizeRank(player.guildRank),
-      mission: mission,
-      status: DailyMissionStatus.completed,
-      dailyMissionsStreak: player.dailyMissionsStreak,
-    );
-    // Sprint 3.4 Etapa C hotfix #1 — buffs em auto-confirm também.
-    final buffed = await _applyBuffs(mission.playerId, reward.xp, reward.gold);
+    if (res['applied'] != true) return;
 
-    LevelUp? levelUp;
-    if (buffed.xp > 0) {
-      levelUp = await _playerDao.addXp(mission.playerId, buffed.xp);
-    }
-    if (buffed.gold > 0) {
-      await _db.customUpdate(
-        'UPDATE players SET gold = gold + ?, '
-        'total_gold_earned_lifetime = total_gold_earned_lifetime + ? '
-        'WHERE id = ?',
-        variables: [
-          Variable.withInt(buffed.gold),
-          Variable.withInt(buffed.gold),
-          Variable.withInt(mission.playerId),
-        ],
-        updates: {_db.playersTable},
-      );
-    }
-
-    final updated = mission.copyWith(
-      status: DailyMissionStatus.completed,
-      completedAt: DateTime.now(),
-      rewardClaimed: true,
-      wasAutoConfirmed: true,
-    );
-    await _missionsDao.updateMission(updated);
-
+    final playerId = res['player_id'] as String;
     _bus.publish(DailyMissionCompleted(
-      playerId: mission.playerId,
+      playerId: playerId,
       missionId: mission.id,
       modalidade: mission.modalidade,
       fullCompleted: true,
       partial: false,
       wasAutoConfirmed: true,
-      goldEarned: buffed.gold,
+      goldEarned: (res['gold_earned'] as num?)?.toInt() ?? 0,
     ));
-    if (levelUp != null) _bus.publish(levelUp);
+    _publishLevelUp(res, playerId);
   }
 
-  String _normalizeRank(String raw) {
-    if (raw == 'none' || raw.isEmpty) return 'E';
-    return raw.toUpperCase();
+  // ─── helpers ──────────────────────────────────────────────────────────
+
+  Future<DailyMission?> _findMissionById(int id) async {
+    final row = await _client
+        .from('daily_missions')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
+    return row == null ? null : DailyMission.fromMap(row);
+  }
+
+  /// As RPCs retornam `level_up` como json `{previous_level, new_level}`
+  /// (ou null). Traduz pra evento [LevelUp] client-side.
+  void _publishLevelUp(Map<String, dynamic> res, String playerId) {
+    final lu = res['level_up'];
+    if (lu is! Map) return;
+    final newLevel = (lu['new_level'] as num?)?.toInt();
+    final prevLevel = (lu['previous_level'] as num?)?.toInt();
+    if (newLevel == null || prevLevel == null) return;
+    _bus.publish(LevelUp(
+      playerId: playerId,
+      newLevel: newLevel,
+      previousLevel: prevLevel,
+    ));
   }
 }
 

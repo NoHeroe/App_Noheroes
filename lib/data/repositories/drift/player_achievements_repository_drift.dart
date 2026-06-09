@@ -1,88 +1,15 @@
-import 'package:drift/drift.dart';
-
-import '../../../domain/repositories/player_achievements_repository.dart';
-import '../../database/app_database.dart';
-
-class PlayerAchievementsRepositoryDrift
-    implements PlayerAchievementsRepository {
-  final AppDatabase _db;
-  PlayerAchievementsRepositoryDrift(this._db);
-
-  @override
-  Future<bool> isCompleted(int playerId, String achievementKey) async {
-    final row = await (_db.select(_db.playerAchievementsCompletedTable)
-          ..where((t) =>
-              t.playerId.equals(playerId) &
-              t.achievementKey.equals(achievementKey)))
-        .getSingleOrNull();
-    return row != null;
-  }
-
-  @override
-  Future<List<String>> listCompletedKeys(int playerId) async {
-    final query = _db.select(_db.playerAchievementsCompletedTable)
-      ..where((t) => t.playerId.equals(playerId))
-      ..orderBy([(t) => OrderingTerm.desc(t.completedAt)]);
-    final rows = await query.get();
-    return rows.map((r) => r.achievementKey).toList(growable: false);
-  }
-
-  @override
-  Future<void> markCompleted(
-    int playerId,
-    String achievementKey, {
-    required DateTime at,
-  }) async {
-    await _db.into(_db.playerAchievementsCompletedTable).insert(
-          PlayerAchievementsCompletedTableCompanion(
-            playerId: Value(playerId),
-            achievementKey: Value(achievementKey),
-            completedAt: Value(at.millisecondsSinceEpoch),
-          ),
-          mode: InsertMode.insertOrIgnore,
-        );
-  }
-
-  @override
-  Future<void> markRewardClaimed(
-      int playerId, String achievementKey) async {
-    await (_db.update(_db.playerAchievementsCompletedTable)
-          ..where((t) =>
-              t.playerId.equals(playerId) &
-              t.achievementKey.equals(achievementKey)))
-        .write(
-            const PlayerAchievementsCompletedTableCompanion(
-          rewardClaimed: Value(true),
-        ));
-  }
-
-  @override
-  Future<bool> isRewardClaimed(int playerId, String achievementKey) async {
-    final row = await (_db.select(_db.playerAchievementsCompletedTable)
-          ..where((t) =>
-              t.playerId.equals(playerId) &
-              t.achievementKey.equals(achievementKey)))
-        .getSingleOrNull();
-    return row != null && row.rewardClaimed;
-  }
-
-  @override
-  Future<int> countCompleted(int playerId) async {
-    final count = _db.playerAchievementsCompletedTable.playerId.count();
-    final query = _db.selectOnly(_db.playerAchievementsCompletedTable)
-      ..addColumns([count])
-      ..where(_db.playerAchievementsCompletedTable.playerId.equals(playerId));
-    final row = await query.getSingle();
-    return row.read(count) ?? 0;
-  }
-
-  @override
-  Future<List<String>> listPendingClaims(int playerId) async {
-    final query = _db.select(_db.playerAchievementsCompletedTable)
-      ..where((t) =>
-          t.playerId.equals(playerId) & t.rewardClaimed.equals(false))
-      ..orderBy([(t) => OrderingTerm.desc(t.completedAt)]);
-    final rows = await query.get();
-    return rows.map((r) => r.achievementKey).toList(growable: false);
-  }
-}
+// OBSOLETO — Época 2 full-online (ADR-0024).
+//
+// A implementação Drift de PlayerAchievementsRepository foi substituída por
+// PlayerAchievementsRepositorySupabase
+// (lib/data/repositories/supabase/player_achievements_repository_supabase.dart).
+//
+// O contrato PlayerAchievementsRepository migrou `playerId` de int -> String
+// (uuid), então a antiga implementação Drift (int playerId + AppDatabase) não
+// satisfaz mais a interface. Mantido como arquivo-tumba até o provider
+// (lib/app/providers.dart) ser religado pra apontar na impl Supabase; pode ser
+// removido do repo em seguida.
+//
+// Toda a lógica anterior vivia em queries Drift sobre
+// `player_achievements_completed` — hoje a tabela é Postgres (player_id uuid)
+// e o acesso é PostgREST direto na impl Supabase.

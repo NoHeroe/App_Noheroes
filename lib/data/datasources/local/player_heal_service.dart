@@ -1,56 +1,26 @@
-import 'package:drift/drift.dart';
-import '../../database/app_database.dart';
-import '../../database/daos/player_dao.dart';
-import '../../../core/utils/vitalism_calculator.dart';
-import '../../../domain/enums/class_type.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-// Ponto único de cura de HP. Garante que a regra de regen proporcional de
-// vitalismo (ADR 0002) seja aplicada sempre, em qualquer fonte de cura futura.
+// Ponto único de cura de HP. A regra de regen proporcional de vitalismo
+// (ADR 0002) — read-modify-write multi-campo sobre o jogador — é atômica e
+// portanto vive inteira na RPC `apply_hp_heal` (porte fiel de
+// computeHealResult + VitalismCalculator.calculateMaxVitalism). O cliente só
+// dispara a RPC.
 //
-// TODO: teste de integração em sprint futura (quando houver setup de banco
-// em memória). A lógica de cálculo puro está testada via computeHealResult.
+// `computeHealResult`/`HealResult` ficam mantidos como utilitários PUROS
+// (testáveis client-side, sem IO), espelhando a lógica que a RPC replica.
 class PlayerHealService {
-  final AppDatabase _db;
-  PlayerHealService(this._db);
-
-  PlayerDao get _dao => PlayerDao(_db);
+  final SupabaseClient _client;
+  PlayerHealService(this._client);
 
   Future<void> applyHpHealWithVitalismRegen({
-    required int playerId,
+    required String playerId,
     required int hpGained,
   }) async {
     if (hpGained <= 0) return;
-
-    final player = await _dao.findById(playerId);
-    if (player == null) return;
-
-    // Usamos maxHp persistido (não recalculamos via calcMaxHp) pra que
-    // multiplicadores temporários futuros (buffs de item, rituais) sejam
-    // respeitados sem precisar replicar a lógica aqui.
-    final hpMax = player.maxHp;
-    final parsedClass = ClassType.values.asNameMap()[player.classType];
-    final vitalismMax = parsedClass != null
-        ? VitalismCalculator.calculateMaxVitalism(
-            hp: hpMax,
-            classType: parsedClass,
-            level: player.level,
-          )
-        : 0;
-
-    final result = computeHealResult(
-      currentHp: player.hp,
-      currentVitalism: player.currentVitalism,
-      hpGained: hpGained,
-      hpMax: hpMax,
-      vitalismMax: vitalismMax,
-    );
-
-    await (_db.update(_db.playersTable)
-          ..where((t) => t.id.equals(playerId)))
-        .write(PlayersTableCompanion(
-      hp:              Value(result.newHp),
-      currentVitalism: Value(result.newCurrentVitalism),
-    ));
+    await _client.rpc('apply_hp_heal', params: {
+      'p_player': playerId,
+      'p_hp_gained': hpGained,
+    });
   }
 }
 

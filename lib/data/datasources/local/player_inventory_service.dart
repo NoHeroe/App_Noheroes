@@ -1,131 +1,88 @@
-import 'package:drift/drift.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../domain/enums/source_type.dart';
 import '../../../domain/models/inventory_entry_with_spec.dart';
-import '../../database/app_database.dart';
+import '../../../domain/models/player_inventory_entry.dart';
 import 'items_catalog_service.dart';
 
-// Orquestra player_inventory + catálogo. Respeita stack_max ao empilhar.
-// Stubs de craft/forge/enchant permanecem pra Sprints 2.2/2.3.
+// Orquestra player_inventory + catálogo (Supabase, Época 2 — ADR-0024).
+// Respeita stack_max ao empilhar (lógica atômica vive na RPC inventory_add_item).
 //
-// TODO: teste de integração em sprint futura (requer Drift in-memory).
+// TODO: teste de integração em sprint futura.
 // A lógica de decisão está coberta pelas políticas puras do Bloco 3.
 class PlayerInventoryService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
   final ItemsCatalogService _catalog;
 
-  PlayerInventoryService(this._db, this._catalog);
+  PlayerInventoryService(this._client, this._catalog);
 
-  Future<List<InventoryEntryWithSpec>> listOf(int playerId) async {
-    final rows = await (_db.select(_db.playerInventoryTable)
-          ..where((t) => t.playerId.equals(playerId)))
-        .get();
-    if (rows.isEmpty) return const [];
+  Future<List<InventoryEntryWithSpec>> listOf(String playerId) async {
+    final rows = await _client
+        .from('player_inventory')
+        .select()
+        .eq('player_id', playerId);
+    final list = (rows as List).cast<Map<String, dynamic>>();
+    if (list.isEmpty) return const [];
 
     final out = <InventoryEntryWithSpec>[];
-    for (final row in rows) {
-      final spec = await _catalog.findByKey(row.itemKey);
+    for (final row in list) {
+      final entry = PlayerInventoryEntry.fromMap(row);
+      final spec = await _catalog.findByKey(entry.itemKey);
       if (spec == null) continue; // item sumido do catálogo — ignora defensivo
-      out.add(InventoryEntryWithSpec(entry: row, spec: spec));
+      out.add(InventoryEntryWithSpec(entry: entry, spec: spec));
     }
     return out;
   }
 
-  // Adiciona item respeitando stack_max. Se stackable, tenta empilhar em entry
-  // não-equipada existente; se sobrar, cria nova (possivelmente várias).
-  // Retorna o id da última entry criada/atualizada. -1 se o item não existir no catálogo.
+  // Adiciona item respeitando stack_max. Operação multi-write atômica
+  // (stacking + inserts) -> RPC inventory_add_item. Retorna o id da última
+  // entry criada/atualizada. -1 se quantity<=0 ou item ausente do catálogo.
   Future<int> addItem({
-    required int playerId,
+    required String playerId,
     required String itemKey,
     int quantity = 1,
     required SourceType acquiredVia,
     String? evolutionStage,
   }) async {
     if (quantity <= 0) return -1;
-    final spec = await _catalog.findByKey(itemKey);
-    if (spec == null) {
-      // Sprint 3.3 Etapa 2.2 hotfix — log explícito ao invés de falhar
-      // silencioso. Causa típica: catálogo desatualizado (item novo no
-      // JSON mas self-heal não rodou ou falhou). Conquistas com items
-      // (ex: CHEST_DEFEATED em tiers *_falha) caem aqui se o seed do
-      // items_unified.json não cobriu este item.
+
+    final res = await _client.rpc('inventory_add_item', params: {
+      'p_player': playerId,
+      'p_item_key': itemKey,
+      'p_quantity': quantity,
+      'p_acquired_via': acquiredVia.name,
+      'p_evolution_stage': evolutionStage,
+    });
+    final id = _asInt(res) ?? -1;
+    if (id < 0) {
+      // Causa típica: catálogo desatualizado (item novo no servidor mas
+      // este cliente não recarregou) ou key inexistente no items_catalog.
       // ignore: avoid_print
       print('[inventory] addItem: item key "$itemKey" não existe no '
           'items_catalog (player=$playerId, qty=$quantity, '
-          'via=${acquiredVia.name}). Verificar self-heal de '
-          'items_unified.json.');
-      return -1;
+          'via=${acquiredVia.name}).');
     }
-
-    final now = DateTime.now().millisecondsSinceEpoch;
-    var remaining = quantity;
-    var lastId = -1;
-
-    if (spec.isStackable) {
-      // Preenche entries existentes não-equipadas primeiro.
-      final existing = await (_db.select(_db.playerInventoryTable)
-            ..where((t) =>
-                t.playerId.equals(playerId) &
-                t.itemKey.equals(itemKey) &
-                t.isEquipped.equals(false))
-            ..orderBy([(t) => OrderingTerm.asc(t.id)]))
-          .get();
-
-      for (final row in existing) {
-        if (remaining <= 0) break;
-        final available = spec.stackMax - row.quantity;
-        if (available <= 0) continue;
-        final toAdd = available >= remaining ? remaining : available;
-        await (_db.update(_db.playerInventoryTable)
-              ..where((t) => t.id.equals(row.id)))
-            .write(PlayerInventoryTableCompanion(
-          quantity: Value(row.quantity + toAdd),
-        ));
-        lastId = row.id;
-        remaining -= toAdd;
-      }
-    }
-
-    // Cria novas entries pra quantidade restante.
-    while (remaining > 0) {
-      final chunk = spec.isStackable && remaining > spec.stackMax
-          ? spec.stackMax
-          : remaining;
-      final id = await _db.into(_db.playerInventoryTable).insert(
-            PlayerInventoryTableCompanion.insert(
-              playerId:     playerId,
-              itemKey:      itemKey,
-              acquiredAt:   now,
-              acquiredVia:  acquiredVia.name,
-              quantity:     Value(chunk),
-              evolutionStage: Value(evolutionStage),
-              durabilityCurrent: Value(spec.durabilityMax),
-            ),
-          );
-      lastId = id;
-      remaining -= chunk;
-    }
-
-    return lastId;
+    return id;
   }
 
   // Remove quantity de uma entry. Rejeita se equipada. Retorna true se algo saiu.
+  // Read-modify-write client-side (sem RPC dedicada).
   Future<bool> removeItem({required int inventoryId, int quantity = 1}) async {
     if (quantity <= 0) return false;
-    final row = await (_db.select(_db.playerInventoryTable)
-          ..where((t) => t.id.equals(inventoryId)))
-        .getSingleOrNull();
+    final row = await _client
+        .from('player_inventory')
+        .select()
+        .eq('id', inventoryId)
+        .maybeSingle();
     if (row == null) return false;
-    if (row.isEquipped) return false; // caller precisa desequipar antes
-    if (row.quantity <= quantity) {
-      await (_db.delete(_db.playerInventoryTable)
-            ..where((t) => t.id.equals(inventoryId)))
-          .go();
+    final entry = PlayerInventoryEntry.fromMap(row);
+    if (entry.isEquipped) return false; // caller precisa desequipar antes
+    if (entry.quantity <= quantity) {
+      await _client.from('player_inventory').delete().eq('id', inventoryId);
     } else {
-      await (_db.update(_db.playerInventoryTable)
-            ..where((t) => t.id.equals(inventoryId)))
-          .write(PlayerInventoryTableCompanion(
-        quantity: Value(row.quantity - quantity),
-      ));
+      await _client
+          .from('player_inventory')
+          .update({'quantity': entry.quantity - quantity})
+          .eq('id', inventoryId);
     }
     return true;
   }
@@ -133,36 +90,32 @@ class PlayerInventoryService {
   // Consome 1 unidade de um item is_consumable. Não aplica effects nesta sprint
   // (engine de effects é Fase 4 — caller é responsável).
   Future<bool> consumeItem(int inventoryId) async {
-    final row = await (_db.select(_db.playerInventoryTable)
-          ..where((t) => t.id.equals(inventoryId)))
-        .getSingleOrNull();
+    final row = await _client
+        .from('player_inventory')
+        .select()
+        .eq('id', inventoryId)
+        .maybeSingle();
     if (row == null) return false;
-    final spec = await _catalog.findByKey(row.itemKey);
+    final entry = PlayerInventoryEntry.fromMap(row);
+    final spec = await _catalog.findByKey(entry.itemKey);
     if (spec == null || !spec.isConsumable) return false;
 
-    if (row.quantity <= 1) {
-      await (_db.delete(_db.playerInventoryTable)
-            ..where((t) => t.id.equals(inventoryId)))
-          .go();
+    if (entry.quantity <= 1) {
+      await _client.from('player_inventory').delete().eq('id', inventoryId);
     } else {
-      await (_db.update(_db.playerInventoryTable)
-            ..where((t) => t.id.equals(inventoryId)))
-          .write(PlayerInventoryTableCompanion(
-        quantity: Value(row.quantity - 1),
-      ));
+      await _client
+          .from('player_inventory')
+          .update({'quantity': entry.quantity - 1})
+          .eq('id', inventoryId);
     }
     // TODO: aplicar effects do consumível (Fase 4 — engine de effects).
     return true;
   }
 
   // Dev Panel — remove TODOS os itens + equipamentos do jogador. Destrutivo.
-  Future<void> resetInventoryFor(int playerId) async {
-    await (_db.delete(_db.playerEquipmentTable)
-          ..where((t) => t.playerId.equals(playerId)))
-        .go();
-    await (_db.delete(_db.playerInventoryTable)
-          ..where((t) => t.playerId.equals(playerId)))
-        .go();
+  // Multi-delete atômico -> RPC inventory_reset.
+  Future<void> resetInventoryFor(String playerId) async {
+    await _client.rpc('inventory_reset', params: {'p_player': playerId});
   }
 
   // Sprint 2.3 fix (D.2) — APIs equivalentes às antigas PlayerEnchantsService,
@@ -170,45 +123,60 @@ class PlayerInventoryService {
 
   // Verifica se o jogador tem pelo menos 1 unidade (qualquer stack, qualquer
   // equipagem) do item informado.
-  Future<bool> hasItem(int playerId, String itemKey) async {
-    final rows = await (_db.select(_db.playerInventoryTable)
-          ..where((t) =>
-              t.playerId.equals(playerId) & t.itemKey.equals(itemKey)))
-        .get();
-    return rows.any((r) => r.quantity > 0);
+  Future<bool> hasItem(String playerId, String itemKey) async {
+    final rows = await _client
+        .from('player_inventory')
+        .select('quantity')
+        .eq('player_id', playerId)
+        .eq('item_key', itemKey);
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .any((r) => (_asInt(r['quantity']) ?? 0) > 0);
   }
 
   // Consome 1 unidade por chave de item (não por inventoryId). Pega a
   // primeira entry não-equipada. Se quantity cai a zero, DELETE a row.
   // Throw StateError se o player não tem nenhuma entry — caller usa pra
-  // forçar rollback em transações atômicas (ex: EnchantService).
+  // forçar rollback (ex: EnchantService).
   Future<void> consumeOneByKey({
-    required int playerId,
+    required String playerId,
     required String itemKey,
   }) async {
-    final row = await (_db.select(_db.playerInventoryTable)
-          ..where((t) =>
-              t.playerId.equals(playerId) &
-              t.itemKey.equals(itemKey) &
-              t.isEquipped.equals(false))
-          ..orderBy([(t) => OrderingTerm.asc(t.id)])
-          ..limit(1))
-        .getSingleOrNull();
-    if (row == null || row.quantity <= 0) {
+    final row = await _client
+        .from('player_inventory')
+        .select()
+        .eq('player_id', playerId)
+        .eq('item_key', itemKey)
+        .eq('is_equipped', false)
+        .order('id', ascending: true)
+        .limit(1)
+        .maybeSingle();
+    if (row == null) {
       throw StateError(
           'Tentou consumir item $itemKey do player $playerId, '
           'mas não tem em inventário (não-equipado).');
     }
-    if (row.quantity == 1) {
-      await (_db.delete(_db.playerInventoryTable)
-            ..where((t) => t.id.equals(row.id)))
-          .go();
+    final entry = PlayerInventoryEntry.fromMap(row);
+    if (entry.quantity <= 0) {
+      throw StateError(
+          'Tentou consumir item $itemKey do player $playerId, '
+          'mas não tem em inventário (não-equipado).');
+    }
+    if (entry.quantity == 1) {
+      await _client.from('player_inventory').delete().eq('id', entry.id);
     } else {
-      await (_db.update(_db.playerInventoryTable)
-            ..where((t) => t.id.equals(row.id)))
-          .write(PlayerInventoryTableCompanion(
-        quantity: Value(row.quantity - 1),
-      ));
+      await _client
+          .from('player_inventory')
+          .update({'quantity': entry.quantity - 1})
+          .eq('id', entry.id);
     }
   }
+}
+
+int? _asInt(dynamic v) {
+  if (v == null) return null;
+  if (v is int) return v;
+  if (v is num) return v.toInt();
+  if (v is String) return int.tryParse(v);
+  return null;
 }

@@ -1,21 +1,20 @@
 import 'dart:convert';
 import 'dart:math' as math;
 
-import 'package:drift/drift.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/events/app_event_bus.dart';
 import '../../../core/events/faction_events.dart';
 import '../../../core/utils/guild_rank.dart';
 import '../../../domain/enums/mission_modality.dart';
 import '../../../domain/enums/mission_tab_origin.dart';
+import '../../../domain/enums/rank_codec.dart';
 import '../../../domain/models/mission_progress.dart';
 import '../../../domain/models/reward_declared.dart';
 import '../../../domain/repositories/mission_repository.dart';
 import '../../../domain/services/faction_admission_sub_task_types.dart';
 import '../../../domain/services/faction_admission_validator.dart';
-import '../../database/app_database.dart';
-import '../../database/daos/player_dao.dart';
 import 'class_quest_service.dart';
 
 /// Sprint 3.4 Sub-Etapa B.2 — service refatorado pra usar catálogo v2
@@ -60,13 +59,13 @@ import 'class_quest_service.dart';
 /// `no_partial_day_window` — exigência "zero" não escala) nem a
 /// `exact_daily_count_window` (target narrativo fixo). MIN 1 sempre.
 class QuestAdmissionService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
   final MissionRepository _missionRepo;
   final ClassQuestService _classQuests;
   final AppEventBus _eventBus;
 
   QuestAdmissionService(
-    this._db,
+    this._client,
     this._missionRepo,
     this._classQuests,
     this._eventBus,
@@ -112,15 +111,11 @@ class QuestAdmissionService {
 
   /// Chamado na escolha de classe (nível 5). Confirma `classType`,
   /// dispara assignment de 3 diárias, e emite `ClassSelected`.
-  Future<void> startClassQuests(int playerId, String classId) async {
-    await _db.customUpdate(
-      'UPDATE players SET class_type = ? WHERE id = ?',
-      variables: [
-        Variable.withString(classId),
-        Variable.withInt(playerId),
-      ],
-      updates: {_db.playersTable},
-    );
+  Future<void> startClassQuests(String playerId, String classId) async {
+    // Update single-table (sem atomicidade multi-tabela) — persiste direto.
+    await _client
+        .from('players')
+        .update({'class_type': classId}).eq('id', playerId);
     await _classQuests.assignDailyQuests(playerId, classId);
     _eventBus.publish(ClassSelected(playerId: playerId, classId: classId));
   }
@@ -135,7 +130,7 @@ class QuestAdmissionService {
   /// profundidade caso algum caller passe `factionId == 'guild'` por
   /// engano.
   Future<List<MissionProgress>> startFactionAdmission(
-    int playerId,
+    String playerId,
     String factionId,
   ) async {
     if (factionId == 'guild') {
@@ -168,10 +163,9 @@ class QuestAdmissionService {
     // Captura snapshot do estado pra scaling + persistência.
     final reputation = await _readReputation(playerId, factionId);
     final scale = _calculateScale(factionId, reputation);
-    final player = await PlayerDao(_db).findById(playerId);
-    final snapshotRank = player?.guildRank ?? 'none';
+    final snapshotRank = await _readGuildRank(playerId);
 
-    // Increment admissionAttempts em player_faction_membership.
+    // Increment admissionAttempts (atômico) via RPC.
     final attemptCount = await _incrementAttemptCount(playerId, factionId);
 
     final nowMs = DateTime.now().millisecondsSinceEpoch;
@@ -194,19 +188,21 @@ class QuestAdmissionService {
       final missionId = q['id'] as String;
       final missionRank = _parseRank(q['rank'] as String?);
 
-      final id = await _missionRepo.insert(MissionProgress(
-        id: 0,
-        playerId: playerId,
-        missionKey: missionId,
-        modality: MissionModality.internal,
-        tabOrigin: MissionTabOrigin.admission,
-        rank: missionRank,
-        targetValue: subTasks.length, // pra mostrar N/M no header
-        currentValue: 0,
-        reward: const RewardDeclared(),
-        startedAt: DateTime.fromMillisecondsSinceEpoch(nowMs),
-        rewardClaimed: false,
-        metaJson: jsonEncode({
+      // Insert simples (single-row; sem atomicidade multi-tabela — não há
+      // RPC dedicada pra admission). Persiste direto e relê a row pra
+      // materializar o MissionProgress de retorno.
+      final row = <String, dynamic>{
+        'player_id': playerId,
+        'mission_key': missionId,
+        'modality': MissionModality.internal.storage,
+        'tab_origin': MissionTabOrigin.admission.storage,
+        'rank': RankCodec.storage(missionRank),
+        'target_value': subTasks.length, // pra mostrar N/M no header
+        'current_value': 0,
+        'reward_json': const RewardDeclared().toJsonString(),
+        'started_at': nowMs,
+        'reward_claimed': false,
+        'meta_json': jsonEncode({
           'faction_id': factionId,
           'mission_id': missionId,
           'title': q['title'],
@@ -218,9 +214,13 @@ class QuestAdmissionService {
           'sub_tasks':
               subTasks.map((s) => s.toJson()).toList(growable: false),
         }),
-      ));
-      final loaded = await _missionRepo.findById(id);
-      if (loaded != null) created.add(loaded);
+      };
+      final inserted = await _client
+          .from('player_mission_progress')
+          .insert(row)
+          .select()
+          .single();
+      created.add(MissionProgress.fromJson(inserted));
     }
 
     if (created.isNotEmpty) {
@@ -237,51 +237,37 @@ class QuestAdmissionService {
   // ─── helpers ─────────────────────────────────────────────────────
 
   /// Lê reputação atual do player na facção (default 50 se não existe).
-  Future<int> _readReputation(int playerId, String factionId) async {
-    final rows = await _db.customSelect(
-      'SELECT reputation FROM player_faction_reputation '
-      'WHERE player_id = ? AND faction_id = ? LIMIT 1',
-      variables: [
-        Variable.withInt(playerId),
-        Variable.withString(factionId),
-      ],
-    ).get();
-    return rows.isNotEmpty ? rows.first.read<int>('reputation') : 50;
+  Future<int> _readReputation(String playerId, String factionId) async {
+    final row = await _client
+        .from('player_faction_reputation')
+        .select('reputation')
+        .eq('player_id', playerId)
+        .eq('faction_id', factionId)
+        .maybeSingle();
+    return (row?['reputation'] as num?)?.toInt() ?? 50;
   }
 
-  /// Incrementa `player_faction_membership.admissionAttempts` (cria
-  /// row se não existe). Retorna novo valor.
+  /// Lê o `guild_rank` atual do player (default 'none' se row ausente).
+  Future<String> _readGuildRank(String playerId) async {
+    final row = await _client
+        .from('players')
+        .select('guild_rank')
+        .eq('id', playerId)
+        .maybeSingle();
+    return (row?['guild_rank'] as String?) ?? 'none';
+  }
+
+  /// Incrementa `player_faction_membership.admission_attempts` (cria row
+  /// se não existe) de forma atômica. Retorna novo valor. Delegado à RPC
+  /// increment_admission_attempts — NÃO reimplementamos o upsert+increment
+  /// no cliente.
   Future<int> _incrementAttemptCount(
-      int playerId, String factionId) async {
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-    // INSERT OR IGNORE (cria row pendente se não existe).
-    await _db.customStatement(
-      'INSERT OR IGNORE INTO player_faction_membership '
-      '(player_id, faction_id, joined_at, left_at, locked_until, '
-      ' debuff_until, admission_attempts) '
-      'VALUES (?, ?, NULL, NULL, NULL, NULL, 0)',
-      [playerId, factionId],
-    );
-    // Increment.
-    await _db.customStatement(
-      'UPDATE player_faction_membership '
-      'SET admission_attempts = admission_attempts + 1 '
-      'WHERE player_id = ? AND faction_id = ?',
-      [playerId, factionId],
-    );
-    final rows = await _db.customSelect(
-      'SELECT admission_attempts FROM player_faction_membership '
-      'WHERE player_id = ? AND faction_id = ? LIMIT 1',
-      variables: [
-        Variable.withInt(playerId),
-        Variable.withString(factionId),
-      ],
-    ).get();
-    // Variável `nowMs` mantida pra futura colocação de timestamp da
-    // tentativa; atual schema não tem coluna last_attempt_at.
-    // ignore: unused_local_variable
-    final _ = nowMs;
-    return rows.isNotEmpty ? rows.first.read<int>('admission_attempts') : 1;
+      String playerId, String factionId) async {
+    final result = await _client.rpc('increment_admission_attempts', params: {
+      'p_player': playerId,
+      'p_faction': factionId,
+    });
+    return (result as num?)?.toInt() ?? 1;
   }
 
   /// Sprint 3.4 Sub-Etapa B.2 hotfix #2 — janela escalada por tier

@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show AssetBundle, rootBundle;
 
-import '../../data/database/app_database.dart';
+import '../entities/player.dart';
 import '../enums/mission_category.dart';
 import '../models/daily_modalidade_pool.dart';
 import '../models/daily_sub_task_spec.dart';
@@ -152,7 +152,7 @@ class DailyPoolService {
     required DailySubTaskSpec spec,
     required String rank,
     required BodyMetricsService bodyMetrics,
-    required PlayersTableData player,
+    required Player player,
   }) {
     if (!const {'E', 'D', 'C', 'B', 'A', 'S'}.contains(rank)) {
       throw ArgumentError("rank inválido '$rank' (esperado E/D/C/B/A/S)");

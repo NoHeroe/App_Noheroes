@@ -1,54 +1,59 @@
-import 'package:drift/drift.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../domain/enums/source_type.dart';
 import '../../../domain/models/recipe_spec.dart';
-import '../../database/app_database.dart';
 import 'recipes_catalog_service.dart';
 
-// Gestão de receitas desbloqueadas por jogador. Desbloqueio é idempotente
-// via insertOrIgnore (player_recipes_unlocked tem PK composta).
+// Gestão de receitas desbloqueadas por jogador (Época 2 — full-online
+// Supabase, ADR-0024). Desbloqueio é idempotente via upsert ignoreDuplicates
+// (player_recipes_unlocked tem PK composta player_id+recipe_key). playerId é o
+// jogador (uuid) -> String.
 class PlayerRecipesService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
   final RecipesCatalogService _catalog;
 
-  PlayerRecipesService(this._db, this._catalog);
+  PlayerRecipesService(this._client, this._catalog);
 
-  Future<List<RecipeSpec>> listUnlockedOf(int playerId) async {
-    final rows = await (_db.select(_db.playerRecipesUnlockedTable)
-          ..where((t) => t.playerId.equals(playerId)))
-        .get();
+  Future<List<RecipeSpec>> listUnlockedOf(String playerId) async {
+    final rows = await _client
+        .from('player_recipes_unlocked')
+        .select('recipe_key')
+        .eq('player_id', playerId);
     if (rows.isEmpty) return const [];
 
     final out = <RecipeSpec>[];
     for (final row in rows) {
-      final spec = await _catalog.findByKey(row.recipeKey);
+      final spec = await _catalog.findByKey(row['recipe_key'] as String);
       if (spec == null) continue; // receita sumida do catálogo — defensivo
       out.add(spec);
     }
     return out;
   }
 
-  Future<bool> isUnlocked(int playerId, String recipeKey) async {
-    final row = await (_db.select(_db.playerRecipesUnlockedTable)
-          ..where((t) =>
-              t.playerId.equals(playerId) &
-              t.recipeKey.equals(recipeKey)))
-        .getSingleOrNull();
+  Future<bool> isUnlocked(String playerId, String recipeKey) async {
+    final row = await _client
+        .from('player_recipes_unlocked')
+        .select('recipe_key')
+        .eq('player_id', playerId)
+        .eq('recipe_key', recipeKey)
+        .maybeSingle();
     return row != null;
   }
 
   Future<void> unlock({
-    required int playerId,
+    required String playerId,
     required String recipeKey,
     required SourceType via,
   }) async {
-    await _db.into(_db.playerRecipesUnlockedTable).insert(
-          PlayerRecipesUnlockedTableCompanion.insert(
-            playerId:    playerId,
-            recipeKey:   recipeKey,
-            unlockedAt:  DateTime.now().millisecondsSinceEpoch,
-            unlockedVia: via.name,
-          ),
-          mode: InsertMode.insertOrIgnore,
-        );
+    // insertOrIgnore -> upsert com ignoreDuplicates (on conflict do nothing).
+    await _client.from('player_recipes_unlocked').upsert(
+      {
+        'player_id': playerId,
+        'recipe_key': recipeKey,
+        'unlocked_at': DateTime.now().millisecondsSinceEpoch,
+        'unlocked_via': via.name,
+      },
+      ignoreDuplicates: true,
+    );
   }
 }

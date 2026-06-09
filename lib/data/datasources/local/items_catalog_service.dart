@@ -1,25 +1,30 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/utils/guild_rank.dart';
 import '../../../core/utils/item_equip_policy.dart';
 import '../../../core/utils/item_source_policy.dart';
 import '../../../domain/enums/item_type.dart';
 import '../../../domain/models/item_spec.dart';
 import '../../../domain/models/player_snapshot.dart';
-import '../../database/app_database.dart';
 
-// Leitura do items_catalog. Catálogo é imutável após seed → cache em memória
-// na primeira chamada. Pattern: guarda o Future pra evitar double-load em boot
-// concorrente (idempotente mesmo se rodar 2x).
+// Leitura do items_catalog (Supabase, Época 2 — ADR-0024). Catálogo é imutável
+// após seed no servidor → cache em memória na primeira chamada. Pattern: guarda
+// o Future pra evitar double-load em boot concorrente (idempotente mesmo se
+// rodar 2x).
 class ItemsCatalogService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
   Future<List<ItemSpec>>? _cacheFuture;
 
-  ItemsCatalogService(this._db);
+  ItemsCatalogService(this._client);
 
   Future<List<ItemSpec>> findAll() => _cacheFuture ??= _loadAll();
 
   Future<List<ItemSpec>> _loadAll() async {
-    final rows = await _db.select(_db.itemsCatalogTable).get();
-    return List<ItemSpec>.unmodifiable(rows.map(ItemSpec.fromRow));
+    final rows = await _client.from('items_catalog').select();
+    return List<ItemSpec>.unmodifiable(
+      (rows as List)
+          .cast<Map<String, dynamic>>()
+          .map(ItemSpec.fromMap),
+    );
   }
 
   Future<ItemSpec?> findByKey(String key) async {

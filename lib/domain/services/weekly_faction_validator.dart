@@ -1,7 +1,5 @@
-import 'package:drift/drift.dart' show Variable;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../data/database/app_database.dart';
-import '../../data/database/daos/player_dao.dart';
 import 'faction_admission_validator.dart' show SubTaskEvaluation;
 
 /// FATIA B1 — strings canônicas dos sub-types do motor SEMANAL de
@@ -144,20 +142,21 @@ class WeeklyFactionSubTask {
 
 /// FATIA B1 — validador acumulativo do motor SEMANAL de facção.
 ///
-/// Stateless (igual ao `FactionAdmissionValidator`): consulta o DB e
+/// Época 2 (ADR-0024) — full-online Supabase. Stateless (igual ao
+/// `FactionAdmissionValidator`): consulta o DB via PostgREST/RPC e
 /// retorna [SubTaskEvaluation] sem persistir. O caller (listener B2)
 /// re-encoda o metaJson da missão quando a sub-task vira `completed`.
 ///
 /// `achieved = current >= target` **sempre** — sem `failed`, sem
 /// `expired`-gating. A janela é **limitada** a `[weekStartMs, weekEndMs)`.
 class WeeklyFactionValidator {
-  final AppDatabase _db;
+  final SupabaseClient _client;
 
-  WeeklyFactionValidator(this._db);
+  WeeklyFactionValidator(this._client);
 
   /// Avalia a sub-task contra o estado do DB dentro da janela semanal.
   Future<SubTaskEvaluation> evaluate({
-    required int playerId,
+    required String playerId,
     required WeeklyFactionSubTask subTask,
     required int weekStartMs,
     required int weekEndMs,
@@ -188,38 +187,26 @@ class WeeklyFactionValidator {
 
   // ─── implementações por sub-type ──────────────────────────────────
   //
-  // ESPELHO de FactionAdmissionValidator — extrair pra MissionWindowQueries
-  // compartilhadas (DÍVIDA — catalogar). A única diferença estrutural é o
-  // **upper-bound** `completed_at < weekEndMs` (admissão só tem lower-bound)
-  // e a semântica sempre acumulativa (achieved = current >= target).
+  // ESPELHO de FactionAdmissionValidator — a diferença estrutural é o
+  // **upper-bound** `completed_at < weekEndMs` (admissão só tem
+  // lower-bound) e a semântica sempre acumulativa.
 
-  Future<SubTaskEvaluation> _modalityCountWindow(int playerId,
+  Future<SubTaskEvaluation> _modalityCountWindow(String playerId,
       WeeklyFactionSubTask sub, int weekStartMs, int weekEndMs) async {
     final modalidade = sub.params?['modalidade'] as String?;
-
-    final whereClauses = <String>[
-      'player_id = ?',
-      'completed_at IS NOT NULL',
-      'completed_at >= ?',
-      'completed_at < ?',
-      "status IN ('completed', 'partial')",
-    ];
-    final variables = <Variable>[
-      Variable.withInt(playerId),
-      Variable.withInt(weekStartMs),
-      Variable.withInt(weekEndMs),
-    ];
+    var q = _client
+        .from('daily_missions')
+        .select()
+        .eq('player_id', playerId)
+        .not('completed_at', 'is', null)
+        .gte('completed_at', weekStartMs)
+        .lt('completed_at', weekEndMs)
+        .inFilter('status', const ['completed', 'partial']);
     if (modalidade != null) {
-      whereClauses.add('modalidade = ?');
-      variables.add(Variable.withString(modalidade));
+      q = q.eq('modalidade', modalidade);
     }
-
-    final rows = await _db.customSelect(
-      'SELECT COUNT(*) AS c FROM daily_missions '
-      'WHERE ${whereClauses.join(' AND ')}',
-      variables: variables,
-    ).get();
-    final count = rows.first.read<int>('c');
+    final res = await q.count(CountOption.exact);
+    final count = res.count;
     return SubTaskEvaluation(
       current: count,
       target: sub.target,
@@ -228,10 +215,13 @@ class WeeklyFactionValidator {
   }
 
   Future<SubTaskEvaluation> _streakMinimum(
-      int playerId, WeeklyFactionSubTask sub) async {
-    // Snapshot do streak corrente — sem janela (igual à admissão).
-    final player = await PlayerDao(_db).findById(playerId);
-    final streak = player?.dailyMissionsStreak ?? 0;
+      String playerId, WeeklyFactionSubTask sub) async {
+    final row = await _client
+        .from('players')
+        .select('daily_missions_streak')
+        .eq('id', playerId)
+        .maybeSingle();
+    final streak = (row?['daily_missions_streak'] as num?)?.toInt() ?? 0;
     return SubTaskEvaluation(
       current: streak,
       target: sub.target,
@@ -240,10 +230,16 @@ class WeeklyFactionValidator {
   }
 
   Future<SubTaskEvaluation> _goldEarnedViaQuests(
-      int playerId, WeeklyFactionSubTask sub) async {
+      String playerId, WeeklyFactionSubTask sub) async {
     final baseline = (sub.params?['baseline_gold_via_quests'] as int?) ?? 0;
-    final player = await PlayerDao(_db).findById(playerId);
-    final current = (player?.totalGoldEarnedViaQuests ?? 0) - baseline;
+    final row = await _client
+        .from('players')
+        .select('total_gold_earned_via_quests')
+        .eq('id', playerId)
+        .maybeSingle();
+    final total =
+        (row?['total_gold_earned_via_quests'] as num?)?.toInt() ?? 0;
+    final current = total - baseline;
     final clamped = current.clamp(0, 1 << 30);
     return SubTaskEvaluation(
       current: clamped,
@@ -253,9 +249,13 @@ class WeeklyFactionValidator {
   }
 
   Future<SubTaskEvaluation> _goldBalanceThreshold(
-      int playerId, WeeklyFactionSubTask sub) async {
-    final player = await PlayerDao(_db).findById(playerId);
-    final gold = player?.gold ?? 0;
+      String playerId, WeeklyFactionSubTask sub) async {
+    final row = await _client
+        .from('players')
+        .select('gold')
+        .eq('id', playerId)
+        .maybeSingle();
+    final gold = (row?['gold'] as num?)?.toInt() ?? 0;
     return SubTaskEvaluation(
       current: gold,
       target: sub.target,
@@ -263,20 +263,18 @@ class WeeklyFactionValidator {
     );
   }
 
-  Future<SubTaskEvaluation> _individualCompleted(int playerId,
+  Future<SubTaskEvaluation> _individualCompleted(String playerId,
       WeeklyFactionSubTask sub, int weekStartMs, int weekEndMs) async {
-    final rows = await _db.customSelect(
-      "SELECT COUNT(*) AS c FROM player_mission_progress "
-      "WHERE player_id = ? AND modality = 'individual' "
-      "AND completed_at IS NOT NULL "
-      "AND completed_at >= ? AND completed_at < ?",
-      variables: [
-        Variable.withInt(playerId),
-        Variable.withInt(weekStartMs),
-        Variable.withInt(weekEndMs),
-      ],
-    ).get();
-    final count = rows.first.read<int>('c');
+    final res = await _client
+        .from('player_mission_progress')
+        .select()
+        .eq('player_id', playerId)
+        .eq('modality', 'individual')
+        .not('completed_at', 'is', null)
+        .gte('completed_at', weekStartMs)
+        .lt('completed_at', weekEndMs)
+        .count(CountOption.exact);
+    final count = res.count;
     return SubTaskEvaluation(
       current: count,
       target: sub.target,
@@ -284,20 +282,18 @@ class WeeklyFactionValidator {
     );
   }
 
-  Future<SubTaskEvaluation> _diaryEntry(int playerId,
+  Future<SubTaskEvaluation> _diaryEntry(String playerId,
       WeeklyFactionSubTask sub, int weekStartMs, int weekEndMs) async {
-    // diary_entries.entry_date é unix SECONDS (Drift padrão) — converte
+    // diary_entries.entry_date é unix SECONDS (Drift legacy) — converte
     // os bounds de ms pra segundos.
-    final rows = await _db.customSelect(
-      "SELECT COUNT(*) AS c FROM diary_entries "
-      "WHERE player_id = ? AND entry_date >= ? AND entry_date < ?",
-      variables: [
-        Variable.withInt(playerId),
-        Variable.withInt(weekStartMs ~/ 1000),
-        Variable.withInt(weekEndMs ~/ 1000),
-      ],
-    ).get();
-    final count = rows.first.read<int>('c');
+    final res = await _client
+        .from('diary_entries')
+        .select()
+        .eq('player_id', playerId)
+        .gte('entry_date', weekStartMs ~/ 1000)
+        .lt('entry_date', weekEndMs ~/ 1000)
+        .count(CountOption.exact);
+    final count = res.count;
     return SubTaskEvaluation(
       current: count,
       target: sub.target,
@@ -305,50 +301,35 @@ class WeeklyFactionValidator {
     );
   }
 
-  Future<SubTaskEvaluation> _fullPerfectDay(int playerId,
+  Future<SubTaskEvaluation> _fullPerfectDay(String playerId,
       WeeklyFactionSubTask sub, int weekStartMs, int weekEndMs) async {
-    final rows = await _db.customSelect(
-      "SELECT data, "
-      " SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS done, "
-      " COUNT(*) AS total "
-      "FROM daily_missions "
-      "WHERE player_id = ? AND completed_at >= ? AND completed_at < ? "
-      "GROUP BY data "
-      "HAVING done = 3 AND total = 3",
-      variables: [
-        Variable.withInt(playerId),
-        Variable.withInt(weekStartMs),
-        Variable.withInt(weekEndMs),
-      ],
-    ).get();
+    // RPC usa created_at e bounds inclusivos [start, end]; passamos
+    // weekEndMs-1 pra aproximar o upper-bound exclusivo do Dart.
+    final daysCount = await _client.rpc('count_full_perfect_days', params: {
+      'p_player': playerId,
+      'p_win_start': weekStartMs,
+      'p_win_end': weekEndMs - 1,
+    });
+    final count = (daysCount as num?)?.toInt() ?? 0;
     return SubTaskEvaluation(
-      current: rows.length,
+      current: count,
       target: sub.target,
-      achieved: rows.length >= sub.target,
+      achieved: count >= sub.target,
     );
   }
 
-  Future<SubTaskEvaluation> _noPartialDay(int playerId,
+  Future<SubTaskEvaluation> _noPartialDay(String playerId,
       WeeklyFactionSubTask sub, int weekStartMs, int weekEndMs) async {
-    final rows = await _db.customSelect(
-      "SELECT data, "
-      " SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS done, "
-      " SUM(CASE WHEN status = 'partial' THEN 1 ELSE 0 END) AS partials, "
-      " COUNT(*) AS total "
-      "FROM daily_missions "
-      "WHERE player_id = ? AND completed_at >= ? AND completed_at < ? "
-      "GROUP BY data "
-      "HAVING done = total AND partials = 0 AND total >= 1",
-      variables: [
-        Variable.withInt(playerId),
-        Variable.withInt(weekStartMs),
-        Variable.withInt(weekEndMs),
-      ],
-    ).get();
+    final daysCount = await _client.rpc('count_no_partial_days', params: {
+      'p_player': playerId,
+      'p_win_start': weekStartMs,
+      'p_win_end': weekEndMs - 1,
+    });
+    final count = (daysCount as num?)?.toInt() ?? 0;
     return SubTaskEvaluation(
-      current: rows.length,
+      current: count,
       target: sub.target,
-      achieved: rows.length >= sub.target,
+      achieved: count >= sub.target,
     );
   }
 

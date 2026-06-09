@@ -133,6 +133,10 @@ class RewardDeclared {
     );
   }
 
+  /// Alias de [RewardDeclared.fromJson] — a row do Supabase já chega como Map.
+  factory RewardDeclared.fromMap(Map<String, dynamic> m) =>
+      RewardDeclared.fromJson(m);
+
   /// Desserializa a partir de uma string JSON (ex: coluna
   /// `player_mission_progress.reward_json`).
   factory RewardDeclared.fromJsonString(String source) {

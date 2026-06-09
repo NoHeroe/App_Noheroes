@@ -1,20 +1,24 @@
-import 'package:drift/drift.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/events/app_event_bus.dart';
 import '../../../core/events/diary_events.dart';
-import '../../database/app_database.dart';
+import '../../../domain/entities/diary_entry.dart';
 
+/// Serviço full-online de entradas de diário (Época 2, ADR-0024).
+///
+/// Não há invariante atômica de servidor pro diário (1 row/dia por jogador é
+/// resolvido client-side via select-then-insert/update), então as escritas
+/// usam PostgREST direto — sem RPC.
 class DiaryService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
 
   /// Sprint 3.4 Sub-Etapa B.2 — bus opcional pra emitir
   /// `DiaryEntryCreated` quando o jogador salva uma entrada. Foundation
   /// pro sub-type `admission_diary_entry_window` reagir em tempo real
   /// sem aguardar polling de outro evento terminal. Provider injeta;
-  /// callers legacy (testes que constroem DiaryService direto) podem
-  /// omitir e o emit vira noop.
+  /// callers legacy podem omitir e o emit vira noop.
   final AppEventBus? _bus;
 
-  DiaryService(this._db, {AppEventBus? bus}) : _bus = bus;
+  DiaryService(this._client, {AppEventBus? bus}) : _bus = bus;
 
   static int countWords(String text) {
     final trimmed = text.trim();
@@ -22,19 +26,28 @@ class DiaryService {
     return trimmed.split(RegExp(r'\s+')).length;
   }
 
-  /// Retorna a entrada de hoje, ou null se não existe
-  Future<DiaryEntriesTableData?> getTodayEntry(int playerId) async {
+  /// Bridge do uuid (String) pro `int playerId` do contrato de evento
+  /// (`AppEvent.playerId` é `int?`, compartilhado por ~18 eventos). Mesma
+  /// convenção dos demais services convertidos (ADR-0024).
+  int _eventPlayerId(String playerUuid) => playerUuid.hashCode;
+
+  /// Retorna a entrada de hoje, ou null se não existe.
+  Future<DiaryEntry?> getTodayEntry(String playerId) async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final tomorrow = today.add(const Duration(days: 1));
-    return (_db.select(_db.diaryEntriesTable)
-          ..where((t) => t.playerId.equals(playerId))
-          ..where((t) => t.entryDate.isBetweenValues(today, tomorrow)))
-        .getSingleOrNull();
+    final row = await _client
+        .from('diary_entries')
+        .select()
+        .eq('player_id', playerId)
+        .gte('entry_date', today.toIso8601String())
+        .lt('entry_date', tomorrow.toIso8601String())
+        .maybeSingle();
+    return row == null ? null : DiaryEntry.fromMap(row);
   }
 
-  /// Salva ou atualiza entrada de hoje
-  Future<void> saveEntry(int playerId, String content) async {
+  /// Salva ou atualiza a entrada de hoje.
+  Future<void> saveEntry(String playerId, String content) async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final words = countWords(content);
@@ -42,57 +55,56 @@ class DiaryService {
 
     final isNew = existing == null;
     if (existing != null) {
-      await (_db.update(_db.diaryEntriesTable)
-            ..where((t) => t.id.equals(existing.id)))
-          .write(DiaryEntriesTableCompanion(
-        content: Value(content),
-        wordCount: Value(words),
-        updatedAt: Value(now),
-      ));
+      await _client.from('diary_entries').update({
+        'content': content,
+        'word_count': words,
+        'updated_at': now.toIso8601String(),
+      }).eq('id', existing.id);
     } else {
-      await _db.into(_db.diaryEntriesTable).insert(
-        DiaryEntriesTableCompanion(
-          playerId: Value(playerId),
-          content: Value(content),
-          wordCount: Value(words),
-          entryDate: Value(today),
-          updatedAt: Value(now),
-        ),
-      );
+      await _client.from('diary_entries').insert({
+        'player_id': playerId,
+        'content': content,
+        'word_count': words,
+        'entry_date': today.toIso8601String(),
+        'updated_at': now.toIso8601String(),
+      });
     }
     // Sprint 3.4 Sub-Etapa B.2 — emite evento pra
     // FactionAdmissionProgressService re-avaliar sub-tasks
     // diary_entry_window em tempo real.
     _bus?.publish(DiaryEntryCreated(
-      playerId: playerId,
+      playerId: _eventPlayerId(playerId),
       wordCount: words,
       isNew: isNew,
     ));
   }
 
-  /// Histórico de entradas (mais recentes primeiro)
-  Future<List<DiaryEntriesTableData>> getHistory(int playerId,
-      {int limit = 30}) async {
-    return (_db.select(_db.diaryEntriesTable)
-          ..where((t) => t.playerId.equals(playerId))
-          ..orderBy([(t) => OrderingTerm.desc(t.entryDate)])
-          ..limit(limit))
-        .get();
+  /// Histórico de entradas (mais recentes primeiro).
+  Future<List<DiaryEntry>> getHistory(String playerId, {int limit = 30}) async {
+    final rows = await _client
+        .from('diary_entries')
+        .select()
+        .eq('player_id', playerId)
+        .order('entry_date', ascending: false)
+        .limit(limit);
+    return rows.map((r) => DiaryEntry.fromMap(r)).toList();
   }
 
-  /// Total de palavras escritas (para conquistas/missões)
-  Future<int> getTotalWords(int playerId) async {
-    final entries = await (_db.select(_db.diaryEntriesTable)
-          ..where((t) => t.playerId.equals(playerId)))
-        .get();
-    return entries.fold<int>(0, (sum, e) => sum + e.wordCount);
+  /// Total de palavras escritas (para conquistas/missões).
+  Future<int> getTotalWords(String playerId) async {
+    final rows = await _client
+        .from('diary_entries')
+        .select('word_count')
+        .eq('player_id', playerId);
+    return rows.fold<int>(0, (sum, r) => sum + ((r['word_count'] as num?)?.toInt() ?? 0));
   }
 
-  /// Total de entradas (dias escritos)
-  Future<int> getTotalEntries(int playerId) async {
-    final entries = await (_db.select(_db.diaryEntriesTable)
-          ..where((t) => t.playerId.equals(playerId)))
-        .get();
-    return entries.length;
+  /// Total de entradas (dias escritos).
+  Future<int> getTotalEntries(String playerId) async {
+    final rows = await _client
+        .from('diary_entries')
+        .select('id')
+        .eq('player_id', playerId);
+    return rows.length;
   }
 }

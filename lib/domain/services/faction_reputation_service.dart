@@ -1,54 +1,78 @@
-import 'package:drift/drift.dart' show Variable;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/faction_alliances.dart';
 import '../../core/events/app_event_bus.dart';
 import '../../core/events/faction_events.dart';
-import '../../data/database/app_database.dart';
-import '../repositories/player_faction_reputation_repository.dart';
 import 'faction_buff_service.dart';
 
 /// Sprint 3.1 Bloco 13b — CRUD + propagação via alianças.
 ///
-/// Reputação 0-100 por `(playerId, factionId)`. Default 50 (neutro).
+/// Época 2 (ADR-0024) — full-online Supabase. A leitura/escrita da
+/// reputação 0-100 por `(playerId, factionId)` (default 50 neutro) é
+/// atômica via RPC `faction_reputation_delta` (read-modify-write +
+/// clamp + upsert no servidor). O service orquestra a propagação via
+/// `kFactionAlliances` client-side (cada single-delta é atômico na sua
+/// própria RPC — paridade com o Dart original, onde cada `_adjustSingle`
+/// era independente) e mantém a emissão de `FactionReputationChanged`
+/// no cliente.
+///
 /// `adjustReputation(playerId, factionId, delta)`:
 ///
-///   1. Lê reputação atual da facção alvo
-///   2. Aplica delta (clamp 0-100 via repo.delta)
-///   3. Emite `FactionReputationChanged` pra facção alvo
-///   4. Itera `kFactionAlliances[factionId]` — pra cada (aliada/rival,
-///      multiplier): aplica `delta × multiplier` na aliada + emit evento
+///   1. Aplica delta na facção alvo (RPC retorna before/after).
+///   2. Emite `FactionReputationChanged` pra facção alvo.
+///   3. Itera `kFactionAlliances[factionId]` — pra cada (aliada/rival,
+///      multiplier): aplica `delta × multiplier` na aliada + emit evento.
 ///
-/// Matrix vazia (neutra) → passo 4 é noop. Código pronto; dados placeholder.
-///
-/// Multiplier pode ser negativo (rival) — `repo.delta` aceita delta
-/// negativo e faz clamp 0 na base.
+/// Matrix vazia (neutra) → passo 3 é noop. Multiplier pode ser negativo
+/// (rival) — a RPC aceita delta negativo e faz clamp 0 na base.
 class FactionReputationService {
-  final PlayerFactionReputationRepository _repo;
+  final SupabaseClient _client;
   final AppEventBus _bus;
 
   /// Sprint 3.4 Etapa C — xpMult universal: buff de facção aplica em
   /// reputação ganha (delta > 0) com mesma porcentagem do XP. Opcional
   /// pra retrocompat de testes.
   final FactionBuffService? _factionBuff;
-  final AppDatabase? _db;
 
   FactionReputationService({
-    required PlayerFactionReputationRepository repo,
+    required SupabaseClient client,
     required AppEventBus bus,
-    AppDatabase? db,
     FactionBuffService? factionBuff,
-  })  : _repo = repo,
+  })  : _client = client,
         _bus = bus,
-        _db = db,
         _factionBuff = factionBuff;
 
   /// Reputação atual (cria lazy default 50 se não existe).
-  Future<int> current(int playerId, String factionId) =>
-      _repo.getOrDefault(playerId, factionId);
+  ///
+  /// Lê direto a row; `faction_reputation_delta` cria/atualiza, mas a
+  /// leitura pura usa um delta 0 implícito? Não — pra não escrever, lemos
+  /// a row e devolvemos 50 se ausente (paridade com `getOrDefault`).
+  Future<int> current(String playerId, String factionId) async {
+    final row = await _client
+        .from('player_faction_reputation')
+        .select('reputation')
+        .eq('player_id', playerId)
+        .eq('faction_id', factionId)
+        .maybeSingle();
+    if (row == null) return 50;
+    return (row['reputation'] as num?)?.toInt() ?? 50;
+  }
 
   /// Todas as reputações do jogador.
-  Future<Map<String, int>> all(int playerId) =>
-      _repo.findAllByPlayer(playerId);
+  Future<Map<String, int>> all(String playerId) async {
+    final rows = await _client
+        .from('player_faction_reputation')
+        .select('faction_id, reputation')
+        .eq('player_id', playerId);
+    final out = <String, int>{};
+    for (final r in (rows as List)) {
+      final m = (r as Map).cast<String, dynamic>();
+      final fid = m['faction_id'] as String?;
+      if (fid == null) continue;
+      out[fid] = (m['reputation'] as num?)?.toInt() ?? 50;
+    }
+    return out;
+  }
 
   /// Aplica [delta] em [factionId] + propaga via matrix.
   ///
@@ -63,7 +87,7 @@ class FactionReputationService {
   /// matrix passam cru. Regra OPÇÃO A: Guilda member ganhando rep
   /// **da Guilda** não recebe buff (buff só aplica em outras facções).
   Future<void> adjustReputation({
-    required int playerId,
+    required String playerId,
     required String factionId,
     required int delta,
   }) async {
@@ -98,40 +122,47 @@ class FactionReputationService {
     }
   }
 
-  /// xpMult em delta positivo, com OPÇÃO A pra Guilda. Sem dependências
-  /// injetadas (buff/db nulos) → retorna delta cru (path legacy/teste).
+  /// xpMult em delta positivo, com OPÇÃO A pra Guilda. Sem buff injetado
+  /// → retorna delta cru (path legacy/teste).
   Future<int> _applyBuff(
-      int playerId, String targetFactionId, int delta) async {
+      String playerId, String targetFactionId, int delta) async {
     if (delta <= 0) return delta;
     final buff = _factionBuff;
-    final db = _db;
-    if (buff == null || db == null) return delta;
+    if (buff == null) return delta;
 
     final mults = await buff.getActiveMultipliers(playerId);
     if (mults.xpMult == 1.0) return delta;
 
     if (targetFactionId == 'guild') {
-      final rows = await db.customSelect(
-        'SELECT faction_type FROM players WHERE id = ? LIMIT 1',
-        variables: [Variable.withInt(playerId)],
-      ).get();
-      if (rows.isNotEmpty &&
-          rows.first.read<String?>('faction_type') == 'guild') {
+      final row = await _client
+          .from('players')
+          .select('faction_type')
+          .eq('id', playerId)
+          .maybeSingle();
+      if (row != null && row['faction_type'] == 'guild') {
         return delta; // Guilda member ganhando rep da Guilda — sem buff
       }
     }
     return (delta * mults.xpMult).round();
   }
 
+  /// Aplica um único delta atômico via RPC `faction_reputation_delta`
+  /// (read-modify-write + clamp 0..100 + upsert no servidor). A RPC
+  /// retorna `{before, after}`; emitimos `FactionReputationChanged`
+  /// só quando houve mudança real (clamp pode engolir o delta).
   Future<void> _adjustSingle({
-    required int playerId,
+    required String playerId,
     required String factionId,
     required int delta,
   }) async {
-    final before = await _repo.getOrDefault(playerId, factionId);
-    await _repo.delta(playerId, factionId, delta);
-    final after = await _repo.getOrDefault(playerId, factionId);
-    // Só emite se houve mudança real (clamp 0-100 pode engolir delta).
+    final res = await _client.rpc('faction_reputation_delta', params: {
+      'p_player': playerId,
+      'p_faction': factionId,
+      'p_delta': delta,
+    });
+    final map = (res as Map).cast<String, dynamic>();
+    final before = (map['before'] as num?)?.toInt() ?? 50;
+    final after = (map['after'] as num?)?.toInt() ?? before;
     if (after != before) {
       _bus.publish(FactionReputationChanged(
         playerId: playerId,

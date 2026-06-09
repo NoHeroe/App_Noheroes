@@ -1,6 +1,7 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../core/events/app_event_bus.dart';
 import '../../core/events/navigation_events.dart';
-import '../../data/database/app_database.dart';
 import '../../data/database/daos/player_dao.dart';
 
 /// Sprint 3.3 Etapa 2.1c-γ — tracking de telas visitadas pelo jogador.
@@ -10,73 +11,53 @@ import '../../data/database/daos/player_dao.dart';
 /// Reads via `hasVisited` / `visitedCount` consumidos pelo
 /// `AchievementsService` no trigger `event_screen_visited`.
 ///
-/// ## Decisão arquitetural — CSV em TEXT vs bitmask em INT
-///
-/// Escolhido CSV pelos motivos:
-///   - Set de telas é pequeno (~30 paths) — performance é irrelevante
-///   - Self-describing: ler diretamente em backup/dev panel/SQL
-///   - Bitmask exigiria mapeamento estático key→bit que rasga ao
-///     adicionar tela nova (frágil)
-///   - Operações dominantes (`contains`, count) são triviais em CSV
-///
 /// ## Race condition
 ///
-/// `recordVisit` faz read-modify-write em string CSV. Sem proteção,
-/// 2 navegações rapid-fire podem ler antes do primeiro persistir →
-/// uma das visitas se perde. Solução: transação Drift atômica.
-///
-/// ## Sem cache em-memória
-///
-/// Evita risco de inconsistência entre cache e DB. Performance de
-/// transação por navegação é negligível (1 SQL read + 1 write quando
-/// é primeira visita; só 1 read em duplicatas).
+/// `recordVisit` é read-modify-write em string CSV. Full-online: a
+/// atomicidade (SELECT ... FOR UPDATE + append) vive na RPC
+/// `record_screen_visit`, que também faz a normalização e a exclusão de
+/// paths. Ela retorna `boolean` = isFirstVisit. NÃO reimplementamos a
+/// transação no cliente.
 class PlayerScreensVisitedService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
   final PlayerDao _playerDao;
   final AppEventBus _bus;
 
   PlayerScreensVisitedService({
-    required AppDatabase db,
+    required SupabaseClient client,
     required PlayerDao playerDao,
     required AppEventBus bus,
-  })  : _db = db,
+  })  : _client = client,
         _playerDao = playerDao,
         _bus = bus;
 
   /// Paths excluídos do tracking. Splash + auth boilerplate não
   /// representam "visitas conscientes" pra fins de conquista.
-  /// Extensível: adicionar mais paths aqui se necessário.
+  /// (Mantido em sincronia com a lista hard-coded na RPC `record_screen_visit`.)
   static const Set<String> excludedFromTracking = {
     '/',
     '/login',
     '/register',
   };
 
-  /// Registra visita à [screenKey]. Idempotente: visita já registrada
-  /// não duplica row, mas ainda publica `ScreenVisited(isFirstVisit:false)`
-  /// pra alimentar listeners que precisam reagir a navegações repetidas
-  /// (ex: conquistas adicionadas após 1ª visita).
+  /// Registra visita à [screenKey] via RPC `record_screen_visit` (atômica:
+  /// normaliza, exclui paths boilerplate, append idempotente). A RPC retorna
+  /// `isFirstVisit`; publicamos `ScreenVisited` com esse flag mesmo em
+  /// visitas repetidas (pra alimentar listeners de navegações repetidas).
   ///
-  /// Path malformado (vazio, só whitespace) é noop silencioso. Path em
-  /// [excludedFromTracking] é noop sem emit.
-  Future<void> recordVisit(int playerId, String screenKey) async {
+  /// Path malformado/excluído resulta em `isFirstVisit=false` (a RPC já trata
+  /// esses casos como no-op). Path vazio é noop silencioso sem emit, igual ao
+  /// comportamento original.
+  Future<void> recordVisit(String playerId, String screenKey) async {
     final normalized = _normalize(screenKey);
     if (normalized.isEmpty) return;
     if (excludedFromTracking.contains(normalized)) return;
 
-    bool isFirst = false;
-    await _db.transaction(() async {
-      final player = await _playerDao.findById(playerId);
-      if (player == null) return;
-      final visited = parseCSV(player.screensVisitedKeys);
-      if (visited.contains(normalized)) {
-        isFirst = false;
-        return;
-      }
-      visited.add(normalized);
-      await _playerDao.setScreensVisitedKeys(playerId, visited.join(','));
-      isFirst = true;
+    final res = await _client.rpc('record_screen_visit', params: {
+      'p_player': playerId,
+      'p_screen_key': screenKey,
     });
+    final isFirst = res == true;
 
     _bus.publish(ScreenVisited(
       playerId: playerId,
@@ -86,23 +67,25 @@ class PlayerScreensVisitedService {
   }
 
   /// `true` se [screenKey] já está no CSV do jogador.
-  Future<bool> hasVisited(int playerId, String screenKey) async {
+  Future<bool> hasVisited(String playerId, String screenKey) async {
     final normalized = _normalize(screenKey);
     if (normalized.isEmpty) return false;
-    final player = await _playerDao.findById(playerId);
-    if (player == null) return false;
-    return parseCSV(player.screensVisitedKeys).contains(normalized);
+    final visited = await _fetchVisited(playerId);
+    return visited.contains(normalized);
   }
 
   /// Quantidade de telas distintas visitadas pelo jogador.
-  Future<int> visitedCount(int playerId) async {
-    final player = await _playerDao.findById(playerId);
-    if (player == null) return 0;
-    return parseCSV(player.screensVisitedKeys).length;
+  Future<int> visitedCount(String playerId) async {
+    return (await _fetchVisited(playerId)).length;
   }
 
   /// Lista bruta dos paths visitados — útil pra debug/testes/UI futura.
-  Future<List<String>> listVisited(int playerId) async {
+  Future<List<String>> listVisited(String playerId) async {
+    return _fetchVisited(playerId);
+  }
+
+  /// Lê o CSV `screens_visited_keys` da própria row e parseia.
+  Future<List<String>> _fetchVisited(String playerId) async {
     final player = await _playerDao.findById(playerId);
     if (player == null) return const [];
     return parseCSV(player.screensVisitedKeys);

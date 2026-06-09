@@ -1,12 +1,11 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/events/app_event_bus.dart';
 import '../../../core/events/daily_mission_events.dart';
 import '../../../core/events/reward_events.dart';
 import '../../../domain/models/reward_resolved.dart';
-import '../../database/app_database.dart';
 
 /// Sprint 3.4 Etapa B (Sub-Etapa B.1) — single writer de
 /// `players.total_gold_earned_via_quests`.
@@ -48,14 +47,14 @@ import '../../database/app_database.dart';
 /// - Provider eager em `app/providers.dart` registra subscriptions
 ///   no boot (espelha pattern de `DailyMissionStatsService`).
 class QuestRewardStatsService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
   final AppEventBus _bus;
   final List<StreamSubscription> _subs = [];
 
   QuestRewardStatsService({
-    required AppDatabase db,
+    required SupabaseClient client,
     required AppEventBus bus,
-  })  : _db = db,
+  })  : _client = client,
         _bus = bus;
 
   /// Registra listeners. Caller (provider) é responsável pelo
@@ -92,15 +91,12 @@ class QuestRewardStatsService {
     await _increment(evt.playerId, evt.goldEarned);
   }
 
-  Future<void> _increment(int playerId, int amount) async {
-    await _db.customUpdate(
-      'UPDATE players SET total_gold_earned_via_quests = '
-      'total_gold_earned_via_quests + ? WHERE id = ?',
-      variables: [
-        Variable.withInt(amount),
-        Variable.withInt(playerId),
-      ],
-      updates: {_db.playersTable},
-    );
+  Future<void> _increment(String playerId, int amount) async {
+    // Incremento atômico all-time delegado à RPC (single writer). O guard
+    // amount<=0 já é aplicado pelos listeners acima.
+    await _client.rpc('increment_gold_earned_via_quests', params: {
+      'p_player': playerId,
+      'p_amount': amount,
+    });
   }
 }

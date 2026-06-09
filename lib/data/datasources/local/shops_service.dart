@@ -1,15 +1,13 @@
 import 'dart:convert';
-import 'package:drift/drift.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/events/app_event_bus.dart';
 import '../../../core/events/player_events.dart';
 import '../../../core/utils/item_equip_policy.dart';
 import '../../../core/utils/item_source_policy.dart';
-import '../../../domain/enums/source_type.dart';
 import '../../../domain/models/player_snapshot.dart';
 import '../../../domain/models/shop_item_view.dart';
 import '../../../domain/models/shop_spec.dart';
-import '../../database/app_database.dart';
 import 'items_catalog_service.dart';
 import 'player_inventory_service.dart';
 
@@ -43,16 +41,18 @@ class BuyResult {
       BuyResult._(isOk: false, reason: r);
 }
 
-// Orquestra leitura do shops.json + compras. Respeita ADR 0010 via defense-
-// in-depth (canAppearInShop) e gates de acesso do jogador.
+// Orquestra leitura do shops.json (asset) + compras (Supabase, Época 2 —
+// ADR-0024). Respeita ADR 0010 via defense-in-depth (canAppearInShop) e gates
+// de acesso do jogador. A transação de compra (débito de moeda + credit do
+// item, atômica) vive na RPC shop_buy_item.
 class ShopsService {
-  final AppDatabase _db;
+  final SupabaseClient _client;
   final ItemsCatalogService _catalog;
   final PlayerInventoryService _inventory;
   final AppEventBus _eventBus;
   Future<List<ShopSpec>>? _cacheFuture;
 
-  ShopsService(this._db, this._catalog, this._inventory, this._eventBus);
+  ShopsService(this._client, this._catalog, this._inventory, this._eventBus);
 
   Future<List<ShopSpec>> listShops() => _cacheFuture ??= _loadAll();
 
@@ -77,8 +77,7 @@ class ShopsService {
     return all.where((s) => _canPlayerEnterShop(s, player)).toList();
   }
 
-  // Itens visíveis pro jogador nessa loja. Sprint 2.2 pós-teste mudou
-  // filosofia: todos os itens aparecem. Gates soft: rank/level/class/faction
+  // Itens visíveis pro jogador nessa loja. Gates soft: rank/level/class/faction
   // viram `canInteract=false` + `rejectReasonLabel`. Só `canAppearInShop=false`
   // continua hard-reject (secret/unique/evolving nunca devem aparecer em loja).
   //
@@ -146,13 +145,6 @@ class ShopsService {
 
   // Mapa class_id → PT-BR usado na mensagem de reject. Fallback pra key raw
   // quando não reconhecido.
-  //
-  // NOTA (dívida narrativa Sprint 2.1): items_unified.json usa 4 sub-classes
-  // de mago (mage_raw, mage_arcane, mage_runic, mage_dark) em allowedClasses,
-  // mas classes.json só tem 'mage' como classe canônica. Conseqüência: mage
-  // atual nunca bate com mage_* → esses itens ficam inalcançáveis. Soft-gate
-  // Sprint 2.2 expõe visualmente; conserto real (unificar listas) fica
-  // pra Sprint 3.x narrativa.
   static const Map<String, String> _classLabelsPt = {
     'warrior':      'Guerreiro',
     'colossus':     'Colosso',
@@ -178,7 +170,7 @@ class ShopsService {
   Future<BuyResult> buyItem({
     required String shopKey,
     required String itemKey,
-    required int playerId,
+    required String playerId,
     required PlayerSnapshot player,
     required int playerCoins,
     required int playerGems,
@@ -218,8 +210,7 @@ class ShopsService {
     if (!ItemEquipPolicy.isRankSufficient(player.rank, spec.requiredRank)) {
       return BuyResult.rejected(BuyRejectReason.rankTooLow);
     }
-    // Sprint 2.2 pós-teste: Tecelão Sombrio é híbrido universal — ignora
-    // allowedClasses em todos os gates de compra/equip.
+    // Tecelão Sombrio é híbrido universal — ignora allowedClasses nos gates.
     if (spec.allowedClasses.isNotEmpty &&
         player.classKey != 'shadowWeaver' &&
         (player.classKey == null ||
@@ -235,7 +226,6 @@ class ShopsService {
     // Preço.
     final priceCoins = entry.priceCoins;
     final priceGems  = entry.priceGems;
-    // Sprint 3.4 Etapa H — preço em Insígnias (lojas de facção).
     final priceInsignias = entry.priceInsignias;
     if (priceCoins == null && priceGems == null && priceInsignias == null) {
       return BuyResult.rejected(BuyRejectReason.noPriceDefined);
@@ -250,69 +240,54 @@ class ShopsService {
       return BuyResult.rejected(BuyRejectReason.insufficientInsignias);
     }
 
-    // Sprint 3.1 Bloco 14.5 — fix do débito #3 (ADR 0018): débito de
-    // currency + credit de item agora vivem na mesma `db.transaction`.
-    // Antes: 2-3 writes independentes; se `addItem` falhasse após
-    // `UPDATE players`, jogador perdia gold/gems sem receber item.
-    // Agora: rollback total em qualquer exceção, emits pós-commit.
+    // Transação atômica (débito de gold/gems/insignias + credit do item via
+    // inventory_add_item) -> RPC shop_buy_item. Espelha a antiga
+    // db.transaction (Sprint 3.1 Bloco 14.5): rollback total em qualquer
+    // exceção. A RPC valida saldo defensivamente e levanta em falha.
     final int invId;
     try {
-      invId = await _db.transaction<int>(() async {
-        if (priceCoins != null) {
-          await (_db.update(_db.playersTable)
-                ..where((t) => t.id.equals(playerId)))
-              .write(PlayersTableCompanion(
-            gold: Value(playerCoins - priceCoins),
-          ));
-        }
-        if (priceGems != null) {
-          await (_db.update(_db.playersTable)
-                ..where((t) => t.id.equals(playerId)))
-              .write(PlayersTableCompanion(
-            gems: Value(playerGems - priceGems),
-          ));
-        }
-        if (priceInsignias != null) {
-          await (_db.update(_db.playersTable)
-                ..where((t) => t.id.equals(playerId)))
-              .write(PlayersTableCompanion(
-            insignias: Value(playerInsignias - priceInsignias),
-          ));
-        }
-        final id = await _inventory.addItem(
-          playerId:    playerId,
-          itemKey:     itemKey,
-          quantity:    1,
-          acquiredVia: SourceType.shop,
-        );
-        if (id < 0) {
-          throw StateError('addItem retornou $id (shop=$shopKey item=$itemKey)');
-        }
-        return id;
+      final res = await _client.rpc('shop_buy_item', params: {
+        'p_player': playerId,
+        'p_shop_key': shopKey,
+        'p_item_key': itemKey,
+        'p_coins': priceCoins,
+        'p_gems': priceGems,
+        'p_insignias': priceInsignias,
       });
+      final id = _asInt(res) ?? -1;
+      if (id < 0) {
+        return BuyResult.rejected(BuyRejectReason.dbError);
+      }
+      invId = id;
     } catch (_) {
       return BuyResult.rejected(BuyRejectReason.dbError);
     }
 
-    // Emits pós-commit — só chega aqui se a transação acima commitou
-    // inteira. Listeners (UI, analytics) consomem com a certeza de
-    // que débito + credit estão persistidos.
+    // Emits pós-commit — só chega aqui se a RPC commitou inteira.
+    // NOTA: GoldSpent/GemsSpent ainda usam `int playerId` (camada de eventos
+    // não-migrada). Bridge via _eventPlayerId(uuid)->int, mesmo padrão da
+    // EnchantService já migrada (ver 'unresolved'). Listeners (analytics,
+    // quests "gaste X ouro") seguem recebendo o sinal.
     if (priceCoins != null && priceCoins > 0) {
       _eventBus.publish(GoldSpent(
-        playerId: playerId,
+        playerId: _eventPlayerId(playerId),
         amount: priceCoins,
         source: GoldSink.shop,
       ));
     }
     if (priceGems != null && priceGems > 0) {
       _eventBus.publish(GemsSpent(
-        playerId: playerId,
+        playerId: _eventPlayerId(playerId),
         amount: priceGems,
         source: GemSink.shop,
       ));
     }
     return BuyResult.ok(invId);
   }
+
+  // Bridge uuid String -> int pra eventos legacy (mesmo padrão da
+  // EnchantService já migrada). Ver 'unresolved' do resumo de migração.
+  int _eventPlayerId(String playerUuid) => playerUuid.hashCode;
 
   bool _canPlayerEnterShop(ShopSpec shop, PlayerSnapshot player) {
     if (shop.acceptedRanks.isNotEmpty) {
@@ -326,4 +301,12 @@ class ShopsService {
     }
     return true;
   }
+}
+
+int? _asInt(dynamic v) {
+  if (v == null) return null;
+  if (v is int) return v;
+  if (v is num) return v.toInt();
+  if (v is String) return int.tryParse(v);
+  return null;
 }
