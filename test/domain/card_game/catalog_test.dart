@@ -49,18 +49,17 @@ void main() {
       }
     });
 
-    test(
-        'criaturas com conceito neutro: regra de design (esperado 0) — '
-        'exceção documentada nos dados', () {
-      final neutras = _loadCreatures()
+    test('criatura neutra só pode existir se for Elite (regra de conceitos.md)',
+        () {
+      // Regra (conceitos.md): criaturas comum→lendária = 1 conceito (não-neutro);
+      // criaturas ELITE podem ser neutras. Ex.: yuna_lannatary.
+      final neutrasNaoElite = _loadCreatures()
           .where((c) => c.concepts.contains(CardConcept.neutro))
+          .where((c) => c.rarity != Rarity.elite)
           .map((c) => c.id)
           .toList();
-      // A regra de design diz que não há criaturas neutras. Os dados reais do
-      // vault contêm UMA exceção (yuna_lannatary, conceito [neutro] no
-      // frontmatter). Não fabricamos/alteramos o dado: travamos exatamente essa
-      // exceção conhecida para flagrar se OUTRA criatura neutra aparecer.
-      expect(neutras, <String>['yuna_lannatary']);
+      expect(neutrasNaoElite, isEmpty,
+          reason: 'criatura neutra não-Elite encontrada: $neutrasNaoElite');
     });
 
     test('relíquia neutro é universal (equipa em qualquer criatura)', () {
