@@ -123,13 +123,13 @@ class CardBattleEngine {
     if (laneIdx < 0) return s;
     final target = side.lanes[laneIdx]!;
 
-    // Conceito deve bater.
-    if (relic.concept != target.card.concept) return s;
+    // Compatibilidade: relíquia universal (neutro) OU compartilha ≥1 conceito.
+    if (!relic.isCompatibleWith(target.card)) return s;
 
     final newPool = List<RelicCard>.from(side.poolRelics)..removeAt(idx);
 
     CreatureInPlay updated;
-    if (relic.flash) {
+    if (relic.isFlash) {
       // Uso único: aplica efeito (cura) e descarta — não fica equipada.
       var hp = target.currentHp;
       final heal = relic.grants.heal;
@@ -494,7 +494,7 @@ class CardBattleEngine {
 
       for (final creature in ordered) {
         final relic = side.poolRelics
-            .where((r) => r.concept == creature.card.concept)
+            .where((r) => r.isCompatibleWith(creature.card))
             .firstOrNull;
         if (relic != null) {
           candidate = PlayRelic(relic.id, creature.instanceId);
@@ -517,16 +517,14 @@ class CardBattleEngine {
   /// prioriza relíquia sem criatura compatível; senão a criatura mais cara
   /// que não cabe. Retorna null se nada útil.
   String? _pickSacrificeToEnable(BoardSide side) {
-    // Relíquia "morta" (sem nenhuma criatura do mesmo conceito no pool/jogo).
-    final concepts = <CardConcept>{};
-    for (final c in side.poolCreatures) {
-      concepts.add(c.concept);
-    }
-    for (final c in side.creaturesInPlay) {
-      concepts.add(c.card.concept);
-    }
-    final deadRelic =
-        side.poolRelics.where((r) => !concepts.contains(r.concept)).firstOrNull;
+    // Relíquia "morta": nenhuma criatura (pool ou jogo) é compatível com ela.
+    final creatures = <CreatureCard>[
+      ...side.poolCreatures,
+      for (final c in side.creaturesInPlay) c.card,
+    ];
+    final deadRelic = side.poolRelics
+        .where((r) => !creatures.any((c) => r.isCompatibleWith(c)))
+        .firstOrNull;
     if (deadRelic != null) return deadRelic.id;
 
     // Senão, qualquer relíquia (vale +1 cristal).

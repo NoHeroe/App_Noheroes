@@ -40,7 +40,7 @@ void main() {
     test('eliminação progressiva leva à vitória numa partida real', () {
       // A: criaturas fortes, baratas, corpoACorpo. B: criaturas frágeis sem dano.
       final a = makeLoadout(
-          prefix: 'A', cost: 1, atk: 50, hp: 50, concept: CardConcept.vita);
+          prefix: 'A', cost: 1, atk: 50, hp: 50, concept: CardConcept.vitalismo);
       final bCreatures = List.generate(
           9,
           (i) => creature(
@@ -172,7 +172,7 @@ void main() {
     test('joga uma partida inteira contra loadout fixo sem travar nem lançar',
         () {
       final a = makeLoadout(
-          prefix: 'A', cost: 2, atk: 5, hp: 12, concept: CardConcept.vita);
+          prefix: 'A', cost: 2, atk: 5, hp: 12, concept: CardConcept.vitalismo);
       final b = makeLoadout(
           prefix: 'B', cost: 1, atk: 4, hp: 10, concept: CardConcept.celestial);
 
@@ -213,11 +213,12 @@ MatchState _zeroAtk(MatchState s) {
             card: CreatureCard(
               id: c.card.id,
               nome: c.card.nome,
-              concept: c.card.concept,
+              concepts: c.card.concepts,
               cost: c.card.cost,
               atk: 0,
               hp: c.card.hp,
               damageType: c.card.damageType,
+              rarity: c.card.rarity,
             ),
             currentHp: c.currentHp,
             lane: c.lane,

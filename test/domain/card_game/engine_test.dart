@@ -86,7 +86,7 @@ void main() {
     test('rejeita conceito diferente (no-op)', () {
       // Criaturas vita, relíquias corrompido.
       final aCreatures = List.generate(
-          9, (i) => creature(id: 'ac$i', concept: CardConcept.vita, cost: 1));
+          9, (i) => creature(id: 'ac$i', concept: CardConcept.vitalismo, cost: 1));
       final aRelics = List.generate(
           9, (i) => relic(id: 'ar$i', concept: CardConcept.corrompido, armor: 1));
       final a = CardLoadout(creatures: aCreatures, relics: aRelics);
@@ -106,8 +106,8 @@ void main() {
 
     test('aceita mesmo conceito e equipa', () {
       var s = engine.start(
-          makeLoadout(prefix: 'A', concept: CardConcept.vita, cost: 1),
-          makeLoadout(prefix: 'B', concept: CardConcept.vita, cost: 1),
+          makeLoadout(prefix: 'A', concept: CardConcept.vitalismo, cost: 1),
+          makeLoadout(prefix: 'B', concept: CardConcept.vitalismo, cost: 1),
           seed: 1);
       final creatureId = s.active.poolCreatures.first.id;
       s = engine.apply(s, PlayCreature(creatureId));

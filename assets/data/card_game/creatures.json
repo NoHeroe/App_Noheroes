@@ -1,0 +1,1198 @@
+[
+  {
+    "id": "aglomerado_de_celulas_estagio_1",
+    "nome": "Aglomerado de Células — Estágio 1",
+    "concepts": [
+      "chrysalis"
+    ],
+    "cost": 1,
+    "atk": 1,
+    "hp": 1,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "aglomerado_de_celulas_estagio_2",
+    "nome": "Aglomerado de Células — Estágio 2",
+    "concepts": [
+      "chrysalis"
+    ],
+    "cost": 2,
+    "atk": 2,
+    "hp": 2,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "aglomerado_de_celulas_estagio_3",
+    "nome": "Aglomerado de Células — Estágio 3",
+    "concepts": [
+      "chrysalis"
+    ],
+    "cost": 3,
+    "atk": 3,
+    "hp": 3,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "azuos",
+    "nome": "Azuos Luar",
+    "concepts": [
+      "corrompido",
+      "vitalismo"
+    ],
+    "cost": 7,
+    "atk": 6,
+    "hp": 7,
+    "damage_type": "vitalismo",
+    "rarity": "elite",
+    "relic_slots": 2,
+    "abilities": []
+  },
+  {
+    "id": "bandidos",
+    "nome": "Bandidos",
+    "concepts": [
+      "corrompido"
+    ],
+    "cost": 2,
+    "atk": 3,
+    "hp": 2,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "cacador_uivante",
+    "nome": "Caçador Uivante",
+    "concepts": [
+      "vitalismo"
+    ],
+    "cost": 6,
+    "atk": 6,
+    "hp": 6,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "cacadores_de_recompensas",
+    "nome": "Caçadores de Recompensas",
+    "concepts": [
+      "corrompido"
+    ],
+    "cost": 3,
+    "atk": 3,
+    "hp": 3,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "caes_esfumacados",
+    "nome": "Cães Esfumaçados",
+    "concepts": [
+      "corrompido",
+      "vitalismo"
+    ],
+    "cost": 2,
+    "atk": 3,
+    "hp": 2,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": [
+      "Investida"
+    ]
+  },
+  {
+    "id": "cavaleiros_petrificados",
+    "nome": "Cavaleiros Petrificados",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 3,
+    "atk": 2,
+    "hp": 6,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": [
+      "Provocar"
+    ]
+  },
+  {
+    "id": "cerverus",
+    "nome": "Cerverus",
+    "concepts": [
+      "celestial",
+      "magico"
+    ],
+    "cost": 7,
+    "atk": 6,
+    "hp": 6,
+    "damage_type": "magico",
+    "rarity": "lendaria",
+    "relic_slots": 2,
+    "abilities": []
+  },
+  {
+    "id": "cervo_chifre_de_cristal",
+    "nome": "Cervo Chifre de Cristal",
+    "concepts": [
+      "celestial"
+    ],
+    "cost": 3,
+    "atk": 1,
+    "hp": 4,
+    "damage_type": "magico",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": [
+      "Inspirar"
+    ]
+  },
+  {
+    "id": "chefao_das_aranhas_mutantes",
+    "nome": "Chefão das Aranhas Mutantes",
+    "concepts": [
+      "corrompido"
+    ],
+    "cost": 5,
+    "atk": 5,
+    "hp": 6,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "couracados",
+    "nome": "Couraçados",
+    "concepts": [
+      "chrysalis"
+    ],
+    "cost": 5,
+    "atk": 4,
+    "hp": 6,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "crawlers",
+    "nome": "Crawlers",
+    "concepts": [
+      "chrysalis"
+    ],
+    "cost": 1,
+    "atk": 2,
+    "hp": 1,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "demonios_comuns",
+    "nome": "Demônios Comuns",
+    "concepts": [
+      "corrompido"
+    ],
+    "cost": 2,
+    "atk": 3,
+    "hp": 2,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "desastres",
+    "nome": "Desastres",
+    "concepts": [
+      "chrysalis"
+    ],
+    "cost": 7,
+    "atk": 6,
+    "hp": 6,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "lendaria",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "desolados",
+    "nome": "Desolados",
+    "concepts": [
+      "chrysalis"
+    ],
+    "cost": 3,
+    "atk": 3,
+    "hp": 3,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "devorador_de_almas",
+    "nome": "Devorador de Almas",
+    "concepts": [
+      "corrompido"
+    ],
+    "cost": 5,
+    "atk": 5,
+    "hp": 5,
+    "damage_type": "vitalismo",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": [
+      "Roubo de PV"
+    ]
+  },
+  {
+    "id": "devoradores_cegos",
+    "nome": "Devoradores Cegos",
+    "concepts": [
+      "corrompido"
+    ],
+    "cost": 2,
+    "atk": 3,
+    "hp": 2,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "diabrete_curupira",
+    "nome": "Diabrete Curupira",
+    "concepts": [
+      "vitalismo"
+    ],
+    "cost": 2,
+    "atk": 2,
+    "hp": 2,
+    "damage_type": "magico",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": [
+      "Provocar"
+    ]
+  },
+  {
+    "id": "diabrete_incandescente",
+    "nome": "Diabrete Incandescente",
+    "concepts": [
+      "vitalismo"
+    ],
+    "cost": 3,
+    "atk": 3,
+    "hp": 2,
+    "damage_type": "magico",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": [
+      "Pisotear"
+    ]
+  },
+  {
+    "id": "diabrete_saci",
+    "nome": "Diabrete Saci",
+    "concepts": [
+      "vitalismo"
+    ],
+    "cost": 2,
+    "atk": 2,
+    "hp": 2,
+    "damage_type": "magico",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": [
+      "Voo"
+    ]
+  },
+  {
+    "id": "dragao_anciao_da_montanha",
+    "nome": "Dragão Ancião da Montanha",
+    "concepts": [
+      "celestial",
+      "magico"
+    ],
+    "cost": 6,
+    "atk": 7,
+    "hp": 8,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "lendaria",
+    "relic_slots": 1,
+    "abilities": [
+      "Escudo"
+    ]
+  },
+  {
+    "id": "dragao_de_fogo",
+    "nome": "Dragão de Fogo",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 5,
+    "atk": 6,
+    "hp": 5,
+    "damage_type": "magico",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": [
+      "Pisotear"
+    ]
+  },
+  {
+    "id": "dragoes_corrompidos",
+    "nome": "Dragões Corrompidos",
+    "concepts": [
+      "corrompido"
+    ],
+    "cost": 6,
+    "atk": 6,
+    "hp": 6,
+    "damage_type": "magico",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "drakonianos",
+    "nome": "Drakonianos",
+    "concepts": [
+      "celestial",
+      "magico"
+    ],
+    "cost": 4,
+    "atk": 4,
+    "hp": 4,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "driades",
+    "nome": "Dríades",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 3,
+    "atk": 2,
+    "hp": 5,
+    "damage_type": "magico",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": [
+      "Provocar"
+    ]
+  },
+  {
+    "id": "elfos",
+    "nome": "Elfos",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 3,
+    "atk": 3,
+    "hp": 3,
+    "damage_type": "a_distancia",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": [
+      "Alcance"
+    ]
+  },
+  {
+    "id": "elfos_cacadores",
+    "nome": "Elfos Caçadores",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 3,
+    "atk": 4,
+    "hp": 2,
+    "damage_type": "a_distancia",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "gnoll_do_vazio",
+    "nome": "Gnoll do Vazio",
+    "concepts": [
+      "vitalismo"
+    ],
+    "cost": 4,
+    "atk": 4,
+    "hp": 4,
+    "damage_type": "vitalismo",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "goblin_arqueiro",
+    "nome": "Goblin Arqueiro",
+    "concepts": [
+      "corrompido"
+    ],
+    "cost": 2,
+    "atk": 3,
+    "hp": 1,
+    "damage_type": "a_distancia",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "goblin_guerreiro",
+    "nome": "Goblin Guerreiro",
+    "concepts": [
+      "corrompido"
+    ],
+    "cost": 2,
+    "atk": 3,
+    "hp": 2,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "goblin_lanceiro",
+    "nome": "Goblin Lanceiro",
+    "concepts": [
+      "corrompido"
+    ],
+    "cost": 2,
+    "atk": 2,
+    "hp": 2,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": [
+      "Alcance"
+    ]
+  },
+  {
+    "id": "goblin_xama",
+    "nome": "Goblin Xamã",
+    "concepts": [
+      "corrompido",
+      "magico"
+    ],
+    "cost": 3,
+    "atk": 1,
+    "hp": 3,
+    "damage_type": "magico",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": [
+      "Inspirar"
+    ]
+  },
+  {
+    "id": "grifo_real",
+    "nome": "Grifo Real",
+    "concepts": [
+      "celestial"
+    ],
+    "cost": 4,
+    "atk": 5,
+    "hp": 4,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": [
+      "Voo"
+    ]
+  },
+  {
+    "id": "harpias",
+    "nome": "Harpias",
+    "concepts": [
+      "celestial",
+      "magico"
+    ],
+    "cost": 3,
+    "atk": 3,
+    "hp": 2,
+    "damage_type": "a_distancia",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": [
+      "Voo"
+    ]
+  },
+  {
+    "id": "hiena_de_cobre",
+    "nome": "Hiena de Cobre",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 2,
+    "atk": 2,
+    "hp": 3,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": [
+      "Escudo"
+    ]
+  },
+  {
+    "id": "hipogrifo",
+    "nome": "Hipogrifo",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 3,
+    "atk": 3,
+    "hp": 3,
+    "damage_type": "a_distancia",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": [
+      "Voo"
+    ]
+  },
+  {
+    "id": "kagemitsu",
+    "nome": "Kagemitsu",
+    "concepts": [
+      "corrompido",
+      "magico"
+    ],
+    "cost": 6,
+    "atk": 4,
+    "hp": 5,
+    "damage_type": "magico",
+    "rarity": "lendaria",
+    "relic_slots": 2,
+    "abilities": []
+  },
+  {
+    "id": "koda_feet",
+    "nome": "Koda Feet",
+    "concepts": [
+      "corrompido",
+      "vitalismo"
+    ],
+    "cost": 6,
+    "atk": 5,
+    "hp": 5,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "elite",
+    "relic_slots": 2,
+    "abilities": []
+  },
+  {
+    "id": "kyanne_laville",
+    "nome": "Kyanne Laville",
+    "concepts": [
+      "celestial",
+      "magico"
+    ],
+    "cost": 6,
+    "atk": 4,
+    "hp": 5,
+    "damage_type": "magico",
+    "rarity": "lendaria",
+    "relic_slots": 2,
+    "abilities": []
+  },
+  {
+    "id": "marionetes_do_culto",
+    "nome": "Marionetes do Culto",
+    "concepts": [
+      "corrompido"
+    ],
+    "cost": 2,
+    "atk": 2,
+    "hp": 3,
+    "damage_type": "magico",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "milena",
+    "nome": "Milena (Vermillion)",
+    "concepts": [
+      "corrompido",
+      "vitalismo"
+    ],
+    "cost": 6,
+    "atk": 4,
+    "hp": 4,
+    "damage_type": "vitalismo",
+    "rarity": "lendaria",
+    "relic_slots": 2,
+    "abilities": []
+  },
+  {
+    "id": "mimico",
+    "nome": "Mímico",
+    "concepts": [
+      "corrompido",
+      "magico"
+    ],
+    "cost": 3,
+    "atk": 4,
+    "hp": 3,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "mimico_de_adaga",
+    "nome": "Mímico de Adaga",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 2,
+    "atk": 4,
+    "hp": 1,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": [
+      "Ataque Duplo"
+    ]
+  },
+  {
+    "id": "mimico_de_corrente",
+    "nome": "Mímico de Corrente",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 3,
+    "atk": 2,
+    "hp": 3,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": [
+      "Provocar"
+    ]
+  },
+  {
+    "id": "mimico_de_escudo",
+    "nome": "Mímico de Escudo",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 3,
+    "atk": 1,
+    "hp": 5,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": [
+      "Provocar"
+    ]
+  },
+  {
+    "id": "mimico_de_espada",
+    "nome": "Mímico de Espada",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 3,
+    "atk": 5,
+    "hp": 2,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "mimico_de_moedas",
+    "nome": "Mímico de Moedas",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 2,
+    "atk": 1,
+    "hp": 2,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": [
+      "Cristal de Drenagem"
+    ]
+  },
+  {
+    "id": "mimico_de_pocao",
+    "nome": "Mímico de Poção",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 2,
+    "atk": 1,
+    "hp": 2,
+    "damage_type": "cura",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "morto_vivo",
+    "nome": "Morto-Vivo",
+    "concepts": [
+      "corrompido"
+    ],
+    "cost": 1,
+    "atk": 2,
+    "hp": 1,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "myroth",
+    "nome": "Myroth",
+    "concepts": [
+      "celestial",
+      "magico"
+    ],
+    "cost": 6,
+    "atk": 7,
+    "hp": 7,
+    "damage_type": "magico",
+    "rarity": "lendaria",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "n6_desconhecido",
+    "nome": "N6 — Desconhecido",
+    "concepts": [
+      "chrysalis"
+    ],
+    "cost": 8,
+    "atk": 7,
+    "hp": 7,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "lendaria",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "nythor",
+    "nome": "Nythor",
+    "concepts": [
+      "corrompido"
+    ],
+    "cost": 6,
+    "atk": 6,
+    "hp": 7,
+    "damage_type": "magico",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "o_devorador",
+    "nome": "O Devorador",
+    "concepts": [
+      "vitalismo"
+    ],
+    "cost": 5,
+    "atk": 4,
+    "hp": 6,
+    "damage_type": "magico",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "oni_vagante",
+    "nome": "Oni Vagante",
+    "concepts": [
+      "corrompido",
+      "magico"
+    ],
+    "cost": 7,
+    "atk": 7,
+    "hp": 5,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "lendaria",
+    "relic_slots": 2,
+    "abilities": []
+  },
+  {
+    "id": "parasitas_de_planta_e_fungo",
+    "nome": "Parasitas de Planta e Fungo",
+    "concepts": [
+      "chrysalis"
+    ],
+    "cost": 3,
+    "atk": 2,
+    "hp": 4,
+    "damage_type": "magico",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "patas_sombrias",
+    "nome": "Patas Sombrias",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 2,
+    "atk": 4,
+    "hp": 1,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": [
+      "Voo"
+    ]
+  },
+  {
+    "id": "predadores",
+    "nome": "Predadores",
+    "concepts": [
+      "chrysalis"
+    ],
+    "cost": 5,
+    "atk": 5,
+    "hp": 4,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "presas_douradas",
+    "nome": "Presas Douradas",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 4,
+    "atk": 4,
+    "hp": 5,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": [
+      "Escudo"
+    ]
+  },
+  {
+    "id": "pulsantes",
+    "nome": "Pulsantes",
+    "concepts": [
+      "chrysalis"
+    ],
+    "cost": 2,
+    "atk": 3,
+    "hp": 2,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "ratos_profanos",
+    "nome": "Ratos Profanos",
+    "concepts": [
+      "corrompido"
+    ],
+    "cost": 1,
+    "atk": 2,
+    "hp": 1,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "sado",
+    "nome": "Sado Luar",
+    "concepts": [
+      "magico",
+      "vitalismo"
+    ],
+    "cost": 5,
+    "atk": 3,
+    "hp": 4,
+    "damage_type": "magico",
+    "rarity": "lendaria",
+    "relic_slots": 2,
+    "abilities": []
+  },
+  {
+    "id": "sakura_anaoji",
+    "nome": "Sakura Anaoji",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 5,
+    "atk": 5,
+    "hp": 3,
+    "damage_type": "magico",
+    "rarity": "lendaria",
+    "relic_slots": 2,
+    "abilities": []
+  },
+  {
+    "id": "sentinela_da_areia_eterna",
+    "nome": "Sentinela da Areia Eterna",
+    "concepts": [
+      "corrompido"
+    ],
+    "cost": 5,
+    "atk": 4,
+    "hp": 7,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": [
+      "Provocar",
+      "Escudo"
+    ]
+  },
+  {
+    "id": "sereias",
+    "nome": "Sereias",
+    "concepts": [
+      "celestial"
+    ],
+    "cost": 4,
+    "atk": 3,
+    "hp": 4,
+    "damage_type": "magico",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": [
+      "Silêncio"
+    ]
+  },
+  {
+    "id": "skinwalkers",
+    "nome": "Skinwalkers",
+    "concepts": [
+      "vitalismo"
+    ],
+    "cost": 4,
+    "atk": 3,
+    "hp": 4,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "sombras_mendigas",
+    "nome": "Sombras Mendigas",
+    "concepts": [
+      "vitalismo"
+    ],
+    "cost": 2,
+    "atk": 2,
+    "hp": 2,
+    "damage_type": "magico",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": [
+      "Furtividade"
+    ]
+  },
+  {
+    "id": "tecelao_sombrio",
+    "nome": "Tecelão Sombrio",
+    "concepts": [
+      "corrompido",
+      "vitalismo"
+    ],
+    "cost": 5,
+    "atk": 4,
+    "hp": 5,
+    "damage_type": "magico",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "tigre_dente_de_sabre",
+    "nome": "Tigre Dente de Sabre",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 3,
+    "atk": 5,
+    "hp": 2,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "rara",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "tormento_sangrento",
+    "nome": "Tormento Sangrento",
+    "concepts": [
+      "vitalismo"
+    ],
+    "cost": 6,
+    "atk": 6,
+    "hp": 5,
+    "damage_type": "vitalismo",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": [
+      "Ataque Duplo"
+    ]
+  },
+  {
+    "id": "trovoador",
+    "nome": "Trovoador",
+    "concepts": [
+      "magico"
+    ],
+    "cost": 4,
+    "atk": 3,
+    "hp": 6,
+    "damage_type": "magico",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": [
+      "Escudo"
+    ]
+  },
+  {
+    "id": "tyrian",
+    "nome": "Tyrian",
+    "concepts": [
+      "vitalismo"
+    ],
+    "cost": 8,
+    "atk": 6,
+    "hp": 6,
+    "damage_type": "vitalismo",
+    "rarity": "lendaria",
+    "relic_slots": 2,
+    "abilities": []
+  },
+  {
+    "id": "vagantes",
+    "nome": "Vagantes",
+    "concepts": [
+      "chrysalis"
+    ],
+    "cost": 5,
+    "atk": 5,
+    "hp": 5,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "varaak",
+    "nome": "Varaak",
+    "concepts": [
+      "celestial",
+      "magico"
+    ],
+    "cost": 5,
+    "atk": 5,
+    "hp": 5,
+    "damage_type": "magico",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "vetrak_mancerion",
+    "nome": "Vetrak Mancerion",
+    "concepts": [
+      "celestial",
+      "vitalismo"
+    ],
+    "cost": 6,
+    "atk": 3,
+    "hp": 5,
+    "damage_type": "magico",
+    "rarity": "lendaria",
+    "relic_slots": 2,
+    "abilities": []
+  },
+  {
+    "id": "voidrins",
+    "nome": "Voidrins",
+    "concepts": [
+      "corrompido",
+      "vitalismo"
+    ],
+    "cost": 4,
+    "atk": 4,
+    "hp": 4,
+    "damage_type": "vitalismo",
+    "rarity": "epica",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "ydros",
+    "nome": "Ydros",
+    "concepts": [
+      "chrysalis"
+    ],
+    "cost": 4,
+    "atk": 1,
+    "hp": 6,
+    "damage_type": "magico",
+    "rarity": "lendaria",
+    "relic_slots": 1,
+    "abilities": []
+  },
+  {
+    "id": "yuna_lannatary",
+    "nome": "Yuna Lannatary",
+    "concepts": [
+      "neutro"
+    ],
+    "cost": 6,
+    "atk": 4,
+    "hp": 5,
+    "damage_type": "magico",
+    "rarity": "elite",
+    "relic_slots": 2,
+    "abilities": []
+  },
+  {
+    "id": "zumbi_comum",
+    "nome": "Zumbi Comum",
+    "concepts": [
+      "chrysalis"
+    ],
+    "cost": 1,
+    "atk": 1,
+    "hp": 2,
+    "damage_type": "corpo_a_corpo",
+    "rarity": "comum",
+    "relic_slots": 1,
+    "abilities": []
+  }
+]

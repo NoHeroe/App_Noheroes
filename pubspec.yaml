@@ -73,4 +73,6 @@ flutter:
     - assets/data/shops.json
     - assets/data/recipes.json
     - assets/data/guild_ascension.json
+    - assets/data/card_game/creatures.json
+    - assets/data/card_game/relics.json
     - assets/fonts/

@@ -36,7 +36,14 @@ class CreatureInPlay {
 
   String get instanceId => card.id;
 
-  int get maxHp => card.hp;
+  /// PV máximo: HP base da carta + soma dos `hpBonus` das relíquias equipadas.
+  int get maxHp {
+    var total = card.hp;
+    for (final r in relics) {
+      total += r.grants.hpBonus ?? 0;
+    }
+    return total;
+  }
 
   bool get isAlive => currentHp > 0;
 
@@ -60,7 +67,14 @@ class CreatureInPlay {
     return type;
   }
 
-  int get atk => card.atk;
+  /// Ataque efetivo: ATK base + soma dos `atkBonus` das relíquias equipadas.
+  int get atk {
+    var total = card.atk;
+    for (final r in relics) {
+      total += r.grants.atkBonus ?? 0;
+    }
+    return total;
+  }
 
   CreatureInPlay copyWith({
     int? currentHp,

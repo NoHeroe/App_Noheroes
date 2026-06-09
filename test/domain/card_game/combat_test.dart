@@ -37,7 +37,7 @@ CreatureInPlay inPlay({
   int hp = 10,
   int armor = 0,
   DamageType type = DamageType.corpoACorpo,
-  CardConcept concept = CardConcept.vita,
+  CardConcept concept = CardConcept.vitalismo,
 }) {
   return CreatureInPlay(
     card: creature(id: id, atk: atk, hp: hp, damageType: type, concept: concept),

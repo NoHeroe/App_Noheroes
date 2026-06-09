@@ -11,39 +11,54 @@ Random makeRng([int seed = 42]) => Random(seed);
 
 CreatureCard creature({
   required String id,
-  CardConcept concept = CardConcept.vita,
+  CardConcept concept = CardConcept.vitalismo,
+  List<CardConcept>? concepts,
   int cost = 1,
   int atk = 2,
   int hp = 5,
   DamageType damageType = DamageType.corpoACorpo,
+  Rarity rarity = Rarity.comum,
   int relicSlots = 1,
 }) {
   return CreatureCard(
     id: id,
     nome: id,
-    concept: concept,
+    concepts: concepts ?? <CardConcept>[concept],
     cost: cost,
     atk: atk,
     hp: hp,
     damageType: damageType,
+    rarity: rarity,
     relicSlots: relicSlots,
   );
 }
 
 RelicCard relic({
   required String id,
-  CardConcept concept = CardConcept.vita,
+  CardConcept concept = CardConcept.vitalismo,
+  List<CardConcept>? concepts,
+  int? atkBonus,
+  int? hpBonus,
   int? armor,
   DamageType? attackType,
   int? heal,
+  Rarity rarity = Rarity.comum,
   bool flash = false,
 }) {
   return RelicCard(
     id: id,
     nome: id,
-    concept: concept,
-    grants: RelicGrants(armor: armor, attackType: attackType, heal: heal),
-    flash: flash,
+    concepts: concepts ?? <CardConcept>[concept],
+    grants: RelicGrants(
+      atkBonus: atkBonus,
+      hpBonus: hpBonus,
+      armor: armor,
+      attackType: attackType,
+      heal: heal,
+      rawEffect: '',
+    ),
+    rarity: rarity,
+    isFlash: flash,
   );
 }
 
@@ -51,7 +66,7 @@ RelicCard relic({
 /// Stats fracos/baratos por padrão para partidas previsíveis.
 CardLoadout makeLoadout({
   String prefix = 'X',
-  CardConcept concept = CardConcept.vita,
+  CardConcept concept = CardConcept.vitalismo,
   int cost = 1,
   int atk = 2,
   int hp = 5,
