@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -228,6 +229,11 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildHeader(),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildDeckBuilderShortcut(),
+          ),
           const SizedBox(height: 14),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -422,6 +428,51 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  // ── Atalho para o Construtor de Deck ────────────────────────────────
+  Widget _buildDeckBuilderShortcut() {
+    return GestureDetector(
+      onTap: () => context.go('/card-game/deck-builder'),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [
+              AppColors.purple.withValues(alpha: 0.22),
+              AppColors.purple.withValues(alpha: 0.06),
+            ],
+          ),
+          border: Border.all(color: AppColors.purple.withValues(alpha: 0.45)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.build_outlined,
+                size: 18, color: AppColors.purpleLt),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Construtor de Deck',
+                      style: GoogleFonts.roboto(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.txt)),
+                  Text('Monte seu deck (9 criaturas + 9 relíquias)',
+                      style: GoogleFonts.roboto(
+                          fontSize: 10.5, color: AppColors.txt2)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded,
+                size: 20, color: AppColors.purpleLt),
+          ],
+        ),
       ),
     );
   }

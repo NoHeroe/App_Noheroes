@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../card_game/deck_repository.dart';
 import '../../shared/widgets/app_snack.dart';
 
 /// Modelo de um submodo (uma "bolinha") dentro de um grupo/estilo de jogo.
@@ -34,14 +36,14 @@ class _PlayStyle {
   });
 }
 
-class BattleHubScreen extends StatefulWidget {
+class BattleHubScreen extends ConsumerStatefulWidget {
   const BattleHubScreen({super.key});
 
   @override
-  State<BattleHubScreen> createState() => _BattleHubScreenState();
+  ConsumerState<BattleHubScreen> createState() => _BattleHubScreenState();
 }
 
-class _BattleHubScreenState extends State<BattleHubScreen> {
+class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
   /// Submodo selecionado por grupo (índice do estilo -> índice do submodo).
   /// Ausente = nenhum submodo selecionado naquele grupo.
   final Map<int, int> _selected = {};
@@ -58,7 +60,7 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
         _SubMode(
           label: 'PvE',
           description: 'Solo contra a IA de Caelum. Dificuldade ajustável.',
-          onPlay: (c) => c.go('/card-game/matchmaking?mode=pve'),
+          onPlay: (c) => _onCardPvePlay(),
         ),
         _SubMode(
           label: 'PvP',
@@ -160,6 +162,78 @@ class _BattleHubScreenState extends State<BattleHubScreen> {
         _selected[styleIndex] = subIndex;
       }
     });
+  }
+
+  /// Gating do Card Game PvE: exige um deck ativo VÁLIDO (9+9) antes de ir
+  /// pro matchmaking. Sem deck válido → popup oferecendo montar agora.
+  Future<void> _onCardPvePlay() async {
+    PlayerDeck? deck;
+    try {
+      // Lê o deck ativo (resolve o FutureProvider). Sem login → null.
+      deck = await ref.read(activeDeckProvider.future);
+    } catch (_) {
+      // Erro de rede/posse — trata como "sem deck" (oferece montar).
+      deck = null;
+    }
+    if (!mounted) return;
+
+    if (deck != null && deck.isValid) {
+      context.go('/card-game/matchmaking?mode=pve');
+      return;
+    }
+    _showNoDeckDialog();
+  }
+
+  void _showNoDeckDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          backgroundColor: AppColors.surfaceVeil2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: AppColors.borderViolet),
+          ),
+          title: Row(
+            children: [
+              const Icon(Icons.style_outlined,
+                  color: AppColors.purpleLight, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text('Sem deck',
+                    style: GoogleFonts.cinzelDecorative(
+                        fontSize: 15,
+                        color: AppColors.purpleLight,
+                        letterSpacing: 1)),
+              ),
+            ],
+          ),
+          content: Text(
+            'Você ainda não tem um deck válido (9 criaturas + 9 relíquias). '
+            'Montar agora?',
+            style: GoogleFonts.roboto(
+                fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              style: TextButton.styleFrom(
+                  foregroundColor: AppColors.textMuted),
+              child: const Text('Agora não'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogCtx).pop();
+                context.go('/card-game/deck-builder');
+              },
+              style: TextButton.styleFrom(
+                  foregroundColor: AppColors.purpleLight),
+              child: const Text('Montar deck'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _onPlay(int styleIndex) {

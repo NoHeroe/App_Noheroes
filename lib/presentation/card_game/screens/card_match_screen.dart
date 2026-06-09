@@ -1,27 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_game.dart';
+import '../deck_repository.dart';
 
 /// Prévia funcional da partida do Modo Cartas (ACDA).
 ///
-/// Carrega o catálogo, monta dois loadouts válidos (9 criaturas + 9 relíquias
-/// compatíveis cada) e roda o engine BOT vs BOT até o fim, coletando um log
-/// turno a turno. É só espectador — a partida jogável interativa (com tabuleiro
-/// Flame) vem depois.
-class CardMatchScreen extends StatefulWidget {
+/// Carrega o catálogo + o DECK ATIVO do jogador (lado A). O lado B é um deck
+/// de BOT (preset determinístico montado do catálogo). Roda o engine até o fim
+/// (bot joga os dois lados por ora), coletando um log turno a turno. A partida
+/// jogável interativa (com tabuleiro Flame) vem depois.
+class CardMatchScreen extends ConsumerStatefulWidget {
   const CardMatchScreen({super.key, required this.mode});
 
   final String mode;
 
   @override
-  State<CardMatchScreen> createState() => _CardMatchScreenState();
+  ConsumerState<CardMatchScreen> createState() => _CardMatchScreenState();
 }
 
-class _CardMatchScreenState extends State<CardMatchScreen> {
+class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   late Future<_SimResult> _future;
   int _seed = 0;
 
@@ -40,7 +42,12 @@ class _CardMatchScreenState extends State<CardMatchScreen> {
 
   Future<_SimResult> _runMatch(int seed) async {
     final catalog = await CardCatalog.load();
-    final loadoutA = _buildLoadout(catalog, offset: 0);
+
+    // Lado A = deck ATIVO do jogador (resolvido do catálogo). Sem deck válido
+    // (acesso direto / sem login) → fallback pro preset de bot, sem crashar.
+    final loadoutA = await _resolvePlayerLoadout(catalog) ??
+        _buildLoadout(catalog, offset: 0);
+    // Lado B = deck de BOT (preset determinístico).
     final loadoutB = _buildLoadout(catalog, offset: 9);
 
     const engine = CardBattleEngine();
@@ -72,6 +79,38 @@ class _CardMatchScreenState extends State<CardMatchScreen> {
       winner: state.winner,
       turns: state.turn,
     );
+  }
+
+  /// Resolve o DECK ATIVO do jogador num [CardLoadout]. Devolve null se não
+  /// houver deck válido (sem login, sem deck, deck incompleto, ou algum id que
+  /// não existe mais no catálogo) — o caller faz fallback pro preset de bot.
+  Future<CardLoadout?> _resolvePlayerLoadout(CardCatalog catalog) async {
+    PlayerDeck? deck;
+    try {
+      deck = await ref.read(activeDeckProvider.future);
+    } catch (_) {
+      deck = null;
+    }
+    if (deck == null || !deck.isValid) return null;
+
+    final creatureById = {for (final c in catalog.creatures) c.id: c};
+    final relicById = {for (final r in catalog.relics) r.id: r};
+
+    final creatures = <CreatureCard>[];
+    for (final id in deck.creatureIds) {
+      final c = creatureById[id];
+      if (c == null) return null; // id órfão → fallback seguro.
+      creatures.add(c);
+    }
+    final relics = <RelicCard>[];
+    for (final id in deck.relicIds) {
+      final r = relicById[id];
+      if (r == null) return null;
+      relics.add(r);
+    }
+
+    if (creatures.length != 9 || relics.length != 9) return null;
+    return CardLoadout(creatures: creatures, relics: relics);
   }
 
   /// Monta um loadout válido: pega 9 criaturas (a partir de [offset]) e 9
@@ -224,7 +263,7 @@ class _CardMatchScreenState extends State<CardMatchScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Espectador: simulação IA vs IA. A partida jogável (tabuleiro Flame) vem depois.',
+              'Lado A = seu deck · Lado B = bot. Espectador (IA joga ambos). A partida jogável vem depois.',
               style: GoogleFonts.roboto(
                   fontSize: 11,
                   color: AppColors.purpleLight,
