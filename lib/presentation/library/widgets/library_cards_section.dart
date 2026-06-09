@@ -232,7 +232,13 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildDeckBuilderShortcut(),
+            child: Row(
+              children: [
+                Expanded(child: _buildDeckBuilderShortcut()),
+                const SizedBox(width: 10),
+                Expanded(child: _buildPacksShortcut()),
+              ],
+            ),
           ),
           const SizedBox(height: 14),
           Padding(
@@ -471,6 +477,51 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
             ),
             const Icon(Icons.chevron_right_rounded,
                 size: 20, color: AppColors.purpleLt),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Atalho para a tela de Pacotes (obtenção de cartas) ──────────────
+  Widget _buildPacksShortcut() {
+    return GestureDetector(
+      onTap: () => context.go('/card-game/packs'),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [
+              AppColors.gold.withValues(alpha: 0.22),
+              AppColors.gold.withValues(alpha: 0.06),
+            ],
+          ),
+          border: Border.all(color: AppColors.gold.withValues(alpha: 0.45)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.inventory_2_outlined,
+                size: 18, color: AppColors.goldLt),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Pacotes',
+                      style: GoogleFonts.roboto(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.txt)),
+                  Text('Compre e abra pacotes de cartas',
+                      style: GoogleFonts.roboto(
+                          fontSize: 10.5, color: AppColors.txt2)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded,
+                size: 20, color: AppColors.goldLt),
           ],
         ),
       ),

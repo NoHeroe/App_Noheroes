@@ -31,6 +31,7 @@ import '../presentation/battle/screens/battle_hub_screen.dart';
 import '../presentation/card_game/screens/card_matchmaking_screen.dart';
 import '../presentation/card_game/screens/card_match_screen.dart';
 import '../presentation/card_game/screens/deck_builder_screen.dart';
+import '../presentation/card_game/screens/packs_screen.dart';
 import '../presentation/vitalism/screens/void_ritual_screen.dart';
 import '../presentation/vitalism/screens/crystal_ceremony_screen.dart';
 import '../presentation/vitalism/screens/vitalism_hub_screen.dart';
@@ -151,6 +152,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/card-game/deck-builder',
         pageBuilder: (c, s) => _fadePage(s, const DeckBuilderScreen()),
+      ),
+      // Pacotes (ACDA) — obtenção de cartas (comprar/abrir/revelar).
+      GoRoute(
+        path: '/card-game/packs',
+        pageBuilder: (c, s) => _fadePage(s, const PacksScreen()),
       ),
       // Sprint 3.1 Bloco 14.6c — /history vira rota dedicada (saiu
       // da aba chip de /quests no redesign).
