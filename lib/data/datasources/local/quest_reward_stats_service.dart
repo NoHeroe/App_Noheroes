@@ -75,6 +75,7 @@ class QuestRewardStatsService {
 
   Future<void> _onRewardGranted(RewardGranted evt) async {
     if (evt.fromAchievementCascade) return; // achievement reward não conta
+    if (evt.fromAscension) return; // reward de ascensão não é ouro de quest
     try {
       final resolved = RewardResolved.fromJsonString(evt.rewardResolvedJson);
       if (resolved.gold <= 0) return;

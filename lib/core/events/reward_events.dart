@@ -24,16 +24,24 @@ class RewardGranted extends AppEvent {
   /// altera o comportamento de cascata de conquistas.
   final bool fromAchievementCascade;
 
+  /// B.2 — `true` quando o reward veio do Teste de Ascensão (AscensionService).
+  /// NÃO é ouro de quest: o `QuestRewardStatsService` ignora pra não poluir
+  /// `players.total_gold_earned_via_quests`. Default `false` (comportamento
+  /// atual de todos os outros emissores preservado).
+  final bool fromAscension;
+
   RewardGranted({
     required this.playerId,
     required this.rewardResolvedJson,
     this.fromAchievementCascade = false,
+    this.fromAscension = false,
     super.at,
   });
 
   @override
   String toString() =>
-      'RewardGranted(player=$playerId, cascade=$fromAchievementCascade)';
+      'RewardGranted(player=$playerId, cascade=$fromAchievementCascade, '
+      'ascension=$fromAscension)';
 }
 
 /// Conquista desbloqueada. Registrada em `player_achievements_completed`
