@@ -26,14 +26,14 @@ void main() {
         s.acceptsInput(
           ctx(metaJson: '{}'),
           EventStrategyInput(ItemCrafted(
-              playerId: 42, itemKey: 'SWORD', recipeKey: 'R')),
+              playerId: 'p42', itemKey: 'SWORD', recipeKey: 'R')),
         ),
         isFalse,
       );
     });
 
     test('rejeita evento de tipo diferente do esperado', () {
-      final evt = LevelUp(playerId: 42, newLevel: 5, previousLevel: 4);
+      final evt = LevelUp(playerId: 'p42', newLevel: 5, previousLevel: 4);
       expect(
         s.acceptsInput(
           ctx(metaJson: '{"internal_event":"ItemCrafted"}'),
@@ -45,10 +45,10 @@ void main() {
 
     test('rejeita evento com playerId diferente', () {
       final evt =
-          ItemCrafted(playerId: 99, itemKey: 'SWORD', recipeKey: 'R');
+          ItemCrafted(playerId: 'p99', itemKey: 'SWORD', recipeKey: 'R');
       expect(
         s.acceptsInput(
-          ctx(playerId: 42, metaJson: '{"internal_event":"ItemCrafted"}'),
+          ctx(playerId: 'p42', metaJson: '{"internal_event":"ItemCrafted"}'),
           EventStrategyInput(evt),
         ),
         isFalse,
@@ -57,10 +57,10 @@ void main() {
 
     test('aceita evento certo do player certo', () {
       final evt =
-          ItemCrafted(playerId: 42, itemKey: 'SWORD', recipeKey: 'R');
+          ItemCrafted(playerId: 'p42', itemKey: 'SWORD', recipeKey: 'R');
       expect(
         s.acceptsInput(
-          ctx(playerId: 42, metaJson: '{"internal_event":"ItemCrafted"}'),
+          ctx(playerId: 'p42', metaJson: '{"internal_event":"ItemCrafted"}'),
           EventStrategyInput(evt),
         ),
         isTrue,
@@ -69,7 +69,7 @@ void main() {
 
     test('rejeita string expected que não está no switch', () {
       final evt =
-          ItemCrafted(playerId: 42, itemKey: 'SWORD', recipeKey: 'R');
+          ItemCrafted(playerId: 'p42', itemKey: 'SWORD', recipeKey: 'R');
       expect(
         s.acceptsInput(
           ctx(metaJson: '{"internal_event":"UnknownEvent"}'),
@@ -83,7 +83,7 @@ void main() {
   group('InternalModalityStrategy — computeStep', () {
     test('incrementa 1 por evento', () {
       final evt =
-          ItemCrafted(playerId: 42, itemKey: 'S', recipeKey: 'R');
+          ItemCrafted(playerId: 'p42', itemKey: 'S', recipeKey: 'R');
       final step = s.computeStep(
         ctx(current: 1, target: 3,
             metaJson: '{"internal_event":"ItemCrafted"}'),
@@ -96,7 +96,7 @@ void main() {
 
     test('shouldComplete quando atinge target', () {
       final evt =
-          ItemCrafted(playerId: 42, itemKey: 'S', recipeKey: 'R');
+          ItemCrafted(playerId: 'p42', itemKey: 'S', recipeKey: 'R');
       final step = s.computeStep(
         ctx(current: 2, target: 3,
             metaJson: '{"internal_event":"ItemCrafted"}'),
@@ -108,7 +108,7 @@ void main() {
 
     test('shouldComplete quando passa do target (ex: +1 além)', () {
       final evt =
-          ItemCrafted(playerId: 42, itemKey: 'S', recipeKey: 'R');
+          ItemCrafted(playerId: 'p42', itemKey: 'S', recipeKey: 'R');
       final step = s.computeStep(
         ctx(current: 3, target: 3,
             metaJson: '{"internal_event":"ItemCrafted"}'),

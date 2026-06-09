@@ -18,7 +18,7 @@ MissionProgress _mixed({
 }) {
   return MissionProgress(
     id: 99,
-    playerId: 1,
+    playerId: 'p1',
     missionKey: 'MIX_X',
     modality: MissionModality.mixed,
     tabOrigin: MissionTabOrigin.extras,
@@ -108,7 +108,7 @@ void main() {
       (tester) async {
     final m = MissionProgress(
       id: 88,
-      playerId: 1,
+      playerId: 'p1',
       missionKey: 'MIX_BAD',
       modality: MissionModality.mixed,
       tabOrigin: MissionTabOrigin.extras,

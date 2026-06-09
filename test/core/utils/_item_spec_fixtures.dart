@@ -1,7 +1,7 @@
 // Fixtures compartilhadas pra testes das políticas de item.
-import 'package:noheroes_app/data/database/app_database.dart';
 import 'package:noheroes_app/domain/models/inventory_entry_with_spec.dart';
 import 'package:noheroes_app/domain/models/item_spec.dart';
+import 'package:noheroes_app/domain/models/player_inventory_entry.dart';
 
 // Constrói um ItemSpec mínimo via fromJson, permitindo overrides.
 ItemSpec makeItem({
@@ -53,17 +53,17 @@ ItemSpec makeItem({
 }
 
 // Monta um InventoryEntryWithSpec pra testes de aggregate/equip — o spec
-// vem de makeItem, a entry é um PlayerInventoryTableData mínimo.
+// vem de makeItem, a entry é um PlayerInventoryEntry mínimo.
 InventoryEntryWithSpec makeEntry({
   required ItemSpec spec,
   int id = 1,
-  int playerId = 1,
+  String playerId = 'p1',
   int quantity = 1,
   String? evolutionStage,
   bool isEquipped = true,
 }) {
   return InventoryEntryWithSpec(
-    entry: PlayerInventoryTableData(
+    entry: PlayerInventoryEntry(
       id: id,
       playerId: playerId,
       itemKey: spec.key,
@@ -73,6 +73,9 @@ InventoryEntryWithSpec makeEntry({
       acquiredVia: 'starter',
       evolutionStage: evolutionStage,
       isEquipped: isEquipped,
+      appliedRuneKey: null,
+      appliedSapKey: null,
+      sapChargesRemaining: null,
     ),
     spec: spec,
   );

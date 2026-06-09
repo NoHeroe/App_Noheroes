@@ -18,12 +18,12 @@ import 'package:noheroes_app/presentation/quests/widgets/individual_mission_card
 /// Fake service — rastreia se foi chamado com quais argumentos.
 class _FakeDeleteService implements IndividualDeleteService {
   int calls = 0;
-  int? lastPlayerId;
+  String? lastPlayerId;
   int? lastMissionId;
 
   @override
   Future<void> deleteIndividual({
-    required int playerId,
+    required String playerId,
     required int missionProgressId,
   }) async {
     calls++;
@@ -51,7 +51,7 @@ String _metaWithRequirements({String name = 'Forja Matinal'}) {
 MissionProgress _individual({int id = 1, GuildRank rank = GuildRank.e}) {
   return MissionProgress(
     id: id,
-    playerId: 10,
+    playerId: 'p10',
     missionKey: 'IND_X',
     modality: MissionModality.individual,
     tabOrigin: MissionTabOrigin.extras,
@@ -120,7 +120,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('individual-delete-confirm')));
     await tester.pumpAndSettle();
     expect(fake.calls, 1);
-    expect(fake.lastPlayerId, 10);
+    expect(fake.lastPlayerId, 'p10');
     expect(fake.lastMissionId, 1);
   });
 
@@ -128,7 +128,7 @@ void main() {
     final fake = _FakeDeleteService();
     final failed = MissionProgress(
       id: 2,
-      playerId: 10,
+      playerId: 'p10',
       missionKey: 'IND_X',
       modality: MissionModality.individual,
       tabOrigin: MissionTabOrigin.extras,

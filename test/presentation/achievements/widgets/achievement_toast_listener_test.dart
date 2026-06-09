@@ -95,7 +95,7 @@ void main() {
     ));
     await tester.pump();
 
-    bus.publish(AchievementUnlocked(playerId: 1, achievementKey: 'K'));
+    bus.publish(AchievementUnlocked(playerId: 'p1', achievementKey: 'K'));
     await tester.pump(); // microtask
     await tester.pump(const Duration(milliseconds: 400)); // slide-in
     expect(find.byType(AchievementUnlockedToast), findsOneWidget);
@@ -113,7 +113,7 @@ void main() {
     await tester.pump();
 
     bus.publish(
-        AchievementUnlocked(playerId: 1, achievementKey: 'SHELL'));
+        AchievementUnlocked(playerId: 'p1', achievementKey: 'SHELL'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byType(AchievementUnlockedToast), findsNothing);
@@ -131,7 +131,7 @@ void main() {
     await tester.pump();
 
     bus.publish(
-        AchievementUnlocked(playerId: 1, achievementKey: 'NEXISTE'));
+        AchievementUnlocked(playerId: 'p1', achievementKey: 'NEXISTE'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byType(AchievementUnlockedToast), findsNothing);
@@ -151,8 +151,8 @@ void main() {
     ));
     await tester.pump();
 
-    bus.publish(AchievementUnlocked(playerId: 1, achievementKey: 'K1'));
-    bus.publish(AchievementUnlocked(playerId: 1, achievementKey: 'K2'));
+    bus.publish(AchievementUnlocked(playerId: 'p1', achievementKey: 'K1'));
+    bus.publish(AchievementUnlocked(playerId: 'p1', achievementKey: 'K2'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 

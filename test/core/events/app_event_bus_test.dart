@@ -35,14 +35,14 @@ void main() {
 
       bus.publish(MissionCompleted(
         missionKey: 'DAILY_PUSHUPS_E',
-        playerId: 42,
+        playerId: 'p42',
         rewardResolvedJson: '{"xp":40}',
       ));
       await pumpEventQueue();
 
       expect(received, isNotNull);
       expect(received!.missionKey, 'DAILY_PUSHUPS_E');
-      expect(received!.playerId, 42);
+      expect(received!.playerId, 'p42');
       expect(received!.rewardResolvedJson, '{"xp":40}');
 
       await sub.cancel();
@@ -56,7 +56,7 @@ void main() {
           bus.on<MissionCompleted>().listen(received.add);
       final subLevel = bus.on<LevelUp>().listen(received.add);
 
-      bus.publish(LevelUp(playerId: 1, newLevel: 5, previousLevel: 4));
+      bus.publish(LevelUp(playerId: 'p1', newLevel: 5, previousLevel: 4));
       await pumpEventQueue();
 
       expect(received, hasLength(1));
@@ -75,7 +75,7 @@ void main() {
       final subB = bus.on<AchievementUnlocked>().listen((_) => countB++);
 
       bus.publish(AchievementUnlocked(
-        playerId: 1,
+        playerId: 'p1',
         achievementKey: 'ACH_FIRST_CRAFT',
       ));
       await pumpEventQueue();
@@ -94,7 +94,7 @@ void main() {
       final sub = bus.on<ItemCrafted>().listen((_) => count++);
 
       bus.publish(ItemCrafted(
-        playerId: 1,
+        playerId: 'p1',
         itemKey: 'SWORD_E',
         recipeKey: 'RECIPE_SWORD_E',
       ));
@@ -103,7 +103,7 @@ void main() {
 
       await sub.cancel();
       bus.publish(ItemCrafted(
-        playerId: 1,
+        playerId: 'p1',
         itemKey: 'SWORD_D',
         recipeKey: 'RECIPE_SWORD_D',
       ));
@@ -122,7 +122,7 @@ void main() {
 
       // Emissão antes do dispose chega.
       bus.publish(GoldSpent(
-        playerId: 1,
+        playerId: 'p1',
         amount: 100,
         source: GoldSink.shop,
       ));
@@ -136,7 +136,7 @@ void main() {
       // Pós-dispose: não lança, não emite, não crasha.
       expect(
         () => bus.publish(GoldSpent(
-          playerId: 1,
+          playerId: 'p1',
           amount: 50,
           source: GoldSink.forge,
         )),
@@ -154,7 +154,7 @@ void main() {
   group('AppEventBus — metadata', () {
     test('6. todo evento tem timestamp não nulo próximo do agora', () {
       final before = DateTime.now();
-      final e = FactionJoined(playerId: 1, factionId: 'noryan');
+      final e = FactionJoined(playerId: 'p1', factionId: 'noryan');
       final after = DateTime.now();
 
       expect(e.timestamp, isNotNull);
@@ -185,7 +185,7 @@ void main() {
 
       bus.publish(MissionProgressed(
         missionKey: 'X',
-        playerId: 1,
+        playerId: 'p1',
         currentValue: 1,
         targetValue: 10,
       ));
@@ -193,7 +193,7 @@ void main() {
 
       bus.publish(MissionProgressed(
         missionKey: 'X',
-        playerId: 1,
+        playerId: 'p1',
         currentValue: 2,
         targetValue: 10,
       ));
@@ -201,7 +201,7 @@ void main() {
 
       bus.publish(MissionProgressed(
         missionKey: 'X',
-        playerId: 1,
+        playerId: 'p1',
         currentValue: 3,
         targetValue: 10,
       ));
@@ -216,7 +216,7 @@ void main() {
     test('9. toString inclui tipo + campos principais', () {
       final e = MissionFailed(
         missionKey: 'DAILY_RUN_E',
-        playerId: 7,
+        playerId: 'p7',
         reason: MissionFailureReason.expired,
       );
       final s = e.toString();
@@ -229,8 +229,8 @@ void main() {
     test(
         '10. dois eventos com mesmo payload são instâncias distintas '
         '(sem igualdade estrutural)', () {
-      final a = StreakMaintained(playerId: 1, currentStreak: 10);
-      final b = StreakMaintained(playerId: 1, currentStreak: 10);
+      final a = StreakMaintained(playerId: 'p1', currentStreak: 10);
+      final b = StreakMaintained(playerId: 'p1', currentStreak: 10);
       expect(identical(a, b), isFalse);
       // `==` default é identity, confirma que não reimplantamos value equality.
       expect(a == b, isFalse);
@@ -253,7 +253,7 @@ void main() {
         'passado', () async {
       final bus = AppEventBus();
 
-      bus.publish(StreakBroken(playerId: 1, lastStreak: 42));
+      bus.publish(StreakBroken(playerId: 'p1', lastStreak: 42));
       await pumpEventQueue();
 
       StreakBroken? late;
@@ -268,7 +268,7 @@ void main() {
       );
 
       // E emissões novas chegam normalmente.
-      bus.publish(StreakBroken(playerId: 1, lastStreak: 10));
+      bus.publish(StreakBroken(playerId: 'p1', lastStreak: 10));
       await pumpEventQueue();
       expect(late, isNotNull);
       expect(late!.lastStreak, 10);

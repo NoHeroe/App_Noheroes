@@ -11,7 +11,7 @@ void main() {
 
   group('RealTaskModalityStrategy — acceptsInput', () {
     test('rejeita EventStrategyInput', () {
-      final evt = ItemCrafted(playerId: 42, itemKey: 'S', recipeKey: 'R');
+      final evt = ItemCrafted(playerId: 'p42', itemKey: 'S', recipeKey: 'R');
       expect(s.acceptsInput(ctx(), EventStrategyInput(evt)), isFalse);
     });
 

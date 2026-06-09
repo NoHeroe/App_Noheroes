@@ -8,7 +8,7 @@ import 'package:noheroes_app/domain/models/reward_declared.dart';
 /// Helpers compartilhados dos testes de strategy.
 MissionContext ctx({
   int missionProgressId = 1,
-  int playerId = 42,
+  String playerId = 'p42',
   String missionKey = 'TEST',
   MissionModality modality = MissionModality.internal,
   MissionTabOrigin tab = MissionTabOrigin.classTab,
@@ -31,7 +31,7 @@ MissionContext ctx({
 
 MissionProgress mission({
   int id = 1,
-  int playerId = 42,
+  String playerId = 'p42',
   String key = 'TEST',
   MissionModality modality = MissionModality.internal,
   MissionTabOrigin tab = MissionTabOrigin.classTab,

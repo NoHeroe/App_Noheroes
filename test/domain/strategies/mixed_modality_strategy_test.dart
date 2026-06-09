@@ -33,7 +33,7 @@ void main() {
     test('aceita EventStrategyInput quando algum req internal matches',
         () {
       final evt =
-          ItemCrafted(playerId: 42, itemKey: 'S', recipeKey: 'R');
+          ItemCrafted(playerId: 'p42', itemKey: 'S', recipeKey: 'R');
       expect(
         s.acceptsInput(
           ctx(
@@ -47,7 +47,7 @@ void main() {
     });
 
     test('rejeita evento que não bate com nenhum req internal', () {
-      final evt = LevelUp(playerId: 42, newLevel: 5, previousLevel: 4);
+      final evt = LevelUp(playerId: 'p42', newLevel: 5, previousLevel: 4);
       expect(
         s.acceptsInput(
           ctx(
@@ -117,7 +117,7 @@ void main() {
     test('evento internal incrementa req 0, currentValue agregado = 0 '
         '(ainda)', () {
       final evt =
-          ItemCrafted(playerId: 42, itemKey: 'S', recipeKey: 'R');
+          ItemCrafted(playerId: 'p42', itemKey: 'S', recipeKey: 'R');
       final step = s.computeStep(
         ctx(
             modality: MissionModality.mixed,
@@ -134,7 +134,7 @@ void main() {
 
     test('3 eventos internal completam req 0, agregado vira 1', () {
       final evt =
-          ItemCrafted(playerId: 42, itemKey: 'S', recipeKey: 'R');
+          ItemCrafted(playerId: 'p42', itemKey: 'S', recipeKey: 'R');
       var meta = _initialMeta();
       for (var i = 0; i < 3; i++) {
         final step = s.computeStep(
@@ -193,7 +193,7 @@ void main() {
         ],
       });
       final evt =
-          ItemCrafted(playerId: 42, itemKey: 'S', recipeKey: 'R');
+          ItemCrafted(playerId: 'p42', itemKey: 'S', recipeKey: 'R');
       final step = s.computeStep(
         ctx(
             modality: MissionModality.mixed,

@@ -26,25 +26,25 @@ class _FakeMissionRepo implements MissionRepository {
 
   @override
   Future<List<MissionProgress>> findByTab(
-      int playerId, MissionTabOrigin tab) async {
+      String playerId, MissionTabOrigin tab) async {
     findByTabCalls++;
     return byTab[tab] ?? const [];
   }
 
   @override
-  Future<List<MissionProgress>> findHistorical(int playerId) async =>
+  Future<List<MissionProgress>> findHistorical(String playerId) async =>
       const [];
 
   @override
   Future<List<MissionProgress>> findCompletedInWindow(
-    int playerId, {
+    String playerId, {
     required DateTime from,
     required DateTime to,
   }) async =>
       const [];
 
   @override
-  Future<List<MissionProgress>> findActive(int playerId) async => const [];
+  Future<List<MissionProgress>> findActive(String playerId) async => const [];
 
   @override
   Future<MissionProgress?> findById(int id) async => null;
@@ -64,7 +64,7 @@ class _FakeMissionRepo implements MissionRepository {
       {required int currentValue, String? metaJson}) async {}
 
   @override
-  Stream<List<MissionProgress>> watchActive(int playerId) =>
+  Stream<List<MissionProgress>> watchActive(String playerId) =>
       const Stream.empty();
 }
 
@@ -73,10 +73,10 @@ class _FakeDailyGenerator implements DailyMissionGeneratorService {
   static const List<DailyMission> _empty = <DailyMission>[];
 
   @override
-  Future<List<DailyMission>> getTodayMissions(int playerId) async => _empty;
+  Future<List<DailyMission>> getTodayMissions(String playerId) async => _empty;
 
   @override
-  Future<List<DailyMission>> generateForToday(int playerId,
+  Future<List<DailyMission>> generateForToday(String playerId,
           {DateTime? date, bool force = false}) async =>
       _empty;
 
@@ -89,7 +89,7 @@ class _FakeDailyGenerator implements DailyMissionGeneratorService {
 
 class _FakeDailyRollover implements DailyMissionRolloverService {
   @override
-  Future<void> processRollover(int playerId, {DateTime? now}) async {}
+  Future<void> processRollover(String playerId, {DateTime? now}) async {}
 
   @override
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
@@ -104,7 +104,7 @@ class _FakeExtrasCatalog implements ExtrasCatalogService {
   Future<List<ExtrasMissionSpec>> loadAll() async => items;
 
   @override
-  Future<List<ExtrasMissionSpec>> loadAllForPlayer(int playerId) async =>
+  Future<List<ExtrasMissionSpec>> loadAllForPlayer(String playerId) async =>
       items;
 
   @override
@@ -120,7 +120,7 @@ MissionProgress _mkMission({
 }) {
   return MissionProgress(
     id: id,
-    playerId: 1,
+    playerId: 'p1',
     missionKey: 'M$id',
     modality: modality,
     tabOrigin: tab,
@@ -175,7 +175,7 @@ void main() {
       final c = _makeContainer(repo: repo, bus: bus);
       addTearDown(c.dispose);
 
-      final state = await c.read(questsScreenNotifierProvider(1).future);
+      final state = await c.read(questsScreenNotifierProvider('p1').future);
       // dailyMissionsNew vem do _FakeDailyGenerator (vazio default).
       expect(state.dailyMissionsNew, isEmpty);
       expect(state.classMissions, hasLength(1));
@@ -213,7 +213,7 @@ void main() {
       final c = _makeContainer(repo: repo, bus: bus);
       addTearDown(c.dispose);
 
-      final state = await c.read(questsScreenNotifierProvider(1).future);
+      final state = await c.read(questsScreenNotifierProvider('p1').future);
       expect(state.doneCount, 2);
       expect(state.totalCount, 2);
     });
@@ -229,16 +229,16 @@ void main() {
       final c = _makeContainer(repo: repo, bus: bus);
       addTearDown(c.dispose);
 
-      await c.read(questsScreenNotifierProvider(1).future);
+      await c.read(questsScreenNotifierProvider('p1').future);
       final callsBeforeEvent = repo.findByTabCalls;
 
       bus.publish(MissionCompleted(
-        playerId: 1,
+        playerId: 'p1',
         missionKey: 'M1',
         rewardResolvedJson: '{}',
       ));
       await Future<void>.delayed(const Duration(milliseconds: 10));
-      await c.read(questsScreenNotifierProvider(1).future);
+      await c.read(questsScreenNotifierProvider('p1').future);
 
       expect(repo.findByTabCalls, greaterThan(callsBeforeEvent));
     });
@@ -250,17 +250,17 @@ void main() {
       final c = _makeContainer(repo: repo, bus: bus);
       addTearDown(c.dispose);
 
-      await c.read(questsScreenNotifierProvider(1).future);
+      await c.read(questsScreenNotifierProvider('p1').future);
       final callsBefore = repo.findByTabCalls;
 
       bus.publish(IndividualCreated(
-        playerId: 1,
+        playerId: 'p1',
         missionProgressId: 42,
         missionKey: 'IND_USER_X',
         categoria: 'fisico',
       ));
       await Future<void>.delayed(const Duration(milliseconds: 10));
-      await c.read(questsScreenNotifierProvider(1).future);
+      await c.read(questsScreenNotifierProvider('p1').future);
 
       expect(repo.findByTabCalls, greaterThan(callsBefore));
     });
@@ -284,7 +284,7 @@ void main() {
       final c = _makeContainer(repo: repo, bus: bus);
       addTearDown(c.dispose);
 
-      final state = await c.read(questsScreenNotifierProvider(1).future);
+      final state = await c.read(questsScreenNotifierProvider('p1').future);
       expect(state.individualMissions, hasLength(1));
       expect(state.individualMissions.single.id, 1);
     });
@@ -315,7 +315,7 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      final state = await c.read(questsScreenNotifierProvider(1).future);
+      final state = await c.read(questsScreenNotifierProvider('p1').future);
       expect(state.extrasCatalog, hasLength(1));
       expect(state.extrasCatalog.single.key, 'E1');
     });
@@ -327,10 +327,10 @@ void main() {
       final c = _makeContainer(repo: repo, bus: bus);
       addTearDown(c.dispose);
 
-      await c.read(questsScreenNotifierProvider(1).future);
+      await c.read(questsScreenNotifierProvider('p1').future);
       final callsBefore = repo.findByTabCalls;
       await c
-          .read(questsScreenNotifierProvider(1).notifier)
+          .read(questsScreenNotifierProvider('p1').notifier)
           .refresh();
       expect(repo.findByTabCalls, greaterThan(callsBefore));
     });
