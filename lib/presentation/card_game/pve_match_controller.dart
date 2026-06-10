@@ -45,6 +45,46 @@ class MatchLogEntry {
   String toString() => '[T$turn][${kind.name}] $text';
 }
 
+/// Destaque visual de UM evento de combate durante o replay narrado.
+///
+/// A tela usa isto para animar os tiles das lanes (atacante avança, alvo
+/// treme, número de dano flutua). `null` fora do replay.
+class CombatHighlight {
+  const CombatHighlight({
+    this.attackerCardId,
+    this.targetCardId,
+    this.attackerSide,
+    this.targetSide,
+    this.amount,
+    this.isHeal = false,
+    this.evaded = false,
+    this.targetDied = false,
+    this.ability,
+  });
+
+  /// Criatura que agiu (atacante/curador/dona da habilidade).
+  final String? attackerCardId;
+
+  /// Criatura atingida/curada.
+  final String? targetCardId;
+
+  /// Lado dono do atacante / lado onde está o alvo. A tela usa [targetSide]
+  /// para ancorar o número flutuante quando o alvo já saiu do tabuleiro
+  /// (morreu e as lanes compactaram).
+  final SideId? attackerSide;
+  final SideId? targetSide;
+
+  /// Dano causado (ou cura, se [isHeal]). null quando não se aplica.
+  final int? amount;
+
+  final bool isHeal;
+  final bool evaded;
+  final bool targetDied;
+
+  /// Nome canônico da habilidade que disparou (eventos `AbilityTriggered`).
+  final String? ability;
+}
+
 /// Estado imutável consumido pela tela. `match == null` apenas em `idle`.
 class PveMatchUiState {
   const PveMatchUiState({
@@ -54,11 +94,16 @@ class PveMatchUiState {
     this.selectedCardId,
     this.playerSide = SideId.a,
     this.playerWon,
+    this.highlight,
   });
 
   final MatchState? match;
   final PveMatchPhase phase;
   final List<MatchLogEntry> log;
+
+  /// Evento de combate sendo narrado AGORA (replay passo a passo). A tela
+  /// anima a partir dele; null fora do replay.
+  final CombatHighlight? highlight;
 
   /// Carta do pool do jogador atualmente selecionada (fluxo de 2 toques).
   final String? selectedCardId;
@@ -84,6 +129,8 @@ class PveMatchUiState {
     String? selectedCardId,
     bool clearSelectedCard = false,
     bool? playerWon,
+    CombatHighlight? highlight,
+    bool clearHighlight = false,
   }) {
     return PveMatchUiState(
       match: match ?? this.match,
@@ -93,6 +140,7 @@ class PveMatchUiState {
           clearSelectedCard ? null : (selectedCardId ?? this.selectedCardId),
       playerSide: playerSide,
       playerWon: playerWon ?? this.playerWon,
+      highlight: clearHighlight ? null : (highlight ?? this.highlight),
     );
   }
 }
@@ -106,7 +154,14 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
 
   final CardBattleEngine _engine;
 
-  Duration _botStepDelay = const Duration(milliseconds: 450);
+  Duration _botStepDelay = const Duration(milliseconds: 340);
+
+  /// Delay entre EVENTOS narrados da Fase de Ataque (replay passo a passo).
+  /// Acompanha o pacing do bot: `Duration.zero` (testes) => replay síncrono,
+  /// sem highlight.
+  Duration get _eventStepDelay => _botStepDelay > Duration.zero
+      ? const Duration(milliseconds: 480)
+      : Duration.zero;
 
   /// Guard de reentrância: cobre `startMatch` e `endPlayerTurn` (pipelines
   /// async). Ações síncronas do jogador também respeitam.
@@ -127,7 +182,7 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     CardLoadout player,
     CardLoadout bot, {
     int seed = 0,
-    Duration botStepDelay = const Duration(milliseconds: 450),
+    Duration botStepDelay = const Duration(milliseconds: 340),
   }) async {
     if (_busy) return;
     _busy = true;
@@ -169,6 +224,7 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
       phase: PveMatchPhase.finished,
       playerWon: false,
       clearSelectedCard: true,
+      clearHighlight: true,
       log: _appended(MatchLogEntry(
         text: 'Você desistiu da partida. Derrota.',
         kind: MatchLogKind.system,
@@ -307,15 +363,15 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
       // Fase de Ataque do jogador.
       final resolvedTurn = match.turn;
       final afterPlayer = _engine.endTurn(match);
-      state = state.copyWith(
-        match: afterPlayer,
-        log: _appendedAll(_eventEntries(afterPlayer, resolvedTurn)),
-      );
+      state = state.copyWith(match: afterPlayer);
+      await _replayEvents(afterPlayer, resolvedTurn);
+      if (!mounted) return;
 
       if (afterPlayer.isOver) {
-        _finish(afterPlayer);
+        if (state.phase != PveMatchPhase.finished) _finish(afterPlayer);
         return;
       }
+      if (_aborted) return; // forfeit durante o replay
 
       await _runBotTurn();
     } finally {
@@ -362,14 +418,13 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     final resolvedTurn = match.turn;
     match = _engine.endTurn(match);
     if (_aborted) return;
-    state = state.copyWith(
-      match: match,
-      log: _appendedAll(_eventEntries(match, resolvedTurn)),
-    );
+    state = state.copyWith(match: match);
+    await _replayEvents(match, resolvedTurn);
+    if (!mounted) return;
 
     if (match.isOver) {
-      _finish(match);
-    } else {
+      if (state.phase != PveMatchPhase.finished) _finish(match);
+    } else if (state.phase != PveMatchPhase.finished) {
       state = state.copyWith(phase: PveMatchPhase.playerTurn);
     }
   }
@@ -380,6 +435,7 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
       phase: PveMatchPhase.finished,
       playerWon: won,
       clearSelectedCard: true,
+      clearHighlight: true,
       log: _appended(MatchLogEntry(
         text: won
             ? '— FIM — Vitória! A IA ficou sem criaturas.'
@@ -474,12 +530,84 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     }
   }
 
-  /// Converte `lastTurnEvents` de [match] em entradas de log de combate.
-  List<MatchLogEntry> _eventEntries(MatchState match, int turn) {
-    return <MatchLogEntry>[
-      for (final e in match.lastTurnEvents)
-        MatchLogEntry(text: _eventText(e), kind: MatchLogKind.combat, turn: turn),
-    ];
+  /// Narra `lastTurnEvents` de [match] passo a passo: a cada evento, appenda
+  /// a linha de log e publica um [CombatHighlight] para a tela animar, com
+  /// `_eventStepDelay` entre eventos (ritmo tipo Card Monsters). Com pacing
+  /// zero (testes), appenda tudo de uma vez — síncrono, sem highlight.
+  ///
+  /// O `MatchState` final já foi publicado ANTES do replay (HP/lanes finais);
+  /// o replay só controla narração + animação, nunca o estado da partida.
+  Future<void> _replayEvents(MatchState match, int turn) async {
+    final events = match.lastTurnEvents;
+    if (events.isEmpty) return;
+
+    if (_eventStepDelay == Duration.zero) {
+      state = state.copyWith(
+        log: _appendedAll(<MatchLogEntry>[
+          for (final e in events)
+            MatchLogEntry(
+                text: _eventText(e), kind: MatchLogKind.combat, turn: turn),
+        ]),
+      );
+      return;
+    }
+
+    for (final e in events) {
+      if (_aborted) return; // forfeit no meio do replay: para de narrar
+      final highlight = _highlightFor(e);
+      state = state.copyWith(
+        log: _appended(MatchLogEntry(
+            text: _eventText(e), kind: MatchLogKind.combat, turn: turn)),
+        highlight: highlight,
+        clearHighlight: highlight == null,
+      );
+      await Future<void>.delayed(_eventStepDelay);
+    }
+    if (!mounted) return;
+    state = state.copyWith(clearHighlight: true);
+  }
+
+  /// Mapeia um [MatchEvent] para o destaque visual correspondente.
+  /// Eventos sem ancoragem em criatura (penalidade, stall) não destacam.
+  CombatHighlight? _highlightFor(MatchEvent e) {
+    SideId opposite(SideId s) => s == SideId.a ? SideId.b : SideId.a;
+    switch (e) {
+      case AttackResolved():
+        return CombatHighlight(
+          attackerCardId: e.attackerCardId,
+          targetCardId: e.targetCardId,
+          attackerSide: e.attackerSide,
+          targetSide: opposite(e.attackerSide),
+          amount: e.damageDealt,
+          targetDied: e.targetDied,
+        );
+      case AttackEvaded():
+        return CombatHighlight(
+          attackerCardId: e.attackerCardId,
+          targetCardId: e.targetCardId,
+          attackerSide: e.attackerSide,
+          targetSide: opposite(e.attackerSide),
+          evaded: true,
+        );
+      case HealResolved():
+        return CombatHighlight(
+          attackerCardId: e.healerCardId,
+          targetCardId: e.targetCardId,
+          attackerSide: e.side,
+          targetSide: e.side,
+          amount: e.amount,
+          isHeal: true,
+        );
+      case AbilityTriggered():
+        return CombatHighlight(
+          attackerCardId: e.cardId,
+          attackerSide: e.side,
+          ability: e.ability,
+        );
+      case NoCreaturePenaltyApplied():
+      case StallLimitReached():
+        return null;
+    }
   }
 
   String _eventText(MatchEvent e) {
@@ -496,6 +624,10 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
           b.write(' — restou ${e.targetHpAfter} PV.');
         }
         return b.toString();
+      case AttackEvaded():
+        return '${e.targetName} EVADIU o ataque de ${e.attackerName} (Voo)!';
+      case AbilityTriggered():
+        return '${e.cardName} · ${e.ability}: ${e.detail}';
       case HealResolved():
         return '${e.healerName} curou ${e.targetName}: +${e.amount} PV.';
       case NoCreaturePenaltyApplied():

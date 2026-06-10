@@ -1,6 +1,7 @@
 /// Barrel do módulo do Card Game "Modo Cartas ACDA" (lógica pura, Dart puro).
 library;
 
+export 'abilities.dart';
 export 'card_battle_engine.dart';
 export 'card_models.dart';
 export 'engine_config.dart';

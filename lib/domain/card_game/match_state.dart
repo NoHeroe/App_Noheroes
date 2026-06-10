@@ -7,6 +7,7 @@ library;
 
 import 'dart:math';
 
+import 'abilities.dart';
 import 'card_models.dart';
 import 'engine_config.dart';
 import 'match_events.dart';
@@ -17,13 +18,27 @@ enum MatchPhase { jogo, ataque, fim }
 /// Identifica um dos dois lados.
 enum SideId { a, b }
 
-/// Uma criatura em jogo: a carta + estado dinâmico (hp, relíquias, lane).
+/// Uma criatura em jogo: a carta + estado dinâmico (hp, relíquias, lane,
+/// buffs temporários de habilidades).
+///
+/// Buffs temporários (design dos campos):
+/// - `inspirarBonus`: aplicado no início do turno do dono (`_beginTurn`),
+///   expira no FIM do turno do dono (limpo pelo `endTurn` do dono, após a
+///   Fase de Ataque).
+/// - `investidaBonus`: aplicado no início do turno do dono, expira no fim do
+///   turno do OPONENTE (limpo pelo `endTurn` do oponente) — dura a rodada.
+/// Ambos só contam para ataque corpo a corpo (`effectiveAtk`). A expiração é
+/// feita por varredura explícita no engine — sem vazamento entre turnos.
+/// - `bonusMaxHp`: PERMANENTE (Roubo de PV soma PV atual e máximo).
 class CreatureInPlay {
   const CreatureInPlay({
     required this.card,
     required this.currentHp,
     required this.lane,
     this.relics = const <RelicCard>[],
+    this.bonusMaxHp = 0,
+    this.inspirarBonus = 0,
+    this.investidaBonus = 0,
   });
 
   final CreatureCard card;
@@ -35,11 +50,23 @@ class CreatureInPlay {
   /// Relíquias equipadas (flash NÃO entra aqui — é consumida ao equipar).
   final List<RelicCard> relics;
 
+  /// Bônus PERMANENTE de PV máximo (Roubo de PV).
+  final int bonusMaxHp;
+
+  /// Bônus temporário de ataque melee (Inspirar) — expira no fim do turno
+  /// do dono.
+  final int inspirarBonus;
+
+  /// Bônus temporário de ataque melee (Investida) — expira no fim do turno
+  /// do oponente.
+  final int investidaBonus;
+
   String get instanceId => card.id;
 
-  /// PV máximo: HP base da carta + soma dos `hpBonus` das relíquias equipadas.
+  /// PV máximo: HP base da carta + `hpBonus` das relíquias + bônus permanente
+  /// (Roubo de PV).
   int get maxHp {
-    var total = card.hp;
+    var total = card.hp + bonusMaxHp;
     for (final r in relics) {
       total += r.grants.hpBonus ?? 0;
     }
@@ -48,12 +75,34 @@ class CreatureInPlay {
 
   bool get isAlive => currentHp > 0;
 
-  /// Armadura derivada: soma das `armor` das relíquias equipadas.
+  /// Keywords de habilidade canônicas: inatas da carta + concedidas pelas
+  /// relíquias equipadas. Variantes de grafia dos dados são normalizadas
+  /// (ver `abilities.dart`); strings desconhecidas são ignoradas.
+  Set<AbilityKeyword> get keywords {
+    final result = <AbilityKeyword>{};
+    for (final a in card.abilities) {
+      final k = abilityKeywordFromString(a);
+      if (k != null) result.add(k);
+    }
+    for (final r in relics) {
+      for (final a in r.grants.abilities) {
+        final k = abilityKeywordFromString(a);
+        if (k != null) result.add(k);
+      }
+    }
+    return result;
+  }
+
+  bool hasKeyword(AbilityKeyword k) => keywords.contains(k);
+
+  /// Armadura derivada: soma das `armor` das relíquias equipadas + armadura
+  /// inata de Escudo (🎚️ `kEscudoArmor`).
   int get armor {
     var total = 0;
     for (final r in relics) {
       total += r.grants.armor ?? 0;
     }
+    if (hasKeyword(AbilityKeyword.escudo)) total += kEscudoArmor;
     return total;
   }
 
@@ -69,6 +118,7 @@ class CreatureInPlay {
   }
 
   /// Ataque efetivo: ATK base + soma dos `atkBonus` das relíquias equipadas.
+  /// NÃO inclui buffs temporários — ver [effectiveAtk].
   int get atk {
     var total = card.atk;
     for (final r in relics) {
@@ -77,16 +127,32 @@ class CreatureInPlay {
     return total;
   }
 
+  /// Ataque usado na Fase de Ataque: [atk] + buffs temporários de melee
+  /// (Inspirar/Investida só valem para ataque corpo a corpo).
+  int get effectiveAtk {
+    var total = atk;
+    if (effectiveDamageType == DamageType.corpoACorpo) {
+      total += inspirarBonus + investidaBonus;
+    }
+    return total;
+  }
+
   CreatureInPlay copyWith({
     int? currentHp,
     int? lane,
     List<RelicCard>? relics,
+    int? bonusMaxHp,
+    int? inspirarBonus,
+    int? investidaBonus,
   }) {
     return CreatureInPlay(
       card: card,
       currentHp: currentHp ?? this.currentHp,
       lane: lane ?? this.lane,
       relics: relics ?? this.relics,
+      bonusMaxHp: bonusMaxHp ?? this.bonusMaxHp,
+      inspirarBonus: inspirarBonus ?? this.inspirarBonus,
+      investidaBonus: investidaBonus ?? this.investidaBonus,
     );
   }
 }
@@ -100,6 +166,7 @@ class BoardSide {
     required this.poolCreatures,
     required this.poolRelics,
     required this.sacrificedThisTurn,
+    this.pendingCrystals = 0,
   });
 
   final SideId id;
@@ -115,6 +182,11 @@ class BoardSide {
 
   /// Se já usou o sacrifício do turno (máx 1/turno).
   final bool sacrificedThisTurn;
+
+  /// Cristais pendentes (Cristal de Drenagem): ganhos durante a Fase de
+  /// Ataque, creditados no início do PRÓXIMO turno deste lado (cristais não
+  /// fazem carry-over, então o crédito imediato seria perdido no reset).
+  final int pendingCrystals;
 
   /// Criaturas vivas no tabuleiro, em ordem de lane (frente→retaguarda).
   List<CreatureInPlay> get creaturesInPlay {
@@ -155,6 +227,7 @@ class BoardSide {
     List<CreatureCard>? poolCreatures,
     List<RelicCard>? poolRelics,
     bool? sacrificedThisTurn,
+    int? pendingCrystals,
   }) {
     return BoardSide(
       id: id,
@@ -163,6 +236,7 @@ class BoardSide {
       poolCreatures: poolCreatures ?? this.poolCreatures,
       poolRelics: poolRelics ?? this.poolRelics,
       sacrificedThisTurn: sacrificedThisTurn ?? this.sacrificedThisTurn,
+      pendingCrystals: pendingCrystals ?? this.pendingCrystals,
     );
   }
 
@@ -198,9 +272,13 @@ class MatchState {
   final MatchPhase phase;
   final SideId? winner;
 
-  /// Eventos gerados pelo ÚLTIMO `endTurn` (Fase de Ataque, penalidade,
-  /// stall). Substituído (não acumulado) a cada `endTurn`. Ações da Fase de
-  /// Jogo (apply) não geram eventos.
+  /// Eventos gerados pelo ÚLTIMO `endTurn`. Semântica (documentada — a UI
+  /// narra a partir daqui): cobre TUDO entre o fim da Fase de Jogo do lado
+  /// que chamou `endTurn` e o início do turno seguinte, nesta ordem:
+  /// Fase de Ataque (ataques/evasões/curas/procs de habilidade), penalidade
+  /// sem criaturas, stall, e os procs de INÍCIO do turno seguinte
+  /// (Inspirar/Investida do novo lado ativo). Substituído (não acumulado) a
+  /// cada `endTurn`. Ações da Fase de Jogo (apply) não geram eventos.
   final List<MatchEvent> lastTurnEvents;
 
   /// Fonte determinística de aleatoriedade (injetada por seed).

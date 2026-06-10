@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -37,9 +38,6 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   String? _bootError;
   CardLoadout? _playerLoadout;
   CardLoadout? _botLoadout;
-
-  /// Aba do pool no rodapé: 0 = criaturas, 1 = relíquias.
-  int _poolTab = 0;
 
   @override
   void initState() {
@@ -499,26 +497,81 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       }
     }
 
+    // Alvo "órfão": o evento narrado mira uma criatura que JÁ saiu do
+    // tabuleiro (morreu; lanes compactaram). O número flutua no centro da
+    // fileira do lado defensor.
+    final h = ui.highlight;
+    final sideId = isPlayerSide ? ui.playerSide : ui.botSideId;
+    final orphanTarget = h != null &&
+        h.targetSide == sideId &&
+        h.targetCardId != null &&
+        !side.lanes
+            .any((c) => c != null && c.instanceId == h.targetCardId);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Row(
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          for (var lane = 0; lane < side.lanes.length; lane++) ...[
-            if (lane > 0) const SizedBox(width: 8),
-            Expanded(
-              child: _laneSlot(
-                ui,
-                side.lanes[lane],
-                lane: lane,
-                isPlayerSide: isPlayerSide,
-                laneHighlighted: highlightLanes.contains(lane),
-                targetHighlighted: side.lanes[lane] != null &&
-                    highlightTargets.contains(side.lanes[lane]!.instanceId),
-              ),
+          Row(
+            children: [
+              for (var lane = 0; lane < side.lanes.length; lane++) ...[
+                if (lane > 0) const SizedBox(width: 8),
+                Expanded(
+                  child: _laneSlot(
+                    ui,
+                    side.lanes[lane],
+                    lane: lane,
+                    isPlayerSide: isPlayerSide,
+                    laneHighlighted: highlightLanes.contains(lane),
+                    targetHighlighted: side.lanes[lane] != null &&
+                        highlightTargets
+                            .contains(side.lanes[lane]!.instanceId),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          if (orphanTarget)
+            Positioned.fill(
+              child: Center(child: _floatingHighlightText(h)),
             ),
-          ],
         ],
       ),
+    );
+  }
+
+  /// Texto flutuante do evento destacado: dano/cura/evasão/habilidade.
+  Widget _floatingHighlightText(CombatHighlight h) {
+    final String text;
+    final Color color;
+    if (h.evaded) {
+      text = 'EVADIU';
+      color = AppColors.textSecondary;
+    } else if (h.isHeal) {
+      text = '+${h.amount ?? 0}';
+      color = AppColors.conceptChrysalis;
+    } else if (h.ability != null) {
+      text = h.ability!.toUpperCase();
+      color = AppColors.gold;
+    } else {
+      text = h.targetDied ? '-${h.amount ?? 0} †' : '-${h.amount ?? 0}';
+      color = AppColors.hp;
+    }
+    return IgnorePointer(
+      child: Text(
+        text,
+        style: GoogleFonts.cinzelDecorative(
+          fontSize: h.ability != null ? 9 : 15,
+          fontWeight: FontWeight.w700,
+          color: color,
+          shadows: const [Shadow(color: AppColors.black, blurRadius: 8)],
+        ),
+      )
+          .animate(key: ObjectKey(h))
+          .fadeIn(duration: 90.ms)
+          .moveY(begin: 8, end: -16, duration: 620.ms, curve: Curves.easeOut)
+          .fadeOut(delay: 400.ms, duration: 220.ms),
     );
   }
 
@@ -538,6 +591,88 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
 
     final isFront = lane == 0;
 
+    // Papel desta criatura no evento de combate sendo narrado (replay).
+    final h = ui.highlight;
+    final cid = creature?.instanceId;
+    final isHlTarget = h != null && cid != null && h.targetCardId == cid;
+    final isHlAbility = h != null &&
+        cid != null &&
+        h.ability != null &&
+        h.attackerCardId == cid;
+    final isHlAttacker = h != null &&
+        cid != null &&
+        h.ability == null &&
+        h.attackerCardId == cid &&
+        !isHlTarget;
+
+    Widget tile = AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      height: 96,
+      decoration: BoxDecoration(
+        color: creature == null
+            ? AppColors.surface.withValues(alpha: 0.55)
+            : AppColors.surfaceVeil2,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: borderColor,
+          width: (laneHighlighted || targetHighlighted) ? 1.6 : 1,
+        ),
+        boxShadow: (laneHighlighted || targetHighlighted)
+            ? [
+                BoxShadow(
+                    color: borderColor.withValues(alpha: 0.35), blurRadius: 8)
+              ]
+            : null,
+      ),
+      child: creature == null
+          ? Center(
+              child: Text(
+                isFront ? 'FRENTE' : 'LINHA ${lane + 1}',
+                style: GoogleFonts.roboto(
+                    fontSize: 9,
+                    color: laneHighlighted
+                        ? AppColors.purpleLight
+                        : AppColors.textMuted,
+                    letterSpacing: 1.5),
+              ),
+            )
+          : _creatureTile(creature, isFront: isFront),
+    );
+
+    // Animações simples do replay (flutter_animate; key = evento, então cada
+    // evento novo reinicia a animação).
+    if (isHlAttacker) {
+      // Investida curta na direção do inimigo (jogador ataca pra cima).
+      final lunge = isPlayerSide ? -7.0 : 7.0;
+      tile = tile
+          .animate(key: ObjectKey(h))
+          .moveY(begin: 0, end: lunge, duration: 140.ms, curve: Curves.easeOut)
+          .then(delay: 50.ms)
+          .moveY(begin: 0, end: -lunge, duration: 170.ms, curve: Curves.easeIn);
+    } else if (isHlAbility) {
+      tile = tile.animate(key: ObjectKey(h)).shimmer(
+          duration: 550.ms, color: AppColors.gold.withValues(alpha: 0.35));
+    } else if (isHlTarget && !h.isHeal) {
+      tile = tile
+          .animate(key: ObjectKey(h))
+          .shake(hz: 7, duration: 340.ms, rotation: 0.012);
+    } else if (isHlTarget && h.isHeal) {
+      tile = tile.animate(key: ObjectKey(h)).shimmer(
+          duration: 550.ms,
+          color: AppColors.conceptChrysalis.withValues(alpha: 0.3));
+    }
+
+    // Número/texto flutuante ancorado no tile do alvo (ou do dono do proc).
+    if (isHlTarget || isHlAbility) {
+      tile = Stack(
+        clipBehavior: Clip.none,
+        children: [
+          tile,
+          Positioned.fill(child: Center(child: _floatingHighlightText(h))),
+        ],
+      );
+    }
+
     return GestureDetector(
       onTap: () {
         if (!isPlayerSide || !ui.isPlayerTurn) return;
@@ -549,40 +684,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
           controller.playRelic(selectedId, creature.instanceId);
         }
       },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        height: 86,
-        decoration: BoxDecoration(
-          color: creature == null
-              ? AppColors.surface.withValues(alpha: 0.55)
-              : AppColors.surfaceVeil2,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: borderColor,
-            width: (laneHighlighted || targetHighlighted) ? 1.6 : 1,
-          ),
-          boxShadow: (laneHighlighted || targetHighlighted)
-              ? [
-                  BoxShadow(
-                      color: borderColor.withValues(alpha: 0.35),
-                      blurRadius: 8)
-                ]
-              : null,
-        ),
-        child: creature == null
-            ? Center(
-                child: Text(
-                  isFront ? 'FRENTE' : 'LINHA ${lane + 1}',
-                  style: GoogleFonts.roboto(
-                      fontSize: 9,
-                      color: laneHighlighted
-                          ? AppColors.purpleLight
-                          : AppColors.textMuted,
-                      letterSpacing: 1.5),
-                ),
-              )
-            : _creatureTile(creature, isFront: isFront),
-      ),
+      child: tile,
     );
   }
 
@@ -597,6 +699,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         children: [
           Row(
             children: [
+              Icon(_damageTypeIcon(c.effectiveDamageType),
+                  size: 10, color: concept),
+              const SizedBox(width: 3),
               Expanded(
                 child: Text(
                   c.card.nome,
@@ -614,7 +719,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
             ],
           ),
           const SizedBox(height: 3),
-          Text('ATK ${c.atk} · PV ${c.currentHp}/${c.maxHp}'
+          Text('ATK ${c.effectiveAtk} · PV ${c.currentHp}/${c.maxHp}'
               '${c.armor > 0 ? ' · ARM ${c.armor}' : ''}',
               style: GoogleFonts.robotoMono(
                   fontSize: 9, color: AppColors.textSecondary)),
@@ -638,6 +743,18 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
               ),
             ),
           ),
+          if (c.keywords.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              c.keywords.map(abilityKeywordLabel).join(' · '),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.roboto(
+                  fontSize: 7.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.gold.withValues(alpha: 0.85)),
+            ),
+          ],
           const Spacer(),
           Row(
             children: [
@@ -753,13 +870,18 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
               _statChip(Icons.pets_outlined,
                   '${player.remainingCreatureCount}/9', AppColors.purpleLight),
               const Spacer(),
-              _poolTabButton('CRIATURAS', 0, player.poolCreatures.length),
-              const SizedBox(width: 6),
-              _poolTabButton('RELÍQUIAS', 1, player.poolRelics.length),
+              Text(
+                'MÃO (${player.poolCreatures.length + player.poolRelics.length})',
+                style: GoogleFonts.cinzelDecorative(
+                    fontSize: 9,
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textMuted),
+              ),
             ],
           ),
           const SizedBox(height: 8),
-          Expanded(child: _poolList(ui, player)),
+          Expanded(child: _handStrip(ui, player)),
           const SizedBox(height: 8),
           _actionRow(ui),
         ],
@@ -767,64 +889,48 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
-  Widget _poolTabButton(String label, int tab, int count) {
-    final active = _poolTab == tab;
-    return GestureDetector(
-      onTap: () => setState(() => _poolTab = tab),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-        decoration: BoxDecoration(
-          color: active
-              ? AppColors.purple.withValues(alpha: 0.18)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-              color: active ? AppColors.purple : AppColors.border),
-        ),
-        child: Text('$label ($count)',
-            style: GoogleFonts.roboto(
-                fontSize: 9,
-                letterSpacing: 1,
-                fontWeight: FontWeight.w600,
-                color:
-                    active ? AppColors.purpleLight : AppColors.textMuted)),
-      ),
-    );
+  /// Mão ÚNICA do jogador: criaturas + relíquias num só baralho, ordenado por
+  /// custo (criaturas antes de relíquias no empate, depois nome).
+  List<Object> _handCards(BoardSide player) {
+    int costOf(Object c) =>
+        c is CreatureCard ? c.cost : (c as RelicCard).cost;
+    int typeOf(Object c) => c is CreatureCard ? 0 : 1;
+    String nameOf(Object c) =>
+        c is CreatureCard ? c.nome : (c as RelicCard).nome;
+
+    final cards = <Object>[...player.poolCreatures, ...player.poolRelics];
+    cards.sort((a, b) {
+      final byCost = costOf(a).compareTo(costOf(b));
+      if (byCost != 0) return byCost;
+      final byType = typeOf(a).compareTo(typeOf(b));
+      if (byType != 0) return byType;
+      return nameOf(a).compareTo(nameOf(b));
+    });
+    return cards;
   }
 
-  Widget _poolList(PveMatchUiState ui, BoardSide player) {
+  Widget _handStrip(PveMatchUiState ui, BoardSide player) {
     final controller = ref.read(pveMatchControllerProvider.notifier);
-    if (_poolTab == 0) {
-      if (player.poolCreatures.isEmpty) {
-        return _emptyPoolText('Sem criaturas no pool.');
-      }
-      return ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: player.poolCreatures.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (_, i) {
-          final card = player.poolCreatures[i];
-          return _creaturePoolCard(
+    final cards = _handCards(player);
+    if (cards.isEmpty) return _emptyPoolText('Mão vazia.');
+    return ListView.separated(
+      scrollDirection: Axis.horizontal,
+      itemCount: cards.length,
+      separatorBuilder: (_, __) => const SizedBox(width: 7),
+      itemBuilder: (_, i) {
+        final card = cards[i];
+        if (card is CreatureCard) {
+          return _handCard(
             card,
             selected: ui.selectedCardId == card.id,
             playable: controller.canPlayCreature(card),
           );
-        },
-      );
-    }
-    if (player.poolRelics.isEmpty) {
-      return _emptyPoolText('Sem relíquias no pool.');
-    }
-    return ListView.separated(
-      scrollDirection: Axis.horizontal,
-      itemCount: player.poolRelics.length,
-      separatorBuilder: (_, __) => const SizedBox(width: 8),
-      itemBuilder: (_, i) {
-        final card = player.poolRelics[i];
-        return _relicPoolCard(
-          card,
-          selected: ui.selectedCardId == card.id,
-          playable: controller.canPlayRelic(card),
+        }
+        final relic = card as RelicCard;
+        return _handCard(
+          relic,
+          selected: ui.selectedCardId == relic.id,
+          playable: controller.canPlayRelic(relic),
         );
       },
     );
@@ -837,141 +943,38 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
-  Widget _creaturePoolCard(CreatureCard card,
-      {required bool selected, required bool playable}) {
-    final concept = _conceptColor(card.concepts.first);
-    return _poolCardShell(
-      cardId: card.id,
-      selected: selected,
-      playable: playable,
-      accent: concept,
-      rarity: card.rarity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                decoration: BoxDecoration(
-                  color: AppColors.mp.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: Text('${card.cost}',
-                    style: GoogleFonts.robotoMono(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.mp)),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(card.nome,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.roboto(
-                        fontSize: 9.5,
-                        height: 1.15,
-                        fontWeight: FontWeight.w600,
-                        color: concept)),
-              ),
-            ],
-          ),
-          const Spacer(),
-          Text('ATK ${card.atk} · PV ${card.hp}',
-              style: GoogleFonts.robotoMono(
-                  fontSize: 9, color: AppColors.textSecondary)),
-        ],
-      ),
-    );
-  }
+  /// Carta COMPACTA da mão (criatura ou relíquia) — vibe Card Monsters com
+  /// acabamento dark fantasy: gema de custo, ícone do tipo, nome em
+  /// CinzelDecorative sobre gradiente escuro do conceito, borda por raridade.
+  Widget _handCard(Object card, {required bool selected, required bool playable}) {
+    final creature = card is CreatureCard ? card : null;
+    final relic = card is RelicCard ? card : null;
 
-  Widget _relicPoolCard(RelicCard card,
-      {required bool selected, required bool playable}) {
-    final concept = _conceptColor(card.concepts.first);
-    return _poolCardShell(
-      cardId: card.id,
-      selected: selected,
-      playable: playable,
-      accent: concept,
-      rarity: card.rarity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                decoration: BoxDecoration(
-                  color: AppColors.mp.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: Text('${card.cost}',
-                    style: GoogleFonts.robotoMono(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.mp)),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(card.nome,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.roboto(
-                        fontSize: 9.5,
-                        height: 1.15,
-                        fontWeight: FontWeight.w600,
-                        color: concept)),
-              ),
-              if (card.isFlash)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: AppColors.gold.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text('FLASH',
-                      style: GoogleFonts.roboto(
-                          fontSize: 7,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.gold)),
-                ),
-            ],
-          ),
-          const Spacer(),
-          Text(_relicSummary(card),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.robotoMono(
-                  fontSize: 8.5, height: 1.2, color: AppColors.textSecondary)),
-        ],
-      ),
-    );
-  }
+    final cardId = creature?.id ?? relic!.id;
+    final nome = creature?.nome ?? relic!.nome;
+    final cost = creature?.cost ?? relic!.cost;
+    final rarity = creature?.rarity ?? relic!.rarity;
+    final concept =
+        _conceptColor((creature?.concepts ?? relic!.concepts).first);
 
-  Widget _poolCardShell({
-    required String cardId,
-    required bool selected,
-    required bool playable,
-    required Color accent,
-    required Rarity rarity,
-    required Widget child,
-  }) {
     final controller = ref.read(pveMatchControllerProvider.notifier);
     return GestureDetector(
       // Carta não-jogável continua selecionável: ainda pode ser SACRIFICADA.
       onTap: () => controller.selectCard(cardId),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        width: 104,
-        padding: const EdgeInsets.all(7),
+        width: 78,
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: selected
-              ? AppColors.purple.withValues(alpha: 0.14)
-              : AppColors.surfaceVeil2,
-          borderRadius: BorderRadius.circular(10),
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              concept.withValues(alpha: selected ? 0.30 : 0.22),
+              const Color(0xFF0B0610),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(9),
           border: Border.all(
             color: selected ? AppColors.purpleLight : _rarityColor(rarity),
             width: selected ? 1.6 : 1,
@@ -985,9 +988,108 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                 ]
               : null,
         ),
-        child: Opacity(opacity: playable ? 1 : 0.38, child: child),
+        child: Opacity(
+          opacity: playable ? 1 : 0.4,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  // Gema de custo.
+                  Container(
+                    width: 17,
+                    height: 17,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: AppColors.mp.withValues(alpha: 0.20),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                          color: AppColors.mp.withValues(alpha: 0.6),
+                          width: 0.8),
+                    ),
+                    child: Text('$cost',
+                        style: GoogleFonts.robotoMono(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.mp)),
+                  ),
+                  const Spacer(),
+                  if (relic?.isFlash ?? false)
+                    const Icon(Icons.bolt, size: 12, color: AppColors.gold),
+                  if (creature != null)
+                    Icon(_damageTypeIcon(creature.damageType),
+                        size: 12, color: concept),
+                  if (relic != null && !relic.isFlash)
+                    Icon(Icons.auto_awesome, size: 11, color: concept),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(nome,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.cinzelDecorative(
+                      fontSize: 8,
+                      height: 1.25,
+                      fontWeight: FontWeight.w700,
+                      color: concept)),
+              const Spacer(),
+              if (creature != null)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text('${creature.atk}',
+                        style: GoogleFonts.robotoMono(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.gold)),
+                    Text(' ATK',
+                        style: GoogleFonts.roboto(
+                            fontSize: 6.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.gold.withValues(alpha: 0.75))),
+                    const Spacer(),
+                    Text('${creature.hp}',
+                        style: GoogleFonts.robotoMono(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.conceptChrysalis)),
+                    Text(' PV',
+                        style: GoogleFonts.roboto(
+                            fontSize: 6.5,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.conceptChrysalis
+                                .withValues(alpha: 0.75))),
+                  ],
+                )
+              else
+                Text(_relicSummary(relic!),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.robotoMono(
+                        fontSize: 7.5,
+                        height: 1.2,
+                        color: AppColors.textSecondary)),
+            ],
+          ),
+        ),
       ),
     );
+  }
+
+  IconData _damageTypeIcon(DamageType t) {
+    switch (t) {
+      case DamageType.corpoACorpo:
+        return Icons.sports_martial_arts;
+      case DamageType.aDistancia:
+        return Icons.gps_fixed;
+      case DamageType.magico:
+        return Icons.auto_fix_high;
+      case DamageType.vitalismo:
+        return Icons.flare;
+      case DamageType.cura:
+        return Icons.healing;
+    }
   }
 
   String _relicSummary(RelicCard card) {

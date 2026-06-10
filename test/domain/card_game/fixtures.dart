@@ -19,6 +19,7 @@ CreatureCard creature({
   DamageType damageType = DamageType.corpoACorpo,
   Rarity rarity = Rarity.comum,
   int relicSlots = 1,
+  List<String> abilities = const <String>[],
 }) {
   return CreatureCard(
     id: id,
@@ -30,6 +31,7 @@ CreatureCard creature({
     damageType: damageType,
     rarity: rarity,
     relicSlots: relicSlots,
+    abilities: abilities,
   );
 }
 
@@ -45,6 +47,7 @@ RelicCard relic({
   int? heal,
   Rarity rarity = Rarity.comum,
   bool flash = false,
+  List<String> abilities = const <String>[],
 }) {
   return RelicCard(
     id: id,
@@ -57,6 +60,7 @@ RelicCard relic({
       armor: armor,
       attackType: attackType,
       heal: heal,
+      abilities: abilities,
       rawEffect: '',
     ),
     rarity: rarity,

@@ -62,12 +62,18 @@ void main() {
     });
 
     test('reduz dano à distância', () {
+      // Combate posicional: ranged precisa estar na RETAGUARDA para atacar —
+      // dummy melee atk 0 segura a frente (intenção do teste: armadura).
       final s = _stateWith(
-        aLanes: [inPlay(id: 'atk', atk: 5, type: DamageType.aDistancia)],
+        aLanes: [
+          inPlay(id: 'dummy', atk: 0, type: DamageType.corpoACorpo),
+          inPlay(id: 'atk', atk: 5, type: DamageType.aDistancia),
+        ],
         bLanes: [inPlay(id: 'def', hp: 10, armor: 3)],
       );
       final after = engine.endTurn(s);
-      expect(after.sideB.lanes[0]!.currentHp, 8); // 5-3=2
+      // Lane oposta (1) vazia -> fallback na frente. 5-3=2.
+      expect(after.sideB.lanes[0]!.currentHp, 8);
     });
 
     test('NÃO reduz dano mágico', () {
@@ -164,10 +170,13 @@ void main() {
     });
   });
 
-  group('aDistancia/magico miram menor HP', () {
-    test('aDistancia ataca o de menor HP em qualquer lane', () {
+  group('magico mira menor PV', () {
+    // (O alvo de aDistancia mudou para "lane oposta; senão a frente" — fiel a
+    // tipos_de_dano.md; coberto em positional_combat_test.dart. A intenção
+    // original deste grupo — padrão de alvo por menor PV — vale pro mágico.)
+    test('magico ataca o de menor PV em qualquer lane', () {
       final s = _stateWith(
-        aLanes: [inPlay(id: 'atk', atk: 3, type: DamageType.aDistancia)],
+        aLanes: [inPlay(id: 'atk', atk: 3, type: DamageType.magico)],
         bLanes: [
           inPlay(id: 'front', hp: 10),
           inPlay(id: 'weak', hp: 4),
