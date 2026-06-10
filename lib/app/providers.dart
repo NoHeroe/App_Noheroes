@@ -204,7 +204,22 @@ final authLoadingProvider = StateProvider<bool>((ref) => false);
 // reage quando o currentPlayer é refetchado. Migrável p/ Supabase Realtime
 // depois sem mudar os consumidores.
 final playerStreamProvider = StreamProvider<Player?>((ref) {
-  return Stream.value(ref.watch(currentPlayerProvider));
+  // Stream CONTÍNUO: emite o valor atual e RE-EMITE a cada mudança do
+  // currentPlayerProvider — sem resets de loading entre emissões. Antes era
+  // `Stream.value(...)` (one-shot): quebrava o listener de level-up do
+  // Santuário (classe L5 / facção L7 / vitalismo L25) porque os valores prev/
+  // next nunca chegavam como dois AsyncData consecutivos.
+  final controller = StreamController<Player?>();
+  controller.add(ref.read(currentPlayerProvider));
+  final sub = ref.listen<Player?>(
+    currentPlayerProvider,
+    (_, next) => controller.add(next),
+  );
+  ref.onDispose(() {
+    sub.close();
+    controller.close();
+  });
+  return controller.stream;
 });
 
 /// Sprint 3.4 Sub-Etapa B.2 hotfix — stream reativo de uma row de

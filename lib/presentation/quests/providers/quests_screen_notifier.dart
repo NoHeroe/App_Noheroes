@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -204,10 +205,16 @@ class QuestsScreenNotifier
         .where((m) => m.completedAt == null && m.failedAt == null)
         .toList(growable: false);
 
+    // Missão de facção só aparece se o jogador É membro da facção dela. Ao
+    // SAIR (faction_type='none'/vazio/pending), some imediatamente — antes
+    // ficava visível porque o leave não limpa as rows e a query não filtrava.
+    final factionMissions =
+        _filterFactionMissions(results[1] as List<MissionProgress>);
+
     return QuestsScreenState(
       dailyMissionsNew: dailyToday,
       classMissions: results[0] as List<MissionProgress>,
-      factionMissions: results[1] as List<MissionProgress>,
+      factionMissions: factionMissions,
       admissionMissions: admissionActive,
       individualMissions: individuals,
       extrasCatalog: extrasSpecs,
@@ -218,6 +225,31 @@ class QuestsScreenNotifier
   Future<void> refresh() async {
     ref.invalidateSelf();
     await future;
+  }
+
+  /// Mantém só as missões de facção da facção ATUAL do jogador. Sem facção
+  /// real (none/vazio/pending) → vazio (some ao sair). Missão sem `faction_id`
+  /// no meta é mantida enquanto houver facção (compat).
+  List<MissionProgress> _filterFactionMissions(List<MissionProgress> all) {
+    final raw = ref.read(currentPlayerProvider)?.factionType ?? '';
+    final hasFaction =
+        raw.isNotEmpty && raw != 'none' && !raw.startsWith('pending:');
+    if (!hasFaction) return const <MissionProgress>[];
+    return all.where((m) {
+      final f = _factionIdOf(m.metaJson);
+      return f == null || f == raw;
+    }).toList(growable: false);
+  }
+
+  String? _factionIdOf(String metaJson) {
+    if (metaJson.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(metaJson);
+      if (decoded is Map<String, dynamic>) {
+        return decoded['faction_id'] as String?;
+      }
+    } catch (_) {}
+    return null;
   }
 
   /// Sprint 3.2 Etapa 1.3.A — encaminha incremento pro

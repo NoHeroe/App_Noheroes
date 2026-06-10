@@ -194,7 +194,7 @@ class _AwakeningScreenState extends ConsumerState<AwakeningScreen>
     try {
       await authDs.completeOnboarding(player.id, name, 'longa');
 
-      await TutorialService.markDone(TutorialPhase.phase0_onboarding);
+      await TutorialService.markDone(player.id, TutorialPhase.phase0_onboarding);
 
       final updated = await authDs.currentSession();
       if (!mounted) return;

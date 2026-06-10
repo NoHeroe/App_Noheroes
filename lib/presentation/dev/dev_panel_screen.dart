@@ -15,6 +15,7 @@ import '../../core/events/faction_events.dart';
 import '../../core/events/reward_events.dart';
 import '../../core/utils/guild_rank.dart';
 import '../../data/database/daos/player_dao.dart';
+import '../../data/datasources/local/tutorial_service.dart';
 import '../../domain/enums/mission_tab_origin.dart';
 import '../../domain/models/achievement_definition.dart';
 import '../../presentation/quests/providers/quests_screen_notifier.dart';
@@ -142,6 +143,12 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
       AppSnack.error(context, 'Falha ao resetar a conta: $e');
       return;
     }
+    if (!mounted) return;
+
+    // Limpa os flags de tutorial DESTE jogador (locais) — senão os gatilhos de
+    // level-up (classe L5 / facção L7 / vitalismo L25) ficariam marcados como
+    // "feitos" e não disparariam de novo no fluxo do zero.
+    await TutorialService.resetAll(player.id);
     if (!mounted) return;
 
     // Limpa caches e volta ao início. O splash re-busca a sessão (agora conta
@@ -280,6 +287,35 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
   }
 
   // ─── FACÇÕES (Sprint 3.4 Etapa A) ─────────────────────────────────
+
+  /// Entra DIRETO na facção escolhida (`_selectedFaction`), sem passar pelo
+  /// fluxo de admissão. Chama a RPC `approve_faction_admission` (seta
+  /// `players.faction_type` + upsert em `player_faction_membership` + bônus de
+  /// boas-vindas). Refetcha o player pra UI refletir na hora.
+  Future<void> _forceJoinFaction() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    try {
+      await ref.read(supabaseClientProvider).rpc(
+        'approve_faction_admission',
+        params: {'p_player': player.id, 'p_faction': _selectedFaction},
+      );
+    } catch (e) {
+      if (!mounted) return;
+      AppSnack.error(context, 'Falha ao entrar na facção: $e');
+      return;
+    }
+    final fresh =
+        await PlayerDao(ref.read(supabaseClientProvider)).findById(player.id);
+    if (!mounted) return;
+    if (fresh != null) {
+      ref.read(currentPlayerProvider.notifier).state = fresh;
+    }
+    _invalidateAll(player.id);
+    if (!mounted) return;
+    AppSnack.success(
+        context, 'Entrou na facção "$_selectedFaction" (faction_type setado).');
+  }
 
   /// Trigger manual do flow de admissão. Útil pra debug em devices que
   /// já tinham `faction_type='X'` antes do bug-fix da Sprint 3.4 (ou
@@ -1174,6 +1210,11 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
 
             // 3.5. FACÇÕES (Sprint 3.4 Etapa A — debug do flow de admissão)
             _section('FACÇÕES'),
+            // Entra DIRETO na facção escolhida (dropdown em REPUTAÇÃO abaixo) —
+            // chama approve_faction_admission: seta faction_type + membership.
+            _actionBtn('Entrar na facção: $_selectedFaction (dev)',
+                AppColors.gold, _forceJoinFaction),
+            const SizedBox(height: 6),
             _actionBtn('Trigger admission (facção atual)',
                 AppColors.shadowStable, _triggerAdmission),
             const SizedBox(height: 6),

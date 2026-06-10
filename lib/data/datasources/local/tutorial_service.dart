@@ -17,18 +17,37 @@ enum TutorialPhase {
   phase13_mission_calibration, // nível 5 + classe: quiz de calibração
 }
 
+/// Flags de progresso do tutorial. **Por jogador** (a chave inclui o `playerId`)
+/// — contas diferentes no mesmo aparelho não se suprimem, e o reset de conta
+/// limpa só os flags daquele jogador (ver [resetAll]). Persistido em
+/// SharedPreferences (local), não no servidor.
 class TutorialService {
-  static Future<bool> isDone(TutorialPhase phase) async {
+  static String _key(String playerId, TutorialPhase phase) =>
+      'tutorial_${playerId}_${phase.name}';
+
+  static Future<bool> isDone(String playerId, TutorialPhase phase) async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('tutorial_${phase.name}') ?? false;
+    return prefs.getBool(_key(playerId, phase)) ?? false;
   }
 
-  static Future<void> markDone(TutorialPhase phase) async {
+  static Future<void> markDone(String playerId, TutorialPhase phase) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('tutorial_${phase.name}', true);
+    await prefs.setBool(_key(playerId, phase), true);
   }
 
-  static Future<bool> shouldShow(TutorialPhase phase) async {
-    return !(await isDone(phase));
+  static Future<bool> shouldShow(String playerId, TutorialPhase phase) async {
+    return !(await isDone(playerId, phase));
+  }
+
+  /// Limpa TODOS os flags de tutorial deste jogador (reset de conta → o fluxo
+  /// de onboarding/level-up volta a disparar do zero).
+  static Future<void> resetAll(String playerId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final prefix = 'tutorial_${playerId}_';
+    final keys =
+        prefs.getKeys().where((k) => k.startsWith(prefix)).toList(growable: false);
+    for (final k in keys) {
+      await prefs.remove(k);
+    }
   }
 }

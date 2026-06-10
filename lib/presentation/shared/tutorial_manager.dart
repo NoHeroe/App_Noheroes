@@ -14,8 +14,9 @@ import 'widgets/milestone_popup.dart';
 class TutorialManager {
 
   // ── FASE 1 — Santuário (nível 1) ──────────────────────────────────────────
-  static Future<void> phase1Sanctuary(BuildContext ctx) async {
-    if (!await TutorialService.shouldShow(TutorialPhase.phase1_sanctuary)) return;
+  static Future<void> phase1Sanctuary(BuildContext ctx,
+      {required String playerId}) async {
+    if (!await TutorialService.shouldShow(playerId, TutorialPhase.phase1_sanctuary)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'O Vazio',
@@ -28,12 +29,13 @@ class TutorialManager {
       npcTitle: 'Presenca silenciosa',
       message: 'Vá até MISSÕES e complete seu primeiro hábito diário. Cada missão fortalece sua forma aqui.',
     );
-    await TutorialService.markDone(TutorialPhase.phase1_sanctuary);
+    await TutorialService.markDone(playerId, TutorialPhase.phase1_sanctuary);
   }
 
   // ── FASE 2 — Biblioteca + Atributos (nível 2) ────────────────────────────
-  static Future<void> phase2Library(BuildContext ctx) async {
-    if (!await TutorialService.shouldShow(TutorialPhase.phase2_library)) return;
+  static Future<void> phase2Library(BuildContext ctx,
+      {required String playerId}) async {
+    if (!await TutorialService.shouldShow(playerId, TutorialPhase.phase2_library)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'O Vazio',
@@ -46,12 +48,13 @@ class TutorialManager {
       npcTitle: 'Presenca silenciosa',
       message: 'Você subiu de nível. No Personagem há pontos de atributo disponíveis — cada ponto melhora suas estatísticas permanentemente.',
     );
-    await TutorialService.markDone(TutorialPhase.phase2_library);
+    await TutorialService.markDone(playerId, TutorialPhase.phase2_library);
   }
 
   // ── FASE 3 — Loja + Itens (nível 3) ─────────────────────────────────────
-  static Future<void> phase3Shop(BuildContext ctx) async {
-    if (!await TutorialService.shouldShow(TutorialPhase.phase3_shop)) return;
+  static Future<void> phase3Shop(BuildContext ctx,
+      {required String playerId}) async {
+    if (!await TutorialService.shouldShow(playerId, TutorialPhase.phase3_shop)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'O Vazio',
@@ -64,12 +67,13 @@ class TutorialManager {
       npcTitle: 'Presenca silenciosa',
       message: 'Itens equipados aparecem no Personagem. Eles adicionam bônus reais aos seus atributos.',
     );
-    await TutorialService.markDone(TutorialPhase.phase3_shop);
+    await TutorialService.markDone(playerId, TutorialPhase.phase3_shop);
   }
 
   // ── FASE 4 — Regiões (nível 4) ────────────────────────────────────────────
-  static Future<void> phase4Regions(BuildContext ctx) async {
-    if (!await TutorialService.shouldShow(TutorialPhase.phase4_regions)) return;
+  static Future<void> phase4Regions(BuildContext ctx,
+      {required String playerId}) async {
+    if (!await TutorialService.shouldShow(playerId, TutorialPhase.phase4_regions)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'O Vazio',
@@ -82,12 +86,13 @@ class TutorialManager {
       npcTitle: 'Presenca silenciosa',
       message: 'Explorar regiões aumenta reputação com NPCs e facções — e desbloqueia partes da história.',
     );
-    await TutorialService.markDone(TutorialPhase.phase4_regions);
+    await TutorialService.markDone(playerId, TutorialPhase.phase4_regions);
   }
 
   // ── FASE 5 — Classe (nível 5) ─────────────────────────────────────────────
-  static Future<void> phase5Class(BuildContext ctx, {required bool hasClass}) async {
-    if (!await TutorialService.shouldShow(TutorialPhase.phase5_class)) return;
+  static Future<void> phase5Class(BuildContext ctx,
+      {required String playerId, required bool hasClass}) async {
+    if (!await TutorialService.shouldShow(playerId, TutorialPhase.phase5_class)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'O Vazio',
@@ -106,7 +111,7 @@ class TutorialManager {
       npcTitle: 'Presenca silenciosa',
       message: 'Após escolher sua classe, 3 Missões de Classe aparecerão todos os dias — completadas automaticamente conforme você age.',
     );
-    await TutorialService.markDone(TutorialPhase.phase5_class);
+    await TutorialService.markDone(playerId, TutorialPhase.phase5_class);
 
     // Popup de ação: só se ainda não tem classe
     if (hasClass || !ctx.mounted) return;
@@ -130,8 +135,9 @@ class TutorialManager {
   // "Refazer Calibração") segue funcionando de forma independente.
 
   // ── FASE 6 — Guilda (nível 6) ─────────────────────────────────────────────
-  static Future<void> phase6Guild(BuildContext ctx) async {
-    if (!await TutorialService.shouldShow(TutorialPhase.phase6_guild)) return;
+  static Future<void> phase6Guild(BuildContext ctx,
+      {required String playerId}) async {
+    if (!await TutorialService.shouldShow(playerId, TutorialPhase.phase6_guild)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'Noryan Gray',
@@ -150,12 +156,13 @@ class TutorialManager {
       npcTitle: 'Mestre da Guilda',
       message: 'As Missões de Guilda ainda estão bloqueadas — chegam com o sistema de batalha. Por enquanto, foque no Teste de Ascensão.',
     );
-    await TutorialService.markDone(TutorialPhase.phase6_guild);
+    await TutorialService.markDone(playerId, TutorialPhase.phase6_guild);
   }
 
   // ── FASE 7 — Facções (nível 7) ────────────────────────────────────────────
-  static Future<void> phase7Factions(BuildContext ctx, {required bool hasFaction}) async {
-    if (!await TutorialService.shouldShow(TutorialPhase.phase7_faction)) return;
+  static Future<void> phase7Factions(BuildContext ctx,
+      {required String playerId, required bool hasFaction}) async {
+    if (!await TutorialService.shouldShow(playerId, TutorialPhase.phase7_faction)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'O Vazio',
@@ -168,7 +175,7 @@ class TutorialManager {
       npcTitle: 'Presenca silenciosa',
       message: 'Não é obrigatório escolher. O Caminho do Lobo Solitário existe para quem prefere caminhar sem alianças — por ora.',
     );
-    await TutorialService.markDone(TutorialPhase.phase7_faction);
+    await TutorialService.markDone(playerId, TutorialPhase.phase7_faction);
 
     // Popup de ação: só se ainda não tem facção
     if (hasFaction || !ctx.mounted) return;
@@ -183,8 +190,9 @@ class TutorialManager {
   }
 
   // ── FASE 8 — Shadow Boss (nível 10) ───────────────────────────────────────
-  static Future<void> phase8Shadow(BuildContext ctx) async {
-    if (!await TutorialService.shouldShow(TutorialPhase.phase8_shadow)) return;
+  static Future<void> phase8Shadow(BuildContext ctx,
+      {required String playerId}) async {
+    if (!await TutorialService.shouldShow(playerId, TutorialPhase.phase8_shadow)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'O Vazio',
@@ -203,12 +211,13 @@ class TutorialManager {
       npcTitle: 'Presenca silenciosa',
       message: 'Estabilidade vai de 0 a 100. Missões aumentam, falhas diminuem. Em 0 acontece o Colapso e você perde XP.',
     );
-    await TutorialService.markDone(TutorialPhase.phase8_shadow);
+    await TutorialService.markDone(playerId, TutorialPhase.phase8_shadow);
   }
 
   // ── FASE 9 — Estilo de Jogo (nível 15) ────────────────────────────────────
-  static Future<void> phase9Playstyle(BuildContext ctx, {required bool hasPlaystyle}) async {
-    if (!await TutorialService.shouldShow(TutorialPhase.phase9_playstyle)) return;
+  static Future<void> phase9Playstyle(BuildContext ctx,
+      {required String playerId, required bool hasPlaystyle}) async {
+    if (!await TutorialService.shouldShow(playerId, TutorialPhase.phase9_playstyle)) return;
     if (!ctx.mounted) return;
     await NpcDialogOverlay.show(ctx,
       npcName: 'O Vazio',
@@ -221,7 +230,7 @@ class TutorialManager {
       npcTitle: 'Presenca silenciosa',
       message: 'O estilo de jogo desbloqueia missões e conteúdos específicos. Pode mudar depois, mas tem custo.',
     );
-    await TutorialService.markDone(TutorialPhase.phase9_playstyle);
+    await TutorialService.markDone(playerId, TutorialPhase.phase9_playstyle);
 
     if (hasPlaystyle || !ctx.mounted) return;
     await MilestonePopup.show(ctx,
@@ -243,11 +252,12 @@ class TutorialManager {
   //   feito silenciosamente — a fase não se aplica ao caminho dele.
   static Future<void> phase10Vitalism(
     BuildContext ctx, {
+    required String playerId,
     required bool isVitalistWithoutAffinity,
   }) async {
-    if (!await TutorialService.shouldShow(TutorialPhase.phase10_vitalism)) return;
+    if (!await TutorialService.shouldShow(playerId, TutorialPhase.phase10_vitalism)) return;
     if (!isVitalistWithoutAffinity) {
-      await TutorialService.markDone(TutorialPhase.phase10_vitalism);
+      await TutorialService.markDone(playerId, TutorialPhase.phase10_vitalism);
       return;
     }
     if (!ctx.mounted) return;
@@ -262,7 +272,7 @@ class TutorialManager {
       npcTitle: 'Presenca silenciosa',
       message: 'O Cristal de Obsidiana do Dragão a revelará. Venha.',
     );
-    await TutorialService.markDone(TutorialPhase.phase10_vitalism);
+    await TutorialService.markDone(playerId, TutorialPhase.phase10_vitalism);
     if (!ctx.mounted) return;
     ctx.go('/vitalism/crystal-ceremony');
   }
@@ -285,7 +295,7 @@ class TutorialManager {
     required WidgetRef ref,
     required String playerId,
   }) async {
-    if (!await TutorialService.shouldShow(TutorialPhase.phase12_enchanter)) {
+    if (!await TutorialService.shouldShow(playerId, TutorialPhase.phase12_enchanter)) {
       return;
     }
 
@@ -342,12 +352,13 @@ class TutorialManager {
       color: AppColors.purple,
     );
 
-    await TutorialService.markDone(TutorialPhase.phase12_enchanter);
+    await TutorialService.markDone(playerId, TutorialPhase.phase12_enchanter);
   }
 
   // ── FASE 11 — Nível Caveira (nível 99) ────────────────────────────────────
-  static Future<void> phase11Skull(BuildContext ctx) async {
-    if (!await TutorialService.shouldShow(TutorialPhase.phase11_skull)) return;
+  static Future<void> phase11Skull(BuildContext ctx,
+      {required String playerId}) async {
+    if (!await TutorialService.shouldShow(playerId, TutorialPhase.phase11_skull)) return;
     if (!ctx.mounted) return;
     await MilestonePopup.show(ctx,
       title: 'Nível 99 — Pináculo',
@@ -356,7 +367,7 @@ class TutorialManager {
       icon: Icons.whatshot,
       color: const Color(0xFFFF2D55),
     );
-    await TutorialService.markDone(TutorialPhase.phase11_skull);
+    await TutorialService.markDone(playerId, TutorialPhase.phase11_skull);
   }
 
   /// Roda todas as fases aplicáveis ao nível do player, em ordem.
@@ -373,24 +384,31 @@ class TutorialManager {
     required bool hasPlaystyle,
     required bool isVitalistWithoutAffinity,
   }) async {
-    if (level >= 1 && ctx.mounted) await phase1Sanctuary(ctx);
-    if (level >= 2 && ctx.mounted) await phase2Library(ctx);
-    if (level >= 3 && ctx.mounted) await phase3Shop(ctx);
-    if (level >= 4 && ctx.mounted) await phase4Regions(ctx);
-    if (level >= 5 && ctx.mounted) await phase5Class(ctx, hasClass: hasClass);
+    if (level >= 1 && ctx.mounted) await phase1Sanctuary(ctx, playerId: playerId);
+    if (level >= 2 && ctx.mounted) await phase2Library(ctx, playerId: playerId);
+    if (level >= 3 && ctx.mounted) await phase3Shop(ctx, playerId: playerId);
+    if (level >= 4 && ctx.mounted) await phase4Regions(ctx, playerId: playerId);
+    if (level >= 5 && ctx.mounted) {
+      await phase5Class(ctx, playerId: playerId, hasClass: hasClass);
+    }
     // Sprint 3.1 Bloco 14.6a — phase13 (quiz de calibração) saiu do runAll:
     // foi fundida no `AwakeningScreen` (onboarding nível 1).
-    if (level >= 6 && ctx.mounted) await phase6Guild(ctx);
-    if (level >= 7 && ctx.mounted) await phase7Factions(ctx, hasFaction: hasFaction);
-    if (level >= 10 && ctx.mounted) await phase8Shadow(ctx);
-    if (level >= 15 && ctx.mounted) await phase9Playstyle(ctx, hasPlaystyle: hasPlaystyle);
+    if (level >= 6 && ctx.mounted) await phase6Guild(ctx, playerId: playerId);
+    if (level >= 7 && ctx.mounted) {
+      await phase7Factions(ctx, playerId: playerId, hasFaction: hasFaction);
+    }
+    if (level >= 10 && ctx.mounted) await phase8Shadow(ctx, playerId: playerId);
+    if (level >= 15 && ctx.mounted) {
+      await phase9Playstyle(ctx, playerId: playerId, hasPlaystyle: hasPlaystyle);
+    }
     if (level >= 20 && ctx.mounted) {
       await phase12Enchanter(ctx, ref: ref, playerId: playerId);
     }
     if (level >= 25 && ctx.mounted) {
       await phase10Vitalism(ctx,
+          playerId: playerId,
           isVitalistWithoutAffinity: isVitalistWithoutAffinity);
     }
-    if (level >= 99 && ctx.mounted) await phase11Skull(ctx);
+    if (level >= 99 && ctx.mounted) await phase11Skull(ctx, playerId: playerId);
   }
 }
