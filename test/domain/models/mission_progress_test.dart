@@ -7,7 +7,7 @@ import 'package:noheroes_app/domain/models/mission_progress.dart';
 
 Map<String, dynamic> _pendingFixture() => {
       'id': 1,
-      'player_id': 42,
+      'player_id': 'p-uuid-1', // Época 2: player_id é uuid (String), não int
       'mission_key': 'DAILY_PUSHUPS_E',
       'modality': 'real',
       'tab_origin': 'daily',
@@ -27,7 +27,7 @@ void main() {
     test('row pendente', () {
       final p = MissionProgress.fromJson(_pendingFixture());
       expect(p.id, 1);
-      expect(p.playerId, 42);
+      expect(p.playerId, 'p-uuid-1');
       expect(p.modality, MissionModality.real);
       expect(p.tabOrigin, MissionTabOrigin.daily);
       expect(p.rank, GuildRank.e);

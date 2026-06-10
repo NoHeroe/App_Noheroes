@@ -6,7 +6,7 @@ import 'package:noheroes_app/domain/models/mission_context.dart';
 
 Map<String, dynamic> _fixture() => {
       'mission_progress_id': 1,
-      'player_id': 42,
+      'player_id': 'p-uuid-1', // Época 2: player_id é uuid (String), não int
       'mission_key': 'DAILY_PUSHUPS_E',
       'modality': 'real',
       'tab_origin': 'daily',
@@ -20,7 +20,7 @@ void main() {
   test('MissionContext — round-trip', () {
     final ctx = MissionContext.fromJson(_fixture());
     expect(ctx.missionProgressId, 1);
-    expect(ctx.playerId, 42);
+    expect(ctx.playerId, 'p-uuid-1');
     expect(ctx.modality, MissionModality.real);
     expect(ctx.tabOrigin, MissionTabOrigin.daily);
     expect(ctx.currentValue, 5);

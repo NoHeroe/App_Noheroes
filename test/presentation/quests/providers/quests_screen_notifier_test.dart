@@ -6,6 +6,7 @@ import 'package:noheroes_app/core/events/app_event_bus.dart';
 import 'package:noheroes_app/core/events/mission_events.dart';
 import 'package:noheroes_app/core/utils/guild_rank.dart';
 import 'package:noheroes_app/data/datasources/local/extras_catalog_service.dart';
+import 'package:noheroes_app/data/datasources/local/faction_admission_progress_service.dart';
 import 'package:noheroes_app/domain/enums/mission_modality.dart';
 import 'package:noheroes_app/domain/enums/mission_tab_origin.dart';
 import 'package:noheroes_app/domain/models/daily_mission.dart';
@@ -111,6 +112,17 @@ class _FakeExtrasCatalog implements ExtrasCatalogService {
   dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
 }
 
+/// Fake do avaliador de admissão — no-op (o real toca Supabase). O notifier
+/// chama `evaluatePlayer` no build; sem este override o teste batia em
+/// `Supabase.instance` não inicializado.
+class _FakeFactionAdmissionProgress implements FactionAdmissionProgressService {
+  @override
+  Future<void> evaluatePlayer(String playerId) async {}
+
+  @override
+  dynamic noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
 MissionProgress _mkMission({
   required int id,
   required MissionTabOrigin tab,
@@ -150,6 +162,8 @@ ProviderContainer _makeContainer({
         .overrideWithValue(_FakeDailyGenerator()),
     dailyMissionRolloverServiceProvider
         .overrideWithValue(_FakeDailyRollover()),
+    factionAdmissionProgressServiceProvider
+        .overrideWithValue(_FakeFactionAdmissionProgress()),
   ]);
 }
 
@@ -183,12 +197,11 @@ void main() {
       expect(state.admissionMissions, isEmpty);
       expect(state.individualMissions, hasLength(1));
       expect(state.extrasCatalog, isEmpty);
-      // Sprint 3.4 Etapa C hotfix #3 (P0-F) — 5 calls: 4 do bloco
-      // Future.wait (classTab/faction/admission/extras) + 1 de
-      // FactionAdmissionProgressService.evaluatePlayer (lê admission
-      // pra re-avaliar expiração de janela). Daily legacy ainda fora
-      // da contagem (droppado da UI na Etapa 1.3.A).
-      expect(repo.findByTabCalls, 5);
+      // 4 calls do bloco Future.wait (classTab/faction/admission/extras).
+      // O 5º (FactionAdmissionProgressService.evaluatePlayer lendo admission)
+      // não conta aqui porque o fake `_FakeFactionAdmissionProgress` é no-op
+      // (o real toca Supabase, indisponível em teste unitário).
+      expect(repo.findByTabCalls, 4);
     });
 
     test('doneCount soma missões `completedAt != null` das seções legacy',
