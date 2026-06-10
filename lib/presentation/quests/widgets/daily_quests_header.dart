@@ -58,23 +58,19 @@ class DailyQuestsHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Header sem título: stats + streak alinhados à direita, com Flexible
+          // pra não estourar em telas estreitas.
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'MISSÕES',
-                style: GoogleFonts.cinzelDecorative(
-                  fontSize: 22,
-                  color: AppColors.gold,
-                  letterSpacing: 3,
-                ),
-              ),
               const Spacer(),
-              PlayerStatsCounter(
-                key: counterKey,
-                gold: gold,
-                xp: xp,
-                gems: gems,
+              Flexible(
+                child: PlayerStatsCounter(
+                  key: counterKey,
+                  gold: gold,
+                  xp: xp,
+                  gems: gems,
+                ),
               ),
               const SizedBox(width: 8),
               _StreakBadge(streak: streak),

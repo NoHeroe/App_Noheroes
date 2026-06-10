@@ -75,6 +75,9 @@ class QuestRewardStatsService {
   Future<void> _onRewardGranted(RewardGranted evt) async {
     if (evt.fromAchievementCascade) return; // achievement reward não conta
     if (evt.fromAscension) return; // reward de ascensão não é ouro de quest
+    // Toda missão de classe/facção/individual/admissão concluída conta pro
+    // gate da Guilda ("complete 15 missões").
+    await _incrementQuestsCompleted(evt.playerId);
     try {
       final resolved = RewardResolved.fromJsonString(evt.rewardResolvedJson);
       if (resolved.gold <= 0) return;
@@ -87,6 +90,10 @@ class QuestRewardStatsService {
   }
 
   Future<void> _onDailyMissionCompleted(DailyMissionCompleted evt) async {
+    // Daily concluída de fato (todas as sub-tarefas) conta pro gate da Guilda.
+    if (evt.fullCompleted) {
+      await _incrementQuestsCompleted(evt.playerId);
+    }
     if (evt.goldEarned <= 0) return;
     await _increment(evt.playerId, evt.goldEarned);
   }
@@ -98,5 +105,19 @@ class QuestRewardStatsService {
       'p_player': playerId,
       'p_amount': amount,
     });
+  }
+
+  /// +1 em `players.total_quests_completed` (gate da Guilda). Single-writer.
+  Future<void> _incrementQuestsCompleted(String playerId) async {
+    try {
+      await _client.rpc('increment_total_quests_completed', params: {
+        'p_player': playerId,
+        'p_amount': 1,
+      });
+    } catch (e) {
+      // ignore: avoid_print
+      print('[quest-reward-stats] increment_total_quests_completed falhou '
+          '(player=$playerId): $e');
+    }
   }
 }

@@ -39,6 +39,13 @@ class TutorialService {
     return !(await isDone(playerId, phase));
   }
 
+  /// Remove o flag de UMA fase (faz ela voltar a disparar). Ex.: reset de
+  /// classe/facção no dev re-injeta as telas L5/L7.
+  static Future<void> clear(String playerId, TutorialPhase phase) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_key(playerId, phase));
+  }
+
   /// Limpa TODOS os flags de tutorial deste jogador (reset de conta → o fluxo
   /// de onboarding/level-up volta a disparar do zero).
   static Future<void> resetAll(String playerId) async {

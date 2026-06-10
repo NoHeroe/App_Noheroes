@@ -141,16 +141,16 @@ class CharacterScreen extends ConsumerWidget {
   Widget _buildHeader(player) {
     // Sprint 2.3 fix — chips de acesso a Forja (lv6) e Encantamento (lv20).
     final playerLevel = player?.level ?? 0;
+    // Header sem título: só os atalhos + badge de pontos, alinhados à direita
+    // e com wrap pra nunca estourar a tela em telas estreitas.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+      child: Wrap(
+        alignment: WrapAlignment.end,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 6,
+        runSpacing: 6,
         children: [
-          Text(
-            'PERSONAGEM',
-            style: GoogleFonts.cinzelDecorative(
-                fontSize: 16, color: AppColors.gold, letterSpacing: 2),
-          ),
-          const Spacer(),
           FeatureChip(
             icon: Icons.hardware,
             label: 'FORJA',

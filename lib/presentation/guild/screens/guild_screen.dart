@@ -29,10 +29,15 @@ class GuildMembershipSnapshot {
   final int reputation;
   final DateTime? joinedAt;
 
+  /// Missões concluídas (gate de admissão). Lido FRESH do servidor aqui pra
+  /// não depender do `currentPlayerProvider` (que pode estar stale).
+  final int totalQuestsCompleted;
+
   const GuildMembershipSnapshot({
     required this.admitted,
     required this.guildRank,
     required this.reputation,
+    this.totalQuestsCompleted = 0,
     this.joinedAt,
   });
 }
@@ -62,10 +67,20 @@ final guildStatusProvider =
       .read(playerFactionReputationRepositoryProvider)
       .getOrDefault(player.id, 'guild');
 
+  // Contador FRESH de missões concluídas (gate da admissão) — direto do
+  // servidor, não do currentPlayer (que pode estar stale entre completions).
+  final pRow = await client
+      .from('players')
+      .select('total_quests_completed')
+      .eq('id', player.id)
+      .maybeSingle();
+  final totalQuests = (pRow?['total_quests_completed'] as int?) ?? 0;
+
   return GuildMembershipSnapshot(
     admitted: player.guildRank != 'none',
     guildRank: player.guildRank,
     reputation: reputation,
+    totalQuestsCompleted: totalQuests,
     joinedAt: joinedAt,
   );
 });
@@ -722,7 +737,11 @@ class GuildScreen extends ConsumerWidget {
     //
     // Sprint 3.4 Etapa A hotfix — gate reduzido de 25 → 15 pra
     // facilitar testes e onboarding. Decisão de balanceamento do CEO.
-    final completed = (player?.totalQuestsCompleted as int?) ?? 0;
+    //
+    // Lê o contador FRESH do snapshot (servidor) — não do currentPlayer, que
+    // pode estar stale. O contador volta a incrementar via QuestRewardStatsService.
+    final completed =
+        status?.totalQuestsCompleted ?? (player?.totalQuestsCompleted as int?) ?? 0;
     const needed = 15;
     final progress = (completed / needed).clamp(0.0, 1.0);
     final canAdmit = completed >= needed;

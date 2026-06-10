@@ -191,12 +191,29 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
   Future<void> _resetClass() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
-    // TODO dev (Época 2 — ADR-0024): limpar class_type/faction_type era
-    // write Drift cru. Sem RPC/service equivalente pra zerar esses campos.
-    // Controle desabilitado até existir um endpoint de reset no backend.
+    try {
+      await ref
+          .read(supabaseClientProvider)
+          .rpc('dev_reset_class_faction', params: {'p_player': player.id});
+    } catch (e) {
+      if (!mounted) return;
+      AppSnack.error(context, 'Falha ao resetar classe/facção: $e');
+      return;
+    }
+    // LIMPA os flags L5/L7 deste jogador pra os gatilhos re-injetarem
+    // classe/facção ao voltar ao Santuário.
+    await TutorialService.clear(player.id, TutorialPhase.phase5_class);
+    await TutorialService.clear(player.id, TutorialPhase.phase7_faction);
+    final fresh =
+        await PlayerDao(ref.read(supabaseClientProvider)).findById(player.id);
     if (!mounted) return;
-    AppSnack.info(context,
-        'Reset de classe/facção desabilitado nesta versão (sem RPC).');
+    if (fresh != null) {
+      ref.read(currentPlayerProvider.notifier).state = fresh;
+    }
+    _invalidateAll(player.id);
+    if (!mounted) return;
+    AppSnack.success(
+        context, 'Classe e facção resetadas (class=null, faction=none).');
   }
 
   // ─── PROGRESSO (Sprint 3.4 Etapa A hotfix P2) ─────────────────────
@@ -640,17 +657,26 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
   Future<void> _listMembership() async {
     final player = ref.read(currentPlayerProvider);
     if (player == null) return;
-    // TODO dev (Época 2 — ADR-0024): listar memberships/reputations era
-    // leitura Drift crua (customSelect em player_faction_membership /
-    // player_faction_reputation). Sem query/service equivalente exposto —
-    // mostramos só o faction_type atual do player até ter um endpoint.
+    final lines = <String>['faction_type atual: ${player.factionType ?? "(null)"}', ''];
+    try {
+      final rows = await ref
+          .read(supabaseClientProvider)
+          .from('player_faction_membership')
+          .select('faction_id, joined_at, left_at, locked_until, debuff_until')
+          .eq('player_id', player.id);
+      if (rows.isEmpty) {
+        lines.add('(sem rows em player_faction_membership)');
+      } else {
+        for (final r in rows) {
+          lines.add('• ${r['faction_id']}: joined=${r['joined_at']} '
+              'left=${r['left_at']} lock=${r['locked_until']} '
+              'debuff=${r['debuff_until']}');
+        }
+      }
+    } catch (e) {
+      lines.add('(falha ao ler membership: $e)');
+    }
     if (!mounted) return;
-    final lines = <String>[
-      'faction_type atual: ${player.factionType ?? "(null)"}',
-      '',
-      '(Listagem de memberships/reputations desabilitada nesta versão — '
-          'sem query exposta. TODO dev.)',
-    ];
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -870,13 +896,19 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
     );
     if (ok != true || !mounted) return;
 
-    // TODO dev (Época 2 — ADR-0024): apagar player_achievements_completed
-    // era DELETE Drift cru (customUpdate). O repository não expõe um método
-    // de reset/clear — controle desabilitado até existir um endpoint no
-    // backend.
+    try {
+      await ref
+          .read(supabaseClientProvider)
+          .rpc('dev_reset_achievements', params: {'p_player': player.id});
+    } catch (e) {
+      if (!mounted) return;
+      AppSnack.error(context, 'Falha ao resetar conquistas: $e');
+      return;
+    }
+    _invalidateAll(player.id);
     if (!mounted) return;
-    AppSnack.info(context,
-        'Reset de conquistas desabilitado nesta versão (sem endpoint).');
+    AppSnack.success(context,
+        'Conquistas resetadas. As que ainda batem critério re-disparam no próximo trigger.');
   }
 
   Future<void> _listAchievements() async {

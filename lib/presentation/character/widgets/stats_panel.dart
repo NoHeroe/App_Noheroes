@@ -83,6 +83,11 @@ class StatsPanel extends StatelessWidget {
             _StatRow('Bônus Ouro',
                 _fmtPct((stats['goldBonus'] ?? 0) + factionGoldBonusPct),
                 AppColors.gold),
+            // Estilo de jogo (escolha do nível 15). Exibe o estilo atual; o
+            // efeito numérico do bônus ainda não é canônico no vault (placeholder
+            // na tela de seleção) e duo/team dependem de sistema de party.
+            _StatRow('Estilo de Jogo', _playStyleLabel(player.playStyle),
+                AppColors.shadowAscending),
           ]),
 
           if (player.classType == null || player.classType!.isEmpty) ...[
@@ -110,6 +115,19 @@ class StatsPanel extends StatelessWidget {
   // Sprint 3.4 Etapa G.2 (D16) — formata % com sinal explícito (positivo
   // ganha '+', negativo mantém '-' do debuff). Ex: 11 → "+11%", -25 → "-25%".
   static String _fmtPct(int v) => v >= 0 ? '+$v%' : '$v%';
+
+  static String _playStyleLabel(String raw) {
+    switch (raw) {
+      case 'solo':
+        return 'Solo';
+      case 'duo':
+        return 'Duo';
+      case 'team':
+        return 'Team';
+      default:
+        return '—';
+    }
+  }
 
   Widget _group(String label, List<Widget> rows) {
     return Column(
