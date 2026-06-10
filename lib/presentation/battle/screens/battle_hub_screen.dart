@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../card_game/deck_repository.dart';
 import '../../shared/widgets/app_snack.dart';
@@ -12,10 +13,14 @@ class _SubMode {
   final String description; // miniatura exibida ao selecionar
   final void Function(BuildContext context) onPlay;
 
+  /// Submodo bloqueado (cadeado; não selecionável). Ex.: PvP/Amistoso.
+  final bool locked;
+
   const _SubMode({
     required this.label,
     required this.description,
     required this.onPlay,
+    this.locked = false,
   });
 }
 
@@ -27,12 +32,20 @@ class _PlayStyle {
   final Color color; // COR PRÓPRIA do estilo
   final List<_SubMode> subModes;
 
+  /// Nível mínimo pra desbloquear o grupo (0 = sempre). Card Game = 2.
+  final int requiredLevel;
+
+  /// Grupo inteiro em desenvolvimento (cadeado permanente, independe de nível).
+  final bool inDev;
+
   const _PlayStyle({
     required this.title,
     required this.subtitle,
     required this.icon,
     required this.color,
     required this.subModes,
+    this.requiredLevel = 0,
+    this.inDev = false,
   });
 }
 
@@ -50,12 +63,13 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
 
   // ── Definição dos grupos / submodos ────────────────────────────────────
   late final List<_PlayStyle> _styles = [
-    // CARD GAME — roxo (funcional no PvE)
+    // CARD GAME — roxo (PvE funcional; desbloqueia no nível 2).
     _PlayStyle(
       title: 'CARD GAME',
       subtitle: 'Duelo de cartas — ACDA',
       icon: Icons.style_outlined,
       color: AppColors.purple,
+      requiredLevel: 2,
       subModes: [
         _SubMode(
           label: 'PvE',
@@ -66,12 +80,14 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
           label: 'PvP',
           description:
               'Duelo ranqueado contra outros invocadores. Sobe de elo.',
+          locked: true,
           onPlay: (c) => AppSnack.info(
               c, 'PvP em breve — precisa do servidor online.'),
         ),
         _SubMode(
           label: 'Amistoso',
           description: 'Partida casual com um amigo, sem ranking.',
+          locked: true,
           onPlay: (c) => AppSnack.info(c, 'Modo amistoso em breve.'),
         ),
       ],
@@ -83,6 +99,7 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
       subtitle: 'Solo & grupo contra Caelum',
       icon: Icons.castle_outlined,
       color: AppColors.shadowAscending,
+      inDev: true,
       subModes: [
         _SubMode(
           label: 'Dungeons',
@@ -113,6 +130,7 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
       subtitle: 'Confronto direto entre jogadores',
       icon: Icons.sports_martial_arts,
       color: AppColors.gold,
+      inDev: true,
       subModes: [
         _SubMode(
           label: '1v1',
@@ -138,6 +156,7 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
       subtitle: 'Eventos dimensionais temporários',
       icon: Icons.blur_on,
       color: AppColors.mp,
+      inDev: true,
       subModes: [
         _SubMode(
           label: 'Fenda do Vazio',
@@ -155,6 +174,12 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
   ];
 
   void _onDotTap(int styleIndex, int subIndex) {
+    final sub = _styles[styleIndex].subModes[subIndex];
+    if (sub.locked) {
+      // Submodo bloqueado (PvP/Amistoso): não seleciona, só avisa.
+      sub.onPlay(context);
+      return;
+    }
     setState(() {
       if (_selected[styleIndex] == subIndex) {
         _selected.remove(styleIndex); // toggle off
@@ -162,6 +187,15 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
         _selected[styleIndex] = subIndex;
       }
     });
+  }
+
+  void _onLockedGroupTap(_PlayStyle style) {
+    AppSnack.info(
+      context,
+      style.inDev
+          ? '${style.title} em desenvolvimento.'
+          : '${style.title} desbloqueia no nível ${style.requiredLevel}.',
+    );
   }
 
   /// Gating do Card Game PvE: exige um deck ativo VÁLIDO (9+9) antes de ir
@@ -248,6 +282,7 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final level = ref.watch(currentPlayerProvider)?.level ?? 1;
     return Scaffold(
       backgroundColor: AppColors.black,
       body: Stack(
@@ -266,9 +301,9 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
           SafeArea(
             child: Column(
               children: [
-                // Header
+                // Header sem título: só o botão de voltar.
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                   child: Row(
                     children: [
                       GestureDetector(
@@ -285,52 +320,6 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
                               color: AppColors.textSecondary, size: 18),
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('CAMPO DE BATALHA',
-                                style: GoogleFonts.cinzelDecorative(
-                                    fontSize: 14,
-                                    color: AppColors.hp,
-                                    letterSpacing: 2)),
-                            Text('Escolha o estilo e o submodo',
-                                style: GoogleFonts.roboto(
-                                    fontSize: 11,
-                                    color: AppColors.textMuted)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Aviso em breve
-                Container(
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.gold.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(8),
-                    border:
-                        Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.construction,
-                          color: AppColors.gold, size: 14),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                            'Apenas Card Game (PvE) jogável. Os demais em desenvolvimento.',
-                            style: GoogleFonts.roboto(
-                                fontSize: 11,
-                                color: AppColors.gold,
-                                fontStyle: FontStyle.italic)),
-                      ),
                     ],
                   ),
                 ),
@@ -341,7 +330,7 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
                     itemCount: _styles.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 22),
-                    itemBuilder: (context, i) => _buildStyleGroup(i),
+                    itemBuilder: (context, i) => _buildStyleGroup(i, level),
                   ),
                 ),
               ],
@@ -353,18 +342,20 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
   }
 
   // ── Um grupo: botão grande + fileira de bolinhas + miniatura ───────────
-  Widget _buildStyleGroup(int styleIndex) {
+  Widget _buildStyleGroup(int styleIndex, int level) {
     final style = _styles[styleIndex];
+    final groupLocked = style.inDev || level < style.requiredLevel;
     final selIndex = _selected[styleIndex];
-    final hasSelection = selIndex != null;
+    final hasSelection = !groupLocked && selIndex != null;
     final color = style.color;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Botão grande (cor própria). Ativo quando há submodo selecionado.
+        // Botão grande. Bloqueado → cadeado + cinza, não joga.
         GestureDetector(
-          onTap: () => _onPlay(styleIndex),
+          onTap: () =>
+              groupLocked ? _onLockedGroupTap(style) : _onPlay(styleIndex),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
@@ -396,110 +387,134 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
                     ]
                   : null,
             ),
-            child: Row(
-              children: [
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: color.withValues(alpha: hasSelection ? 0.22 : 0.10),
-                    border: Border.all(
-                        color: color.withValues(
-                            alpha: hasSelection ? 0.7 : 0.3)),
-                  ),
-                  child: Icon(
-                    hasSelection ? Icons.play_arrow_rounded : style.icon,
-                    color: color,
-                    size: hasSelection ? 30 : 26,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        hasSelection
-                            ? 'JOGAR — ${style.subModes[selIndex].label}'
-                            : style.title,
-                        style: GoogleFonts.cinzelDecorative(
-                          fontSize: 15,
-                          color: hasSelection ? color : AppColors.textPrimary,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        hasSelection ? style.title : style.subtitle,
-                        style: GoogleFonts.roboto(
-                          fontSize: 11,
-                          color: hasSelection
-                              ? AppColors.textSecondary
-                              : AppColors.textMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  hasSelection
-                      ? Icons.chevron_right_rounded
-                      : Icons.touch_app_outlined,
-                  color: hasSelection ? color : AppColors.textMuted,
-                  size: 22,
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 12),
-
-        // Fileira de bolinhas (uma por submodo)
-        Wrap(
-          spacing: 18,
-          runSpacing: 10,
-          children: List.generate(style.subModes.length, (subIndex) {
-            final selected = selIndex == subIndex;
-            return _buildDot(
-              label: style.subModes[subIndex].label,
-              color: color,
-              selected: selected,
-              onTap: () => _onDotTap(styleIndex, subIndex),
-            );
-          }),
-        ),
-
-        // Miniatura do submodo selecionado
-        if (hasSelection) ...[
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: color.withValues(alpha: 0.35)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.info_outline, size: 13, color: color),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    style.subModes[selIndex].description,
-                    style: GoogleFonts.roboto(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                      height: 1.35,
+            child: Opacity(
+              opacity: groupLocked ? 0.55 : 1,
+              child: Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: groupLocked
+                          ? AppColors.textMuted.withValues(alpha: 0.12)
+                          : color.withValues(alpha: hasSelection ? 0.22 : 0.10),
+                      border: Border.all(
+                          color: groupLocked
+                              ? AppColors.textMuted.withValues(alpha: 0.4)
+                              : color.withValues(
+                                  alpha: hasSelection ? 0.7 : 0.3)),
+                    ),
+                    child: Icon(
+                      groupLocked
+                          ? Icons.lock
+                          : (hasSelection
+                              ? Icons.play_arrow_rounded
+                              : style.icon),
+                      color: groupLocked ? AppColors.textMuted : color,
+                      size: hasSelection ? 30 : 26,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          hasSelection
+                              ? 'JOGAR — ${style.subModes[selIndex].label}'
+                              : style.title,
+                          style: GoogleFonts.cinzelDecorative(
+                            fontSize: 15,
+                            color: groupLocked
+                                ? AppColors.textMuted
+                                : (hasSelection
+                                    ? color
+                                    : AppColors.textPrimary),
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          groupLocked
+                              ? (style.inDev
+                                  ? 'Em desenvolvimento'
+                                  : 'Desbloqueia no nível ${style.requiredLevel}')
+                              : (hasSelection ? style.title : style.subtitle),
+                          style: GoogleFonts.roboto(
+                            fontSize: 11,
+                            color: hasSelection
+                                ? AppColors.textSecondary
+                                : AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    groupLocked
+                        ? Icons.lock_outline
+                        : (hasSelection
+                            ? Icons.chevron_right_rounded
+                            : Icons.touch_app_outlined),
+                    color: groupLocked
+                        ? AppColors.textMuted
+                        : (hasSelection ? color : AppColors.textMuted),
+                    size: 22,
+                  ),
+                ],
+              ),
             ),
           ),
+        ),
+
+        // Bolinhas + miniatura só pra grupos desbloqueados.
+        if (!groupLocked) ...[
+          const SizedBox(height: 12),
+          // Fileira de bolinhas CENTRALIZADA.
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 22,
+            runSpacing: 10,
+            children: List.generate(style.subModes.length, (subIndex) {
+              return _buildDot(
+                label: style.subModes[subIndex].label,
+                color: color,
+                selected: selIndex == subIndex,
+                locked: style.subModes[subIndex].locked,
+                onTap: () => _onDotTap(styleIndex, subIndex),
+              );
+            }),
+          ),
+          if (hasSelection) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: color.withValues(alpha: 0.35)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline, size: 13, color: color),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      style.subModes[selIndex].description,
+                      style: GoogleFonts.roboto(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ],
     );
@@ -510,51 +525,63 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
     required String label,
     required Color color,
     required bool selected,
+    required bool locked,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            width: 18,
-            height: 18,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: selected
-                  ? color
-                  : AppColors.textMuted.withValues(alpha: 0.35),
-              border: Border.all(
-                color: selected
-                    ? color
-                    : AppColors.textMuted.withValues(alpha: 0.6),
-                width: 1.5,
+      child: Opacity(
+        opacity: locked ? 0.55 : 1,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              width: 18,
+              height: 18,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: locked
+                    ? AppColors.textMuted.withValues(alpha: 0.18)
+                    : (selected
+                        ? color
+                        : AppColors.textMuted.withValues(alpha: 0.35)),
+                border: Border.all(
+                  color: selected && !locked
+                      ? color
+                      : AppColors.textMuted.withValues(alpha: 0.6),
+                  width: 1.5,
+                ),
+                boxShadow: selected && !locked
+                    ? [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.6),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ]
+                    : null,
               ),
-              boxShadow: selected
-                  ? [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.6),
-                        blurRadius: 8,
-                        spreadRadius: 1,
-                      ),
-                    ]
+              child: locked
+                  ? const Icon(Icons.lock,
+                      size: 10, color: AppColors.textMuted)
                   : null,
             ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            label,
-            style: GoogleFonts.roboto(
-              fontSize: 10,
-              color: selected ? color : AppColors.textMuted,
-              letterSpacing: 0.3,
-              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+            const SizedBox(height: 5),
+            Text(
+              label,
+              style: GoogleFonts.roboto(
+                fontSize: 10,
+                color: selected && !locked ? color : AppColors.textMuted,
+                letterSpacing: 0.3,
+                fontWeight:
+                    selected && !locked ? FontWeight.w600 : FontWeight.w400,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

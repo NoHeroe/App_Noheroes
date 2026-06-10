@@ -391,10 +391,14 @@ void main() {
       expect(c.state.selectedCardId, isNull);
 
       c.selectCard(card.id);
+      // Front-packed: pedir lane 1 com o tabuleiro vazio NÃO deixa buraco na
+      // frente — a criatura encaixa no lane 0 (a fila é compacta). Logo as
+      // lanes livres viram [1, 2], não [0, 2].
       expect(c.playCreature(card.id, lane: 1), isTrue);
       // Ação bem-sucedida limpa a seleção.
       expect(c.state.selectedCardId, isNull);
-      expect(c.freeLanes(), [0, 2]);
+      expect(c.freeLanes(), [1, 2]);
+      expect(c.state.playerBoard!.lanes[0]?.instanceId, card.id);
 
       final relicCard = c.state.playerBoard!.handRelics.first;
       final targets = c.compatibleTargets(relicCard);

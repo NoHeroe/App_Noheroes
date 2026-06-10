@@ -64,6 +64,48 @@ void main() {
     });
   });
 
+  group('front-packed (sem buraco na frente)', () {
+    // Acha seed cujo lado ativo começa com ≥2 criaturas na mão.
+    int seedWith2Creatures(CardLoadout a, CardLoadout b) {
+      for (var seed = 0; seed < 256; seed++) {
+        final s = engine.start(a, b, seed: seed);
+        if (s.active.handCreatures.length >= 2) return seed;
+      }
+      return 0;
+    }
+
+    test('pedir lane 2 com tabuleiro vazio encaixa na FRENTE (lane 0)', () {
+      final aL = makeLoadout(prefix: 'A', cost: 1);
+      final bL = makeLoadout(prefix: 'B');
+      var s = engine.start(aL, bL, seed: seedWithMixedHand(aL, bL));
+      final id = s.active.handCreatures.first.id;
+
+      // Pede o slot 3 (lane 2) com o tabuleiro vazio → não pode deixar buraco
+      // na frente, então vai pro lane 0.
+      s = engine.apply(s, PlayCreature(id, lane: 2));
+      expect(s.active.lanes[0]?.instanceId, id);
+      expect(s.active.lanes[1], isNull);
+      expect(s.active.lanes[2], isNull);
+    });
+
+    test('jogar no lane 0 empurra o ocupante pra trás (re-indexa lanes)', () {
+      final aL = makeLoadout(prefix: 'A', cost: 1);
+      final bL = makeLoadout(prefix: 'B');
+      var s = engine.start(aL, bL, seed: seedWith2Creatures(aL, bL));
+      final first = s.active.handCreatures.first.id;
+      final second = s.active.handCreatures[1].id;
+
+      s = engine.apply(s, PlayCreature(first)); // auto → frente (lane 0)
+      expect(s.active.lanes[0]?.instanceId, first);
+
+      s = engine.apply(s, PlayCreature(second, lane: 0)); // fura a frente
+      expect(s.active.lanes[0]?.instanceId, second, reason: 'novo na frente');
+      expect(s.active.lanes[1]?.instanceId, first,
+          reason: 'ocupante empurrado pra trás');
+      expect(s.active.lanes[1]?.lane, 1, reason: 'lane re-indexada');
+    });
+  });
+
   group('sacrifício gera cristal', () {
     test('relíquia => +1, criatura => +2, máx 1/turno', () {
       final aL = makeLoadout(prefix: 'A', cost: 1);

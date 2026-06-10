@@ -362,12 +362,17 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
 
     // Tabuleiro em FOCO. Banda central (entre os dois lados) guarda os botões
     // laterais (sobrepostos no build). Sem log no meio. Mão = baralho aberto.
+    final selectedCard = _selectedPoolCard(ui);
+
     return Column(
       children: [
         _botInfoBar(bot, ui),
+        // Tabuleiros AGRUPADOS no centro (mais perto um do outro): a banda
+        // central de 60px guarda os botões laterais; o conjunto inteiro fica
+        // centralizado verticalmente em vez de espalhado nas bordas.
         Expanded(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _lanesRow(ui, bot, isPlayerSide: false),
               const SizedBox(height: 60), // banda central (botões voltar/encerrar)
@@ -379,20 +384,26 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
           ),
         ),
         _crystalBar(ui, player),
-        AbsorbPointer(
-          absorbing: !interactive,
-          child: Opacity(
-            opacity: interactive ? 1 : 0.55,
-            child: _handFan(ui, player),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-          child: AbsorbPointer(
-            absorbing: !interactive,
-            child: Opacity(
-                opacity: interactive ? 1 : 0.55, child: _actionRow(ui)),
-          ),
+        // Mão + menu de ação SOBREPOSTO: o menu (cancelar/sacrificar) flutua
+        // sobre o topo do leque sem empurrar o HUD (aparece de forma sutil).
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            AbsorbPointer(
+              absorbing: !interactive,
+              child: Opacity(
+                opacity: interactive ? 1 : 0.55,
+                child: _handFan(ui, player),
+              ),
+            ),
+            if (interactive && selectedCard != null)
+              Positioned(
+                top: -10,
+                left: 0,
+                right: 0,
+                child: Center(child: _actionOverlay(ui, selectedCard)),
+              ),
+          ],
         ),
       ],
     );
@@ -421,12 +432,16 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary)),
-                Text('  cristais',
-                    style: GoogleFonts.roboto(
-                        fontSize: 9, color: AppColors.textMuted)),
               ],
             ),
           ),
+          const SizedBox(width: 12),
+          // Quantos monstros e itens o jogador ainda tem disponíveis (mão+deck).
+          _statChip(Icons.pets_outlined, '${player.availableCreatureCount}',
+              AppColors.conceptChrysalis),
+          const SizedBox(width: 10),
+          _statChip(Icons.auto_awesome, '${player.availableRelicCount}',
+              AppColors.gold),
           const Spacer(),
           if (ui.phase == PveMatchPhase.botTurn ||
               ui.phase == PveMatchPhase.resolving)
@@ -672,6 +687,29 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       ),
     );
 
+    // Corte de espada do atacante MELEE: wrappa o card ANTES da investida, pra
+    // VIAJAR junto e flashear no pico (quando a carta "encosta" no alvo).
+    final showSlash = h != null &&
+        isHlAttacker &&
+        !h.evaded &&
+        (h.damageType == DamageType.corpoACorpo ||
+            h.damageType == DamageType.vitalismo);
+    if (creature != null && showSlash) {
+      tile = Stack(
+        clipBehavior: Clip.none,
+        children: [
+          tile,
+          Positioned(
+            top: isPlayerSide ? -16 : null,
+            bottom: isPlayerSide ? null : -16,
+            left: 0,
+            right: 0,
+            child: Center(child: _slashFlash(h)),
+          ),
+        ],
+      );
+    }
+
     // Animações do replay por TIPO de ataque (flutter_animate; key = evento).
     if (creature != null && h != null) {
       if (isHlAttacker) {
@@ -679,29 +717,38 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         switch (h.damageType) {
           case DamageType.corpoACorpo:
           case DamageType.vitalismo:
-            // Físico/verdadeiro: AVANÇA até o inimigo e volta (golpe).
+            // Físico/verdadeiro: a carta AVANÇA cruzando a banda central até
+            // "encostar" no alvo, segura no impacto (golpe de espada) e RETORNA
+            // ao slot. Lunge grande (56px) pra ser nítido — antes era 16px e
+            // ficava "invisível". Com Clip.none nos Stacks ancestrais não corta.
             tile = tile
                 .animate(key: ObjectKey(h))
                 .moveY(
                     begin: 0,
-                    end: 16 * dir,
-                    duration: 150.ms,
-                    curve: Curves.easeOut)
-                .then(delay: 40.ms)
+                    end: 56 * dir,
+                    duration: 190.ms,
+                    curve: Curves.easeIn)
+                .then(delay: 80.ms) // segura no impacto
                 .moveY(
                     begin: 0,
-                    end: -16 * dir,
-                    duration: 190.ms,
-                    curve: Curves.easeIn);
+                    end: -56 * dir,
+                    duration: 240.ms,
+                    curve: Curves.easeOut);
           case DamageType.magico:
           case DamageType.aDistancia:
-            // Lança projétil/flecha: pulso de "conjuração/saque" (recuo curto).
+            // Lança projétil/flecha (viaja no overlay do alvo): recuo curto de
+            // "conjuração/saque" + leve crescimento.
             tile = tile
                 .animate(key: ObjectKey(h))
-                .scaleXY(
-                    begin: 1, end: 1.08, duration: 130.ms, curve: Curves.easeOut)
+                .moveY(
+                    begin: 0,
+                    end: -10 * dir,
+                    duration: 140.ms,
+                    curve: Curves.easeOut)
+                .scaleXY(begin: 1, end: 1.06, duration: 140.ms)
                 .then()
-                .scaleXY(begin: 1, end: 1 / 1.08, duration: 170.ms);
+                .moveY(begin: 0, end: 10 * dir, duration: 200.ms)
+                .scaleXY(begin: 1, end: 1 / 1.06, duration: 200.ms);
           case DamageType.cura:
           case null:
             tile = tile.animate(key: ObjectKey(h)).shimmer(
@@ -722,8 +769,8 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       }
     }
 
-    // Overlays no card do alvo: impacto por tipo (projétil + burst) + número.
-    if (creature != null && (isHlTarget || isHlAbility)) {
+    // Overlays do ALVO: impacto por tipo (projétil + burst) + número flutuante.
+    if (creature != null && h != null && (isHlTarget || isHlAbility)) {
       final hh = h;
       tile = Stack(
         clipBehavior: Clip.none,
@@ -788,23 +835,26 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         color = AppColors.hp;
     }
 
-    // O projétil entra pela borda do lado do atacante: alvo do jogador (em
-    // baixo) leva tiro de cima; alvo do bot (em cima) leva tiro de baixo.
-    final startDy = isPlayerSideTarget ? -30.0 : 30.0;
+    // O projétil entra pela borda do lado do atacante e VIAJA até o alvo: alvo
+    // do jogador (embaixo) leva tiro de cima; alvo do bot (em cima) leva tiro
+    // de baixo. Distância maior (60px) pra cruzar visivelmente a banda central.
+    final startDy = isPlayerSideTarget ? -60.0 : 60.0;
 
     return IgnorePointer(
       child: Stack(
+        clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
           if (isProjectile)
-            Icon(Icons.circle, size: 9, color: color)
+            Icon(type == DamageType.aDistancia ? Icons.navigation : Icons.circle,
+                    size: type == DamageType.aDistancia ? 14 : 11, color: color)
                 .animate(key: ObjectKey(h))
                 .moveY(
                     begin: startDy,
                     end: 0,
-                    duration: 200.ms,
+                    duration: 240.ms,
                     curve: Curves.easeIn)
-                .fadeOut(delay: 180.ms, duration: 60.ms),
+                .fadeOut(delay: 210.ms, duration: 60.ms),
           Icon(impactIcon, size: 26, color: color)
               .animate(key: ObjectKey(h))
               .scaleXY(
@@ -818,6 +868,28 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
               .fadeOut(duration: 180.ms),
         ],
       ),
+    );
+  }
+
+  /// Corte de espada (flash) do golpe melee: risco curvo brilhante que cresce
+  /// e some no pico da investida do atacante (quando "encosta" no alvo).
+  Widget _slashFlash(CombatHighlight h) {
+    return IgnorePointer(
+      child: SizedBox(
+        width: 50,
+        height: 50,
+        child: CustomPaint(painter: _SlashPainter(AppColors.gold)),
+      )
+          .animate(key: ObjectKey(h))
+          .fadeIn(delay: 180.ms, duration: 60.ms)
+          .scaleXY(
+              begin: 0.45,
+              end: 1.35,
+              delay: 180.ms,
+              duration: 150.ms,
+              curve: Curves.easeOut)
+          .then()
+          .fadeOut(duration: 150.ms),
     );
   }
 
@@ -1072,10 +1144,10 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         child: Transform.rotate(
           angle: rot,
           child: Opacity(
-            opacity: 0.6,
+            opacity: 0.55,
             child: SizedBox(
-              width: cardW * 0.82,
-              height: cardH * 0.82,
+              width: cardW * 0.6,
+              height: cardH * 0.6,
               child: Stack(children: [
                 IgnorePointer(child: _gameFaceFor(card)),
                 Positioned(
@@ -1208,59 +1280,73 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     return parts.join(' · ');
   }
 
-  /// Linha de ação: aparece só com uma carta selecionada (cancelar +
-  /// sacrificar). O ENCERRAR TURNO virou o botão redondo da direita.
-  Widget _actionRow(PveMatchUiState ui) {
+  /// Menu de ação SUTIL: pílula flutuante que aparece com uma carta
+  /// selecionada (cancelar + sacrificar). Sobreposta ao topo do leque — não
+  /// empurra o HUD. O ENCERRAR TURNO é o botão redondo da direita.
+  Widget _actionOverlay(PveMatchUiState ui, Object selected) {
     final controller = ref.read(pveMatchControllerProvider.notifier);
-    final selected = _selectedPoolCard(ui);
-    if (selected == null) return const SizedBox.shrink();
+    final canSac = controller.canSacrifice;
 
-    return Row(
-      children: [
-        GestureDetector(
-          onTap: () => controller.selectCard(null),
-          child: Container(
-            width: 38,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.border),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVeil.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.border),
+        boxShadow: const [
+          BoxShadow(color: AppColors.black, blurRadius: 10, spreadRadius: -2),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: () => controller.selectCard(null),
+            behavior: HitTestBehavior.opaque,
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Icon(Icons.close, size: 16, color: AppColors.textSecondary),
             ),
-            child: const Icon(Icons.close,
-                size: 16, color: AppColors.textSecondary),
           ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: controller.canSacrifice
-              ? OutlinedButton.icon(
-                  onPressed: () => controller.sacrifice(selected is CreatureCard
-                      ? selected.id
-                      : (selected as RelicCard).id),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: AppColors.hp.withValues(alpha: 0.6)),
-                    foregroundColor: AppColors.hp,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                  icon: const Icon(Icons.local_fire_department_outlined,
-                      size: 15),
-                  label: Text(
-                    selected is CreatureCard
-                        ? 'Sacrificar (+$kSacrificeCreatureCrystals)'
-                        : 'Sacrificar (+$kSacrificeRelicCrystals)',
-                    style: GoogleFonts.roboto(
-                        fontSize: 11, fontWeight: FontWeight.w600),
-                  ),
-                )
-              : Center(
-                  child: Text('Toque numa lane para posicionar',
+          Container(width: 1, height: 18, color: AppColors.border),
+          if (canSac)
+            GestureDetector(
+              onTap: () => controller.sacrifice(selected is CreatureCard
+                  ? selected.id
+                  : (selected as RelicCard).id),
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.local_fire_department_outlined,
+                        size: 14, color: AppColors.hp),
+                    const SizedBox(width: 5),
+                    Text(
+                      'Sacrificar +${selected is CreatureCard ? kSacrificeCreatureCrystals : kSacrificeRelicCrystals}',
                       style: GoogleFonts.roboto(
-                          fontSize: 10, color: AppColors.textMuted)),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.hp),
+                    ),
+                  ],
                 ),
-        ),
-      ],
-    );
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              child: Text('Toque numa lane',
+                  style: GoogleFonts.roboto(
+                      fontSize: 11, color: AppColors.textMuted)),
+            ),
+        ],
+      ),
+    )
+        .animate()
+        .fadeIn(duration: 130.ms)
+        .slideY(begin: 0.5, end: 0, duration: 150.ms, curve: Curves.easeOut);
   }
 
   /// Botão REDONDO de encerrar jogada (espadas cruzadas), no centro-direita.
@@ -1508,27 +1594,86 @@ class _SwordsPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size s) {
-    final blade = Paint()
+    // Desenha DUAS espadas reais cruzadas em X: cada uma com lâmina
+    // afilada (ponta), guarda (cross-guard), punho e pomo. Renderizadas
+    // por transform (espada vertical) rotacionada ±40°.
+    _drawSword(canvas, s, 0.7); // \ (ponta sup-esq)
+    _drawSword(canvas, s, -0.7); // / (ponta sup-dir)
+  }
+
+  void _drawSword(Canvas canvas, Size s, double angle) {
+    final w = s.width;
+    final h = s.height;
+    canvas.save();
+    canvas.translate(w / 2, h / 2);
+    canvas.rotate(angle);
+
+    final fill = Paint()
       ..color = color
-      ..strokeWidth = s.width * 0.11
+      ..style = PaintingStyle.fill;
+    final line = Paint()
+      ..color = color
+      ..strokeWidth = w * 0.07
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
-    // Duas lâminas cruzadas (X).
-    canvas.drawLine(Offset(s.width * 0.18, s.height * 0.84),
-        Offset(s.width * 0.82, s.height * 0.16), blade);
-    canvas.drawLine(Offset(s.width * 0.82, s.height * 0.84),
-        Offset(s.width * 0.18, s.height * 0.16), blade);
-    // Guardas (cabos) curtas perto das pontas de baixo.
-    final guard = Paint()
-      ..color = color
-      ..strokeWidth = s.width * 0.10
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(Offset(s.width * 0.06, s.height * 0.72),
-        Offset(s.width * 0.30, s.height * 0.96), guard);
-    canvas.drawLine(Offset(s.width * 0.94, s.height * 0.72),
-        Offset(s.width * 0.70, s.height * 0.96), guard);
+
+    final guardY = h * 0.12; // altura da guarda
+    final bladeHalf = w * 0.05; // meia-largura da lâmina
+
+    // Lâmina: ponta afilada no topo, alargando até a guarda.
+    final blade = Path()
+      ..moveTo(0, -h * 0.46) // ponta
+      ..lineTo(-bladeHalf, -h * 0.34)
+      ..lineTo(-bladeHalf, guardY)
+      ..lineTo(bladeHalf, guardY)
+      ..lineTo(bladeHalf, -h * 0.34)
+      ..close();
+    canvas.drawPath(blade, fill);
+
+    // Guarda (cross-guard) perpendicular logo abaixo da lâmina.
+    canvas.drawLine(
+        Offset(-w * 0.17, guardY), Offset(w * 0.17, guardY), line);
+    // Punho.
+    canvas.drawLine(Offset(0, guardY), Offset(0, h * 0.32), line);
+    // Pomo (esfera no fim do punho).
+    canvas.drawCircle(Offset(0, h * 0.36), w * 0.05, fill);
+
+    canvas.restore();
   }
 
   @override
   bool shouldRepaint(covariant _SwordsPainter old) => old.color != color;
+}
+
+/// Risco de CORTE de espada (golpe melee): arco curvo grosso na cor do golpe +
+/// um realce branco fino sobreposto (brilho da lâmina). Desenhado via
+/// CustomPaint pra renderizar igual em qualquer device.
+class _SlashPainter extends CustomPainter {
+  _SlashPainter(this.color);
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size s) {
+    final path = Path()
+      ..moveTo(s.width * 0.10, s.height * 0.80)
+      ..quadraticBezierTo(s.width * 0.52, s.height * 0.06,
+          s.width * 0.92, s.height * 0.38);
+
+    final stroke = Paint()
+      ..color = color
+      ..strokeWidth = s.width * 0.13
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    canvas.drawPath(path, stroke);
+
+    final shine = Paint()
+      ..color = Colors.white.withValues(alpha: 0.85)
+      ..strokeWidth = s.width * 0.045
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    canvas.drawPath(path, shine);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SlashPainter old) => old.color != color;
 }

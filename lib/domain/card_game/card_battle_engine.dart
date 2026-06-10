@@ -174,40 +174,31 @@ class CardBattleEngine {
     if (idx < 0) return s; // não está na mão
     final card = side.hand[idx] as CreatureCard;
 
-    // Lane alvo: explícita (UI) ou a livre mais à frente (auto/bot).
-    final int lane;
+    // FRONT-PACKED: o tabuleiro nunca tem buraco na frente. As criaturas vivas
+    // formam uma fila compacta (frente→retaguarda); a lane pedida é só a
+    // INTENÇÃO de posição e é clampada ao tamanho da fila (não dá pra colocar
+    // no slot 3 com o slot 1 vazio — vai pra frente).
+    final packed = side.creaturesInPlay; // já ordenado por lane, só vivas
+    final count = packed.length;
+
+    final int requested;
     if (a.lane != null) {
       if (a.lane! < 0 || a.lane! >= kLaneCount) return s;
-      lane = a.lane!;
+      requested = a.lane!;
     } else {
-      final free = _firstFreeLane(side);
-      if (free < 0) return s; // auto sem vaga: no-op (empurrão só via lane explícita)
-      lane = free;
+      requested = count; // auto/bot sem lane: encaixa após a última
     }
 
-    // Procura uma vaga em [lane..fim] pra absorver o empurrão.
-    final lanes = List<CreatureInPlay?>.from(side.lanes);
-    var gap = -1;
-    for (var i = lane; i < kLaneCount; i++) {
-      if (lanes[i] == null) {
-        gap = i;
-        break;
-      }
-    }
+    final placed = CreatureInPlay(card: card, currentHp: card.hp, lane: 0);
 
-    final hand = List<Object>.from(side.hand);
-    final placed = CreatureInPlay(card: card, currentHp: card.hp, lane: lane);
-
-    if (gap >= 0) {
-      // Encaixe normal (havia vaga): empurra [lane..gap-1] um slot pra trás.
+    if (count < kLaneCount) {
+      // Há vaga: encaixe front-packed (paga o custo da carta).
       if (card.cost > side.crystals) return s; // cristais insuficientes
-      for (var i = gap; i > lane; i--) {
-        lanes[i] = lanes[i - 1]?.copyWith(lane: i);
-      }
-      lanes[lane] = placed;
-      hand.removeAt(idx);
+      final insertPos = requested < count ? requested : count; // clamp à fila
+      final list = List<CreatureInPlay>.from(packed)..insert(insertPos, placed);
+      final hand = List<Object>.from(side.hand)..removeAt(idx);
       var newSide = side.copyWith(
-        lanes: lanes,
+        lanes: _packedToLanes(list),
         hand: hand,
         crystals: side.crystals - card.cost,
       );
@@ -215,31 +206,32 @@ class CardBattleEngine {
       return s.withSide(side.id, newSide);
     }
 
-    // Tabuleiro CHEIO em [lane..fim]: a última criatura volta pra mão. Custa
-    // kReturnToHandCost e ENCERRA a vez (o controller dispara o endTurn ao
-    // detectar este caso). Sem compra (a mão troca 1 por 1).
+    // Tabuleiro CHEIO: insere front-packed empurrando a última criatura pra
+    // mão. Custa kReturnToHandCost e ENCERRA a vez (o controller dispara o
+    // endTurn ao detectar este caso). Sem compra (a mão troca 1 por 1).
     if (side.crystals < kReturnToHandCost) return s;
-    final displaced = lanes[kLaneCount - 1]!;
-    for (var i = kLaneCount - 1; i > lane; i--) {
-      lanes[i] = lanes[i - 1]?.copyWith(lane: i);
-    }
-    lanes[lane] = placed;
-    hand.removeAt(idx);
+    final insertPos = requested < kLaneCount ? requested : kLaneCount - 1;
+    final list = List<CreatureInPlay>.from(packed)..insert(insertPos, placed);
+    final displaced = list.removeLast(); // a que caiu do slot de trás
+    final hand = List<Object>.from(side.hand)..removeAt(idx);
     hand.add(displaced.card); // relíquias equipadas são descartadas (MVP)
     final newSide = side.copyWith(
-      lanes: lanes,
+      lanes: _packedToLanes(list),
       hand: hand,
       crystals: side.crystals - kReturnToHandCost,
     );
     return s.withSide(side.id, newSide);
   }
 
-  /// Lane livre mais à frente (menor índice), ou -1 se o tabuleiro está cheio.
-  int _firstFreeLane(BoardSide side) {
-    for (var i = 0; i < kLaneCount; i++) {
-      if (side.lanes[i] == null) return i;
+  /// Converte uma fila PACKED (frente→retaguarda) em lanes indexadas: o item i
+  /// vai pro lane i (re-atribuindo `lane`); os lanes restantes ficam nulos.
+  /// Garante a invariante "sem buraco na frente".
+  List<CreatureInPlay?> _packedToLanes(List<CreatureInPlay> packed) {
+    final lanes = List<CreatureInPlay?>.filled(kLaneCount, null);
+    for (var i = 0; i < packed.length && i < kLaneCount; i++) {
+      lanes[i] = packed[i].copyWith(lane: i);
     }
-    return -1;
+    return lanes;
   }
 
   /// Compra automática: repõe a mão do topo do deck até `kHandSize`.
@@ -260,10 +252,10 @@ class CardBattleEngine {
     final side = s.active;
     if (lane < 0 || lane >= kLaneCount) return false;
     if (!side.hand.any((c) => c is CreatureCard && c.id == cardId)) return false;
-    for (var i = lane; i < kLaneCount; i++) {
-      if (side.lanes[i] == null) return false; // há vaga → jogada normal
-    }
-    return true;
+    // Front-packed: só é caso "volta pra mão" quando a fila já está CHEIA
+    // (3 criaturas). Com vaga, qualquer posição pedida encaixa empurrando sem
+    // expulsar ninguém.
+    return side.creaturesInPlay.length >= kLaneCount;
   }
 
   MatchState _playRelic(MatchState s, PlayRelic a) {
@@ -1081,17 +1073,15 @@ class CardBattleEngine {
     return actions;
   }
 
-  /// Lane que o bot pede para posicionar [card]: melee → lane livre de MENOR
-  /// índice (frente); demais (ranged/mágico/cura/vitalismo) → lane livre de
-  /// MAIOR índice (retaguarda). Retorna null se não houver lane livre (o
-  /// apply rejeitará — chamadores garantem que há).
+  /// Posição (front-packed) que o bot pede para [card]: melee fura na FRENTE
+  /// (índice 0, empurrando os demais pra trás); demais (ranged/mágico/cura/
+  /// vitalismo) encaixam na RETAGUARDA (logo após a última criatura). A engine
+  /// clampa o índice ao tamanho da fila. Retorna null com o tabuleiro cheio
+  /// (chamadores só jogam com vaga).
   int? _botLaneFor(BoardSide side, CreatureCard card) {
-    final free = <int>[
-      for (var i = 0; i < side.lanes.length; i++)
-        if (side.lanes[i] == null) i,
-    ];
-    if (free.isEmpty) return null;
-    return card.damageType == DamageType.corpoACorpo ? free.first : free.last;
+    final count = side.creaturesInPlay.length;
+    if (count >= kLaneCount) return null;
+    return card.damageType == DamageType.corpoACorpo ? 0 : count;
   }
 
   /// Escolhe uma carta do pool para sacrificar visando habilitar uma jogada:

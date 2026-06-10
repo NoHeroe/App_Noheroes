@@ -244,6 +244,17 @@ class BoardSide {
     return total;
   }
 
+  /// Monstros ainda disponíveis para jogar (mão + deck) — exibido no HUD.
+  int get availableCreatureCount =>
+      hand.whereType<CreatureCard>().length +
+      deck.whereType<CreatureCard>().length;
+
+  /// Itens (relíquias) ainda disponíveis para usar (mão + deck) — exibido no
+  /// HUD.
+  int get availableRelicCount =>
+      hand.whereType<RelicCard>().length +
+      deck.whereType<RelicCard>().length;
+
   BoardSide copyWith({
     List<CreatureInPlay?>? lanes,
     int? crystals,
