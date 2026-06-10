@@ -1,5 +1,5 @@
 {
-  "_doc": "Sprint 3.4 Etapa B v2 — catálogo de admissão eliminatória. Sub-Etapa B.2 hotfix #2 (2026-05-04): catálogo recalibrado contra throughput real (~3 dailies/dia) com margem escalada por tier (MÉDIO 80%/ALTO 85%/EXTREMO 90%). Sub-type renomeado de `admission_daily_count_window` → `admission_modality_count_window` (aceita filtro de pilar via params.modalidade; sem modalidade = qualquer). Hoje conta apenas `daily_missions`; expansão pra individuais/classe é dívida D1 catalogada em `.vault/App/docs/sprints/dividas_pos_sprint_3.4.md`. Janelas base: MÉDIO 48h, ALTO 72h, EXTREMO 96h (escala +24h/-12h por reputação na Sub-Etapa B.2). 25 missões / 67 sub-tasks total. Modelo dual da Guilda — bloco 'guild' permanece REMOVIDO.",
+  "_doc": "Sprint 3.4 Etapa B v2 — catálogo de admissão eliminatória. Sub-Etapa B.2 hotfix #2 (2026-05-04): recalibrado contra throughput. D24 (2026-06-10): o daily passou a ser FIXO em 1 missão por pilar/dia (1 físico+1 mental+1 espiritual = 3 dailies/dia; supply per-modalidade = 1/dia). Caps reais por janela: per-modalidade = dias na janela (48h→2, 72h→3, 96h→4); total = 3×. Correções D24: (1) ADM_LEGION_1 5→3 físicas (era impossível); (2) `admission_modality_count_window` ISENTO de scaling de reputação (supply fixo) — ver `quest_admission_service._noScaleSubTypes`; (3) a penalidade de reputação baixa (janela -12h + alvo +20%) foi REMOVIDA no serviço (travava rejeitados permanentemente). Alvos '3 por modalidade/72h' (Order/Trinity/Legion_3) mantidos a 0-margem por decisão de design. Sub-type `admission_modality_count_window` aceita filtro de pilar via params.modalidade; sem modalidade = qualquer. Conta apenas `daily_missions` (expansão = dívida D1). Janelas base: MÉDIO 48h, ALTO 72h, EXTREMO 96h (rep>70: +24h). 25 missões / 67 sub-tasks total. Bloco 'guild' permanece REMOVIDO (modelo dual).",
 
   "moon_clan": [
     {
@@ -142,12 +142,12 @@
   "black_legion": [
     {
       "id": "ADM_LEGION_1",
-      "_design_note": "Ajuste A do CEO: target 5 físicas em 72h é EXCEÇÃO ao cap teórico do tier (cap = 3 físicas). Justificada como filtro narrativo: Legião premia VOLUME físico — adepto físico cumpre (gerador adaptativo dá ~5-6 físicas/72h pra adepto), generalista sofre.",
+      "_design_note": "D24 (2026-06-10): target era 5 físicas/72h, justificado pelo gerador adaptativo antigo (~5-6 físicas/72h). Com o daily FIXO em 1/pilar/dia o supply físico é 1/dia → cap real de 3 físicas em 72h. 5 ficou matematicamente impossível (até com rep alta, 96h, o cap é 4). Reduzido a 3 (= cap do tier). O sabor de VOLUME da Legião fica nas outras missões (8 dailies/72h em LEGION_2/4) e na exigência de streak 3 + 0 falhas.",
       "title": "Ordem da Legião",
       "description": "Não há lugar pra hesitação na Legião. Aja.",
       "rank": "D",
       "sub_tasks": [
-        {"sub_type": "admission_modality_count_window", "target": 5, "params": {"modalidade": "fisico"}, "label": "5 missões físicas em 72h"},
+        {"sub_type": "admission_modality_count_window", "target": 3, "params": {"modalidade": "fisico"}, "label": "3 missões físicas em 72h"},
         {"sub_type": "admission_streak_minimum", "target": 3, "label": "Streak de 3 dias"},
         {"sub_type": "admission_zero_failed_window", "target": 0, "label": "0 falhas em 72h"}
       ]

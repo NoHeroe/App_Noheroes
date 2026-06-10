@@ -44,20 +44,27 @@ import 'class_quest_service.dart';
 /// concedida via entrada DIRETA em `FactionSelectionScreen._confirm`,
 /// sem admissão eliminatória.
 ///
-/// ## Escala de dificuldade por reputação
+/// ## Escala de dificuldade por reputação (D24, 2026-06-10)
 ///
-/// Reputação atual do player na facção tentada:
+/// Reputação atual do player na facção tentada (exemplo tier MÉDIO 48h):
 ///
 /// | Faixa | Janela | Threshold |
 /// |---|---|---|
-/// | reputação > 70 | 72h | -15% (ceil) |
-/// | reputação 40..70 | 48h (padrão) | padrão |
-/// | reputação < 40 | 36h | +20% (ceil) |
+/// | reputação > 70 | 72h (+24h) | -15% (floor) |
+/// | reputação ≤ 70 | 48h (base) | base (sem penalidade) |
+///
+/// **D24:** a PENALIDADE de reputação baixa (<40 → janela -12h + alvo +20%)
+/// foi REMOVIDA. Com o daily fixo em 1/pilar/dia (3 dailies/dia, supply
+/// constante), a penalidade dupla tornava a admissão impossível e travava
+/// PERMANENTEMENTE quem fosse rejeitado (rejeição custa -10 rep). O bônus de
+/// reputação alta continua valendo.
 ///
 /// Threshold scaling NÃO se aplica a sub-types não-monótonos
 /// (`zero_failed_window`, `zero_category_window`,
-/// `no_partial_day_window` — exigência "zero" não escala) nem a
-/// `exact_daily_count_window` (target narrativo fixo). MIN 1 sempre.
+/// `no_partial_day_window` — exigência "zero" não escala), a
+/// `exact_daily_count_window` (target narrativo fixo), nem a
+/// `admission_modality_count_window` (supply per-modalidade é fixo 1/dia —
+/// D24). MIN 1 sempre.
 class QuestAdmissionService {
   final SupabaseClient _client;
   final MissionRepository _missionRepo;
@@ -80,9 +87,9 @@ class QuestAdmissionService {
   ///
   /// A janela é o tempo absoluto pra player completar UMA missão da
   /// admissão; sequenciamento garante que cada missão da sequência
-  /// recebe sua janela própria a partir do unlock. Reputação modifica
-  /// (rep > 70: +24h; rep < 40: -12h) pra criar gradiente de
-  /// dificuldade dinâmica.
+  /// recebe sua janela própria a partir do unlock. Reputação ALTA (>70)
+  /// concede +24h (gradiente de facilidade); rep baixa NÃO encurta mais a
+  /// janela (D24 — ver `_calculateScale`).
   static const Map<_AdmissionTier, int> _tierBaseWindowMs = {
     _AdmissionTier.medium: 48 * 60 * 60 * 1000,
     _AdmissionTier.high: 72 * 60 * 60 * 1000,
@@ -107,6 +114,11 @@ class QuestAdmissionService {
     FactionAdmissionSubTaskTypes.zeroCategoryWindow,
     FactionAdmissionSubTaskTypes.noPartialDayWindow,
     FactionAdmissionSubTaskTypes.exactDailyCountWindow,
+    // D24 (2026-06-10): o daily virou FIXO 1/pilar/dia, então cada modalidade
+    // rende exatamente 1/dia (supply fixo). Inflar/deflacionar o alvo por
+    // reputação não faz sentido — o número de missões por modalidade na janela
+    // é uma constante narrativa. Mantém estável em qualquer reputação.
+    FactionAdmissionSubTaskTypes.modalityCountWindow,
   };
 
   /// Chamado na escolha de classe (nível 5). Confirma `classType`,
@@ -274,13 +286,13 @@ class QuestAdmissionService {
   /// narrativo da facção + reputação. Threshold sempre escala pela
   /// reputação (independente do tier).
   ///
-  /// Tabela final de janelas (ms):
+  /// Tabela final de janelas (ms) — D24 removeu a coluna de rep baixa:
   ///
-  /// | Tier | rep < 40 (-12h) | rep 40..70 (base) | rep > 70 (+24h) |
-  /// |---|---|---|---|
-  /// | MÉDIO  | 36h | 48h  | 72h  |
-  /// | ALTO   | 60h | 72h  | 96h  |
-  /// | EXTREMO| 84h | 96h  | 120h |
+  /// | Tier | rep ≤ 70 (base) | rep > 70 (+24h) |
+  /// |---|---|---|
+  /// | MÉDIO  | 48h  | 72h  |
+  /// | ALTO   | 72h  | 96h  |
+  /// | EXTREMO| 96h  | 120h |
   ///
   /// `factionId` desconhecido (não está em `_factionTier`) cai em
   /// MÉDIO como default seguro. Defesa em profundidade — não deveria
@@ -294,10 +306,13 @@ class QuestAdmissionService {
     if (reputation > 70) {
       windowMs = baseMs + 24 * 60 * 60 * 1000; // +24h
       thresholdMult = 0.85;
-    } else if (reputation < 40) {
-      windowMs = baseMs - 12 * 60 * 60 * 1000; // -12h
-      thresholdMult = 1.20;
     } else {
+      // D24 (2026-06-10): a PENALIDADE de reputação baixa foi REMOVIDA. Antes
+      // rep<40 encurtava a janela -12h E inflava o alvo +20% ao mesmo tempo —
+      // com o supply fixo (3 dailies/dia, 1 por pilar) isso tornava a admissão
+      // matematicamente impossível, travando PERMANENTEMENTE quem fosse
+      // rejeitado uma vez (rejeição custa -10 rep). Agora rep baixa = base.
+      // O bônus de rep alta (>70: +24h janela, -15% alvo) é mantido.
       windowMs = baseMs;
       thresholdMult = 1.0;
     }
