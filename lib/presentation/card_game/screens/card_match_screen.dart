@@ -6,9 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../data/datasources/local/tutorial_service.dart';
+import '../../../data/services/card_match_reward_service.dart';
 import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_game.dart';
+import '../../shared/tutorial_manager.dart';
 import '../deck_repository.dart';
 import '../pve_match_controller.dart';
 import '../widgets/game_card_face.dart';
@@ -40,6 +44,15 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   CardLoadout? _playerLoadout;
   CardLoadout? _botLoadout;
 
+  // Recompensa de partida (ponto #1): concedida 1× ao terminar; exibida no
+  // overlay de fim. `_rewardRequested` evita conceder de novo no rebuild.
+  CardMatchReward? _reward;
+  bool _rewardRequested = false;
+
+  // Tutorial guiado da 1ª partida (ponto #2): bot fraco + diálogos. Detectado
+  // no boot pra montar o bot fácil; o tutorial roda por cima da partida.
+  bool _isTutorial = false;
+
   @override
   void initState() {
     super.initState();
@@ -63,10 +76,28 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         setState(() => _boot = _BootStatus.noDeck);
         return;
       }
+
+      // Tutorial guiado da 1ª partida (1× por jogador): bot FRACO + diálogos.
+      final playerId = ref.read(currentPlayerProvider)?.id;
+      _isTutorial = playerId != null &&
+          await TutorialService.shouldShow(
+              playerId, TutorialPhase.phase14_cardgame);
+      if (!mounted) return;
+
       _playerLoadout = player;
-      _botLoadout = _buildBotLoadout(catalog);
+      _botLoadout = _isTutorial
+          ? _buildEasyBotLoadout(catalog)
+          : _buildBotLoadout(catalog);
       setState(() => _boot = _BootStatus.ready);
       _startMatch();
+
+      if (_isTutorial && playerId != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            TutorialManager.cardGameIntro(context, playerId: playerId);
+          }
+        });
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -77,12 +108,38 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   }
 
   void _startMatch() {
+    // Nova partida: zera o estado de recompensa do round anterior.
+    _reward = null;
+    _rewardRequested = false;
     final seed = math.Random().nextInt(0x7fffffff);
     ref.read(pveMatchControllerProvider.notifier).startMatch(
           _playerLoadout!,
           _botLoadout!,
           seed: seed,
         );
+  }
+
+  /// Concede a recompensa de partida (1×) quando termina. Server-authoritative:
+  /// só informa win/loss; a RPC decide os valores. Depois refaz o fetch do
+  /// player pra XP/gold/level refletirem na HUD.
+  Future<void> _grantReward(bool won) async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    try {
+      final reward = await ref
+          .read(cardMatchRewardServiceProvider)
+          .grant(playerId: player.id, won: won);
+      if (!mounted) return;
+      setState(() => _reward = reward);
+      // Refresh do player (XP/gold mudam mesmo sem level-up — o listener de
+      // LevelUp só cobre subida de nível).
+      final fresh = await ref.read(playerRepositoryProvider).fetchById(player.id);
+      if (fresh != null && mounted) {
+        ref.read(currentPlayerProvider.notifier).state = fresh;
+      }
+    } catch (_) {
+      // Recompensa é best-effort: falha de rede não trava a tela de fim.
+    }
   }
 
   /// Resolve o DECK ATIVO do jogador num [CardLoadout]. null = sem deck
@@ -145,6 +202,34 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     }
 
     return CardLoadout(creatures: creatures, relics: relics.take(9).toList());
+  }
+
+  /// Bot do TUTORIAL (1ª partida): as 9 criaturas mais FRACAS do catálogo
+  /// (menor atk+hp) + relíquias compatíveis. Partida fácil pra primeira
+  /// experiência guiada.
+  CardLoadout _buildEasyBotLoadout(CardCatalog catalog) {
+    final creatures = List<CreatureCard>.from(catalog.creatures)
+      ..sort((a, b) => (a.atk + a.hp).compareTo(b.atk + b.hp));
+    final weakest = creatures.take(9).toList();
+
+    final relics = <RelicCard>[];
+    final used = <String>{};
+    bool fitsAny(RelicCard r) => weakest.any((c) => r.isCompatibleWith(c));
+    for (final r in catalog.relics) {
+      if (relics.length >= 9) break;
+      if (used.contains(r.id)) continue;
+      if (fitsAny(r)) {
+        relics.add(r);
+        used.add(r.id);
+      }
+    }
+    for (final r in catalog.relics) {
+      if (relics.length >= 9) break;
+      if (used.contains(r.id)) continue;
+      relics.add(r);
+      used.add(r.id);
+    }
+    return CardLoadout(creatures: weakest, relics: relics.take(9).toList());
   }
 
   // ---------------------------------------------------------------------------
@@ -275,6 +360,15 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   @override
   Widget build(BuildContext context) {
     final ui = ref.watch(pveMatchControllerProvider);
+
+    // Concede a recompensa 1× quando a partida termina (pós-frame pra não
+    // mutar provider durante o build).
+    if (ui.isFinished && _boot == _BootStatus.ready && !_rewardRequested) {
+      _rewardRequested = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _grantReward(ui.playerWon == true);
+      });
+    }
 
     return PopScope(
       canPop: false,
@@ -726,13 +820,13 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                 .moveY(
                     begin: 0,
                     end: 56 * dir,
-                    duration: 190.ms,
+                    duration: 260.ms,
                     curve: Curves.easeIn)
-                .then(delay: 80.ms) // segura no impacto
+                .then(delay: 150.ms) // segura no impacto (golpe legível)
                 .moveY(
                     begin: 0,
                     end: -56 * dir,
-                    duration: 240.ms,
+                    duration: 320.ms,
                     curve: Curves.easeOut);
           case DamageType.magico:
           case DamageType.aDistancia:
@@ -769,7 +863,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       }
     }
 
-    // Overlays do ALVO: impacto por tipo (projétil + burst) + número flutuante.
+    // Overlays do ALVO: impacto por tipo (projétil + burst) + número + morte.
     if (creature != null && h != null && (isHlTarget || isHlAbility)) {
       final hh = h;
       tile = Stack(
@@ -778,6 +872,11 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
           tile,
           if (isHlTarget && !hh.isHeal && !hh.evaded)
             Positioned.fill(child: _impactOverlay(hh, isPlayerSide)),
+          // Morte: com o replay pré-estado o alvo morto ainda está visível no
+          // passo — o shatter estilhaça SOBRE o tile (some no passo seguinte,
+          // quando o tabuleiro avança). Antes só existia no caminho "órfão".
+          if (isHlTarget && hh.targetDied && !hh.isHeal)
+            Positioned.fill(child: Center(child: _shardBurst(hh))),
           Positioned.fill(child: Center(child: _floatingHighlightText(hh))),
         ],
       );
@@ -881,15 +980,15 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         child: CustomPaint(painter: _SlashPainter(AppColors.gold)),
       )
           .animate(key: ObjectKey(h))
-          .fadeIn(delay: 180.ms, duration: 60.ms)
+          .fadeIn(delay: 250.ms, duration: 60.ms)
           .scaleXY(
               begin: 0.45,
               end: 1.35,
-              delay: 180.ms,
-              duration: 150.ms,
+              delay: 250.ms,
+              duration: 160.ms,
               curve: Curves.easeOut)
           .then()
-          .fadeOut(duration: 150.ms),
+          .fadeOut(duration: 170.ms),
     );
   }
 
@@ -1414,6 +1513,93 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   // Overlay de fim de partida
   // ---------------------------------------------------------------------------
 
+  /// Seção de RECOMPENSAS no overlay de fim (ponto #1). Enquanto o RPC não
+  /// volta, mostra um spinner discreto; depois, os chips de XP/gold/pacote +
+  /// bônus de 1ª vitória e level-up.
+  Widget _rewardSection() {
+    final r = _reward;
+    if (r == null) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 14),
+        child: SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.purple)),
+        ),
+      );
+    }
+
+    final chips = <Widget>[
+      if (r.xp > 0) _rewardChip(Icons.auto_graph, '+${r.xp} XP', AppColors.xp),
+      if (r.gold > 0)
+        _rewardChip(Icons.monetization_on, '+${r.gold}', AppColors.gold),
+      if (r.packs > 0)
+        _rewardChip(Icons.style,
+            '+${r.packs} pacote${r.packs > 1 ? 's' : ''}', AppColors.purpleLight),
+    ];
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 14),
+        Text('RECOMPENSAS',
+            style: GoogleFonts.cinzelDecorative(
+                fontSize: 10, color: AppColors.textMuted, letterSpacing: 2)),
+        const SizedBox(height: 8),
+        if (chips.isEmpty)
+          Text('—',
+              style: GoogleFonts.roboto(
+                  fontSize: 12, color: AppColors.textMuted))
+        else
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
+            children: chips,
+          ),
+        if (r.isFirstWinOfDay) ...[
+          const SizedBox(height: 8),
+          Text('Bônus de 1ª vitória do dia!',
+              style: GoogleFonts.roboto(
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.gold)),
+        ],
+        if (r.levelUp != null) ...[
+          const SizedBox(height: 6),
+          Text('Subiu para o nível ${r.levelUp!.newLevel}!',
+              style: GoogleFonts.roboto(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.purpleLight)),
+        ],
+      ],
+    ).animate().fadeIn(duration: 200.ms);
+  }
+
+  Widget _rewardChip(IconData icon, String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.45)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 5),
+          Text(text,
+              style: GoogleFonts.robotoMono(
+                  fontSize: 12, fontWeight: FontWeight.w700, color: color)),
+        ],
+      ),
+    );
+  }
+
   Widget _matchOverOverlay(PveMatchUiState ui) {
     final won = ui.playerWon == true;
     final color = won ? AppColors.gold : AppColors.hp;
@@ -1455,6 +1641,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                 Text('$turns turnos',
                     style: GoogleFonts.roboto(
                         fontSize: 12, color: AppColors.textSecondary)),
+                _rewardSection(),
                 const SizedBox(height: 20),
                 Row(
                   mainAxisSize: MainAxisSize.min,

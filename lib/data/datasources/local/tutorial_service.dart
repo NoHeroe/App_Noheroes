@@ -15,6 +15,7 @@ enum TutorialPhase {
   phase11_skull,      // nível 99: nível caveira
   phase12_enchanter,  // nível 20: encantamento + grant de RUNE_FIRE_E
   phase13_mission_calibration, // nível 5 + classe: quiz de calibração
+  phase14_cardgame,   // nível 2: 1ª partida do Modo Cartas (tutorial guiado)
 }
 
 /// Flags de progresso do tutorial. **Por jogador** (a chave inclui o `playerId`)

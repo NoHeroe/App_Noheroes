@@ -445,16 +445,19 @@ class CardBattleEngine {
     var attacker = s.active;
     var defender = s.opponent;
 
-    // Snapshota num step os eventos gerados desde [snappedUpTo] — ancorados no
-    // estado ATUAL (atacante/defensor acumulados). Assim cada golpe/cura/morte
-    // vira um keyframe do replay, na ordem.
+    // Snapshot PRÉ-ataque (feel Card Monsters): o estado de cada step é o de
+    // ANTES do golpe (preAtk/preDef), mas carrega os eventos GERADOS por ele.
+    // Assim a UI anima o golpe com o alvo AINDA VIVO na posição (mostra dano e
+    // morte sobre ele) e só avança/compacta o tabuleiro no passo SEGUINTE — em
+    // vez de já mostrar o resultado resolvido (que fazia o golpe "cair" na carta
+    // errada por causa do avanço da retaguarda).
     var snappedUpTo = 0;
-    void snap() {
+    void snapPre(BoardSide preAtk, BoardSide preDef) {
       if (steps == null || events.length <= snappedUpTo) return;
       final slice = List<MatchEvent>.unmodifiable(events.sublist(snappedUpTo));
       snappedUpTo = events.length;
       final snapState =
-          s.withSide(attacker.id, attacker).withSide(defender.id, defender);
+          s.withSide(preAtk.id, preAtk).withSide(preDef.id, preDef);
       steps.add(MatchReplayStep(state: snapState, events: slice));
     }
 
@@ -464,6 +467,10 @@ class CardBattleEngine {
     for (final attackerId in order) {
       // Sem alvos → fase termina (já é vitória de fato).
       if (!defender.hasCreatureInPlay) break;
+
+      // Estado ANTES deste golpe — é o que o step mostra enquanto a UI anima.
+      final preAtk = attacker;
+      final preDef = defender;
 
       final attackerLaneIdx = attacker.lanes
           .indexWhere((c) => c != null && c.instanceId == attackerId);
@@ -488,14 +495,14 @@ class CardBattleEngine {
             detail: 'bloqueou ${creature.card.nome} '
                 '(${type == DamageType.cura ? 'cura' : 'ataque mágico'})',
           ));
-          snap();
+          snapPre(preAtk, preDef);
           continue;
         }
       }
 
       if (type == DamageType.cura) {
         attacker = _resolveHeal(attacker, creature, events);
-        snap();
+        snapPre(preAtk, preDef);
         continue;
       }
 
@@ -529,7 +536,7 @@ class CardBattleEngine {
       );
       attacker = result.$1;
       defender = result.$2;
-      snap();
+      snapPre(preAtk, preDef);
     }
 
     var state = s.withSide(attacker.id, attacker);

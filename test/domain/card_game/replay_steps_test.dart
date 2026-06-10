@@ -2,8 +2,9 @@
 ///
 /// Garante que: (1) `finalState` é idêntico ao `endTurn`; (2) concatenar os
 /// `events` dos steps reproduz exatamente `lastTurnEvents`; (3) os snapshots
-/// dos steps mostram o tabuleiro AVANÇANDO (dano/morte/compactação) e não o
-/// estado final de uma vez.
+/// são PRÉ-ataque (Card Monsters): cada step mostra o alvo ainda vivo na
+/// posição enquanto a UI anima o golpe; o avanço/compactação aparece no step
+/// seguinte (ou no `finalState`).
 library;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -91,7 +92,8 @@ void main() {
       }
     });
 
-    test('os snapshots AVANÇAM o tabuleiro (morte+compactação visível)', () {
+    test('replay PRÉ-estado: o step mostra o alvo VIVO; tabuleiro avança no fim',
+        () {
       // a mata a frente de B num golpe; B tem retaguarda que deve avançar.
       final s = _stateWith(
         aLanes: [_inPlay(id: 'a', atk: 100)],
@@ -103,13 +105,21 @@ void main() {
       final out = engine.endTurnDetailed(s);
 
       expect(out.steps, isNotEmpty);
-      // O primeiro step (o ataque) já deve mostrar a frente morta e a
-      // retaguarda compactada para a lane 0 — o tabuleiro AVANÇOU naquele passo,
-      // não só no estado final.
+      // Card Monsters: o step do ataque mostra o tabuleiro ANTES do golpe — a
+      // frente AINDA viva na lane 0 e a retaguarda na lane 1 — pra UI animar o
+      // golpe sobre o alvo vivo. O avanço/compactação só aparece no finalState
+      // (ou no step seguinte, se houver mais ataques).
       final firstAttackStep = out.steps.first;
-      expect(firstAttackStep.state.sideB.lanes[0]?.instanceId, 'bBack');
-      expect(firstAttackStep.state.sideB.lanes[0]?.lane, 0);
-      expect(firstAttackStep.state.sideB.lanes[1], isNull);
+      expect(firstAttackStep.state.sideB.lanes[0]?.instanceId, 'bFront');
+      expect(firstAttackStep.state.sideB.lanes[1]?.instanceId, 'bBack');
+      // O evento do golpe registra a morte do alvo (a UI usa isso pra animar o
+      // shatter sobre o tile ainda visível).
+      expect(firstAttackStep.events.whereType<AttackResolved>().first.targetDied,
+          isTrue);
+      // Estado final: frente morta, retaguarda compactada pra lane 0.
+      expect(out.finalState.sideB.lanes[0]?.instanceId, 'bBack');
+      expect(out.finalState.sideB.lanes[0]?.lane, 0);
+      expect(out.finalState.sideB.lanes[1], isNull);
     });
 
     test('partida vazia/sem ataque não gera steps espúrios', () {

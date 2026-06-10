@@ -11,6 +11,7 @@ import '../data/datasources/local/diary_service.dart';
 import '../data/datasources/local/faction_quest_service.dart';
 import '../data/datasources/local/quest_admission_service.dart';
 import '../core/events/reward_events.dart';
+import '../data/services/card_match_reward_service.dart';
 import '../data/services/reward_grant_service.dart';
 import '../domain/enums/mission_modality.dart';
 import '../domain/enums/rank_codec.dart';
@@ -333,6 +334,15 @@ final rewardGrantServiceProvider = Provider<RewardGrantService>((ref) {
     client: ref.watch(supabaseClientProvider),
     eventBus: ref.watch(appEventBusProvider),
     factionBuff: ref.watch(factionBuffServiceProvider),
+  );
+});
+
+// Card Game — recompensa de partida PvE (ponto #1). Server-authoritative.
+final cardMatchRewardServiceProvider =
+    Provider<CardMatchRewardService>((ref) {
+  return CardMatchRewardService(
+    client: ref.watch(supabaseClientProvider),
+    eventBus: ref.watch(appEventBusProvider),
   );
 });
 

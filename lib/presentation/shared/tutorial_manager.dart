@@ -411,4 +411,57 @@ class TutorialManager {
     }
     if (level >= 99 && ctx.mounted) await phase11Skull(ctx, playerId: playerId);
   }
+
+  // ── FASE 14 — Modo Cartas (1ª partida, nível 2) ──────────────────────────
+  // Tutorial guiado da 1ª partida do Card Game: explica objetivo, recursos,
+  // posicionamento e o fim de turno via diálogos. NÃO entra no `runAll` (não é
+  // gatilho por nível) — a `CardMatchScreen` chama na 1ª vez que a partida
+  // abre. Mostrado UMA vez por jogador (sem revisão depois, decisão do CEO).
+  static Future<void> cardGameIntro(BuildContext ctx,
+      {required String playerId}) async {
+    if (!await TutorialService.shouldShow(
+        playerId, TutorialPhase.phase14_cardgame)) {
+      return;
+    }
+    if (!ctx.mounted) return;
+    await NpcDialogOverlay.show(ctx,
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
+      message: 'Bem-vindo ao Modo Cartas. Você e o oponente começam com 9 '
+          'criaturas. Vença derrotando todas as 9 dele.',
+    );
+    if (!ctx.mounted) return;
+    await NpcDialogOverlay.show(ctx,
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
+      message: 'A cada turno você ganha 3 cristais (canto inferior). Sua mão '
+          'tem 5 cartas; jogar uma compra a próxima do baralho. Use cristais '
+          'para invocar criaturas e equipar relíquias.',
+    );
+    if (!ctx.mounted) return;
+    await NpcDialogOverlay.show(ctx,
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
+      message: 'Posição importa. Corpo a corpo só ataca da FRENTE; arqueiros '
+          'só do FUNDO; magos de qualquer lugar miram o mais fraco. Monte sua '
+          'linha pensando nisso.',
+    );
+    if (!ctx.mounted) return;
+    await NpcDialogOverlay.show(ctx,
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
+      message: 'Suas criaturas formam uma fila sem buracos na frente. Tocar um '
+          'slot ocupado empurra os de trás — útil pra pôr um defensor na '
+          'frente e proteger quem está atrás.',
+    );
+    if (!ctx.mounted) return;
+    await NpcDialogOverlay.show(ctx,
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
+      message: 'Terminou suas jogadas? Toque nas espadas cruzadas (à direita) '
+          'para encerrar o turno. Aí as criaturas atacam automaticamente. '
+          'Agora é com você — boa sorte.',
+    );
+    await TutorialService.markDone(playerId, TutorialPhase.phase14_cardgame);
+  }
 }
