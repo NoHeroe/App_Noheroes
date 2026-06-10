@@ -306,37 +306,67 @@ class CardBattleEngine {
   /// Os eventos gerados durante a resolução (ataques, curas, penalidade,
   /// stall) são devolvidos em `lastTurnEvents` — substituindo (não acumulando)
   /// os do `endTurn` anterior.
-  MatchState endTurn(MatchState s) {
-    if (s.isOver) return s;
+  ///
+  /// Wrapper fino sobre [endTurnDetailed]: descarta os `steps` do replay e
+  /// devolve só o estado final. Usado por testes e bot-vs-bot.
+  MatchState endTurn(MatchState s) => endTurnDetailed(s).finalState;
 
-    // Log estruturado da resolução deste endTurn.
+  /// Como [endTurn], mas também devolve a LINHA DO TEMPO da resolução: uma lista
+  /// de [MatchReplayStep] em ordem, cada um com o snapshot do tabuleiro logo após
+  /// aquele passo e a fatia de eventos correspondente. A UI usa os steps pra
+  /// animar a Fase de Ataque passo a passo (o tabuleiro avança a cada golpe/morte
+  /// em vez de pular pro final). `finalState` é idêntico ao retorno de [endTurn].
+  ({MatchState finalState, List<MatchReplayStep> steps}) endTurnDetailed(
+      MatchState s) {
+    if (s.isOver) {
+      return (finalState: s, steps: const <MatchReplayStep>[]);
+    }
+
+    // Log estruturado da resolução deste endTurn + keyframes do replay.
     final events = <MatchEvent>[];
+    final steps = <MatchReplayStep>[];
 
-    // Fase de Ataque automática.
-    var state = _resolveAttackPhase(s, events);
+    // Snapshota a fatia de eventos [from..] num step ancorado em [snapState].
+    void record(MatchState snapState, int from) {
+      if (events.length <= from) return;
+      steps.add(MatchReplayStep(
+        state: snapState,
+        events: List<MatchEvent>.unmodifiable(events.sublist(from)),
+      ));
+    }
+
+    // Fase de Ataque automática (grava 1 step por ação de ataque/cura).
+    var state = _resolveAttackPhase(s, events, steps);
     final winAfterAttack = _checkVictory(state);
     if (winAfterAttack != null) {
-      return state.copyWith(
+      final fin = state.copyWith(
         phase: MatchPhase.fim,
         winner: winAfterAttack,
         lastTurnEvents: List.unmodifiable(events),
       );
+      return (finalState: fin, steps: steps);
     }
 
     // Penalidade: terminar o turno sem criaturas no tabuleiro.
+    final beforePenalty = events.length;
     state = _applyNoCreaturePenalty(state, events);
+    record(state, beforePenalty);
     final winAfterPenalty = _checkVictory(state);
     if (winAfterPenalty != null) {
-      return state.copyWith(
+      final fin = state.copyWith(
         phase: MatchPhase.fim,
         winner: winAfterPenalty,
         lastTurnEvents: List.unmodifiable(events),
       );
+      return (finalState: fin, steps: steps);
     }
 
     // Trava anti-stall.
     if (state.turn >= kStallTurnLimit) {
-      return _resolveStall(state, events);
+      final beforeStall = events.length;
+      final fin = _resolveStall(state, events);
+      record(fin, beforeStall);
+      return (finalState: fin, steps: steps);
     }
 
     // Expira buffs temporários (Inspirar do lado que termina; Investida do
@@ -349,8 +379,11 @@ class CardBattleEngine {
     // lastTurnEvents deste endTurn — semântica documentada em MatchState.
     final next = ending == SideId.a ? SideId.b : SideId.a;
     state = state.copyWith(activeSide: next, turn: state.turn + 1);
+    final beforeBegin = events.length;
     state = _beginTurn(state, events);
-    return state.copyWith(lastTurnEvents: List.unmodifiable(events));
+    final fin = state.copyWith(lastTurnEvents: List.unmodifiable(events));
+    record(fin, beforeBegin);
+    return (finalState: fin, steps: steps);
   }
 
   /// Resolve a Fase de Ataque do lado ativo contra o oponente — combate
@@ -363,9 +396,23 @@ class CardBattleEngine {
   /// - `cura` cura de qualquer posição.
   /// Criatura fora de posição simplesmente NÃO age neste turno.
   /// Silêncio (aura inimiga) bloqueia `magico` e `cura`.
-  MatchState _resolveAttackPhase(MatchState s, List<MatchEvent> events) {
+  MatchState _resolveAttackPhase(
+      MatchState s, List<MatchEvent> events, List<MatchReplayStep>? steps) {
     var attacker = s.active;
     var defender = s.opponent;
+
+    // Snapshota num step os eventos gerados desde [snappedUpTo] — ancorados no
+    // estado ATUAL (atacante/defensor acumulados). Assim cada golpe/cura/morte
+    // vira um keyframe do replay, na ordem.
+    var snappedUpTo = 0;
+    void snap() {
+      if (steps == null || events.length <= snappedUpTo) return;
+      final slice = List<MatchEvent>.unmodifiable(events.sublist(snappedUpTo));
+      snappedUpTo = events.length;
+      final snapState =
+          s.withSide(attacker.id, attacker).withSide(defender.id, defender);
+      steps.add(MatchReplayStep(state: snapState, events: slice));
+    }
 
     // Ordem de lane (frente→retaguarda), fixada no início da fase.
     final order = attacker.creaturesInPlay.map((c) => c.instanceId).toList();
@@ -397,12 +444,14 @@ class CardBattleEngine {
             detail: 'bloqueou ${creature.card.nome} '
                 '(${type == DamageType.cura ? 'cura' : 'ataque mágico'})',
           ));
+          snap();
           continue;
         }
       }
 
       if (type == DamageType.cura) {
         attacker = _resolveHeal(attacker, creature, events);
+        snap();
         continue;
       }
 
@@ -436,6 +485,7 @@ class CardBattleEngine {
       );
       attacker = result.$1;
       defender = result.$2;
+      snap();
     }
 
     var state = s.withSide(attacker.id, attacker);

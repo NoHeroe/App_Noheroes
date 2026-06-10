@@ -11,6 +11,7 @@ import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_game.dart';
 import '../deck_repository.dart';
 import '../pve_match_controller.dart';
+import '../widgets/game_card_face.dart';
 
 /// PARTIDA JOGÁVEL do Modo Cartas (ACDA) — PvE interativo.
 ///
@@ -38,6 +39,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   String? _bootError;
   CardLoadout? _playerLoadout;
   CardLoadout? _botLoadout;
+
+  /// Bandeja de mão expandida (minimizável — foco no tabuleiro).
+  bool _handExpanded = true;
 
   @override
   void initState() {
@@ -408,24 +412,37 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     final player = ui.playerBoard!;
     final interactive = ui.phase == PveMatchPhase.playerTurn;
 
+    // Tabuleiro em FOCO: as lanes ocupam o centro (espaçadas), e a mão fica
+    // numa bandeja minimizável no rodapé — não come a tela.
     return Column(
       children: [
         _botInfoBar(bot),
-        const SizedBox(height: 4),
-        _lanesRow(ui, bot, isPlayerSide: false),
-        _miniLog(ui),
+        Expanded(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _lanesRow(ui, bot, isPlayerSide: false),
+              _miniLog(ui),
+              AbsorbPointer(
+                absorbing: !interactive,
+                child: _lanesRow(ui, player, isPlayerSide: true),
+              ),
+            ],
+          ),
+        ),
         AbsorbPointer(
           absorbing: !interactive,
-          child: _lanesRow(ui, player, isPlayerSide: true),
+          child: Opacity(
+            opacity: interactive ? 1 : 0.55,
+            child: _handTray(ui, player),
+          ),
         ),
-        const SizedBox(height: 4),
-        Expanded(
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
           child: AbsorbPointer(
             absorbing: !interactive,
             child: Opacity(
-              opacity: interactive ? 1 : 0.55,
-              child: _footer(ui, player),
-            ),
+                opacity: interactive ? 1 : 0.55, child: _actionRow(ui)),
           ),
         ),
       ],
@@ -509,34 +526,38 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
             .any((c) => c != null && c.instanceId == h.targetCardId);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Row(
-            children: [
-              for (var lane = 0; lane < side.lanes.length; lane++) ...[
-                if (lane > 0) const SizedBox(width: 8),
-                Expanded(
-                  child: _laneSlot(
-                    ui,
-                    side.lanes[lane],
-                    lane: lane,
-                    isPlayerSide: isPlayerSide,
-                    laneHighlighted: highlightLanes.contains(lane),
-                    targetHighlighted: side.lanes[lane] != null &&
-                        highlightTargets
-                            .contains(side.lanes[lane]!.instanceId),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: SizedBox(
+        height: 152,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                for (var lane = 0; lane < side.lanes.length; lane++) ...[
+                  if (lane > 0) const SizedBox(width: 6),
+                  Expanded(
+                    child: _laneSlot(
+                      ui,
+                      side.lanes[lane],
+                      lane: lane,
+                      isPlayerSide: isPlayerSide,
+                      laneHighlighted: highlightLanes.contains(lane),
+                      targetHighlighted: side.lanes[lane] != null &&
+                          highlightTargets
+                              .contains(side.lanes[lane]!.instanceId),
+                    ),
                   ),
-                ),
+                ],
               ],
-            ],
-          ),
-          if (orphanTarget)
-            Positioned.fill(
-              child: Center(child: _floatingHighlightText(h)),
             ),
-        ],
+            if (orphanTarget)
+              Positioned.fill(
+                child: Center(child: _floatingHighlightText(h)),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -584,12 +605,11 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     required bool targetHighlighted,
   }) {
     final controller = ref.read(pveMatchControllerProvider.notifier);
-
-    Color borderColor = AppColors.border;
-    if (laneHighlighted) borderColor = AppColors.purpleLight;
-    if (targetHighlighted) borderColor = AppColors.gold;
-
     final isFront = lane == 0;
+
+    Color? borderOverride;
+    if (laneHighlighted) borderOverride = AppColors.purpleLight;
+    if (targetHighlighted) borderOverride = AppColors.gold;
 
     // Papel desta criatura no evento de combate sendo narrado (replay).
     final h = ui.highlight;
@@ -605,65 +625,59 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         h.attackerCardId == cid &&
         !isHlTarget;
 
-    Widget tile = AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      height: 96,
-      decoration: BoxDecoration(
-        color: creature == null
-            ? AppColors.surface.withValues(alpha: 0.55)
-            : AppColors.surfaceVeil2,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: borderColor,
-          width: (laneHighlighted || targetHighlighted) ? 1.6 : 1,
+    // Conteúdo: card no formato da coleção ou slot vazio. AnimatedSwitcher
+    // keyed no instanceId → "frente sai / retaguarda entra" faz cross-fade
+    // (a substituição passa a LER visualmente).
+    final Widget content = creature == null
+        ? _emptyLane(lane, laneHighlighted)
+        : _boardCard(creature, isFront: isFront, borderOverride: borderOverride);
+
+    Widget tile = AspectRatio(
+      aspectRatio: 142 / 206,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 280),
+        switchInCurve: Curves.easeOut,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (child, anim) => FadeTransition(
+          opacity: anim,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.9, end: 1).animate(anim),
+            child: child,
+          ),
         ),
-        boxShadow: (laneHighlighted || targetHighlighted)
-            ? [
-                BoxShadow(
-                    color: borderColor.withValues(alpha: 0.35), blurRadius: 8)
-              ]
-            : null,
+        child: KeyedSubtree(
+          key: ValueKey<String>(creature?.instanceId ?? 'empty$lane'),
+          child: content,
+        ),
       ),
-      child: creature == null
-          ? Center(
-              child: Text(
-                isFront ? 'FRENTE' : 'LINHA ${lane + 1}',
-                style: GoogleFonts.roboto(
-                    fontSize: 9,
-                    color: laneHighlighted
-                        ? AppColors.purpleLight
-                        : AppColors.textMuted,
-                    letterSpacing: 1.5),
-              ),
-            )
-          : _creatureTile(creature, isFront: isFront),
     );
 
-    // Animações simples do replay (flutter_animate; key = evento, então cada
-    // evento novo reinicia a animação).
-    if (isHlAttacker) {
-      // Investida curta na direção do inimigo (jogador ataca pra cima).
-      final lunge = isPlayerSide ? -7.0 : 7.0;
-      tile = tile
-          .animate(key: ObjectKey(h))
-          .moveY(begin: 0, end: lunge, duration: 140.ms, curve: Curves.easeOut)
-          .then(delay: 50.ms)
-          .moveY(begin: 0, end: -lunge, duration: 170.ms, curve: Curves.easeIn);
-    } else if (isHlAbility) {
-      tile = tile.animate(key: ObjectKey(h)).shimmer(
-          duration: 550.ms, color: AppColors.gold.withValues(alpha: 0.35));
-    } else if (isHlTarget && !h.isHeal) {
-      tile = tile
-          .animate(key: ObjectKey(h))
-          .shake(hz: 7, duration: 340.ms, rotation: 0.012);
-    } else if (isHlTarget && h.isHeal) {
-      tile = tile.animate(key: ObjectKey(h)).shimmer(
-          duration: 550.ms,
-          color: AppColors.conceptChrysalis.withValues(alpha: 0.3));
+    // Animações do replay (flutter_animate; key = evento → reinicia a cada
+    // evento). Só fazem sentido com criatura presente.
+    if (creature != null && h != null) {
+      if (isHlAttacker) {
+        final lunge = isPlayerSide ? -7.0 : 7.0;
+        tile = tile
+            .animate(key: ObjectKey(h))
+            .moveY(begin: 0, end: lunge, duration: 140.ms, curve: Curves.easeOut)
+            .then(delay: 50.ms)
+            .moveY(begin: 0, end: -lunge, duration: 170.ms, curve: Curves.easeIn);
+      } else if (isHlAbility) {
+        tile = tile.animate(key: ObjectKey(h)).shimmer(
+            duration: 550.ms, color: AppColors.gold.withValues(alpha: 0.35));
+      } else if (isHlTarget && !h.isHeal) {
+        tile = tile
+            .animate(key: ObjectKey(h))
+            .shake(hz: 7, duration: 340.ms, rotation: 0.012);
+      } else if (isHlTarget && h.isHeal) {
+        tile = tile.animate(key: ObjectKey(h)).shimmer(
+            duration: 550.ms,
+            color: AppColors.conceptChrysalis.withValues(alpha: 0.3));
+      }
     }
 
-    // Número/texto flutuante ancorado no tile do alvo (ou do dono do proc).
-    if (isHlTarget || isHlAbility) {
+    // Número/texto flutuante ancorado no card do alvo (ou do dono do proc).
+    if (creature != null && (isHlTarget || isHlAbility)) {
       tile = Stack(
         clipBehavior: Clip.none,
         children: [
@@ -673,101 +687,134 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       );
     }
 
-    return GestureDetector(
-      onTap: () {
-        if (!isPlayerSide || !ui.isPlayerTurn) return;
-        final selectedId = ui.selectedCardId;
-        if (selectedId == null) return;
-        if (laneHighlighted && creature == null) {
-          controller.playCreature(selectedId, lane: lane);
-        } else if (targetHighlighted && creature != null) {
-          controller.playRelic(selectedId, creature.instanceId);
-        }
-      },
-      child: tile,
+    return Center(
+      child: GestureDetector(
+        onTap: () {
+          if (!isPlayerSide || !ui.isPlayerTurn) return;
+          final selectedId = ui.selectedCardId;
+          if (selectedId == null) return;
+          if (laneHighlighted && creature == null) {
+            controller.playCreature(selectedId, lane: lane);
+          } else if (targetHighlighted && creature != null) {
+            controller.playRelic(selectedId, creature.instanceId);
+          }
+        },
+        child: tile,
+      ),
     );
   }
 
-  Widget _creatureTile(CreatureInPlay c, {required bool isFront}) {
-    final concept = _conceptColor(c.card.concepts.first);
+  /// Slot de lane vazio (placeholder no formato/raio do card).
+  Widget _emptyLane(int lane, bool highlighted) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: highlighted ? AppColors.purpleLight : AppColors.border,
+          width: highlighted ? 1.6 : 1,
+        ),
+        boxShadow: highlighted
+            ? const [BoxShadow(color: AppColors.purpleGlow, blurRadius: 8)]
+            : null,
+      ),
+      child: Center(
+        child: Text(
+          lane == 0 ? 'FRENTE' : 'LINHA ${lane + 1}',
+          style: GoogleFonts.roboto(
+              fontSize: 8,
+              letterSpacing: 1.2,
+              color:
+                  highlighted ? AppColors.purpleLight : AppColors.textMuted),
+        ),
+      ),
+    );
+  }
+
+  /// Card de criatura no tabuleiro: `GameCardFace` (formato da coleção) com
+  /// rodapé de combate (ATK efetivo, PV atual/máx + barra, keywords).
+  Widget _boardCard(CreatureInPlay c,
+      {required bool isFront, Color? borderOverride}) {
+    return GameCardFace(
+      name: c.card.nome,
+      cost: c.card.cost,
+      concepts: c.card.concepts,
+      rarity: c.card.rarity,
+      artIcon: damageTypeIcon(c.effectiveDamageType),
+      borderOverride: borderOverride,
+      cornerBadge: isFront
+          ? const Icon(Icons.flag, size: 11, color: AppColors.gold)
+          : null,
+      footer: _boardFooter(c),
+    );
+  }
+
+  Widget _boardFooter(CreatureInPlay c) {
     final hpRatio =
         c.maxHp <= 0 ? 0.0 : (c.currentHp / c.maxHp).clamp(0.0, 1.0);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(_damageTypeIcon(c.effectiveDamageType),
-                  size: 10, color: concept),
-              const SizedBox(width: 3),
-              Expanded(
-                child: Text(
-                  c.card.nome,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.roboto(
-                      fontSize: 10,
-                      color: concept,
-                      fontWeight: FontWeight.w600),
-                ),
-              ),
-              if (isFront)
-                const Icon(Icons.flag_outlined,
-                    size: 10, color: AppColors.textMuted),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Text('${c.effectiveAtk}',
+                style: GoogleFonts.robotoMono(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.gold)),
+            Text(' ATK',
+                style: GoogleFonts.roboto(
+                    fontSize: 6,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.gold.withValues(alpha: 0.7))),
+            const Spacer(),
+            if (c.armor > 0) ...[
+              const Icon(Icons.shield, size: 8, color: AppColors.textSecondary),
+              Text('${c.armor} ',
+                  style: GoogleFonts.robotoMono(
+                      fontSize: 8, color: AppColors.textSecondary)),
             ],
-          ),
-          const SizedBox(height: 3),
-          Text('ATK ${c.effectiveAtk} · PV ${c.currentHp}/${c.maxHp}'
-              '${c.armor > 0 ? ' · ARM ${c.armor}' : ''}',
-              style: GoogleFonts.robotoMono(
-                  fontSize: 9, color: AppColors.textSecondary)),
-          const SizedBox(height: 5),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(3),
-            child: SizedBox(
-              height: 4,
-              child: Stack(
-                children: [
-                  Container(color: AppColors.surface),
-                  FractionallySizedBox(
-                    widthFactor: hpRatio,
-                    child: Container(
-                      color: hpRatio > 0.5
-                          ? AppColors.conceptChrysalis
-                          : (hpRatio > 0.25 ? AppColors.gold : AppColors.hp),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (c.keywords.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              c.keywords.map(abilityKeywordLabel).join(' · '),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.roboto(
-                  fontSize: 7.5,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.gold.withValues(alpha: 0.85)),
-            ),
+            Text('${c.currentHp}/${c.maxHp}',
+                style: GoogleFonts.robotoMono(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.conceptChrysalis)),
           ],
-          const Spacer(),
-          Row(
-            children: [
-              for (final r in c.relics)
-                Padding(
-                  padding: const EdgeInsets.only(right: 3),
-                  child: Icon(Icons.auto_awesome,
-                      size: 10, color: _conceptColor(r.concepts.first)),
+        ),
+        const SizedBox(height: 3),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(3),
+          child: SizedBox(
+            height: 4,
+            child: Stack(
+              children: [
+                Container(color: AppColors.surface),
+                FractionallySizedBox(
+                  widthFactor: hpRatio,
+                  child: Container(
+                    color: hpRatio > 0.5
+                        ? AppColors.conceptChrysalis
+                        : (hpRatio > 0.25 ? AppColors.gold : AppColors.hp),
+                  ),
                 ),
-            ],
+              ],
+            ),
+          ),
+        ),
+        if (c.keywords.isNotEmpty) ...[
+          const SizedBox(height: 3),
+          Text(
+            c.keywords.map(abilityKeywordLabel).join(' · '),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.roboto(
+                fontSize: 7,
+                fontWeight: FontWeight.w600,
+                color: AppColors.gold.withValues(alpha: 0.85)),
           ),
         ],
-      ),
+      ],
     );
   }
 
@@ -775,36 +822,39 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   // Mini-log
   // ---------------------------------------------------------------------------
 
+  /// Faixa central slim: turno/fase + últimas 2 linhas de log (toca → log full).
   Widget _miniLog(PveMatchUiState ui) {
-    final recent = ui.log.length <= 4
-        ? ui.log
-        : ui.log.sublist(ui.log.length - 4);
+    final recent =
+        ui.log.length <= 2 ? ui.log : ui.log.sublist(ui.log.length - 2);
     return GestureDetector(
       onTap: () => _showFullLog(ui.log),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        margin: const EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         width: double.infinity,
         decoration: BoxDecoration(
           color: AppColors.black.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppColors.borderViolet),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            for (final entry in recent)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 1),
-                child: _logLine(entry),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final entry in recent)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 0.5),
+                      child: _logLine(entry),
+                    ),
+                ],
               ),
-            if (ui.log.length > 4)
-              Align(
-                alignment: Alignment.centerRight,
-                child: Text('ver tudo ›',
-                    style: GoogleFonts.roboto(
-                        fontSize: 9, color: AppColors.purpleLight)),
-              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(Icons.unfold_more,
+                size: 13, color: AppColors.purpleLight),
           ],
         ),
       ),
@@ -830,60 +880,82 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   // Rodapé: cristais + pool + ações
   // ---------------------------------------------------------------------------
 
-  Widget _footer(PveMatchUiState ui, BoardSide player) {
+  /// Bandeja de mão MINIMIZÁVEL: alça (cristais + contagem + chevron) que
+  /// expande/colapsa o baralho único. Colapsada, o tabuleiro ganha a tela.
+  Widget _handTray(PveMatchUiState ui, BoardSide player) {
+    final count = player.poolCreatures.length + player.poolRelics.length;
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 2, 16, 10),
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+      margin: const EdgeInsets.fromLTRB(10, 2, 10, 4),
       decoration: BoxDecoration(
         color: AppColors.surfaceVeil,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.borderViolet),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              // Cristais — destaque.
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: AppColors.mp.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                  border:
-                      Border.all(color: AppColors.mp.withValues(alpha: 0.5)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.diamond_outlined,
-                        size: 15, color: AppColors.mp),
-                    const SizedBox(width: 5),
-                    Text('${player.crystals}',
-                        style: GoogleFonts.robotoMono(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary)),
-                  ],
-                ),
+          InkWell(
+            onTap: () => setState(() => _handExpanded = !_handExpanded),
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 7, 10, 7),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.mp.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                          color: AppColors.mp.withValues(alpha: 0.5)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.diamond_outlined,
+                            size: 14, color: AppColors.mp),
+                        const SizedBox(width: 5),
+                        Text('${player.crystals}',
+                            style: GoogleFonts.robotoMono(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  _statChip(Icons.pets_outlined,
+                      '${player.remainingCreatureCount}/9',
+                      AppColors.purpleLight),
+                  const Spacer(),
+                  Text('MÃO ($count)',
+                      style: GoogleFonts.cinzelDecorative(
+                          fontSize: 9,
+                          letterSpacing: 2,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textMuted)),
+                  const SizedBox(width: 4),
+                  Icon(
+                      _handExpanded
+                          ? Icons.keyboard_arrow_down
+                          : Icons.keyboard_arrow_up,
+                      size: 18,
+                      color: AppColors.purpleLight),
+                ],
               ),
-              const SizedBox(width: 10),
-              _statChip(Icons.pets_outlined,
-                  '${player.remainingCreatureCount}/9', AppColors.purpleLight),
-              const Spacer(),
-              Text(
-                'MÃO (${player.poolCreatures.length + player.poolRelics.length})',
-                style: GoogleFonts.cinzelDecorative(
-                    fontSize: 9,
-                    letterSpacing: 2,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textMuted),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 8),
-          Expanded(child: _handStrip(ui, player)),
-          const SizedBox(height: 8),
-          _actionRow(ui),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            alignment: Alignment.topCenter,
+            child: _handExpanded
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                    child: SizedBox(height: 150, child: _handStrip(ui, player)),
+                  )
+                : const SizedBox(width: double.infinity),
+          ),
         ],
       ),
     );
@@ -943,153 +1015,79 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
-  /// Carta COMPACTA da mão (criatura ou relíquia) — vibe Card Monsters com
-  /// acabamento dark fantasy: gema de custo, ícone do tipo, nome em
-  /// CinzelDecorative sobre gradiente escuro do conceito, borda por raridade.
+  /// Carta da mão no formato da coleção (`GameCardFace`), ~10% maior que a
+  /// referência. Criatura mostra ATK/PV; relíquia mostra o resumo de efeito.
   Widget _handCard(Object card, {required bool selected, required bool playable}) {
     final creature = card is CreatureCard ? card : null;
     final relic = card is RelicCard ? card : null;
-
     final cardId = creature?.id ?? relic!.id;
-    final nome = creature?.nome ?? relic!.nome;
-    final cost = creature?.cost ?? relic!.cost;
-    final rarity = creature?.rarity ?? relic!.rarity;
-    final concept =
-        _conceptColor((creature?.concepts ?? relic!.concepts).first);
+    final concepts = creature?.concepts ?? relic!.concepts;
+    final concept = conceptColor(concepts);
+
+    final Widget footer = creature != null
+        ? Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text('${creature.atk}',
+                  style: GoogleFonts.robotoMono(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.gold)),
+              Text(' ATK',
+                  style: GoogleFonts.roboto(
+                      fontSize: 6,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.gold.withValues(alpha: 0.7))),
+              const Spacer(),
+              Text('${creature.hp}',
+                  style: GoogleFonts.robotoMono(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.conceptChrysalis)),
+              Text(' PV',
+                  style: GoogleFonts.roboto(
+                      fontSize: 6,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.conceptChrysalis.withValues(alpha: 0.7))),
+            ],
+          )
+        : Text(_relicSummary(relic!),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.robotoMono(
+                fontSize: 7, height: 1.15, color: AppColors.textSecondary));
+
+    final Widget badge = (relic?.isFlash ?? false)
+        ? const Icon(Icons.bolt, size: 12, color: AppColors.gold)
+        : Icon(
+            creature != null
+                ? damageTypeIcon(creature.damageType)
+                : Icons.auto_awesome,
+            size: 11,
+            color: concept);
 
     final controller = ref.read(pveMatchControllerProvider.notifier);
     return GestureDetector(
       // Carta não-jogável continua selecionável: ainda pode ser SACRIFICADA.
       onTap: () => controller.selectCard(cardId),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        width: 78,
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              concept.withValues(alpha: selected ? 0.30 : 0.22),
-              const Color(0xFF0B0610),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(9),
-          border: Border.all(
-            color: selected ? AppColors.purpleLight : _rarityColor(rarity),
-            width: selected ? 1.6 : 1,
-          ),
-          boxShadow: selected
-              ? const [
-                  BoxShadow(
-                      color: AppColors.purpleGlow,
-                      blurRadius: 8,
-                      spreadRadius: 1)
-                ]
-              : null,
-        ),
-        child: Opacity(
-          opacity: playable ? 1 : 0.4,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  // Gema de custo.
-                  Container(
-                    width: 17,
-                    height: 17,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: AppColors.mp.withValues(alpha: 0.20),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                          color: AppColors.mp.withValues(alpha: 0.6),
-                          width: 0.8),
-                    ),
-                    child: Text('$cost',
-                        style: GoogleFonts.robotoMono(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.mp)),
-                  ),
-                  const Spacer(),
-                  if (relic?.isFlash ?? false)
-                    const Icon(Icons.bolt, size: 12, color: AppColors.gold),
-                  if (creature != null)
-                    Icon(_damageTypeIcon(creature.damageType),
-                        size: 12, color: concept),
-                  if (relic != null && !relic.isFlash)
-                    Icon(Icons.auto_awesome, size: 11, color: concept),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(nome,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.cinzelDecorative(
-                      fontSize: 8,
-                      height: 1.25,
-                      fontWeight: FontWeight.w700,
-                      color: concept)),
-              const Spacer(),
-              if (creature != null)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text('${creature.atk}',
-                        style: GoogleFonts.robotoMono(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.gold)),
-                    Text(' ATK',
-                        style: GoogleFonts.roboto(
-                            fontSize: 6.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.gold.withValues(alpha: 0.75))),
-                    const Spacer(),
-                    Text('${creature.hp}',
-                        style: GoogleFonts.robotoMono(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.conceptChrysalis)),
-                    Text(' PV',
-                        style: GoogleFonts.roboto(
-                            fontSize: 6.5,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.conceptChrysalis
-                                .withValues(alpha: 0.75))),
-                  ],
-                )
-              else
-                Text(_relicSummary(relic!),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.robotoMono(
-                        fontSize: 7.5,
-                        height: 1.2,
-                        color: AppColors.textSecondary)),
-            ],
-          ),
+      child: AspectRatio(
+        aspectRatio: 142 / 206,
+        child: GameCardFace(
+          name: creature?.nome ?? relic!.nome,
+          cost: creature?.cost ?? relic!.cost,
+          concepts: concepts,
+          rarity: creature?.rarity ?? relic!.rarity,
+          artIcon: creature != null
+              ? damageTypeIcon(creature.damageType)
+              : (relic!.isFlash ? Icons.bolt : Icons.auto_awesome),
+          footer: footer,
+          cornerBadge: badge,
+          selected: selected,
+          dimmed: !playable,
         ),
       ),
     );
-  }
-
-  IconData _damageTypeIcon(DamageType t) {
-    switch (t) {
-      case DamageType.corpoACorpo:
-        return Icons.sports_martial_arts;
-      case DamageType.aDistancia:
-        return Icons.gps_fixed;
-      case DamageType.magico:
-        return Icons.auto_fix_high;
-      case DamageType.vitalismo:
-        return Icons.flare;
-      case DamageType.cura:
-        return Icons.healing;
-    }
   }
 
   String _relicSummary(RelicCard card) {
@@ -1358,39 +1356,4 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Cores
-  // ---------------------------------------------------------------------------
-
-  Color _conceptColor(CardConcept c) {
-    switch (c) {
-      case CardConcept.vitalismo:
-        return AppColors.conceptVita;
-      case CardConcept.neutro:
-        return AppColors.conceptNeutro;
-      case CardConcept.chrysalis:
-        return AppColors.conceptChrysalis;
-      case CardConcept.celestial:
-        return AppColors.conceptCelestial;
-      case CardConcept.magico:
-        return AppColors.conceptMagico;
-      case CardConcept.corrompido:
-        return AppColors.conceptCorrompido;
-    }
-  }
-
-  Color _rarityColor(Rarity r) {
-    switch (r) {
-      case Rarity.comum:
-        return AppColors.cardComum;
-      case Rarity.rara:
-        return AppColors.cardRara;
-      case Rarity.epica:
-        return AppColors.cardEpica;
-      case Rarity.lendaria:
-        return AppColors.cardLendaria;
-      case Rarity.elite:
-        return AppColors.cardElite;
-    }
-  }
 }

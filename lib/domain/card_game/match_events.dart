@@ -168,3 +168,19 @@ class StallLimitReached extends MatchEvent {
   @override
   String toString() => 'StallLimitReached(vencedor: ${winner.name})';
 }
+
+/// Um PASSO do replay narrado da Fase de Ataque (e dos procs de virada de
+/// turno). `state` é o snapshot imutável do `MatchState` logo APÓS este passo
+/// resolver; `events` é a fatia de eventos gerada NESTE passo (1 ou mais).
+///
+/// A UI avança o tabuleiro para `state` e anima/narra `events` — assim o combate
+/// "acontece" passo a passo (dano cai, criatura morre, retaguarda avança) em vez
+/// de pular direto pro estado final. Cada evento de `lastTurnEvents` pertence a
+/// exatamente um step, na ordem; concatenar os `events` dos steps reproduz
+/// `lastTurnEvents`.
+class MatchReplayStep {
+  const MatchReplayStep({required this.state, required this.events});
+
+  final MatchState state;
+  final List<MatchEvent> events;
+}

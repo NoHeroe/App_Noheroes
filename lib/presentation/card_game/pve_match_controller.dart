@@ -160,7 +160,7 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
   /// Acompanha o pacing do bot: `Duration.zero` (testes) => replay síncrono,
   /// sem highlight.
   Duration get _eventStepDelay => _botStepDelay > Duration.zero
-      ? const Duration(milliseconds: 480)
+      ? const Duration(milliseconds: 520)
       : Duration.zero;
 
   /// Guard de reentrância: cobre `startMatch` e `endPlayerTurn` (pipelines
@@ -360,15 +360,14 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
         clearSelectedCard: true,
       );
 
-      // Fase de Ataque do jogador.
+      // Fase de Ataque do jogador (replay passo a passo).
       final resolvedTurn = match.turn;
-      final afterPlayer = _engine.endTurn(match);
-      state = state.copyWith(match: afterPlayer);
-      await _replayEvents(afterPlayer, resolvedTurn);
+      final outcome = _engine.endTurnDetailed(match);
+      await _replaySteps(outcome, resolvedTurn);
       if (!mounted) return;
 
-      if (afterPlayer.isOver) {
-        if (state.phase != PveMatchPhase.finished) _finish(afterPlayer);
+      if (outcome.finalState.isOver) {
+        if (state.phase != PveMatchPhase.finished) _finish(outcome.finalState);
         return;
       }
       if (_aborted) return; // forfeit durante o replay
@@ -414,16 +413,15 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
       if (_aborted) return;
     }
 
-    // Fase de Ataque do bot.
+    // Fase de Ataque do bot (replay passo a passo).
     final resolvedTurn = match.turn;
-    match = _engine.endTurn(match);
+    final outcome = _engine.endTurnDetailed(match);
     if (_aborted) return;
-    state = state.copyWith(match: match);
-    await _replayEvents(match, resolvedTurn);
+    await _replaySteps(outcome, resolvedTurn);
     if (!mounted) return;
 
-    if (match.isOver) {
-      if (state.phase != PveMatchPhase.finished) _finish(match);
+    if (outcome.finalState.isOver) {
+      if (state.phase != PveMatchPhase.finished) _finish(outcome.finalState);
     } else if (state.phase != PveMatchPhase.finished) {
       state = state.copyWith(phase: PveMatchPhase.playerTurn);
     }
@@ -537,14 +535,20 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
   ///
   /// O `MatchState` final já foi publicado ANTES do replay (HP/lanes finais);
   /// o replay só controla narração + animação, nunca o estado da partida.
-  Future<void> _replayEvents(MatchState match, int turn) async {
-    final events = match.lastTurnEvents;
-    if (events.isEmpty) return;
+  Future<void> _replaySteps(
+      ({MatchState finalState, List<MatchReplayStep> steps}) outcome,
+      int turn) async {
+    final finalState = outcome.finalState;
+    final steps = outcome.steps;
 
-    if (_eventStepDelay == Duration.zero) {
+    // Modo síncrono (testes, pacing zero) OU nada a narrar: pula direto pro
+    // estado final e appenda todos os logs de uma vez. Mantém os testes do
+    // controller verdes (logs e estado final idênticos ao comportamento antigo).
+    if (_eventStepDelay == Duration.zero || steps.isEmpty) {
       state = state.copyWith(
+        match: finalState,
         log: _appendedAll(<MatchLogEntry>[
-          for (final e in events)
+          for (final e in finalState.lastTurnEvents)
             MatchLogEntry(
                 text: _eventText(e), kind: MatchLogKind.combat, turn: turn),
         ]),
@@ -552,19 +556,42 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
       return;
     }
 
-    for (final e in events) {
-      if (_aborted) return; // forfeit no meio do replay: para de narrar
-      final highlight = _highlightFor(e);
+    // Replay passo a passo: a cada step o TABULEIRO avança (HP cai, morto sai,
+    // retaguarda avança) e o destaque visual anima o evento principal.
+    for (final step in steps) {
+      if (_aborted) {
+        state = state.copyWith(match: finalState, clearHighlight: true);
+        return;
+      }
+      final primary = _primaryEvent(step.events);
+      final highlight = primary == null ? null : _highlightFor(primary);
       state = state.copyWith(
-        log: _appended(MatchLogEntry(
-            text: _eventText(e), kind: MatchLogKind.combat, turn: turn)),
+        match: step.state,
         highlight: highlight,
         clearHighlight: highlight == null,
+        log: _appendedAll(<MatchLogEntry>[
+          for (final e in step.events)
+            MatchLogEntry(
+                text: _eventText(e), kind: MatchLogKind.combat, turn: turn),
+        ]),
       );
       await Future<void>.delayed(_eventStepDelay);
     }
     if (!mounted) return;
-    state = state.copyWith(clearHighlight: true);
+    // Crava o estado final exato (vira de turno / buffs) e limpa o destaque.
+    state = state.copyWith(match: finalState, clearHighlight: true);
+  }
+
+  /// Evento "âncora" de um step para o destaque visual: prioriza ataque/evasão/
+  /// cura (ancorados em atacante+alvo) sobre procs de habilidade.
+  MatchEvent? _primaryEvent(List<MatchEvent> events) {
+    if (events.isEmpty) return null;
+    for (final e in events) {
+      if (e is AttackResolved || e is AttackEvaded || e is HealResolved) {
+        return e;
+      }
+    }
+    return events.first;
   }
 
   /// Mapeia um [MatchEvent] para o destaque visual correspondente.
