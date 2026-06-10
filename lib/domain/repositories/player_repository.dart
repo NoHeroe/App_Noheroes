@@ -20,4 +20,10 @@ abstract class PlayerRepository {
   /// Conclui o onboarding (nome da Sombra + modo narrativo).
   Future<void> completeOnboarding(
       String id, String shadowName, String narrativeMode);
+
+  /// DEV: zera 100% a conta. Apaga todos os dados do jogador no servidor,
+  /// restaura `players` aos defaults de conta nova e re-semeia as receitas
+  /// starter (RPC `reset_account`, atômica). Mantém login/email; reinicia o
+  /// onboarding. `auth.uid()` precisa ser o próprio jogador.
+  Future<void> resetAccount(String id);
 }

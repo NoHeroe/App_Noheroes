@@ -38,4 +38,12 @@ class PlayerRepositorySupabase implements PlayerRepository {
       'narrative_mode': narrativeMode,
     }).eq('id', id);
   }
+
+  @override
+  Future<void> resetAccount(String id) async {
+    // RPC server-side atômica (apaga dados + restaura players + re-semeia
+    // starters). Guard `auth.uid() = p_player` no SQL garante que só o próprio
+    // jogador reseta a si mesmo.
+    await _client.rpc('reset_account', params: {'p_player': id});
+  }
 }

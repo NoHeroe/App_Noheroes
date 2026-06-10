@@ -97,6 +97,61 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
     ref.invalidate(playerStreamProvider);
   }
 
+  // ─── RESET TOTAL (DEV) ─────────────────────────────────────────────
+
+  /// Zera 100% a conta no servidor e reinicia o fluxo do app (splash →
+  /// awakening), espelhando um cold-start de conta nova. Mantém o login.
+  Future<void> _resetAccount() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('RESETAR 100% A CONTA?',
+            style: GoogleFonts.cinzelDecorative(
+                color: AppColors.hp, fontSize: 14)),
+        content: Text(
+          'Apaga TUDO no servidor: progressão, atributos, ouro/gemas, '
+          'inventário, equipamentos, receitas, missões, conquistas, facções, '
+          'guilda, vitalismo, reputação, diário e a coleção/decks de cartas. '
+          'Restaura a conta aos valores de uma conta nova e reinicia o '
+          'onboarding. O login (email) é mantido. Sem volta. Confirma?',
+          style: GoogleFonts.roboto(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.hp),
+            child: const Text('RESETAR TUDO'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+
+    try {
+      await ref.read(playerRepositoryProvider).resetAccount(player.id);
+    } catch (e) {
+      if (!mounted) return;
+      AppSnack.error(context, 'Falha ao resetar a conta: $e');
+      return;
+    }
+    if (!mounted) return;
+
+    // Limpa caches e volta ao início. O splash re-busca a sessão (agora conta
+    // zerada, onboarding_done=false) e roteia pro /awakening.
+    _invalidateAll(player.id);
+    ref.invalidate(playerStreamProvider);
+    AppSnack.success(context, 'Conta zerada. Reiniciando o fluxo do zero…');
+    context.go('/');
+  }
+
   // ─── AJUSTAR VALORES ───────────────────────────────────────────────
 
   Future<void> _apply() async {
@@ -1040,6 +1095,12 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
                 '${player?.classType ?? '-'} · ${player?.factionType ?? '-'}'),
             _infoRow('Sombra',
                 '${player?.shadowState ?? '-'} · Dia ${player?.caelumDay ?? 1} em Caelum'),
+            const SizedBox(height: 16),
+
+            // 1.5. ZONA PERIGOSA — reset total da conta (full-online).
+            _section('ZONA PERIGOSA'),
+            _actionBtn('RESETAR 100% A CONTA (do zero)', AppColors.hp,
+                _resetAccount),
             const SizedBox(height: 16),
 
             // 2. AJUSTAR VALORES
