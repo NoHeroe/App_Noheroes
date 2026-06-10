@@ -48,6 +48,24 @@ class TutorialManager {
       npcTitle: 'Presenca silenciosa',
       message: 'Você subiu de nível. No Personagem há pontos de atributo disponíveis — cada ponto melhora suas estatísticas permanentemente.',
     );
+    // Nível 2 também desbloqueia o Modo Cartas (ponto #3). Duas falas: anúncio
+    // do modo + como preparar (Coleção + Construtor de Deck).
+    if (!ctx.mounted) return;
+    await NpcDialogOverlay.show(ctx,
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
+      message: 'O Modo Cartas também despertou. Na tela de Batalha há um duelo '
+          'de cartas — colecione criaturas e relíquias e prove sua estratégia '
+          'contra outros.',
+    );
+    if (!ctx.mounted) return;
+    await NpcDialogOverlay.show(ctx,
+      npcName: 'O Vazio',
+      npcTitle: 'Presenca silenciosa',
+      message: 'Antes de duelar, prepare-se: na Coleção você vê suas cartas; no '
+          'Construtor de Deck monta seu baralho com 9 criaturas + 9 relíquias. '
+          'Sem um deck válido não dá pra entrar na partida.',
+    );
     await TutorialService.markDone(playerId, TutorialPhase.phase2_library);
   }
 
