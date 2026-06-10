@@ -40,9 +40,6 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   CardLoadout? _playerLoadout;
   CardLoadout? _botLoadout;
 
-  /// Bandeja de mão expandida (minimizável — foco no tabuleiro).
-  bool _handExpanded = true;
-
   @override
   void initState() {
     super.initState();
@@ -302,22 +299,26 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                 ),
               ),
             ),
-            SafeArea(
-              child: Column(
-                children: [
-                  _header(ui),
-                  Expanded(child: _body(ui)),
-                ],
-              ),
-            ),
-            // Botão redondo de encerrar turno, fixo no centro-direita.
+            SafeArea(child: _body(ui)),
+            // Botões laterais no MEIO (banda entre os dois tabuleiros): voltar à
+            // esquerda, encerrar jogada (espadas cruzadas) à direita.
             if (_boot == _BootStatus.ready && ui.match != null && !ui.isFinished)
-              Positioned(
-                right: 8,
-                top: 0,
-                bottom: 0,
-                child: Center(child: _endTurnButton(ui)),
+              ...[
+              Align(
+                alignment: const Alignment(-1, -0.04),
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: _sideBackButton(),
+                ),
               ),
+              Align(
+                alignment: const Alignment(1, -0.04),
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: _endTurnButton(ui),
+                ),
+              ),
+            ],
             if (ui.isFinished && _boot == _BootStatus.ready)
               _matchOverOverlay(ui),
           ],
@@ -351,67 +352,6 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   }
 
   // ---------------------------------------------------------------------------
-  // Header
-  // ---------------------------------------------------------------------------
-
-  Widget _header(PveMatchUiState ui) {
-    final turnText = switch (ui.phase) {
-      PveMatchPhase.playerTurn => 'Turno ${ui.match?.turn ?? '-'} · sua vez',
-      PveMatchPhase.resolving => 'Resolvendo ataque…',
-      PveMatchPhase.botTurn => 'Vez da IA…',
-      PveMatchPhase.finished => 'Partida encerrada',
-      PveMatchPhase.idle => 'Preparando…',
-    };
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: _onBackPressed,
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                border: Border.all(color: AppColors.border),
-                borderRadius: BorderRadius.circular(10),
-                color: AppColors.surface,
-              ),
-              child: const Icon(Icons.arrow_back_ios_new,
-                  color: AppColors.textSecondary, size: 18),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('PARTIDA — MODO CARTAS',
-                    style: GoogleFonts.cinzelDecorative(
-                        fontSize: 13,
-                        color: AppColors.purpleLight,
-                        letterSpacing: 2)),
-                Text(turnText,
-                    style: GoogleFonts.roboto(
-                        fontSize: 11, color: AppColors.textMuted)),
-              ],
-            ),
-          ),
-          if (ui.phase == PveMatchPhase.botTurn ||
-              ui.phase == PveMatchPhase.resolving)
-            const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.purple),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
   // Corpo da partida
   // ---------------------------------------------------------------------------
 
@@ -420,17 +360,17 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     final player = ui.playerBoard!;
     final interactive = ui.phase == PveMatchPhase.playerTurn;
 
-    // Tabuleiro em FOCO: as lanes ocupam o centro (espaçadas), e a mão fica
-    // numa bandeja minimizável no rodapé — não come a tela.
+    // Tabuleiro em FOCO. Banda central (entre os dois lados) guarda os botões
+    // laterais (sobrepostos no build). Sem log no meio. Mão = baralho aberto.
     return Column(
       children: [
-        _botInfoBar(bot),
+        _botInfoBar(bot, ui),
         Expanded(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _lanesRow(ui, bot, isPlayerSide: false),
-              _miniLog(ui),
+              const SizedBox(height: 60), // banda central (botões voltar/encerrar)
               AbsorbPointer(
                 absorbing: !interactive,
                 child: _lanesRow(ui, player, isPlayerSide: true),
@@ -438,11 +378,12 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
             ],
           ),
         ),
+        _crystalBar(ui, player),
         AbsorbPointer(
           absorbing: !interactive,
           child: Opacity(
             opacity: interactive ? 1 : 0.55,
-            child: _handTray(ui, player),
+            child: _handFan(ui, player),
           ),
         ),
         Padding(
@@ -457,10 +398,69 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
-  Widget _botInfoBar(BoardSide bot) {
+  /// Barra inferior (fora do conjunto das cartas): cristais em destaque + turno.
+  Widget _crystalBar(PveMatchUiState ui, BoardSide player) {
+    final turn = ui.match?.turn ?? 0;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 2, 12, 4),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.mp.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.mp.withValues(alpha: 0.55)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.diamond, size: 16, color: AppColors.mp),
+                const SizedBox(width: 6),
+                Text('${player.crystals}',
+                    style: GoogleFonts.robotoMono(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary)),
+                Text('  cristais',
+                    style: GoogleFonts.roboto(
+                        fontSize: 9, color: AppColors.textMuted)),
+              ],
+            ),
+          ),
+          const Spacer(),
+          if (ui.phase == PveMatchPhase.botTurn ||
+              ui.phase == PveMatchPhase.resolving)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 12,
+                    height: 12,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(AppColors.purple)),
+                  ),
+                  const SizedBox(width: 6),
+                  Text('IA jogando…',
+                      style: GoogleFonts.roboto(
+                          fontSize: 10, color: AppColors.textMuted)),
+                ],
+              ),
+            ),
+          Text('Turno $turn',
+              style: GoogleFonts.roboto(
+                  fontSize: 10, color: AppColors.textMuted)),
+        ],
+      ),
+    );
+  }
+
+  Widget _botInfoBar(BoardSide bot, PveMatchUiState ui) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      margin: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.surfaceVeil,
         borderRadius: BorderRadius.circular(10),
@@ -470,7 +470,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         children: [
           const Icon(Icons.smart_toy_outlined,
               color: AppColors.conceptCorrompido, size: 16),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Text('IA',
               style: GoogleFonts.cinzelDecorative(
                   fontSize: 12, color: AppColors.textPrimary, letterSpacing: 1)),
@@ -480,8 +480,12 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
           _statChip(Icons.pets_outlined, '${bot.remainingCreatureCount}/9',
               AppColors.conceptCorrompido),
           const SizedBox(width: 10),
-          _statChip(Icons.style_outlined,
-              '${bot.hand.length + bot.deck.length}', AppColors.textSecondary),
+          // Acesso ao registro (saiu do meio do tabuleiro).
+          GestureDetector(
+            onTap: () => _showFullLog(ui.log),
+            child: const Icon(Icons.receipt_long_outlined,
+                size: 16, color: AppColors.textSecondary),
+          ),
         ],
       ),
     );
@@ -533,28 +537,33 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         !side.lanes
             .any((c) => c != null && c.instanceId == h.targetCardId);
 
+    // Ordem VISUAL das lanes: frente (lane 0) no MEIO; slot 2 (lane 1) à
+    // esquerda; slot 3 (lane 2) à direita.
+    const visualOrder = <int>[1, 0, 2];
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: SizedBox(
-        height: 152,
+        height: 130,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                for (var lane = 0; lane < side.lanes.length; lane++) ...[
-                  if (lane > 0) const SizedBox(width: 6),
+                for (var i = 0; i < visualOrder.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 6),
                   Expanded(
                     child: _laneSlot(
                       ui,
-                      side.lanes[lane],
-                      lane: lane,
+                      side.lanes[visualOrder[i]],
+                      lane: visualOrder[i],
                       isPlayerSide: isPlayerSide,
-                      laneHighlighted: highlightLanes.contains(lane),
-                      targetHighlighted: side.lanes[lane] != null &&
-                          highlightTargets
-                              .contains(side.lanes[lane]!.instanceId),
+                      laneHighlighted:
+                          highlightLanes.contains(visualOrder[i]),
+                      targetHighlighted: side.lanes[visualOrder[i]] != null &&
+                          highlightTargets.contains(
+                              side.lanes[visualOrder[i]]!.instanceId),
                     ),
                   ),
                 ],
@@ -727,9 +736,11 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       );
     }
 
-    // Stagger: frente (lane 0) no centro; 2 e 3 recuados (3 mais que 2). O
-    // recuo é pra LONGE da linha central (jogador desce, bot sobe).
-    final staggerDy = (lane * 8.0) * (isPlayerSide ? 1 : -1);
+    // Stagger em CUNHA: frente (lane 0) avançada na direção do inimigo; slot 2
+    // e 3 recuados pra longe da linha central (3 mais que 2). Jogador recua pra
+    // baixo; bot pra cima.
+    const laneDepth = <double>[0, 13, 22]; // lane0 frente, lane1, lane2
+    final staggerDy = laneDepth[lane] * (isPlayerSide ? 1 : -1);
 
     return Transform.translate(
       offset: Offset(0, staggerDy),
@@ -963,49 +974,6 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Mini-log
-  // ---------------------------------------------------------------------------
-
-  /// Faixa central slim: turno/fase + últimas 2 linhas de log (toca → log full).
-  Widget _miniLog(PveMatchUiState ui) {
-    final recent =
-        ui.log.length <= 2 ? ui.log : ui.log.sublist(ui.log.length - 2);
-    return GestureDetector(
-      onTap: () => _showFullLog(ui.log),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: AppColors.black.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.borderViolet),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (final entry in recent)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 0.5),
-                      child: _logLine(entry),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 6),
-            const Icon(Icons.unfold_more,
-                size: 13, color: AppColors.purpleLight),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _logLine(MatchLogEntry entry) {
     final color = switch (entry.kind) {
       MatchLogKind.system => AppColors.textMuted,
@@ -1025,177 +993,139 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   // Rodapé: cristais + pool + ações
   // ---------------------------------------------------------------------------
 
-  /// Bandeja de mão MINIMIZÁVEL: alça (cristais + contagem + chevron) que
-  /// expande/colapsa o baralho único. Colapsada, o tabuleiro ganha a tela.
-  Widget _handTray(PveMatchUiState ui, BoardSide player) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(10, 2, 10, 4),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceVeil,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderViolet),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          InkWell(
-            onTap: () => setState(() => _handExpanded = !_handExpanded),
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 7, 10, 7),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 9, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.mp.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                          color: AppColors.mp.withValues(alpha: 0.5)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.diamond_outlined,
-                            size: 14, color: AppColors.mp),
-                        const SizedBox(width: 5),
-                        Text('${player.crystals}',
-                            style: GoogleFonts.robotoMono(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  _statChip(Icons.pets_outlined,
-                      '${player.remainingCreatureCount}/9',
-                      AppColors.purpleLight),
-                  const Spacer(),
-                  Text('MÃO ${player.hand.length} · DECK ${player.deck.length}',
-                      style: GoogleFonts.cinzelDecorative(
-                          fontSize: 9,
-                          letterSpacing: 1.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textMuted)),
-                  const SizedBox(width: 4),
-                  Icon(
-                      _handExpanded
-                          ? Icons.keyboard_arrow_down
-                          : Icons.keyboard_arrow_up,
-                      size: 18,
-                      color: AppColors.purpleLight),
-                ],
-              ),
-            ),
-          ),
-          AnimatedSize(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-            alignment: Alignment.topCenter,
-            child: _handExpanded
-                ? Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                    child: SizedBox(height: 150, child: _handStrip(ui, player)),
-                  )
-                : const SizedBox(width: double.infinity),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _handStrip(PveMatchUiState ui, BoardSide player) {
+  /// MÃO como BARALHO ABERTO (leque), não rolável: as ≤5 cartas espalhadas em
+  /// arco + a miniatura da PRÓXIMA carta no fim. A carta selecionada sobe e
+  /// vai pra frente.
+  Widget _handFan(PveMatchUiState ui, BoardSide player) {
     final controller = ref.read(pveMatchControllerProvider.notifier);
-    // MÃO: as ≤5 cartas visíveis, em ordem de compra (embaralhada — sem
-    // reordenar). A última posição mostra a MINIATURA da próxima a comprar.
     final cards = player.hand;
     final next = player.nextCard;
-    if (cards.isEmpty && next == null) return _emptyPoolText('Mão vazia.');
-    final itemCount = cards.length + (next != null ? 1 : 0);
-    return ListView.separated(
-      scrollDirection: Axis.horizontal,
-      itemCount: itemCount,
-      separatorBuilder: (_, i) =>
-          SizedBox(width: i == cards.length - 1 ? 12 : 7),
-      itemBuilder: (_, i) {
-        if (i >= cards.length) return _previewCard(next!);
-        final card = cards[i];
-        if (card is CreatureCard) {
-          return _handCard(
-            card,
-            selected: ui.selectedCardId == card.id,
-            playable: controller.canPlayCreature(card),
+    final n = cards.length + (next != null ? 1 : 0);
+
+    const cardH = 132.0;
+    const cardW = cardH * 142 / 206; // ~91
+    if (n == 0) {
+      return const SizedBox(height: cardH, child: Center(child: Text('')));
+    }
+
+    return SizedBox(
+      height: cardH + 20,
+      child: LayoutBuilder(
+        builder: (context, cons) {
+          final width = cons.maxWidth;
+          final usable = (width - cardW).clamp(0.0, double.infinity);
+          // Passo entre cartas: cabe todas sem rolar (sobrepõe se faltar espaço).
+          final step =
+              n > 1 ? (usable / (n - 1)).clamp(0.0, cardW * 0.94) : 0.0;
+          final span = step * (n - 1) + cardW;
+          final startX = (width - span) / 2;
+          final center = (n - 1) / 2;
+
+          // Ordem de pintura: selecionada por último (fica na frente).
+          final order = [for (var i = 0; i < n; i++) i]..sort((a, b) {
+              final sa = _isFanSelected(ui, cards, a) ? 1 : 0;
+              final sb = _isFanSelected(ui, cards, b) ? 1 : 0;
+              return sa - sb;
+            });
+
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              for (final i in order)
+                _fanCard(ui, controller, cards, next, i, n,
+                    left: startX + step * i,
+                    cardW: cardW,
+                    cardH: cardH,
+                    center: center),
+            ],
           );
-        }
-        final relic = card as RelicCard;
-        return _handCard(
-          relic,
-          selected: ui.selectedCardId == relic.id,
-          playable: controller.canPlayRelic(relic),
-        );
-      },
+        },
+      ),
     );
   }
 
-  /// Miniatura (menor, não-interativa) da PRÓXIMA carta que será comprada.
-  Widget _previewCard(Object card) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Opacity(
-        opacity: 0.6,
-        child: AspectRatio(
-          aspectRatio: 142 / 206,
-          child: Stack(
-            children: [
-              IgnorePointer(child: _gameFaceFor(card)),
-              Positioned(
-                top: 2,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: AppColors.black.withValues(alpha: 0.7),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text('PRÓXIMA',
-                        style: GoogleFonts.roboto(
-                            fontSize: 6,
-                            letterSpacing: 1,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textSecondary)),
-                  ),
+  bool _isFanSelected(PveMatchUiState ui, List<Object> cards, int i) =>
+      i < cards.length && ui.selectedCardId == cardId(cards[i]);
+
+  Widget _fanCard(
+    PveMatchUiState ui,
+    PveMatchController controller,
+    List<Object> cards,
+    Object? next,
+    int i,
+    int n, {
+    required double left,
+    required double cardW,
+    required double cardH,
+    required double center,
+  }) {
+    final isPreview = i >= cards.length;
+    final card = isPreview ? next! : cards[i];
+    final offset = i - center;
+    final rot = isPreview ? 0.0 : offset * 0.045; // leque
+    final arcDy = offset.abs() * 3.0; // bordas levemente mais baixas
+
+    if (isPreview) {
+      return Positioned(
+        left: left,
+        bottom: 4 - arcDy,
+        child: Transform.rotate(
+          angle: rot,
+          child: Opacity(
+            opacity: 0.6,
+            child: SizedBox(
+              width: cardW * 0.82,
+              height: cardH * 0.82,
+              child: Stack(children: [
+                IgnorePointer(child: _gameFaceFor(card)),
+                Positioned(
+                  top: 2,
+                  left: 0,
+                  right: 0,
+                  child: Center(child: _previewBadge()),
                 ),
-              ),
-            ],
+              ]),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final selected = ui.selectedCardId == cardId(card);
+    final playable = card is CreatureCard
+        ? controller.canPlayCreature(card)
+        : controller.canPlayRelic(card as RelicCard);
+
+    return Positioned(
+      left: left,
+      bottom: (selected ? 20 : 4) - arcDy,
+      child: Transform.rotate(
+        angle: selected ? 0 : rot,
+        child: GestureDetector(
+          onTap: () => controller.selectCard(cardId(card)),
+          child: SizedBox(
+            width: cardW,
+            height: cardH,
+            child: _gameFaceFor(card, selected: selected, dimmed: !playable),
           ),
         ),
       ),
     );
   }
 
-  Widget _emptyPoolText(String text) {
-    return Center(
-      child: Text(text,
-          style: GoogleFonts.roboto(fontSize: 11, color: AppColors.textMuted)),
-    );
-  }
-
-  /// Carta da mão no formato da coleção (`GameCardFace`), ~10% maior que a
-  /// referência. Tocar seleciona (mesmo não-jogável: ainda dá pra SACRIFICAR).
-  Widget _handCard(Object card, {required bool selected, required bool playable}) {
-    final controller = ref.read(pveMatchControllerProvider.notifier);
-    return GestureDetector(
-      onTap: () => controller.selectCard(cardId(card)),
-      child: AspectRatio(
-        aspectRatio: 142 / 206,
-        child: _gameFaceFor(card, selected: selected, dimmed: !playable),
-      ),
-    );
-  }
+  Widget _previewBadge() => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+        decoration: BoxDecoration(
+          color: AppColors.black.withValues(alpha: 0.7),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text('PRÓXIMA',
+            style: GoogleFonts.roboto(
+                fontSize: 6,
+                letterSpacing: 1,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textSecondary)),
+      );
 
   /// Constrói a `GameCardFace` de uma carta (criatura ou relíquia) — usada pela
   /// mão e pela miniatura de preview.
@@ -1333,15 +1263,16 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
-  /// Botão REDONDO de encerrar turno, fixo no centro-direita (estilo Card
-  /// Monsters). Só ativo na vez do jogador.
+  /// Botão REDONDO de encerrar jogada (espadas cruzadas), no centro-direita.
+  /// Só ativo na vez do jogador.
   Widget _endTurnButton(PveMatchUiState ui) {
     final enabled = ui.phase == PveMatchPhase.playerTurn;
+    final fg = enabled ? Colors.white : Colors.white.withValues(alpha: 0.5);
     return GestureDetector(
       onTap: enabled ? _onEndTurnPressed : null,
       child: Container(
-        width: 54,
-        height: 54,
+        width: 52,
+        height: 52,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: enabled
@@ -1359,24 +1290,25 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                 ]
               : null,
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.fast_forward_rounded,
-                size: 22,
-                color: enabled
-                    ? Colors.white
-                    : Colors.white.withValues(alpha: 0.5)),
-            Text('FIM',
-                style: GoogleFonts.cinzelDecorative(
-                    fontSize: 7,
-                    letterSpacing: 1,
-                    fontWeight: FontWeight.w700,
-                    color: enabled
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.5))),
-          ],
+        child: Center(child: _CrossedSwords(color: fg, size: 26)),
+      ),
+    );
+  }
+
+  /// Botão REDONDO de voltar, no centro-esquerda (oposto ao encerrar jogada).
+  Widget _sideBackButton() {
+    return GestureDetector(
+      onTap: _onBackPressed,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.surface,
+          border: Border.all(color: AppColors.border, width: 1.4),
         ),
+        child: const Icon(Icons.arrow_back_ios_new,
+            size: 16, color: AppColors.textSecondary),
       ),
     );
   }
@@ -1554,5 +1486,49 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       ),
     );
   }
+}
 
+/// Ícone de ESPADAS CRUZADAS (botão de encerrar jogada). Desenhado via
+/// CustomPaint pra não depender de glyph/emoji (renderiza igual em qualquer
+/// device).
+class _CrossedSwords extends StatelessWidget {
+  const _CrossedSwords({required this.color, this.size = 24});
+
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) =>
+      CustomPaint(size: Size.square(size), painter: _SwordsPainter(color));
+}
+
+class _SwordsPainter extends CustomPainter {
+  _SwordsPainter(this.color);
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size s) {
+    final blade = Paint()
+      ..color = color
+      ..strokeWidth = s.width * 0.11
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    // Duas lâminas cruzadas (X).
+    canvas.drawLine(Offset(s.width * 0.18, s.height * 0.84),
+        Offset(s.width * 0.82, s.height * 0.16), blade);
+    canvas.drawLine(Offset(s.width * 0.82, s.height * 0.84),
+        Offset(s.width * 0.18, s.height * 0.16), blade);
+    // Guardas (cabos) curtas perto das pontas de baixo.
+    final guard = Paint()
+      ..color = color
+      ..strokeWidth = s.width * 0.10
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(Offset(s.width * 0.06, s.height * 0.72),
+        Offset(s.width * 0.30, s.height * 0.96), guard);
+    canvas.drawLine(Offset(s.width * 0.94, s.height * 0.72),
+        Offset(s.width * 0.70, s.height * 0.96), guard);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SwordsPainter old) => old.color != color;
 }

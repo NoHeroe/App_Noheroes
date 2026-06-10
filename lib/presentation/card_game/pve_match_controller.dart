@@ -159,13 +159,13 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
 
   final CardBattleEngine _engine;
 
-  Duration _botStepDelay = const Duration(milliseconds: 600);
+  Duration _botStepDelay = const Duration(milliseconds: 720);
 
   /// Delay entre EVENTOS narrados da Fase de Ataque (replay passo a passo).
   /// Acompanha o pacing do bot: `Duration.zero` (testes) => replay síncrono,
   /// sem highlight. Mesmo valor para os DOIS lados (ritmo simétrico).
   Duration get _eventStepDelay => _botStepDelay > Duration.zero
-      ? const Duration(milliseconds: 560)
+      ? const Duration(milliseconds: 780)
       : Duration.zero;
 
   /// Guard de reentrância: cobre `startMatch` e `endPlayerTurn` (pipelines
@@ -187,7 +187,7 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     CardLoadout player,
     CardLoadout bot, {
     int seed = 0,
-    Duration botStepDelay = const Duration(milliseconds: 600),
+    Duration botStepDelay = const Duration(milliseconds: 720),
   }) async {
     if (_busy) return;
     _busy = true;
