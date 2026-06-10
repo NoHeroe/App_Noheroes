@@ -60,7 +60,12 @@ class CombatHighlight {
     this.evaded = false,
     this.targetDied = false,
     this.ability,
+    this.damageType,
   });
+
+  /// Tipo do ataque (dirige a animação: físico avança+espada, mágico projétil,
+  /// arqueiro flecha). null quando não se aplica (proc de habilidade).
+  final DamageType? damageType;
 
   /// Criatura que agiu (atacante/curador/dona da habilidade).
   final String? attackerCardId;
@@ -154,13 +159,13 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
 
   final CardBattleEngine _engine;
 
-  Duration _botStepDelay = const Duration(milliseconds: 340);
+  Duration _botStepDelay = const Duration(milliseconds: 600);
 
   /// Delay entre EVENTOS narrados da Fase de Ataque (replay passo a passo).
   /// Acompanha o pacing do bot: `Duration.zero` (testes) => replay síncrono,
-  /// sem highlight.
+  /// sem highlight. Mesmo valor para os DOIS lados (ritmo simétrico).
   Duration get _eventStepDelay => _botStepDelay > Duration.zero
-      ? const Duration(milliseconds: 520)
+      ? const Duration(milliseconds: 560)
       : Duration.zero;
 
   /// Guard de reentrância: cobre `startMatch` e `endPlayerTurn` (pipelines
@@ -182,7 +187,7 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     CardLoadout player,
     CardLoadout bot, {
     int seed = 0,
-    Duration botStepDelay = const Duration(milliseconds: 340),
+    Duration botStepDelay = const Duration(milliseconds: 600),
   }) async {
     if (_busy) return;
     _busy = true;
@@ -241,18 +246,36 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
   /// lane livre mais à frente. Retorna false se não for a vez do jogador ou
   /// se o engine recusar (no-op).
   bool playCreature(String cardId, {int? lane}) {
-    return _playerAction(
+    // Detecta (ANTES de aplicar) a jogada especial de "tabuleiro cheio →
+    // carta empurrada volta pra mão", que custa 3 cristais e ENCERRA a vez.
+    final match = state.match;
+    final fullReturn = lane != null &&
+        match != null &&
+        match.activeSide == state.playerSide &&
+        _engine.isFullBoardReturnPlay(match, cardId, lane);
+
+    final ok = _playerAction(
       PlayCreature(cardId, lane: lane),
       onApplied: (before, after) {
         final name = _creatureName(before, cardId);
         final placed = _findCreature(after.sideOf(state.playerSide), cardId);
         final laneLabel = placed == null ? '' : ' na ${_laneLabel(placed.lane)}';
+        if (fullReturn) {
+          return 'Você jogou $name$laneLabel (tabuleiro cheio: '
+              'carta recuada volta pra mão, −$kReturnToHandCost · encerra a vez).';
+        }
         return 'Você jogou $name$laneLabel.';
       },
       invalidText: () =>
           'Jogada inválida: ${_creatureName(state.match!, cardId)} '
           'não pôde ser jogada.',
     );
+
+    // A jogada de retorno encerra a vez automaticamente (dispara o ataque).
+    if (ok && fullReturn) {
+      endPlayerTurn();
+    }
+    return ok;
   }
 
   /// Equipa/usa uma relíquia numa criatura própria em jogo.
@@ -469,12 +492,14 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     ];
   }
 
-  /// A criatura [card] pode ser jogada agora (vez do jogador, custo ok,
-  /// lane livre)?
-  bool canPlayCreature(CreatureCard card) =>
-      state.phase == PveMatchPhase.playerTurn &&
-      canAfford(card) &&
-      freeLanes().isNotEmpty;
+  /// A criatura [card] pode ser jogada agora? Com lane livre, basta pagar o
+  /// custo da carta. Tabuleiro CHEIO ainda permite a jogada de retorno (empurra
+  /// a última pra mão), que custa `kReturnToHandCost` e encerra a vez.
+  bool canPlayCreature(CreatureCard card) {
+    if (state.phase != PveMatchPhase.playerTurn) return false;
+    if (freeLanes().isNotEmpty) return canAfford(card);
+    return (state.playerBoard?.crystals ?? 0) >= kReturnToHandCost;
+  }
 
   /// Criaturas PRÓPRIAS em jogo compatíveis com a relíquia [relic].
   List<CreatureInPlay> compatibleTargets(RelicCard relic) {
@@ -607,6 +632,7 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
           targetSide: opposite(e.attackerSide),
           amount: e.damageDealt,
           targetDied: e.targetDied,
+          damageType: e.damageType,
         );
       case AttackEvaded():
         return CombatHighlight(
@@ -624,6 +650,7 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
           targetSide: e.side,
           amount: e.amount,
           isHeal: true,
+          damageType: DamageType.cura,
         );
       case AbilityTriggered():
         return CombatHighlight(
@@ -685,7 +712,10 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
   }
 
   String? _creatureNameInPool(BoardSide side, String cardId) {
-    for (final c in side.poolCreatures) {
+    for (final c in side.hand.whereType<CreatureCard>()) {
+      if (c.id == cardId) return c.nome;
+    }
+    for (final c in side.deck.whereType<CreatureCard>()) {
       if (c.id == cardId) return c.nome;
     }
     final inPlay = _findCreature(side, cardId);
@@ -693,7 +723,10 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
   }
 
   RelicCard? _relicInPool(BoardSide side, String cardId) {
-    for (final r in side.poolRelics) {
+    for (final r in side.hand.whereType<RelicCard>()) {
+      if (r.id == cardId) return r;
+    }
+    for (final r in side.deck.whereType<RelicCard>()) {
       if (r.id == cardId) return r;
     }
     return null;

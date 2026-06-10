@@ -9,6 +9,20 @@ import 'package:noheroes_app/domain/card_game/card_game.dart';
 /// Random determinístico para montar estados em testes.
 Random makeRng([int seed = 42]) => Random(seed);
 
+/// Acha um seed (0..255) cujo LADO ATIVO começa com ≥1 criatura E ≥1 relíquia
+/// na mão. Como o deck é embaralhado, garante que os testes de jogar criatura /
+/// equipar relíquia tenham as duas na mão inicial (determinístico).
+int seedWithMixedHand(CardLoadout a, CardLoadout b) {
+  const engine = CardBattleEngine();
+  for (var seed = 0; seed < 256; seed++) {
+    final s = engine.start(a, b, seed: seed);
+    if (s.active.handCreatures.isNotEmpty && s.active.handRelics.isNotEmpty) {
+      return seed;
+    }
+  }
+  return 0;
+}
+
 CreatureCard creature({
   required String id,
   CardConcept concept = CardConcept.vitalismo,

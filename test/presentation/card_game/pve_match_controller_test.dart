@@ -21,6 +21,21 @@ void main() {
     fail('Nenhum seed em 0..63 fez o lado ${starter.name} começar.');
   }
 
+  /// Seed em que o JOGADOR (lado A) começa E sua mão inicial tem ≥1 criatura
+  /// e ≥1 relíquia (deck embaralhado → garante cartas testáveis na mão).
+  int seedPlayerStartsMixed(CardLoadout player, CardLoadout bot) {
+    const engine = CardBattleEngine();
+    for (var seed = 0; seed < 512; seed++) {
+      final s = engine.start(player, bot, seed: seed);
+      if (s.activeSide == SideId.a &&
+          s.sideA.handCreatures.isNotEmpty &&
+          s.sideA.handRelics.isNotEmpty) {
+        return seed;
+      }
+    }
+    fail('Nenhum seed deu jogador começando com mão mista.');
+  }
+
   PveMatchController makeController() => PveMatchController();
 
   Future<void> startPlayerFirst(
@@ -28,10 +43,12 @@ void main() {
     CardLoadout? player,
     CardLoadout? bot,
   }) async {
+    final p = player ?? makeLoadout(prefix: 'P');
+    final b = bot ?? makeLoadout(prefix: 'B');
     await c.startMatch(
-      player ?? makeLoadout(prefix: 'P'),
-      bot ?? makeLoadout(prefix: 'B'),
-      seed: seedForStarter(SideId.a),
+      p,
+      b,
+      seed: seedPlayerStartsMixed(p, b),
       botStepDelay: Duration.zero,
     );
   }
@@ -51,10 +68,22 @@ void main() {
     test('bot começa: roda o turno do bot e devolve a vez ao jogador',
         () async {
       final c = makeController();
+      final p = makeLoadout(prefix: 'P');
+      final b = makeLoadout(prefix: 'B');
+      // Seed em que o BOT (lado B) começa E tem criatura na mão pra jogar.
+      const engine = CardBattleEngine();
+      var botSeed = seedForStarter(SideId.b);
+      for (var seed = 0; seed < 512; seed++) {
+        final s = engine.start(p, b, seed: seed);
+        if (s.activeSide == SideId.b && s.sideB.handCreatures.isNotEmpty) {
+          botSeed = seed;
+          break;
+        }
+      }
       await c.startMatch(
-        makeLoadout(prefix: 'P'),
-        makeLoadout(prefix: 'B'),
-        seed: seedForStarter(SideId.b),
+        p,
+        b,
+        seed: botSeed,
         botStepDelay: Duration.zero,
       );
 
@@ -77,7 +106,7 @@ void main() {
       final c = makeController();
       await startPlayerFirst(c);
 
-      final card = c.state.playerBoard!.poolCreatures.first;
+      final card = c.state.playerBoard!.handCreatures.first;
       expect(c.canPlayCreature(card), isTrue);
       expect(c.playCreature(card.id, lane: 0), isTrue);
       expect(c.state.playerBoard!.lanes[0]?.card.id, card.id);
@@ -87,7 +116,8 @@ void main() {
       );
       expect(c.state.log.last.text, contains('Você jogou'));
 
-      // Inválida: mesma carta de novo (já saiu do pool) → no-op + false.
+      // Inválida: mesma carta de novo (já saiu da mão p/ o tabuleiro) →
+      // no-op + false.
       final before = c.state.match;
       expect(c.playCreature(card.id), isFalse);
       expect(identical(c.state.match, before), isTrue);
@@ -99,7 +129,7 @@ void main() {
       // Criaturas caras (custo 9) — 3 cristais não pagam.
       await startPlayerFirst(c, player: makeLoadout(prefix: 'P', cost: 9));
 
-      final card = c.state.playerBoard!.poolCreatures.first;
+      final card = c.state.playerBoard!.handCreatures.first;
       expect(c.canAfford(card), isFalse);
       expect(c.playCreature(card.id), isFalse);
       expect(c.state.playerBoard!.creaturesInPlay, isEmpty);
@@ -109,8 +139,7 @@ void main() {
       final c = makeController();
       await startPlayerFirst(c);
 
-      final r1 = c.state.playerBoard!.poolRelics[0];
-      final r2 = c.state.playerBoard!.poolRelics[1];
+      final r1 = c.state.playerBoard!.handRelics.first;
 
       expect(c.canSacrifice, isTrue);
       final crystalsBefore = c.state.playerBoard!.crystals;
@@ -118,78 +147,81 @@ void main() {
       expect(c.state.playerBoard!.crystals,
           crystalsBefore + kSacrificeRelicCrystals);
 
+      // Já sacrificou neste turno → qualquer outro sacrifício é no-op.
       expect(c.canSacrifice, isFalse);
-      expect(c.sacrifice(r2.id), isFalse);
-      expect(c.state.playerBoard!.poolRelics.length, 8);
+      final anyCardId = cardId(c.state.playerBoard!.hand.first);
+      expect(c.sacrifice(anyCardId), isFalse);
     });
 
     test('relíquia incompatível retorna false (no-op)', () async {
       final c = makeController();
-      // Criaturas vitalismo; relíquias do bot não importam. Monta um loadout
-      // do jogador com uma relíquia corrompida (não-universal) na mão.
+      // TODAS as relíquias do jogador são corrompido; criaturas vita → qualquer
+      // relíquia na mão é incompatível com qualquer criatura.
       final player = CardLoadout(
         creatures: [
           for (var i = 0; i < 9; i++)
             creature(id: 'P_c$i', concept: CardConcept.vitalismo),
         ],
         relics: [
-          relic(id: 'P_bad', concept: CardConcept.corrompido),
-          for (var i = 1; i < 9; i++)
-            relic(id: 'P_r$i', concept: CardConcept.vitalismo),
+          for (var i = 0; i < 9; i++)
+            relic(id: 'P_r$i', concept: CardConcept.corrompido),
         ],
       );
       await startPlayerFirst(c, player: player);
 
-      expect(c.playCreature('P_c0', lane: 0), isTrue);
-      final badRelic =
-          c.state.playerBoard!.poolRelics.firstWhere((r) => r.id == 'P_bad');
+      final cr = c.state.playerBoard!.handCreatures.first;
+      expect(c.playCreature(cr.id, lane: 0), isTrue);
+      final badRelic = c.state.playerBoard!.handRelics.first;
       expect(c.compatibleTargets(badRelic), isEmpty);
-      expect(c.playRelic('P_bad', 'P_c0'), isFalse);
+      expect(c.playRelic(badRelic.id, cr.id), isFalse);
       expect(c.state.playerBoard!.lanes[0]!.relics, isEmpty);
-
-      // Compatível funciona.
-      expect(c.playRelic('P_r1', 'P_c0'), isTrue);
-      expect(c.state.playerBoard!.lanes[0]!.relics, hasLength(1));
     });
 
-    test('relíquia impagável: canAffordRelic/canPlayRelic false e playRelic '
-        'retorna false (no-op)', () async {
-      final c = makeController();
-      // Relíquia compatível mas cara (custo 5 > 3 cristais do turno) na mão.
-      final player = CardLoadout(
+    test('relíquia impagável é no-op; pagável joga e debita', () async {
+      // Impagável: todas as relíquias custam 5 (> 2 cristais após jogar 1).
+      final caro = makeController();
+      final pCaro = CardLoadout(
         creatures: [
           for (var i = 0; i < 9; i++)
-            creature(id: 'P_c$i', concept: CardConcept.vitalismo),
+            creature(id: 'C_c$i', concept: CardConcept.vitalismo, cost: 1),
         ],
         relics: [
-          relic(id: 'P_cara', concept: CardConcept.vitalismo, cost: 5),
-          relic(id: 'P_ok', concept: CardConcept.vitalismo, cost: 1, armor: 1),
-          for (var i = 2; i < 9; i++)
-            relic(id: 'P_r$i', concept: CardConcept.vitalismo),
+          for (var i = 0; i < 9; i++)
+            relic(id: 'C_r$i', concept: CardConcept.vitalismo, cost: 5),
         ],
       );
-      await startPlayerFirst(c, player: player);
+      await startPlayerFirst(caro, player: pCaro);
+      final cr1 = caro.state.playerBoard!.handCreatures.first;
+      expect(caro.playCreature(cr1.id, lane: 0), isTrue); // 3 - 1 = 2
+      final relCara = caro.state.playerBoard!.handRelics.first;
+      expect(caro.canAffordRelic(relCara), isFalse);
+      expect(caro.canPlayRelic(relCara), isFalse);
+      expect(caro.compatibleTargets(relCara), isNotEmpty);
+      expect(caro.playRelic(relCara.id, cr1.id), isFalse);
+      expect(caro.state.playerBoard!.lanes[0]!.relics, isEmpty);
+      expect(caro.state.playerBoard!.crystals, 2);
 
-      expect(c.playCreature('P_c0', lane: 0), isTrue); // 3 - 1 = 2 cristais
-
-      final cara = c.state.playerBoard!.poolRelics
-          .firstWhere((r) => r.id == 'P_cara');
-      expect(c.canAffordRelic(cara), isFalse);
-      expect(c.canPlayRelic(cara), isFalse);
-      // Alvo compatível existe, mas falta cristal → engine recusa (no-op).
-      expect(c.compatibleTargets(cara), isNotEmpty);
-      expect(c.playRelic('P_cara', 'P_c0'), isFalse);
-      expect(c.state.playerBoard!.lanes[0]!.relics, isEmpty);
-      expect(c.state.playerBoard!.crystals, 2);
-
-      // Pagável: joga e debita.
-      final ok =
-          c.state.playerBoard!.poolRelics.firstWhere((r) => r.id == 'P_ok');
-      expect(c.canAffordRelic(ok), isTrue);
-      expect(c.canPlayRelic(ok), isTrue);
-      expect(c.playRelic('P_ok', 'P_c0'), isTrue);
-      expect(c.state.playerBoard!.lanes[0]!.relics, hasLength(1));
-      expect(c.state.playerBoard!.crystals, 1);
+      // Pagável: todas as relíquias custam 1.
+      final barato = makeController();
+      final pBarato = CardLoadout(
+        creatures: [
+          for (var i = 0; i < 9; i++)
+            creature(id: 'K_c$i', concept: CardConcept.vitalismo, cost: 1),
+        ],
+        relics: [
+          for (var i = 0; i < 9; i++)
+            relic(id: 'K_r$i', concept: CardConcept.vitalismo, cost: 1, armor: 1),
+        ],
+      );
+      await startPlayerFirst(barato, player: pBarato);
+      final cr2 = barato.state.playerBoard!.handCreatures.first;
+      expect(barato.playCreature(cr2.id, lane: 0), isTrue); // 3 - 1 = 2
+      final relOk = barato.state.playerBoard!.handRelics.first;
+      expect(barato.canAffordRelic(relOk), isTrue);
+      expect(barato.canPlayRelic(relOk), isTrue);
+      expect(barato.playRelic(relOk.id, cr2.id), isTrue);
+      expect(barato.state.playerBoard!.lanes[0]!.relics, hasLength(1));
+      expect(barato.state.playerBoard!.crystals, 1);
     });
 
     test('ações fora de playerTurn são no-op (idle e finished)', () async {
@@ -206,9 +238,9 @@ void main() {
       expect(c.state.phase, PveMatchPhase.finished);
 
       final logLen = c.state.log.length;
-      expect(c.playCreature(c.state.playerBoard!.poolCreatures.first.id),
+      expect(c.playCreature(c.state.playerBoard!.handCreatures.first.id),
           isFalse);
-      expect(c.sacrifice(c.state.playerBoard!.poolRelics.first.id), isFalse);
+      expect(c.sacrifice(c.state.playerBoard!.handRelics.first.id), isFalse);
       expect(c.state.log.length, logLen, reason: 'no-op não loga');
     });
   });
@@ -218,7 +250,7 @@ void main() {
       final c = makeController();
       await startPlayerFirst(c);
 
-      final card = c.state.playerBoard!.poolCreatures.first;
+      final card = c.state.playerBoard!.handCreatures.first;
       expect(c.playCreature(card.id, lane: 0), isTrue);
 
       await c.endPlayerTurn();
@@ -235,7 +267,7 @@ void main() {
 
       // T1 jogador: joga criatura. Bot joga as dele no turno dele.
       expect(
-          c.playCreature(c.state.playerBoard!.poolCreatures.first.id,
+          c.playCreature(c.state.playerBoard!.handCreatures.first.id,
               lane: 0),
           isTrue);
       await c.endPlayerTurn();
@@ -296,12 +328,14 @@ void main() {
       while (c.state.phase != PveMatchPhase.finished && guard++ < 60) {
         expect(c.state.phase, PveMatchPhase.playerTurn,
             reason: 'entre rodadas a vez deve ser do jogador');
-        // Joga a primeira criatura jogável, se houver.
-        final pool = c.state.playerBoard!.poolCreatures;
-        for (final card in pool) {
-          if (c.canPlayCreature(card)) {
-            expect(c.playCreature(card.id), isTrue);
-            break;
+        // Joga a primeira criatura jogável numa lane livre, se houver vaga.
+        final free = c.freeLanes();
+        if (free.isNotEmpty) {
+          for (final card in c.state.playerBoard!.handCreatures) {
+            if (c.canAfford(card)) {
+              expect(c.playCreature(card.id, lane: free.first), isTrue);
+              break;
+            }
           }
         }
         await c.endPlayerTurn();
@@ -349,7 +383,7 @@ void main() {
 
       expect(c.freeLanes(), [0, 1, 2]);
 
-      final card = c.state.playerBoard!.poolCreatures.first;
+      final card = c.state.playerBoard!.handCreatures.first;
       c.selectCard(card.id);
       expect(c.state.selectedCardId, card.id);
       // Selecionar a mesma carta deseleciona (toggle).
@@ -362,7 +396,7 @@ void main() {
       expect(c.state.selectedCardId, isNull);
       expect(c.freeLanes(), [0, 2]);
 
-      final relicCard = c.state.playerBoard!.poolRelics.first;
+      final relicCard = c.state.playerBoard!.handRelics.first;
       final targets = c.compatibleTargets(relicCard);
       expect(targets.map((t) => t.instanceId), contains(card.id));
     });

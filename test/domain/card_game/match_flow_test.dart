@@ -10,7 +10,7 @@ void main() {
     test('lado sem nenhuma criatura (em jogo e pool) perde', () {
       final a = makeLoadout(prefix: 'A');
       final b = makeLoadout(prefix: 'B');
-      // Estado fabricado: B sem criaturas em jogo nem no pool; A tem 1 em jogo.
+      // Estado fabricado: B sem criaturas em jogo nem na mão/deck; A tem 1 em jogo.
       final aSide = BoardSide.initial(SideId.a, a).copyWith(
         lanes: [
           CreatureInPlay(
@@ -18,10 +18,12 @@ void main() {
           null,
           null,
         ],
-        poolCreatures: const [],
+        hand: const <Object>[],
+        deck: const <Object>[],
       );
       final bSide = BoardSide.initial(SideId.b, b).copyWith(
-        poolCreatures: const [],
+        hand: const <Object>[],
+        deck: const <Object>[],
         lanes: List<CreatureInPlay?>.filled(kLaneCount, null),
       );
       var s = MatchState(
@@ -70,7 +72,7 @@ void main() {
   });
 
   group('penalidade sem criaturas', () {
-    test('terminar turno sem criaturas perde 1 carta do pool', () {
+    test('terminar turno sem criaturas perde 1 carta da mão/deck', () {
       final a = makeLoadout(prefix: 'A');
       final b = makeLoadout(prefix: 'B');
       final aSide = BoardSide.initial(SideId.a, a); // sem criaturas em jogo
@@ -89,11 +91,9 @@ void main() {
         phase: MatchPhase.jogo,
         rng: makeRng(),
       );
-      final totalBefore =
-          s.sideA.poolCreatures.length + s.sideA.poolRelics.length;
+      final totalBefore = s.sideA.hand.length + s.sideA.deck.length;
       s = engine.endTurn(s);
-      final totalAfter =
-          s.sideA.poolCreatures.length + s.sideA.poolRelics.length;
+      final totalAfter = s.sideA.hand.length + s.sideA.deck.length;
       expect(totalAfter, totalBefore - kNoCreaturePenaltyCards);
     });
   });

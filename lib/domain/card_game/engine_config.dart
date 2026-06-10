@@ -28,6 +28,14 @@ const int kStallTurnLimit = 40;
 /// Quantas cartas o lado perde ao terminar o turno sem criaturas em jogo. 🎚️
 const int kNoCreaturePenaltyCards = 1;
 
+/// Tamanho da MÃO (cartas visíveis/jogáveis). O resto fica no deck (compra). 🎚️
+/// Modelo Card Monsters: deck embaralhado, mão de 5, compra automática ao jogar.
+const int kHandSize = 5;
+
+/// Custo em cristais da jogada especial "tabuleiro cheio → carta empurrada
+/// volta pra mão" (encerra a vez). 🎚️
+const int kReturnToHandCost = 3;
+
 // ---------------------------------------------------------------------------
 // Combate posicional — padrões de alvo por tipo (fiel a `tipos_de_dano.md`)
 // ---------------------------------------------------------------------------

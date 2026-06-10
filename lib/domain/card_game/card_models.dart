@@ -319,6 +319,21 @@ class RelicCard {
       'flash=$isFlash, $rarity, $grants)';
 }
 
+/// Helpers para tratar uma carta de jogo genérica (`CreatureCard` ou
+/// `RelicCard`) — a mão/deck guardam as duas misturadas como `Object` (mesmo
+/// padrão que a UI já usa). Falham alto se receberem outro tipo.
+String cardId(Object card) {
+  if (card is CreatureCard) return card.id;
+  if (card is RelicCard) return card.id;
+  throw ArgumentError('cardId: tipo de carta inesperado: $card');
+}
+
+int cardCost(Object card) {
+  if (card is CreatureCard) return card.cost;
+  if (card is RelicCard) return card.cost;
+  throw ArgumentError('cardCost: tipo de carta inesperado: $card');
+}
+
 /// Conjunto de cartas de um jogador: exatamente 9 criaturas + 9 relíquias.
 class CardLoadout {
   CardLoadout({

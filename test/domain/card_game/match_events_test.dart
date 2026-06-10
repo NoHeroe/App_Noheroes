@@ -132,14 +132,15 @@ void main() {
     test('ataque que encerra a partida também preenche lastTurnEvents', () {
       final a = makeLoadout(prefix: 'A');
       final b = makeLoadout(prefix: 'B');
-      // B: última criatura em jogo, pool vazio -> morrer = derrota de B.
+      // B: última criatura em jogo, mão/deck vazios -> morrer = derrota de B.
       final aSide = BoardSide.initial(SideId.a, a).copyWith(lanes: [
         inPlay(id: 'killer', atk: 50).copyWith(lane: 0),
         null,
         null,
       ]);
       final bSide = BoardSide.initial(SideId.b, b).copyWith(
-        poolCreatures: const [],
+        hand: const <Object>[],
+        deck: const <Object>[],
         lanes: [inPlay(id: 'last', hp: 5).copyWith(lane: 0), null, null],
       );
       var s = MatchState(
@@ -211,9 +212,16 @@ void main() {
         phase: MatchPhase.jogo,
         rng: makeRng(),
       );
-      final creatureIdsBefore =
-          s.sideA.poolCreatures.map((c) => c.id).toSet();
-      final relicIdsBefore = s.sideA.poolRelics.map((r) => r.id).toSet();
+      Set<String> creatureIds(BoardSide x) => <String>{
+            for (final c in x.hand.whereType<CreatureCard>()) c.id,
+            for (final c in x.deck.whereType<CreatureCard>()) c.id,
+          };
+      Set<String> relicIds(BoardSide x) => <String>{
+            for (final r in x.hand.whereType<RelicCard>()) r.id,
+            for (final r in x.deck.whereType<RelicCard>()) r.id,
+          };
+      final creatureIdsBefore = creatureIds(s.sideA);
+      final relicIdsBefore = relicIds(s.sideA);
 
       s = engine.endTurn(s);
 
@@ -222,13 +230,13 @@ void main() {
       expect(penalties, hasLength(kNoCreaturePenaltyCards));
       final e = penalties.single;
       expect(e.side, SideId.a);
-      // A carta narrada de fato saiu do pool, e o tipo (criatura/relíquia) bate.
+      // A carta narrada de fato saiu da mão/deck, e o tipo bate.
       if (e.wasCreature) {
         expect(creatureIdsBefore, contains(e.lostCardId));
-        expect(s.sideA.poolCreatures.map((c) => c.id), isNot(contains(e.lostCardId)));
+        expect(creatureIds(s.sideA), isNot(contains(e.lostCardId)));
       } else {
         expect(relicIdsBefore, contains(e.lostCardId));
-        expect(s.sideA.poolRelics.map((r) => r.id), isNot(contains(e.lostCardId)));
+        expect(relicIds(s.sideA), isNot(contains(e.lostCardId)));
       }
       expect(e.lostCardName, e.lostCardId); // fixtures usam nome == id.
     });
@@ -274,9 +282,10 @@ void main() {
     });
 
     test('apply (Fase de Jogo) não gera eventos', () {
-      var s = engine.start(
-          makeLoadout(prefix: 'A'), makeLoadout(prefix: 'B'), seed: 1);
-      final card = s.active.poolCreatures.first;
+      final aL = makeLoadout(prefix: 'A');
+      final bL = makeLoadout(prefix: 'B');
+      var s = engine.start(aL, bL, seed: seedWithMixedHand(aL, bL));
+      final card = s.active.handCreatures.first;
       s = engine.apply(s, PlayCreature(card.id));
       expect(s.lastTurnEvents, isEmpty);
     });

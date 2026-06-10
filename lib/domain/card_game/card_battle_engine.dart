@@ -27,8 +27,8 @@ class CardBattleEngine {
     final starter = rng.nextBool() ? SideId.a : SideId.b;
 
     var state = MatchState(
-      sideA: BoardSide.initial(SideId.a, a),
-      sideB: BoardSide.initial(SideId.b, b),
+      sideA: BoardSide.initial(SideId.a, a, rng),
+      sideB: BoardSide.initial(SideId.b, b, rng),
       activeSide: starter,
       turn: 1,
       phase: MatchPhase.jogo,
@@ -169,51 +169,110 @@ class CardBattleEngine {
 
   MatchState _playCreature(MatchState s, PlayCreature a) {
     final side = s.active;
-    final idx = side.poolCreatures.indexWhere((c) => c.id == a.cardId);
-    if (idx < 0) return s; // não está no pool
+    final idx =
+        side.hand.indexWhere((c) => c is CreatureCard && c.id == a.cardId);
+    if (idx < 0) return s; // não está na mão
+    final card = side.hand[idx] as CreatureCard;
 
-    final card = side.poolCreatures[idx];
-    if (card.cost > side.crystals) return s; // cristais insuficientes
+    // Lane alvo: explícita (UI) ou a livre mais à frente (auto/bot).
+    final int lane;
+    if (a.lane != null) {
+      if (a.lane! < 0 || a.lane! >= kLaneCount) return s;
+      lane = a.lane!;
+    } else {
+      final free = _firstFreeLane(side);
+      if (free < 0) return s; // auto sem vaga: no-op (empurrão só via lane explícita)
+      lane = free;
+    }
 
-    final lane = _resolveLane(side, a.lane);
-    if (lane < 0) return s; // sem lane livre
+    // Procura uma vaga em [lane..fim] pra absorver o empurrão.
+    final lanes = List<CreatureInPlay?>.from(side.lanes);
+    var gap = -1;
+    for (var i = lane; i < kLaneCount; i++) {
+      if (lanes[i] == null) {
+        gap = i;
+        break;
+      }
+    }
 
-    final newLanes = List<CreatureInPlay?>.from(side.lanes);
-    newLanes[lane] = CreatureInPlay(
-      card: card,
-      currentHp: card.hp,
-      lane: lane,
-    );
+    final hand = List<Object>.from(side.hand);
+    final placed = CreatureInPlay(card: card, currentHp: card.hp, lane: lane);
 
-    final newPool = List<CreatureCard>.from(side.poolCreatures)..removeAt(idx);
+    if (gap >= 0) {
+      // Encaixe normal (havia vaga): empurra [lane..gap-1] um slot pra trás.
+      if (card.cost > side.crystals) return s; // cristais insuficientes
+      for (var i = gap; i > lane; i--) {
+        lanes[i] = lanes[i - 1]?.copyWith(lane: i);
+      }
+      lanes[lane] = placed;
+      hand.removeAt(idx);
+      var newSide = side.copyWith(
+        lanes: lanes,
+        hand: hand,
+        crystals: side.crystals - card.cost,
+      );
+      newSide = _refillHand(newSide); // compra automática
+      return s.withSide(side.id, newSide);
+    }
 
+    // Tabuleiro CHEIO em [lane..fim]: a última criatura volta pra mão. Custa
+    // kReturnToHandCost e ENCERRA a vez (o controller dispara o endTurn ao
+    // detectar este caso). Sem compra (a mão troca 1 por 1).
+    if (side.crystals < kReturnToHandCost) return s;
+    final displaced = lanes[kLaneCount - 1]!;
+    for (var i = kLaneCount - 1; i > lane; i--) {
+      lanes[i] = lanes[i - 1]?.copyWith(lane: i);
+    }
+    lanes[lane] = placed;
+    hand.removeAt(idx);
+    hand.add(displaced.card); // relíquias equipadas são descartadas (MVP)
     final newSide = side.copyWith(
-      lanes: newLanes,
-      poolCreatures: newPool,
-      crystals: side.crystals - card.cost,
+      lanes: lanes,
+      hand: hand,
+      crystals: side.crystals - kReturnToHandCost,
     );
     return s.withSide(side.id, newSide);
   }
 
-  /// Resolve a lane de posicionamento. Se [requested] for válida e livre, usa.
-  /// Senão escolhe a lane livre mais à frente (menor índice). -1 = sem vaga.
-  int _resolveLane(BoardSide side, int? requested) {
-    if (requested != null) {
-      if (requested < 0 || requested >= kLaneCount) return -1;
-      return side.lanes[requested] == null ? requested : -1;
-    }
+  /// Lane livre mais à frente (menor índice), ou -1 se o tabuleiro está cheio.
+  int _firstFreeLane(BoardSide side) {
     for (var i = 0; i < kLaneCount; i++) {
       if (side.lanes[i] == null) return i;
     }
     return -1;
   }
 
+  /// Compra automática: repõe a mão do topo do deck até `kHandSize`.
+  BoardSide _refillHand(BoardSide side) {
+    if (side.hand.length >= kHandSize || side.deck.isEmpty) return side;
+    final hand = List<Object>.from(side.hand);
+    final deck = List<Object>.from(side.deck);
+    while (hand.length < kHandSize && deck.isNotEmpty) {
+      hand.add(deck.removeAt(0));
+    }
+    return side.copyWith(hand: hand, deck: deck);
+  }
+
+  /// Esta jogada de criatura é o caso especial "tabuleiro cheio → carta volta
+  /// pra mão" (custa 3 e encerra a vez)? O controller usa isto pra disparar o
+  /// fim do turno automaticamente. Puro: depende só do estado ANTES da jogada.
+  bool isFullBoardReturnPlay(MatchState s, String cardId, int lane) {
+    final side = s.active;
+    if (lane < 0 || lane >= kLaneCount) return false;
+    if (!side.hand.any((c) => c is CreatureCard && c.id == cardId)) return false;
+    for (var i = lane; i < kLaneCount; i++) {
+      if (side.lanes[i] == null) return false; // há vaga → jogada normal
+    }
+    return true;
+  }
+
   MatchState _playRelic(MatchState s, PlayRelic a) {
     final side = s.active;
-    final idx = side.poolRelics.indexWhere((r) => r.id == a.cardId);
+    final idx =
+        side.hand.indexWhere((c) => c is RelicCard && c.id == a.cardId);
     if (idx < 0) return s;
 
-    final relic = side.poolRelics[idx];
+    final relic = side.hand[idx] as RelicCard;
     if (relic.cost > side.crystals) return s; // cristais insuficientes
 
     // Encontra a criatura alvo (própria, em jogo).
@@ -225,7 +284,7 @@ class CardBattleEngine {
     // Compatibilidade: relíquia universal (neutro) OU compartilha ≥1 conceito.
     if (!relic.isCompatibleWith(target.card)) return s;
 
-    final newPool = List<RelicCard>.from(side.poolRelics)..removeAt(idx);
+    final newHand = List<Object>.from(side.hand)..removeAt(idx);
 
     CreatureInPlay updated;
     if (relic.isFlash) {
@@ -256,12 +315,13 @@ class CardBattleEngine {
     final newLanes = List<CreatureInPlay?>.from(side.lanes);
     newLanes[laneIdx] = updated;
 
-    // Cobra o custo em cristais (vale para equipamento E flash).
-    final newSide = side.copyWith(
+    // Cobra o custo em cristais (vale para equipamento E flash) e compra.
+    var newSide = side.copyWith(
       lanes: newLanes,
-      poolRelics: newPool,
+      hand: newHand,
       crystals: side.crystals - relic.cost,
     );
+    newSide = _refillHand(newSide); // compra automática
     return s.withSide(side.id, newSide);
   }
 
@@ -269,31 +329,23 @@ class CardBattleEngine {
     final side = s.active;
     if (side.sacrificedThisTurn) return s; // máx 1/turno
 
-    // Tenta relíquia no pool.
-    final rIdx = side.poolRelics.indexWhere((r) => r.id == a.cardId);
-    if (rIdx >= 0) {
-      final newPool = List<RelicCard>.from(side.poolRelics)..removeAt(rIdx);
-      final newSide = side.copyWith(
-        poolRelics: newPool,
-        crystals: side.crystals + kSacrificeRelicCrystals,
-        sacrificedThisTurn: true,
-      );
-      return s.withSide(side.id, newSide);
-    }
+    // A carta a sacrificar tem que estar na MÃO.
+    final idx = side.hand.indexWhere((c) => cardId(c) == a.cardId);
+    if (idx < 0) return s; // carta não está na mão
 
-    // Tenta criatura no pool.
-    final cIdx = side.poolCreatures.indexWhere((c) => c.id == a.cardId);
-    if (cIdx >= 0) {
-      final newPool = List<CreatureCard>.from(side.poolCreatures)..removeAt(cIdx);
-      final newSide = side.copyWith(
-        poolCreatures: newPool,
-        crystals: side.crystals + kSacrificeCreatureCrystals,
-        sacrificedThisTurn: true,
-      );
-      return s.withSide(side.id, newSide);
-    }
+    final card = side.hand[idx];
+    final gain = card is RelicCard
+        ? kSacrificeRelicCrystals
+        : kSacrificeCreatureCrystals;
 
-    return s; // carta não encontrada no pool
+    final newHand = List<Object>.from(side.hand)..removeAt(idx);
+    var newSide = side.copyWith(
+      hand: newHand,
+      crystals: side.crystals + gain,
+      sacrificedThisTurn: true,
+    );
+    newSide = _refillHand(newSide); // compra automática
+    return s.withSide(side.id, newSide);
   }
 
   // ---------------------------------------------------------------------------
@@ -851,40 +903,32 @@ class CardBattleEngine {
   }
 
   /// Penalidade: se o lado ATIVO terminou o turno sem criaturas em jogo, perde
-  /// `kNoCreaturePenaltyCards` carta(s) aleatória(s) do pool (rng).
+  /// `kNoCreaturePenaltyCards` carta(s) aleatória(s) do conjunto mão+deck (rng).
   /// Emite `NoCreaturePenaltyApplied` em [events] por carta perdida.
   MatchState _applyNoCreaturePenalty(MatchState s, List<MatchEvent> events) {
     final side = s.active;
     if (side.hasCreatureInPlay) return s;
 
-    var poolCreatures = List<CreatureCard>.from(side.poolCreatures);
-    var poolRelics = List<RelicCard>.from(side.poolRelics);
+    final hand = List<Object>.from(side.hand);
+    final deck = List<Object>.from(side.deck);
 
     for (var i = 0; i < kNoCreaturePenaltyCards; i++) {
-      final total = poolCreatures.length + poolRelics.length;
+      final total = hand.length + deck.length;
       if (total == 0) break;
       final pick = s.rng.nextInt(total);
-      if (pick < poolCreatures.length) {
-        final lost = poolCreatures.removeAt(pick);
-        events.add(NoCreaturePenaltyApplied(
-          side: side.id,
-          lostCardId: lost.id,
-          lostCardName: lost.nome,
-          wasCreature: true,
-        ));
-      } else {
-        final lost = poolRelics.removeAt(pick - poolCreatures.length);
-        events.add(NoCreaturePenaltyApplied(
-          side: side.id,
-          lostCardId: lost.id,
-          lostCardName: lost.nome,
-          wasCreature: false,
-        ));
-      }
+      final Object lost =
+          pick < hand.length ? hand.removeAt(pick) : deck.removeAt(pick - hand.length);
+      events.add(NoCreaturePenaltyApplied(
+        side: side.id,
+        lostCardId: cardId(lost),
+        lostCardName:
+            lost is CreatureCard ? lost.nome : (lost as RelicCard).nome,
+        wasCreature: lost is CreatureCard,
+      ));
     }
 
-    final newSide =
-        side.copyWith(poolCreatures: poolCreatures, poolRelics: poolRelics);
+    var newSide = side.copyWith(hand: hand, deck: deck);
+    newSide = _refillHand(newSide); // se perdeu da mão, repõe do deck
     return s.withSide(side.id, newSide);
   }
 
@@ -959,8 +1003,8 @@ class CardBattleEngine {
       final freeLane = side.lanes.contains(null);
       if (!freeLane) break;
 
-      // Candidatas que cabem nos cristais (maior atk primeiro).
-      final affordable = side.poolCreatures
+      // Candidatas na MÃO que cabem nos cristais (maior atk primeiro).
+      final affordable = side.handCreatures
           .where((c) => c.cost <= side.crystals)
           .toList()
         ..sort((a, b) => b.atk.compareTo(a.atk));
@@ -1016,7 +1060,7 @@ class CardBattleEngine {
         ..sort((a, b) => b.atk.compareTo(a.atk));
 
       for (final creature in ordered) {
-        final relic = side.poolRelics
+        final relic = side.handRelics
             .where((r) =>
                 r.cost <= side.crystals && r.isCompatibleWith(creature.card))
             .firstOrNull;
@@ -1054,21 +1098,21 @@ class CardBattleEngine {
   /// prioriza relíquia sem criatura compatível; senão a criatura mais cara
   /// que não cabe. Retorna null se nada útil.
   String? _pickSacrificeToEnable(BoardSide side) {
-    // Relíquia "morta": nenhuma criatura (pool ou jogo) é compatível com ela.
+    // Relíquia "morta": nenhuma criatura (mão ou jogo) é compatível com ela.
     final creatures = <CreatureCard>[
-      ...side.poolCreatures,
+      ...side.handCreatures,
       for (final c in side.creaturesInPlay) c.card,
     ];
-    final deadRelic = side.poolRelics
+    final deadRelic = side.handRelics
         .where((r) => !creatures.any((c) => r.isCompatibleWith(c)))
         .firstOrNull;
     if (deadRelic != null) return deadRelic.id;
 
     // Senão, qualquer relíquia (vale +1 cristal).
-    if (side.poolRelics.isNotEmpty) return side.poolRelics.first.id;
+    if (side.handRelics.isNotEmpty) return side.handRelics.first.id;
 
     // Senão, a criatura mais cara que não cabe (vale +2 cristais).
-    final tooExpensive = side.poolCreatures
+    final tooExpensive = side.handCreatures
         .where((c) => c.cost > side.crystals)
         .toList()
       ..sort((a, b) => b.cost.compareTo(a.cost));

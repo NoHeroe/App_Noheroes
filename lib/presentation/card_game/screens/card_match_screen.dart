@@ -310,6 +310,14 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                 ],
               ),
             ),
+            // Botão redondo de encerrar turno, fixo no centro-direita.
+            if (_boot == _BootStatus.ready && ui.match != null && !ui.isFinished)
+              Positioned(
+                right: 8,
+                top: 0,
+                bottom: 0,
+                child: Center(child: _endTurnButton(ui)),
+              ),
             if (ui.isFinished && _boot == _BootStatus.ready)
               _matchOverOverlay(ui),
           ],
@@ -473,8 +481,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
               AppColors.conceptCorrompido),
           const SizedBox(width: 10),
           _statChip(Icons.style_outlined,
-              '${bot.poolCreatures.length + bot.poolRelics.length}',
-              AppColors.textSecondary),
+              '${bot.hand.length + bot.deck.length}', AppColors.textSecondary),
         ],
       ),
     );
@@ -502,12 +509,13 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     final controller = ref.read(pveMatchControllerProvider.notifier);
     final selected = _selectedPoolCard(ui);
 
-    // Destaques de seleção (apenas no lado do jogador).
+    // Destaques de seleção (apenas no lado do jogador). Criatura jogável acende
+    // TODAS as lanes próprias (empurrão: pode-se pôr em slot ocupado).
     final highlightLanes = <int>{};
     final highlightTargets = <String>{};
     if (isPlayerSide && ui.isPlayerTurn && selected != null) {
-      if (selected is CreatureCard && controller.canAfford(selected)) {
-        highlightLanes.addAll(controller.freeLanes());
+      if (selected is CreatureCard && controller.canPlayCreature(selected)) {
+        highlightLanes.addAll([for (var i = 0; i < kLaneCount; i++) i]);
       } else if (selected is RelicCard && controller.canAffordRelic(selected)) {
         highlightTargets.addAll(
             controller.compatibleTargets(selected).map((c) => c.instanceId));
@@ -552,10 +560,13 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                 ],
               ],
             ),
-            if (orphanTarget)
+            if (orphanTarget) ...[
+              if (h.targetDied && !h.isHeal)
+                Positioned.fill(child: Center(child: _shardBurst(h))),
               Positioned.fill(
                 child: Center(child: _floatingHighlightText(h)),
               ),
+            ],
           ],
         ),
       ),
@@ -652,16 +663,42 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       ),
     );
 
-    // Animações do replay (flutter_animate; key = evento → reinicia a cada
-    // evento). Só fazem sentido com criatura presente.
+    // Animações do replay por TIPO de ataque (flutter_animate; key = evento).
     if (creature != null && h != null) {
       if (isHlAttacker) {
-        final lunge = isPlayerSide ? -7.0 : 7.0;
-        tile = tile
-            .animate(key: ObjectKey(h))
-            .moveY(begin: 0, end: lunge, duration: 140.ms, curve: Curves.easeOut)
-            .then(delay: 50.ms)
-            .moveY(begin: 0, end: -lunge, duration: 170.ms, curve: Curves.easeIn);
+        final dir = isPlayerSide ? -1.0 : 1.0; // -y = rumo ao inimigo (jogador)
+        switch (h.damageType) {
+          case DamageType.corpoACorpo:
+          case DamageType.vitalismo:
+            // Físico/verdadeiro: AVANÇA até o inimigo e volta (golpe).
+            tile = tile
+                .animate(key: ObjectKey(h))
+                .moveY(
+                    begin: 0,
+                    end: 16 * dir,
+                    duration: 150.ms,
+                    curve: Curves.easeOut)
+                .then(delay: 40.ms)
+                .moveY(
+                    begin: 0,
+                    end: -16 * dir,
+                    duration: 190.ms,
+                    curve: Curves.easeIn);
+          case DamageType.magico:
+          case DamageType.aDistancia:
+            // Lança projétil/flecha: pulso de "conjuração/saque" (recuo curto).
+            tile = tile
+                .animate(key: ObjectKey(h))
+                .scaleXY(
+                    begin: 1, end: 1.08, duration: 130.ms, curve: Curves.easeOut)
+                .then()
+                .scaleXY(begin: 1, end: 1 / 1.08, duration: 170.ms);
+          case DamageType.cura:
+          case null:
+            tile = tile.animate(key: ObjectKey(h)).shimmer(
+                duration: 450.ms,
+                color: AppColors.conceptChrysalis.withValues(alpha: 0.3));
+        }
       } else if (isHlAbility) {
         tile = tile.animate(key: ObjectKey(h)).shimmer(
             duration: 550.ms, color: AppColors.gold.withValues(alpha: 0.35));
@@ -676,32 +713,140 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       }
     }
 
-    // Número/texto flutuante ancorado no card do alvo (ou do dono do proc).
+    // Overlays no card do alvo: impacto por tipo (projétil + burst) + número.
     if (creature != null && (isHlTarget || isHlAbility)) {
+      final hh = h;
       tile = Stack(
         clipBehavior: Clip.none,
         children: [
           tile,
-          Positioned.fill(child: Center(child: _floatingHighlightText(h))),
+          if (isHlTarget && !hh.isHeal && !hh.evaded)
+            Positioned.fill(child: _impactOverlay(hh, isPlayerSide)),
+          Positioned.fill(child: Center(child: _floatingHighlightText(hh))),
         ],
       );
     }
 
-    return Center(
-      child: GestureDetector(
-        onTap: () {
-          if (!isPlayerSide || !ui.isPlayerTurn) return;
-          final selectedId = ui.selectedCardId;
-          if (selectedId == null) return;
-          if (laneHighlighted && creature == null) {
-            controller.playCreature(selectedId, lane: lane);
-          } else if (targetHighlighted && creature != null) {
-            controller.playRelic(selectedId, creature.instanceId);
-          }
-        },
-        child: tile,
+    // Stagger: frente (lane 0) no centro; 2 e 3 recuados (3 mais que 2). O
+    // recuo é pra LONGE da linha central (jogador desce, bot sobe).
+    final staggerDy = (lane * 8.0) * (isPlayerSide ? 1 : -1);
+
+    return Transform.translate(
+      offset: Offset(0, staggerDy),
+      child: Center(
+        child: GestureDetector(
+          onTap: () {
+            if (!isPlayerSide || !ui.isPlayerTurn) return;
+            final selectedId = ui.selectedCardId;
+            if (selectedId == null) return;
+            if (laneHighlighted) {
+              // Criatura: joga aqui (empurra se o slot estiver ocupado; a
+              // engine decide normal vs cheio→volta-pra-mão).
+              controller.playCreature(selectedId, lane: lane);
+            } else if (targetHighlighted && creature != null) {
+              controller.playRelic(selectedId, creature.instanceId);
+            }
+          },
+          child: tile,
+        ),
       ),
     );
+  }
+
+  /// Overlay de impacto no card do alvo, por tipo de ataque: projétil/flecha
+  /// que entra do lado do atacante (mágico/à distância) + burst de impacto.
+  Widget _impactOverlay(CombatHighlight h, bool isPlayerSideTarget) {
+    final type = h.damageType;
+    final isProjectile =
+        type == DamageType.magico || type == DamageType.aDistancia;
+
+    final IconData impactIcon;
+    final Color color;
+    switch (type) {
+      case DamageType.magico:
+        impactIcon = Icons.blur_on;
+        color = AppColors.conceptMagico;
+      case DamageType.aDistancia:
+        impactIcon = Icons.close;
+        color = AppColors.gold;
+      case DamageType.corpoACorpo:
+      case DamageType.vitalismo:
+      case DamageType.cura:
+      case null:
+        impactIcon = Icons.flare;
+        color = AppColors.hp;
+    }
+
+    // O projétil entra pela borda do lado do atacante: alvo do jogador (em
+    // baixo) leva tiro de cima; alvo do bot (em cima) leva tiro de baixo.
+    final startDy = isPlayerSideTarget ? -30.0 : 30.0;
+
+    return IgnorePointer(
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          if (isProjectile)
+            Icon(Icons.circle, size: 9, color: color)
+                .animate(key: ObjectKey(h))
+                .moveY(
+                    begin: startDy,
+                    end: 0,
+                    duration: 200.ms,
+                    curve: Curves.easeIn)
+                .fadeOut(delay: 180.ms, duration: 60.ms),
+          Icon(impactIcon, size: 26, color: color)
+              .animate(key: ObjectKey(h))
+              .scaleXY(
+                  begin: 0.3,
+                  end: 1.2,
+                  delay: isProjectile ? 200.ms : 60.ms,
+                  duration: 160.ms,
+                  curve: Curves.easeOut)
+              .fadeIn(delay: isProjectile ? 200.ms : 60.ms, duration: 80.ms)
+              .then()
+              .fadeOut(duration: 180.ms),
+        ],
+      ),
+    );
+  }
+
+  /// Burst de cacos (morte de uma carta) — ancorado onde o número da morte
+  /// flutua. 8 fragmentos voam pra fora e somem.
+  Widget _shardBurst(CombatHighlight h) {
+    return IgnorePointer(
+      child: KeyedSubtree(
+        key: ObjectKey(h),
+        child: SizedBox(
+          width: 60,
+          height: 60,
+          child: Stack(alignment: Alignment.center, children: [
+            for (var i = 0; i < 8; i++) _shard(i),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _shard(int i) {
+    final angle = (i / 8) * 2 * math.pi;
+    final dx = math.cos(angle) * 26;
+    final dy = math.sin(angle) * 26;
+    return Container(
+      width: 7,
+      height: 7,
+      decoration: BoxDecoration(
+        color: AppColors.hp.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(1),
+      ),
+    )
+        .animate()
+        .move(
+            begin: Offset.zero,
+            end: Offset(dx, dy),
+            duration: 420.ms,
+            curve: Curves.easeOut)
+        .rotate(begin: 0, end: 0.6, duration: 420.ms)
+        .fadeOut(delay: 200.ms, duration: 220.ms);
   }
 
   /// Slot de lane vazio (placeholder no formato/raio do card).
@@ -883,7 +1028,6 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   /// Bandeja de mão MINIMIZÁVEL: alça (cristais + contagem + chevron) que
   /// expande/colapsa o baralho único. Colapsada, o tabuleiro ganha a tela.
   Widget _handTray(PveMatchUiState ui, BoardSide player) {
-    final count = player.poolCreatures.length + player.poolRelics.length;
     return Container(
       margin: const EdgeInsets.fromLTRB(10, 2, 10, 4),
       decoration: BoxDecoration(
@@ -928,10 +1072,10 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                       '${player.remainingCreatureCount}/9',
                       AppColors.purpleLight),
                   const Spacer(),
-                  Text('MÃO ($count)',
+                  Text('MÃO ${player.hand.length} · DECK ${player.deck.length}',
                       style: GoogleFonts.cinzelDecorative(
                           fontSize: 9,
-                          letterSpacing: 2,
+                          letterSpacing: 1.5,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textMuted)),
                   const SizedBox(width: 4),
@@ -961,35 +1105,21 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
-  /// Mão ÚNICA do jogador: criaturas + relíquias num só baralho, ordenado por
-  /// custo (criaturas antes de relíquias no empate, depois nome).
-  List<Object> _handCards(BoardSide player) {
-    int costOf(Object c) =>
-        c is CreatureCard ? c.cost : (c as RelicCard).cost;
-    int typeOf(Object c) => c is CreatureCard ? 0 : 1;
-    String nameOf(Object c) =>
-        c is CreatureCard ? c.nome : (c as RelicCard).nome;
-
-    final cards = <Object>[...player.poolCreatures, ...player.poolRelics];
-    cards.sort((a, b) {
-      final byCost = costOf(a).compareTo(costOf(b));
-      if (byCost != 0) return byCost;
-      final byType = typeOf(a).compareTo(typeOf(b));
-      if (byType != 0) return byType;
-      return nameOf(a).compareTo(nameOf(b));
-    });
-    return cards;
-  }
-
   Widget _handStrip(PveMatchUiState ui, BoardSide player) {
     final controller = ref.read(pveMatchControllerProvider.notifier);
-    final cards = _handCards(player);
-    if (cards.isEmpty) return _emptyPoolText('Mão vazia.');
+    // MÃO: as ≤5 cartas visíveis, em ordem de compra (embaralhada — sem
+    // reordenar). A última posição mostra a MINIATURA da próxima a comprar.
+    final cards = player.hand;
+    final next = player.nextCard;
+    if (cards.isEmpty && next == null) return _emptyPoolText('Mão vazia.');
+    final itemCount = cards.length + (next != null ? 1 : 0);
     return ListView.separated(
       scrollDirection: Axis.horizontal,
-      itemCount: cards.length,
-      separatorBuilder: (_, __) => const SizedBox(width: 7),
+      itemCount: itemCount,
+      separatorBuilder: (_, i) =>
+          SizedBox(width: i == cards.length - 1 ? 12 : 7),
       itemBuilder: (_, i) {
+        if (i >= cards.length) return _previewCard(next!);
         final card = cards[i];
         if (card is CreatureCard) {
           return _handCard(
@@ -1008,6 +1138,45 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
+  /// Miniatura (menor, não-interativa) da PRÓXIMA carta que será comprada.
+  Widget _previewCard(Object card) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Opacity(
+        opacity: 0.6,
+        child: AspectRatio(
+          aspectRatio: 142 / 206,
+          child: Stack(
+            children: [
+              IgnorePointer(child: _gameFaceFor(card)),
+              Positioned(
+                top: 2,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: AppColors.black.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text('PRÓXIMA',
+                        style: GoogleFonts.roboto(
+                            fontSize: 6,
+                            letterSpacing: 1,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textSecondary)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _emptyPoolText(String text) {
     return Center(
       child: Text(text,
@@ -1016,11 +1185,23 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   }
 
   /// Carta da mão no formato da coleção (`GameCardFace`), ~10% maior que a
-  /// referência. Criatura mostra ATK/PV; relíquia mostra o resumo de efeito.
+  /// referência. Tocar seleciona (mesmo não-jogável: ainda dá pra SACRIFICAR).
   Widget _handCard(Object card, {required bool selected, required bool playable}) {
+    final controller = ref.read(pveMatchControllerProvider.notifier);
+    return GestureDetector(
+      onTap: () => controller.selectCard(cardId(card)),
+      child: AspectRatio(
+        aspectRatio: 142 / 206,
+        child: _gameFaceFor(card, selected: selected, dimmed: !playable),
+      ),
+    );
+  }
+
+  /// Constrói a `GameCardFace` de uma carta (criatura ou relíquia) — usada pela
+  /// mão e pela miniatura de preview.
+  Widget _gameFaceFor(Object card, {bool selected = false, bool dimmed = false}) {
     final creature = card is CreatureCard ? card : null;
     final relic = card is RelicCard ? card : null;
-    final cardId = creature?.id ?? relic!.id;
     final concepts = creature?.concepts ?? relic!.concepts;
     final concept = conceptColor(concepts);
 
@@ -1067,26 +1248,18 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
             size: 11,
             color: concept);
 
-    final controller = ref.read(pveMatchControllerProvider.notifier);
-    return GestureDetector(
-      // Carta não-jogável continua selecionável: ainda pode ser SACRIFICADA.
-      onTap: () => controller.selectCard(cardId),
-      child: AspectRatio(
-        aspectRatio: 142 / 206,
-        child: GameCardFace(
-          name: creature?.nome ?? relic!.nome,
-          cost: creature?.cost ?? relic!.cost,
-          concepts: concepts,
-          rarity: creature?.rarity ?? relic!.rarity,
-          artIcon: creature != null
-              ? damageTypeIcon(creature.damageType)
-              : (relic!.isFlash ? Icons.bolt : Icons.auto_awesome),
-          footer: footer,
-          cornerBadge: badge,
-          selected: selected,
-          dimmed: !playable,
-        ),
-      ),
+    return GameCardFace(
+      name: creature?.nome ?? relic!.nome,
+      cost: creature?.cost ?? relic!.cost,
+      concepts: concepts,
+      rarity: creature?.rarity ?? relic!.rarity,
+      artIcon: creature != null
+          ? damageTypeIcon(creature.damageType)
+          : (relic!.isFlash ? Icons.bolt : Icons.auto_awesome),
+      footer: footer,
+      cornerBadge: badge,
+      selected: selected,
+      dimmed: dimmed,
     );
   }
 
@@ -1105,90 +1278,116 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     return parts.join(' · ');
   }
 
+  /// Linha de ação: aparece só com uma carta selecionada (cancelar +
+  /// sacrificar). O ENCERRAR TURNO virou o botão redondo da direita.
   Widget _actionRow(PveMatchUiState ui) {
     final controller = ref.read(pveMatchControllerProvider.notifier);
     final selected = _selectedPoolCard(ui);
-    final canEndTurn = ui.phase == PveMatchPhase.playerTurn;
+    if (selected == null) return const SizedBox.shrink();
 
     return Row(
       children: [
-        if (selected != null) ...[
-          // Cancelar seleção.
-          GestureDetector(
-            onTap: () => controller.selectCard(null),
-            child: Container(
-              width: 38,
-              height: 42,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: const Icon(Icons.close,
-                  size: 16, color: AppColors.textSecondary),
+        GestureDetector(
+          onTap: () => controller.selectCard(null),
+          child: Container(
+            width: 38,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.border),
             ),
+            child: const Icon(Icons.close,
+                size: 16, color: AppColors.textSecondary),
           ),
-          const SizedBox(width: 8),
-          if (controller.canSacrifice)
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () => controller.sacrifice(selected is CreatureCard
-                    ? selected.id
-                    : (selected as RelicCard).id),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(
-                      color: AppColors.hp.withValues(alpha: 0.6)),
-                  foregroundColor: AppColors.hp,
-                  padding: const EdgeInsets.symmetric(vertical: 11),
-                ),
-                icon: const Icon(Icons.local_fire_department_outlined,
-                    size: 15),
-                label: Text(
-                  selected is CreatureCard
-                      ? 'Sacrificar (+$kSacrificeCreatureCrystals)'
-                      : 'Sacrificar (+$kSacrificeRelicCrystals)',
-                  style: GoogleFonts.roboto(
-                      fontSize: 11, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-          if (controller.canSacrifice) const SizedBox(width: 8),
-        ],
+        ),
+        const SizedBox(width: 8),
         Expanded(
-          flex: 2,
-          child: FilledButton.icon(
-            onPressed: canEndTurn ? _onEndTurnPressed : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.purple,
-              disabledBackgroundColor:
-                  AppColors.purple.withValues(alpha: 0.25),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 11),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-            icon: const Icon(Icons.bolt, size: 15),
-            label: Text('ENCERRAR TURNO',
-                style: GoogleFonts.cinzelDecorative(
-                    fontSize: 11,
-                    letterSpacing: 1,
-                    fontWeight: FontWeight.w700)),
-          ),
+          child: controller.canSacrifice
+              ? OutlinedButton.icon(
+                  onPressed: () => controller.sacrifice(selected is CreatureCard
+                      ? selected.id
+                      : (selected as RelicCard).id),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: AppColors.hp.withValues(alpha: 0.6)),
+                    foregroundColor: AppColors.hp,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  icon: const Icon(Icons.local_fire_department_outlined,
+                      size: 15),
+                  label: Text(
+                    selected is CreatureCard
+                        ? 'Sacrificar (+$kSacrificeCreatureCrystals)'
+                        : 'Sacrificar (+$kSacrificeRelicCrystals)',
+                    style: GoogleFonts.roboto(
+                        fontSize: 11, fontWeight: FontWeight.w600),
+                  ),
+                )
+              : Center(
+                  child: Text('Toque numa lane para posicionar',
+                      style: GoogleFonts.roboto(
+                          fontSize: 10, color: AppColors.textMuted)),
+                ),
         ),
       ],
     );
   }
 
-  /// Resolve a carta selecionada (criatura OU relíquia) do pool do jogador.
+  /// Botão REDONDO de encerrar turno, fixo no centro-direita (estilo Card
+  /// Monsters). Só ativo na vez do jogador.
+  Widget _endTurnButton(PveMatchUiState ui) {
+    final enabled = ui.phase == PveMatchPhase.playerTurn;
+    return GestureDetector(
+      onTap: enabled ? _onEndTurnPressed : null,
+      child: Container(
+        width: 54,
+        height: 54,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: enabled
+              ? AppColors.purple
+              : AppColors.purple.withValues(alpha: 0.22),
+          border: Border.all(
+              color: enabled ? AppColors.purpleLight : AppColors.border,
+              width: 1.5),
+          boxShadow: enabled
+              ? const [
+                  BoxShadow(
+                      color: AppColors.purpleGlow,
+                      blurRadius: 12,
+                      spreadRadius: 1)
+                ]
+              : null,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.fast_forward_rounded,
+                size: 22,
+                color: enabled
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.5)),
+            Text('FIM',
+                style: GoogleFonts.cinzelDecorative(
+                    fontSize: 7,
+                    letterSpacing: 1,
+                    fontWeight: FontWeight.w700,
+                    color: enabled
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.5))),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Resolve a carta selecionada (criatura OU relíquia) na MÃO do jogador.
   Object? _selectedPoolCard(PveMatchUiState ui) {
     final id = ui.selectedCardId;
     final board = ui.playerBoard;
     if (id == null || board == null) return null;
-    for (final c in board.poolCreatures) {
-      if (c.id == id) return c;
-    }
-    for (final r in board.poolRelics) {
-      if (r.id == id) return r;
+    for (final c in board.hand) {
+      if (cardId(c) == id) return c;
     }
     return null;
   }

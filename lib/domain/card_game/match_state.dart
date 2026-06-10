@@ -158,13 +158,19 @@ class CreatureInPlay {
 }
 
 /// Estado de um lado do tabuleiro.
+///
+/// Modelo de MÃO (Card Monsters): o loadout de 18 cartas vira um [deck]
+/// embaralhado; a [hand] são as ≤ `kHandSize` cartas visíveis/jogáveis; jogar
+/// uma carta COMPRA a próxima do topo do deck repondo a mão. Cartas na mão/deck
+/// são `CreatureCard` ou `RelicCard` misturadas (mesmo padrão `Object`+`is` da
+/// UI) — use os helpers `cardId`/`cardCost` de `card_models.dart`.
 class BoardSide {
   const BoardSide({
     required this.id,
     required this.lanes,
     required this.crystals,
-    required this.poolCreatures,
-    required this.poolRelics,
+    required this.hand,
+    required this.deck,
     required this.sacrificedThisTurn,
     this.pendingCrystals = 0,
   });
@@ -176,9 +182,12 @@ class BoardSide {
 
   final int crystals;
 
-  /// Cartas ainda não jogadas.
-  final List<CreatureCard> poolCreatures;
-  final List<RelicCard> poolRelics;
+  /// MÃO: cartas visíveis/jogáveis (≤ `kHandSize`), criaturas e relíquias
+  /// misturadas, em ordem de compra.
+  final List<Object> hand;
+
+  /// DECK: pilha de compra restante (índice 0 = topo = próxima a comprar).
+  final List<Object> deck;
 
   /// Se já usou o sacrifício do turno (máx 1/turno).
   final bool sacrificedThisTurn;
@@ -200,11 +209,25 @@ class BoardSide {
 
   bool get hasCreatureInPlay => creaturesInPlay.isNotEmpty;
 
-  /// Quantas das 9 criaturas ainda existem (em jogo OU no pool). Conta IDs
-  /// distintos: cada carta é única no loadout MVP.
+  /// Criaturas na MÃO (subconjunto jogável agora).
+  List<CreatureCard> get handCreatures =>
+      hand.whereType<CreatureCard>().toList(growable: false);
+
+  /// Relíquias na MÃO.
+  List<RelicCard> get handRelics =>
+      hand.whereType<RelicCard>().toList(growable: false);
+
+  /// Próxima carta a comprar (preview); null se o deck acabou.
+  Object? get nextCard => deck.isEmpty ? null : deck.first;
+
+  /// Quantas das 9 criaturas ainda existem (em jogo, na mão OU no deck). Conta
+  /// IDs distintos: cada carta é única no loadout MVP.
   int get remainingCreatureCount {
     final ids = <String>{};
-    for (final c in poolCreatures) {
+    for (final c in hand.whereType<CreatureCard>()) {
+      ids.add(c.id);
+    }
+    for (final c in deck.whereType<CreatureCard>()) {
       ids.add(c.id);
     }
     for (final c in creaturesInPlay) {
@@ -224,8 +247,8 @@ class BoardSide {
   BoardSide copyWith({
     List<CreatureInPlay?>? lanes,
     int? crystals,
-    List<CreatureCard>? poolCreatures,
-    List<RelicCard>? poolRelics,
+    List<Object>? hand,
+    List<Object>? deck,
     bool? sacrificedThisTurn,
     int? pendingCrystals,
   }) {
@@ -233,20 +256,27 @@ class BoardSide {
       id: id,
       lanes: lanes ?? this.lanes,
       crystals: crystals ?? this.crystals,
-      poolCreatures: poolCreatures ?? this.poolCreatures,
-      poolRelics: poolRelics ?? this.poolRelics,
+      hand: hand ?? this.hand,
+      deck: deck ?? this.deck,
       sacrificedThisTurn: sacrificedThisTurn ?? this.sacrificedThisTurn,
       pendingCrystals: pendingCrystals ?? this.pendingCrystals,
     );
   }
 
-  static BoardSide initial(SideId id, CardLoadout loadout) {
+  /// Monta o lado inicial: deck = 18 cartas (criaturas+relíquias); mão = as
+  /// primeiras `kHandSize`. Com [rng] (partida real) o deck é embaralhado
+  /// determinístico por seed; sem rng (testes que montam estados controlados)
+  /// mantém a ordem do loadout.
+  static BoardSide initial(SideId id, CardLoadout loadout, [Random? rng]) {
+    final pile = <Object>[...loadout.creatures, ...loadout.relics];
+    if (rng != null) pile.shuffle(rng);
+    final handCount = pile.length < kHandSize ? pile.length : kHandSize;
     return BoardSide(
       id: id,
       lanes: List<CreatureInPlay?>.filled(kLaneCount, null),
       crystals: 0,
-      poolCreatures: List<CreatureCard>.from(loadout.creatures),
-      poolRelics: List<RelicCard>.from(loadout.relics),
+      hand: List<Object>.from(pile.sublist(0, handCount)),
+      deck: List<Object>.from(pile.sublist(handCount)),
       sacrificedThisTurn: false,
     );
   }
