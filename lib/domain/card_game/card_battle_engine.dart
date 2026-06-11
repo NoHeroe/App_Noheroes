@@ -164,9 +164,32 @@ class CardBattleEngine {
         return _sacrifice(s, action);
       case ReturnToHand():
         return _returnToHand(s, action);
+      case SwapPosition():
+        return _swapPosition(s, action);
       case Pass():
         return s; // no-op: fim da sequência é sinalizado via endTurn.
     }
+  }
+
+  /// Troca a posição de duas criaturas PRÓPRIAS — a selecionada vai pra trás
+  /// (movimento só pra trás: `targetId` precisa estar ATRÁS da `creatureId`).
+  /// Custa `kReturnVoluntaryCost` cristais e NÃO encerra a vez.
+  MatchState _swapPosition(MatchState s, SwapPosition a) {
+    final side = s.active;
+    if (side.crystals < kReturnVoluntaryCost) return s;
+    final packed = side.creaturesInPlay.toList();
+    final i = packed.indexWhere((c) => c.instanceId == a.creatureId);
+    final j = packed.indexWhere((c) => c.instanceId == a.targetId);
+    if (i < 0 || j < 0 || i == j) return s;
+    if (j <= i) return s; // só pra trás: alvo precisa estar mais atrás (lane maior).
+    final tmp = packed[i];
+    packed[i] = packed[j];
+    packed[j] = tmp;
+    final newSide = side.copyWith(
+      lanes: _packedToLanes(packed),
+      crystals: side.crystals - kReturnVoluntaryCost,
+    );
+    return s.withSide(side.id, newSide);
   }
 
   /// Recua uma criatura PRÓPRIA em jogo de volta pra mão por `kReturnVoluntaryCost`

@@ -308,6 +308,22 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     );
   }
 
+  /// Troca a posição de uma criatura PRÓPRIA com outra ATRÁS dela (movimento só
+  /// pra trás), por `kReturnVoluntaryCost` cristais. NÃO encerra a vez.
+  bool swapPosition(String creatureId, String targetId) {
+    if (state.playLocked) return false;
+    return _playerAction(
+      SwapPosition(creatureId, targetId),
+      onApplied: (before, after) {
+        final c = _findCreature(before.sideOf(state.playerSide), creatureId);
+        return 'Você recuou ${c?.card.nome ?? creatureId} '
+            '(−$kReturnVoluntaryCost cristais).';
+      },
+      invalidText: () => 'Movimento inválido (só pra trás; '
+          'cristais insuficientes?).',
+    );
+  }
+
   /// Equipa/usa uma relíquia numa criatura própria em jogo.
   bool playRelic(String cardId, String targetCreatureId) {
     return _playerAction(
@@ -584,6 +600,9 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
         // O bot não usa esta ação no MVP; exaustividade do switch.
         final c = _findCreature(side, creatureId);
         return 'A IA recuou ${c?.card.nome ?? creatureId} pra mão.';
+      case SwapPosition():
+        // O bot não reposiciona no MVP; exaustividade do switch.
+        return 'A IA reposicionou uma criatura.';
       case Pass():
         return 'A IA passou.';
     }

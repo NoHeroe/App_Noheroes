@@ -46,6 +46,19 @@ class ReturnToHand extends GameAction {
   String toString() => 'ReturnToHand($creatureId)';
 }
 
+/// Troca a posição de uma criatura PRÓPRIA com outra ATRÁS dela (movimento só
+/// pra trás), pagando `kReturnVoluntaryCost` cristais. NÃO encerra a vez. A
+/// `creatureId` (selecionada) vai pra posição da `targetId` (mais atrás) e
+/// vice-versa. (SPEC do CEO 2026-06-11.)
+class SwapPosition extends GameAction {
+  const SwapPosition(this.creatureId, this.targetId);
+  final String creatureId; // a selecionada (vai pra trás)
+  final String targetId; // a de trás (vem pra frente)
+
+  @override
+  String toString() => 'SwapPosition($creatureId <-> $targetId)';
+}
+
 /// Encerra a Fase de Jogo do lado ativo (sinaliza fim da sequência de ações).
 class Pass extends GameAction {
   const Pass();

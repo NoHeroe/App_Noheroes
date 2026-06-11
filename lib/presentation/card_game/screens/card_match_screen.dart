@@ -50,6 +50,11 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   CardMatchReward? _reward;
   bool _rewardRequested = false;
 
+  // Reposicionamento (SPEC CEO 2026-06-11): criatura própria selecionada pra
+  // mover. 1º toque seleciona; tocar outra ATRÁS = troca (2 cristais); tocar a
+  // mesma = recuar pra mão. Só pra trás.
+  String? _movingCreatureId;
+
   // Tutorial guiado da 1ª partida (ponto #2): bot fraco + diálogos. Detectado
   // no boot pra montar o bot fácil; o tutorial roda por cima da partida.
   bool _isTutorial = false;
@@ -849,9 +854,14 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     // Conteúdo: card no formato da coleção ou slot vazio. AnimatedSwitcher
     // keyed no instanceId → "frente sai / retaguarda entra" faz cross-fade
     // (a substituição passa a LER visualmente).
+    final isMoving = isPlayerSide &&
+        creature != null &&
+        _movingCreatureId == creature.instanceId;
     final Widget content = creature == null
         ? _emptyLane(lane, laneHighlighted)
-        : _boardCard(creature, isFront: isFront, borderOverride: borderOverride);
+        : _boardCard(creature,
+            isFront: isFront,
+            borderOverride: isMoving ? AppColors.gold : borderOverride);
 
     Widget tile = AspectRatio(
       aspectRatio: 142 / 206,
@@ -990,10 +1000,30 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
             if (!isPlayerSide || !ui.isPlayerTurn || ui.playLocked) return;
             final selectedId = ui.selectedCardId;
             if (selectedId == null) {
-              // Nada selecionado + toque na PRÓPRIA criatura → recuar pra mão
-              // (custo kReturnVoluntaryCost; não encerra a vez).
-              if (creature != null) _confirmReturnToHand(creature);
+              // Fluxo de REPOSICIONAMENTO (select + click; só pra trás):
+              // 1º toque numa criatura própria seleciona; tocar OUTRA atrás =
+              // troca (−2 cristais); tocar a MESMA = recuar pra mão.
+              if (creature == null) {
+                if (_movingCreatureId != null) {
+                  setState(() => _movingCreatureId = null);
+                }
+                return;
+              }
+              if (_movingCreatureId == null) {
+                setState(() => _movingCreatureId = creature.instanceId);
+              } else if (_movingCreatureId == creature.instanceId) {
+                final c = creature;
+                setState(() => _movingCreatureId = null);
+                _confirmReturnToHand(c);
+              } else {
+                final from = _movingCreatureId!;
+                setState(() => _movingCreatureId = null);
+                controller.swapPosition(from, creature.instanceId);
+              }
               return;
+            }
+            if (_movingCreatureId != null) {
+              setState(() => _movingCreatureId = null);
             }
             if (laneHighlighted) {
               // Criatura: joga aqui (empurra se o slot estiver ocupado; a
