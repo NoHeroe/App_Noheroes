@@ -13,6 +13,7 @@ class NhBottomNav extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final player = ref.watch(currentPlayerProvider);
     final level = player?.level ?? 1;
+    final attrPoints = player?.attributePoints ?? 0;
 
     // Restyle Santuário (mockup v3) — Santuário no CENTRO (index 2).
     final items = [
@@ -46,6 +47,9 @@ class NhBottomNav extends ConsumerWidget {
               final item = e.value;
               final active = i == currentIndex;
               final locked = level < item.minLevel;
+              // Ping dourado no Personagem (index 1) quando há pontos de
+              // atributo pra distribuir.
+              final showPing = i == 1 && !locked && attrPoints > 0;
 
               return GestureDetector(
                 onTap: () {
@@ -79,29 +83,57 @@ class NhBottomNav extends ConsumerWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          decoration: active
-                              ? const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: AppColors.purpleGlow45,
-                                      blurRadius: 12,
-                                    ),
-                                  ],
-                                )
-                              : null,
-                          child: Icon(
-                            locked
-                                ? Icons.lock_outline
-                                : (active ? item.activeIcon : item.icon),
-                            color: locked
-                                ? AppColors.txtMut
-                                : (active
-                                    ? AppColors.purpleLt
-                                    : AppColors.textMuted),
-                            size: 22,
-                          ),
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              decoration: active
+                                  ? const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.purpleGlow45,
+                                          blurRadius: 12,
+                                        ),
+                                      ],
+                                    )
+                                  : null,
+                              child: Icon(
+                                locked
+                                    ? Icons.lock_outline
+                                    : (active ? item.activeIcon : item.icon),
+                                color: locked
+                                    ? AppColors.txtMut
+                                    : (active
+                                        ? AppColors.purpleLt
+                                        : AppColors.textMuted),
+                                size: 22,
+                              ),
+                            ),
+                            // Ping dourado de pontos de atributo disponíveis.
+                            if (showPing)
+                              Positioned(
+                                right: -4,
+                                top: -4,
+                                child: Container(
+                                  width: 11,
+                                  height: 11,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: AppColors.gold,
+                                    border: Border.all(
+                                        color: AppColors.surface, width: 1.5),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.gold
+                                            .withValues(alpha: 0.6),
+                                        blurRadius: 6,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         Text(item.label,

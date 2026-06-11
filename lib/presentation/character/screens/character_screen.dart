@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_3d_controller/flutter_3d_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
@@ -10,6 +11,7 @@ import '../../../domain/enums/equipment_slot.dart';
 import '../../../domain/enums/item_rarity.dart';
 import '../../../domain/models/faction_buff_multipliers.dart';
 import '../../../domain/models/inventory_entry_with_spec.dart';
+import '../../../domain/models/player_snapshot.dart';
 import '../../shared/widgets/feature_chip.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
 import '../../shared/widgets/app_snack.dart';
@@ -139,7 +141,8 @@ class CharacterScreen extends ConsumerWidget {
   }
 
   Widget _buildHeader(player) {
-    // Sprint 2.3 fix — chips de acesso a Forja (lv6) e Encantamento (lv20).
+    // Sprint 2.3 fix — chip de acesso a Encantamento (lv20). FORJA removido
+    // daqui (acesso pela Mercearia/Ferreiro).
     final playerLevel = player?.level ?? 0;
     // Header sem título: só os atalhos + badge de pontos, alinhados à direita
     // e com wrap pra nunca estourar a tela em telas estreitas.
@@ -151,13 +154,6 @@ class CharacterScreen extends ConsumerWidget {
         spacing: 6,
         runSpacing: 6,
         children: [
-          FeatureChip(
-            icon: Icons.hardware,
-            label: 'FORJA',
-            route: '/forge',
-            requiredLevel: 6,
-            playerLevel: playerLevel,
-          ),
           FeatureChip(
             icon: Icons.auto_awesome,
             label: 'ENCANT.',
@@ -234,7 +230,7 @@ class CharacterScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: leftSlots
                       .map((s) =>
-                          _slot(context, ref, s.$1, s.$2, slotMap[s.$3]))
+                          _slot(context, ref, s.$1, s.$2, slotMap[s.$3], s.$3))
                       .toList(),
                 ),
                 Expanded(
@@ -242,6 +238,7 @@ class CharacterScreen extends ConsumerWidget {
                     child: Container(
                       margin: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
+                      clipBehavior: Clip.antiAlias,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
@@ -252,37 +249,7 @@ class CharacterScreen extends ConsumerWidget {
                           AppColors.shadowVoid,
                         ]),
                       ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Container(
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color:
-                                      AppColors.purple.withValues(alpha: 0.4),
-                                  blurRadius: 40,
-                                  spreadRadius: 15,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const Icon(Icons.blur_circular,
-                              color: AppColors.purple, size: 90),
-                          const Positioned(
-                            bottom: 12,
-                            child: Text('Avatar 2D',
-                                style: TextStyle(
-                                    fontFamily: 'CinzelDecorative',
-                                    fontSize: 9,
-                                    color: AppColors.textMuted,
-                                    letterSpacing: 1)),
-                          ),
-                        ],
-                      ),
+                      child: const _Character3DView(),
                     ),
                   ),
                 ),
@@ -290,7 +257,7 @@ class CharacterScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: rightSlots
                       .map((s) =>
-                          _slot(context, ref, s.$1, s.$2, slotMap[s.$3]))
+                          _slot(context, ref, s.$1, s.$2, slotMap[s.$3], s.$3))
                       .toList(),
                 ),
               ],
@@ -300,8 +267,8 @@ class CharacterScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: bottomSlots
-                .map((s) =>
-                    _slot(context, ref, s.$1, s.$2, slotMap[s.$3], wide: true))
+                .map((s) => _slot(
+                    context, ref, s.$1, s.$2, slotMap[s.$3], s.$3, wide: true))
                 .toList(),
           ),
         ],
@@ -314,14 +281,16 @@ class CharacterScreen extends ConsumerWidget {
     WidgetRef ref,
     String label,
     IconData icon,
-    InventoryEntryWithSpec? equipped, {
+    InventoryEntryWithSpec? equipped,
+    String slotDbValue, {
     bool wide = false,
   }) {
     final hasItem = equipped != null;
     final rarityColor = equipped?.spec.rarity.color ?? AppColors.textMuted;
 
     return GestureDetector(
-      onTap: hasItem ? () => _showItemDetail(context, ref, equipped) : null,
+      // Tocar abre o mini-inventário do slot pra trocar/equipar sem sair.
+      onTap: () => _openSlotSheet(context, ref, slotDbValue, label, equipped),
       child: Container(
         width: wide ? 90 : 68,
         height: 68,
@@ -371,118 +340,21 @@ class CharacterScreen extends ConsumerWidget {
     );
   }
 
-  void _showItemDetail(
+  // Abre o mini-inventário do slot: equipar/trocar/desequipar sem sair.
+  void _openSlotSheet(
     BuildContext context,
     WidgetRef ref,
-    InventoryEntryWithSpec equipped,
+    String slotDbValue,
+    String label,
+    InventoryEntryWithSpec? equipped,
   ) {
-    final spec = equipped.spec;
-    final color = spec.rarity.color;
-
-    showModalBottomSheet(
+    final slot = EquipmentSlotParser.fromString(slotDbValue);
+    if (slot == null) return;
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: const Color(0xFF0E0E1A),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.5)),
-          boxShadow: [
-            BoxShadow(
-                color: color.withValues(alpha: 0.15),
-                blurRadius: 20,
-                spreadRadius: 2),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(6),
-                    border:
-                        Border.all(color: color.withValues(alpha: 0.4)),
-                  ),
-                  child: Text(spec.rarity.label.toUpperCase(),
-                      style: GoogleFonts.roboto(
-                          fontSize: 9, color: color, letterSpacing: 1.5)),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(spec.name,
-                      style: GoogleFonts.cinzelDecorative(
-                          fontSize: 14, color: AppColors.textPrimary)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(spec.description,
-                style: GoogleFonts.roboto(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                    height: 1.5)),
-            if (spec.stats.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text('BÔNUS',
-                  style: GoogleFonts.cinzelDecorative(
-                      fontSize: 10,
-                      color: AppColors.gold,
-                      letterSpacing: 1)),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 6,
-                children: [
-                  for (final entry in spec.stats.entries)
-                    _bonusChip(
-                      '${entry.key.toUpperCase()} +${entry.value}',
-                      AppColors.gold,
-                    ),
-                ],
-              ),
-              const SizedBox(height: 12),
-            ],
-            // Sprint 2.3 fix (B5) — mostra runa aplicada no item equipado
-            // com seus efeitos (resolve async via FutureBuilder).
-            if (equipped.entry.appliedRuneKey != null)
-              _AppliedRuneSection(runeKey: equipped.entry.appliedRuneKey!),
-            GestureDetector(
-              onTap: () async {
-                final slot = spec.slot;
-                if (slot == null) return;
-                await ref.read(playerEquipmentServiceProvider).unequip(
-                      playerId: equipped.entry.playerId,
-                      slot: slot,
-                    );
-                ref.invalidate(equippedItemsProvider);
-                if (context.mounted) Navigator.pop(context);
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                      color: AppColors.hp.withValues(alpha: 0.4)),
-                  color: AppColors.hp.withValues(alpha: 0.06),
-                ),
-                child: Text('Desequipar',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.roboto(
-                        fontSize: 13, color: AppColors.hp)),
-              ),
-            ),
-          ],
-        ),
-      ),
+      isScrollControlled: true,
+      builder: (_) => _EquipSwapSheet(slot: slot, slotLabel: label),
     );
   }
 
@@ -1056,6 +928,319 @@ class _AppliedRuneSection extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+// ── Modelo 3D do personagem (placeholder: character.glb do projeto antigo) ──
+// Ocupa o mesmo espaço/slot do antigo "Avatar 2D". Toca a animação embutida.
+class _Character3DView extends StatefulWidget {
+  const _Character3DView();
+
+  @override
+  State<_Character3DView> createState() => _Character3DViewState();
+}
+
+class _Character3DViewState extends State<_Character3DView> {
+  final Flutter3DController _controller = Flutter3DController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Flutter3DViewer(
+      src: 'assets/models/character.glb',
+      controller: _controller,
+      progressBarColor: AppColors.purpleLight,
+      enableTouch: true,
+      onLoad: (modelAddress) async {
+        // Toca a primeira animação embutida no glb (placeholder).
+        try {
+          final anims = await _controller.getAvailableAnimations();
+          if (anims.isNotEmpty) {
+            _controller.playAnimation(animationName: anims.first);
+          }
+        } catch (_) {
+          _controller.playAnimation();
+        }
+      },
+    );
+  }
+}
+
+// ── Mini-inventário do slot: equipar / trocar / desequipar sem sair ─────────
+class _EquipSwapSheet extends ConsumerStatefulWidget {
+  final EquipmentSlot slot;
+  final String slotLabel;
+  const _EquipSwapSheet({required this.slot, required this.slotLabel});
+
+  @override
+  ConsumerState<_EquipSwapSheet> createState() => _EquipSwapSheetState();
+}
+
+class _EquipSwapSheetState extends ConsumerState<_EquipSwapSheet> {
+  Future<List<InventoryEntryWithSpec>>? _future;
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  void _load() {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) {
+      _future = Future.value(const []);
+      return;
+    }
+    _future = ref.read(playerInventoryServiceProvider).listOf(player.id);
+  }
+
+  PlayerSnapshot? _snapshot() {
+    final p = ref.read(currentPlayerProvider);
+    if (p == null) return null;
+    return PlayerSnapshot(
+      level: p.level,
+      rank: ItemEquipPolicy.parseRank(p.guildRank),
+      classKey: p.classType,
+      factionKey: p.factionType,
+    );
+  }
+
+  Future<void> _equip(InventoryEntryWithSpec item) async {
+    final snap = _snapshot();
+    if (snap == null || _busy) return;
+    setState(() => _busy = true);
+    final res = await ref.read(playerEquipmentServiceProvider).equip(
+          playerId: item.entry.playerId,
+          inventoryId: item.entry.id,
+          player: snap,
+        );
+    ref.invalidate(equippedItemsProvider);
+    if (!mounted) return;
+    if (res.isOk) {
+      Navigator.of(context).maybePop();
+    } else {
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Não foi possível equipar.',
+            style: GoogleFonts.roboto(color: AppColors.textPrimary)),
+        backgroundColor: AppColors.surface,
+        behavior: SnackBarBehavior.floating,
+      ));
+    }
+  }
+
+  Future<void> _unequip(InventoryEntryWithSpec item) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    await ref.read(playerEquipmentServiceProvider).unequip(
+          playerId: item.entry.playerId,
+          slot: widget.slot,
+        );
+    ref.invalidate(equippedItemsProvider);
+    if (!mounted) return;
+    Navigator.of(context).maybePop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 20),
+      constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.66),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0E0E1A),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.borderViolet),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.backpack_outlined,
+                  size: 16, color: AppColors.purpleLight),
+              const SizedBox(width: 8),
+              Text(widget.slotLabel.toUpperCase(),
+                  style: GoogleFonts.cinzelDecorative(
+                      fontSize: 13,
+                      color: AppColors.textPrimary,
+                      letterSpacing: 2)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Flexible(
+            child: FutureBuilder<List<InventoryEntryWithSpec>>(
+              future: _future,
+              builder: (_, snap) {
+                if (snap.connectionState != ConnectionState.done) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: AppColors.purpleLight)),
+                  );
+                }
+                final all = snap.data ?? const <InventoryEntryWithSpec>[];
+                final forSlot =
+                    all.where((e) => e.spec.slot == widget.slot).toList();
+                final equipped =
+                    forSlot.where((e) => e.entry.isEquipped).toList();
+                final others =
+                    forSlot.where((e) => !e.entry.isEquipped).toList();
+
+                return SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (equipped.isNotEmpty) ...[
+                        _label('EQUIPADO'),
+                        const SizedBox(height: 6),
+                        _equippedRow(equipped.first),
+                        const SizedBox(height: 16),
+                      ],
+                      _label(equipped.isEmpty ? 'EQUIPAR' : 'TROCAR POR'),
+                      const SizedBox(height: 6),
+                      if (others.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          child: Text(
+                            'Nenhum outro item para este slot no inventário.',
+                            style: GoogleFonts.roboto(
+                                fontSize: 11, color: AppColors.textMuted),
+                          ),
+                        )
+                      else
+                        ...others.map(_swapRow),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _label(String t) => Text(t,
+      style: GoogleFonts.cinzelDecorative(
+          fontSize: 10, color: AppColors.gold, letterSpacing: 2));
+
+  Widget _equippedRow(InventoryEntryWithSpec item) {
+    final color = item.spec.rarity.color;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: color.withValues(alpha: 0.08),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.spec.name,
+                    style: GoogleFonts.cinzelDecorative(
+                        fontSize: 12, color: AppColors.textPrimary)),
+                if (item.spec.stats.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    item.spec.stats.entries
+                        .map((e) => '${e.key} +${e.value}')
+                        .join('  ·  '),
+                    style: GoogleFonts.roboto(
+                        fontSize: 10, color: AppColors.textSecondary),
+                  ),
+                ],
+                if (item.entry.appliedRuneKey != null) ...[
+                  const SizedBox(height: 8),
+                  _AppliedRuneSection(runeKey: item.entry.appliedRuneKey!),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: _busy ? null : () => _unequip(item),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.hp.withValues(alpha: 0.5)),
+                color: AppColors.hp.withValues(alpha: 0.06),
+              ),
+              child: Text('DESEQUIPAR',
+                  style: GoogleFonts.roboto(
+                      fontSize: 9, letterSpacing: 1, color: AppColors.hp)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _swapRow(InventoryEntryWithSpec item) {
+    final color = item.spec.rarity.color;
+    final snap = _snapshot();
+    final canEquip = snap == null
+        ? true
+        : ItemEquipPolicy.canEquipItem(item: item.spec, player: snap).isOk;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: GestureDetector(
+        onTap: (!canEquip || _busy) ? null : () => _equip(item),
+        child: Opacity(
+          opacity: canEquip ? 1.0 : 0.45,
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: AppColors.surface,
+              border: Border.all(color: color.withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration:
+                      BoxDecoration(shape: BoxShape.circle, color: color),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(item.spec.name,
+                          style: GoogleFonts.roboto(
+                              fontSize: 12, color: AppColors.textPrimary)),
+                      if (item.spec.stats.isNotEmpty)
+                        Text(
+                          item.spec.stats.entries
+                              .map((e) => '${e.key} +${e.value}')
+                              .join('  ·  '),
+                          style: GoogleFonts.roboto(
+                              fontSize: 9, color: AppColors.textMuted),
+                        ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  canEquip ? Icons.swap_horiz : Icons.lock_outline,
+                  size: 16,
+                  color: canEquip ? AppColors.gold : AppColors.textMuted,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
