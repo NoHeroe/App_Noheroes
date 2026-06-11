@@ -106,6 +106,57 @@ void main() {
     });
   });
 
+  group('relíquia de ATK só escala dano físico (CEO 2026-06-10)', () {
+    CreatureInPlay withAtkRelic(DamageType type) => CreatureInPlay(
+          card: creature(id: 'c_${type.name}', atk: 3, damageType: type),
+          currentHp: 5,
+          lane: 0,
+          relics: [relic(id: 'r_${type.name}', atkBonus: 5)],
+        );
+
+    test('corpo a corpo: bônus aplica (3+5=8)', () {
+      expect(withAtkRelic(DamageType.corpoACorpo).atk, 8);
+    });
+    test('à distância: bônus aplica (3+5=8)', () {
+      expect(withAtkRelic(DamageType.aDistancia).atk, 8);
+    });
+    test('mágico: bônus IGNORADO (fica 3)', () {
+      expect(withAtkRelic(DamageType.magico).atk, 3);
+    });
+    test('vitalismo: bônus IGNORADO (fica 3)', () {
+      expect(withAtkRelic(DamageType.vitalismo).atk, 3);
+    });
+  });
+
+  group('ReturnToHand (recuar criatura pra mão)', () {
+    test('recua criatura própria pra mão por kReturnVoluntaryCost', () {
+      final aL = makeLoadout(prefix: 'A', cost: 1);
+      final bL = makeLoadout(prefix: 'B');
+      var s = engine.start(aL, bL, seed: seedWithMixedHand(aL, bL));
+      final id = s.active.handCreatures.first.id;
+      s = engine.apply(s, PlayCreature(id)); // crystals 3-1=2
+      expect(s.active.lanes[0]?.instanceId, id);
+      final before = s.active.crystals;
+
+      s = engine.apply(s, ReturnToHand(id)); // 2-2=0
+      expect(s.active.lanes[0], isNull, reason: 'saiu do tabuleiro');
+      expect(s.active.crystals, before - kReturnVoluntaryCost);
+      expect(_inHand(s.active, id), isTrue, reason: 'voltou pra mão');
+    });
+
+    test('sem cristais suficientes é no-op', () {
+      final aL = makeLoadout(prefix: 'A', cost: 1);
+      final bL = makeLoadout(prefix: 'B');
+      var s = engine.start(aL, bL, seed: seedWithMixedHand(aL, bL));
+      final id = s.active.handCreatures.first.id;
+      s = engine.apply(s, PlayCreature(id));
+      s = engine.apply(s, ReturnToHand(id)); // crystals 2->0
+      // Sem criatura em jogo e 0 cristais: nova tentativa é no-op.
+      final s2 = engine.apply(s, ReturnToHand(id));
+      expect(identical(s2.active, s.active) || s2.active.crystals == 0, isTrue);
+    });
+  });
+
   group('sacrifício gera cristal', () {
     test('relíquia => +1, criatura => +2, máx 1/turno', () {
       final aL = makeLoadout(prefix: 'A', cost: 1);

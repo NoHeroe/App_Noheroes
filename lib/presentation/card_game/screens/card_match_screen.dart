@@ -276,6 +276,36 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     controller.endPlayerTurn();
   }
 
+  /// Recuar uma criatura própria pra mão (custo kReturnVoluntaryCost; não
+  /// encerra a vez). Confirma antes; avisa se faltam cristais.
+  Future<void> _confirmReturnToHand(CreatureInPlay c) async {
+    final crystals =
+        ref.read(pveMatchControllerProvider).playerBoard?.crystals ?? 0;
+    if (crystals < kReturnVoluntaryCost) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          duration: const Duration(milliseconds: 1400),
+          backgroundColor: AppColors.surfaceVeil,
+          content: Text(
+            'Cristais insuficientes para recuar (precisa de $kReturnVoluntaryCost).',
+            style: GoogleFonts.roboto(color: AppColors.textPrimary, fontSize: 12),
+          ),
+        ));
+      }
+      return;
+    }
+    final ok = await _confirmDialog(
+      title: 'Recuar pra mão?',
+      message: '${c.card.nome} volta pra sua mão por $kReturnVoluntaryCost '
+          'cristais. Relíquias equipadas são descartadas.',
+      confirmLabel: 'Recuar',
+      confirmColor: AppColors.mp,
+    );
+    if (ok == true) {
+      ref.read(pveMatchControllerProvider.notifier).returnToHand(c.instanceId);
+    }
+  }
+
   Future<bool?> _confirmDialog({
     required String title,
     required String message,
@@ -452,7 +482,10 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   Widget _matchBody(PveMatchUiState ui) {
     final bot = ui.botBoard!;
     final player = ui.playerBoard!;
-    final interactive = ui.phase == PveMatchPhase.playerTurn;
+    // Bloqueado durante o replay/bot E quando playLocked (troca com tabuleiro
+    // cheio → só resta encerrar o turno). O botão de encerrar fica ativo à parte.
+    final interactive =
+        ui.phase == PveMatchPhase.playerTurn && !ui.playLocked;
 
     // Tabuleiro em FOCO. Banda central (entre os dois lados) guarda os botões
     // laterais (sobrepostos no build). Sem log no meio. Mão = baralho aberto.
@@ -764,13 +797,15 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     Widget tile = AspectRatio(
       aspectRatio: 142 / 206,
       child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 280),
+        // Mais lento/suave pra reduzir o "flicker" quando o tabuleiro avança
+        // (morte + compactação) entre os passos do replay.
+        duration: const Duration(milliseconds: 380),
         switchInCurve: Curves.easeOut,
         switchOutCurve: Curves.easeIn,
         transitionBuilder: (child, anim) => FadeTransition(
           opacity: anim,
           child: ScaleTransition(
-            scale: Tween<double>(begin: 0.9, end: 1).animate(anim),
+            scale: Tween<double>(begin: 0.94, end: 1).animate(anim),
             child: child,
           ),
         ),
@@ -893,9 +928,14 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       child: Center(
         child: GestureDetector(
           onTap: () {
-            if (!isPlayerSide || !ui.isPlayerTurn) return;
+            if (!isPlayerSide || !ui.isPlayerTurn || ui.playLocked) return;
             final selectedId = ui.selectedCardId;
-            if (selectedId == null) return;
+            if (selectedId == null) {
+              // Nada selecionado + toque na PRÓPRIA criatura → recuar pra mão
+              // (custo kReturnVoluntaryCost; não encerra a vez).
+              if (creature != null) _confirmReturnToHand(creature);
+              return;
+            }
             if (laneHighlighted) {
               // Criatura: joga aqui (empurra se o slot estiver ocupado; a
               // engine decide normal vs cheio→volta-pra-mão).
@@ -1089,16 +1129,16 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       children: [
         Row(
           children: [
+            // Ícone + cor do tipo de dano coladas no ATK (diferencia
+            // melee/flecha/mágico/vitalismo de relance).
+            Icon(damageTypeIcon(c.effectiveDamageType),
+                size: 10, color: damageTypeColor(c.effectiveDamageType)),
+            const SizedBox(width: 2),
             Text('${c.effectiveAtk}',
                 style: GoogleFonts.robotoMono(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.gold)),
-            Text(' ATK',
-                style: GoogleFonts.roboto(
-                    fontSize: 6,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.gold.withValues(alpha: 0.7))),
+                    color: damageTypeColor(c.effectiveDamageType))),
             const Spacer(),
             if (c.armor > 0) ...[
               const Icon(Icons.shield, size: 8, color: AppColors.textSecondary),
@@ -1312,19 +1352,16 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
 
     final Widget footer = creature != null
         ? Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
             children: [
+              // Ícone + cor do tipo de dano colados no ATK (diferencia o tipo).
+              Icon(damageTypeIcon(creature.damageType),
+                  size: 10, color: damageTypeColor(creature.damageType)),
+              const SizedBox(width: 2),
               Text('${creature.atk}',
                   style: GoogleFonts.robotoMono(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.gold)),
-              Text(' ATK',
-                  style: GoogleFonts.roboto(
-                      fontSize: 6,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.gold.withValues(alpha: 0.7))),
+                      color: damageTypeColor(creature.damageType))),
               const Spacer(),
               Text('${creature.hp}',
                   style: GoogleFonts.robotoMono(

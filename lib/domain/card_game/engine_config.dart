@@ -33,8 +33,12 @@ const int kNoCreaturePenaltyCards = 1;
 const int kHandSize = 5;
 
 /// Custo em cristais da jogada especial "tabuleiro cheio → carta empurrada
-/// volta pra mão" (encerra a vez). 🎚️
+/// volta pra mão" (bloqueia o resto das ações do turno). 🎚️
 const int kReturnToHandCost = 3;
+
+/// Custo em cristais da ação VOLUNTÁRIA de recuar uma criatura própria em jogo
+/// de volta pra mão (não encerra a vez). 🎚️
+const int kReturnVoluntaryCost = 2;
 
 // ---------------------------------------------------------------------------
 // Combate posicional — padrões de alvo por tipo (fiel a `tipos_de_dano.md`)

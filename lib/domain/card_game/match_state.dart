@@ -119,10 +119,20 @@ class CreatureInPlay {
 
   /// Ataque efetivo: ATK base + soma dos `atkBonus` das relíquias equipadas.
   /// NÃO inclui buffs temporários — ver [effectiveAtk].
+  ///
+  /// REGRA (CEO 2026-06-10): o `atkBonus` genérico de relíquia só escala dano
+  /// **FÍSICO** (corpo a corpo + à distância). Dano **mágico** e **vitalismo**
+  /// (verdadeiro) NÃO são escalados por relíquia de ATK genérica — pra reforçá-los
+  /// é preciso item específico. (hpBonus/armor de relíquia seguem valendo p/ todos.)
   int get atk {
     var total = card.atk;
-    for (final r in relics) {
-      total += r.grants.atkBonus ?? 0;
+    final type = effectiveDamageType;
+    final scalesAtk =
+        type == DamageType.corpoACorpo || type == DamageType.aDistancia;
+    if (scalesAtk) {
+      for (final r in relics) {
+        total += r.grants.atkBonus ?? 0;
+      }
     }
     return total;
   }

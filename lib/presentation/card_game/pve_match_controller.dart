@@ -100,6 +100,7 @@ class PveMatchUiState {
     this.playerSide = SideId.a,
     this.playerWon,
     this.highlight,
+    this.playLocked = false,
   });
 
   final MatchState? match;
@@ -119,6 +120,11 @@ class PveMatchUiState {
   /// null enquanto a partida não terminou.
   final bool? playerWon;
 
+  /// Após uma troca com o tabuleiro CHEIO (carta empurrada volta pra mão), o
+  /// resto das ações da Fase de Jogo fica bloqueado — só sobra Encerrar Turno.
+  /// Resetado no início de cada turno do jogador.
+  final bool playLocked;
+
   SideId get botSideId => playerSide == SideId.a ? SideId.b : SideId.a;
 
   BoardSide? get playerBoard => match?.sideOf(playerSide);
@@ -136,6 +142,7 @@ class PveMatchUiState {
     bool? playerWon,
     CombatHighlight? highlight,
     bool clearHighlight = false,
+    bool? playLocked,
   }) {
     return PveMatchUiState(
       match: match ?? this.match,
@@ -146,6 +153,7 @@ class PveMatchUiState {
       playerSide: playerSide,
       playerWon: playerWon ?? this.playerWon,
       highlight: clearHighlight ? null : (highlight ?? this.highlight),
+      playLocked: playLocked ?? this.playLocked,
     );
   }
 }
@@ -265,7 +273,8 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
         final laneLabel = placed == null ? '' : ' na ${_laneLabel(placed.lane)}';
         if (fullReturn) {
           return 'Você jogou $name$laneLabel (tabuleiro cheio: '
-              'carta recuada volta pra mão, −$kReturnToHandCost · encerra a vez).';
+              'carta recuada volta pra mão, −$kReturnToHandCost · só resta '
+              'encerrar o turno).';
         }
         return 'Você jogou $name$laneLabel.';
       },
@@ -274,11 +283,28 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
           'não pôde ser jogada.',
     );
 
-    // A jogada de retorno encerra a vez automaticamente (dispara o ataque).
+    // Troca com tabuleiro cheio: bloqueia o resto das ações do turno (só sobra
+    // Encerrar Turno) em vez de encerrar automaticamente.
     if (ok && fullReturn) {
-      endPlayerTurn();
+      state = state.copyWith(playLocked: true, clearSelectedCard: true);
     }
     return ok;
+  }
+
+  /// Recua uma criatura PRÓPRIA em jogo de volta pra mão por
+  /// `kReturnVoluntaryCost` cristais. NÃO encerra a vez.
+  bool returnToHand(String creatureId) {
+    if (state.playLocked) return false;
+    return _playerAction(
+      ReturnToHand(creatureId),
+      onApplied: (before, after) {
+        final c = _findCreature(before.sideOf(state.playerSide), creatureId);
+        return 'Você recuou ${c?.card.nome ?? creatureId} pra mão '
+            '(−$kReturnVoluntaryCost cristais).';
+      },
+      invalidText: () => 'Não dá pra recuar essa criatura '
+          '(cristais insuficientes?).',
+    );
   }
 
   /// Equipa/usa uma relíquia numa criatura própria em jogo.
@@ -334,7 +360,9 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     required String Function(MatchState before, MatchState after) onApplied,
     required String Function() invalidText,
   }) {
-    if (_busy || state.phase != PveMatchPhase.playerTurn) return false;
+    if (_busy || state.phase != PveMatchPhase.playerTurn || state.playLocked) {
+      return false;
+    }
     final before = state.match;
     if (before == null ||
         before.isOver ||
@@ -412,7 +440,7 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     var match = state.match!;
     if (match.activeSide != state.botSideId) {
       // Defesa: nunca rodar o bot na vez do jogador.
-      state = state.copyWith(phase: PveMatchPhase.playerTurn);
+      state = state.copyWith(phase: PveMatchPhase.playerTurn, playLocked: false);
       return;
     }
     state = state.copyWith(phase: PveMatchPhase.botTurn);
@@ -449,7 +477,7 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     if (outcome.finalState.isOver) {
       if (state.phase != PveMatchPhase.finished) _finish(outcome.finalState);
     } else if (state.phase != PveMatchPhase.finished) {
-      state = state.copyWith(phase: PveMatchPhase.playerTurn);
+      state = state.copyWith(phase: PveMatchPhase.playerTurn, playLocked: false);
     }
   }
 
@@ -551,6 +579,10 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
         }
         final name = _creatureNameInPool(side, cardId) ?? cardId;
         return 'A IA sacrificou $name (+$kSacrificeCreatureCrystals cristais).';
+      case ReturnToHand(:final creatureId):
+        // O bot não usa esta ação no MVP; exaustividade do switch.
+        final c = _findCreature(side, creatureId);
+        return 'A IA recuou ${c?.card.nome ?? creatureId} pra mão.';
       case Pass():
         return 'A IA passou.';
     }

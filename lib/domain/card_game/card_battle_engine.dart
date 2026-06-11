@@ -162,9 +162,34 @@ class CardBattleEngine {
         return _playRelic(s, action);
       case Sacrifice():
         return _sacrifice(s, action);
+      case ReturnToHand():
+        return _returnToHand(s, action);
       case Pass():
         return s; // no-op: fim da sequência é sinalizado via endTurn.
     }
+  }
+
+  /// Recua uma criatura PRÓPRIA em jogo de volta pra mão por `kReturnVoluntaryCost`
+  /// cristais (NÃO encerra a vez). A fila re-compacta; relíquias equipadas são
+  /// descartadas (MVP). No-op se a criatura não está em jogo ou faltam cristais.
+  MatchState _returnToHand(MatchState s, ReturnToHand a) {
+    final side = s.active;
+    if (side.crystals < kReturnVoluntaryCost) return s;
+    final target = side.creaturesInPlay
+        .where((c) => c.instanceId == a.creatureId)
+        .firstOrNull;
+    if (target == null) return s;
+
+    final packed = side.creaturesInPlay
+        .where((c) => c.instanceId != a.creatureId)
+        .toList();
+    final hand = List<Object>.from(side.hand)..add(target.card);
+    final newSide = side.copyWith(
+      lanes: _packedToLanes(packed),
+      hand: hand,
+      crystals: side.crystals - kReturnVoluntaryCost,
+    );
+    return s.withSide(side.id, newSide);
   }
 
   MatchState _playCreature(MatchState s, PlayCreature a) {

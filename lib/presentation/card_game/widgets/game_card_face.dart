@@ -244,6 +244,24 @@ IconData damageTypeIcon(DamageType t) {
   }
 }
 
+/// Cor do tipo de dano — pra diferenciar de relance no card (CEO 2026-06-10:
+/// "todas mostram espada, não dá pra distinguir mágico/arqueiro"). Aplicada no
+/// ícone + número de ATK do rodapé.
+Color damageTypeColor(DamageType t) {
+  switch (t) {
+    case DamageType.corpoACorpo:
+      return AppColors.hp; // vermelho — golpe físico
+    case DamageType.aDistancia:
+      return AppColors.gold; // dourado — flecha
+    case DamageType.magico:
+      return AppColors.conceptMagico; // azul/ciano — magia
+    case DamageType.vitalismo:
+      return AppColors.purple; // roxo — vitalismo (verdadeiro)
+    case DamageType.cura:
+      return AppColors.conceptChrysalis; // verde — cura
+  }
+}
+
 /// Losango de custo (top-left) — idêntico ao da coleção.
 class _CostDiamond extends StatelessWidget {
   const _CostDiamond(this.cost);
