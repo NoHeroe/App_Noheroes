@@ -351,6 +351,22 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
     }
   }
 
+  /// DEV — concede 3 de cada tipo de pacote (pra testar abrir/garantias).
+  Future<void> _grantAllPacks() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    try {
+      await ref
+          .read(supabaseClientProvider)
+          .rpc('dev_grant_all_packs', params: {'p_player': player.id});
+      if (!mounted) return;
+      AppSnack.success(context, 'Pacotes concedidos (dev).');
+    } catch (e) {
+      if (!mounted) return;
+      AppSnack.error(context, 'Falha ao conceder pacotes: $e');
+    }
+  }
+
   /// Trigger manual do flow de admissão. Útil pra debug em devices que
   /// já tinham `faction_type='X'` antes do bug-fix da Sprint 3.4 (ou
   /// que selecionaram facção antes do `QuestAdmissionService` ser
@@ -1302,6 +1318,9 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
             _section('CARD GAME'),
             _actionBtn('Conceder recursos de carta (dev)',
                 AppColors.purpleLight, _grantCardResources),
+            const SizedBox(height: 6),
+            _actionBtn('Conceder todos os pacotes (dev)',
+                AppColors.gold, _grantAllPacks),
             const SizedBox(height: 16),
 
             // 4. MISSÕES DIÁRIAS

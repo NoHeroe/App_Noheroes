@@ -31,18 +31,17 @@ class PacksScreen extends ConsumerStatefulWidget {
 }
 
 class _PacksScreenState extends ConsumerState<PacksScreen> {
-  static const int _packPrice = 224;
-  static const String _packType = 'padrao';
+  bool _loadingHeader = true; // carga inicial (catálogo + tipos + counts)
+  bool _busy = false; // comprando/abrindo (trava global)
+  String? _opening; // pack_type sendo aberto (spinner no card)
+  String? _buying; // pack_type sendo comprado
 
-  bool _loadingHeader = true; // carga inicial (count + catálogo)
-  bool _buying = false;
-  bool _opening = false;
-
-  int _packCount = 0;
   CardCatalog? _catalog;
+  List<Map<String, dynamic>> _packs = const []; // pack_catalog
+  Map<String, int> _counts = const {}; // pack_type -> count possuído
   String? _loadError;
 
-  /// Resultado da última abertura (5 cartas reveladas). null = sem revelação.
+  /// Resultado da última abertura. null = sem revelação.
   List<_RevealCard>? _reveal;
 
   @override
@@ -54,11 +53,18 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
   Future<void> _boot() async {
     try {
       final catalog = await CardCatalog.load();
-      final count = await _fetchPackCount();
+      final client = ref.read(supabaseClientProvider);
+      final packsRaw = await client
+          .from('pack_catalog')
+          .select()
+          .order('sort', ascending: true);
+      final packs = (packsRaw as List).cast<Map<String, dynamic>>();
+      final counts = await _fetchCounts();
       if (!mounted) return;
       setState(() {
         _catalog = catalog;
-        _packCount = count;
+        _packs = packs;
+        _counts = counts;
         _loadingHeader = false;
       });
     } catch (e) {
@@ -70,16 +76,15 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
     }
   }
 
-  /// Lê o count de pacotes do tipo padrão (RLS filtra o jogador; null = 0).
-  Future<int> _fetchPackCount() async {
+  /// Lê os counts de TODOS os tipos de pacote do jogador (RLS filtra).
+  Future<Map<String, int>> _fetchCounts() async {
     final client = ref.read(supabaseClientProvider);
-    final row = await client
-        .from('player_packs')
-        .select('count')
-        .eq('pack_type', _packType)
-        .maybeSingle();
-    if (row == null) return 0;
-    return (row['count'] as int?) ?? 0;
+    final rows = await client.from('player_packs').select('pack_type, count');
+    final list = (rows as List).cast<Map<String, dynamic>>();
+    return {
+      for (final r in list)
+        (r['pack_type'] as String): ((r['count'] as int?) ?? 0),
+    };
   }
 
   /// Refetcha o player (gold mudou no servidor) e atualiza o provider.
@@ -103,9 +108,12 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
   }
 
   // ── Comprar ─────────────────────────────────────────────────────────
-  Future<void> _buy() async {
-    if (_buying || _opening) return;
-    setState(() => _buying = true);
+  Future<void> _buy(String type) async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _buying = type;
+    });
     try {
       final player = ref.read(currentPlayerProvider);
       if (player == null) {
@@ -114,36 +122,44 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
       }
       final res = await ref.read(supabaseClientProvider).rpc(
         'buy_pack',
-        params: {'p_player': player.id},
+        params: {'p_player': player.id, 'p_type': type},
       );
       final map = (res as Map).cast<String, dynamic>();
       final ok = map['ok'] == true;
       if (!ok) {
-        if (map['reason'] == 'insufficient_gold') {
-          _snack('Ouro insuficiente');
-        } else {
-          _snack('Não foi possível comprar o pacote.');
+        switch (map['reason']) {
+          case 'insufficient_gold':
+            _snack('Ouro insuficiente');
+          case 'insufficient_gems':
+            _snack('Gemas insuficientes');
+          default:
+            _snack('Não foi possível comprar o pacote.');
         }
         return;
       }
-      // Sucesso: gold debitado + 1 pacote. Reatualiza gold e count.
       await _refreshPlayer();
-      final count = await _fetchPackCount();
+      final counts = await _fetchCounts();
       if (!mounted) return;
-      setState(() => _packCount = count);
+      setState(() => _counts = counts);
       _snack('Pacote comprado!');
     } catch (e) {
       _snack('Erro de rede. Tente novamente.');
     } finally {
-      if (mounted) setState(() => _buying = false);
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _buying = null;
+        });
+      }
     }
   }
 
   // ── Abrir ───────────────────────────────────────────────────────────
-  Future<void> _open() async {
-    if (_buying || _opening || _packCount < 1) return;
+  Future<void> _open(String type) async {
+    if (_busy || (_counts[type] ?? 0) < 1) return;
     setState(() {
-      _opening = true;
+      _busy = true;
+      _opening = type;
       _reveal = null;
     });
     try {
@@ -154,7 +170,7 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
       }
       final res = await ref.read(supabaseClientProvider).rpc(
         'open_pack',
-        params: {'p_player': player.id},
+        params: {'p_player': player.id, 'p_type': type},
       );
       final map = (res as Map).cast<String, dynamic>();
       final ok = map['ok'] == true;
@@ -176,12 +192,12 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
       // Resolve os modelos completos do catálogo p/ a revelação em tela cheia.
       final entries = _buildRevealEntries(cardsRaw);
 
-      // Consumiu 1 pacote no servidor: atualiza count e invalida posse.
-      final count = await _fetchPackCount();
+      // Consumiu 1 pacote no servidor: atualiza counts e invalida posse.
+      final counts = await _fetchCounts();
       ref.invalidate(cardOwnershipProvider);
       if (!mounted) return;
       setState(() {
-        _packCount = count;
+        _counts = counts;
         _reveal = reveal;
       });
       // Revelação em tela cheia (Clash Royale): carta a carta + PULAR.
@@ -189,7 +205,12 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
     } catch (e) {
       _snack('Erro de rede. Tente novamente.');
     } finally {
-      if (mounted) setState(() => _opening = false);
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _opening = null;
+        });
+      }
     }
   }
 
@@ -223,6 +244,7 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
     final player = ref.watch(currentPlayerProvider);
     final gold = player?.gold ?? 0;
 
+    final gems = player?.gems ?? 0;
     return Scaffold(
       backgroundColor: AppColors.black,
       body: Stack(
@@ -235,9 +257,9 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildHeader(gold),
+                _buildHeader(gold, gems),
                 const SizedBox(height: 8),
-                Expanded(child: _buildBody(gold)),
+                Expanded(child: _buildBody(gold, gems)),
               ],
             ),
           ),
@@ -246,7 +268,7 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
     );
   }
 
-  Widget _buildBody(int gold) {
+  Widget _buildBody(int gold, int gems) {
     if (_loadingHeader) {
       return const Center(
         child: CircularProgressIndicator(
@@ -277,15 +299,20 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
-        _buildPackCard(gold),
-        const SizedBox(height: 20),
-        if (_reveal != null) _buildReveal(_reveal!),
+        for (final pack in _packs) ...[
+          _buildPackCard(pack, gold, gems),
+          const SizedBox(height: 12),
+        ],
+        if (_reveal != null) ...[
+          const SizedBox(height: 8),
+          _buildReveal(_reveal!),
+        ],
       ],
     );
   }
 
   // ── Header ──────────────────────────────────────────────────────────
-  Widget _buildHeader(int gold) {
+  Widget _buildHeader(int gold, int gems) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Row(
@@ -320,44 +347,81 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
               ],
             ),
           ),
-          _goldPill(gold),
-        ],
-      ),
-    );
-  }
-
-  Widget _goldPill(int gold) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: const Color(0xB3100C15),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.monetization_on, size: 15, color: AppColors.gold),
-          const SizedBox(width: 6),
-          Text(
-            '$gold',
-            style: GoogleFonts.roboto(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AppColors.goldLt),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              _currencyPill(Icons.monetization_on, AppColors.gold, gold),
+              const SizedBox(height: 6),
+              _currencyPill(
+                  Icons.diamond, AppColors.conceptCelestial, gems),
+            ],
           ),
         ],
       ),
     );
   }
 
-  // ── Card do Pacote Padrão ───────────────────────────────────────────
-  Widget _buildPackCard(int gold) {
-    final canBuy = gold >= _packPrice && !_buying && !_opening;
-    final canOpen = _packCount >= 1 && !_buying && !_opening;
+  Widget _currencyPill(IconData icon, Color color, int amount) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: const Color(0xB3100C15),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text('$amount',
+              style: GoogleFonts.roboto(
+                  fontSize: 13, fontWeight: FontWeight.w700, color: color)),
+        ],
+      ),
+    );
+  }
+
+  static String _rarLabel(String r) => switch (r) {
+        'rara' => 'rara',
+        'epica' => 'épica',
+        'lendaria' => 'lendária',
+        _ => r,
+      };
+
+  // ── Card de um tipo de pacote ───────────────────────────────────────
+  Widget _buildPackCard(Map<String, dynamic> pack, int gold, int gems) {
+    final type = pack['pack_type'] as String;
+    final name = (pack['display_name'] as String?) ?? 'Pacote';
+    final count = _counts[type] ?? 0;
+    final minC = (pack['min_count'] as num?)?.toInt() ?? 5;
+    final maxC = (pack['max_count'] as num?)?.toInt() ?? 5;
+    final guarantee = pack['guarantee_rarity'] as String?;
+    final buyable = pack['buyable'] == true;
+    final priceGold = (pack['price_gold'] as num?)?.toInt();
+    final priceGems = (pack['price_gems'] as num?)?.toInt();
+
+    final extras = <String>[
+      minC == maxC ? '$minC cartas' : '$minC-$maxC cartas',
+      if (guarantee != null) 'garante 1 ${_rarLabel(guarantee)}',
+      if ((pack['elite_chance'] as num? ?? 0) > 0) 'chance de elite',
+      if ((pack['exclusive_chance'] as num? ?? 0) > 0) 'chance de exclusiva',
+    ];
+
+    final useGems = (priceGems ?? 0) > 0;
+    final affordable =
+        useGems ? gems >= priceGems! : ((priceGold ?? 0) > 0 && gold >= priceGold!);
+    final canBuy = buyable && affordable && !_busy;
+    final canOpen = count >= 1 && !_busy;
+    final String? buyLabel = !buyable
+        ? null
+        : useGems
+            ? 'COMPRAR ($priceGems gemas)'
+            : ((priceGold ?? 0) > 0 ? 'COMPRAR ($priceGold)' : null);
 
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         gradient: const LinearGradient(
@@ -365,10 +429,10 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
           end: Alignment.bottomCenter,
           colors: [Color(0xFF221A2E), Color(0xFF0B0810)],
         ),
-        border: Border.all(color: AppColors.purple.withValues(alpha: 0.45)),
-        boxShadow: const [
-          BoxShadow(color: AppColors.purpleGlow45, blurRadius: 18),
-        ],
+        border: Border.all(
+            color: count > 0
+                ? AppColors.gold.withValues(alpha: 0.5)
+                : AppColors.purple.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -376,98 +440,89 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
           Row(
             children: [
               Container(
-                width: 54,
-                height: 54,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.purple.withValues(alpha: 0.55),
-                      const Color(0xFF0B0810),
-                    ],
-                  ),
+                  gradient: RadialGradient(colors: [
+                    AppColors.purple.withValues(alpha: 0.55),
+                    const Color(0xFF0B0810),
+                  ]),
                   border:
                       Border.all(color: AppColors.purple.withValues(alpha: 0.5)),
                 ),
                 child: const Icon(Icons.inventory_2,
-                    size: 28, color: Colors.white),
+                    size: 24, color: Colors.white),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Pacote Padrão',
-                      style: GoogleFonts.cinzelDecorative(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.goldLt),
-                    ),
+                    Text(name,
+                        style: GoogleFonts.cinzelDecorative(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.goldLt)),
                     const SizedBox(height: 2),
-                    Text(
-                      '5 cartas · $_packPrice de ouro',
-                      style: GoogleFonts.roboto(
-                          fontSize: 12, color: AppColors.txt2),
-                    ),
+                    Text(extras.join(' · '),
+                        style: GoogleFonts.roboto(
+                            fontSize: 11, color: AppColors.txt2)),
                   ],
                 ),
               ),
+              if (count > 0)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    color: AppColors.gold.withValues(alpha: 0.16),
+                    border: Border.all(color: AppColors.gold.withValues(alpha: 0.6)),
+                  ),
+                  child: Text('x$count',
+                      style: GoogleFonts.roboto(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.goldLt)),
+                ),
             ],
           ),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: const Color(0x33100C15),
-              border: Border.all(color: AppColors.borderViolet),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.backpack_outlined,
-                    size: 16, color: AppColors.txt2),
-                const SizedBox(width: 8),
-                Text('Pacotes que você tem:',
-                    style: GoogleFonts.roboto(
-                        fontSize: 12.5, color: AppColors.txt2)),
-                const Spacer(),
-                Text(
-                  '$_packCount',
-                  style: GoogleFonts.roboto(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.goldLt),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(
-                child: _actionButton(
-                  label: 'COMPRAR ($_packPrice)',
-                  icon: Icons.shopping_cart_outlined,
-                  enabled: canBuy,
-                  loading: _buying,
-                  primary: false,
-                  onTap: _buy,
+              if (buyLabel != null) ...[
+                Expanded(
+                  child: _actionButton(
+                    label: buyLabel,
+                    icon: Icons.shopping_cart_outlined,
+                    enabled: canBuy,
+                    loading: _buying == type,
+                    primary: false,
+                    onTap: () => _buy(type),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
+                const SizedBox(width: 10),
+              ],
               Expanded(
                 child: _actionButton(
                   label: 'ABRIR',
                   icon: Icons.auto_awesome,
                   enabled: canOpen,
-                  loading: _opening,
+                  loading: _opening == type,
                   primary: true,
-                  onTap: _open,
+                  onTap: () => _open(type),
                 ),
               ),
             ],
           ),
+          if (buyLabel == null && count == 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text('Obtido em eventos e recompensas.',
+                  style: GoogleFonts.roboto(
+                      fontSize: 10.5, color: AppColors.txtMut)),
+            ),
         ],
       ),
     );
