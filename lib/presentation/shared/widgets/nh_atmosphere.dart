@@ -1,14 +1,16 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../settings/settings_provider.dart';
 
 /// Atmosfera de fundo REUTILIZÁVEL (procedural) — base radial + glow no topo +
 /// névoa em drift + faíscas douradas + vignette + grão. Sem silhueta (genérica),
 /// tintável por [glow]/[base] pra cada tela. Mesma linguagem do
 /// Santuário/Biblioteca/Mercado. Faíscas com speed inteiro (sem flick no loop).
-class NhAtmosphere extends StatefulWidget {
+class NhAtmosphere extends ConsumerStatefulWidget {
   /// Cor do glow do topo + névoa (com alpha aplicado internamente).
   final Color glow;
 
@@ -22,10 +24,10 @@ class NhAtmosphere extends StatefulWidget {
   });
 
   @override
-  State<NhAtmosphere> createState() => _NhAtmosphereState();
+  ConsumerState<NhAtmosphere> createState() => _NhAtmosphereState();
 }
 
-class _NhAtmosphereState extends State<NhAtmosphere>
+class _NhAtmosphereState extends ConsumerState<NhAtmosphere>
     with TickerProviderStateMixin {
   late final AnimationController _fog;
   late final AnimationController _embers;
@@ -61,6 +63,16 @@ class _NhAtmosphereState extends State<NhAtmosphere>
 
   @override
   Widget build(BuildContext context) {
+    // Toggle global (Configurações). OFF = só camadas estáticas + controllers
+    // parados (alívio de performance).
+    final animate = ref.watch(backgroundAnimationsProvider);
+    if (animate) {
+      if (!_fog.isAnimating) _fog.repeat();
+      if (!_embers.isAnimating) _embers.repeat();
+    } else {
+      _fog.stop();
+      _embers.stop();
+    }
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -92,23 +104,25 @@ class _NhAtmosphereState extends State<NhAtmosphere>
             ),
           ),
         ),
-        RepaintBoundary(
-          child: AnimatedBuilder(
-            animation: _fog,
-            builder: (_, __) => CustomPaint(
-                painter: _FogPainter(_fog.value, widget.glow),
-                size: Size.infinite),
-          ),
-        ),
-        RepaintBoundary(
-          child: AnimatedBuilder(
-            animation: _embers,
-            builder: (_, __) => CustomPaint(
-              painter: _EmbersPainter(_embers.value, _emberSpecs),
-              size: Size.infinite,
+        if (animate) ...[
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _fog,
+              builder: (_, __) => CustomPaint(
+                  painter: _FogPainter(_fog.value, widget.glow),
+                  size: Size.infinite),
             ),
           ),
-        ),
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _embers,
+              builder: (_, __) => CustomPaint(
+                painter: _EmbersPainter(_embers.value, _emberSpecs),
+                size: Size.infinite,
+              ),
+            ),
+          ),
+        ],
         const DecoratedBox(
           decoration: BoxDecoration(
             gradient: RadialGradient(

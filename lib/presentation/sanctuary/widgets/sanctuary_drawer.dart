@@ -59,7 +59,7 @@ class SanctuaryDrawer extends ConsumerWidget {
       _Item('Perfil',        Icons.person_outline,         '/perfil'),
       _Item('Amigos',        Icons.group_outlined,         null),
       _Item('Meus Produtos', Icons.book_outlined,          null),
-      _Item('Configurações', Icons.settings_outlined,      null),
+      _Item('Configurações', Icons.settings_outlined,      '/settings'),
     ];
 
     return Drawer(

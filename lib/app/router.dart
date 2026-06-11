@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../presentation/guild/screens/guild_screen.dart';
 import '../presentation/reputation/screens/reputation_screen.dart';
 import '../presentation/library/screens/library_screen.dart';
+import '../presentation/settings/settings_screen.dart';
 import '../presentation/playstyle/playstyle_screen.dart';
 import '../presentation/notifications/notifications_screen.dart';
 import '../presentation/splash/screens/splash_screen.dart';
@@ -164,6 +165,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Sprint 3.2 Etapa 1.0 — /perfil (identidade + dados físicos +
       // recomendações diárias). Acessível pelo SanctuaryDrawer.
       GoRoute(path: '/perfil',             pageBuilder: (c, s) => _fadePage(s, const ProfileScreen())),
+      GoRoute(path: '/settings',           pageBuilder: (c, s) => _fadePage(s, const SettingsScreen())),
       GoRoute(
         path: '/vitalism/void-ritual',
         pageBuilder: (c, s) => _fadePage(s, const VoidRitualScreen()),
