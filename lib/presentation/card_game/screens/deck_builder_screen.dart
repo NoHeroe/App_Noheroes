@@ -25,6 +25,7 @@ class DeckBuilderScreen extends ConsumerStatefulWidget {
 
 class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
   int _tab = 0; // 0 = criaturas, 1 = relíquias
+  CardConcept? _conceptFilter; // null = Todos
 
   // Seleção atual (ids), em ordem de inserção.
   final List<String> _creatureIds = [];
@@ -34,6 +35,26 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
   bool _saving = false;
 
   static const int _max = 9;
+
+  // Paginação horizontal: 9 cartas por página (3x3), com setas + swipe.
+  static const int _perPage = 9;
+  final PageController _pageController = PageController();
+  int _page = 0;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  /// Aplica uma mudança de filtro/aba e VOLTA pra primeira página.
+  void _onFilterChanged(VoidCallback change) {
+    setState(() {
+      change();
+      _page = 0;
+    });
+    if (_pageController.hasClients) _pageController.jumpToPage(0);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,10 +122,12 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
       _seeded = true;
     }
 
-    final ownedCreatures =
-        catalog.creatures.where((c) => owned.contains(c.id)).toList();
-    final ownedRelics =
-        catalog.relics.where((r) => owned.contains(r.id)).toList();
+    final ownedCreatures = catalog.creatures
+        .where((c) => owned.contains(c.id) && _byConcept(c.concepts))
+        .toList();
+    final ownedRelics = catalog.relics
+        .where((r) => owned.contains(r.id) && _byConcept(r.concepts))
+        .toList();
 
     // Criaturas atualmente no deck (resolvidas) — usadas pra checar
     // compatibilidade das relíquias.
@@ -115,21 +138,31 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
 
     return Column(
       children: [
-        _buildStatusBar(),
+        // Preview do DECK: 2 filas de 9 (criaturas + relíquias).
+        _buildDeckPreview(catalog),
         const SizedBox(height: 10),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: _buildTabs(),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
+        // Filtro de conceito (chips compactos, igual à coleção).
+        _buildConceptFilters(),
+        const SizedBox(height: 8),
         Expanded(
           child: _tab == 0
               ? _buildCreatureGrid(ownedCreatures)
               : _buildRelicGrid(ownedRelics, deckCreatures),
         ),
+        // Contador + Salvar no RODAPÉ.
+        _buildStatusBar(),
+        const SizedBox(height: 6),
       ],
     );
   }
+
+  bool _byConcept(List<CardConcept> concepts) =>
+      _conceptFilter == null || concepts.contains(_conceptFilter);
 
   // ── Header ──────────────────────────────────────────────────────────
   Widget _buildHeader() {
@@ -149,22 +182,6 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
               ),
               child: const Icon(Icons.arrow_back_ios_new,
                   color: AppColors.textSecondary, size: 18),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('CONSTRUTOR DE DECK',
-                    style: GoogleFonts.cinzelDecorative(
-                        fontSize: 15,
-                        color: AppColors.purpleLight,
-                        letterSpacing: 2)),
-                Text('Monte 9 criaturas + 9 relíquias',
-                    style: GoogleFonts.roboto(
-                        fontSize: 11, color: AppColors.textMuted)),
-              ],
             ),
           ),
         ],
@@ -255,7 +272,7 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
   Widget _tabBtn(int index, String label, IconData icon) {
     final active = _tab == index;
     return GestureDetector(
-      onTap: () => setState(() => _tab = index),
+      onTap: () => _onFilterChanged(() => _tab = index),
       behavior: HitTestBehavior.opaque,
       child: Container(
         height: 34,
@@ -293,40 +310,230 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
     );
   }
 
-  // ── Grid de criaturas adquiridas ────────────────────────────────────
+  // ── Preview do DECK: 2 filas de 9 miniaturas (criaturas + relíquias) ─
+  Widget _buildDeckPreview(CardCatalog catalog) {
+    final creatureById = {for (final c in catalog.creatures) c.id: c};
+    final relicById = {for (final r in catalog.relics) r.id: r};
+
+    Widget creatureSlot(int i) {
+      if (i >= _creatureIds.length) return _miniSlot();
+      final c = creatureById[_creatureIds[i]];
+      if (c == null) return _miniSlot();
+      return _miniSlot(
+        concept: _conceptColor(c.concepts),
+        rarity: c.rarity,
+        icon: _damageIcon(c.damageType),
+        onTap: () => _toggleCreature(c.id),
+      );
+    }
+
+    Widget relicSlot(int i) {
+      if (i >= _relicIds.length) return _miniSlot();
+      final r = relicById[_relicIds[i]];
+      if (r == null) return _miniSlot();
+      return _miniSlot(
+        concept: _conceptColor(r.concepts),
+        rarity: r.rarity,
+        icon: r.isFlash ? Icons.bolt : Icons.shield_outlined,
+        onTap: () => _toggleRelic(r.id),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          _deckPreviewRow(Icons.pets, creatureSlot),
+          const SizedBox(height: 6),
+          _deckPreviewRow(Icons.shield_outlined, relicSlot),
+        ],
+      ),
+    );
+  }
+
+  Widget _deckPreviewRow(IconData lead, Widget Function(int) slotBuilder) {
+    return Row(
+      children: [
+        Icon(lead, size: 13, color: AppColors.txtMut),
+        const SizedBox(width: 6),
+        for (int i = 0; i < _max; i++) ...[
+          Expanded(child: AspectRatio(aspectRatio: 0.82, child: slotBuilder(i))),
+          if (i < _max - 1) const SizedBox(width: 4),
+        ],
+      ],
+    );
+  }
+
+  /// Miniatura de slot do deck. Preenchido = ícone + cor de conceito + ponto
+  /// de raridade; vazio = moldura tracejada apagada. Tap remove do deck.
+  Widget _miniSlot({
+    Color? concept,
+    Rarity? rarity,
+    IconData? icon,
+    VoidCallback? onTap,
+  }) {
+    final filled = icon != null;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+          gradient: filled
+              ? LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    (concept ?? AppColors.purple).withValues(alpha: 0.4),
+                    const Color(0xFF0B0810),
+                  ],
+                )
+              : null,
+          color: filled ? null : const Color(0x33100C15),
+          border: Border.all(
+            color: filled
+                ? (concept ?? AppColors.purple).withValues(alpha: 0.6)
+                : AppColors.borderViolet.withValues(alpha: 0.5),
+          ),
+        ),
+        child: filled
+            ? Stack(
+                children: [
+                  Center(
+                    child: Icon(icon,
+                        size: 15,
+                        color: Colors.white.withValues(alpha: 0.85)),
+                  ),
+                  if (rarity != null)
+                    Positioned(
+                      top: 2,
+                      right: 2,
+                      child: Container(
+                        width: 5,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _rarityColor(rarity),
+                        ),
+                      ),
+                    ),
+                ],
+              )
+            : const Center(
+                child: Icon(Icons.add,
+                    size: 12, color: AppColors.borderViolet),
+              ),
+      ),
+    );
+  }
+
+  // ── Filtro de conceito (chips compactos em Wrap, igual à coleção) ───
+  Widget _buildConceptFilters() {
+    const styles = <(CardConcept, String, Color)>[
+      (CardConcept.vitalismo, 'Vita', AppColors.conceptVita),
+      (CardConcept.neutro, 'Neutro', AppColors.conceptNeutro),
+      (CardConcept.chrysalis, 'Chrysalis', AppColors.conceptChrysalis),
+      (CardConcept.celestial, 'Celestial', AppColors.conceptCelestial),
+      (CardConcept.magico, 'Mágico', AppColors.conceptMagico),
+      (CardConcept.corrompido, 'Corrompido', AppColors.conceptCorrompido),
+    ];
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 7,
+        runSpacing: 7,
+        children: [
+          _chip(
+            label: 'Todos',
+            selected: _conceptFilter == null,
+            onTap: () => _onFilterChanged(() => _conceptFilter = null),
+          ),
+          for (final s in styles)
+            _chip(
+              label: s.$2,
+              dot: s.$3,
+              selected: _conceptFilter == s.$1,
+              onTap: () => _onFilterChanged(() => _conceptFilter = s.$1),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _chip({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+    Color? dot,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          color: const Color(0xB3100C15),
+          border: Border.all(
+            color: selected
+                ? AppColors.gold.withValues(alpha: 0.6)
+                : AppColors.borderViolet,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                      color: AppColors.gold.withValues(alpha: 0.15),
+                      blurRadius: 8),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (dot != null) ...[
+              Container(
+                width: 9,
+                height: 9,
+                decoration: BoxDecoration(shape: BoxShape.circle, color: dot),
+              ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: GoogleFonts.roboto(
+                fontSize: 11.5,
+                color: selected ? AppColors.goldLt : AppColors.txt2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Grid de criaturas adquiridas (paginado 3x3) ─────────────────────
   Widget _buildCreatureGrid(List<CreatureCard> creatures) {
     if (creatures.isEmpty) {
       return _emptyBody('Você ainda não possui criaturas.');
     }
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 0.74,
-      ),
-      itemCount: creatures.length,
-      itemBuilder: (_, i) {
-        final c = creatures[i];
-        final inDeck = _creatureIds.contains(c.id);
-        return _DeckCardTile(
-          name: c.nome,
-          concepts: c.concepts,
-          rarity: c.rarity,
-          icon: _damageIcon(c.damageType),
-          cost: c.cost,
-          atk: c.atk,
-          pv: c.hp,
-          inDeck: inDeck,
-          warning: false,
-          onTap: () => _toggleCreature(c.id),
-        );
-      },
-    );
+    return _pagedGrid(creatures.length, (i) {
+      final c = creatures[i];
+      final inDeck = _creatureIds.contains(c.id);
+      return _DeckCardTile(
+        name: c.nome,
+        concepts: c.concepts,
+        rarity: c.rarity,
+        icon: _damageIcon(c.damageType),
+        cost: c.cost,
+        atk: c.atk,
+        pv: c.hp,
+        inDeck: inDeck,
+        warning: false,
+        onTap: () => _toggleCreature(c.id),
+      );
+    });
   }
 
-  // ── Grid de relíquias adquiridas (+ aviso de dead card) ─────────────
+  // ── Grid de relíquias adquiridas (paginado 3x3 + aviso de dead card) ─
   Widget _buildRelicGrid(
     List<RelicCard> relics,
     List<CreatureCard> deckCreatures,
@@ -334,37 +541,128 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
     if (relics.isEmpty) {
       return _emptyBody('Você ainda não possui relíquias.');
     }
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 0.74,
-      ),
-      itemCount: relics.length,
-      itemBuilder: (_, i) {
-        final r = relics[i];
-        final inDeck = _relicIds.contains(r.id);
-        // Dica soft: relíquia que não casa com nenhuma criatura do deck atual
-        // (e o deck tem criaturas) é uma "dead card". Universais sempre ok.
-        final dead = deckCreatures.isNotEmpty &&
-            !r.isUniversal &&
-            !deckCreatures.any(r.isCompatibleWith);
-        return _DeckCardTile(
-          name: r.nome,
-          concepts: r.concepts,
-          rarity: r.rarity,
-          icon: r.isFlash ? Icons.bolt : Icons.shield_outlined,
-          cost: r.cost,
-          atk: null,
-          pv: null,
-          relicTag: r.isFlash ? 'Flash' : 'Equip.',
-          inDeck: inDeck,
-          warning: dead,
-          onTap: () => _toggleRelic(r.id),
+    return _pagedGrid(relics.length, (i) {
+      final r = relics[i];
+      final inDeck = _relicIds.contains(r.id);
+      // Dica soft: relíquia que não casa com nenhuma criatura do deck atual
+      // (e o deck tem criaturas) é uma "dead card". Universais sempre ok.
+      final dead = deckCreatures.isNotEmpty &&
+          !r.isUniversal &&
+          !deckCreatures.any(r.isCompatibleWith);
+      return _DeckCardTile(
+        name: r.nome,
+        concepts: r.concepts,
+        rarity: r.rarity,
+        icon: r.isFlash ? Icons.bolt : Icons.shield_outlined,
+        cost: r.cost,
+        atk: null,
+        pv: null,
+        relicTag: r.isFlash ? 'Flash' : 'Equip.',
+        inDeck: inDeck,
+        warning: dead,
+        onTap: () => _toggleRelic(r.id),
+      );
+    });
+  }
+
+  // ── Paginação 3x3 (setas + swipe), igual à coleção mas 9 por página ──
+  Widget _pagedGrid(int total, Widget Function(int) tileBuilder) {
+    final pageCount = (total / _perPage).ceil().clamp(1, 9999);
+    final safePage = _page.clamp(0, pageCount - 1);
+    return Column(
+      children: [
+        Expanded(
+          child: Row(
+            children: [
+              _pageArrow(
+                icon: Icons.chevron_left_rounded,
+                enabled: safePage > 0,
+                onTap: () => _pageController.previousPage(
+                    duration: const Duration(milliseconds: 240),
+                    curve: Curves.easeOut),
+              ),
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: (p) => setState(() => _page = p),
+                  itemCount: pageCount,
+                  itemBuilder: (_, page) => _grid3x3(page, total, tileBuilder),
+                ),
+              ),
+              _pageArrow(
+                icon: Icons.chevron_right_rounded,
+                enabled: safePage < pageCount - 1,
+                onTap: () => _pageController.nextPage(
+                    duration: const Duration(milliseconds: 240),
+                    curve: Curves.easeOut),
+              ),
+            ],
+          ),
+        ),
+        if (pageCount > 1)
+          Padding(
+            padding: const EdgeInsets.only(top: 2, bottom: 4),
+            child: Text('Página ${safePage + 1}/$pageCount',
+                style: GoogleFonts.roboto(
+                    fontSize: 10, letterSpacing: 1, color: AppColors.txtMut)),
+          ),
+      ],
+    );
+  }
+
+  /// Uma página com até 9 tiles em grade 3x3.
+  Widget _grid3x3(int page, int total, Widget Function(int) tileBuilder) {
+    final start = page * _perPage;
+    Widget cell(int offset) {
+      final i = start + offset;
+      if (i >= total) return const SizedBox.shrink();
+      return Center(
+        child: AspectRatio(aspectRatio: 0.72, child: tileBuilder(i)),
+      );
+    }
+
+    Widget gridRow(int base) => Expanded(
+          child: Row(
+            children: [
+              Expanded(child: cell(base)),
+              const SizedBox(width: 8),
+              Expanded(child: cell(base + 1)),
+              const SizedBox(width: 8),
+              Expanded(child: cell(base + 2)),
+            ],
+          ),
         );
-      },
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
+      child: Column(
+        children: [
+          gridRow(0),
+          const SizedBox(height: 8),
+          gridRow(3),
+          const SizedBox(height: 8),
+          gridRow(6),
+        ],
+      ),
+    );
+  }
+
+  Widget _pageArrow({
+    required IconData icon,
+    required bool enabled,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: Container(
+        width: 26,
+        alignment: Alignment.center,
+        child: Icon(icon,
+            size: 28,
+            color: enabled
+                ? AppColors.purpleLt
+                : AppColors.txtMut.withValues(alpha: 0.3)),
+      ),
     );
   }
 
