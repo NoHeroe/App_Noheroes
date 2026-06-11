@@ -257,13 +257,13 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     );
   }
 
-  // Topo: voltar (esq) + wallet (Santuário) com o botão de Inventário logo
-  // abaixo. Sem título — header removido.
+  // Topo: voltar (esq) → atalhos (Inventário, e Forja no Ferreiro) → wallet
+  // (Santuário) à direita, com os atalhos ao lado das coins. Sem título.
   Widget _topBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           GestureDetector(
             onTap: () => context.go('/shops'),
@@ -284,21 +284,21 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             ),
           ),
           const Spacer(),
+          // Atalhos empilhados ao lado das coins.
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SanctuaryWalletPills(),
-              const SizedBox(height: 8),
               _inventoryButton(),
-              // Atalho pra Forja preservado quando a loja é o Ferreiro.
               if (_shop?.key == 'blacksmith_aureum') ...[
                 const SizedBox(height: 6),
-                _pillButton(
-                    Icons.hardware, 'FORJA', AppColors.gold, () => context.go('/forge')),
+                _pillButton(Icons.hardware, 'FORJA', AppColors.gold,
+                    () => context.go('/forge')),
               ],
             ],
           ),
+          const SizedBox(width: 8),
+          const SanctuaryWalletPills(),
         ],
       ),
     );
@@ -338,16 +338,17 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     );
   }
 
-  // Filtro por tipo — chips com os tipos presentes na loja + "Todos".
+  // Filtro por tipo — chips CENTRALIZADOS (Wrap) com os tipos da loja + "Todos".
   Widget _typeFilterBar() {
     final types = <ItemType>{for (final v in _items) v.spec.type}.toList()
       ..sort((a, b) => a.index.compareTo(b.index));
     if (types.length < 2) return const SizedBox.shrink();
-    return SizedBox(
-      height: 34,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 7,
+        runSpacing: 7,
         children: [
           _typeChip(null, 'Todos', Icons.apps),
           for (final t in types)
@@ -359,9 +360,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   Widget _typeChip(ItemType? type, String label, IconData icon) {
     final selected = _typeFilter == type;
-    return Padding(
-      padding: const EdgeInsets.only(right: 7),
-      child: GestureDetector(
+    return GestureDetector(
         onTap: () => setState(() => _typeFilter = type),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
@@ -395,7 +394,6 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             ],
           ),
         ),
-      ),
     );
   }
 

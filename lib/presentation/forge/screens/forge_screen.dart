@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,11 +16,6 @@ import '../../../domain/models/recipe_spec.dart';
 import '../../shared/widgets/feature_chip.dart';
 import '../../shared/widgets/level_locked_view.dart';
 
-// TODO Fase 5: asset próprio de bigorna medieval.
-// Usando Icons.hardware (martelo pesado) como placeholder — zero colisão
-// com Icons.gavel que já é usado pra weapon.
-const _forgeHeaderIcon = Icons.hardware;
-
 class ForgeScreen extends ConsumerStatefulWidget {
   const ForgeScreen({super.key});
 
@@ -27,7 +24,7 @@ class ForgeScreen extends ConsumerStatefulWidget {
 }
 
 class _ForgeScreenState extends ConsumerState<ForgeScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late TabController _tab;
   List<RecipeSpec> _recipes = const [];
   Map<String, int> _currentMaterials = const {};
@@ -37,16 +34,28 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
   bool _loading = true;
   String? _error;
 
+  // Receita selecionada (exibida na bigorna) + animação de faíscas.
+  RecipeSpec? _selected;
+  late final AnimationController _spark;
+  bool _forging = false;
+
   @override
   void initState() {
     super.initState();
     _tab = TabController(length: 2, vsync: this);
+    // Trocar de aba limpa a seleção (anvil sempre coerente com a aba ativa).
+    _tab.addListener(() {
+      if (_tab.indexIsChanging) setState(() => _selected = null);
+    });
+    _spark = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 750));
     WidgetsBinding.instance.addPostFrameCallback((_) => _reload());
   }
 
   @override
   void dispose() {
     _tab.dispose();
+    _spark.dispose();
     super.dispose();
   }
 
@@ -188,6 +197,24 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
     ));
   }
 
+  bool _previewCraftable(RecipeSpec r) {
+    for (final m in r.materials) {
+      if ((_currentMaterials[m.itemKey] ?? 0) < m.quantity) return false;
+    }
+    return _currentCoins >= r.costCoins;
+  }
+
+  // Forja a receita selecionada com animação de faíscas na bigorna.
+  Future<void> _craftSelected() async {
+    final r = _selected;
+    if (r == null || _forging || !_previewCraftable(r)) return;
+    setState(() => _forging = true);
+    _spark.forward(from: 0);
+    await _craft(r); // valida + debita + reload (mantém _selected).
+    if (!mounted) return;
+    setState(() => _forging = false);
+  }
+
   // ── Build ────────────────────────────────────────────────────────────────
 
   @override
@@ -204,47 +231,59 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
     }
     return Scaffold(
       backgroundColor: AppColors.black,
-      body: SafeArea(
-        child: _loading
-            ? const Center(
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: AppColors.gold),
-              )
-            : _error != null
-                ? _ErrorView(message: _error!)
-                : Column(
-                    children: [
-                      _buildHeader(),
-                      _buildTabs(),
-                      Expanded(child: _buildTabContent()),
-                    ],
-                  ),
+      body: Stack(
+        children: [
+          const _ForgeBackground(),
+          SafeArea(
+            child: _loading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: AppColors.gold),
+                  )
+                : _error != null
+                    ? _ErrorView(message: _error!)
+                    : Column(
+                        children: [
+                          _topBar(),
+                          const SizedBox(height: 8),
+                          _miniInventory(),
+                          const SizedBox(height: 10),
+                          _anvilStation(),
+                          const SizedBox(height: 6),
+                          _buildTabs(),
+                          Expanded(child: _buildTabContent()),
+                        ],
+                      ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildHeader() {
-    // Sprint 2.3 fix — chip Encantamento (lv20) no header da Forja.
-    // Chip Forja em si não aparece aqui (estamos nela).
+  // Topo SEM título: voltar + Encantamento + ouro.
+  Widget _topBar() {
     final playerLevel = ref.watch(currentPlayerProvider)?.level ?? 0;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Row(
         children: [
           GestureDetector(
             onTap: () => context.go('/sanctuary'),
-            child: const Icon(Icons.arrow_back_ios,
-                color: AppColors.textSecondary, size: 18),
-          ),
-          const SizedBox(width: 12),
-          const Icon(_forgeHeaderIcon, color: AppColors.gold, size: 22),
-          const SizedBox(width: 8),
-          Text(
-            'FORJA',
-            style: GoogleFonts.cinzelDecorative(
-              fontSize: 16,
-              color: AppColors.gold,
-              letterSpacing: 3,
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(11),
+                gradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF2A1B12), Color(0xFF0B0705)],
+                ),
+                border:
+                    Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
+              ),
+              child: const Icon(Icons.arrow_back_ios_new,
+                  color: AppColors.goldLt, size: 15),
             ),
           ),
           const Spacer(),
@@ -256,11 +295,148 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
             playerLevel: playerLevel,
             color: AppColors.purpleLight,
           ),
-          Text('🪙 $_currentCoins',
+          const SizedBox(width: 10),
+          const Icon(Icons.monetization_on, size: 14, color: AppColors.gold),
+          const SizedBox(width: 4),
+          Text('$_currentCoins',
               style: GoogleFonts.roboto(
-                  fontSize: 12, color: AppColors.gold)),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.gold)),
         ],
       ),
+    );
+  }
+
+  // Miniatura do inventário: slots de materiais (>=5), scroll horizontal.
+  Widget _miniInventory() {
+    final mats = _currentMaterials.entries
+        .where((e) => _itemTypes[e.key] == ItemType.material && e.value > 0)
+        .toList()
+      ..sort((a, b) =>
+          (_itemNames[a.key] ?? a.key).compareTo(_itemNames[b.key] ?? b.key));
+    final slots = math.max(5, mats.length);
+    return SizedBox(
+      height: 60,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: slots,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (_, i) {
+          if (i >= mats.length) return const _MatSlot();
+          final e = mats[i];
+          return _MatSlot(
+            icon: _RecipeCard._typeIcon(
+                _itemTypes[e.key] ?? ItemType.material),
+            qty: e.value,
+            name: _itemNames[e.key] ?? e.key,
+          );
+        },
+      ),
+    );
+  }
+
+  // Bigorna com o slot do item selecionado + faíscas ao forjar.
+  Widget _anvilStation() {
+    final r = _selected;
+    final accent = (r?.type == RecipeType.forge)
+        ? AppColors.gold
+        : (r?.type == RecipeType.craft
+            ? AppColors.purpleLight
+            : AppColors.gold);
+    final type = r == null
+        ? null
+        : (_itemTypes[r.resultItemKey] ?? ItemType.misc);
+    final name = r == null
+        ? 'Escolha uma receita abaixo'
+        : (_itemNames[r.resultItemKey] ?? r.resultItemKey);
+    final craftable = r != null && _previewCraftable(r);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 132,
+            child: AnimatedBuilder(
+              animation: _spark,
+              builder: (_, __) {
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Bigorna desenhada.
+                    const Positioned.fill(
+                      child: CustomPaint(painter: _AnvilPainter()),
+                    ),
+                    // Slot do item (sobre a face da bigorna).
+                    Align(
+                      alignment: const Alignment(0, -0.55),
+                      child: Transform.scale(
+                        scale: 1.0 + math.sin(_spark.value * math.pi) * 0.12,
+                        child: _itemSlot(type, accent),
+                      ),
+                    ),
+                    // Faíscas.
+                    if (_spark.value > 0)
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: CustomPaint(
+                            painter: _SparkPainter(_spark.value),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.cinzelDecorative(
+                fontSize: 12,
+                letterSpacing: 1,
+                color: r == null ? AppColors.txtMut : AppColors.textPrimary),
+          ),
+          const SizedBox(height: 8),
+          _ActionButton(
+            label: r == null
+                ? 'SELECIONE UMA RECEITA'
+                : (r.type == RecipeType.forge ? 'FORJAR' : 'CRIAR'),
+            color: (craftable && !_forging) ? accent : AppColors.textMuted,
+            enabled: craftable && !_forging,
+            onTap: _craftSelected,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _itemSlot(ItemType? type, Color accent) {
+    return Container(
+      width: 66,
+      height: 66,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF241A12), Color(0xFF0E0906)],
+        ),
+        border: Border.all(color: accent.withValues(alpha: 0.7), width: 1.6),
+        boxShadow: [
+          BoxShadow(
+              color: accent.withValues(alpha: 0.25),
+              blurRadius: 14,
+              spreadRadius: 1),
+        ],
+      ),
+      child: type == null
+          ? const Icon(Icons.add, color: AppColors.txtMut, size: 22)
+          : Icon(_RecipeCard._typeIcon(type), color: accent, size: 30),
     );
   }
 
@@ -309,29 +485,10 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
         currentCoins: _currentCoins,
         itemNames: _itemNames,
         itemTypes: _itemTypes,
-        onTap: () => _openDetails(list[i]),
+        selected: _selected?.key == list[i].key,
+        onTap: () => setState(() => _selected = list[i]),
       ),
     );
-  }
-
-  Future<void> _openDetails(RecipeSpec recipe) async {
-    final confirmed = await showModalBottomSheet<bool>(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      isScrollControlled: true,
-      builder: (_) => _RecipeDetailsSheet(
-        recipe: recipe,
-        currentMaterials: _currentMaterials,
-        currentCoins: _currentCoins,
-        itemNames: _itemNames,
-        itemTypes: _itemTypes,
-      ),
-    );
-    if (!mounted || confirmed != true) return;
-    await _craft(recipe);
   }
 }
 
@@ -343,6 +500,7 @@ class _RecipeCard extends StatelessWidget {
   final int currentCoins;
   final Map<String, String> itemNames;
   final Map<String, ItemType> itemTypes;
+  final bool selected;
   final VoidCallback onTap;
 
   const _RecipeCard({
@@ -351,6 +509,7 @@ class _RecipeCard extends StatelessWidget {
     required this.currentCoins,
     required this.itemNames,
     required this.itemTypes,
+    required this.selected,
     required this.onTap,
   });
 
@@ -378,7 +537,15 @@ class _RecipeCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: accent.withValues(alpha: 0.4)),
+          border: Border.all(
+              color: accent.withValues(alpha: selected ? 0.9 : 0.4),
+              width: selected ? 1.8 : 1),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                      color: accent.withValues(alpha: 0.3), blurRadius: 12)
+                ]
+              : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -501,12 +668,32 @@ class _RecipeCard extends StatelessWidget {
                 ],
               ),
             ],
-            const SizedBox(height: 12),
-            _ActionButton(
-              label: recipe.type.label.toUpperCase(),
-              color: _canCraftPreview ? accent : AppColors.textMuted,
-              enabled: _canCraftPreview,
-              onTap: onTap,
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  selected
+                      ? 'NA BIGORNA'
+                      : (_canCraftPreview
+                          ? 'TOCAR P/ FORJAR'
+                          : 'MATERIAIS FALTANDO'),
+                  style: GoogleFonts.roboto(
+                      fontSize: 9,
+                      letterSpacing: 1.2,
+                      color: selected
+                          ? accent
+                          : (_canCraftPreview
+                              ? AppColors.txt2
+                              : AppColors.textMuted)),
+                ),
+                const SizedBox(width: 5),
+                Icon(
+                  selected ? Icons.check_circle : Icons.chevron_right,
+                  size: 14,
+                  color: selected ? accent : AppColors.textMuted,
+                ),
+              ],
             ),
           ],
         ),
@@ -539,151 +726,6 @@ class _RecipeCard extends StatelessWidget {
         ItemType.rune       => Icons.auto_awesome,
         ItemType.misc       => Icons.help_outline,
       };
-}
-
-class _RecipeDetailsSheet extends StatelessWidget {
-  final RecipeSpec recipe;
-  final Map<String, int> currentMaterials;
-  final int currentCoins;
-  final Map<String, String> itemNames;
-  final Map<String, ItemType> itemTypes;
-
-  const _RecipeDetailsSheet({
-    required this.recipe,
-    required this.currentMaterials,
-    required this.currentCoins,
-    required this.itemNames,
-    required this.itemTypes,
-  });
-
-  bool get _canCraftPreview {
-    for (final m in recipe.materials) {
-      final have = currentMaterials[m.itemKey] ?? 0;
-      if (have < m.quantity) return false;
-    }
-    if (currentCoins < recipe.costCoins) return false;
-    return true;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final accent = recipe.type == RecipeType.forge
-        ? AppColors.gold
-        : AppColors.purpleLight;
-    final producedQty = recipe.resultQuantity;
-    final producedName =
-        itemNames[recipe.resultItemKey] ?? recipe.resultItemKey;
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(recipe.name,
-                style: GoogleFonts.cinzelDecorative(
-                    fontSize: 17,
-                    color: accent,
-                    letterSpacing: 2)),
-            const SizedBox(height: 8),
-            if (recipe.description.isNotEmpty)
-              Text(recipe.description,
-                  style: GoogleFonts.roboto(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                      height: 1.5)),
-            const SizedBox(height: 16),
-            _sectionTitle('RESULTADO'),
-            const SizedBox(height: 6),
-            Text(
-              '$producedName ×$producedQty',
-              style: GoogleFonts.roboto(
-                  fontSize: 13, color: AppColors.textPrimary),
-            ),
-            const SizedBox(height: 16),
-            _sectionTitle('MATERIAIS'),
-            const SizedBox(height: 6),
-            ...recipe.materials.map((m) {
-              final have = currentMaterials[m.itemKey] ?? 0;
-              final color = _RecipeCard._materialColor(have, m.quantity);
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Row(
-                  children: [
-                    Icon(Icons.circle, size: 7, color: color),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        itemNames[m.itemKey] ?? m.itemKey,
-                        style: GoogleFonts.roboto(
-                            fontSize: 12,
-                            color: AppColors.textSecondary),
-                      ),
-                    ),
-                    Text('$have / ${m.quantity}',
-                        style: GoogleFonts.roboto(
-                            fontSize: 12, color: color)),
-                  ],
-                ),
-              );
-            }),
-            if (recipe.costCoins > 0) ...[
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  const Icon(Icons.monetization_on_outlined,
-                      size: 14, color: AppColors.gold),
-                  const SizedBox(width: 6),
-                  Text('Custo: ${recipe.costCoins}',
-                      style: GoogleFonts.roboto(
-                          fontSize: 12,
-                          color: currentCoins >= recipe.costCoins
-                              ? AppColors.gold
-                              : AppColors.hp)),
-                ],
-              ),
-            ],
-            if (recipe.requiredRank != null || recipe.requiredLevel > 1) ...[
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  if (recipe.requiredRank != null)
-                    _TagBadge(
-                      text:
-                          'RANK ${recipe.requiredRank!.name.toUpperCase()}',
-                      color: AppColors.gold,
-                    ),
-                  if (recipe.requiredLevel > 1)
-                    _TagBadge(
-                      text: 'LV ${recipe.requiredLevel}',
-                      color: AppColors.purpleLight,
-                    ),
-                ],
-              ),
-            ],
-            const SizedBox(height: 22),
-            _ActionButton(
-              label: recipe.type == RecipeType.forge
-                  ? 'CONFIRMAR FORJA'
-                  : 'CONFIRMAR CRIAÇÃO',
-              color: _canCraftPreview ? accent : AppColors.textMuted,
-              enabled: _canCraftPreview,
-              onTap: () => Navigator.pop(context, true),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _sectionTitle(String text) => Text(
-        text,
-        style: GoogleFonts.cinzelDecorative(
-            fontSize: 11, color: AppColors.purpleLight, letterSpacing: 3),
-      );
 }
 
 class _TagBadge extends StatelessWidget {
@@ -759,7 +801,7 @@ class _EmptyList extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(_forgeHeaderIcon,
+            Icon(Icons.hardware,
                 color: AppColors.textMuted.withValues(alpha: 0.3), size: 46),
             const SizedBox(height: 12),
             Text(
@@ -820,4 +862,189 @@ class _ErrorView extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Fundo quente da Forja ───────────────────────────────────────────────────
+class _ForgeBackground extends StatelessWidget {
+  const _ForgeBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment(0, -0.45),
+          radius: 1.25,
+          colors: [Color(0xFF2A1A10), Color(0xFF150D08), Color(0xFF090605)],
+          stops: [0.0, 0.5, 0.85],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Slot de material da miniatura do inventário ─────────────────────────────
+class _MatSlot extends StatelessWidget {
+  final IconData? icon;
+  final int? qty;
+  final String? name;
+  const _MatSlot({this.icon, this.qty, this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    final filled = icon != null;
+    final slot = Container(
+      width: 52,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF241A12), Color(0xFF0E0906)],
+        ),
+        border: Border.all(
+          color: filled
+              ? AppColors.gold.withValues(alpha: 0.45)
+              : AppColors.borderViolet.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Stack(
+        children: [
+          Center(
+            child: Icon(
+              icon ?? Icons.add,
+              size: filled ? 22 : 16,
+              color: filled
+                  ? AppColors.goldLt.withValues(alpha: 0.9)
+                  : AppColors.txtMut.withValues(alpha: 0.5),
+            ),
+          ),
+          if (qty != null)
+            Positioned(
+              right: 2,
+              bottom: 2,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  color: const Color(0xCC0B0705),
+                ),
+                child: Text('×$qty',
+                    style: GoogleFonts.roboto(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.goldLt)),
+              ),
+            ),
+        ],
+      ),
+    );
+    return filled ? Tooltip(message: name ?? '', child: slot) : slot;
+  }
+}
+
+// ── Bigorna (silhueta metálica) ─────────────────────────────────────────────
+class _AnvilPainter extends CustomPainter {
+  const _AnvilPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width, h = size.height;
+    final cx = w / 2;
+    final faceW = math.min(w * 0.66, 210.0);
+    final faceTop = h * 0.46;
+    const faceH = 18.0;
+    final faceL = cx - faceW / 2, faceR = cx + faceW / 2;
+    final waistTop = faceTop + faceH;
+    final waistH = h * 0.20;
+    final waistTopHalf = faceW * 0.18, waistBotHalf = faceW * 0.12;
+    final baseTop = waistTop + waistH;
+    final baseH = h * 0.12;
+    final baseHalf = faceW * 0.34;
+    final bottom = baseTop + baseH;
+
+    final path = Path()
+      ..moveTo(faceL, faceTop)
+      ..lineTo(faceR, faceTop)
+      ..lineTo(faceR + 26, faceTop + faceH * 0.45) // bico (horn)
+      ..lineTo(faceR, faceTop + faceH)
+      ..lineTo(cx + waistTopHalf, waistTop)
+      ..lineTo(cx + waistBotHalf, baseTop)
+      ..lineTo(cx + baseHalf, baseTop)
+      ..lineTo(cx + baseHalf * 0.9, bottom)
+      ..lineTo(cx - baseHalf * 0.9, bottom)
+      ..lineTo(cx - baseHalf, baseTop)
+      ..lineTo(cx - waistBotHalf, baseTop)
+      ..lineTo(cx - waistTopHalf, waistTop)
+      ..lineTo(faceL, faceTop + faceH)
+      ..close();
+
+    final body = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF3C3C46), Color(0xFF17171C)],
+      ).createShader(Rect.fromLTWH(0, faceTop, w, bottom - faceTop));
+    canvas.drawShadow(path, Colors.black, 6, true);
+    canvas.drawPath(path, body);
+
+    // Brilho na aresta superior da face.
+    final hi = Paint()
+      ..color = const Color(0xFF6A6A78)
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(Offset(faceL, faceTop), Offset(faceR, faceTop), hi);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+// ── Faíscas da forja (t: 0→1) ───────────────────────────────────────────────
+class _SparkPainter extends CustomPainter {
+  final double t;
+  const _SparkPainter(this.t);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (t <= 0) return;
+    final cx = size.width / 2;
+    final oy = size.height * 0.225; // origem ≈ centro do slot
+    final origin = Offset(cx, oy);
+
+    // Flash central.
+    final flashA = math.sin(t * math.pi).clamp(0.0, 1.0);
+    final flash = Paint()
+      ..shader = RadialGradient(colors: [
+        const Color(0xFFFFE0A3).withValues(alpha: 0.55 * flashA),
+        const Color(0x00FFB347),
+      ]).createShader(Rect.fromCircle(center: origin, radius: 34));
+    canvas.drawCircle(origin, 34, flash);
+
+    // Partículas.
+    const n = 18;
+    final alpha = (1 - t).clamp(0.0, 1.0);
+    for (var i = 0; i < n; i++) {
+      final ang = (i / n) * 2 * math.pi - math.pi / 2; // viés pra cima
+      final speed = 0.6 + ((i * 53) % 10) / 10 * 0.7;
+      final dist = t * 72 * speed;
+      final px = cx + math.cos(ang) * dist;
+      final py = oy + math.sin(ang) * dist - t * 12 * speed;
+      final dir = Offset(math.cos(ang), math.sin(ang));
+      final p = Paint()
+        ..color = (i.isEven ? const Color(0xFFFFB347) : const Color(0xFFFF8A3D))
+            .withValues(alpha: alpha)
+        ..strokeWidth = 2
+        ..strokeCap = StrokeCap.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.5);
+      canvas.drawLine(
+        Offset(px, py),
+        Offset(px + dir.dx * 5, py + dir.dy * 5),
+        p,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SparkPainter old) => old.t != t;
 }
