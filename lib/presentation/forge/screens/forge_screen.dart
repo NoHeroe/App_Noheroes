@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/item_equip_policy.dart';
+import '../../card_game/widgets/card_forge_section.dart';
 import '../../../data/database/daos/player_dao.dart';
 import '../../../domain/enums/item_type.dart';
 import '../../../domain/enums/recipe_type.dart';
@@ -42,7 +43,7 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
   @override
   void initState() {
     super.initState();
-    _tab = TabController(length: 2, vsync: this);
+    _tab = TabController(length: 3, vsync: this);
     // Trocar de aba limpa a seleção (anvil sempre coerente com a aba ativa).
     _tab.addListener(() {
       if (_tab.indexIsChanging) setState(() => _selected = null);
@@ -491,6 +492,7 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
       tabs: const [
         Tab(text: 'CRIAR'),
         Tab(text: 'FORJAR'),
+        Tab(text: 'EMBLEMAS'),
       ],
     );
   }
@@ -507,6 +509,8 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
       children: [
         _buildList(craft, RecipeType.craft),
         _buildList(forge, RecipeType.forge),
+        // Economia de cartas (hybrid): forja de emblema + fusão de essência.
+        const CardForgeSection(),
       ],
     );
   }

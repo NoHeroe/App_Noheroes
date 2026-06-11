@@ -152,6 +152,14 @@ class _CardVM {
   Color get conceptColor => _conceptColor(concepts);
   Color get rarityColor => _rarityColor(rarity);
 
+  /// Conceito primário NÃO-neutro (string) pra Essência de Facção; null se só neutro.
+  String? get primaryConceptName {
+    for (final c in concepts) {
+      if (c != CardConcept.neutro) return cardConceptToString(c);
+    }
+    return null;
+  }
+
   factory _CardVM.fromCreature(CreatureCard c) => _CardVM(
         id: c.id,
         name: c.nome,
@@ -1039,6 +1047,7 @@ class _CardDetailSheet extends StatelessWidget {
                 baseAtk: card.atk,
                 baseHp: card.pv,
                 isCreature: card.kind == _CardKind.creature,
+                concept: card.primaryConceptName,
               ),
             ],
           ),

@@ -38,17 +38,55 @@ class CardEconomyService {
       CgResult.fromRpc(await _client.rpc('cg_create_card',
           params: {'p_player': playerId, 'p_card_id': cardId}));
 
-  Future<CgResult> disenchant(String playerId, String cardId) async =>
-      CgResult.fromRpc(await _client.rpc('cg_disenchant_card',
-          params: {'p_player': playerId, 'p_card_id': cardId}));
+  Future<CgResult> disenchant(String playerId, String cardId,
+          {String? concept}) async =>
+      CgResult.fromRpc(await _client.rpc('cg_disenchant_card', params: {
+        'p_player': playerId,
+        'p_card_id': cardId,
+        if (concept != null) 'p_concept': concept,
+      }));
 
   Future<CgResult> upgrade(String playerId, String cardId) async =>
       CgResult.fromRpc(await _client.rpc('cg_upgrade_card',
           params: {'p_player': playerId, 'p_card_id': cardId}));
+
+  /// Forja 1 Emblema (kind 'card'|'relic', raridade) no Ferreiro.
+  Future<CgResult> forgeEmblem(String playerId, String kind, String rarity) async =>
+      CgResult.fromRpc(await _client.rpc('cg_forge_emblem',
+          params: {'p_player': playerId, 'p_kind': kind, 'p_rarity': rarity}));
+
+  /// Funde 5 Essências de [fromRarity] (+ Poeira) → 1 da raridade seguinte.
+  Future<CgResult> fuseEssence(
+          String playerId, String kind, String fromRarity) async =>
+      CgResult.fromRpc(await _client.rpc('cg_fuse_essence', params: {
+        'p_player': playerId,
+        'p_kind': kind,
+        'p_from_rarity': fromRarity,
+      }));
+
+  /// Saldo de TODOS os recursos do card game do jogador (chave → quantidade).
+  Future<Map<String, int>> resources(String playerId) async {
+    final rows = await _client
+        .from('player_cg_resources')
+        .select('resource_key, amount');
+    final list = (rows as List).cast<Map<String, dynamic>>();
+    return {
+      for (final r in list)
+        (r['resource_key'] as String): ((r['amount'] as num?)?.toInt() ?? 0),
+    };
+  }
 }
 
 final cardEconomyServiceProvider = Provider<CardEconomyService>(
     (ref) => CardEconomyService(ref.watch(supabaseClientProvider)));
+
+/// Saldo de recursos do card game do jogador (chave → quantidade). Usado na
+/// forja (Ferreiro) e em painéis de recurso.
+final cgResourcesProvider = FutureProvider<Map<String, int>>((ref) async {
+  final player = ref.watch(currentPlayerProvider);
+  if (player == null) return const <String, int>{};
+  return ref.read(cardEconomyServiceProvider).resources(player.id);
+});
 
 /// Níveis de aprimoramento das cartas possuídas (`card_id` → level). Vazio sem
 /// login. Usado pra injetar o nível no loadout da partida (escala de stats) e

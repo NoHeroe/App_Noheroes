@@ -20,12 +20,17 @@ class CardEconomyActions extends ConsumerStatefulWidget {
   final int baseHp;
   final bool isCreature;
 
+  /// Conceito primário (não-neutro) da carta — usado no desencante pra chance
+  /// de Essência de Facção (cards_catalog não tem conceito no DB). null = neutro.
+  final String? concept;
+
   const CardEconomyActions({
     super.key,
     required this.cardId,
     this.baseAtk = 0,
     this.baseHp = 0,
     this.isCreature = true,
+    this.concept,
   });
 
   @override
@@ -284,8 +289,8 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
             icon: Icons.recycling,
             danger: true,
             cost: '+Poeira ${(dis['dust'] as num).toInt()} '
-                '+Emblema ${(dis['mat'] as num).toInt()} '
-                '+Cristal 1 +Essência ${((dis['soul'] as num?) ?? 1).toInt()}',
+                '+Lasca ${(dis['lasca'] as num? ?? 0).toInt()} '
+                '+Essência 1 · chance: Cristal/Facção',
             enabled: dis['can'] == true && !_busy,
             onTap: () async {
               if (!await _confirm('Desencantar carta',
@@ -298,7 +303,7 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
               await _run(
                   () => ref
                       .read(cardEconomyServiceProvider)
-                      .disenchant(p.id, widget.cardId),
+                      .disenchant(p.id, widget.cardId, concept: widget.concept),
                   'Carta desencantada.');
             },
           ),
