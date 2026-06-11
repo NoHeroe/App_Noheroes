@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../shared/widgets/nh_atmosphere.dart';
+import '../../shared/widgets/nh_back_button.dart';
 import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_models.dart';
 import '../card_ownership.dart';
@@ -259,23 +260,8 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => context.go('/library'),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF221A2E), Color(0xFF0B0910)],
-                ),
-                border: Border.all(color: AppColors.borderViolet),
-              ),
-              child: const Icon(Icons.arrow_back_ios_new,
-                  color: AppColors.txt2, size: 16),
-            ),
+          NhBackButton(
+            onTap: () => context.canPop() ? context.pop() : context.go('/library'),
           ),
           const SizedBox(width: 14),
           Expanded(

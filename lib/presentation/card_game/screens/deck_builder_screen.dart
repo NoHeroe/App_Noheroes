@@ -9,6 +9,7 @@ import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_models.dart';
 import '../card_ownership.dart';
 import '../deck_repository.dart';
+import '../../shared/widgets/nh_back_button.dart';
 import '../widgets/game_card_face.dart';
 import '../../shared/widgets/nh_atmosphere.dart';
 
@@ -167,20 +168,9 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Row(
         children: [
-          GestureDetector(
+          NhBackButton(
             onTap: () =>
                 context.canPop() ? context.pop() : context.go('/library'),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                border: Border.all(color: AppColors.border),
-                borderRadius: BorderRadius.circular(10),
-                color: AppColors.surface,
-              ),
-              child: const Icon(Icons.arrow_back_ios_new,
-                  color: AppColors.textSecondary, size: 18),
-            ),
           ),
         ],
       ),

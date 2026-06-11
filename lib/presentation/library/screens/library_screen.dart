@@ -69,29 +69,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
     return SafeArea(
       child: Column(
         children: [
-          // Header
+          // Header — botão de voltar padronizado (NhBackButton).
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
             child: Row(
               children: [
-                GestureDetector(
-                  onTap: () => context.go('/sanctuary'),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      gradient: const LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Color(0xFF221A2E), Color(0xFF0B0910)],
-                      ),
-                      border: Border.all(color: AppColors.borderViolet),
-                    ),
-                    child: const Icon(Icons.arrow_back_ios_new,
-                        color: AppColors.txt2, size: 16),
-                  ),
-                ),
+                NhBackButton(onTap: () => context.go('/sanctuary')),
               ],
             ),
           ),

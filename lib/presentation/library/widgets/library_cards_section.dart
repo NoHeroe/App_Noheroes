@@ -9,6 +9,7 @@ import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_models.dart';
 import '../../card_game/card_ownership.dart';
 import '../../card_game/widgets/game_card_face.dart';
+import '../../shared/widgets/nh_back_button.dart';
 
 /// Fatia 2 — Coleção de cartas. Casca visual ORIGINAL preservada (tabs/busca/
 /// filtros por conceito/grid), mas a FONTE DE DADOS agora é o catálogo REAL do
@@ -477,24 +478,7 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: widget.onBack,
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF221A2E), Color(0xFF0B0910)],
-                ),
-                border: Border.all(color: AppColors.borderViolet),
-              ),
-              child: const Icon(Icons.arrow_back_ios_new,
-                  color: AppColors.txt2, size: 16),
-            ),
-          ),
+          NhBackButton(onTap: widget.onBack),
           const SizedBox(width: 12),
           Expanded(child: _buildSearch()),
         ],
