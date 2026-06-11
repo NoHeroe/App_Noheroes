@@ -90,18 +90,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                         color: AppColors.txt2, size: 16),
                   ),
                 ),
-                const SizedBox(width: 14),
-                Text('BIBLIOTECA',
-                    style: GoogleFonts.cinzelDecorative(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.goldLt,
-                        letterSpacing: 2,
-                        shadows: [
-                          Shadow(
-                              color: AppColors.gold.withValues(alpha: 0.5),
-                              blurRadius: 12),
-                        ])),
               ],
             ),
           ),
@@ -140,9 +128,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         NhMedallion(
-                          label: 'Construtor',
+                          label: 'DECK',
                           icon: Icons.build_outlined,
-                          size: 56,
+                          size: 76,
                           onTap: () => context.go('/card-game/deck-builder'),
                         ),
                         const SizedBox(height: 12),
@@ -156,7 +144,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                         NhMedallion(
                           label: 'Pacotes',
                           icon: Icons.inventory_2_outlined,
-                          size: 56,
+                          size: 76,
                           onTap: () => context.go('/card-game/packs'),
                         ),
                       ],
