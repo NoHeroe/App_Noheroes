@@ -122,6 +122,7 @@ class ShopsListScreen extends ConsumerWidget {
       icon: med.icon,
       size: 84,
       locked: med.locked,
+      badge: med.badge,
       onTap: () {
         if (med.locked) {
           AppSnack.warning(
@@ -201,6 +202,7 @@ final _marketMedallionsProvider =
     availableKeys = available.map((s) => s.key).toSet();
   }
 
+  final level = player?.level ?? 0;
   final faction = player?.factionType;
   final hasFaction = faction != null && faction.isNotEmpty && faction != 'none';
 
@@ -213,13 +215,18 @@ final _marketMedallionsProvider =
 
   final meds = <_ShopMed>[];
 
-  // Lojas gerais (na ordem do JSON).
+  // Lojas gerais (na ordem do JSON). Algumas têm gate de NÍVEL (espelha o
+  // LevelLockedView da própria tela da loja) — aí o cadeado mostra o nível.
   for (final s in all.where((s) => s.type == 'general')) {
+    final reqLvl = _shopLevelGate[s.key] ?? 0;
+    final levelLocked = level < reqLvl;
     meds.add(_ShopMed(
       key: s.key,
       label: _labelFor(s.key, s.name),
       icon: _iconFor(s.key),
-      locked: !availableKeys.contains(s.key),
+      locked: levelLocked || !availableKeys.contains(s.key),
+      badge: levelLocked ? 'NÍVEL $reqLvl' : null,
+      lockMsg: levelLocked ? 'O ${s.name} abre no Nível $reqLvl.' : null,
     ));
   }
 
@@ -260,6 +267,12 @@ final _marketMedallionsProvider =
   return meds;
 });
 
+/// Gates de NÍVEL por loja (espelha os checks hardcoded nas telas das lojas —
+/// ver LevelLockedView em shop_screen.dart). Loja sem entrada aqui = nível 0.
+const Map<String, int> _shopLevelGate = {
+  'blacksmith_aureum': 6, // Ferreiro de Aureum — Sprint 2.3 Bloco 0.B.
+};
+
 String _labelFor(String key, String fallback) {
   if (key.startsWith('blacksmith')) return 'Ferreiro';
   if (key.startsWith('general_store')) return 'Mercearia';
@@ -279,6 +292,7 @@ class _ShopMed {
   final IconData icon;
   final bool locked;
   final String? lockMsg;
+  final String? badge; // selo (ex.: 'NÍVEL 6') quando travado por nível.
 
   const _ShopMed({
     required this.key,
@@ -286,5 +300,6 @@ class _ShopMed {
     required this.icon,
     required this.locked,
     this.lockMsg,
+    this.badge,
   });
 }
