@@ -72,28 +72,14 @@ class NhMedallion extends StatelessWidget {
                       border: Border.all(
                           color: AppColors.gold.withValues(alpha: 0.2)),
                     ),
-                    child: Icon(icon, color: medColor, size: size * 0.4),
+                    child: Icon(
+                        // Bloqueado: esconde o ícone do recurso e mostra só o
+                        // cadeado central.
+                        locked ? Icons.lock : icon,
+                        color: medColor,
+                        size: size * 0.4),
                   ),
                 ),
-                // Cadeado: pequeno selo no canto inferior-direito quando bloqueado.
-                if (locked)
-                  Positioned(
-                    right: -2,
-                    bottom: -2,
-                    child: Container(
-                      width: size * 0.34,
-                      height: size * 0.34,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFF0B0910),
-                        border: Border.all(
-                            color: AppColors.gold.withValues(alpha: 0.4)),
-                      ),
-                      child: Icon(Icons.lock,
-                          color: AppColors.goldLt, size: size * 0.18),
-                    ),
-                  ),
                 if (badge != null)
                   Positioned(
                     bottom: -6,
