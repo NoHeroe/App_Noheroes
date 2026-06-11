@@ -79,6 +79,20 @@ const bool kVitalismoAttacksAnywhere = true;
 /// Armadura inata concedida pela habilidade Escudo (soma com a de relíquia). 🎚️
 const int kEscudoArmor = 1;
 
+// ── Lote 2 (defensivas) — magnitudes 🎚️ calibráveis ──────────────────────────
+
+/// Dano verdadeiro que Espinhos causa ao atacante melee. 🎚️
+const int kEspinhosDamage = 1;
+
+/// Redução de dano MÁGICO de Escudo Espelhado (armadura mágica). 🎚️
+const int kEscudoEspelhadoArmor = 1;
+
+/// Redução de dano FÍSICO e MÁGICO de Escudo Sagrado. 🎚️
+const int kEscudoSagradoArmor = 1;
+
+/// Chance de Contra-Ataque ao ser atingida por melee (0..1). 🎚️
+const double kContraAtaqueChance = 0.5;
+
 /// Bônus de ataque corpo a corpo de Inspirar (aliados, até o fim do turno). 🎚️
 const int kInspirarBonus = 1;
 

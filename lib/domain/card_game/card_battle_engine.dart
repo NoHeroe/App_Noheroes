@@ -612,6 +612,25 @@ class CardBattleEngine {
   /// Resolve UM ataque (alvo, evasão de Voo, dano e procs on-hit: Roubo de PV,
   /// Cristal de Drenagem, Pisotear, Ataque Duplo). Retorna (atacante, defensor)
   /// atualizados. Lanes do defensor são compactadas no fim, uma única vez.
+  /// Aplica `newHp` a uma criatura considerando **Inabalável**: se for morrer
+  /// (newHp ≤ 0) mas tiver Inabalável ainda não-usado, ela NÃO morre —
+  /// ressuscita com vida cheia e marca o uso (1×/partida). Retorna a criatura
+  /// resultante (null se morreu de verdade) + se morreu/reviveu.
+  ({CreatureInPlay? creature, bool died, bool revived}) _resolveLethal(
+      CreatureInPlay c, int newHp) {
+    if (newHp > 0) {
+      return (creature: c.copyWith(currentHp: newHp), died: false, revived: false);
+    }
+    if (c.hasKeyword(AbilityKeyword.inabalavel) && !c.inabalavelUsed) {
+      return (
+        creature: c.copyWith(currentHp: c.maxHp, inabalavelUsed: true),
+        died: false,
+        revived: true,
+      );
+    }
+    return (creature: null, died: true, revived: false);
+  }
+
   (BoardSide, BoardSide) _resolveAttack(
     MatchState s,
     BoardSide atkSide,
@@ -654,13 +673,25 @@ class CardBattleEngine {
     final physical =
         type == DamageType.corpoACorpo || type == DamageType.aDistancia;
     if (physical) {
-      damage = damage - target.armor;
-      if (damage < 0) damage = 0;
+      damage = damage - target.armor; // Escudo / Escudo Sagrado
+    } else if (type == DamageType.magico) {
+      damage = damage - target.magicArmor; // Escudo Espelhado / Escudo Sagrado
     }
+    if (damage < 0) damage = 0;
     final hpBefore = target.currentHp;
-    final newHp = hpBefore - damage;
-    final died = newHp <= 0;
-    defLanes[targetLaneIdx] = died ? null : target.copyWith(currentHp: newHp);
+    // Inabalável: se morreria, ressuscita com vida cheia (1×/partida).
+    final lethalT = _resolveLethal(target, hpBefore - damage);
+    final died = lethalT.died;
+    defLanes[targetLaneIdx] = lethalT.creature;
+    if (lethalT.revived) {
+      events.add(AbilityTriggered(
+        side: defSide.id,
+        cardId: target.instanceId,
+        cardName: target.card.nome,
+        ability: abilityKeywordLabel(AbilityKeyword.inabalavel),
+        detail: 'resistiu à destruição e voltou com vida cheia',
+      ));
+    }
     if (died) anyDeath = true;
 
     events.add(AttackResolved(
@@ -672,7 +703,7 @@ class CardBattleEngine {
       damageType: type,
       rawDamage: raw,
       damageDealt: damage,
-      targetHpAfter: died ? 0 : newHp,
+      targetHpAfter: lethalT.creature?.currentHp ?? 0,
       targetDied: died,
     ));
 
@@ -730,10 +761,9 @@ class CardBattleEngine {
           // Sem evasão de Voo no transbordo (não é um "ataque" mirado).
           var spill = overflow - next.armor;
           if (spill < 0) spill = 0;
-          final nextHp = next.currentHp - spill;
-          final nextDied = nextHp <= 0;
-          defLanes[nextIdx] =
-              nextDied ? null : next.copyWith(currentHp: nextHp);
+          final lethalN = _resolveLethal(next, next.currentHp - spill);
+          final nextDied = lethalN.died;
+          defLanes[nextIdx] = lethalN.creature;
           if (nextDied) anyDeath = true;
           events.add(AbilityTriggered(
             side: atkSide.id,
@@ -778,10 +808,9 @@ class CardBattleEngine {
           // Dano verdadeiro: ignora armadura. Extra = valor DESTE ataque melee
           // (multi-ataque: o ataque que disparou o Ataque Duplo).
           final extraDmg = value;
-          final extraHp = extraTarget.currentHp - extraDmg;
-          final extraDied = extraHp <= 0;
-          defLanes[pickIdx] =
-              extraDied ? null : extraTarget.copyWith(currentHp: extraHp);
+          final lethalE = _resolveLethal(extraTarget, extraTarget.currentHp - extraDmg);
+          final extraDied = lethalE.died;
+          defLanes[pickIdx] = lethalE.creature;
           if (extraDied) anyDeath = true;
           events.add(AbilityTriggered(
             side: atkSide.id,
@@ -799,13 +828,62 @@ class CardBattleEngine {
       }
     }
 
+    // ---- Retaliação do alvo melee: Espinhos + Contra-Ataque ----
+    // Disparam quando o alvo foi atingido por melee (não evadido). Espinhos
+    // dispara mesmo se o alvo morreu (você se espeta ao acertá-lo); Contra-
+    // Ataque só se o alvo SOBREVIVEU (precisa estar vivo pra revidar).
+    var attackerDied = false;
+    if (type == DamageType.corpoACorpo) {
+      final targetAlive = defLanes[targetLaneIdx] != null;
+
+      if (target.hasKeyword(AbilityKeyword.espinhos)) {
+        final res = _resolveLethal(attacker, attacker.currentHp - kEspinhosDamage);
+        events.add(AbilityTriggered(
+          side: defSide.id,
+          cardId: target.instanceId,
+          cardName: target.card.nome,
+          ability: abilityKeywordLabel(AbilityKeyword.espinhos),
+          detail: '$kEspinhosDamage de dano verdadeiro em '
+              '${attacker.card.nome}${res.died ? ' (destruída)' : ''}',
+        ));
+        if (res.died) {
+          attackerDied = true;
+        } else {
+          attacker = res.creature!;
+        }
+      }
+
+      if (!attackerDied &&
+          targetAlive &&
+          target.hasKeyword(AbilityKeyword.contraAtaque) &&
+          s.rng.nextDouble() < kContraAtaqueChance) {
+        var cdmg = target.atk - attacker.armor; // contra-ataque melee → armadura reduz
+        if (cdmg < 0) cdmg = 0;
+        final res = _resolveLethal(attacker, attacker.currentHp - cdmg);
+        events.add(AbilityTriggered(
+          side: defSide.id,
+          cardId: target.instanceId,
+          cardName: target.card.nome,
+          ability: abilityKeywordLabel(AbilityKeyword.contraAtaque),
+          detail: 'contra-atacou ${attacker.card.nome} '
+              '($cdmg de dano)${res.died ? ' (destruída)' : ''}',
+        ));
+        if (res.died) {
+          attackerDied = true;
+        } else {
+          attacker = res.creature!;
+        }
+      }
+    }
+
     // ---- Consolida lados ----
     final atkLanes = List<CreatureInPlay?>.from(atkSide.lanes);
-    atkLanes[attackerLaneIdx] = attacker;
+    atkLanes[attackerLaneIdx] = attackerDied ? null : attacker;
     var newAtkSide = atkSide.copyWith(
       lanes: atkLanes,
       pendingCrystals: atkSide.pendingCrystals + pendingGain,
     );
+    if (attackerDied) newAtkSide = _advanceLanes(newAtkSide);
 
     var newDefSide = defSide.copyWith(lanes: defLanes);
     if (anyDeath) newDefSide = _advanceLanes(newDefSide);

@@ -1,6 +1,7 @@
 /// Habilidades runtime (keywords) do Card Game "Modo Cartas ACDA".
 ///
-/// EXATAMENTE as 12 keywords presentes nos dados reais (criaturas + relíquias).
+/// Keywords com runtime no engine. (As 12 originais batiam os dados reais; o Lote 2
+/// adicionou 5 defensivas — atribuição às cartas é a passada de balanceamento.)
 /// Os dados trazem variantes de grafia ("Ataque Duplo" vs "AtaqueDuplo",
 /// "Silêncio" vs "Silencio") — o engine canoniza tudo via
 /// [abilityKeywordFromString] para o enum interno [AbilityKeyword].
@@ -10,7 +11,7 @@
 /// e o engine as ignora silenciosamente.
 library;
 
-/// As 12 habilidades com runtime no engine.
+/// As 17 habilidades com runtime no engine (12 originais + 5 do Lote 2).
 enum AbilityKeyword {
   /// Redireciona ataques à distância/mágicos inimigos para esta criatura.
   provocar,
@@ -52,6 +53,26 @@ enum AbilityKeyword {
   /// No início do turno do dono: ataque melee +🎚️ `kInvestidaBonus` até o fim
   /// do turno do OPONENTE (dura a rodada inteira).
   investida,
+
+  // ── Lote 2 (defensivas) ──────────────────────────────────────────────────
+
+  /// Ao ser atingida por melee, causa 🎚️ `kEspinhosDamage` de dano verdadeiro
+  /// ao atacante. (Simplificação: o "danifica a armadura primeiro" do rascunho
+  /// não se aplica — armadura aqui é redução fixa por golpe, não pool.)
+  espinhos,
+
+  /// Reduz dano MÁGICO recebido em 🎚️ `kEscudoEspelhadoArmor` (armadura mágica).
+  escudoEspelhado,
+
+  /// Reduz dano FÍSICO e MÁGICO recebido em 🎚️ `kEscudoSagradoArmor`.
+  escudoSagrado,
+
+  /// Ao ser atingida por melee, 🎚️ `kContraAtaqueChance` de contra-atacar com
+  /// um ataque melee (= ataque melee da defensora) no atacante.
+  contraAtaque,
+
+  /// Se fosse ser destruída, NÃO é: ressuscita com vida cheia. 1×/partida.
+  inabalavel,
 }
 
 /// Nome canônico (forma "bonita" com espaço/acento) — usado em eventos
@@ -82,12 +103,22 @@ String abilityKeywordLabel(AbilityKeyword k) {
       return 'Roubo de PV';
     case AbilityKeyword.investida:
       return 'Investida';
+    case AbilityKeyword.espinhos:
+      return 'Espinhos';
+    case AbilityKeyword.escudoEspelhado:
+      return 'Escudo Espelhado';
+    case AbilityKeyword.escudoSagrado:
+      return 'Escudo Sagrado';
+    case AbilityKeyword.contraAtaque:
+      return 'Contra-Ataque';
+    case AbilityKeyword.inabalavel:
+      return 'Inabalável';
   }
 }
 
 /// Canoniza uma string de habilidade vinda dos dados. Aceita variantes com e
 /// sem espaço/acento/caixa ("AtaqueDuplo", "Silencio", "roubo de pv"...).
-/// Retorna null se não for uma das 12 keywords runtime.
+/// Retorna null se não for uma keyword com runtime.
 AbilityKeyword? abilityKeywordFromString(String raw) =>
     _canonical[_fold(raw)];
 
@@ -129,4 +160,9 @@ const Map<String, AbilityKeyword> _canonical = {
   'cristaldedrenagem': AbilityKeyword.cristalDeDrenagem,
   'roubodepv': AbilityKeyword.rouboDePv,
   'investida': AbilityKeyword.investida,
+  'espinhos': AbilityKeyword.espinhos,
+  'escudoespelhado': AbilityKeyword.escudoEspelhado,
+  'escudosagrado': AbilityKeyword.escudoSagrado,
+  'contraataque': AbilityKeyword.contraAtaque,
+  'inabalavel': AbilityKeyword.inabalavel,
 };

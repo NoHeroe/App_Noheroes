@@ -52,6 +52,7 @@ class CreatureInPlay {
     this.bonusMaxHp = 0,
     this.inspirarBonus = 0,
     this.investidaBonus = 0,
+    this.inabalavelUsed = false,
   });
 
   final CreatureCard card;
@@ -73,6 +74,9 @@ class CreatureInPlay {
   /// Bônus temporário de ataque melee (Investida) — expira no fim do turno
   /// do oponente.
   final int investidaBonus;
+
+  /// Inabalável já foi usado nesta partida (revive 1×). Persiste entre golpes.
+  final bool inabalavelUsed;
 
   String get instanceId => card.id;
 
@@ -116,6 +120,17 @@ class CreatureInPlay {
       total += r.scaledArmor;
     }
     if (hasKeyword(AbilityKeyword.escudo)) total += kEscudoArmor;
+    if (hasKeyword(AbilityKeyword.escudoSagrado)) total += kEscudoSagradoArmor;
+    return total;
+  }
+
+  /// Armadura MÁGICA (reduz dano mágico): Escudo Espelhado + Escudo Sagrado.
+  int get magicArmor {
+    var total = 0;
+    if (hasKeyword(AbilityKeyword.escudoEspelhado)) {
+      total += kEscudoEspelhadoArmor;
+    }
+    if (hasKeyword(AbilityKeyword.escudoSagrado)) total += kEscudoSagradoArmor;
     return total;
   }
 
@@ -184,6 +199,7 @@ class CreatureInPlay {
     int? bonusMaxHp,
     int? inspirarBonus,
     int? investidaBonus,
+    bool? inabalavelUsed,
   }) {
     return CreatureInPlay(
       card: card,
@@ -193,6 +209,7 @@ class CreatureInPlay {
       bonusMaxHp: bonusMaxHp ?? this.bonusMaxHp,
       inspirarBonus: inspirarBonus ?? this.inspirarBonus,
       investidaBonus: investidaBonus ?? this.investidaBonus,
+      inabalavelUsed: inabalavelUsed ?? this.inabalavelUsed,
     );
   }
 }
