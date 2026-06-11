@@ -295,7 +295,7 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
             danger: true,
             cost: '+Pó ${(dis['dust'] as num).toInt()} '
                 '+${isRelic ? 'Runas' : 'Perg.'} ${(dis['mat'] as num).toInt()} '
-                '+Cristal 1',
+                '+Cristal 1 +Alma ${((dis['soul'] as num?) ?? 1).toInt()}',
             enabled: dis['can'] == true && !_busy,
             onTap: () async {
               if (!await _confirm('Desencantar carta',
