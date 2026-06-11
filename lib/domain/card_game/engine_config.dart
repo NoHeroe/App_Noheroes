@@ -93,6 +93,26 @@ const int kEscudoSagradoArmor = 1;
 /// Chance de Contra-Ataque ao ser atingida por melee (0..1). 🎚️
 const double kContraAtaqueChance = 0.5;
 
+// ── Lote 3a (status / DoT) — magnitudes 🎚️ calibráveis ───────────────────────
+
+/// Dano verdadeiro por ACÚMULO de Sangramento, por tick. 🎚️
+/// (3 acúmulos → 3 de dano/turno.)
+const int kSangramentoPerStack = 1;
+
+/// Duração (em turnos do dono) para a qual o Sangramento RESETA a cada novo
+/// acerto. Sem novo acerto, decai 1 turno por tick até expirar. 🎚️
+const int kSangramentoTurns = 2;
+
+/// Dano verdadeiro por turno do Veneno (sem duração-limite; não escala). 🎚️
+const int kVenenoPerTurn = 1;
+
+/// Cooldown (em turnos) da habilidade Atordoar: após atordoar, não atordoa de
+/// novo por este nº de turnos do dono. 🎚️
+const int kAtordoarCooldownTurns = 1;
+
+/// Chance de Enredar ao acertar um alvo com Voo (0..1). 🎚️
+const double kEnredarChance = 0.5;
+
 /// Bônus de ataque corpo a corpo de Inspirar (aliados, até o fim do turno). 🎚️
 const int kInspirarBonus = 1;
 

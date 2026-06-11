@@ -713,6 +713,17 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
           attackerSide: e.side,
           ability: e.ability,
         );
+      case StatusDamageResolved():
+        // DoT no início do turno: destaca a carta afetada sofrendo o dano.
+        return CombatHighlight(
+          attackerCardId: e.cardId,
+          targetCardId: e.cardId,
+          attackerSide: e.side,
+          targetSide: e.side,
+          amount: e.damage,
+          targetDied: e.targetDied,
+          ability: e.statusLabel,
+        );
       case NoCreaturePenaltyApplied():
       case StallLimitReached():
         return null;
@@ -739,6 +750,13 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
         return '${e.cardName} · ${e.ability}: ${e.detail}';
       case HealResolved():
         return '${e.healerName} curou ${e.targetName}: +${e.amount} PV.';
+      case StatusDamageResolved():
+        final b = StringBuffer(
+            '${e.cardName} sofreu ${e.damage} de ${e.statusLabel}');
+        b.write(e.targetDied
+            ? ' — morreu!'
+            : ' — restou ${e.targetHpAfter} PV.');
+        return b.toString();
       case NoCreaturePenaltyApplied():
         final who = e.side == state.playerSide ? 'Você terminou' : 'A IA terminou';
         final kind = e.wasCreature ? 'criatura' : 'relíquia';

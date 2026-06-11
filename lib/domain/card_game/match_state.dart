@@ -53,6 +53,12 @@ class CreatureInPlay {
     this.inspirarBonus = 0,
     this.investidaBonus = 0,
     this.inabalavelUsed = false,
+    this.bleedStacks = 0,
+    this.bleedTurns = 0,
+    this.poisoned = false,
+    this.stunned = false,
+    this.entangled = false,
+    this.atordoarCooldown = 0,
   });
 
   final CreatureCard card;
@@ -77,6 +83,42 @@ class CreatureInPlay {
 
   /// Inabalável já foi usado nesta partida (revive 1×). Persiste entre golpes.
   final bool inabalavelUsed;
+
+  // ── Lote 3a: status / DoT ───────────────────────────────────────────────
+  /// Acúmulos de Sangramento (dano/tick = acúmulos × `kSangramentoPerStack`).
+  final int bleedStacks;
+
+  /// Turnos restantes de Sangramento (reseta para `kSangramentoTurns` a cada
+  /// novo acerto; decai 1 por tick). 0 = sem sangramento.
+  final int bleedTurns;
+
+  /// Envenenada (DoT de `kVenenoPerTurn`/turno, sem duração; removida por cura).
+  final bool poisoned;
+
+  /// Atordoada: pula a PRÓXIMA Fase de Ataque dela (limpa ao pular).
+  final bool stunned;
+
+  /// Enredada: pula a próxima Fase de Ataque E não pode usar Voo enquanto durar
+  /// (limpa ao pular).
+  final bool entangled;
+
+  /// Cooldown da habilidade Atordoar DESTA criatura (atacante): >0 = não pode
+  /// atordoar ainda. Decai no início do turno do dono.
+  final int atordoarCooldown;
+
+  /// Tem DoT ativo (sangramento ou veneno)?
+  bool get hasDot => bleedStacks > 0 || poisoned;
+
+  /// Dano de DoT aplicado por tick (sangramento por acúmulos + veneno fixo).
+  int get dotDamage =>
+      bleedStacks * kSangramentoPerStack + (poisoned ? kVenenoPerTurn : 0);
+
+  /// Pula a Fase de Ataque dela neste turno (atordoada ou enredada).
+  bool get skipsAttack => stunned || entangled;
+
+  /// Pode evadir por Voo? Tem a keyword Voo E não está enredada (Enredar tira
+  /// o Voo enquanto dura).
+  bool get canFly => hasKeyword(AbilityKeyword.voo) && !entangled;
 
   String get instanceId => card.id;
 
@@ -200,6 +242,12 @@ class CreatureInPlay {
     int? inspirarBonus,
     int? investidaBonus,
     bool? inabalavelUsed,
+    int? bleedStacks,
+    int? bleedTurns,
+    bool? poisoned,
+    bool? stunned,
+    bool? entangled,
+    int? atordoarCooldown,
   }) {
     return CreatureInPlay(
       card: card,
@@ -210,6 +258,12 @@ class CreatureInPlay {
       inspirarBonus: inspirarBonus ?? this.inspirarBonus,
       investidaBonus: investidaBonus ?? this.investidaBonus,
       inabalavelUsed: inabalavelUsed ?? this.inabalavelUsed,
+      bleedStacks: bleedStacks ?? this.bleedStacks,
+      bleedTurns: bleedTurns ?? this.bleedTurns,
+      poisoned: poisoned ?? this.poisoned,
+      stunned: stunned ?? this.stunned,
+      entangled: entangled ?? this.entangled,
+      atordoarCooldown: atordoarCooldown ?? this.atordoarCooldown,
     );
   }
 }

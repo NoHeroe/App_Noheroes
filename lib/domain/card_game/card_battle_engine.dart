@@ -79,9 +79,16 @@ class CardBattleEngine {
       final inspirarB = inspired ? kInspirarBonus : 0;
       final investidaB =
           c.hasKeyword(AbilityKeyword.investida) ? kInvestidaBonus : 0;
-      if (c.inspirarBonus != inspirarB || c.investidaBonus != investidaB) {
-        lanes[i] =
-            c.copyWith(inspirarBonus: inspirarB, investidaBonus: investidaB);
+      // Cooldown de Atordoar decai 1 por turno do dono.
+      final newCd = c.atordoarCooldown > 0 ? c.atordoarCooldown - 1 : 0;
+      if (c.inspirarBonus != inspirarB ||
+          c.investidaBonus != investidaB ||
+          c.atordoarCooldown != newCd) {
+        lanes[i] = c.copyWith(
+          inspirarBonus: inspirarB,
+          investidaBonus: investidaB,
+          atordoarCooldown: newCd,
+        );
         changed = true;
       }
     }
@@ -427,8 +434,24 @@ class CardBattleEngine {
       ));
     }
 
+    // DoT (Sangramento/Veneno) ANTES da Fase de Ataque: dispara quando o dono
+    // da carta afetada clica "encerrar turno" (início do processamento deste
+    // endTurn), não durante as ações dele. Atinge as criaturas DESTE lado.
+    final beforeDot = events.length;
+    var state = _resolveStatusTicks(s, events);
+    record(state, beforeDot);
+    final winAfterDot = _checkVictory(state);
+    if (winAfterDot != null) {
+      final fin = state.copyWith(
+        phase: MatchPhase.fim,
+        winner: winAfterDot,
+        lastTurnEvents: List.unmodifiable(events),
+      );
+      return (finalState: fin, steps: steps);
+    }
+
     // Fase de Ataque automática (grava 1 step por ação de ataque/cura).
-    var state = _resolveAttackPhase(s, events, steps);
+    state = _resolveAttackPhase(state, events, steps);
     final winAfterAttack = _checkVictory(state);
     if (winAfterAttack != null) {
       final fin = state.copyWith(
@@ -478,6 +501,65 @@ class CardBattleEngine {
     return (finalState: fin, steps: steps);
   }
 
+  /// Rótulo do DoT ativo de uma criatura (para narração do tick).
+  String _dotLabel(CreatureInPlay c) {
+    if (c.bleedStacks > 0 && c.poisoned) return 'Sangramento+Veneno';
+    if (c.poisoned) return abilityKeywordLabel(AbilityKeyword.veneno);
+    return abilityKeywordLabel(AbilityKeyword.sangramento);
+  }
+
+  /// Tick de DoT (Sangramento/Veneno) nas criaturas do lado ATIVO, no início do
+  /// seu endTurn. Dano VERDADEIRO (ignora armadura). Sangramento decai 1 turno
+  /// por tick (e zera os acúmulos ao expirar); Veneno persiste. Inabalável ainda
+  /// salva de morte por DoT (consistente com os demais death sites).
+  MatchState _resolveStatusTicks(MatchState s, List<MatchEvent> events) {
+    final side = s.active;
+    final lanes = List<CreatureInPlay?>.from(side.lanes);
+    var anyDeath = false;
+    var changed = false;
+    for (var i = 0; i < lanes.length; i++) {
+      final c = lanes[i];
+      if (c == null || !c.isAlive || !c.hasDot) continue;
+      final dmg = c.dotDamage;
+      final label = _dotLabel(c);
+      final lethal = _resolveLethal(c, c.currentHp - dmg);
+      var updated = lethal.creature;
+      if (updated != null) {
+        // Decai Sangramento (Veneno não tem duração).
+        final newBleedTurns = c.bleedTurns > 0 ? c.bleedTurns - 1 : 0;
+        updated = updated.copyWith(
+          bleedTurns: newBleedTurns,
+          bleedStacks: newBleedTurns == 0 ? 0 : c.bleedStacks,
+        );
+      }
+      lanes[i] = updated;
+      changed = true;
+      if (lethal.died) anyDeath = true;
+      events.add(StatusDamageResolved(
+        side: side.id,
+        cardId: c.instanceId,
+        cardName: c.card.nome,
+        statusLabel: label,
+        damage: dmg,
+        targetHpAfter: updated?.currentHp ?? 0,
+        targetDied: lethal.died,
+      ));
+      if (lethal.revived) {
+        events.add(AbilityTriggered(
+          side: side.id,
+          cardId: c.instanceId,
+          cardName: c.card.nome,
+          ability: abilityKeywordLabel(AbilityKeyword.inabalavel),
+          detail: 'resistiu à destruição (DoT) e voltou com vida cheia',
+        ));
+      }
+    }
+    if (!changed) return s;
+    var newSide = side.copyWith(lanes: lanes);
+    if (anyDeath) newSide = _advanceLanes(newSide);
+    return s.withSide(side.id, newSide);
+  }
+
   /// Resolve a Fase de Ataque do lado ativo contra o oponente — combate
   /// POSICIONAL fiel a `tipos_de_dano.md`:
   /// - `corpoACorpo` só ataca da linha de frente (Alcance libera a retaguarda;
@@ -512,7 +594,36 @@ class CardBattleEngine {
     // Ordem de lane (frente→retaguarda), fixada no início da fase.
     final order = attacker.creaturesInPlay.map((c) => c.instanceId).toList();
 
+    // Atordoamento / Enredamento: criaturas presas PULAM esta Fase de Ataque e
+    // limpam o status (Enredar devolve o Voo ao limpar). Narrado num passo.
+    final skipped = <String>{};
+    {
+      final lanes = List<CreatureInPlay?>.from(attacker.lanes);
+      var changed = false;
+      for (var i = 0; i < lanes.length; i++) {
+        final c = lanes[i];
+        if (c == null || !c.isAlive || !c.skipsAttack) continue;
+        skipped.add(c.instanceId);
+        events.add(AbilityTriggered(
+          side: attacker.id,
+          cardId: c.instanceId,
+          cardName: c.card.nome,
+          ability: c.stunned
+              ? abilityKeywordLabel(AbilityKeyword.atordoar)
+              : abilityKeywordLabel(AbilityKeyword.enredar),
+          detail: 'presa: pulou a Fase de Ataque',
+        ));
+        lanes[i] = c.copyWith(stunned: false, entangled: false);
+        changed = true;
+      }
+      if (changed) {
+        attacker = attacker.copyWith(lanes: lanes);
+        snapPre(attacker, defender); // flush dos eventos de "presa" num passo.
+      }
+    }
+
     for (final attackerId in order) {
+      if (skipped.contains(attackerId)) continue; // presa neste turno.
       // Sem alvos → fase termina (já é vitória de fato).
       if (!defender.hasCreatureInPlay) break;
 
@@ -707,6 +818,70 @@ class CardBattleEngine {
       targetDied: died,
     ));
 
+    // ---- Lote 3a: status aplicados pelo ATACANTE ao acertar (alvo vivo) ----
+    final survivor = defLanes[targetLaneIdx];
+    if (survivor != null) {
+      var t = survivor;
+      // Sangramento: só dano físico; +1 acúmulo e reseta a duração.
+      if (physical && attacker.hasKeyword(AbilityKeyword.sangramento)) {
+        t = t.copyWith(
+          bleedStacks: t.bleedStacks + 1,
+          bleedTurns: kSangramentoTurns,
+        );
+        events.add(AbilityTriggered(
+          side: atkSide.id,
+          cardId: attacker.instanceId,
+          cardName: attacker.card.nome,
+          ability: abilityKeywordLabel(AbilityKeyword.sangramento),
+          detail: '${t.bleedStacks} acúmulo(s) em ${t.card.nome}',
+        ));
+      }
+      // Veneno: qualquer acerto; aplica se ainda não envenenada.
+      if (attacker.hasKeyword(AbilityKeyword.veneno) && !t.poisoned) {
+        t = t.copyWith(poisoned: true);
+        events.add(AbilityTriggered(
+          side: atkSide.id,
+          cardId: attacker.instanceId,
+          cardName: attacker.card.nome,
+          ability: abilityKeywordLabel(AbilityKeyword.veneno),
+          detail: 'envenenou ${t.card.nome}',
+        ));
+      }
+      // Atordoar: só melee, 100% ao acertar, respeitando o cooldown da atacante.
+      if (type == DamageType.corpoACorpo &&
+          attacker.hasKeyword(AbilityKeyword.atordoar) &&
+          attacker.atordoarCooldown == 0 &&
+          !t.stunned) {
+        t = t.copyWith(stunned: true);
+        // +1: o decremento do início do próximo turno do dono ainda bloqueia
+        // aquela Fase de Ataque (net: pula `kAtordoarCooldownTurns` turno).
+        attacker =
+            attacker.copyWith(atordoarCooldown: kAtordoarCooldownTurns + 1);
+        events.add(AbilityTriggered(
+          side: atkSide.id,
+          cardId: attacker.instanceId,
+          cardName: attacker.card.nome,
+          ability: abilityKeywordLabel(AbilityKeyword.atordoar),
+          detail: 'atordoou ${t.card.nome}',
+        ));
+      }
+      // Enredar: só alvo com Voo; chance; remove o Voo e prende.
+      if (attacker.hasKeyword(AbilityKeyword.enredar) &&
+          t.canFly &&
+          !t.entangled &&
+          s.rng.nextDouble() < kEnredarChance) {
+        t = t.copyWith(entangled: true);
+        events.add(AbilityTriggered(
+          side: atkSide.id,
+          cardId: attacker.instanceId,
+          cardName: attacker.card.nome,
+          ability: abilityKeywordLabel(AbilityKeyword.enredar),
+          detail: 'enredou ${t.card.nome} (perdeu Voo, pula o próximo ataque)',
+        ));
+      }
+      if (!identical(t, survivor)) defLanes[targetLaneIdx] = t;
+    }
+
     // ---- Roubo de PV: ao ACERTAR (dano > 0), +PV atual e máx ----
     if (damage > 0 && attacker.hasKeyword(AbilityKeyword.rouboDePv)) {
       attacker = attacker.copyWith(
@@ -897,7 +1072,7 @@ class CardBattleEngine {
   /// por seed).
   bool _rollEvade(MatchState s, CreatureInPlay attacker, CreatureInPlay target,
       DamageType type) {
-    if (!target.hasKeyword(AbilityKeyword.voo)) return false;
+    if (!target.canFly) return false; // sem Voo ou enredada (Voo removido).
     if (attacker.hasKeyword(AbilityKeyword.voo)) return false;
     final double chance;
     switch (type) {
@@ -1024,8 +1199,25 @@ class CardBattleEngine {
       amount: amount,
     ));
 
+    // Cura LIMPA DoT (Sangramento e Veneno) do alvo (regra do CEO).
+    final cleansed = target.hasDot;
+    if (cleansed) {
+      events.add(AbilityTriggered(
+        side: side.id,
+        cardId: healer.instanceId,
+        cardName: healer.card.nome,
+        ability: 'Cura',
+        detail: 'limpou os efeitos de ${target.card.nome}',
+      ));
+    }
+
     final newLanes = List<CreatureInPlay?>.from(side.lanes);
-    newLanes[laneIdx] = target.copyWith(currentHp: healed);
+    newLanes[laneIdx] = target.copyWith(
+      currentHp: healed,
+      bleedStacks: 0,
+      bleedTurns: 0,
+      poisoned: false,
+    );
     return side.copyWith(lanes: newLanes);
   }
 

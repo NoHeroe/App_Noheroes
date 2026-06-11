@@ -159,6 +159,35 @@ class NoCreaturePenaltyApplied extends MatchEvent {
       '[${wasCreature ? 'criatura' : 'relíquia'}])';
 }
 
+/// Tick de DoT (Sangramento/Veneno) no início do turno do dono da carta
+/// afetada. `statusLabel` = "Sangramento" / "Veneno"; `damage` = dano verdadeiro
+/// aplicado; `targetHpAfter` = HP após (0 se morreu).
+class StatusDamageResolved extends MatchEvent {
+  const StatusDamageResolved({
+    required this.side,
+    required this.cardId,
+    required this.cardName,
+    required this.statusLabel,
+    required this.damage,
+    required this.targetHpAfter,
+    required this.targetDied,
+  });
+
+  /// Lado DONO da carta que sofreu o DoT.
+  final SideId side;
+  final String cardId;
+  final String cardName;
+  final String statusLabel;
+  final int damage;
+  final int targetHpAfter;
+  final bool targetDied;
+
+  @override
+  String toString() =>
+      'StatusDamageResolved(${side.name}:$cardName [$statusLabel] '
+      '-$damage HP, hpAfter=$targetHpAfter${targetDied ? ', MORREU' : ''})';
+}
+
 /// Trava anti-stall (turno limite) atingida: partida encerrada por desempate.
 class StallLimitReached extends MatchEvent {
   const StallLimitReached({required this.winner});

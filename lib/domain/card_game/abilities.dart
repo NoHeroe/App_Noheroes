@@ -11,7 +11,8 @@
 /// e o engine as ignora silenciosamente.
 library;
 
-/// As 17 habilidades com runtime no engine (12 originais + 5 do Lote 2).
+/// As 21 habilidades com runtime no engine (12 originais + 5 do Lote 2 + 4 do
+/// Lote 3a de status/DoT).
 enum AbilityKeyword {
   /// Redireciona ataques à distância/mágicos inimigos para esta criatura.
   provocar,
@@ -73,6 +74,29 @@ enum AbilityKeyword {
 
   /// Se fosse ser destruída, NÃO é: ressuscita com vida cheia. 1×/partida.
   inabalavel,
+
+  // ── Lote 3a (status / DoT) ────────────────────────────────────────────────
+
+  /// Ao ACERTAR dano físico, aplica/renova Sangramento no alvo: +1 acúmulo e a
+  /// duração reseta para 🎚️ `kSangramentoTurns`. No início do turno do DONO da
+  /// carta sangrando (ao clicar "encerrar turno"), ela sofre dano verdadeiro =
+  /// acúmulos × 🎚️ `kSangramentoPerStack`; depois −1 turno (decai sozinho).
+  /// Curar a carta remove o efeito.
+  sangramento,
+
+  /// Ao ACERTAR, aplica Veneno no alvo: dano verdadeiro de 🎚️ `kVenenoPerTurn`
+  /// por turno do dono (mesmo tick do Sangramento), SEM duração-limite (persiste
+  /// até morrer ou ser CURADA). Não escala com acúmulos.
+  veneno,
+
+  /// Ao ACERTAR corpo a corpo (100%), atordoa o alvo: ele pula a PRÓXIMA Fase de
+  /// Ataque dele. A habilidade tem cooldown de 🎚️ `kAtordoarCooldownTurns` turno
+  /// (não atordoa em turnos seguidos).
+  atordoar,
+
+  /// Ao ACERTAR um alvo com Voo (🎚️ `kEnredarChance`), enreda: remove o Voo e
+  /// prende — o alvo pula a próxima Fase de Ataque dele. Só afeta alvos voadores.
+  enredar,
 }
 
 /// Nome canônico (forma "bonita" com espaço/acento) — usado em eventos
@@ -113,6 +137,14 @@ String abilityKeywordLabel(AbilityKeyword k) {
       return 'Contra-Ataque';
     case AbilityKeyword.inabalavel:
       return 'Inabalável';
+    case AbilityKeyword.sangramento:
+      return 'Sangramento';
+    case AbilityKeyword.veneno:
+      return 'Veneno';
+    case AbilityKeyword.atordoar:
+      return 'Atordoar';
+    case AbilityKeyword.enredar:
+      return 'Enredar';
   }
 }
 
@@ -165,4 +197,8 @@ const Map<String, AbilityKeyword> _canonical = {
   'escudosagrado': AbilityKeyword.escudoSagrado,
   'contraataque': AbilityKeyword.contraAtaque,
   'inabalavel': AbilityKeyword.inabalavel,
+  'sangramento': AbilityKeyword.sangramento,
+  'veneno': AbilityKeyword.veneno,
+  'atordoar': AbilityKeyword.atordoar,
+  'enredar': AbilityKeyword.enredar,
 };
