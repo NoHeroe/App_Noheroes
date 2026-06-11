@@ -100,21 +100,18 @@ class _PackRevealOverlayState extends State<PackRevealOverlay> {
               ),
             ),
           ),
-          // Carta central animada (entra escalando + brilho), por índice.
+          // Carta central — entrada por escala (SEMPRE visível; sem fadeIn que
+          // poderia travar a carta em opacity 0 ~ "loading infinito").
           Center(
-            child: _cardHero(entry, cardW, glow)
-                .animate(key: ValueKey(_index))
-                .scale(
-                  begin: const Offset(0.6, 0.6),
-                  end: const Offset(1, 1),
-                  duration: 360.ms,
-                  curve: Curves.easeOutBack,
-                )
-                .fadeIn(duration: 220.ms)
-                .shimmer(
-                    delay: 240.ms,
-                    duration: 700.ms,
-                    color: glow.withValues(alpha: 0.55)),
+            child: TweenAnimationBuilder<double>(
+              key: ValueKey(_index),
+              tween: Tween(begin: 0.86, end: 1.0),
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutBack,
+              builder: (_, scale, child) =>
+                  Transform.scale(scale: scale, child: child),
+              child: _cardHero(entry, cardW, glow),
+            ),
           ),
           // Contador "x / n" no topo.
           Positioned(

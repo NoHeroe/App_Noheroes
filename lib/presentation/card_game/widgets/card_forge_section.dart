@@ -66,6 +66,8 @@ class _CardForgeSectionState extends ConsumerState<CardForgeSection> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
+        _resourcePanel(n),
+        const SizedBox(height: 14),
         _header('FORJAR EMBLEMA',
             '10×nível Lascas + 2 Essências + 100×nível Poeira → 1 Emblema'),
         const SizedBox(height: 8),
@@ -100,6 +102,62 @@ class _CardForgeSectionState extends ConsumerState<CardForgeSection> {
           const SizedBox(height: 10),
         ],
       ],
+    );
+  }
+
+  /// Painel "SEUS RECURSOS" — visibilidade dos materiais do card game.
+  Widget _resourcePanel(int Function(String) n) {
+    Widget chip(IconData ic, String label, int v) => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            color: const Color(0x33100C15),
+            border: Border.all(color: AppColors.borderViolet),
+          ),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(ic, size: 13, color: AppColors.purpleLt),
+            const SizedBox(width: 5),
+            Text('$label ',
+                style: GoogleFonts.roboto(fontSize: 10.5, color: AppColors.txtMut)),
+            Text('$v',
+                style: GoogleFonts.robotoMono(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.goldLt)),
+          ]),
+        );
+    const rLetters = {'comum': 'C', 'rara': 'R', 'epica': 'É', 'lendaria': 'L'};
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: const Color(0x22100C15),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('SEUS RECURSOS',
+              style: GoogleFonts.cinzelDecorative(
+                  fontSize: 12, color: AppColors.goldLt, letterSpacing: 1.5)),
+          const SizedBox(height: 8),
+          Wrap(spacing: 7, runSpacing: 7, children: [
+            chip(Icons.blur_on, 'Poeira', n('stardust')),
+            chip(Icons.layers_outlined, 'Lasca C', n('card_shard')),
+            chip(Icons.layers_outlined, 'Lasca R', n('relic_shard')),
+            for (final r in _rarities)
+              chip(Icons.auto_awesome, 'Ess.C·${rLetters[r]}', n('card_soul_$r')),
+            for (final r in _rarities)
+              chip(Icons.auto_awesome, 'Ess.R·${rLetters[r]}', n('relic_soul_$r')),
+            for (final r in _rarities)
+              chip(Icons.military_tech_outlined, 'Embl.C·${rLetters[r]}',
+                  n('card_scroll_$r')),
+            for (final r in _rarities)
+              chip(Icons.military_tech_outlined, 'Embl.R·${rLetters[r]}',
+                  n('relic_runes_$r')),
+          ]),
+        ],
+      ),
     );
   }
 

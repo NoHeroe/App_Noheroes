@@ -184,7 +184,16 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
         const SizedBox(height: 8),
         _resourceStrip(info),
         const SizedBox(height: 12),
-        if (owned) _ownedBlock(info, isRelic) else _craftBlock(info),
+        if (owned) ...[
+          _ownedBlock(info, isRelic),
+          // Criar também aparece pra carta possuída → gera +1 cópia (combustível
+          // de evolução). Antes só aparecia pra carta não-possuída.
+          if (info['craft'] != null) ...[
+            const SizedBox(height: 8),
+            _craftBlock(info, asCopy: true),
+          ],
+        ] else
+          _craftBlock(info),
         if (player != null && (info['player_level'] as num? ?? 1) < 3)
           _lockNote('Criação e desencante abrem no Nível 3 · Aprimorar no Nível 5'),
       ],
@@ -231,8 +240,8 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
     );
   }
 
-  // ── Carta NÃO possuída → Criar ───────────────────────────────────────
-  Widget _craftBlock(Map<String, dynamic> info) {
+  // ── Criar carta (não-possuída) ou Criar cópia (possuída → +1 cópia) ──
+  Widget _craftBlock(Map<String, dynamic> info, {bool asCopy = false}) {
     final craft = info['craft'] as Map?;
     if (craft == null) {
       return _infoLine('Esta carta não pode ser criada.');
@@ -244,16 +253,16 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
     final can = craft['can'] == true;
     final faccaoStr = faccao > 0 ? ' · $faccao Ess. Facção' : '';
     return _actionButton(
-      label: 'CRIAR',
+      label: asCopy ? 'CRIAR CÓPIA' : 'CRIAR',
       icon: Icons.auto_fix_high,
       cost: 'Poeira $dust · Cristal $crystal · $soul Essência$faccaoStr',
       enabled: can && !_busy,
       onTap: () async {
-        if (!await _confirm('Criar carta',
+        if (!await _confirm(asCopy ? 'Criar cópia' : 'Criar carta',
             'Gastar Poeira $dust + Cristal $crystal + $soul Essência'
                 '${faccao > 0 ? ' + $faccao Essência de Facção' : ''} '
-                'para criar esta carta no Nível 1?',
-            'Criar')) {
+                '${asCopy ? 'para gerar +1 cópia desta carta?' : 'para criar esta carta no Nível 1?'}',
+            asCopy ? 'Criar cópia' : 'Criar')) {
           return;
         }
         final p = ref.read(currentPlayerProvider)!;
@@ -261,7 +270,7 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
             () => ref
                 .read(cardEconomyServiceProvider)
                 .create(p.id, widget.cardId, concept: widget.concept),
-            'Carta criada!');
+            asCopy ? '+1 cópia criada!' : 'Carta criada!');
       },
     );
   }
