@@ -429,14 +429,19 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
             if (_boot == _BootStatus.ready && ui.match != null && !ui.isFinished)
               ...[
               Align(
-                alignment: const Alignment(-1, -0.04),
+                alignment: const Alignment(-1, -0.16),
                 child: Padding(
                   padding: const EdgeInsets.only(left: 6),
                   child: _sideBackButton(),
                 ),
               ),
+              // Turno no MEIO, entre desistir (esq) e encerrar (dir).
               Align(
-                alignment: const Alignment(1, -0.04),
+                alignment: const Alignment(0, -0.16),
+                child: _turnIndicator(ui),
+              ),
+              Align(
+                alignment: const Alignment(1, -0.16),
                 child: Padding(
                   padding: const EdgeInsets.only(right: 6),
                   child: _endTurnButton(ui),
@@ -515,9 +520,8 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
             ],
           ),
         ),
-        _crystalBar(ui, player),
-        // Mão + menu de ação SOBREPOSTO: o menu (cancelar/sacrificar) flutua
-        // sobre o topo do leque sem empurrar o HUD (aparece de forma sutil).
+        // Mão (sobe um pouco) + menu de ação SOBREPOSTO: o menu flutua sobre o
+        // topo do leque sem empurrar o HUD.
         Stack(
           clipBehavior: Clip.none,
           children: [
@@ -537,70 +541,104 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
               ),
           ],
         ),
+        // HUD inferior ornamentado (moldura): monstros (esq) · cristal (centro)
+        // · itens (dir). Centralizado no rodapé da página.
+        _bottomHud(ui, player),
       ],
     );
   }
 
-  /// Barra inferior (fora do conjunto das cartas): cristais em destaque + turno.
-  Widget _crystalBar(PveMatchUiState ui, BoardSide player) {
+  /// Indicador de TURNO no centro da banda (entre desistir e encerrar). Na vez
+  /// da IA, mostra um spinner.
+  Widget _turnIndicator(PveMatchUiState ui) {
     final turn = ui.match?.turn ?? 0;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 2, 12, 4),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.mp.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.mp.withValues(alpha: 0.55)),
-            ),
+    final botPlaying = ui.phase == PveMatchPhase.botTurn ||
+        ui.phase == PveMatchPhase.resolving;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('TURNO',
+            style: GoogleFonts.cinzelDecorative(
+                fontSize: 8, color: AppColors.textMuted, letterSpacing: 2)),
+        Text('$turn',
+            style: GoogleFonts.cinzelDecorative(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary)),
+        if (botPlaying)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.diamond, size: 16, color: AppColors.mp),
-                const SizedBox(width: 6),
-                Text('${player.crystals}',
-                    style: GoogleFonts.robotoMono(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary)),
+                const SizedBox(
+                  width: 9,
+                  height: 9,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppColors.purple)),
+                ),
+                const SizedBox(width: 4),
+                Text('IA',
+                    style: GoogleFonts.roboto(
+                        fontSize: 9, color: AppColors.textMuted)),
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          // Quantos monstros e itens o jogador ainda tem disponíveis (mão+deck).
-          _statChip(Icons.pets_outlined, '${player.availableCreatureCount}',
-              AppColors.conceptChrysalis),
-          const SizedBox(width: 10),
-          _statChip(Icons.auto_awesome, '${player.availableRelicCount}',
-              AppColors.gold),
-          const Spacer(),
-          if (ui.phase == PveMatchPhase.botTurn ||
-              ui.phase == PveMatchPhase.resolving)
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: Row(
-                children: [
-                  const SizedBox(
-                    width: 12,
-                    height: 12,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(AppColors.purple)),
-                  ),
-                  const SizedBox(width: 6),
-                  Text('IA jogando…',
-                      style: GoogleFonts.roboto(
-                          fontSize: 10, color: AppColors.textMuted)),
-                ],
-              ),
-            ),
-          Text('Turno $turn',
-              style: GoogleFonts.roboto(
-                  fontSize: 10, color: AppColors.textMuted)),
-        ],
+      ],
+    );
+  }
+
+  /// HUD inferior com MOLDURA refinada: contador de monstros (esq, branco) ·
+  /// cristais facetados (centro, igual ao da carta) · itens (dir, branco).
+  Widget _bottomHud(PveMatchUiState ui, BoardSide player) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 2, 20, 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          // Moldura "de quadro": dupla borda dourada + fundo escuro + brilho.
+          color: const Color(0xFF15101E),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: AppColors.gold.withValues(alpha: 0.6), width: 2),
+          boxShadow: [
+            BoxShadow(
+                color: AppColors.gold.withValues(alpha: 0.12), blurRadius: 10),
+          ],
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(11),
+            border: Border.all(
+                color: AppColors.gold.withValues(alpha: 0.25), width: 1),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _hudCounter(Icons.pets, '${player.availableCreatureCount}'),
+              CrystalGem(value: player.crystals, size: 40),
+              _hudCounter(Icons.auto_awesome, '${player.availableRelicCount}'),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+
+  /// Contador branco (monstros / itens) do HUD inferior.
+  Widget _hudCounter(IconData icon, String value) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: Colors.white),
+        const SizedBox(width: 5),
+        Text(value,
+            style: GoogleFonts.cinzelDecorative(
+                fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+      ],
     );
   }
 
@@ -1107,6 +1145,19 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
+  /// Glifo do tipo de dano em BRANCO (físico = espada custom; demais = ícone
+  /// Material branco). Diferencia pela FORMA, não pela cor.
+  Widget _typeGlyph(DamageType type, {double size = 12}) {
+    if (type == DamageType.corpoACorpo) {
+      return SizedBox(
+        width: size,
+        height: size,
+        child: const CustomPaint(painter: _SwordGlyphPainter(Colors.white)),
+      );
+    }
+    return Icon(damageTypeIcon(type), size: size, color: Colors.white);
+  }
+
   /// Cor do PV no tabuleiro: branco = vida cheia (no original); vermelho =
   /// abaixo do total; verde = acima da vida original (buffada).
   Color _boardHpColor(CreatureInPlay c) {
@@ -1158,16 +1209,14 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       children: [
         Row(
           children: [
-            // Ícone + cor do tipo de dano coladas no ATK (diferencia
-            // melee/flecha/mágico/vitalismo de relance).
-            Icon(damageTypeIcon(c.effectiveDamageType),
-                size: 10, color: damageTypeColor(c.effectiveDamageType)),
-            const SizedBox(width: 2),
+            // Ícone BRANCO do tipo (físico = espada); diferencia pela forma.
+            _typeGlyph(c.effectiveDamageType, size: 12),
+            const SizedBox(width: 3),
             Text('${c.effectiveAtk}',
                 style: GoogleFonts.robotoMono(
-                    fontSize: 10,
+                    fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: damageTypeColor(c.effectiveDamageType))),
+                    color: AppColors.gold)),
             const Spacer(),
             if (c.armor > 0) ...[
               const Icon(Icons.shield, size: 8, color: AppColors.textSecondary),
@@ -1384,15 +1433,14 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     final Widget footer = creature != null
         ? Row(
             children: [
-              // Ícone + cor do tipo de dano colados no ATK (diferencia o tipo).
-              Icon(damageTypeIcon(creature.damageType),
-                  size: 10, color: damageTypeColor(creature.damageType)),
-              const SizedBox(width: 2),
+              // Ícone BRANCO do tipo (físico = espada).
+              _typeGlyph(creature.damageType, size: 12),
+              const SizedBox(width: 3),
               Text('${creature.atk}',
                   style: GoogleFonts.robotoMono(
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: damageTypeColor(creature.damageType))),
+                      color: AppColors.gold)),
               const Spacer(),
               Text('${creature.hp}',
                   style: GoogleFonts.robotoMono(
@@ -1845,6 +1893,44 @@ class _CrossedSwords extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       CustomPaint(size: Size.square(size), painter: _SwordsPainter(color));
+}
+
+/// Glifo de ESPADA única (vertical, ponta pra cima) — ícone do ATK físico.
+class _SwordGlyphPainter extends CustomPainter {
+  const _SwordGlyphPainter(this.color);
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    final cx = w / 2;
+    final fill = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    final line = Paint()
+      ..color = color
+      ..strokeWidth = w * 0.11
+      ..strokeCap = StrokeCap.round;
+
+    // Lâmina: ponta no topo, base na guarda.
+    final blade = Path()
+      ..moveTo(cx, h * 0.04)
+      ..lineTo(cx - w * 0.11, h * 0.20)
+      ..lineTo(cx - w * 0.11, h * 0.60)
+      ..lineTo(cx + w * 0.11, h * 0.60)
+      ..lineTo(cx + w * 0.11, h * 0.20)
+      ..close();
+    canvas.drawPath(blade, fill);
+    // Guarda (cross-guard).
+    canvas.drawLine(Offset(w * 0.16, h * 0.63), Offset(w * 0.84, h * 0.63), line);
+    // Punho.
+    canvas.drawLine(Offset(cx, h * 0.63), Offset(cx, h * 0.88), line);
+    // Pomo.
+    canvas.drawCircle(Offset(cx, h * 0.92), w * 0.09, fill);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SwordGlyphPainter old) => old.color != color;
 }
 
 class _SwordsPainter extends CustomPainter {

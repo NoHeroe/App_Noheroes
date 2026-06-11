@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -56,7 +57,6 @@ class GameCardFace extends StatelessWidget {
   final Widget? cornerBadge;
 
   Color get _concept => conceptColor(concepts);
-  Color get _rarity => rarityColor(rarity);
 
   @override
   Widget build(BuildContext context) {
@@ -124,47 +124,28 @@ class GameCardFace extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Nome no TOPO da carta (logo abaixo do custo), menor, com
-                  // fundo escuro p/ legibilidade sobre a arte.
+                  // Nome no TOPO da carta, menor, com leve fundo escuro p/
+                  // legibilidade sobre a arte. (Raridade saiu daqui → bandeira
+                  // pendurada na borda esquerda.)
                   Positioned(
-                    top: 12,
-                    left: 3,
-                    right: 3,
+                    top: 6,
+                    left: 12,
+                    right: 6,
                     child: Container(
                       padding:
                           const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0B0810).withValues(alpha: 0.55),
+                        color: const Color(0xFF0B0810).withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(5),
                       ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 7,
-                            height: 7,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: _rarity,
-                              boxShadow: [
-                                BoxShadow(
-                                    color: _rarity.withValues(alpha: 0.6),
-                                    blurRadius: 4),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.cinzelDecorative(
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary),
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.cinzelDecorative(
+                            fontSize: 7,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary),
                       ),
                     ),
                   ),
@@ -212,11 +193,14 @@ class GameCardFace extends StatelessWidget {
       alignment: Alignment.topCenter,
       children: [
         card,
+        // Bandeira de RARIDADE pendurada na borda esquerda (mini banner virado
+        // pra baixo). Lendária = RGB animado.
+        Positioned(top: 6, left: -1, child: _RarityPennant(rarity: rarity)),
         Positioned(
           top: -12, // metade dos 24px do diamante acima da borda
           left: 0,
           right: 0,
-          child: Center(child: _CostDiamond(cost)),
+          child: Center(child: CrystalGem(value: cost)),
         ),
       ],
     );
@@ -293,21 +277,23 @@ Color damageTypeColor(DamageType t) {
   }
 }
 
-/// Losango de custo (top-left) — idêntico ao da coleção.
-class _CostDiamond extends StatelessWidget {
-  const _CostDiamond(this.cost);
-  final int cost;
+/// Cristal facetado com um número (custo da carta OU contador de cristais do
+/// HUD). `size` escala tudo. Mesma DNA visual nos dois usos (pedido do CEO).
+class CrystalGem extends StatelessWidget {
+  const CrystalGem({super.key, required this.value, this.size = 24});
+  final int value;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     return ClipPath(
       clipper: _DiamondClipper(),
       child: Container(
-        width: 24,
-        height: 24,
+        width: size,
+        height: size,
         alignment: Alignment.center,
         decoration: const BoxDecoration(
-          // Gradiente com mais profundidade (claro→médio→escuro) pra dar volume.
+          // Gradiente com profundidade (claro→médio→escuro) pra dar volume.
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -318,14 +304,15 @@ class _CostDiamond extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // Facetas de cristal (linhas do centro aos vértices + faceta clara).
             const Positioned.fill(child: CustomPaint(painter: _CrystalFacets())),
-            Text('$cost',
+            Text('$value',
                 style: GoogleFonts.cinzelDecorative(
-                    fontSize: 12,
+                    fontSize: size * 0.5,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
-                    shadows: const [Shadow(color: Color(0xAA1A2050), blurRadius: 2)])),
+                    shadows: const [
+                      Shadow(color: Color(0xAA1A2050), blurRadius: 2)
+                    ])),
           ],
         ),
       ),
@@ -380,6 +367,69 @@ class _CrystalFacets extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _CrystalFacets old) => false;
+}
+
+/// Bandeira de raridade pendurada na borda esquerda (mini banner virado pra
+/// baixo). Lendária = RGB animado (hue cíclico).
+class _RarityPennant extends StatelessWidget {
+  const _RarityPennant({required this.rarity});
+  final Rarity rarity;
+
+  @override
+  Widget build(BuildContext context) {
+    if (rarity == Rarity.lendaria) {
+      return const SizedBox(width: 12, height: 28)
+          .animate(onPlay: (c) => c.repeat())
+          .custom(
+            duration: 2600.ms,
+            builder: (context, value, _) => _banner(
+                HSVColor.fromAHSV(1, (value * 360) % 360, 0.85, 1).toColor()),
+          );
+    }
+    return _banner(rarityColor(rarity));
+  }
+
+  Widget _banner(Color color) {
+    return ClipPath(
+      clipper: _PennantClipper(),
+      child: Container(
+        width: 12,
+        height: 28,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color.lerp(color, Colors.white, 0.35)!,
+              color,
+              Color.lerp(color, Colors.black, 0.25)!,
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 4),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PennantClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final w = size.width, h = size.height;
+    const notch = 6.0;
+    return Path()
+      ..moveTo(0, 0)
+      ..lineTo(w, 0)
+      ..lineTo(w, h)
+      ..lineTo(w / 2, h - notch)
+      ..lineTo(0, h)
+      ..close();
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> old) => false;
 }
 
 class _DiamondClipper extends CustomClipper<Path> {
