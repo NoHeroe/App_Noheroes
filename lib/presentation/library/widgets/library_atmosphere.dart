@@ -36,7 +36,9 @@ class _LibraryAtmosphereState extends State<LibraryAtmosphere>
         x: rnd.nextDouble(),
         size: 1.5 + rnd.nextDouble() * 1.5,
         phase: rnd.nextDouble(),
-        speed: 0.55 + rnd.nextDouble() * 0.9,
+        // Inteiro (1 ou 2 subidas por ciclo) — garante que (t*speed+phase)%1
+        // volte ao mesmo valor no reinício do controller, sem flick no loop.
+        speed: (rnd.nextInt(2) + 1).toDouble(),
         drift: (rnd.nextDouble() - 0.5) * 0.06,
       );
     });

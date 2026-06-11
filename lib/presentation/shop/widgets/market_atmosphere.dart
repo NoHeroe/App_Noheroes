@@ -39,7 +39,8 @@ class _MarketAtmosphereState extends State<MarketAtmosphere>
         x: rnd.nextDouble(),
         size: 1.4 + rnd.nextDouble() * 1.6,
         phase: rnd.nextDouble(),
-        speed: 0.5 + rnd.nextDouble() * 0.9,
+        // Inteiro (1 ou 2 subidas por ciclo) — sem flick no reinício do loop.
+        speed: (rnd.nextInt(2) + 1).toDouble(),
         drift: (rnd.nextDouble() - 0.5) * 0.07,
       );
     });

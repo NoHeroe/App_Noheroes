@@ -39,7 +39,8 @@ class _SanctuaryAtmosphereState extends State<SanctuaryAtmosphere>
         x: rnd.nextDouble(),
         size: 1.5 + rnd.nextDouble() * 1.5,
         phase: rnd.nextDouble(),
-        speed: 0.55 + rnd.nextDouble() * 0.9, // fração da altura por ciclo
+        // Inteiro (1 ou 2 subidas por ciclo) — sem flick no reinício do loop.
+        speed: (rnd.nextInt(2) + 1).toDouble(),
         drift: (rnd.nextDouble() - 0.5) * 0.06,
       );
     });
