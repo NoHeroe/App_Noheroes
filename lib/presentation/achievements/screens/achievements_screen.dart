@@ -9,6 +9,7 @@ import '../../../data/database/daos/player_dao.dart';
 import '../../../domain/models/achievement_definition.dart';
 import '../../../domain/models/player_daily_mission_stats.dart';
 import '../../shared/widgets/app_snack.dart';
+import '../../shared/widgets/nh_back_button.dart';
 import '../utils/achievement_progress.dart';
 import '../utils/reward_display_helper.dart';
 import '../widgets/achievement_card.dart';
@@ -165,22 +166,15 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
   }
 
   Widget _buildHeader() {
+    // Sem título no topo — só o botão de voltar padrão.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Row(
         children: [
-          GestureDetector(
+          NhBackButton(
             key: const ValueKey('achievements-back'),
             onTap: () => context.go('/sanctuary'),
-            child: const Icon(Icons.arrow_back_ios,
-                color: AppColors.textSecondary, size: 20),
           ),
-          const SizedBox(width: 12),
-          Text('CONQUISTAS',
-              style: GoogleFonts.cinzelDecorative(
-                  fontSize: 16,
-                  color: AppColors.gold,
-                  letterSpacing: 2)),
         ],
       ),
     );

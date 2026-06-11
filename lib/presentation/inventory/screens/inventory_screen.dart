@@ -12,7 +12,8 @@ import '../../../domain/models/enchant_spec.dart';
 import '../../../domain/models/inventory_entry_with_spec.dart';
 import '../../../domain/models/player_snapshot.dart';
 import '../../shared/widgets/feature_chip.dart';
-import '../../shared/widgets/player_stats_counter.dart';
+import '../../shared/widgets/nh_back_button.dart';
+import '../../sanctuary/widgets/sanctuary_header_widgets.dart';
 
 class InventoryScreen extends ConsumerStatefulWidget {
   const InventoryScreen({super.key});
@@ -23,22 +24,14 @@ class InventoryScreen extends ConsumerStatefulWidget {
 
 enum _Filter { all, equippable, consumable, material, special }
 
-class _InventoryScreenState extends ConsumerState<InventoryScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tab;
+class _InventoryScreenState extends ConsumerState<InventoryScreen> {
+  _Filter _filter = _Filter.all;
   Future<List<InventoryEntryWithSpec>>? _future;
 
   @override
   void initState() {
     super.initState();
-    _tab = TabController(length: 5, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _reload());
-  }
-
-  @override
-  void dispose() {
-    _tab.dispose();
-    super.dispose();
   }
 
   void _reload() {
@@ -75,104 +68,107 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
         child: Column(
           children: [
             _buildHeader(),
-            _buildStatsRow(),
-            _buildTabs(),
-            Expanded(child: _buildTabContent()),
+            const SizedBox(height: 6),
+            _buildFilterChips(),
+            const SizedBox(height: 6),
+            Expanded(child: _buildContent()),
           ],
         ),
       ),
     );
   }
 
-  /// Sprint 3.3 Etapa 2.4 — counter Gold/XP/Gems em row separada acima
-  /// das tabs. Não vai dentro do header pra evitar overflow histórico
-  /// (FORJA + ENCANT. + back + título já enchem o Row em telas pequenas).
-  Widget _buildStatsRow() {
-    final player = ref.watch(currentPlayerProvider);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-      child: Row(
-        children: [
-          const Spacer(),
-          PlayerStatsCounter(
-            gold: player?.gold ?? 0,
-            xp: player?.xp ?? 0,
-            gems: player?.gems ?? 0,
-          ),
-        ],
-      ),
-    );
-  }
-
+  // Header sem título: voltar (padrão) + atalhos Forja/Encant. + wallet Santuário.
   Widget _buildHeader() {
-    // Sprint 2.3 fix — chips de acesso a Forja e Encantamento substituem
-    // a antiga aba FORJA do inventário. Gates: lv6 pra forja, lv20 pra enchant.
     final playerLevel = ref.watch(currentPlayerProvider)?.level ?? 0;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          GestureDetector(
-            onTap: () => context.go('/sanctuary'),
-            child: const Icon(Icons.arrow_back_ios,
-                color: AppColors.textSecondary, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            'INVENTÁRIO',
-            style: GoogleFonts.cinzelDecorative(
-              fontSize: 16,
-              color: AppColors.gold,
-              letterSpacing: 2,
-            ),
-          ),
+          NhBackButton(onTap: () => context.go('/sanctuary')),
           const Spacer(),
-          FeatureChip(
-            icon: Icons.hardware,
-            label: 'FORJA',
-            route: '/forge',
-            requiredLevel: 6,
-            playerLevel: playerLevel,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FeatureChip(
+                icon: Icons.hardware,
+                label: 'FORJA',
+                route: '/forge',
+                requiredLevel: 6,
+                playerLevel: playerLevel,
+              ),
+              const SizedBox(height: 6),
+              FeatureChip(
+                icon: Icons.auto_awesome,
+                label: 'ENCANT.',
+                route: '/enchant',
+                requiredLevel: 20,
+                playerLevel: playerLevel,
+                color: AppColors.purpleLight,
+              ),
+            ],
           ),
-          FeatureChip(
-            icon: Icons.auto_awesome,
-            label: 'ENCANT.',
-            route: '/enchant',
-            requiredLevel: 20,
-            playerLevel: playerLevel,
-            color: AppColors.purpleLight,
-          ),
-          // Sprint 2.3 fix (B1) — contagem de itens removida (causava
-          // overflow em telas pequenas quando chips FORJA + ENCANT. estavam
-          // visíveis simultaneamente). Contagem por aba já é implícita nos
-          // cards listados.
+          const SizedBox(width: 8),
+          const SanctuaryWalletPills(),
         ],
       ),
     );
   }
 
-  Widget _buildTabs() {
-    return TabBar(
-      controller: _tab,
-      isScrollable: true,
-      indicatorColor: AppColors.purpleLight,
-      labelColor: AppColors.purpleLight,
-      unselectedLabelColor: AppColors.textMuted,
-      labelStyle: GoogleFonts.cinzelDecorative(
-          fontSize: 11, letterSpacing: 2),
-      unselectedLabelStyle: GoogleFonts.cinzelDecorative(
-          fontSize: 11, letterSpacing: 2),
-      tabs: const [
-        Tab(text: 'TUDO'),
-        Tab(text: 'EQUIPÁVEL'),
-        Tab(text: 'CONSUMÍVEIS'),
-        Tab(text: 'MATERIAIS'),
-        Tab(text: 'ESPECIAIS'),
-      ],
+  // Filtros compactos e CENTRALIZADOS (Wrap, sem scroll).
+  Widget _buildFilterChips() {
+    const items = <(_Filter, String)>[
+      (_Filter.all, 'Tudo'),
+      (_Filter.equippable, 'Equip.'),
+      (_Filter.consumable, 'Consum.'),
+      (_Filter.material, 'Materiais'),
+      (_Filter.special, 'Especiais'),
+    ];
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 6,
+        runSpacing: 6,
+        children: [
+          for (final it in items)
+            GestureDetector(
+              onTap: () => setState(() => _filter = it.$1),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  color: const Color(0xB3100C15),
+                  border: Border.all(
+                    color: _filter == it.$1
+                        ? AppColors.gold.withValues(alpha: 0.6)
+                        : AppColors.borderViolet,
+                  ),
+                  boxShadow: _filter == it.$1
+                      ? [
+                          BoxShadow(
+                              color: AppColors.gold.withValues(alpha: 0.15),
+                              blurRadius: 8)
+                        ]
+                      : null,
+                ),
+                child: Text(it.$2,
+                    style: GoogleFonts.roboto(
+                        fontSize: 11.5,
+                        color: _filter == it.$1
+                            ? AppColors.goldLt
+                            : AppColors.txt2)),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
-  Widget _buildTabContent() {
+  Widget _buildContent() {
     return FutureBuilder<List<InventoryEntryWithSpec>>(
       future: _future,
       builder: (_, snap) {
@@ -189,16 +185,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen>
                   '${snap.stackTrace ?? ""}');
         }
         final items = snap.data ?? const <InventoryEntryWithSpec>[];
-        return TabBarView(
-          controller: _tab,
-          children: [
-            _buildList(_filterBy(items, _Filter.all)),
-            _buildList(_filterBy(items, _Filter.equippable)),
-            _buildList(_filterBy(items, _Filter.consumable)),
-            _buildList(_filterBy(items, _Filter.material)),
-            _buildList(_filterBy(items, _Filter.special)),
-          ],
-        );
+        return _buildList(_filterBy(items, _filter));
       },
     );
   }

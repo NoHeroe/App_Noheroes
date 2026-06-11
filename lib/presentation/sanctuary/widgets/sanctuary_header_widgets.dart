@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../shared/avatar_provider.dart';
 
 /// Bloco 2 do restyle — componentes do topo do Santuário.
 /// Toda a fonte de dados é o `currentPlayerProvider` (sem mudar lógica).
@@ -55,12 +56,16 @@ class SanctuaryMiniProfile extends ConsumerWidget {
   }
 }
 
-class _Avatar extends StatelessWidget {
+class _Avatar extends ConsumerWidget {
   final int level;
   const _Avatar({required this.level});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final idx = ref
+        .watch(selectedAvatarProvider)
+        .clamp(0, kAvatarPresets.length - 1);
+    final preset = kAvatarPresets[idx];
     return SizedBox(
       width: 46,
       height: 46,
@@ -90,8 +95,7 @@ class _Avatar extends StatelessWidget {
                   colors: [Color(0xFF3A2D52), Color(0xFF140E20)],
                 ),
               ),
-              child: const Icon(Icons.person,
-                  color: AppColors.txt2, size: 22),
+              child: Icon(preset.icon, color: preset.color, size: 22),
             ),
           ),
           // Badge de nível bottom-right

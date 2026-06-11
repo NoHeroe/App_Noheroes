@@ -11,7 +11,9 @@ import '../../../core/widgets/animated_bg.dart';
 import '../../../data/database/daos/player_dao.dart';
 import '../../../domain/entities/player.dart';
 import '../../../domain/services/body_metrics_service.dart';
-import '../../shared/widgets/player_stats_counter.dart';
+import '../../shared/avatar_provider.dart';
+import '../../shared/widgets/nh_back_button.dart';
+import '../../sanctuary/widgets/sanctuary_header_widgets.dart';
 
 /// Sprint 3.2 Etapa 1.0 — Perfil do jogador.
 ///
@@ -49,6 +51,9 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 const _Header(),
                 const SizedBox(height: 16),
+                // Mini-perfil no topo (avatar + nome + XP) — padrão Santuário.
+                const SanctuaryMiniProfile(),
+                const SizedBox(height: 16),
                 _IdentityCard(player: player),
                 const SizedBox(height: 16),
                 _BodyMetricsCard(player: player, service: service),
@@ -65,41 +70,20 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-class _Header extends ConsumerWidget {
+class _Header extends StatelessWidget {
   const _Header();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final player = ref.watch(currentPlayerProvider);
+  Widget build(BuildContext context) {
+    // Sem título — só voltar (padrão) + carteira do Santuário.
     return Row(
       children: [
-        GestureDetector(
+        NhBackButton(
           key: const ValueKey('profile-back'),
           onTap: () => context.go('/sanctuary'),
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              border: Border.all(color: AppColors.border),
-              borderRadius: BorderRadius.circular(10),
-              color: AppColors.surface,
-            ),
-            child: const Icon(Icons.arrow_back_ios_new,
-                color: AppColors.textSecondary, size: 18),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Text(
-          'PERFIL',
-          style: GoogleFonts.cinzelDecorative(
-              fontSize: 16, color: AppColors.gold, letterSpacing: 2),
         ),
         const Spacer(),
-        PlayerStatsCounter(
-          gold: player?.gold ?? 0,
-          xp: player?.xp ?? 0,
-          gems: player?.gems ?? 0,
-        ),
+        const SanctuaryWalletPills(),
       ],
     );
   }
@@ -117,42 +101,123 @@ String _classLabel(String? c) => switch (c) {
       _ => 'Sem Classe',
     };
 
-class _IdentityCard extends StatelessWidget {
+class _IdentityCard extends ConsumerWidget {
   final Player player;
   const _IdentityCard({required this.player});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final hasRank = player.guildRank != 'none';
     final rankLabel = hasRank
         ? GuildRankSystem.label(GuildRankSystem.fromString(player.guildRank))
             .toUpperCase()
         : 'SEM RANK';
+    final avatarIdx =
+        ref.watch(selectedAvatarProvider).clamp(0, kAvatarPresets.length - 1);
+    final preset = kAvatarPresets[avatarIdx];
 
     return _Card(
       title: 'IDENTIDADE',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(player.shadowName,
-              style: GoogleFonts.cinzelDecorative(
-                  fontSize: 20, color: AppColors.textPrimary)),
-          const SizedBox(height: 8),
-          Text(_classLabel(player.classType),
-              style: GoogleFonts.roboto(
-                  fontSize: 14, color: AppColors.purpleLight)),
-          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Visualização do avatar selecionado.
+              Container(
+                width: 70,
+                height: 70,
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                      color: AppColors.gold.withValues(alpha: 0.6), width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                        color: preset.color.withValues(alpha: 0.25),
+                        blurRadius: 14),
+                  ],
+                ),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [Color(0xFF3A2D52), Color(0xFF140E20)],
+                    ),
+                  ),
+                  child: Icon(preset.icon, color: preset.color, size: 34),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(player.shadowName,
+                        style: GoogleFonts.cinzelDecorative(
+                            fontSize: 18, color: AppColors.txt)),
+                    const SizedBox(height: 6),
+                    Text(_classLabel(player.classType),
+                        style: GoogleFonts.roboto(
+                            fontSize: 13, color: AppColors.txt2)),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        _Pill(label: 'Nível ${player.level}',
+                            color: AppColors.gold),
+                        const SizedBox(width: 8),
+                        _Pill(
+                          label: rankLabel,
+                          color: hasRank ? AppColors.gold : AppColors.txtMut,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           Row(
             children: [
-              _Pill(
-                label: 'Nível ${player.level}',
-                color: AppColors.purple,
-              ),
+              Text('AVATAR',
+                  style: GoogleFonts.cinzelDecorative(
+                      fontSize: 10, color: AppColors.gold, letterSpacing: 2)),
               const SizedBox(width: 8),
-              _Pill(
-                label: rankLabel,
-                color: hasRank ? AppColors.gold : AppColors.textMuted,
-              ),
+              Text('(placeholder — editor 3D em breve)',
+                  style: GoogleFonts.roboto(
+                      fontSize: 9, color: AppColors.txtMut)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Seletor de avatar (presets) — visualização atualiza acima e em
+          // todos os mini-perfis.
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (var i = 0; i < kAvatarPresets.length; i++)
+                GestureDetector(
+                  onTap: () =>
+                      ref.read(selectedAvatarProvider.notifier).select(i),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: kAvatarPresets[i].color.withValues(alpha: 0.12),
+                      border: Border.all(
+                        color: i == avatarIdx
+                            ? AppColors.gold
+                            : AppColors.borderViolet,
+                        width: i == avatarIdx ? 2 : 1,
+                      ),
+                    ),
+                    child: Icon(kAvatarPresets[i].icon,
+                        color: kAvatarPresets[i].color, size: 20),
+                  ),
+                ),
             ],
           ),
         ],
