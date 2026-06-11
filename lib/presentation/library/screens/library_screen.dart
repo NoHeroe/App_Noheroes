@@ -134,14 +134,32 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                         onTap: () => _navigate(1),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 14),
-                      child: NhMedallion(
-                        label: 'Coleção',
-                        icon: Icons.style_outlined,
-                        size: 76,
-                        onTap: () => _navigate(2),
-                      ),
+                    // Coleção flanqueada pelos atalhos REDONDOS (Construtor
+                    // acima, Pacotes abaixo) — mesmo visual de medalhão.
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NhMedallion(
+                          label: 'Construtor',
+                          icon: Icons.build_outlined,
+                          size: 56,
+                          onTap: () => context.go('/card-game/deck-builder'),
+                        ),
+                        const SizedBox(height: 12),
+                        NhMedallion(
+                          label: 'Coleção',
+                          icon: Icons.style_outlined,
+                          size: 76,
+                          onTap: () => _navigate(2),
+                        ),
+                        const SizedBox(height: 12),
+                        NhMedallion(
+                          label: 'Pacotes',
+                          icon: Icons.inventory_2_outlined,
+                          size: 56,
+                          onTap: () => context.go('/card-game/packs'),
+                        ),
+                      ],
                     ),
                   ],
                 ),

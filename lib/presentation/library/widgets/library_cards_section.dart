@@ -2,7 +2,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -194,12 +193,27 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
   _OwnershipView _view = _OwnershipView.all; // default = Todas
   final _searchCtrl = TextEditingController();
 
+  // Paginação horizontal: 4 cartas por página (2x2), com setas + swipe.
+  static const int _perPage = 4;
+  final PageController _pageController = PageController();
+  int _page = 0;
+
   late final Future<CardCatalog> _catalogFuture = CardCatalog.load();
 
   @override
   void dispose() {
     _searchCtrl.dispose();
+    _pageController.dispose();
     super.dispose();
+  }
+
+  /// Aplica uma mudança de filtro e VOLTA pra primeira página.
+  void _onFilterChanged(VoidCallback change) {
+    setState(() {
+      change();
+      _page = 0;
+    });
+    if (_pageController.hasClients) _pageController.jumpToPage(0);
   }
 
   List<_CardVM> _sourceFor(CardCatalog catalog) => _tab == 0
@@ -229,12 +243,6 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
         children: [
           // Header: voltar + BUSCA (no lugar do antigo título).
           _buildHeader(),
-          const SizedBox(height: 10),
-          // Construtor de Deck — EM CIMA da coleção.
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildDeckBuilderShortcut(),
-          ),
           const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -266,11 +274,6 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
                 return _buildBody(snap.data!);
               },
             ),
-          ),
-          // Pacotes — EMBAIXO da coleção.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
-            child: _buildPacksShortcut(),
           ),
         ],
       ),
@@ -311,6 +314,9 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
         source.where((c) => isCardUnlocked(id: c.id, owned: owned)).length;
     final total = source.length;
 
+    final pageCount = cards.isEmpty ? 0 : ((cards.length - 1) ~/ _perPage) + 1;
+    final safePage = pageCount == 0 ? 0 : _page.clamp(0, pageCount - 1);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -320,53 +326,138 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
                   child: Text('Nenhuma carta encontrada.',
                       style: GoogleFonts.roboto(color: AppColors.txtMut)),
                 )
-              : GridView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 14,
-                    mainAxisSpacing: 14,
-                    childAspectRatio: 142 / 206,
-                  ),
-                  itemCount: cards.length,
-                  itemBuilder: (_, i) {
-                    final card = cards[i];
-                    final unlocked =
-                        isCardUnlocked(id: card.id, owned: owned);
-                    return _CardTile(
-                      card: card,
-                      unlocked: unlocked,
-                      onTap: () => _openDetail(card, unlocked),
-                    );
-                  },
+              : Row(
+                  children: [
+                    // Seta ESQUERDA (página anterior).
+                    _pageArrow(
+                      icon: Icons.chevron_left_rounded,
+                      enabled: safePage > 0,
+                      onTap: () => _pageController.previousPage(
+                          duration: const Duration(milliseconds: 240),
+                          curve: Curves.easeOut),
+                    ),
+                    // 4 cartas (2x2) por página — swipe horizontal também funciona.
+                    Expanded(
+                      child: PageView.builder(
+                        controller: _pageController,
+                        onPageChanged: (p) => setState(() => _page = p),
+                        itemCount: pageCount,
+                        itemBuilder: (_, page) => _cardPage(cards, page, owned),
+                      ),
+                    ),
+                    // Seta DIREITA (próxima página).
+                    _pageArrow(
+                      icon: Icons.chevron_right_rounded,
+                      enabled: safePage < pageCount - 1,
+                      onTap: () => _pageController.nextPage(
+                          duration: const Duration(milliseconds: 240),
+                          curve: Curves.easeOut),
+                    ),
+                  ],
                 ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
-          child: Text.rich(
-            TextSpan(
-              text: _tab == 0
-                  ? 'Criaturas desbloqueadas '
-                  : 'Relíquias desbloqueadas ',
-              style: GoogleFonts.roboto(
-                  fontSize: 11, letterSpacing: 1.5, color: AppColors.txtMut),
-              children: [
+          padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
+          child: Column(
+            children: [
+              if (pageCount > 1)
+                Text('Página ${safePage + 1}/$pageCount',
+                    style: GoogleFonts.roboto(
+                        fontSize: 10,
+                        letterSpacing: 1,
+                        color: AppColors.txtMut)),
+              const SizedBox(height: 2),
+              Text.rich(
                 TextSpan(
-                  text: '$ownedCount',
+                  text: _tab == 0
+                      ? 'Criaturas desbloqueadas '
+                      : 'Relíquias desbloqueadas ',
                   style: GoogleFonts.roboto(
                       fontSize: 11,
                       letterSpacing: 1.5,
-                      color: AppColors.gold,
-                      fontWeight: FontWeight.w700),
+                      color: AppColors.txtMut),
+                  children: [
+                    TextSpan(
+                      text: '$ownedCount',
+                      style: GoogleFonts.roboto(
+                          fontSize: 11,
+                          letterSpacing: 1.5,
+                          color: AppColors.gold,
+                          fontWeight: FontWeight.w700),
+                    ),
+                    TextSpan(text: ' / $total'),
+                  ],
                 ),
-                TextSpan(text: ' / $total'),
-              ],
-            ),
-            textAlign: TextAlign.center,
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
         ),
       ],
+    );
+  }
+
+  /// Uma página com até 4 cartas em grade 2x2 (preenche a altura disponível).
+  Widget _cardPage(List<_CardVM> cards, int page, Set<String> owned) {
+    final start = page * _perPage;
+    Widget cell(int offset) {
+      final i = start + offset;
+      if (i >= cards.length) return const SizedBox.shrink();
+      final card = cards[i];
+      final unlocked = isCardUnlocked(id: card.id, owned: owned);
+      return Center(
+        child: AspectRatio(
+          aspectRatio: 142 / 206,
+          child: _CardTile(
+            card: card,
+            unlocked: unlocked,
+            onTap: () => _openDetail(card, unlocked),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+      child: Column(
+        children: [
+          Expanded(
+            child: Row(children: [
+              Expanded(child: cell(0)),
+              const SizedBox(width: 12),
+              Expanded(child: cell(1)),
+            ]),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: Row(children: [
+              Expanded(child: cell(2)),
+              const SizedBox(width: 12),
+              Expanded(child: cell(3)),
+            ]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Seta de paginação (lateral). Esmaece quando desabilitada.
+  Widget _pageArrow({
+    required IconData icon,
+    required bool enabled,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: Container(
+        width: 30,
+        alignment: Alignment.center,
+        child: Icon(icon,
+            size: 30,
+            color: enabled
+                ? AppColors.purpleLt
+                : AppColors.txtMut.withValues(alpha: 0.3)),
+      ),
     );
   }
 
@@ -406,96 +497,6 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
           const SizedBox(width: 12),
           Expanded(child: _buildSearch()),
         ],
-      ),
-    );
-  }
-
-  // ── Atalho para o Construtor de Deck ────────────────────────────────
-  Widget _buildDeckBuilderShortcut() {
-    return GestureDetector(
-      onTap: () => context.go('/card-game/deck-builder'),
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            colors: [
-              AppColors.purple.withValues(alpha: 0.22),
-              AppColors.purple.withValues(alpha: 0.06),
-            ],
-          ),
-          border: Border.all(color: AppColors.purple.withValues(alpha: 0.45)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.build_outlined,
-                size: 18, color: AppColors.purpleLt),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Construtor de Deck',
-                      style: GoogleFonts.roboto(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.txt)),
-                  Text('Monte seu deck (9 criaturas + 9 relíquias)',
-                      style: GoogleFonts.roboto(
-                          fontSize: 10.5, color: AppColors.txt2)),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded,
-                size: 20, color: AppColors.purpleLt),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Atalho para a tela de Pacotes (obtenção de cartas) ──────────────
-  Widget _buildPacksShortcut() {
-    return GestureDetector(
-      onTap: () => context.go('/card-game/packs'),
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            colors: [
-              AppColors.gold.withValues(alpha: 0.22),
-              AppColors.gold.withValues(alpha: 0.06),
-            ],
-          ),
-          border: Border.all(color: AppColors.gold.withValues(alpha: 0.45)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.inventory_2_outlined,
-                size: 18, color: AppColors.goldLt),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Pacotes',
-                      style: GoogleFonts.roboto(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.txt)),
-                  Text('Compre e abra pacotes de cartas',
-                      style: GoogleFonts.roboto(
-                          fontSize: 10.5, color: AppColors.txt2)),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded,
-                size: 20, color: AppColors.goldLt),
-          ],
-        ),
       ),
     );
   }
@@ -565,7 +566,7 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
     final active = _tab == index;
     final color = active ? AppColors.txt : AppColors.txt2;
     return GestureDetector(
-      onTap: () => setState(() => _tab = index),
+      onTap: () => _onFilterChanged(() => _tab = index),
       child: SizedBox(
         width: w,
         height: 30,
@@ -607,7 +608,7 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
           Expanded(
             child: TextField(
               controller: _searchCtrl,
-              onChanged: (v) => setState(() => _query = v),
+              onChanged: (v) => _onFilterChanged(() => _query = v),
               style: GoogleFonts.roboto(
                   fontSize: 13, color: AppColors.txt),
               cursorColor: AppColors.purpleLt,
@@ -630,19 +631,20 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Wrap(
+        alignment: WrapAlignment.center,
         spacing: 7,
         runSpacing: 7,
         children: [
           _chip(
               label: 'Todos',
               selected: _conceptFilter == null,
-              onTap: () => setState(() => _conceptFilter = null)),
+              onTap: () => _onFilterChanged(() => _conceptFilter = null)),
           for (final entry in _conceptStyles.entries)
             _chip(
               label: entry.value.label,
               dot: entry.value.color,
               selected: _conceptFilter == entry.key,
-              onTap: () => setState(() => _conceptFilter = entry.key),
+              onTap: () => _onFilterChanged(() => _conceptFilter = entry.key),
             ),
         ],
       ),
@@ -721,7 +723,7 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
   Widget _viewSeg(_OwnershipView view, String label, IconData icon) {
     final selected = _view == view;
     return GestureDetector(
-      onTap: () => setState(() => _view = view),
+      onTap: () => _onFilterChanged(() => _view = view),
       child: Container(
         height: 34,
         alignment: Alignment.center,
