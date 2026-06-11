@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../domain/card_game/card_game.dart';
 import '../card_economy.dart';
 import '../card_ownership.dart';
 
@@ -13,7 +14,19 @@ import '../card_ownership.dart';
 /// Server-authoritative — o botão só dispara a RPC; o servidor valida.
 class CardEconomyActions extends ConsumerStatefulWidget {
   final String cardId;
-  const CardEconomyActions({super.key, required this.cardId});
+
+  /// Stats-base (nível 1) pra mostrar os deltas no aprimorar CR-style.
+  final int baseAtk;
+  final int baseHp;
+  final bool isCreature;
+
+  const CardEconomyActions({
+    super.key,
+    required this.cardId,
+    this.baseAtk = 0,
+    this.baseHp = 0,
+    this.isCreature = true,
+  });
 
   @override
   ConsumerState<CardEconomyActions> createState() => _CardEconomyActionsState();
@@ -263,29 +276,7 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
         if (level >= maxLevel)
           _infoLine('Nível máximo atingido.')
         else if (upgrade != null)
-          _actionButton(
-            label: 'APRIMORAR → Nível ${level + 1}',
-            icon: Icons.trending_up,
-            cost: 'Ouro ${(upgrade['gold'] as num).toInt()} · '
-                'Emblema ${(upgrade['mat'] as num).toInt()} · '
-                'Essência ${(upgrade['soul'] as num).toInt()} · '
-                'Cópias ${(upgrade['copies_needed'] as num).toInt()}',
-            enabled: upgrade['can'] == true && !_busy,
-            onTap: () async {
-              if (!await _confirm('Aprimorar carta',
-                  'Subir para o Nível ${level + 1}? Consome ouro, materiais e '
-                      '${(upgrade['copies_needed'] as num).toInt()} cópia(s).',
-                  'Aprimorar')) {
-                return;
-              }
-              final p = ref.read(currentPlayerProvider)!;
-              await _run(
-                  () => ref
-                      .read(cardEconomyServiceProvider)
-                      .upgrade(p.id, widget.cardId),
-                  'Carta aprimorada!');
-            },
-          ),
+          _upgradePanel(info, level, copies, upgrade),
         const SizedBox(height: 8),
         if (dis != null)
           _actionButton(
@@ -312,6 +303,230 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
             },
           ),
       ],
+    );
+  }
+
+  // ── Aprimorar (CR-style: carta atual → próxima, deltas, custos) ──────
+  Widget _upgradePanel(Map<String, dynamic> info, int level, int copies, Map up) {
+    final player = ref.read(currentPlayerProvider);
+    final gold = player?.gold ?? 0;
+    final goldCost = (up['gold'] as num).toInt();
+    final poeira = (up['poeira'] as num? ?? 0).toInt();
+    final embNeed = (up['emblema_needed'] as num? ?? 0).toInt();
+    final soul = (up['soul'] as num).toInt();
+    final copiesNeed = (up['copies_needed'] as num).toInt();
+    final haveEmb = (up['have_emblema'] as num? ?? 0).toInt();
+    final haveSoul = (up['have_soul'] as num? ?? 0).toInt();
+    final haveDust = (up['have_dust'] as num? ?? 0).toInt();
+    final can = up['can'] == true;
+
+    final atkNow = cgScaleStat(widget.baseAtk, level);
+    final atkNext = cgScaleStat(widget.baseAtk, level + 1);
+    final hpNow = cgScaleStat(widget.baseHp, level);
+    final hpNext = cgScaleStat(widget.baseHp, level + 1);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: const Color(0x22100C15),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                  child: _miniLevel('Nível $level', atkNow, hpNow,
+                      AppColors.txtMut, null, null)),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 6),
+                child: Icon(Icons.arrow_forward_rounded,
+                    size: 18, color: AppColors.gold),
+              ),
+              Expanded(
+                  child: _miniLevel('Nível ${level + 1}', atkNext, hpNext,
+                      AppColors.gold, atkNext - atkNow, hpNext - hpNow)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          _copiesBar(copies, copiesNeed),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              _costChip(Icons.monetization_on, goldCost, gold >= goldCost),
+              _costChip(Icons.blur_on, poeira, haveDust >= poeira),
+              _costChip(Icons.military_tech_outlined, embNeed, haveEmb >= embNeed),
+              _costChip(Icons.auto_awesome, soul, haveSoul >= soul),
+            ],
+          ),
+          const SizedBox(height: 10),
+          _upgradeButton(can && copies > copiesNeed, level + 1, copiesNeed),
+        ],
+      ),
+    );
+  }
+
+  Widget _miniLevel(String title, int atk, int hp, Color accent, int? dAtk,
+      int? dHp) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: const Color(0x33100C15),
+        border: Border.all(color: accent.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        children: [
+          Text(title,
+              style: GoogleFonts.roboto(
+                  fontSize: 10, letterSpacing: 0.5, color: accent)),
+          const SizedBox(height: 4),
+          if (widget.isCreature)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.bolt, size: 12, color: AppColors.gold),
+                Text('$atk',
+                    style: GoogleFonts.robotoMono(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.txt)),
+                if (dAtk != null && dAtk > 0)
+                  Text(' +$dAtk',
+                      style: GoogleFonts.robotoMono(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.shadowAscending)),
+                const SizedBox(width: 8),
+                const Icon(Icons.favorite, size: 11, color: Colors.white),
+                Text('$hp',
+                    style: GoogleFonts.robotoMono(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.txt)),
+                if (dHp != null && dHp > 0)
+                  Text(' +$dHp',
+                      style: GoogleFonts.robotoMono(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.shadowAscending)),
+              ],
+            )
+          else
+            Text('+10% bônus',
+                style: GoogleFonts.roboto(fontSize: 11, color: AppColors.txt2)),
+        ],
+      ),
+    );
+  }
+
+  Widget _copiesBar(int have, int need) {
+    final ratio = need <= 0 ? 1.0 : (have / need).clamp(0.0, 1.0);
+    final ok = have > need;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Text('Cópias',
+                style: GoogleFonts.roboto(fontSize: 10, color: AppColors.txtMut)),
+            const Spacer(),
+            Text('$have / ${need + 1}',
+                style: GoogleFonts.robotoMono(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: ok ? AppColors.shadowAscending : AppColors.txt2)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: ratio,
+            minHeight: 5,
+            backgroundColor: AppColors.border,
+            valueColor: AlwaysStoppedAnimation(
+                ok ? AppColors.shadowAscending : AppColors.purpleLt),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _costChip(IconData icon, int amount, bool ok) {
+    final color = ok ? AppColors.goldLt : AppColors.hp;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 13, color: color),
+        const SizedBox(width: 3),
+        Text('$amount',
+            style: GoogleFonts.robotoMono(
+                fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+        if (!ok)
+          const Padding(
+            padding: EdgeInsets.only(left: 2),
+            child: Icon(Icons.close, size: 11, color: AppColors.hp),
+          ),
+      ],
+    );
+  }
+
+  Widget _upgradeButton(bool can, int nextLevel, int copiesNeed) {
+    return Opacity(
+      opacity: can && !_busy ? 1 : 0.5,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: can && !_busy
+            ? () async {
+                if (!await _confirm('Aprimorar carta',
+                    'Subir para o Nível $nextLevel? Consome ouro, Poeira, '
+                        'Emblemas, Essência e $copiesNeed cópia(s).',
+                    'Aprimorar')) {
+                  return;
+                }
+                final p = ref.read(currentPlayerProvider)!;
+                await _run(
+                    () => ref
+                        .read(cardEconomyServiceProvider)
+                        .upgrade(p.id, widget.cardId),
+                    'Carta aprimorada!');
+              }
+            : null,
+        child: Container(
+          height: 44,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: can
+                ? const LinearGradient(
+                    colors: [Color(0xFFE8C15A), Color(0xFFB8932E)])
+                : null,
+            color: can ? null : const Color(0x33100C15),
+            border: Border.all(
+                color: can
+                    ? AppColors.gold
+                    : AppColors.borderViolet),
+          ),
+          child: _busy
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                      color: Colors.black, strokeWidth: 2))
+              : Text(can ? 'APRIMORAR' : 'Recursos insuficientes',
+                  style: GoogleFonts.roboto(
+                      fontSize: 13,
+                      letterSpacing: 1,
+                      fontWeight: FontWeight.w800,
+                      color: can ? Colors.black : AppColors.txtMut)),
+        ),
+      ),
     );
   }
 

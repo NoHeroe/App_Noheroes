@@ -1034,7 +1034,12 @@ class _CardDetailSheet extends StatelessWidget {
               // Economia: criar / aprimorar / desencantar (server-authoritative).
               const SizedBox(height: 16),
               Divider(color: AppColors.borderViolet.withValues(alpha: 0.5)),
-              CardEconomyActions(cardId: card.id),
+              CardEconomyActions(
+                cardId: card.id,
+                baseAtk: card.atk,
+                baseHp: card.pv,
+                isCreature: card.kind == _CardKind.creature,
+              ),
             ],
           ),
         ),
