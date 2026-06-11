@@ -13,7 +13,7 @@ import '../../../domain/enums/recipe_type.dart';
 import '../../../domain/models/craft_result.dart';
 import '../../../domain/models/player_snapshot.dart';
 import '../../../domain/models/recipe_spec.dart';
-import '../../shared/widgets/feature_chip.dart';
+import '../../sanctuary/widgets/sanctuary_header_widgets.dart';
 import '../../shared/widgets/level_locked_view.dart';
 
 class ForgeScreen extends ConsumerStatefulWidget {
@@ -260,12 +260,14 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
     );
   }
 
-  // Topo SEM título: voltar + Encantamento + ouro.
+  // Topo SEM título: voltar + atalhos (Inventário, Ferreiro, Encant.) + wallet
+  // no padrão do Santuário.
   Widget _topBar() {
     final playerLevel = ref.watch(currentPlayerProvider)?.level ?? 0;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           GestureDetector(
             onTap: () => context.go('/sanctuary'),
@@ -287,23 +289,59 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
             ),
           ),
           const Spacer(),
-          FeatureChip(
-            icon: Icons.auto_awesome,
-            label: 'ENCANT.',
-            route: '/enchant',
-            requiredLevel: 20,
-            playerLevel: playerLevel,
-            color: AppColors.purpleLight,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _pillButton(Icons.backpack_outlined, 'INVENTÁRIO',
+                  AppColors.purpleLight, () => context.go('/inventory')),
+              const SizedBox(height: 6),
+              _pillButton(Icons.hardware, 'FERREIRO', AppColors.gold,
+                  () => context.go('/shop/blacksmith_aureum')),
+              const SizedBox(height: 6),
+              _pillButton(Icons.auto_awesome, 'ENCANT.', AppColors.purpleLight,
+                  () {
+                if (playerLevel >= 20) {
+                  context.go('/enchant');
+                } else {
+                  _snack('O Encantamento abre no Nível 20.');
+                }
+              }),
+            ],
           ),
-          const SizedBox(width: 10),
-          const Icon(Icons.monetization_on, size: 14, color: AppColors.gold),
-          const SizedBox(width: 4),
-          Text('$_currentCoins',
-              style: GoogleFonts.roboto(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.gold)),
+          const SizedBox(width: 8),
+          const SanctuaryWalletPills(),
         ],
+      ),
+    );
+  }
+
+  Widget _pillButton(
+      IconData icon, String label, Color iconColor, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(10, 5, 12, 5),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          gradient: const LinearGradient(
+            colors: [Color(0xE6141019), Color(0xE60A080E)],
+          ),
+          border: Border.all(color: AppColors.borderViolet),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 13, color: iconColor),
+            const SizedBox(width: 6),
+            Text(label,
+                style: GoogleFonts.roboto(
+                    fontSize: 9.5,
+                    letterSpacing: 1.1,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.txt)),
+          ],
+        ),
       ),
     );
   }
@@ -864,23 +902,156 @@ class _ErrorView extends StatelessWidget {
   }
 }
 
-// ── Fundo quente da Forja ───────────────────────────────────────────────────
-class _ForgeBackground extends StatelessWidget {
+// ── Fundo temático da Forja: brasa pulsante embaixo + faíscas + vignette ─────
+class _ForgeBackground extends StatefulWidget {
   const _ForgeBackground();
 
   @override
+  State<_ForgeBackground> createState() => _ForgeBackgroundState();
+}
+
+class _ForgeBackgroundState extends State<_ForgeBackground>
+    with TickerProviderStateMixin {
+  late final AnimationController _embers;
+  late final AnimationController _glow;
+  late final List<_BgEmber> _specs;
+
+  @override
+  void initState() {
+    super.initState();
+    _embers = AnimationController(
+        vsync: this, duration: const Duration(seconds: 11))
+      ..repeat();
+    _glow = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 2300))
+      ..repeat(reverse: true);
+    final rnd = math.Random(19);
+    _specs = List.generate(14, (_) {
+      return _BgEmber(
+        x: rnd.nextDouble(),
+        size: 1.3 + rnd.nextDouble() * 1.5,
+        phase: rnd.nextDouble(),
+        // Inteiro: sem flick no reinício do loop.
+        speed: (rnd.nextInt(2) + 1).toDouble(),
+        drift: (rnd.nextDouble() - 0.5) * 0.06,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _embers.dispose();
+    _glow.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment(0, -0.45),
-          radius: 1.25,
-          colors: [Color(0xFF2A1A10), Color(0xFF150D08), Color(0xFF090605)],
-          stops: [0.0, 0.5, 0.85],
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Base radial quente.
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment(0, -0.45),
+              radius: 1.25,
+              colors: [Color(0xFF2A1A10), Color(0xFF150D08), Color(0xFF090605)],
+              stops: [0.0, 0.5, 0.85],
+            ),
+          ),
         ),
-      ),
+        // Brasa da fornalha pulsando no rodapé.
+        RepaintBoundary(
+          child: AnimatedBuilder(
+            animation: _glow,
+            builder: (_, __) {
+              final f = 0.78 + _glow.value * 0.22;
+              return Align(
+                alignment: const Alignment(0, 1.25),
+                child: Container(
+                  width: 520,
+                  height: 360,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        const Color(0xFFFF7A1A).withValues(alpha: 0.22 * f),
+                        const Color(0xFFFF5A1A).withValues(alpha: 0.07 * f),
+                        const Color(0x00FF5A1A),
+                      ],
+                      stops: const [0.0, 0.5, 1.0],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        // Faíscas subindo.
+        RepaintBoundary(
+          child: AnimatedBuilder(
+            animation: _embers,
+            builder: (_, __) => CustomPaint(
+              painter: _BgEmbersPainter(_embers.value, _specs),
+              size: Size.infinite,
+            ),
+          ),
+        ),
+        // Vignette.
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment.center,
+              radius: 1.0,
+              colors: [Color(0x00000000), Color(0x99000000)],
+              stops: [0.55, 1.0],
+            ),
+          ),
+        ),
+      ],
     );
   }
+}
+
+class _BgEmber {
+  final double x, size, phase, speed, drift;
+  const _BgEmber({
+    required this.x,
+    required this.size,
+    required this.phase,
+    required this.speed,
+    required this.drift,
+  });
+}
+
+class _BgEmbersPainter extends CustomPainter {
+  final double t;
+  final List<_BgEmber> embers;
+  const _BgEmbersPainter(this.t, this.embers);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final glow = Paint()
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+    for (final e in embers) {
+      final p = (t * e.speed + e.phase) % 1.0;
+      const rise = 640.0;
+      final y = size.height - p * rise;
+      if (y < -10 || y > size.height + 10) continue;
+      final x =
+          e.x * size.width + math.sin(p * math.pi * 2) * e.drift * size.width;
+      final alpha = math.sin(p * math.pi).clamp(0.0, 1.0);
+      const amber = Color(0xFFFFB347);
+      glow.color = amber.withValues(alpha: 0.7 * alpha);
+      canvas.drawCircle(Offset(x, y), e.size + 1.5, glow);
+      final core = Paint()..color = amber.withValues(alpha: alpha);
+      canvas.drawCircle(Offset(x, y), e.size, core);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _BgEmbersPainter old) => old.t != t;
 }
 
 // ── Slot de material da miniatura do inventário ─────────────────────────────
