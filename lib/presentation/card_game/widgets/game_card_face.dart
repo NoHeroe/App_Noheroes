@@ -213,8 +213,8 @@ class GameCardFace extends StatelessWidget {
         card,
         // Bandeira de RARIDADE pendurada rente ao TOPO, na borda esquerda
         // (mini banner virado pra baixo, sem estourar). Lendária = RGB animado.
-        if (!minimal)
-          Positioned(top: 0, left: 3, child: _RarityPennant(rarity: rarity)),
+        // Mostrada também no preview (minimal) — faz parte da identidade da carta.
+        Positioned(top: 0, left: 3, child: _RarityPennant(rarity: rarity)),
         // Brasões de EFEITO (keywords) na borda esquerda, abaixo da bandeira,
         // vazando ~40% pra fora.
         if (effects.isNotEmpty && !minimal)
@@ -600,17 +600,15 @@ class _PennantClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     final w = size.width, h = size.height;
-    const notch = 6.0, r = 3.5, tlr = 6.0;
-    // Banner com NOTCH central + cantos inferiores arredondados + canto
+    const notch = 6.0, tlr = 6.0;
+    // Base PONTUDA (notch central em V, cantos inferiores afiados) + canto
     // SUPERIOR-ESQUERDO arredondado (segue a curvatura da carta).
     return Path()
       ..moveTo(tlr, 0)
       ..lineTo(w, 0)
-      ..lineTo(w, h - r)
-      ..quadraticBezierTo(w, h, w - r, h)
+      ..lineTo(w, h)
       ..lineTo(w / 2, h - notch)
-      ..lineTo(r, h)
-      ..quadraticBezierTo(0, h, 0, h - r)
+      ..lineTo(0, h)
       ..lineTo(0, tlr)
       ..quadraticBezierTo(0, 0, tlr, 0)
       ..close();

@@ -530,7 +530,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         // Mão sobe e desloca levemente pra direita (CEO) + menu de ação
         // sobreposto (flutua sobre o topo do leque sem empurrar o HUD).
         Transform.translate(
-          offset: const Offset(16, -18),
+          offset: const Offset(16, -24),
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -1375,11 +1375,11 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     final arcDy = offset.abs() * 3.0; // bordas levemente mais baixas
 
     if (isPreview) {
-      // Preview da próxima carta: mais pra DIREITA e BEM mais pra BAIXO (CEO) —
-      // desce até quase encostar no contador de cristais do rodapé.
+      // Preview da próxima carta: um pouco mais pra ESQUERDA e ainda mais pra
+      // BAIXO (CEO) — desce até quase encostar no contador de cristais.
       return Positioned(
-        left: left + 22,
-        bottom: -46 - arcDy,
+        left: left + 6,
+        bottom: -56 - arcDy,
         child: Transform.rotate(
           angle: rot,
           child: Opacity(
