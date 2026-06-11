@@ -432,7 +432,14 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                 alignment: const Alignment(-1, -0.16),
                 child: Padding(
                   padding: const EdgeInsets.only(left: 6),
-                  child: _sideBackButton(),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _sideBackButton(),
+                      const SizedBox(width: 8),
+                      _logButton(ui),
+                    ],
+                  ),
                 ),
               ),
               // Turno no MEIO, entre desistir (esq) e encerrar (dir).
@@ -520,26 +527,29 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
             ],
           ),
         ),
-        // Mão (sobe um pouco) + menu de ação SOBREPOSTO: o menu flutua sobre o
-        // topo do leque sem empurrar o HUD.
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            AbsorbPointer(
-              absorbing: !interactive,
-              child: Opacity(
-                opacity: interactive ? 1 : 0.55,
-                child: _handFan(ui, player),
+        // Mão sobe e desloca levemente pra direita (CEO) + menu de ação
+        // sobreposto (flutua sobre o topo do leque sem empurrar o HUD).
+        Transform.translate(
+          offset: const Offset(8, -12),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              AbsorbPointer(
+                absorbing: !interactive,
+                child: Opacity(
+                  opacity: interactive ? 1 : 0.55,
+                  child: _handFan(ui, player),
+                ),
               ),
-            ),
-            if (interactive && selectedCard != null)
-              Positioned(
-                top: -10,
-                left: 0,
-                right: 0,
-                child: Center(child: _actionOverlay(ui, selectedCard)),
-              ),
-          ],
+              if (interactive && selectedCard != null)
+                Positioned(
+                  top: -10,
+                  left: 0,
+                  right: 0,
+                  child: Center(child: _actionOverlay(ui, selectedCard)),
+                ),
+            ],
+          ),
         ),
         // HUD inferior ornamentado (moldura): monstros (esq) · cristal (centro)
         // · itens (dir). Centralizado no rodapé da página.
@@ -590,110 +600,78 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
-  /// HUD inferior com MOLDURA orgânica (pílula com borda em gradiente dourado,
-  /// estilo cartucho): monstros (esq, branco) · cristal facetado (centro) ·
-  /// itens (dir, branco).
+  /// HUD inferior COMPACTO e centralizado (sem moldura por ora): monstros ·
+  /// cristal facetado (com borda) · itens — todos juntos no centro do rodapé.
   Widget _bottomHud(PveMatchUiState ui, BoardSide player) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 2, 18, 10),
-      child: Container(
-        // Borda em GRADIENTE dourado (mais "viva" que cor sólida) + brilho.
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(40),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFF0D27E), Color(0xFF8A6A2A), Color(0xFFF0D27E)],
-          ),
-          boxShadow: [
-            BoxShadow(
-                color: AppColors.gold.withValues(alpha: 0.22), blurRadius: 14),
+      padding: const EdgeInsets.fromLTRB(0, 2, 0, 10),
+      child: Center(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            _hudCounter(Icons.pets, '${player.availableCreatureCount}'),
+            const SizedBox(width: 14),
+            CrystalGem(value: player.crystals, size: 42),
+            const SizedBox(width: 14),
+            _hudCounter(Icons.auto_awesome, '${player.availableRelicCount}'),
           ],
-        ),
-        padding: const EdgeInsets.all(2.5), // espessura da moldura
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(38),
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFF221833), Color(0xFF120C1E)],
-            ),
-            border: Border.all(
-                color: Colors.white.withValues(alpha: 0.10), width: 1),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _hudCounter(Icons.pets, '${player.availableCreatureCount}'),
-              CrystalGem(value: player.crystals, size: 40),
-              _hudCounter(Icons.auto_awesome, '${player.availableRelicCount}'),
-            ],
-          ),
         ),
       ),
     );
   }
 
-  /// Contador branco (monstros / itens) do HUD inferior.
-  Widget _hudCounter(IconData icon, String value) {
-    return Row(
+  /// Contador branco (monstros / itens): ícone EM CIMA, número EMBAIXO.
+  Widget _hudCounter(IconData icon, String value, {double size = 18}) {
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: Colors.white),
-        const SizedBox(width: 5),
+        Icon(icon, size: size, color: Colors.white),
         Text(value,
             style: GoogleFonts.cinzelDecorative(
-                fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+                fontSize: size * 0.85,
+                fontWeight: FontWeight.w700,
+                color: Colors.white)),
       ],
     );
   }
 
   Widget _botInfoBar(BoardSide bot, PveMatchUiState ui) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceVeil,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.borderViolet),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
       child: Row(
         children: [
-          const Icon(Icons.smart_toy_outlined,
-              color: AppColors.conceptCorrompido, size: 16),
-          const SizedBox(width: 6),
-          Text('IA',
-              style: GoogleFonts.cinzelDecorative(
-                  fontSize: 12, color: AppColors.textPrimary, letterSpacing: 1)),
-          const Spacer(),
-          _statChip(Icons.diamond_outlined, '${bot.crystals}', AppColors.mp),
-          const SizedBox(width: 10),
-          _statChip(Icons.pets_outlined, '${bot.remainingCreatureCount}/9',
-              AppColors.conceptCorrompido),
-          const SizedBox(width: 10),
-          // Acesso ao registro (saiu do meio do tabuleiro).
-          GestureDetector(
-            onTap: () => _showFullLog(ui.log),
-            child: const Icon(Icons.receipt_long_outlined,
-                size: 16, color: AppColors.textSecondary),
+          // Caixinha ISOLADA do bot: ícone + título IA.
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceVeil,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.borderViolet),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.smart_toy_outlined,
+                    color: AppColors.conceptCorrompido, size: 16),
+                const SizedBox(width: 6),
+                Text('IA',
+                    style: GoogleFonts.cinzelDecorative(
+                        fontSize: 12,
+                        color: AppColors.textPrimary,
+                        letterSpacing: 1)),
+              ],
+            ),
           ),
+          const Spacer(),
+          // Mini-HUD do bot (mesmo design do rodapé, menor).
+          _hudCounter(Icons.pets, '${bot.availableCreatureCount}', size: 14),
+          const SizedBox(width: 12),
+          CrystalGem(value: bot.crystals, size: 26),
+          const SizedBox(width: 12),
+          _hudCounter(Icons.auto_awesome, '${bot.availableRelicCount}', size: 14),
         ],
       ),
-    );
-  }
-
-  Widget _statChip(IconData icon, String text, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13, color: color),
-        const SizedBox(width: 3),
-        Text(text,
-            style: GoogleFonts.robotoMono(
-                fontSize: 11, color: color, fontWeight: FontWeight.w600)),
-      ],
     );
   }
 
@@ -1382,9 +1360,10 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     final arcDy = offset.abs() * 3.0; // bordas levemente mais baixas
 
     if (isPreview) {
+      // Preview da próxima carta: mais pra DIREITA e mais pra BAIXO (CEO).
       return Positioned(
-        left: left,
-        bottom: 4 - arcDy,
+        left: left + 18,
+        bottom: -10 - arcDy,
         child: Transform.rotate(
           angle: rot,
           child: Opacity(
@@ -1638,6 +1617,25 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         ),
         child: const Icon(Icons.arrow_back_ios_new,
             size: 16, color: AppColors.textSecondary),
+      ),
+    );
+  }
+
+  /// Botão REDONDO de REGISTRO (log), à direita do botão de desistir. Mesma
+  /// aparência do botão de voltar.
+  Widget _logButton(PveMatchUiState ui) {
+    return GestureDetector(
+      onTap: () => _showFullLog(ui.log),
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.surface,
+          border: Border.all(color: AppColors.border, width: 1.4),
+        ),
+        child: const Icon(Icons.receipt_long_outlined,
+            size: 18, color: AppColors.textSecondary),
       ),
     );
   }

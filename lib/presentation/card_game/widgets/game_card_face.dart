@@ -319,38 +319,78 @@ class CrystalGem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipPath(
-      clipper: _DiamondClipper(),
-      child: Container(
-        width: size,
-        height: size,
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
         alignment: Alignment.center,
-        decoration: const BoxDecoration(
-          // Gradiente com profundidade (claro→médio→escuro) pra dar volume.
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF9DB6FF), Color(0xFF5E80F0), Color(0xFF2E3F92)],
-            stops: [0.0, 0.45, 1.0],
+        children: [
+          ClipPath(
+            clipper: _DiamondClipper(),
+            child: Container(
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                // Gradiente com profundidade (claro→médio→escuro).
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF9DB6FF),
+                    Color(0xFF5E80F0),
+                    Color(0xFF2E3F92)
+                  ],
+                  stops: [0.0, 0.45, 1.0],
+                ),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Positioned.fill(
+                      child: CustomPaint(painter: _CrystalFacets())),
+                  Text('$value',
+                      style: GoogleFonts.cinzelDecorative(
+                          fontSize: size * 0.5,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          shadows: const [
+                            Shadow(color: Color(0xAA1A2050), blurRadius: 2)
+                          ])),
+                ],
+              ),
+            ),
           ),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            const Positioned.fill(child: CustomPaint(painter: _CrystalFacets())),
-            Text('$value',
-                style: GoogleFonts.cinzelDecorative(
-                    fontSize: size * 0.5,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    shadows: const [
-                      Shadow(color: Color(0xAA1A2050), blurRadius: 2)
-                    ])),
-          ],
-        ),
+          // Borda do cristal (contorno do losango).
+          const Positioned.fill(
+              child: CustomPaint(painter: _DiamondBorder())),
+        ],
       ),
     );
   }
+}
+
+/// Contorno (borda) do losango do cristal — claro, fica metade visível sobre a
+/// borda do clip.
+class _DiamondBorder extends CustomPainter {
+  const _DiamondBorder();
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    final path = Path()
+      ..moveTo(w / 2, 0)
+      ..lineTo(w, h / 2)
+      ..lineTo(w / 2, h)
+      ..lineTo(0, h / 2)
+      ..close();
+    canvas.drawPath(
+        path,
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.7)
+          ..strokeWidth = s.width * 0.06
+          ..style = PaintingStyle.stroke);
+  }
+
+  @override
+  bool shouldRepaint(covariant _DiamondBorder old) => false;
 }
 
 /// Facetas internas do cristal de custo: arestas do centro aos 4 vértices +
