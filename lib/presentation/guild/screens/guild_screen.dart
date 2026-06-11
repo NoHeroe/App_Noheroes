@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../shared/widgets/nh_atmosphere.dart';
+import '../../shared/widgets/nh_back_button.dart';
 import '../../../core/utils/guild_rank.dart';
 import '../../../core/utils/faction_theme.dart';
 import '../../../domain/enums/source_type.dart';
@@ -95,15 +97,21 @@ class GuildScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.black,
-      body: SafeArea(
-        child: guildAsync.when(
-          loading: () => const Center(
-              child: CircularProgressIndicator(color: AppColors.gold)),
-          error: (e, _) => Center(
-              child: Text('Erro: $e',
-                  style: const TextStyle(color: AppColors.textMuted))),
-          data: (status) => _buildContent(context, ref, player, status),
-        ),
+      body: Stack(
+        children: [
+          const NhAtmosphere(),
+          SafeArea(
+            child: guildAsync.when(
+              loading: () => const Center(
+                  child: CircularProgressIndicator(color: AppColors.gold)),
+              error: (e, _) => Center(
+                  child: Text('Erro: $e',
+                      style: const TextStyle(color: AppColors.textMuted))),
+              data: (status) =>
+                  _buildContent(context, ref, player, status),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -631,12 +639,12 @@ class GuildScreen extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios,
-                color: AppColors.textMuted, size: 18),
-            onPressed: () => context.go('/sanctuary'),
+          NhBackButton(
+            size: 36,
+            onTap: () =>
+                context.canPop() ? context.pop() : context.go('/sanctuary'),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 10),
           // Emblema
           Container(
             width: 40,

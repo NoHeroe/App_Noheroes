@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../shared/widgets/nh_atmosphere.dart';
+import '../../shared/widgets/nh_back_button.dart';
 import '../../../core/utils/faction_theme.dart';
 import '../../../data/datasources/local/class_bonus_service.dart';
 import '../../shared/widgets/app_snack.dart';
@@ -71,19 +73,24 @@ class FactionScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.black,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(context, headerTitle, headerColor),
-            Expanded(
-              child: isLoneWolf
-                  ? _buildLoneWolfView(context, ref, color)
-                  : isMember
-                      ? _buildMemberView(context, ref, color, name)
-                      : _buildNonMemberView(context, currentFaction),
+      body: Stack(
+        children: [
+          const NhAtmosphere(),
+          SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(context, headerTitle, headerColor),
+                Expanded(
+                  child: isLoneWolf
+                      ? _buildLoneWolfView(context, ref, color)
+                      : isMember
+                          ? _buildMemberView(context, ref, color, name)
+                          : _buildNonMemberView(context, currentFaction),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -96,12 +103,12 @@ class FactionScreen extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios,
-                color: AppColors.textMuted, size: 18),
-            onPressed: () =>
+          NhBackButton(
+            size: 36,
+            onTap: () =>
                 context.canPop() ? context.pop() : context.go('/guild'),
           ),
+          const SizedBox(width: 10),
           Expanded(
             child: Text(
               title.toUpperCase(),

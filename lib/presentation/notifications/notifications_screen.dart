@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../../core/constants/app_colors.dart';
 import '../../data/datasources/local/notification_service.dart';
+import '../shared/widgets/nh_atmosphere.dart';
+import '../shared/widgets/nh_back_button.dart';
 
 class _NotifItem {
   final String id;
@@ -182,26 +184,26 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.black,
-      body: SafeArea(
+      body: Stack(
+        children: [
+          const NhAtmosphere(),
+          SafeArea(
         child: Column(
           children: [
-            // Header
+            // Header sem título — só o voltar padrão + badge de não-lidas.
             Container(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
               decoration: const BoxDecoration(
                 border: Border(bottom: BorderSide(color: AppColors.border)),
               ),
               child: Row(
                 children: [
-                  GestureDetector(
-                    onTap: () => context.go('/sanctuary'),
-                    child: const Icon(Icons.arrow_back_ios,
-                        color: AppColors.textSecondary, size: 20),
+                  NhBackButton(
+                    onTap: () => context.canPop()
+                        ? context.pop()
+                        : context.go('/sanctuary'),
                   ),
-                  const SizedBox(width: 12),
-                  Text('NOTIFICAÇÕES',
-                      style: GoogleFonts.cinzelDecorative(
-                          fontSize: 15, color: AppColors.gold, letterSpacing: 2)),
+                  const Spacer(),
                   if (unread > 0) ...[
                     const SizedBox(width: 8),
                     Container(
@@ -326,6 +328,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             ),
           ],
         ),
+      ),
+        ],
       ),
     );
   }

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../shared/widgets/nh_atmosphere.dart';
+import '../../shared/widgets/nh_back_button.dart';
 
 // Placeholder da Fase 1 — estrutura de escolas de magia entra em sprint
 // dedicada (Fase 2.x ou 3.x). Mana-users nível 25+ caem aqui.
@@ -16,45 +18,22 @@ class MagicHubScreen extends ConsumerWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment(0, -0.35),
-                radius: 1.3,
-                colors: [
-                  Color(0xFF0E1A2E),
-                  Color(0xFF050810),
-                  AppColors.black,
-                ],
-                stops: [0.0, 0.6, 1.0],
-              ),
-            ),
+          const NhAtmosphere(
+            glow: AppColors.mp,
+            base: [Color(0xFF0E1A2E), Color(0xFF050810), AppColors.black],
           ),
           SafeArea(
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                   child: Row(
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back,
-                            color: AppColors.textSecondary, size: 20),
-                        onPressed: () => context.go('/sanctuary'),
+                      NhBackButton(
+                        onTap: () => context.canPop()
+                            ? context.pop()
+                            : context.go('/sanctuary'),
                       ),
-                      Expanded(
-                        child: Center(
-                          child: Text(
-                            'MAGIA',
-                            style: GoogleFonts.cinzelDecorative(
-                              fontSize: 15,
-                              color: AppColors.mp,
-                              letterSpacing: 6,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 40),
                     ],
                   ),
                 ),
