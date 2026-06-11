@@ -28,6 +28,9 @@ class GameCardFace extends StatelessWidget {
     this.borderOverride,
     this.glowColor,
     this.cornerBadge,
+    this.itemIcon,
+    this.showItemSlot = false,
+    this.effects = const <IconData>[],
   });
 
   final String name;
@@ -55,6 +58,16 @@ class GameCardFace extends StatelessWidget {
 
   /// Selo opcional no canto superior direito da arte (ex.: FLASH, ícone de tipo).
   final Widget? cornerBadge;
+
+  /// Ícone do ITEM equipado (mostrado no pentágono inferior). null = slot vazio.
+  final IconData? itemIcon;
+
+  /// Mostra o slot de item (pentágono) cravado na borda inferior.
+  final bool showItemSlot;
+
+  /// Brasões de EFEITO (keywords) — pequenos círculos na borda esquerda que
+  /// vazam ~40% pra fora, abaixo da bandeira de raridade.
+  final List<IconData> effects;
 
   Color get _concept => conceptColor(concepts);
 
@@ -128,8 +141,8 @@ class GameCardFace extends StatelessWidget {
                   // legibilidade sobre a arte. (Raridade saiu daqui → bandeira
                   // pendurada na borda esquerda.)
                   Positioned(
-                    top: 6,
-                    left: 12,
+                    top: 4,
+                    left: 17,
                     right: 6,
                     child: Container(
                       padding:
@@ -193,15 +206,35 @@ class GameCardFace extends StatelessWidget {
       alignment: Alignment.topCenter,
       children: [
         card,
-        // Bandeira de RARIDADE pendurada na borda esquerda (mini banner virado
-        // pra baixo). Lendária = RGB animado.
-        Positioned(top: 6, left: -1, child: _RarityPennant(rarity: rarity)),
+        // Bandeira de RARIDADE pendurada rente ao TOPO, na borda esquerda
+        // (mini banner virado pra baixo, sem estourar). Lendária = RGB animado.
+        Positioned(top: 0, left: 3, child: _RarityPennant(rarity: rarity)),
+        // Brasões de EFEITO (keywords) na borda esquerda, abaixo da bandeira,
+        // vazando ~40% pra fora.
+        if (effects.isNotEmpty)
+          Positioned(
+            top: 34,
+            left: -7,
+            child: Column(
+              children: [
+                for (final ic in effects.take(4)) _EffectCrest(icon: ic),
+              ],
+            ),
+          ),
         Positioned(
           top: -12, // metade dos 24px do diamante acima da borda
           left: 0,
           right: 0,
           child: Center(child: CrystalGem(value: cost)),
         ),
+        // Slot de ITEM (pentágono) cravado na borda INFERIOR-centro.
+        if (showItemSlot)
+          Positioned(
+            bottom: -14,
+            left: 0,
+            right: 0,
+            child: Center(child: _PentagonSlot(icon: itemIcon)),
+          ),
       ],
     );
 
@@ -367,6 +400,108 @@ class _CrystalFacets extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _CrystalFacets old) => false;
+}
+
+/// Brasão redondo de EFEITO (keyword) — pequeno, dourado, ícone branco.
+class _EffectCrest extends StatelessWidget {
+  const _EffectCrest({required this.icon});
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 16,
+      height: 16,
+      margin: const EdgeInsets.only(bottom: 3),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFE8C66A), Color(0xFF8A6A2A)],
+        ),
+        border: Border.all(color: const Color(0xFF1A140A), width: 1),
+        boxShadow: const [BoxShadow(color: Color(0x88000000), blurRadius: 3)],
+      ),
+      child: Icon(icon, size: 10, color: Colors.white),
+    );
+  }
+}
+
+/// Slot de ITEM em PENTÁGONO (apontando pra baixo) com borda DUPLA. Mostra o
+/// ícone do item equipado no meio (ou vazio).
+class _PentagonSlot extends StatelessWidget {
+  const _PentagonSlot({this.icon});
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    const size = 28.0;
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(
+        painter: _PentagonPainter(filled: icon != null),
+        child: Center(
+          child: icon == null
+              ? null
+              : Icon(icon, size: 13, color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
+
+class _PentagonPainter extends CustomPainter {
+  _PentagonPainter({required this.filled});
+  final bool filled;
+
+  /// Pentágono apontando pra baixo; [inset] lerpa os vértices rumo ao centro
+  /// (0 = externo, 0.28 = borda interna), sem Matrix4.
+  Path _path(Size s, [double inset = 0]) {
+    final w = s.width, h = s.height;
+    final c = Offset(w / 2, h / 2);
+    Offset v(double x, double y) => Offset.lerp(Offset(x, y), c, inset)!;
+    final a = v(0, 0),
+        b = v(w, 0),
+        d = v(w, h * 0.58),
+        e = v(w / 2, h),
+        f = v(0, h * 0.58);
+    return Path()
+      ..moveTo(a.dx, a.dy)
+      ..lineTo(b.dx, b.dy)
+      ..lineTo(d.dx, d.dy)
+      ..lineTo(e.dx, e.dy)
+      ..lineTo(f.dx, f.dy)
+      ..close();
+  }
+
+  @override
+  void paint(Canvas canvas, Size s) {
+    final path = _path(s);
+    canvas.drawPath(
+        path,
+        Paint()
+          ..color = filled ? const Color(0xEE2A2140) : const Color(0xCC15101E)
+          ..style = PaintingStyle.fill);
+    canvas.drawPath(
+        path,
+        Paint()
+          ..color = const Color(0xFFE8C66A)
+          ..strokeWidth = 2.2
+          ..style = PaintingStyle.stroke);
+    // Borda interna (dupla).
+    canvas.drawPath(
+        _path(s, 0.28),
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.4)
+          ..strokeWidth = 1
+          ..style = PaintingStyle.stroke);
+  }
+
+  @override
+  bool shouldRepaint(covariant _PentagonPainter old) => old.filled != filled;
 }
 
 /// Bandeira de raridade pendurada na borda esquerda (mini banner virado pra

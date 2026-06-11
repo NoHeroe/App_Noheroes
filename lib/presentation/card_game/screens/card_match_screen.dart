@@ -590,31 +590,39 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
-  /// HUD inferior com MOLDURA refinada: contador de monstros (esq, branco) ·
-  /// cristais facetados (centro, igual ao da carta) · itens (dir, branco).
+  /// HUD inferior com MOLDURA orgânica (pílula com borda em gradiente dourado,
+  /// estilo cartucho): monstros (esq, branco) · cristal facetado (centro) ·
+  /// itens (dir, branco).
   Widget _bottomHud(PveMatchUiState ui, BoardSide player) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 2, 20, 8),
+      padding: const EdgeInsets.fromLTRB(18, 2, 18, 10),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        // Borda em GRADIENTE dourado (mais "viva" que cor sólida) + brilho.
         decoration: BoxDecoration(
-          // Moldura "de quadro": dupla borda dourada + fundo escuro + brilho.
-          color: const Color(0xFF15101E),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color: AppColors.gold.withValues(alpha: 0.6), width: 2),
+          borderRadius: BorderRadius.circular(40),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFF0D27E), Color(0xFF8A6A2A), Color(0xFFF0D27E)],
+          ),
           boxShadow: [
             BoxShadow(
-                color: AppColors.gold.withValues(alpha: 0.12), blurRadius: 10),
+                color: AppColors.gold.withValues(alpha: 0.22), blurRadius: 14),
           ],
         ),
+        padding: const EdgeInsets.all(2.5), // espessura da moldura
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(11),
+            borderRadius: BorderRadius.circular(38),
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF221833), Color(0xFF120C1E)],
+            ),
             border: Border.all(
-                color: AppColors.gold.withValues(alpha: 0.25), width: 1),
+                color: Colors.white.withValues(alpha: 0.10), width: 1),
           ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 5),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1145,6 +1153,54 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
+  /// Ícone de uma keyword (brasão de efeito na borda da carta).
+  IconData _keywordIcon(AbilityKeyword k) {
+    switch (k) {
+      case AbilityKeyword.provocar:
+        return Icons.campaign;
+      case AbilityKeyword.escudo:
+        return Icons.shield;
+      case AbilityKeyword.voo:
+        return Icons.flight;
+      case AbilityKeyword.ataqueDuplo:
+        return Icons.fast_forward;
+      case AbilityKeyword.alcance:
+        return Icons.open_in_full;
+      case AbilityKeyword.inspirar:
+        return Icons.upgrade;
+      case AbilityKeyword.pisotear:
+        return Icons.south;
+      case AbilityKeyword.silencio:
+        return Icons.volume_off;
+      case AbilityKeyword.furtividade:
+        return Icons.visibility_off;
+      case AbilityKeyword.cristalDeDrenagem:
+        return Icons.diamond;
+      case AbilityKeyword.rouboDePv:
+        return Icons.bloodtype;
+      case AbilityKeyword.investida:
+        return Icons.bolt;
+    }
+  }
+
+  /// Ícone do item equipado (pra o pentágono inferior), derivado do efeito.
+  IconData _relicSlotIcon(RelicCard r) {
+    final g = r.grants;
+    if (g.attackType != null) return damageTypeIcon(g.attackType!);
+    if (g.armor != null) return Icons.shield;
+    if (g.heal != null) return Icons.healing;
+    if (g.hpBonus != null) return Icons.favorite;
+    if (g.atkBonus != null) return Icons.colorize;
+    return Icons.auto_awesome;
+  }
+
+  /// Brasões de efeito de uma criatura da MÃO (keywords inatas das abilities).
+  List<IconData> _creatureEffectIcons(CreatureCard c) => c.abilities
+      .map(abilityKeywordFromString)
+      .whereType<AbilityKeyword>()
+      .map(_keywordIcon)
+      .toList();
+
   /// Glifo do tipo de dano em BRANCO (físico = espada custom; demais = ícone
   /// Material branco). Diferencia pela FORMA, não pela cor.
   Widget _typeGlyph(DamageType type, {double size = 12}) {
@@ -1182,6 +1238,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       cornerBadge: isFront
           ? const Icon(Icons.flag, size: 11, color: AppColors.gold)
           : null,
+      showItemSlot: true,
+      itemIcon: c.relics.isNotEmpty ? _relicSlotIcon(c.relics.first) : null,
+      effects: c.keywords.map(_keywordIcon).toList(),
       footer: _boardFooter(c),
     )
         .animate(onPlay: (ctrl) => ctrl.repeat(reverse: true))
@@ -1201,70 +1260,32 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   }
 
   Widget _boardFooter(CreatureInPlay c) {
-    final hpRatio =
-        c.maxHp <= 0 ? 0.0 : (c.currentHp / c.maxHp).clamp(0.0, 1.0);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    // Barra de vida REMOVIDA (CEO); as keywords viraram brasões na borda
+    // esquerda (ver GameCardFace.effectCrests). Aqui fica só a linha de stats.
+    return Row(
       children: [
-        Row(
-          children: [
-            // Ícone BRANCO do tipo (físico = espada); diferencia pela forma.
-            _typeGlyph(c.effectiveDamageType, size: 12),
-            const SizedBox(width: 3),
-            Text('${c.effectiveAtk}',
-                style: GoogleFonts.robotoMono(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.gold)),
-            const Spacer(),
-            if (c.armor > 0) ...[
-              const Icon(Icons.shield, size: 8, color: AppColors.textSecondary),
-              Text('${c.armor} ',
-                  style: GoogleFonts.robotoMono(
-                      fontSize: 8, color: AppColors.textSecondary)),
-            ],
-            // Só a vida ATUAL, colorida: branco = cheia (no original);
-            // vermelho = abaixo do total; verde = acima da vida original.
-            Text('${c.currentHp}',
-                style: GoogleFonts.robotoMono(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: _boardHpColor(c))),
-          ],
-        ),
-        const SizedBox(height: 3),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(3),
-          child: SizedBox(
-            height: 4,
-            child: Stack(
-              children: [
-                Container(color: AppColors.surface),
-                FractionallySizedBox(
-                  widthFactor: hpRatio,
-                  child: Container(
-                    color: hpRatio > 0.5
-                        ? AppColors.conceptChrysalis
-                        : (hpRatio > 0.25 ? AppColors.gold : AppColors.hp),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (c.keywords.isNotEmpty) ...[
-          const SizedBox(height: 3),
-          Text(
-            c.keywords.map(abilityKeywordLabel).join(' · '),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.roboto(
-                fontSize: 7,
-                fontWeight: FontWeight.w600,
-                color: AppColors.gold.withValues(alpha: 0.85)),
-          ),
+        // Ícone BRANCO do tipo (físico = espada); diferencia pela forma.
+        _typeGlyph(c.effectiveDamageType, size: 12),
+        const SizedBox(width: 3),
+        Text('${c.effectiveAtk}',
+            style: GoogleFonts.robotoMono(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: AppColors.gold)),
+        const Spacer(),
+        if (c.armor > 0) ...[
+          const Icon(Icons.shield, size: 8, color: AppColors.textSecondary),
+          Text('${c.armor} ',
+              style: GoogleFonts.robotoMono(
+                  fontSize: 8, color: AppColors.textSecondary)),
         ],
+        // Só a vida ATUAL, colorida: branco = cheia (no original); vermelho =
+        // abaixo do total; verde = acima da vida original.
+        Text('${c.currentHp}',
+            style: GoogleFonts.robotoMono(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: _boardHpColor(c))),
       ],
     );
   }
@@ -1477,6 +1498,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       artIcon: creature != null
           ? damageTypeIcon(creature.damageType)
           : (relic!.isFlash ? Icons.bolt : Icons.auto_awesome),
+      // Criaturas na mão mostram o slot de item (vazio) + efeitos inatos.
+      showItemSlot: creature != null,
+      effects: creature != null ? _creatureEffectIcons(creature) : const [],
       footer: footer,
       cornerBadge: badge,
       selected: selected,
