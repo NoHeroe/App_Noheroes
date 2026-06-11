@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Permite tráfego cleartext (HTTP) APENAS para o localhost. O flutter_3d_controller
+  serve o modelo glb via um servidor HTTP local (http://127.0.0.1:PORT) e o
+  WebView bloqueia cleartext por padrão (targetSdk alto) → ERR_CLEARTEXT_NOT_PERMITTED.
+  O resto do app continua exigindo HTTPS.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>
