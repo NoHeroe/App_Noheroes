@@ -9,6 +9,7 @@ import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_models.dart';
 import '../card_ownership.dart';
 import '../deck_repository.dart';
+import '../widgets/game_card_face.dart';
 
 /// Construtor de Deck (ACDA).
 ///
@@ -518,17 +519,45 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
     return _pagedGrid(creatures.length, (i) {
       final c = creatures[i];
       final inDeck = _creatureIds.contains(c.id);
-      return _DeckCardTile(
-        name: c.nome,
-        concepts: c.concepts,
-        rarity: c.rarity,
-        icon: _damageIcon(c.damageType),
-        cost: c.cost,
-        atk: c.atk,
-        pv: c.hp,
-        inDeck: inDeck,
-        warning: false,
+      final footer = Row(
+        children: [
+          typeGlyph(c.damageType, size: 12),
+          const SizedBox(width: 3),
+          Text('${c.atk}',
+              style: GoogleFonts.robotoMono(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.gold)),
+          const Spacer(),
+          const Icon(Icons.favorite, size: 10, color: Colors.white),
+          const SizedBox(width: 3),
+          Text('${c.hp}',
+              style: GoogleFonts.robotoMono(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.conceptChrysalis)),
+        ],
+      );
+      return GestureDetector(
         onTap: () => _toggleCreature(c.id),
+        child: GameCardFace(
+          name: c.nome,
+          cost: c.cost,
+          concepts: c.concepts,
+          rarity: c.rarity,
+          artIcon: _damageIcon(c.damageType),
+          showItemSlot: false,
+          effects: effectIconsFromAbilities(c.abilities),
+          footer: footer,
+          borderOverride: inDeck ? AppColors.shadowAscending : null,
+          glowColor: inDeck
+              ? AppColors.shadowAscending.withValues(alpha: 0.4)
+              : null,
+          cornerBadge: inDeck
+              ? const Icon(Icons.check_circle,
+                  size: 16, color: AppColors.shadowAscending)
+              : null,
+        ),
       );
     });
   }
@@ -549,18 +578,37 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
       final dead = deckCreatures.isNotEmpty &&
           !r.isUniversal &&
           !deckCreatures.any(r.isCompatibleWith);
-      return _DeckCardTile(
-        name: r.nome,
-        concepts: r.concepts,
-        rarity: r.rarity,
-        icon: r.isFlash ? Icons.bolt : Icons.shield_outlined,
-        cost: r.cost,
-        atk: null,
-        pv: null,
-        relicTag: r.isFlash ? 'Flash' : 'Equip.',
-        inDeck: inDeck,
-        warning: dead,
+      final footer = Center(
+        child: Text(
+          dead ? 'INCOMPATÍVEL' : (r.isFlash ? 'FLASH' : 'EQUIP.'),
+          style: GoogleFonts.roboto(
+              fontSize: 8.5,
+              letterSpacing: 1,
+              color: dead ? AppColors.gold : AppColors.txtMut),
+        ),
+      );
+      final highlight =
+          inDeck ? AppColors.shadowAscending : (dead ? AppColors.gold : null);
+      return GestureDetector(
         onTap: () => _toggleRelic(r.id),
+        child: GameCardFace(
+          name: r.nome,
+          cost: r.cost,
+          concepts: r.concepts,
+          rarity: r.rarity,
+          artIcon: r.isFlash ? Icons.bolt : Icons.shield_outlined,
+          showItemSlot: false,
+          footer: footer,
+          borderOverride: highlight,
+          glowColor: highlight?.withValues(alpha: 0.4),
+          cornerBadge: inDeck
+              ? const Icon(Icons.check_circle,
+                  size: 16, color: AppColors.shadowAscending)
+              : (dead
+                  ? const Icon(Icons.warning_amber_rounded,
+                      size: 15, color: AppColors.gold)
+                  : null),
+        ),
       );
     });
   }
@@ -885,212 +933,6 @@ class _SaveButton extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Tile compacto pro grid do construtor. Destaque quando no deck; aviso
-/// (borda/ícone âmbar) quando "dead card" (relíquia incompatível).
-class _DeckCardTile extends StatelessWidget {
-  const _DeckCardTile({
-    required this.name,
-    required this.concepts,
-    required this.rarity,
-    required this.icon,
-    required this.inDeck,
-    required this.warning,
-    required this.onTap,
-    this.cost,
-    this.atk,
-    this.pv,
-    this.relicTag,
-  });
-
-  final String name;
-  final List<CardConcept> concepts;
-  final Rarity rarity;
-  final IconData icon;
-  final bool inDeck;
-  final bool warning;
-  final VoidCallback onTap;
-  final int? cost;
-  final int? atk;
-  final int? pv;
-  final String? relicTag;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = _conceptColor(concepts);
-    final borderColor = inDeck
-        ? AppColors.shadowAscending
-        : (warning ? AppColors.gold : c.withValues(alpha: 0.35));
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          gradient: const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF211A2E), Color(0xFF0B0810)],
-          ),
-          border: Border.all(
-            color: borderColor,
-            width: inDeck ? 2 : 1,
-          ),
-          boxShadow: inDeck
-              ? [
-                  BoxShadow(
-                    color: AppColors.shadowAscending.withValues(alpha: 0.35),
-                    blurRadius: 10,
-                    spreadRadius: 1,
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: c.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                  ),
-                ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Art
-              Expanded(
-                child: Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: RadialGradient(
-                            center: const Alignment(0, -0.2),
-                            radius: 0.9,
-                            colors: [
-                              c.withValues(alpha: 0.45),
-                              const Color(0xFF0B0810),
-                            ],
-                          ),
-                        ),
-                        child: Center(
-                          child: Icon(icon,
-                              size: 30,
-                              color: Colors.white.withValues(alpha: 0.5)),
-                        ),
-                      ),
-                    ),
-                    if (cost != null)
-                      Positioned(
-                        top: 0,
-                        left: 0,
-                        child: Container(
-                          width: 18,
-                          height: 18,
-                          alignment: Alignment.center,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color(0xFF3A4FAE),
-                          ),
-                          child: Text('$cost',
-                              style: GoogleFonts.cinzelDecorative(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white)),
-                        ),
-                      ),
-                    // Marca de seleção / aviso (top-right)
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: inDeck
-                          ? const Icon(Icons.check_circle,
-                              size: 18, color: AppColors.shadowAscending)
-                          : (warning
-                              ? const Icon(Icons.warning_amber_rounded,
-                                  size: 16, color: AppColors.gold)
-                              : const SizedBox.shrink()),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Container(
-                    width: 9,
-                    height: 9,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _rarityColor(rarity),
-                    ),
-                  ),
-                  const SizedBox(width: 5),
-                  Expanded(
-                    child: Text(
-                      name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.roboto(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.txt),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 3),
-              if (atk != null && pv != null)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.colorize,
-                            size: 11, color: Color(0xFFF0D9A0)),
-                        const SizedBox(width: 2),
-                        Text('$atk',
-                            style: GoogleFonts.cinzelDecorative(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.conceptMagico)),
-                      ],
-                    ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.favorite,
-                            size: 11, color: Color(0xFFFF9B9B)),
-                        const SizedBox(width: 2),
-                        Text('$pv',
-                            style: GoogleFonts.cinzelDecorative(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.conceptCorrompido)),
-                      ],
-                    ),
-                  ],
-                )
-              else
-                Center(
-                  child: Text(
-                    warning
-                        ? 'INCOMPATÍVEL'
-                        : (relicTag ?? '').toUpperCase(),
-                    style: GoogleFonts.roboto(
-                        fontSize: 8.5,
-                        letterSpacing: 1,
-                        color: warning ? AppColors.gold : AppColors.txtMut),
-                  ),
-                ),
-            ],
-          ),
         ),
       ),
     );

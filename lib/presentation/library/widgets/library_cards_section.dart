@@ -835,17 +835,13 @@ class _CardTile extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       color: AppColors.gold)),
               const Spacer(),
+              const Icon(Icons.favorite, size: 10, color: Colors.white),
+              const SizedBox(width: 3),
               Text('${card.pv}',
                   style: GoogleFonts.robotoMono(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       color: AppColors.conceptChrysalis)),
-              Text(' PV',
-                  style: GoogleFonts.roboto(
-                      fontSize: 6,
-                      fontWeight: FontWeight.w700,
-                      color:
-                          AppColors.conceptChrysalis.withValues(alpha: 0.7))),
             ],
           )
         : Center(

@@ -1228,7 +1228,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                   fontSize: 8, color: AppColors.textSecondary)),
         ],
         // Só a vida ATUAL, colorida: branco = cheia (no original); vermelho =
-        // abaixo do total; verde = acima da vida original.
+        // abaixo do total; verde = acima da vida original. Coraçãozinho branco.
+        const Icon(Icons.favorite, size: 9, color: Colors.white),
+        const SizedBox(width: 2),
         Text('${c.currentHp}',
             style: GoogleFonts.robotoMono(
                 fontSize: 12,
@@ -1414,16 +1416,13 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                       fontWeight: FontWeight.w700,
                       color: AppColors.gold)),
               const Spacer(),
+              const Icon(Icons.favorite, size: 9, color: Colors.white),
+              const SizedBox(width: 2),
               Text('${creature.hp}',
                   style: GoogleFonts.robotoMono(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       color: AppColors.conceptChrysalis)),
-              Text(' PV',
-                  style: GoogleFonts.roboto(
-                      fontSize: 6,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.conceptChrysalis.withValues(alpha: 0.7))),
             ],
           )
         : Text(_relicSummary(relic!),
