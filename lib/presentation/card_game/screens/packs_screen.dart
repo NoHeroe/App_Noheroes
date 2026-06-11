@@ -11,6 +11,7 @@ import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_models.dart';
 import '../card_ownership.dart';
 import '../widgets/pack_reveal_overlay.dart';
+import '../widgets/weekly_shop_section.dart';
 
 /// Tela de Pacotes (ACDA — obtenção de cartas).
 ///
@@ -254,13 +255,28 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
             base: [Color(0xFF1A0020), Color(0xFF0A000A), AppColors.black],
           ),
           SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildHeader(gold, gems),
-                const SizedBox(height: 8),
-                Expanded(child: _buildBody(gold, gems)),
-              ],
+            child: DefaultTabController(
+              length: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildHeader(gold, gems),
+                  const TabBar(
+                    indicatorColor: AppColors.gold,
+                    labelColor: AppColors.goldLt,
+                    unselectedLabelColor: AppColors.txtMut,
+                    tabs: [Tab(text: 'PACOTES'), Tab(text: 'MERCADO')],
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        _buildBody(gold, gems),
+                        const WeeklyShopSection(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

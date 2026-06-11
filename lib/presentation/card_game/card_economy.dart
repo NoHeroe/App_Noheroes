@@ -72,6 +72,17 @@ class CardEconomyService {
         'p_from_rarity': fromRarity,
       }));
 
+  /// Estado da loja semanal (catálogo + contagem da semana + oferta rotativa).
+  Future<Map<String, dynamic>> shopState(String playerId) async {
+    final res = await _client.rpc('cg_shop_state', params: {'p_player': playerId});
+    return (res as Map).cast<String, dynamic>();
+  }
+
+  /// Compra um item da loja semanal (item_key, ou 'rotative').
+  Future<CgResult> shopBuy(String playerId, String itemKey) async =>
+      CgResult.fromRpc(await _client.rpc('cg_shop_buy',
+          params: {'p_player': playerId, 'p_item_key': itemKey}));
+
   /// Saldo de TODOS os recursos do card game do jogador (chave → quantidade).
   Future<Map<String, int>> resources(String playerId) async {
     final rows = await _client
