@@ -8,6 +8,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_models.dart';
 import '../../card_game/card_ownership.dart';
+import '../../card_game/widgets/game_card_face.dart';
 
 /// Fatia 2 — Coleção de cartas. Casca visual ORIGINAL preservada (tabs/busca/
 /// filtros por conceito/grid), mas a FONTE DE DADOS agora é o catálogo REAL do
@@ -820,240 +821,52 @@ class _CardTile extends StatelessWidget {
     );
   }
 
+  /// Carta com o MESMO visual da partida (GameCardFace), sem o slot de item.
   Widget _buildTile(BuildContext context) {
-    final c = card.conceptColor;
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF211A2E), Color(0xFF0B0810)],
-        ),
-        border: Border.all(color: c.withValues(alpha: 0.35)),
-        boxShadow: [
-          BoxShadow(
-            color: c.withValues(alpha: 0.12),
-            blurRadius: 10,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(7),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Art
-            Expanded(
-              flex: 58,
-              child: Stack(
-                children: [
-                  // Fundo + silhueta
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: RadialGradient(
-                              center: const Alignment(0, -0.2),
-                              radius: 0.9,
-                              colors: [
-                                c.withValues(alpha: 0.45),
-                                const Color(0xFF0B0810),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Center(
-                          child: Icon(card.icon,
-                              size: 46,
-                              color: Colors.white.withValues(alpha: 0.5)),
-                        ),
-                        // fade escuro embaixo
-                        const DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.center,
-                              end: Alignment.bottomCenter,
-                              colors: [Color(0x000B0810), Color(0xCC0B0810)],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Custo (losango top-left) — criaturas E relíquias têm custo.
-                  Positioned(top: 0, left: 0, child: _CostDiamond(card.cost)),
-                  // Multi-conceito: pontos dos conceitos extras (top-right)
-                  if (card.concepts.length > 1)
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: Row(
-                        children: [
-                          for (final extra in card.concepts.skip(1))
-                            Padding(
-                              padding: const EdgeInsets.only(left: 3),
-                              child: Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: _styleOf(extra).color,
-                                  border: Border.all(
-                                      color: const Color(0xCC0B0810),
-                                      width: 1),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 6),
-            // Plate — gema raridade + nome
-            Row(
-              children: [
-                Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: card.rarityColor,
-                    boxShadow: [
-                      BoxShadow(
-                          color: card.rarityColor.withValues(alpha: 0.6),
-                          blurRadius: 6),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    card.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.roboto(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.txt),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            // Stats (criatura) ou tag (relíquia)
-            if (card.kind == _CardKind.creature)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _Stat(
-                    icon: Icons.colorize,
-                    iconColor: const Color(0xFFF0D9A0),
-                    value: card.atk,
-                    valueColor: AppColors.conceptMagico,
-                  ),
-                  _Stat(
-                    icon: Icons.favorite,
-                    iconColor: const Color(0xFFFF9B9B),
-                    value: card.pv,
-                    valueColor: AppColors.conceptCorrompido,
-                  ),
-                ],
-              )
-            else
-              Center(
-                child: Text(
-                  card.relicTag.toUpperCase(),
+    final isCreature = card.kind == _CardKind.creature;
+    final Widget footer = isCreature
+        ? Row(
+            children: [
+              typeGlyph(card.damageType ?? DamageType.corpoACorpo, size: 12),
+              const SizedBox(width: 3),
+              Text('${card.atk}',
+                  style: GoogleFonts.robotoMono(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.gold)),
+              const Spacer(),
+              Text('${card.pv}',
+                  style: GoogleFonts.robotoMono(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.conceptChrysalis)),
+              Text(' PV',
                   style: GoogleFonts.roboto(
-                      fontSize: 10,
-                      letterSpacing: 1.5,
-                      color: AppColors.txtMut),
-                ),
-              ),
-          ],
-        ),
-      ),
+                      fontSize: 6,
+                      fontWeight: FontWeight.w700,
+                      color:
+                          AppColors.conceptChrysalis.withValues(alpha: 0.7))),
+            ],
+          )
+        : Center(
+            child: Text(card.relicTag.toUpperCase(),
+                style: GoogleFonts.roboto(
+                    fontSize: 9,
+                    letterSpacing: 1.5,
+                    color: AppColors.txtMut)),
+          );
+
+    return GameCardFace(
+      name: card.name,
+      cost: card.cost,
+      concepts: card.concepts,
+      rarity: card.rarity,
+      artIcon: card.icon,
+      showItemSlot: false, // coleção não mostra slot de item
+      effects: isCreature ? effectIconsFromAbilities(card.abilities) : const [],
+      footer: footer,
     );
   }
-}
-
-class _Stat extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final int value;
-  final Color valueColor;
-  const _Stat({
-    required this.icon,
-    required this.iconColor,
-    required this.value,
-    required this.valueColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13, color: iconColor),
-        const SizedBox(width: 3),
-        Text('$value',
-            style: GoogleFonts.cinzelDecorative(
-                fontSize: 13, fontWeight: FontWeight.w700, color: valueColor)),
-      ],
-    );
-  }
-}
-
-class _CostDiamond extends StatelessWidget {
-  final int cost;
-  const _CostDiamond(this.cost);
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipPath(
-      clipper: _DiamondClipper(),
-      child: Container(
-        width: 26,
-        height: 26,
-        alignment: Alignment.center,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF6A8CFF), Color(0xFF3A4FAE)],
-          ),
-        ),
-        child: Text('$cost',
-            style: GoogleFonts.cinzelDecorative(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: Colors.white)),
-      ),
-    );
-  }
-}
-
-class _DiamondClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final w = size.width;
-    final h = size.height;
-    return Path()
-      ..moveTo(w / 2, 0)
-      ..lineTo(w, h / 2)
-      ..lineTo(w / 2, h)
-      ..lineTo(0, h / 2)
-      ..close();
-  }
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
 
 // ── Detalhe (BottomSheet) — inspeção sempre liberada ─────────────────────────

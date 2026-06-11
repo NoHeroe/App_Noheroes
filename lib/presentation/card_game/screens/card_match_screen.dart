@@ -1151,36 +1151,6 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
-  /// Ícone de uma keyword (brasão de efeito na borda da carta).
-  IconData _keywordIcon(AbilityKeyword k) {
-    switch (k) {
-      case AbilityKeyword.provocar:
-        return Icons.campaign;
-      case AbilityKeyword.escudo:
-        return Icons.shield;
-      case AbilityKeyword.voo:
-        return Icons.flight;
-      case AbilityKeyword.ataqueDuplo:
-        return Icons.fast_forward;
-      case AbilityKeyword.alcance:
-        return Icons.open_in_full;
-      case AbilityKeyword.inspirar:
-        return Icons.upgrade;
-      case AbilityKeyword.pisotear:
-        return Icons.south;
-      case AbilityKeyword.silencio:
-        return Icons.volume_off;
-      case AbilityKeyword.furtividade:
-        return Icons.visibility_off;
-      case AbilityKeyword.cristalDeDrenagem:
-        return Icons.diamond;
-      case AbilityKeyword.rouboDePv:
-        return Icons.bloodtype;
-      case AbilityKeyword.investida:
-        return Icons.bolt;
-    }
-  }
-
   /// Ícone do item equipado (pra o pentágono inferior), derivado do efeito.
   IconData _relicSlotIcon(RelicCard r) {
     final g = r.grants;
@@ -1190,26 +1160,6 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     if (g.hpBonus != null) return Icons.favorite;
     if (g.atkBonus != null) return Icons.colorize;
     return Icons.auto_awesome;
-  }
-
-  /// Brasões de efeito de uma criatura da MÃO (keywords inatas das abilities).
-  List<IconData> _creatureEffectIcons(CreatureCard c) => c.abilities
-      .map(abilityKeywordFromString)
-      .whereType<AbilityKeyword>()
-      .map(_keywordIcon)
-      .toList();
-
-  /// Glifo do tipo de dano em BRANCO (físico = espada custom; demais = ícone
-  /// Material branco). Diferencia pela FORMA, não pela cor.
-  Widget _typeGlyph(DamageType type, {double size = 12}) {
-    if (type == DamageType.corpoACorpo) {
-      return SizedBox(
-        width: size,
-        height: size,
-        child: const CustomPaint(painter: _SwordGlyphPainter(Colors.white)),
-      );
-    }
-    return Icon(damageTypeIcon(type), size: size, color: Colors.white);
   }
 
   /// Cor do PV no tabuleiro: branco = vida cheia (no original); vermelho =
@@ -1238,7 +1188,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
           : null,
       showItemSlot: true,
       itemIcon: c.relics.isNotEmpty ? _relicSlotIcon(c.relics.first) : null,
-      effects: c.keywords.map(_keywordIcon).toList(),
+      effects: c.keywords.map(keywordIcon).toList(),
       footer: _boardFooter(c),
     )
         .animate(onPlay: (ctrl) => ctrl.repeat(reverse: true))
@@ -1263,7 +1213,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     return Row(
       children: [
         // Ícone BRANCO do tipo (físico = espada); diferencia pela forma.
-        _typeGlyph(c.effectiveDamageType, size: 12),
+        typeGlyph(c.effectiveDamageType, size: 12),
         const SizedBox(width: 3),
         Text('${c.effectiveAtk}',
             style: GoogleFonts.robotoMono(
@@ -1456,7 +1406,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         ? Row(
             children: [
               // Ícone BRANCO do tipo (físico = espada).
-              _typeGlyph(creature.damageType, size: 12),
+              typeGlyph(creature.damageType, size: 12),
               const SizedBox(width: 3),
               Text('${creature.atk}',
                   style: GoogleFonts.robotoMono(
@@ -1503,7 +1453,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       // Preview (minimal): nada disso — só arte + nome.
       showItemSlot: creature != null && !minimal,
       effects: (creature != null && !minimal)
-          ? _creatureEffectIcons(creature)
+          ? effectIconsFromAbilities(creature.abilities)
           : const [],
       minimal: minimal,
       footer: minimal ? const SizedBox.shrink() : footer,
@@ -1941,44 +1891,6 @@ class _CrossedSwords extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       CustomPaint(size: Size.square(size), painter: _SwordsPainter(color));
-}
-
-/// Glifo de ESPADA única (vertical, ponta pra cima) — ícone do ATK físico.
-class _SwordGlyphPainter extends CustomPainter {
-  const _SwordGlyphPainter(this.color);
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size s) {
-    final w = s.width, h = s.height;
-    final cx = w / 2;
-    final fill = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-    final line = Paint()
-      ..color = color
-      ..strokeWidth = w * 0.11
-      ..strokeCap = StrokeCap.round;
-
-    // Lâmina: ponta no topo, base na guarda.
-    final blade = Path()
-      ..moveTo(cx, h * 0.04)
-      ..lineTo(cx - w * 0.11, h * 0.20)
-      ..lineTo(cx - w * 0.11, h * 0.60)
-      ..lineTo(cx + w * 0.11, h * 0.60)
-      ..lineTo(cx + w * 0.11, h * 0.20)
-      ..close();
-    canvas.drawPath(blade, fill);
-    // Guarda (cross-guard).
-    canvas.drawLine(Offset(w * 0.16, h * 0.63), Offset(w * 0.84, h * 0.63), line);
-    // Punho.
-    canvas.drawLine(Offset(cx, h * 0.63), Offset(cx, h * 0.88), line);
-    // Pomo.
-    canvas.drawCircle(Offset(cx, h * 0.92), w * 0.09, fill);
-  }
-
-  @override
-  bool shouldRepaint(covariant _SwordGlyphPainter old) => old.color != color;
 }
 
 class _SwordsPainter extends CustomPainter {

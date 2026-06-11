@@ -317,6 +317,90 @@ Color damageTypeColor(DamageType t) {
   }
 }
 
+/// Glifo do tipo de dano em BRANCO (físico = espada custom; demais = ícone
+/// Material). Compartilhado entre a PARTIDA e a COLEÇÃO pra manter o mesmo
+/// visual de carta.
+Widget typeGlyph(DamageType type, {double size = 12}) {
+  if (type == DamageType.corpoACorpo) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: const CustomPaint(painter: _SwordGlyph(Colors.white)),
+    );
+  }
+  return Icon(damageTypeIcon(type), size: size, color: Colors.white);
+}
+
+/// Ícone (brasão) de uma keyword de habilidade.
+IconData keywordIcon(AbilityKeyword k) {
+  switch (k) {
+    case AbilityKeyword.provocar:
+      return Icons.campaign;
+    case AbilityKeyword.escudo:
+      return Icons.shield;
+    case AbilityKeyword.voo:
+      return Icons.flight;
+    case AbilityKeyword.ataqueDuplo:
+      return Icons.fast_forward;
+    case AbilityKeyword.alcance:
+      return Icons.open_in_full;
+    case AbilityKeyword.inspirar:
+      return Icons.upgrade;
+    case AbilityKeyword.pisotear:
+      return Icons.south;
+    case AbilityKeyword.silencio:
+      return Icons.volume_off;
+    case AbilityKeyword.furtividade:
+      return Icons.visibility_off;
+    case AbilityKeyword.cristalDeDrenagem:
+      return Icons.diamond;
+    case AbilityKeyword.rouboDePv:
+      return Icons.bloodtype;
+    case AbilityKeyword.investida:
+      return Icons.bolt;
+  }
+}
+
+/// Brasões de efeito a partir das strings de habilidade de uma carta.
+List<IconData> effectIconsFromAbilities(List<String> abilities) => abilities
+    .map(abilityKeywordFromString)
+    .whereType<AbilityKeyword>()
+    .map(keywordIcon)
+    .toList();
+
+/// Glifo de ESPADA única (vertical, ponta pra cima) — ícone do ATK físico.
+class _SwordGlyph extends CustomPainter {
+  const _SwordGlyph(this.color);
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    final cx = w / 2;
+    final fill = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    final line = Paint()
+      ..color = color
+      ..strokeWidth = w * 0.11
+      ..strokeCap = StrokeCap.round;
+    final blade = Path()
+      ..moveTo(cx, h * 0.04)
+      ..lineTo(cx - w * 0.11, h * 0.20)
+      ..lineTo(cx - w * 0.11, h * 0.60)
+      ..lineTo(cx + w * 0.11, h * 0.60)
+      ..lineTo(cx + w * 0.11, h * 0.20)
+      ..close();
+    canvas.drawPath(blade, fill);
+    canvas.drawLine(Offset(w * 0.16, h * 0.63), Offset(w * 0.84, h * 0.63), line);
+    canvas.drawLine(Offset(cx, h * 0.63), Offset(cx, h * 0.88), line);
+    canvas.drawCircle(Offset(cx, h * 0.92), w * 0.09, fill);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SwordGlyph old) => old.color != color;
+}
+
 /// Cristal facetado com um número (custo da carta OU contador de cristais do
 /// HUD). `size` escala tudo. Mesma DNA visual nos dois usos (pedido do CEO).
 class CrystalGem extends StatelessWidget {
