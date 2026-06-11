@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../domain/models/mission_progress.dart';
 import 'mission_card_base.dart';
+import '../../../core/constants/app_colors.dart';
 
 /// Sprint 3.1 Bloco 10a.1 — card da família **internal**: sistema detecta
 /// progresso via EventBus (Bloco 6 strategies). UI é passiva — só
@@ -20,6 +21,8 @@ class InternalMissionCard extends StatelessWidget {
         : (mission.currentValue / mission.targetValue).clamp(0.0, 1.0);
     return MissionCardBase(
       mission: mission,
+      icon: Icons.self_improvement,
+      accent: AppColors.purpleLight,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

@@ -107,6 +107,8 @@ class IndividualMissionCard extends ConsumerWidget {
 
     return MissionCardBase(
       mission: mission,
+      icon: Icons.flag_outlined,
+      accent: AppColors.gold,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

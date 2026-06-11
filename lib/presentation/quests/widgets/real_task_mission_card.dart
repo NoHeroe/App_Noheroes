@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../domain/models/mission_progress.dart';
 import 'mission_card_base.dart';
+import '../../../core/constants/app_colors.dart';
 
 /// Sprint 3.1 Bloco 10a.1 — card da família **real**: jogador marca
 /// progresso manualmente via botões ±1/±10/±25.
@@ -32,6 +33,8 @@ class RealTaskMissionCard extends ConsumerWidget {
     final locked = mission.completedAt != null || mission.failedAt != null;
     return MissionCardBase(
       mission: mission,
+      icon: Icons.task_alt,
+      accent: AppColors.shadowAscending,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
