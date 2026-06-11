@@ -258,7 +258,7 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
             TextButton(
               onPressed: () {
                 Navigator.of(dialogCtx).pop();
-                context.go('/card-game/deck-builder');
+                context.push('/card-game/deck-builder');
               },
               style: TextButton.styleFrom(
                   foregroundColor: AppColors.purpleLight),

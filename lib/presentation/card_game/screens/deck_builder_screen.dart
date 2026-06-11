@@ -172,7 +172,8 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => context.go('/library'),
+            onTap: () =>
+                context.canPop() ? context.pop() : context.go('/library'),
             child: Container(
               width: 40,
               height: 40,
@@ -758,7 +759,11 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
       ref.invalidate(activeDeckProvider);
       if (!mounted) return;
       _showSnack('Deck salvo.');
-      context.go('/library');
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/library');
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);

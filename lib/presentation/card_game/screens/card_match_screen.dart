@@ -1821,7 +1821,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
-            onPressed: () => context.go('/card-game/deck-builder'),
+            onPressed: () => context.push('/card-game/deck-builder'),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.purple,
               padding:

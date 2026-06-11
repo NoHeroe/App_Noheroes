@@ -11,6 +11,7 @@ import '../../quests/widgets/history_filter_chips.dart';
 import '../../quests/widgets/history_mission_card.dart';
 import '../../quests/widgets/mission_counters.dart';
 import '../../quests/widgets/weekly_missions_chart.dart';
+import '../../shared/widgets/nh_back_button.dart';
 import '../providers/history_screen_notifier.dart';
 
 /// Sprint 3.1 Bloco 14.6c — rota dedicada `/history` (saiu da aba
@@ -77,32 +78,10 @@ class HistoryScreen extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
       child: Row(
         children: [
-          GestureDetector(
+          NhBackButton(
             key: const ValueKey('history-back'),
-            onTap: () => context.go('/sanctuary'),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                border: Border.all(color: AppColors.border),
-                borderRadius: BorderRadius.circular(10),
-                color: AppColors.surface,
-              ),
-              child: const Icon(
-                Icons.arrow_back_ios_new,
-                color: AppColors.textSecondary,
-                size: 18,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Text(
-            'HISTÓRICO',
-            style: GoogleFonts.cinzelDecorative(
-              fontSize: 16,
-              color: AppColors.gold,
-              letterSpacing: 2,
-            ),
+            onTap: () =>
+                context.canPop() ? context.pop() : context.go('/sanctuary'),
           ),
         ],
       ),

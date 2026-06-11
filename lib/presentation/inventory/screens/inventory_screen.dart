@@ -88,27 +88,21 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
         children: [
           NhBackButton(onTap: () => context.go('/sanctuary')),
           const Spacer(),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              FeatureChip(
-                icon: Icons.hardware,
-                label: 'FORJA',
-                route: '/forge',
-                requiredLevel: 6,
-                playerLevel: playerLevel,
-              ),
-              const SizedBox(height: 6),
-              FeatureChip(
-                icon: Icons.auto_awesome,
-                label: 'ENCANT.',
-                route: '/enchant',
-                requiredLevel: 20,
-                playerLevel: playerLevel,
-                color: AppColors.purpleLight,
-              ),
-            ],
+          FeatureChip(
+            icon: Icons.hardware,
+            label: 'FORJA',
+            route: '/forge',
+            requiredLevel: 6,
+            playerLevel: playerLevel,
+          ),
+          const SizedBox(width: 6),
+          FeatureChip(
+            icon: Icons.auto_awesome,
+            label: 'ENCANT.',
+            route: '/enchant',
+            requiredLevel: 20,
+            playerLevel: playerLevel,
+            color: AppColors.purpleLight,
           ),
           const SizedBox(width: 8),
           const SanctuaryWalletPills(),

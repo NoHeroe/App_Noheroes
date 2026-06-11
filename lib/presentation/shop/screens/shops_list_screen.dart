@@ -8,6 +8,7 @@ import '../../../core/utils/item_equip_policy.dart';
 import '../../../domain/models/player_snapshot.dart';
 import '../../../domain/models/shop_spec.dart';
 import '../../shared/widgets/nh_medallion.dart';
+import '../../shared/widgets/nh_back_button.dart';
 import '../../shared/widgets/app_snack.dart';
 import '../widgets/market_atmosphere.dart';
 
@@ -58,23 +59,10 @@ class ShopsListScreen extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => context.go('/sanctuary'),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF2A1B12), Color(0xFF0B0705)],
-                ),
-                border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
-              ),
-              child: const Icon(Icons.arrow_back_ios_new,
-                  color: AppColors.goldLt, size: 16),
-            ),
+          NhBackButton(
+            onTap: () => context.canPop()
+                ? context.pop()
+                : context.go('/sanctuary'),
           ),
         ],
       ),
@@ -128,7 +116,7 @@ class ShopsListScreen extends ConsumerWidget {
           AppSnack.warning(
               context, med.lockMsg ?? 'Esta loja ainda não está disponível.');
         } else if (med.key != null) {
-          context.go('/shop/${med.key}');
+          context.push('/shop/${med.key}');
         }
       },
     );

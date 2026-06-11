@@ -386,7 +386,7 @@ class FactionScreen extends ConsumerWidget {
   // espelha shops.json (faction_shop_<factionId>).
   Widget _buildShopButton(BuildContext context, Color color) {
     return GestureDetector(
-      onTap: () => context.go('/shop/faction_shop_$factionId'),
+      onTap: () => context.push('/shop/faction_shop_$factionId'),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),

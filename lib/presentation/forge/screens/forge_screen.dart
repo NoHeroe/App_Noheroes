@@ -297,7 +297,7 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
                   AppColors.purpleLight, () => context.go('/inventory')),
               const SizedBox(height: 6),
               _pillButton(Icons.hardware, 'FERREIRO', AppColors.gold,
-                  () => context.go('/shop/blacksmith_aureum')),
+                  () => context.push('/shop/blacksmith_aureum')),
               const SizedBox(height: 6),
               _pillButton(Icons.auto_awesome, 'ENCANT.', AppColors.purpleLight,
                   () {

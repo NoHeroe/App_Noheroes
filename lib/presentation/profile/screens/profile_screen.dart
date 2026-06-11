@@ -51,9 +51,6 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 const _Header(),
                 const SizedBox(height: 16),
-                // Mini-perfil no topo (avatar + nome + XP) — padrão Santuário.
-                const SanctuaryMiniProfile(),
-                const SizedBox(height: 16),
                 _IdentityCard(player: player),
                 const SizedBox(height: 16),
                 _BodyMetricsCard(player: player, service: service),
@@ -75,14 +72,16 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Sem título — só voltar (padrão) + carteira do Santuário.
+    // Sem título — voltar + mini-perfil compacto + carteira (entre eles).
     return Row(
       children: [
         NhBackButton(
           key: const ValueKey('profile-back'),
           onTap: () => context.go('/sanctuary'),
         ),
-        const Spacer(),
+        const SizedBox(width: 10),
+        const Expanded(child: SanctuaryMiniProfile()),
+        const SizedBox(width: 10),
         const SanctuaryWalletPills(),
       ],
     );

@@ -1038,7 +1038,7 @@ class GuildScreen extends ConsumerWidget {
   // Visível só quando admitted=true (verificado no call-site via admitted flag).
   Widget _buildGuildShopCard(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.go('/shop/guild_shop'),
+      onTap: () => context.push('/shop/guild_shop'),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

@@ -156,7 +156,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                           label: 'DECK',
                           icon: Icons.build_outlined,
                           size: 76,
-                          onTap: () => context.go('/card-game/deck-builder'),
+                          onTap: () => context.push('/card-game/deck-builder'),
                         ),
                         const SizedBox(height: 12),
                         NhMedallion(

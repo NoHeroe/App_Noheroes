@@ -14,6 +14,7 @@ import '../../../domain/models/shop_item_view.dart';
 import '../../../domain/models/shop_spec.dart';
 import '../../sanctuary/widgets/sanctuary_header_widgets.dart';
 import '../../shared/widgets/level_locked_view.dart';
+import '../../shared/widgets/nh_back_button.dart';
 
 // Tela /shop/:shopKey — loja individual. Sem header: só wallet (padrão
 // Santuário) + atalho de Inventário, filtro por tipo, lista de itens
@@ -265,23 +266,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          GestureDetector(
-            onTap: () => context.go('/shops'),
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(11),
-                gradient: const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF2A1B12), Color(0xFF0B0705)],
-                ),
-                border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
-              ),
-              child: const Icon(Icons.arrow_back_ios_new,
-                  color: AppColors.goldLt, size: 15),
-            ),
+          NhBackButton(
+            size: 38,
+            onTap: () =>
+                context.canPop() ? context.pop() : context.go('/shops'),
           ),
           const Spacer(),
           // Atalhos empilhados ao lado das coins.

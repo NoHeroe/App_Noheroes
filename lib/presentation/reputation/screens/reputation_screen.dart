@@ -6,6 +6,7 @@ import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/datasources/local/npc_reputation_service.dart';
 import '../../../domain/entities/npc_reputation.dart';
+import '../../shared/widgets/nh_back_button.dart';
 
 final reputationProvider =
     FutureProvider.autoDispose<List<NpcReputation>>((ref) async {
@@ -67,17 +68,11 @@ class _ReputationScreenState extends ConsumerState<ReputationScreen>
                 children: [
                   Row(
                     children: [
-                      GestureDetector(
-                        onTap: () => context.go('/sanctuary'),
-                        child: const Icon(Icons.arrow_back_ios,
-                            color: AppColors.textSecondary, size: 20),
+                      NhBackButton(
+                        onTap: () => context.canPop()
+                            ? context.pop()
+                            : context.go('/sanctuary'),
                       ),
-                      const SizedBox(width: 12),
-                      Text('REPUTAÇÃO',
-                          style: GoogleFonts.cinzelDecorative(
-                              fontSize: 16,
-                              color: AppColors.gold,
-                              letterSpacing: 2)),
                     ],
                   ),
                   const SizedBox(height: 10),
