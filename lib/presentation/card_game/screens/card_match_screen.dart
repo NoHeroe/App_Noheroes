@@ -513,7 +513,12 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _lanesRow(ui, bot, isPlayerSide: false),
+              // O tabuleiro do OPONENTE sobe um pouco (CEO), sem mexer no resto:
+              // Transform.translate não afeta o layout/centralização.
+              Transform.translate(
+                offset: const Offset(0, -18),
+                child: _lanesRow(ui, bot, isPlayerSide: false),
+              ),
               const SizedBox(height: 60), // banda central (botões voltar/encerrar)
               // O tabuleiro do JOGADOR desce um pouco (CEO) sem mexer no do bot:
               // Transform.translate não afeta o layout/centralização.
