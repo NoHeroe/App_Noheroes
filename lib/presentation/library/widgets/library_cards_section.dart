@@ -227,36 +227,29 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Header: voltar + BUSCA (no lugar do antigo título).
           _buildHeader(),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
+          // Construtor de Deck — EM CIMA da coleção.
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Expanded(child: _buildDeckBuilderShortcut()),
-                const SizedBox(width: 10),
-                Expanded(child: _buildPacksShortcut()),
-              ],
-            ),
+            child: _buildDeckBuilderShortcut(),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _buildTabs(),
           ),
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildSearch(),
-          ),
-          const SizedBox(height: 12),
-          _buildFilters(),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
+          // Filtro de posse logo ABAIXO de criaturas/relíquias.
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _buildViewSelector(),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
+          // Conceitos: chips compactos em Wrap (sem scroll horizontal).
+          _buildFilters(),
+          const SizedBox(height: 10),
           Expanded(
             child: FutureBuilder<CardCatalog>(
               future: _catalogFuture,
@@ -273,6 +266,11 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
                 return _buildBody(snap.data!);
               },
             ),
+          ),
+          // Pacotes — EMBAIXO da coleção.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
+            child: _buildPacksShortcut(),
           ),
         ],
       ),
@@ -381,7 +379,7 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
     );
   }
 
-  // ── Header ──────────────────────────────────────────────────────────
+  // ── Header: voltar + BUSCA (sem título — busca no lugar dele) ────────
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -405,33 +403,8 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
                   color: AppColors.txt2, size: 16),
             ),
           ),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'COLEÇÃO',
-                style: GoogleFonts.cinzelDecorative(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 2,
-                  color: AppColors.goldLt,
-                  shadows: [
-                    Shadow(
-                        color: AppColors.gold.withValues(alpha: 0.5),
-                        blurRadius: 12),
-                  ],
-                ),
-              ),
-              Text(
-                'Biblioteca · seu acervo',
-                style: GoogleFonts.roboto(
-                    fontSize: 11,
-                    letterSpacing: 2,
-                    color: AppColors.txtMut),
-              ),
-            ],
-          ),
+          const SizedBox(width: 12),
+          Expanded(child: _buildSearch()),
         ],
       ),
     );
@@ -534,7 +507,7 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
       child: BackdropFilter(
         filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: Container(
-          padding: const EdgeInsets.all(4),
+          padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             gradient: const LinearGradient(
@@ -544,7 +517,7 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
           ),
           child: LayoutBuilder(
             builder: (context, c) {
-              final tabW = (c.maxWidth - 8) / 2;
+              final tabW = (c.maxWidth - 6) / 2;
               return Stack(
                 children: [
                   // Indicador deslizante
@@ -555,7 +528,7 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
                         _tab == 0 ? Alignment.centerLeft : Alignment.centerRight,
                     child: Container(
                       width: tabW,
-                      height: 34,
+                      height: 30,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(7),
                         gradient: LinearGradient(
@@ -595,18 +568,18 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
       onTap: () => setState(() => _tab = index),
       child: SizedBox(
         width: w,
-        height: 34,
+        height: 30,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 16, color: active ? AppColors.purpleLt : color),
+            Icon(icon, size: 14, color: active ? AppColors.purpleLt : color),
             const SizedBox(width: 6),
             Text(
               label,
               style: GoogleFonts.roboto(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
-                letterSpacing: 1.5,
+                letterSpacing: 1.2,
                 color: active ? AppColors.purpleLt : color,
               ),
             ),
@@ -652,26 +625,25 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
     );
   }
 
-  // ── Filtros (chips) ─────────────────────────────────────────────────
+  // ── Filtros de conceito (chips compactos em Wrap, sem scroll) ───────
   Widget _buildFilters() {
-    return SizedBox(
-      height: 32,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Wrap(
+        spacing: 7,
+        runSpacing: 7,
         children: [
-          _chip(label: 'Todos', selected: _conceptFilter == null, onTap: () {
-            setState(() => _conceptFilter = null);
-          }),
-          for (final entry in _conceptStyles.entries) ...[
-            const SizedBox(width: 8),
+          _chip(
+              label: 'Todos',
+              selected: _conceptFilter == null,
+              onTap: () => setState(() => _conceptFilter = null)),
+          for (final entry in _conceptStyles.entries)
             _chip(
               label: entry.value.label,
               dot: entry.value.color,
               selected: _conceptFilter == entry.key,
               onTap: () => setState(() => _conceptFilter = entry.key),
             ),
-          ],
         ],
       ),
     );
@@ -686,7 +658,7 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
           color: const Color(0xB3100C15),
