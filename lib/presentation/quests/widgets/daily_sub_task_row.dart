@@ -82,7 +82,7 @@ class DailySubTaskRow extends StatelessWidget {
               Text(
                 isBool
                     ? (sub.completed ? 'FEITO' : '— / ${sub.escalaAlvo}')
-                    : '${sub.progressoAtual} / ${sub.escalaAlvo} ${sub.unidade}',
+                    : _formatXY(sub),
                 style: GoogleFonts.roboto(
                   fontSize: 12,
                   color: sub.completed
@@ -129,27 +129,48 @@ class _NumericButtons extends StatelessWidget {
     final atCap = sub.escalaAlvo > 0 &&
         sub.progressoAtual >= sub.escalaAlvo * 3;
     final atZero = sub.progressoAtual <= 0;
+    // Passos por unidade: água (ml) usa copo/gole (250/50) — alvo ~2.4 L em
+    // ml com +10 daria ~50 toques. Resto mantém 10/1.
+    final isVolume = sub.tipoUnidade == DailyUnitType.volumeMl;
+    final big = isVolume ? 250 : 10;
+    final small = isVolume ? 50 : 1;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _NumericBtn(
-            label: '−10', color: color, disabled: atZero,
-            onTap: () => onDelta(-10)),
+            label: '−$big', color: color, disabled: atZero,
+            onTap: () => onDelta(-big)),
         const SizedBox(width: 8),
         _NumericBtn(
-            label: '−1', color: color, disabled: atZero,
-            onTap: () => onDelta(-1)),
+            label: '−$small', color: color, disabled: atZero,
+            onTap: () => onDelta(-small)),
         const Spacer(),
         _NumericBtn(
-            label: '+1', color: color, disabled: atCap,
-            onTap: () => onDelta(1)),
+            label: '+$small', color: color, disabled: atCap,
+            onTap: () => onDelta(small)),
         const SizedBox(width: 8),
         _NumericBtn(
-            label: '+10', color: color, disabled: atCap,
-            onTap: () => onDelta(10)),
+            label: '+$big', color: color, disabled: atCap,
+            onTap: () => onDelta(big)),
       ],
     );
   }
+}
+
+/// X/Y formatado: água (volumeMl) em LITROS; resto na unidade original.
+String _formatXY(DailySubTaskInstance sub) {
+  if (sub.tipoUnidade == DailyUnitType.volumeMl) {
+    return '${_liters(sub.progressoAtual)} / ${_liters(sub.escalaAlvo)} L';
+  }
+  return '${sub.progressoAtual} / ${sub.escalaAlvo} ${sub.unidade}';
+}
+
+String _liters(int ml) {
+  var s = (ml / 1000).toStringAsFixed(2);
+  while (s.contains('.') && (s.endsWith('0') || s.endsWith('.'))) {
+    s = s.substring(0, s.length - 1);
+  }
+  return s;
 }
 
 class _NumericBtn extends StatelessWidget {
