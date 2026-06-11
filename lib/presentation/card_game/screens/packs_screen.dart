@@ -10,6 +10,7 @@ import '../../shared/widgets/nh_back_button.dart';
 import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_models.dart';
 import '../card_ownership.dart';
+import '../widgets/pack_reveal_overlay.dart';
 
 /// Tela de Pacotes (ACDA — obtenção de cartas).
 ///
@@ -172,6 +173,8 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
                 _catalog,
               ))
           .toList(growable: false);
+      // Resolve os modelos completos do catálogo p/ a revelação em tela cheia.
+      final entries = _buildRevealEntries(cardsRaw);
 
       // Consumiu 1 pacote no servidor: atualiza count e invalida posse.
       final count = await _fetchPackCount();
@@ -181,11 +184,38 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
         _packCount = count;
         _reveal = reveal;
       });
+      // Revelação em tela cheia (Clash Royale): carta a carta + PULAR.
+      await PackRevealOverlay.show(context, entries);
     } catch (e) {
       _snack('Erro de rede. Tente novamente.');
     } finally {
       if (mounted) setState(() => _opening = false);
     }
+  }
+
+  /// Resolve as cartas cruas da RPC (`card_id`/`kind`/`is_new`) nos modelos
+  /// completos do catálogo, pra alimentar a revelação em tela cheia. Cartas
+  /// fora do catálogo são puladas (a revelação degrada pro recap em lista).
+  List<PackRevealEntry> _buildRevealEntries(List cardsRaw) {
+    final cat = _catalog;
+    if (cat == null) return const [];
+    final out = <PackRevealEntry>[];
+    for (final raw in cardsRaw) {
+      final json = (raw as Map).cast<String, dynamic>();
+      final cardId = json['card_id'] as String? ?? '';
+      final kind = json['kind'] as String? ?? 'creature';
+      final isNew = json['is_new'] == true;
+      Object? card;
+      if (kind == 'relic') {
+        final m = cat.relics.where((r) => r.id == cardId);
+        if (m.isNotEmpty) card = m.first;
+      } else {
+        final m = cat.creatures.where((c) => c.id == cardId);
+        if (m.isNotEmpty) card = m.first;
+      }
+      if (card != null) out.add(PackRevealEntry(card: card, isNew: isNew));
+    }
+    return out;
   }
 
   @override
