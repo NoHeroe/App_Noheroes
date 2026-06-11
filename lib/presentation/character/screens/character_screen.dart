@@ -294,18 +294,9 @@ class CharacterScreen extends ConsumerWidget {
                 color: AppColors.gold.withValues(alpha: 0.2), blurRadius: 10),
           ],
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.brush_outlined, size: 13, color: AppColors.goldLt),
-            const SizedBox(width: 6),
-            Text('EDITAR',
-                style: GoogleFonts.cinzelDecorative(
-                    fontSize: 10,
-                    letterSpacing: 1.5,
-                    color: AppColors.goldLt)),
-          ],
-        ),
+        child: Text('EDITAR',
+            style: GoogleFonts.cinzelDecorative(
+                fontSize: 10, letterSpacing: 1.5, color: AppColors.goldLt)),
       ),
     );
   }

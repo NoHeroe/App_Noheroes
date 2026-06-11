@@ -179,7 +179,9 @@ class _StatRow extends StatelessWidget {
           Text(value,
               style: GoogleFonts.cinzelDecorative(
                   fontSize: 12,
-                  color: color,
+                  // Padrao dourado pros numeros; dano vitalista (isSpecial)
+                  // mantem o destaque colorido.
+                  color: isSpecial ? color : AppColors.gold,
                   fontWeight: FontWeight.bold)),
         ],
       ),

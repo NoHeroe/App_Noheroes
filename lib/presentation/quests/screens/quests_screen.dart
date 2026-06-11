@@ -103,10 +103,6 @@ class _QuestsScreenState extends ConsumerState<QuestsScreen> {
                     subTasksDone: state.dailySubTasksDone,
                     subTasksTotal: state.dailySubTasksTotal,
                     streak: player.dailyMissionsStreak,
-                    gold: player.gold,
-                    xp: player.xp,
-                    gems: player.gems,
-                    counterKey: _counterKey,
                   ),
                   Expanded(
                     child: RefreshIndicator(
