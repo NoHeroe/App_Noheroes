@@ -30,6 +30,19 @@ enum SideId { a, b }
 /// Ambos só contam para ataque corpo a corpo (`effectiveAtk`). A expiração é
 /// feita por varredura explícita no engine — sem vazamento entre turnos.
 /// - `bonusMaxHp`: PERMANENTE (Roubo de PV soma PV atual e máximo).
+/// Um ataque de uma criatura na Fase de Ataque: tipo de dano + valor.
+/// Multi-ataque (SPEC do CEO 2026-06-11): uma criatura pode ter VÁRIOS ataques
+/// (1 por tipo). Bônus de relíquia de outro tipo vira um ataque novo (não soma
+/// no tipo base). A fase resolve cada ataque separado, com mira/posição própria.
+class CardAttack {
+  final DamageType type;
+  final int value;
+  const CardAttack(this.type, this.value);
+
+  @override
+  String toString() => 'CardAttack($type, $value)';
+}
+
 class CreatureInPlay {
   const CreatureInPlay({
     required this.card,
@@ -106,46 +119,63 @@ class CreatureInPlay {
     return total;
   }
 
-  /// Tipo de dano efetivo: a última relíquia equipada que concede `attackType`
-  /// sobrescreve o tipo base da criatura.
-  DamageType get effectiveDamageType {
-    DamageType type = card.damageType;
-    for (final r in relics) {
-      final granted = r.grants.attackType;
-      if (granted != null) type = granted;
-    }
-    return type;
-  }
-
-  /// Ataque efetivo: ATK base + soma dos `atkBonus` das relíquias equipadas.
-  /// NÃO inclui buffs temporários — ver [effectiveAtk].
+  /// MULTI-ATAQUE (SPEC do CEO 2026-06-11) — lista de ataques desta criatura na
+  /// Fase de Ataque, 1 por tipo de dano:
+  /// - **Base:** `(card.damageType, card.effectiveAtk)` (escala por nível).
+  /// - **Relíquia com `atkBonus`:** o bônus é do tipo `attackType` da relíquia,
+  ///   ou do tipo BASE se a relíquia não especifica. Mesmo tipo → soma; tipo
+  ///   diferente → ataque NOVO. Bônus genérico (sem `attackType`) só vale se o
+  ///   tipo base for FÍSICO (regra antiga do CEO 2026-06-10).
+  /// - **Buffs temporários** (Inspirar/Investida) só no ataque corpo a corpo.
   ///
-  /// REGRA (CEO 2026-06-10): o `atkBonus` genérico de relíquia só escala dano
-  /// **FÍSICO** (corpo a corpo + à distância). Dano **mágico** e **vitalismo**
-  /// (verdadeiro) NÃO são escalados por relíquia de ATK genérica — pra reforçá-los
-  /// é preciso item específico. (hpBonus/armor de relíquia seguem valendo p/ todos.)
-  int get atk {
-    var total = card.effectiveAtk;
-    final type = effectiveDamageType;
-    final scalesAtk =
-        type == DamageType.corpoACorpo || type == DamageType.aDistancia;
-    if (scalesAtk) {
-      for (final r in relics) {
-        total += r.scaledAtkBonus;
+  /// Relíquias NÃO sobrescrevem mais o tipo da criatura (corrige o bug do +2 à
+  /// distância numa criatura melee virar 6 à distância — agora vira 4 melee + 2
+  /// à distância). Ordem determinística (ordem do enum); valores 0 são omitidos.
+  List<CardAttack> get attacks {
+    final base = card.damageType;
+    final byType = <DamageType, int>{base: card.effectiveAtk};
+    for (final r in relics) {
+      final bonus = r.scaledAtkBonus;
+      if (bonus <= 0) continue;
+      final t = r.grants.attackType;
+      if (t == null) {
+        // Bônus genérico: só soma se o tipo BASE for físico.
+        if (base == DamageType.corpoACorpo || base == DamageType.aDistancia) {
+          byType[base] = (byType[base] ?? 0) + bonus;
+        }
+      } else {
+        // Tipado: soma no ataque daquele tipo (cria se não existe).
+        byType[t] = (byType[t] ?? 0) + bonus;
       }
     }
-    return total;
+    // Buffs temporários (Inspirar/Investida) só no ataque corpo a corpo.
+    final meleeBuff = inspirarBonus + investidaBonus;
+    if (meleeBuff > 0 && byType.containsKey(DamageType.corpoACorpo)) {
+      byType[DamageType.corpoACorpo] =
+          byType[DamageType.corpoACorpo]! + meleeBuff;
+    }
+    final out = <CardAttack>[];
+    for (final dt in DamageType.values) {
+      final v = byType[dt];
+      if (v != null && v > 0) out.add(CardAttack(dt, v));
+    }
+    return out;
   }
 
-  /// Ataque usado na Fase de Ataque: [atk] + buffs temporários de melee
-  /// (Inspirar/Investida só valem para ataque corpo a corpo).
-  int get effectiveAtk {
-    var total = atk;
-    if (effectiveDamageType == DamageType.corpoACorpo) {
-      total += inspirarBonus + investidaBonus;
+  /// Tipo de dano PRIMÁRIO (base). Relíquias não sobrescrevem mais — ver [attacks].
+  DamageType get effectiveDamageType => card.damageType;
+
+  /// Valor do ataque do tipo BASE (display/cura/ordenação). Inclui buffs se for
+  /// melee. Pro combate real, use [attacks].
+  int get atk {
+    for (final a in attacks) {
+      if (a.type == card.damageType) return a.value;
     }
-    return total;
+    return 0;
   }
+
+  /// Compat: o multi-ataque substituiu o "ataque único". Mantido = [atk].
+  int get effectiveAtk => atk;
 
   CreatureInPlay copyWith({
     int? currentHp,

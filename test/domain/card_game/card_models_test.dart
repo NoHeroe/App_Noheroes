@@ -46,14 +46,23 @@ void main() {
       expect(c.armor, 5);
     });
 
-    test('effectiveDamageType sobrescrito por relíquia', () {
+    test('relíquia NÃO sobrescreve o tipo; bônus tipado vira ataque novo', () {
+      // SPEC CEO 2026-06-11 (multi-ataque): a relíquia à distância não converte
+      // mais a criatura melee — adiciona um ATAQUE à distância separado.
       final c = CreatureInPlay(
-        card: creature(id: 'c', damageType: DamageType.corpoACorpo),
+        card: creature(id: 'c', damageType: DamageType.corpoACorpo, atk: 4),
         currentHp: 5,
         lane: 0,
-        relics: [relic(id: 'r', attackType: DamageType.aDistancia)],
+        relics: [relic(id: 'r', atkBonus: 2, attackType: DamageType.aDistancia)],
       );
-      expect(c.effectiveDamageType, DamageType.aDistancia);
+      // Tipo base preservado (sem override).
+      expect(c.effectiveDamageType, DamageType.corpoACorpo);
+      // Dois ataques: melee 4 (base) + à distância 2 (relíquia).
+      expect(c.attacks.length, 2);
+      expect(
+          c.attacks.firstWhere((a) => a.type == DamageType.corpoACorpo).value, 4);
+      expect(
+          c.attacks.firstWhere((a) => a.type == DamageType.aDistancia).value, 2);
     });
   });
 }

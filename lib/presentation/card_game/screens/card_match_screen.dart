@@ -1222,14 +1222,17 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     // esquerda (ver GameCardFace.effectCrests). Aqui fica só a linha de stats.
     return Row(
       children: [
-        // Ícone BRANCO do tipo (físico = espada); diferencia pela forma.
-        typeGlyph(c.effectiveDamageType, size: 12),
-        const SizedBox(width: 3),
-        Text('${c.effectiveAtk}',
-            style: GoogleFonts.robotoMono(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppColors.gold)),
+        // Multi-ataque: 1 par (ícone do tipo + valor) por ataque da criatura.
+        for (final a in c.attacks) ...[
+          typeGlyph(a.type, size: 12),
+          const SizedBox(width: 2),
+          Text('${a.value}',
+              style: GoogleFonts.robotoMono(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.gold)),
+          const SizedBox(width: 6),
+        ],
         const Spacer(),
         if (c.armor > 0) ...[
           const Icon(Icons.shield, size: 8, color: AppColors.textSecondary),

@@ -493,75 +493,92 @@ class CardBattleEngine {
       // Sem alvos → fase termina (já é vitória de fato).
       if (!defender.hasCreatureInPlay) break;
 
-      // Estado ANTES deste golpe — é o que o step mostra enquanto a UI anima.
-      final preAtk = attacker;
-      final preDef = defender;
-
-      final attackerLaneIdx = attacker.lanes
+      // Lista de ataques FIXADA no início da vez desta criatura (multi-ataque:
+      // 1 por tipo de dano). Cada ataque é resolvido separadamente, com mira/
+      // posição própria, e vira seu próprio passo animado.
+      final lane0 = attacker.lanes
           .indexWhere((c) => c != null && c.instanceId == attackerId);
-      if (attackerLaneIdx < 0) continue;
-      final creature = attacker.lanes[attackerLaneIdx]!;
-      if (!creature.isAlive) continue;
+      if (lane0 < 0) continue;
+      final creature0 = attacker.lanes[lane0]!;
+      if (!creature0.isAlive) continue;
+      final atkList = creature0.attacks;
 
-      final type = creature.effectiveDamageType;
+      for (final atk in atkList) {
+        if (!defender.hasCreatureInPlay) break;
 
-      // Silêncio (aura): enquanto o INIMIGO tiver criatura com Silêncio viva,
-      // este lado não usa ataque mágico nem cura.
-      if (type == DamageType.magico || type == DamageType.cura) {
-        final silencer = defender.creaturesInPlay
-            .where((c) => c.hasKeyword(AbilityKeyword.silencio))
-            .firstOrNull;
-        if (silencer != null) {
-          events.add(AbilityTriggered(
-            side: defender.id,
-            cardId: silencer.instanceId,
-            cardName: silencer.card.nome,
-            ability: abilityKeywordLabel(AbilityKeyword.silencio),
-            detail: 'bloqueou ${creature.card.nome} '
-                '(${type == DamageType.cura ? 'cura' : 'ataque mágico'})',
-          ));
+        // Estado ANTES deste golpe — é o que o step mostra enquanto a UI anima.
+        final preAtk = attacker;
+        final preDef = defender;
+
+        // Re-localiza (mortes do defensor compactam lanes; atacante pode ter
+        // mudado de estado entre golpes via Roubo de PV).
+        final attackerLaneIdx = attacker.lanes
+            .indexWhere((c) => c != null && c.instanceId == attackerId);
+        if (attackerLaneIdx < 0) break;
+        final creature = attacker.lanes[attackerLaneIdx]!;
+        if (!creature.isAlive) break;
+
+        final type = atk.type;
+
+        // Silêncio (aura): enquanto o INIMIGO tiver criatura com Silêncio viva,
+        // este lado não usa ataque mágico nem cura.
+        if (type == DamageType.magico || type == DamageType.cura) {
+          final silencer = defender.creaturesInPlay
+              .where((c) => c.hasKeyword(AbilityKeyword.silencio))
+              .firstOrNull;
+          if (silencer != null) {
+            events.add(AbilityTriggered(
+              side: defender.id,
+              cardId: silencer.instanceId,
+              cardName: silencer.card.nome,
+              ability: abilityKeywordLabel(AbilityKeyword.silencio),
+              detail: 'bloqueou ${creature.card.nome} '
+                  '(${type == DamageType.cura ? 'cura' : 'ataque mágico'})',
+            ));
+            snapPre(preAtk, preDef);
+            continue;
+          }
+        }
+
+        if (type == DamageType.cura) {
+          attacker = _resolveHeal(attacker, creature, events);
           snapPre(preAtk, preDef);
           continue;
         }
-      }
 
-      if (type == DamageType.cura) {
-        attacker = _resolveHeal(attacker, creature, events);
+        // ---- Elegibilidade posicional (POR ATAQUE — regra purista do CEO) ----
+        // Linha de frente do PRÓPRIO lado = menor lane ocupada.
+        final myFront = attacker.creaturesInPlay.first.lane;
+        final atFront = creature.lane == myFront;
+
+        if (type == DamageType.corpoACorpo &&
+            !atFront &&
+            !creature.hasKeyword(AbilityKeyword.alcance)) {
+          continue; // melee fora de posição não dispara ESTE ataque.
+        }
+        if (type == DamageType.aDistancia && atFront) {
+          continue; // à distância na frente não dispara ESTE ataque.
+        }
+        if (type == DamageType.vitalismo &&
+            !kVitalismoAttacksAnywhere &&
+            !atFront) {
+          continue;
+        }
+
+        final result = _resolveAttack(
+          s,
+          attacker,
+          defender,
+          attackerLaneIdx,
+          type,
+          atk.value,
+          meleeFromFront: type == DamageType.corpoACorpo && atFront,
+          events: events,
+        );
+        attacker = result.$1;
+        defender = result.$2;
         snapPre(preAtk, preDef);
-        continue;
       }
-
-      // ---- Elegibilidade posicional ----
-      // Linha de frente do PRÓPRIO lado = menor lane ocupada.
-      final myFront = attacker.creaturesInPlay.first.lane;
-      final atFront = creature.lane == myFront;
-
-      if (type == DamageType.corpoACorpo &&
-          !atFront &&
-          !creature.hasKeyword(AbilityKeyword.alcance)) {
-        continue; // melee fora de posição não ataca.
-      }
-      if (type == DamageType.aDistancia && atFront) {
-        continue; // ranged na frente não ataca.
-      }
-      if (type == DamageType.vitalismo &&
-          !kVitalismoAttacksAnywhere &&
-          !atFront) {
-        continue;
-      }
-
-      final result = _resolveAttack(
-        s,
-        attacker,
-        defender,
-        attackerLaneIdx,
-        type,
-        meleeFromFront: type == DamageType.corpoACorpo && atFront,
-        events: events,
-      );
-      attacker = result.$1;
-      defender = result.$2;
-      snapPre(preAtk, preDef);
     }
 
     var state = s.withSide(attacker.id, attacker);
@@ -577,7 +594,8 @@ class CardBattleEngine {
     BoardSide atkSide,
     BoardSide defSide,
     int attackerLaneIdx,
-    DamageType type, {
+    DamageType type,
+    int value, {
     required bool meleeFromFront,
     required List<MatchEvent> events,
   }) {
@@ -607,8 +625,8 @@ class CardBattleEngine {
     var pendingGain = 0;
     var anyDeath = false;
 
-    // ---- Dano principal ----
-    final raw = attacker.effectiveAtk;
+    // ---- Dano principal ---- (valor deste ataque específico — multi-ataque)
+    final raw = value;
     var damage = raw;
     final physical =
         type == DamageType.corpoACorpo || type == DamageType.aDistancia;
@@ -734,9 +752,9 @@ class CardBattleEngine {
             targetName: extraTarget.card.nome,
           ));
         } else {
-          // Dano verdadeiro: ignora armadura. 🎚️ kAtaqueDuploDamage = atk
-          // efetivo do atacante.
-          final extraDmg = attacker.effectiveAtk;
+          // Dano verdadeiro: ignora armadura. Extra = valor DESTE ataque melee
+          // (multi-ataque: o ataque que disparou o Ataque Duplo).
+          final extraDmg = value;
           final extraHp = extraTarget.currentHp - extraDmg;
           final extraDied = extraHp <= 0;
           defLanes[pickIdx] =
