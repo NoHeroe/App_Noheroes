@@ -1,0 +1,413 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../../../app/providers.dart';
+import '../../../core/constants/app_colors.dart';
+import '../card_economy.dart';
+import '../card_ownership.dart';
+
+/// Bloco de ações de economia para uma carta (embutido no detalhe da Coleção):
+/// **Criar** (se não possui), **Aprimorar** + **Desencantar** (se possui).
+/// Carrega o snapshot `cg_card_info` e reflete custo, saldo e affordability.
+/// Server-authoritative — o botão só dispara a RPC; o servidor valida.
+class CardEconomyActions extends ConsumerStatefulWidget {
+  final String cardId;
+  const CardEconomyActions({super.key, required this.cardId});
+
+  @override
+  ConsumerState<CardEconomyActions> createState() => _CardEconomyActionsState();
+}
+
+class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
+  Map<String, dynamic>? _info;
+  bool _loading = true;
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) {
+      setState(() {
+        _loading = false;
+        _error = 'Sessão expirada.';
+      });
+      return;
+    }
+    try {
+      final info = await ref
+          .read(cardEconomyServiceProvider)
+          .cardInfo(player.id, widget.cardId);
+      if (!mounted) return;
+      setState(() {
+        _info = info['ok'] == true ? info : null;
+        _error = info['ok'] == true ? null : 'Carta indisponível.';
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = 'Erro ao carregar economia.';
+      });
+    }
+  }
+
+  Future<void> _refreshAfterAction() async {
+    // Posse/cópias mudaram → invalida a Coleção; ouro pode ter mudado.
+    ref.invalidate(cardOwnershipProvider);
+    try {
+      final updated = await ref.read(authDsProvider).currentSession();
+      if (mounted && updated != null) {
+        ref.read(currentPlayerProvider.notifier).state = updated;
+      }
+    } catch (_) {}
+    await _load();
+  }
+
+  void _snack(String msg, {bool ok = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(
+        content: Text(msg, style: GoogleFonts.roboto(color: AppColors.txt)),
+        backgroundColor: ok ? const Color(0xFF14331E) : const Color(0xFF1A1326),
+        behavior: SnackBarBehavior.floating,
+      ));
+  }
+
+  Future<bool> _confirm(String title, String body, String action) async {
+    final res = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF181221),
+        title: Text(title,
+            style: GoogleFonts.cinzelDecorative(
+                color: AppColors.goldLt, fontSize: 16)),
+        content: Text(body,
+            style: GoogleFonts.roboto(color: AppColors.txt2, fontSize: 13)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancelar',
+                style: GoogleFonts.roboto(color: AppColors.txtMut)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(action,
+                style: GoogleFonts.roboto(
+                    color: AppColors.purpleLt, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+    return res ?? false;
+  }
+
+  Future<void> _run(Future<CgResult> Function() op, String okMsg) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final r = await op();
+      if (r.ok) {
+        _snack(okMsg, ok: true);
+        await _refreshAfterAction();
+      } else {
+        _snack(cgReasonLabel(r.reason));
+      }
+    } catch (_) {
+      _snack('Erro de rede. Tente novamente.');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 18),
+        child: Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(
+                color: AppColors.purpleLt, strokeWidth: 2.2),
+          ),
+        ),
+      );
+    }
+    final info = _info;
+    if (info == null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Text(_error ?? 'Economia indisponível.',
+            style: GoogleFonts.roboto(color: AppColors.txtMut, fontSize: 12)),
+      );
+    }
+
+    final player = ref.read(currentPlayerProvider);
+    final isRelic = info['kind'] == 'relic';
+    final owned = info['owned'] == true;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 6),
+        Text('PROGRESSÃO',
+            style: GoogleFonts.roboto(
+                fontSize: 10, letterSpacing: 1.5, color: AppColors.txtMut)),
+        const SizedBox(height: 8),
+        _resourceStrip(info, isRelic),
+        const SizedBox(height: 12),
+        if (owned) _ownedBlock(info, isRelic) else _craftBlock(info),
+        if (player != null && (info['player_level'] as num? ?? 1) < 3)
+          _lockNote('Criação e desencante abrem no Nível 3 · Aprimorar no Nível 5'),
+      ],
+    );
+  }
+
+  // ── Saldo de recursos relevantes ────────────────────────────────────
+  Widget _resourceStrip(Map<String, dynamic> info, bool isRelic) {
+    int n(String k) => (info[k] as num?)?.toInt() ?? 0;
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        _resChip(Icons.blur_on, 'Pó', n('have_dust')),
+        _resChip(Icons.diamond_outlined, 'Cristal', n('have_crystal')),
+        _resChip(Icons.description_outlined, isRelic ? 'Runas' : 'Pergam.',
+            n('have_mat')),
+        _resChip(Icons.auto_awesome, 'Alma', n('have_soul')),
+      ],
+    );
+  }
+
+  Widget _resChip(IconData icon, String label, int amount) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: const Color(0x33100C15),
+        border: Border.all(color: AppColors.borderViolet),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.purpleLt),
+          const SizedBox(width: 5),
+          Text('$label ',
+              style: GoogleFonts.roboto(fontSize: 11, color: AppColors.txtMut)),
+          Text('$amount',
+              style: GoogleFonts.robotoMono(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.goldLt)),
+        ],
+      ),
+    );
+  }
+
+  // ── Carta NÃO possuída → Criar ───────────────────────────────────────
+  Widget _craftBlock(Map<String, dynamic> info) {
+    final craft = info['craft'] as Map?;
+    if (craft == null) {
+      return _infoLine('Esta carta não pode ser criada.');
+    }
+    final dust = (craft['dust'] as num).toInt();
+    final crystal = (craft['crystal'] as num).toInt();
+    final can = craft['can'] == true;
+    return _actionButton(
+      label: 'CRIAR',
+      icon: Icons.auto_fix_high,
+      cost: 'Pó $dust · Cristal $crystal',
+      enabled: can && !_busy,
+      onTap: () async {
+        if (!await _confirm('Criar carta',
+            'Gastar Pó $dust + Cristal $crystal para criar esta carta no Nível 1?',
+            'Criar')) {
+          return;
+        }
+        final p = ref.read(currentPlayerProvider)!;
+        await _run(
+            () => ref.read(cardEconomyServiceProvider).create(p.id, widget.cardId),
+            'Carta criada!');
+      },
+    );
+  }
+
+  // ── Carta possuída → Nível + Aprimorar + Desencantar ─────────────────
+  Widget _ownedBlock(Map<String, dynamic> info, bool isRelic) {
+    final level = (info['level'] as num).toInt();
+    final maxLevel = (info['max_level'] as num).toInt();
+    final copies = (info['copies'] as num).toInt();
+    final upgrade = info['upgrade'] as Map?;
+    final dis = info['disenchant'] as Map?;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            _badge('Nível $level/$maxLevel', AppColors.gold),
+            const SizedBox(width: 8),
+            _badge('Cópias $copies', AppColors.purpleLt),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (level >= maxLevel)
+          _infoLine('Nível máximo atingido.')
+        else if (upgrade != null)
+          _actionButton(
+            label: 'APRIMORAR → Nível ${level + 1}',
+            icon: Icons.trending_up,
+            cost: 'Ouro ${(upgrade['gold'] as num).toInt()} · '
+                '${isRelic ? 'Runas' : 'Perg.'} ${(upgrade['mat'] as num).toInt()} · '
+                'Alma ${(upgrade['soul'] as num).toInt()} · '
+                'Cópias ${(upgrade['copies_needed'] as num).toInt()}',
+            enabled: upgrade['can'] == true && !_busy,
+            onTap: () async {
+              if (!await _confirm('Aprimorar carta',
+                  'Subir para o Nível ${level + 1}? Consome ouro, materiais e '
+                      '${(upgrade['copies_needed'] as num).toInt()} cópia(s).',
+                  'Aprimorar')) {
+                return;
+              }
+              final p = ref.read(currentPlayerProvider)!;
+              await _run(
+                  () => ref
+                      .read(cardEconomyServiceProvider)
+                      .upgrade(p.id, widget.cardId),
+                  'Carta aprimorada!');
+            },
+          ),
+        const SizedBox(height: 8),
+        if (dis != null)
+          _actionButton(
+            label: 'DESENCANTAR',
+            icon: Icons.recycling,
+            danger: true,
+            cost: '+Pó ${(dis['dust'] as num).toInt()} '
+                '+${isRelic ? 'Runas' : 'Perg.'} ${(dis['mat'] as num).toInt()} '
+                '+Cristal 1',
+            enabled: dis['can'] == true && !_busy,
+            onTap: () async {
+              if (!await _confirm('Desencantar carta',
+                  'Destruir 1 cópia desta carta em troca de materiais? '
+                      'Não recupera o que foi gasto em melhorias.',
+                  'Desencantar')) {
+                return;
+              }
+              final p = ref.read(currentPlayerProvider)!;
+              await _run(
+                  () => ref
+                      .read(cardEconomyServiceProvider)
+                      .disenchant(p.id, widget.cardId),
+                  'Carta desencantada.');
+            },
+          ),
+      ],
+    );
+  }
+
+  // ── Widgets auxiliares ───────────────────────────────────────────────
+  Widget _actionButton({
+    required String label,
+    required IconData icon,
+    required String cost,
+    required bool enabled,
+    required VoidCallback onTap,
+    bool danger = false,
+  }) {
+    final base = danger ? AppColors.conceptCorrompido : AppColors.purple;
+    return Opacity(
+      opacity: enabled ? 1 : 0.45,
+      child: GestureDetector(
+        onTap: enabled ? onTap : null,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            gradient: LinearGradient(colors: [
+              base.withValues(alpha: 0.32),
+              base.withValues(alpha: 0.12),
+            ]),
+            border: Border.all(color: base.withValues(alpha: 0.55)),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 18, color: AppColors.txt),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label,
+                        style: GoogleFonts.roboto(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.6,
+                            color: AppColors.txt)),
+                    const SizedBox(height: 2),
+                    Text(cost,
+                        style: GoogleFonts.roboto(
+                            fontSize: 10.5, color: AppColors.txt2)),
+                  ],
+                ),
+              ),
+              if (_busy)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      color: AppColors.txt, strokeWidth: 2),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _badge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.6)),
+        color: color.withValues(alpha: 0.1),
+      ),
+      child: Text(text,
+          style: GoogleFonts.roboto(
+              fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+    );
+  }
+
+  Widget _infoLine(String text) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Text(text,
+            style: GoogleFonts.roboto(fontSize: 12, color: AppColors.txtMut)),
+      );
+
+  Widget _lockNote(String text) => Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Row(
+          children: [
+            const Icon(Icons.lock_outline, size: 13, color: AppColors.txtMut),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(text,
+                  style: GoogleFonts.roboto(
+                      fontSize: 10.5, color: AppColors.txtMut)),
+            ),
+          ],
+        ),
+      );
+}

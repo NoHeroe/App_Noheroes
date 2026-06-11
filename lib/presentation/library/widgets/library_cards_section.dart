@@ -9,6 +9,7 @@ import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_models.dart';
 import '../../card_game/card_ownership.dart';
 import '../../card_game/widgets/game_card_face.dart';
+import '../../card_game/widgets/card_economy_actions.dart';
 import '../../shared/widgets/nh_back_button.dart';
 
 /// Fatia 2 — Coleção de cartas. Casca visual ORIGINAL preservada (tabs/busca/
@@ -1002,6 +1003,11 @@ class _CardDetailSheet extends StatelessWidget {
 
               // Stats grid
               ..._buildStatRows(),
+
+              // Economia: criar / aprimorar / desencantar (server-authoritative).
+              const SizedBox(height: 16),
+              Divider(color: AppColors.borderViolet.withValues(alpha: 0.5)),
+              CardEconomyActions(cardId: card.id),
             ],
           ),
         ),
