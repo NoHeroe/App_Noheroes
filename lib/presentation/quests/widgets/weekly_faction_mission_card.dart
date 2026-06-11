@@ -82,32 +82,57 @@ class _WeeklyFactionMissionCardState
             (s as Map).cast<String, dynamic>()['completed'] == true)
         .length;
 
-    return Card(
-      color: AppColors.surface,
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: AppColors.gold.withValues(alpha: 0.3)),
-        borderRadius: BorderRadius.circular(8),
+      decoration: BoxDecoration(
+        color: AppColors.surface.withValues(alpha: 0.85),
+        border:
+            Border.all(color: AppColors.gold.withValues(alpha: 0.5), width: 1.4),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                _RankBadge(rank: widget.mission.rank.name),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(title,
-                      style: GoogleFonts.cinzelDecorative(
-                          fontSize: 13,
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600)),
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.gold.withValues(alpha: 0.12),
+                    border:
+                        Border.all(color: AppColors.gold.withValues(alpha: 0.6)),
+                  ),
+                  child: const Icon(Icons.flag_outlined,
+                      size: 18, color: AppColors.gold),
                 ),
-                Text('$completedCount/${subTasks.length}',
-                    style: GoogleFonts.roboto(
-                        fontSize: 11, color: AppColors.textMuted)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title,
+                          style: GoogleFonts.cinzelDecorative(
+                              fontSize: 14,
+                              color: AppColors.textPrimary,
+                              letterSpacing: 1)),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          _RankBadge(rank: widget.mission.rank.name),
+                          const SizedBox(width: 8),
+                          Text('$completedCount/${subTasks.length}',
+                              style: GoogleFonts.roboto(
+                                  fontSize: 11, color: AppColors.textMuted)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
             if (description != null && description.isNotEmpty) ...[
