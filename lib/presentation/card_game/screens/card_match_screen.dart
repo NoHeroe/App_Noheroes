@@ -530,7 +530,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         // Mão sobe e desloca levemente pra direita (CEO) + menu de ação
         // sobreposto (flutua sobre o topo do leque sem empurrar o HUD).
         Transform.translate(
-          offset: const Offset(8, -12),
+          offset: const Offset(16, -12),
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -639,38 +639,53 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   Widget _botInfoBar(BoardSide bot, PveMatchUiState ui) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-      child: Row(
-        children: [
-          // Caixinha ISOLADA do bot: ícone + título IA.
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceVeil,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.borderViolet),
+      child: SizedBox(
+        height: 38,
+        child: Stack(
+          children: [
+            // Caixinha ISOLADA do bot: ícone + título IA (fica à esquerda).
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVeil,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.borderViolet),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.smart_toy_outlined,
+                        color: AppColors.conceptCorrompido, size: 16),
+                    const SizedBox(width: 6),
+                    Text('IA',
+                        style: GoogleFonts.cinzelDecorative(
+                            fontSize: 12,
+                            color: AppColors.textPrimary,
+                            letterSpacing: 1)),
+                  ],
+                ),
+              ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.smart_toy_outlined,
-                    color: AppColors.conceptCorrompido, size: 16),
-                const SizedBox(width: 6),
-                Text('IA',
-                    style: GoogleFonts.cinzelDecorative(
-                        fontSize: 12,
-                        color: AppColors.textPrimary,
-                        letterSpacing: 1)),
-              ],
+            // Mini-HUD do bot CENTRALIZADO (mesmo design do rodapé, menor).
+            Align(
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _hudCounter(Icons.pets, '${bot.availableCreatureCount}',
+                      size: 14),
+                  const SizedBox(width: 12),
+                  CrystalGem(value: bot.crystals, size: 26),
+                  const SizedBox(width: 12),
+                  _hudCounter(Icons.auto_awesome, '${bot.availableRelicCount}',
+                      size: 14),
+                ],
+              ),
             ),
-          ),
-          const Spacer(),
-          // Mini-HUD do bot (mesmo design do rodapé, menor).
-          _hudCounter(Icons.pets, '${bot.availableCreatureCount}', size: 14),
-          const SizedBox(width: 12),
-          CrystalGem(value: bot.crystals, size: 26),
-          const SizedBox(width: 12),
-          _hudCounter(Icons.auto_awesome, '${bot.availableRelicCount}', size: 14),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1360,10 +1375,11 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     final arcDy = offset.abs() * 3.0; // bordas levemente mais baixas
 
     if (isPreview) {
-      // Preview da próxima carta: mais pra DIREITA e mais pra BAIXO (CEO).
+      // Preview da próxima carta: mais pra DIREITA e BEM mais pra BAIXO (CEO) —
+      // desce até quase encostar no contador de cristais do rodapé.
       return Positioned(
-        left: left + 18,
-        bottom: -10 - arcDy,
+        left: left + 22,
+        bottom: -46 - arcDy,
         child: Transform.rotate(
           angle: rot,
           child: Opacity(

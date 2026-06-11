@@ -593,13 +593,17 @@ class _PennantClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     final w = size.width, h = size.height;
-    const notch = 6.0;
+    const notch = 6.0, r = 3.5;
+    // Banner com NOTCH central + cantos inferiores arredondados (o canto que
+    // "olha pra fora" da carta fica suave, rente ao fim).
     return Path()
       ..moveTo(0, 0)
       ..lineTo(w, 0)
-      ..lineTo(w, h)
+      ..lineTo(w, h - r)
+      ..quadraticBezierTo(w, h, w - r, h)
       ..lineTo(w / 2, h - notch)
-      ..lineTo(0, h)
+      ..lineTo(r, h)
+      ..quadraticBezierTo(0, h, 0, h - r)
       ..close();
   }
 
