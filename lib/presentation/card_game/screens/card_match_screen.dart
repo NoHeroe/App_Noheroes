@@ -503,9 +503,14 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
             children: [
               _lanesRow(ui, bot, isPlayerSide: false),
               const SizedBox(height: 60), // banda central (botões voltar/encerrar)
-              AbsorbPointer(
-                absorbing: !interactive,
-                child: _lanesRow(ui, player, isPlayerSide: true),
+              // O tabuleiro do JOGADOR desce um pouco (CEO) sem mexer no do bot:
+              // Transform.translate não afeta o layout/centralização.
+              Transform.translate(
+                offset: const Offset(0, 20),
+                child: AbsorbPointer(
+                  absorbing: !interactive,
+                  child: _lanesRow(ui, player, isPlayerSide: true),
+                ),
               ),
             ],
           ),

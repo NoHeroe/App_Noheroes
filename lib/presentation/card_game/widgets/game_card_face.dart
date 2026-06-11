@@ -124,6 +124,50 @@ class GameCardFace extends StatelessWidget {
                       ],
                     ),
                   ),
+                  // Nome no TOPO da carta (logo abaixo do custo), menor, com
+                  // fundo escuro p/ legibilidade sobre a arte.
+                  Positioned(
+                    top: 12,
+                    left: 3,
+                    right: 3,
+                    child: Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0B0810).withValues(alpha: 0.55),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _rarity,
+                              boxShadow: [
+                                BoxShadow(
+                                    color: _rarity.withValues(alpha: 0.6),
+                                    blurRadius: 4),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.cinzelDecorative(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                   if (concepts.length > 1)
                     Positioned(
                       top: 3,
@@ -152,37 +196,8 @@ class GameCardFace extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 5),
-            // Gema de raridade + nome.
-            Row(
-              children: [
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _rarity,
-                    boxShadow: [
-                      BoxShadow(
-                          color: _rarity.withValues(alpha: 0.6), blurRadius: 5),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: Text(
-                    name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.cinzelDecorative(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
+            // Nome migrou pro TOPO da arte (overlay); aqui fica só o rodapé.
+            const SizedBox(height: 6),
             footer,
           ],
         ),
@@ -292,18 +307,79 @@ class _CostDiamond extends StatelessWidget {
         height: 24,
         alignment: Alignment.center,
         decoration: const BoxDecoration(
+          // Gradiente com mais profundidade (claro→médio→escuro) pra dar volume.
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF6A8CFF), Color(0xFF3A4FAE)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF9DB6FF), Color(0xFF5E80F0), Color(0xFF2E3F92)],
+            stops: [0.0, 0.45, 1.0],
           ),
         ),
-        child: Text('$cost',
-            style: GoogleFonts.cinzelDecorative(
-                fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white)),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Facetas de cristal (linhas do centro aos vértices + faceta clara).
+            const Positioned.fill(child: CustomPaint(painter: _CrystalFacets())),
+            Text('$cost',
+                style: GoogleFonts.cinzelDecorative(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    shadows: const [Shadow(color: Color(0xAA1A2050), blurRadius: 2)])),
+          ],
+        ),
       ),
     );
   }
+}
+
+/// Facetas internas do cristal de custo: arestas do centro aos 4 vértices +
+/// uma faceta superior mais clara (brilho). Dá "cara de cristal lapidado" sem
+/// mudar a forma/tamanho do diamante.
+class _CrystalFacets extends CustomPainter {
+  const _CrystalFacets();
+
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    final c = Offset(w / 2, h / 2);
+    final top = Offset(w / 2, 0);
+    final right = Offset(w, h / 2);
+    final bottom = Offset(w / 2, h);
+    final left = Offset(0, h / 2);
+
+    // Faceta superior-esquerda mais clara (brilho do topo).
+    final shine = Paint()..color = Colors.white.withValues(alpha: 0.20);
+    canvas.drawPath(
+        Path()
+          ..moveTo(top.dx, top.dy)
+          ..lineTo(left.dx, left.dy)
+          ..lineTo(c.dx, c.dy)
+          ..close(),
+        shine);
+    // Faceta inferior-direita mais escura (sombra).
+    final shade = Paint()..color = const Color(0x33000022);
+    canvas.drawPath(
+        Path()
+          ..moveTo(bottom.dx, bottom.dy)
+          ..lineTo(right.dx, right.dy)
+          ..lineTo(c.dx, c.dy)
+          ..close(),
+        shade);
+
+    // Arestas das facetas (centro → vértices).
+    final edge = Paint()
+      ..color = Colors.white.withValues(alpha: 0.28)
+      ..strokeWidth = 0.7
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(c, top, edge);
+    canvas.drawLine(c, right, edge);
+    canvas.drawLine(c, bottom, edge);
+    canvas.drawLine(c, left, edge);
+  }
+
+  @override
+  bool shouldRepaint(covariant _CrystalFacets old) => false;
 }
 
 class _DiamondClipper extends CustomClipper<Path> {
