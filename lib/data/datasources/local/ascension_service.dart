@@ -246,8 +246,10 @@ class AscensionService {
     final rewardXp = (res['reward_xp'] as num?)?.toInt() ?? 0;
     final rewardGold = (res['reward_gold'] as num?)?.toInt() ?? 0;
     final rewardIns = (res['reward_insignias'] as num?)?.toInt() ?? 0;
+    // SPEC economia v1: ascensão de rank concede gemas (amarra guilda↔cartas).
+    final rewardGems = (res['reward_gems'] as num?)?.toInt() ?? 0;
     final resolvedJson =
-        '{"xp":$rewardXp,"gold":$rewardGold,"insignias":$rewardIns}';
+        '{"xp":$rewardXp,"gold":$rewardGold,"gems":$rewardGems,"insignias":$rewardIns}';
     _bus.publish(RewardGranted(
         playerId: playerId,
         rewardResolvedJson: resolvedJson,
