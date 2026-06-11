@@ -334,6 +334,23 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
         context, 'Entrou na facção "$_selectedFaction" (faction_type setado).');
   }
 
+  /// DEV — concede um pacote de recursos do card game (dust/crystal/scroll/soul)
+  /// pra testar criar/aprimorar/desencantar (sem fontes reais de Soul ainda).
+  Future<void> _grantCardResources() async {
+    final player = ref.read(currentPlayerProvider);
+    if (player == null) return;
+    try {
+      await ref
+          .read(supabaseClientProvider)
+          .rpc('dev_grant_card_resources', params: {'p_player': player.id});
+      if (!mounted) return;
+      AppSnack.success(context, 'Recursos de carta concedidos (dev).');
+    } catch (e) {
+      if (!mounted) return;
+      AppSnack.error(context, 'Falha ao conceder recursos: $e');
+    }
+  }
+
   /// Trigger manual do flow de admissão. Útil pra debug em devices que
   /// já tinham `faction_type='X'` antes do bug-fix da Sprint 3.4 (ou
   /// que selecionaram facção antes do `QuestAdmissionService` ser
@@ -1279,6 +1296,12 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
             const SizedBox(height: 6),
             _actionBtn('Forçar debuff 48h (sem sair)',
                 AppColors.hp, _triggerDebuff48h),
+            const SizedBox(height: 16),
+
+            // 3.6 CARD GAME (economia)
+            _section('CARD GAME'),
+            _actionBtn('Conceder recursos de carta (dev)',
+                AppColors.purpleLight, _grantCardResources),
             const SizedBox(height: 16),
 
             // 4. MISSÕES DIÁRIAS
