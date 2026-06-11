@@ -170,7 +170,8 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
   // Ritmo deliberado estilo Card Monsters: cada jogada do bot e cada golpe do
   // replay precisam ser LEGÍVEIS. Valores base tunáveis (o CEO afina no flutter
   // run). O delay de evento precisa caber a animação do golpe + número + morte.
-  Duration _botStepDelay = const Duration(milliseconds: 1000);
+  // 1300ms nas jogadas do bot (CEO achou "um pouco rápido" a 1000).
+  Duration _botStepDelay = const Duration(milliseconds: 1300);
 
   /// Delay entre EVENTOS narrados da Fase de Ataque (replay passo a passo).
   /// Acompanha o pacing do bot: `Duration.zero` (testes) => replay síncrono,
@@ -198,7 +199,7 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     CardLoadout player,
     CardLoadout bot, {
     int seed = 0,
-    Duration botStepDelay = const Duration(milliseconds: 1000),
+    Duration botStepDelay = const Duration(milliseconds: 1300),
   }) async {
     if (_busy) return;
     _busy = true;

@@ -686,7 +686,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: SizedBox(
-        height: 130,
+        height: 152, // slots maiores (CEO) — sem mudar a posição relativa
         child: Stack(
           clipBehavior: Clip.none,
           children: [
@@ -1102,10 +1102,20 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
+  /// Cor do PV no tabuleiro: branco = vida cheia (no original); vermelho =
+  /// abaixo do total; verde = acima da vida original (buffada).
+  Color _boardHpColor(CreatureInPlay c) {
+    if (c.currentHp > c.card.hp) return AppColors.conceptChrysalis; // acima
+    if (c.currentHp >= c.maxHp) return Colors.white; // cheia
+    return AppColors.hp; // abaixo do total
+  }
+
   /// Card de criatura no tabuleiro: `GameCardFace` (formato da coleção) com
-  /// rodapé de combate (ATK efetivo, PV atual/máx + barra, keywords).
+  /// rodapé de combate (ATK efetivo, PV atual colorido, keywords). Ganha um
+  /// glow pulse LEVE na cor do conceito (carta "viva" no tabuleiro).
   Widget _boardCard(CreatureInPlay c,
       {required bool isFront, Color? borderOverride}) {
+    final glow = conceptColor(c.card.concepts);
     return GameCardFace(
       name: c.card.nome,
       cost: c.card.cost,
@@ -1117,7 +1127,21 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
           ? const Icon(Icons.flag, size: 11, color: AppColors.gold)
           : null,
       footer: _boardFooter(c),
-    );
+    )
+        .animate(onPlay: (ctrl) => ctrl.repeat(reverse: true))
+        .boxShadow(
+          duration: 1400.ms,
+          curve: Curves.easeInOut,
+          borderRadius: BorderRadius.circular(10),
+          begin: BoxShadow(
+              color: glow.withValues(alpha: 0.0),
+              blurRadius: 3,
+              spreadRadius: 0),
+          end: BoxShadow(
+              color: glow.withValues(alpha: 0.45),
+              blurRadius: 12,
+              spreadRadius: 1),
+        );
   }
 
   Widget _boardFooter(CreatureInPlay c) {
@@ -1146,11 +1170,13 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                   style: GoogleFonts.robotoMono(
                       fontSize: 8, color: AppColors.textSecondary)),
             ],
-            Text('${c.currentHp}/${c.maxHp}',
+            // Só a vida ATUAL, colorida: branco = cheia (no original);
+            // vermelho = abaixo do total; verde = acima da vida original.
+            Text('${c.currentHp}',
                 style: GoogleFonts.robotoMono(
-                    fontSize: 9,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.conceptChrysalis)),
+                    color: _boardHpColor(c))),
           ],
         ),
         const SizedBox(height: 3),

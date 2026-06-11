@@ -124,7 +124,6 @@ class GameCardFace extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Positioned(top: 0, left: 0, child: _CostDiamond(cost)),
                   if (concepts.length > 1)
                     Positioned(
                       top: 3,
@@ -190,7 +189,24 @@ class GameCardFace extends StatelessWidget {
       ),
     );
 
-    return dimmed ? Opacity(opacity: 0.42, child: card) : card;
+    // Custo no TOPO-CENTRO da carta, "metade pra fora / metade pra dentro"
+    // (cravando na borda superior). Precisa de Clip.none nos pais (o tabuleiro
+    // e o leque já usam) — fica sobre a borda, centralizado.
+    final framed = Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.topCenter,
+      children: [
+        card,
+        Positioned(
+          top: -12, // metade dos 24px do diamante acima da borda
+          left: 0,
+          right: 0,
+          child: Center(child: _CostDiamond(cost)),
+        ),
+      ],
+    );
+
+    return dimmed ? Opacity(opacity: 0.42, child: framed) : framed;
   }
 }
 
