@@ -947,7 +947,11 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
           if (isProjectile)
             Icon(type == DamageType.aDistancia ? Icons.navigation : Icons.circle,
                     size: type == DamageType.aDistancia ? 14 : 11, color: color)
-                .animate(key: ObjectKey(h))
+                // Keys DISTINTAS por filho (projétil vs burst): senão os dois
+                // ficam com a mesma key no mesmo Stack → "Duplicate keys".
+                // Estável por evento (identityHashCode de h) pra reiniciar a
+                // animação a cada highlight novo.
+                .animate(key: ValueKey('fxProj_${identityHashCode(h)}'))
                 .moveY(
                     begin: startDy,
                     end: 0,
@@ -955,7 +959,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                     curve: Curves.easeIn)
                 .fadeOut(delay: 210.ms, duration: 60.ms),
           Icon(impactIcon, size: 26, color: color)
-              .animate(key: ObjectKey(h))
+              .animate(key: ValueKey('fxImpact_${identityHashCode(h)}'))
               .scaleXY(
                   begin: 0.3,
                   end: 1.2,
