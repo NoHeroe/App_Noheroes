@@ -164,7 +164,7 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
             style: GoogleFonts.roboto(
                 fontSize: 10, letterSpacing: 1.5, color: AppColors.txtMut)),
         const SizedBox(height: 8),
-        _resourceStrip(info, isRelic),
+        _resourceStrip(info),
         const SizedBox(height: 12),
         if (owned) _ownedBlock(info, isRelic) else _craftBlock(info),
         if (player != null && (info['player_level'] as num? ?? 1) < 3)
@@ -174,17 +174,16 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
   }
 
   // ── Saldo de recursos relevantes ────────────────────────────────────
-  Widget _resourceStrip(Map<String, dynamic> info, bool isRelic) {
+  Widget _resourceStrip(Map<String, dynamic> info) {
     int n(String k) => (info[k] as num?)?.toInt() ?? 0;
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: [
-        _resChip(Icons.blur_on, 'Pó', n('have_dust')),
+        _resChip(Icons.blur_on, 'Poeira', n('have_dust')),
         _resChip(Icons.diamond_outlined, 'Cristal', n('have_crystal')),
-        _resChip(Icons.description_outlined, isRelic ? 'Runas' : 'Pergam.',
-            n('have_mat')),
-        _resChip(Icons.auto_awesome, 'Alma', n('have_soul')),
+        _resChip(Icons.military_tech_outlined, 'Emblema', n('have_mat')),
+        _resChip(Icons.auto_awesome, 'Essência', n('have_soul')),
       ],
     );
   }
@@ -226,11 +225,11 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
     return _actionButton(
       label: 'CRIAR',
       icon: Icons.auto_fix_high,
-      cost: 'Pó $dust · Cristal $crystal',
+      cost: 'Poeira $dust · Cristal $crystal',
       enabled: can && !_busy,
       onTap: () async {
         if (!await _confirm('Criar carta',
-            'Gastar Pó $dust + Cristal $crystal para criar esta carta no Nível 1?',
+            'Gastar Poeira Estelar $dust + Cristal $crystal para criar esta carta no Nível 1?',
             'Criar')) {
           return;
         }
@@ -268,8 +267,8 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
             label: 'APRIMORAR → Nível ${level + 1}',
             icon: Icons.trending_up,
             cost: 'Ouro ${(upgrade['gold'] as num).toInt()} · '
-                '${isRelic ? 'Runas' : 'Perg.'} ${(upgrade['mat'] as num).toInt()} · '
-                'Alma ${(upgrade['soul'] as num).toInt()} · '
+                'Emblema ${(upgrade['mat'] as num).toInt()} · '
+                'Essência ${(upgrade['soul'] as num).toInt()} · '
                 'Cópias ${(upgrade['copies_needed'] as num).toInt()}',
             enabled: upgrade['can'] == true && !_busy,
             onTap: () async {
@@ -293,9 +292,9 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
             label: 'DESENCANTAR',
             icon: Icons.recycling,
             danger: true,
-            cost: '+Pó ${(dis['dust'] as num).toInt()} '
-                '+${isRelic ? 'Runas' : 'Perg.'} ${(dis['mat'] as num).toInt()} '
-                '+Cristal 1 +Alma ${((dis['soul'] as num?) ?? 1).toInt()}',
+            cost: '+Poeira ${(dis['dust'] as num).toInt()} '
+                '+Emblema ${(dis['mat'] as num).toInt()} '
+                '+Cristal 1 +Essência ${((dis['soul'] as num?) ?? 1).toInt()}',
             enabled: dis['can'] == true && !_busy,
             onTap: () async {
               if (!await _confirm('Desencantar carta',
