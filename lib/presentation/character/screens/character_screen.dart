@@ -85,32 +85,31 @@ class CharacterScreen extends ConsumerWidget {
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
                     child: Column(
                       children: [
+                        // HP/VT/XP no TOPO, acima do modelo 3D.
+                        const StatBarsRow(),
+                        const SizedBox(height: 12),
                         _buildAvatarFull(context, ref, equipped),
                         const SizedBox(height: 12),
                         _buildClassFaction(player),
                         const SizedBox(height: 12),
                         _buildGuildRankCard(player),
                         const SizedBox(height: 12),
-                        // Sprint 3.4 Etapa D (D17) — barras de status acima dos
-                        // atributos. maxHp já vem pós-buff via
-                        // effectiveAttributesProvider (consistente com a seção
-                        // ATRIBUTOS EFETIVOS abaixo).
-                        const StatBarsRow(),
-                        const SizedBox(height: 12),
                         _buildAttributes(context, ref, player, effective),
                         const SizedBox(height: 12),
                         if (player != null)
-                          // Sprint 3.4 Etapa G.2 (D16) — passa o % do buff de
-                          // facção (xp/gold) pro painel somar ao bônus exibido.
-                          // 1.10 → +10; debuff 0.7 → -30.
-                          StatsPanel(
-                            player: player,
-                            factionXpBonusPct:
-                                ((buffSnapshot.multipliers.xpMult - 1.0) * 100)
-                                    .round(),
-                            factionGoldBonusPct:
-                                ((buffSnapshot.multipliers.goldMult - 1.0) * 100)
-                                    .round(),
+                          // Estatísticas em acordeão (fechado por padrão).
+                          _AccordionSection(
+                            title: 'ESTATÍSTICAS',
+                            child: StatsPanel(
+                              player: player,
+                              factionXpBonusPct:
+                                  ((buffSnapshot.multipliers.xpMult - 1.0) * 100)
+                                      .round(),
+                              factionGoldBonusPct:
+                                  ((buffSnapshot.multipliers.goldMult - 1.0) *
+                                          100)
+                                      .round(),
+                            ),
                           ),
                         if (buffSnapshot.applied.isNotEmpty ||
                             buffSnapshot.pending.isNotEmpty ||
@@ -192,14 +191,16 @@ class CharacterScreen extends ConsumerWidget {
       if (e.spec.slot != null) slotMap[e.spec.slot!.dbValue] = e;
     }
 
+    // Slots reordenados (CEO): bota<->luva, depois bota<->cinto. Resultado:
+    // esquerda = Capacete/Peitoral/Botas; direita = Luvas/Cinto/Escudo.
     final leftSlots = [
       ('Capacete', Icons.security, 'head'),
       ('Peitoral', Icons.shield, 'chest'),
-      ('Cinto', Icons.fitness_center_outlined, 'waist'),
+      ('Botas', Icons.hiking, 'feet'),
     ];
     final rightSlots = [
-      ('Botas', Icons.hiking, 'feet'),
       ('Luvas', Icons.back_hand_outlined, 'hands'),
+      ('Cinto', Icons.fitness_center_outlined, 'waist'),
       ('Escudo', Icons.shield_outlined, 'off_hand'),
     ];
     final bottomSlots = [
@@ -208,9 +209,21 @@ class CharacterScreen extends ConsumerWidget {
       ('Colar', Icons.auto_awesome, 'necklace'),
     ];
 
+    Widget slotColumn(List<(String, IconData, String)> slots) => Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisSize: MainAxisSize.min,
+          children: slots
+              .map((s) =>
+                  _slot(context, ref, s.$1, s.$2, slotMap[s.$3], s.$3))
+              .toList(),
+        );
+
+    // Modelo 3D ocupa ~98% da caixa; os slots ficam SOBRE o modelo (ele ao
+    // centro/fundo). Botão de edição no topo-centro.
     return Container(
       height: screenH * 0.52,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(6),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
@@ -220,58 +233,79 @@ class CharacterScreen extends ConsumerWidget {
           AppColors.surface,
         ]),
       ),
-      child: Column(
+      child: Stack(
         children: [
-          Expanded(
+          // Modelo 3D preenchendo a caixa.
+          const Positioned.fill(child: _Character3DView()),
+          // Slots laterais sobrepostos.
+          Positioned(
+            left: 2,
+            top: 44,
+            bottom: 56,
+            child: Center(child: slotColumn(leftSlots)),
+          ),
+          Positioned(
+            right: 2,
+            top: 44,
+            bottom: 56,
+            child: Center(child: slotColumn(rightSlots)),
+          ),
+          // Slots inferiores.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 6,
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: leftSlots
-                      .map((s) =>
-                          _slot(context, ref, s.$1, s.$2, slotMap[s.$3], s.$3))
-                      .toList(),
-                ),
-                Expanded(
-                  child: Center(
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      clipBehavior: Clip.antiAlias,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            color:
-                                AppColors.purple.withValues(alpha: 0.4)),
-                        gradient: RadialGradient(colors: [
-                          AppColors.purple.withValues(alpha: 0.2),
-                          AppColors.shadowVoid,
-                        ]),
-                      ),
-                      child: const _Character3DView(),
-                    ),
-                  ),
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: rightSlots
-                      .map((s) =>
-                          _slot(context, ref, s.$1, s.$2, slotMap[s.$3], s.$3))
-                      .toList(),
-                ),
-              ],
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: bottomSlots
+                  .map((s) => _slot(context, ref, s.$1, s.$2, slotMap[s.$3],
+                      s.$3, wide: true))
+                  .toList(),
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: bottomSlots
-                .map((s) => _slot(
-                    context, ref, s.$1, s.$2, slotMap[s.$3], s.$3, wide: true))
-                .toList(),
+          // Botão de edição (topo-centro) → editor de personagem (futuro).
+          Positioned(
+            top: 6,
+            left: 0,
+            right: 0,
+            child: Center(child: _editButton(context)),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _editButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () => AppSnack.warning(
+          context, 'Editor de personagem — em breve (recurso premium).'),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF2A2030), Color(0xFF0B0910)],
+          ),
+          border: Border.all(color: AppColors.gold.withValues(alpha: 0.6)),
+          boxShadow: [
+            BoxShadow(
+                color: AppColors.gold.withValues(alpha: 0.2), blurRadius: 10),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.brush_outlined, size: 13, color: AppColors.goldLt),
+            const SizedBox(width: 6),
+            Text('EDITAR',
+                style: GoogleFonts.cinzelDecorative(
+                    fontSize: 10,
+                    letterSpacing: 1.5,
+                    color: AppColors.goldLt)),
+          ],
+        ),
       ),
     );
   }
@@ -565,7 +599,6 @@ class CharacterScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           ...attrs.map((a) {
             final base = a.$3 as int;
-            final color = a.$5;
             final eff = a.$7 as int;
             final delta = a.$8;
             return Padding(
@@ -574,7 +607,8 @@ class CharacterScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(children: [
-                    Icon(a.$4, color: color, size: 15),
+                    // Paleta padronizada: ícone/numeros/botoes em dourado.
+                    Icon(a.$4, color: AppColors.goldLt, size: 15),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(a.$1,
@@ -588,17 +622,17 @@ class CharacterScreen extends ConsumerWidget {
                       Text('$eff',
                           style: GoogleFonts.cinzelDecorative(
                               fontSize: 14,
-                              color: color,
+                              color: AppColors.gold,
                               fontWeight: FontWeight.bold)),
                       const SizedBox(width: 4),
                       Text('(+$delta)',
                           style: GoogleFonts.roboto(
-                              fontSize: 10, color: AppColors.gold)),
+                              fontSize: 10, color: AppColors.goldLt)),
                     ] else
                       Text('$base',
                           style: GoogleFonts.cinzelDecorative(
                               fontSize: 14,
-                              color: color,
+                              color: AppColors.gold,
                               fontWeight: FontWeight.bold)),
                     if (hasPoints) ...[
                       const SizedBox(width: 10),
@@ -610,11 +644,12 @@ class CharacterScreen extends ConsumerWidget {
                           height: 28,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: color.withValues(alpha: 0.15),
+                            color: AppColors.gold.withValues(alpha: 0.15),
                             border: Border.all(
-                                color: color.withValues(alpha: 0.6)),
+                                color: AppColors.gold.withValues(alpha: 0.6)),
                           ),
-                          child: Icon(Icons.add, color: color, size: 16),
+                          child: const Icon(Icons.add,
+                              color: AppColors.goldLt, size: 16),
                         ),
                       ),
                     ],
@@ -625,7 +660,7 @@ class CharacterScreen extends ConsumerWidget {
                     child: LinearProgressIndicator(
                       value: (base / 100).clamp(0.0, 1.0),
                       backgroundColor: AppColors.border,
-                      valueColor: AlwaysStoppedAnimation(color),
+                      valueColor: const AlwaysStoppedAnimation(Colors.white),
                       minHeight: 5,
                     ),
                   ),
@@ -657,11 +692,14 @@ class CharacterScreen extends ConsumerWidget {
     final m = snap.multipliers;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(
+            color: m.hasDebuff
+                ? AppColors.hp.withValues(alpha: 0.4)
+                : AppColors.gold.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -961,6 +999,13 @@ class _Character3DViewState extends State<_Character3DView> {
         } catch (_) {
           _controller.playAnimation();
         }
+        // Câmera padrão: enquadra do torso pra cima, mais próxima. O usuário
+        // ainda pode orbitar/zoom livremente. (Valores podem precisar de ajuste
+        // fino conforme o modelo final.)
+        try {
+          _controller.setCameraTarget(0, 1.35, 0);
+          _controller.setCameraOrbit(0, 82, 1.4);
+        } catch (_) {}
       },
     );
   }
@@ -1241,6 +1286,62 @@ class _EquipSwapSheetState extends ConsumerState<_EquipSwapSheet> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ── Seção em acordeão (fechada por padrão). O child traz o próprio card. ─────
+class _AccordionSection extends StatefulWidget {
+  final String title;
+  final Widget child;
+  const _AccordionSection({required this.title, required this.child});
+
+  @override
+  State<_AccordionSection> createState() => _AccordionSectionState();
+}
+
+class _AccordionSectionState extends State<_AccordionSection> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => setState(() => _open = !_open),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                Text(widget.title,
+                    style: GoogleFonts.cinzelDecorative(
+                        fontSize: 11,
+                        color: AppColors.gold,
+                        letterSpacing: 2)),
+                const Spacer(),
+                Icon(_open ? Icons.expand_less : Icons.expand_more,
+                    color: AppColors.goldLt, size: 20),
+              ],
+            ),
+          ),
+        ),
+        AnimatedCrossFade(
+          firstChild: const SizedBox(width: double.infinity, height: 0),
+          secondChild: Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: widget.child,
+          ),
+          crossFadeState:
+              _open ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+          duration: const Duration(milliseconds: 220),
+        ),
+      ],
     );
   }
 }

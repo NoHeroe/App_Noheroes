@@ -329,9 +329,10 @@ class _IBtn extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors: [Color(0xFF221A2E), Color(0xFF0B0910)],
               ),
-              border: Border.all(color: AppColors.borderViolet),
+              // Mesma paleta dourada dos botoes/medalhoes do app.
+              border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
             ),
-            child: Icon(icon, color: AppColors.txt2, size: 19),
+            child: Icon(icon, color: AppColors.goldLt, size: 19),
           ),
           if (showDot)
             Positioned(
@@ -340,11 +341,13 @@ class _IBtn extends StatelessWidget {
               child: Container(
                 width: 8,
                 height: 8,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.purpleLt,
+                  color: AppColors.gold,
                   boxShadow: [
-                    BoxShadow(color: AppColors.purpleGlow45, blurRadius: 6),
+                    BoxShadow(
+                        color: AppColors.gold.withValues(alpha: 0.6),
+                        blurRadius: 6),
                   ],
                 ),
               ),
