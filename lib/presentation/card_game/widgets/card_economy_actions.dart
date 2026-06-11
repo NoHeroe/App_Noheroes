@@ -61,7 +61,7 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
     try {
       final info = await ref
           .read(cardEconomyServiceProvider)
-          .cardInfo(player.id, widget.cardId);
+          .cardInfo(player.id, widget.cardId, concept: widget.concept);
       if (!mounted) return;
       setState(() {
         _info = info['ok'] == true ? info : null;
@@ -239,21 +239,28 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
     }
     final dust = (craft['dust'] as num).toInt();
     final crystal = (craft['crystal'] as num).toInt();
+    final soul = (craft['soul'] as num? ?? 2).toInt();
+    final faccao = (craft['faccao'] as num? ?? 0).toInt();
     final can = craft['can'] == true;
+    final faccaoStr = faccao > 0 ? ' · $faccao Ess. Facção' : '';
     return _actionButton(
       label: 'CRIAR',
       icon: Icons.auto_fix_high,
-      cost: 'Poeira $dust · Cristal $crystal',
+      cost: 'Poeira $dust · Cristal $crystal · $soul Essência$faccaoStr',
       enabled: can && !_busy,
       onTap: () async {
         if (!await _confirm('Criar carta',
-            'Gastar Poeira Estelar $dust + Cristal $crystal para criar esta carta no Nível 1?',
+            'Gastar Poeira $dust + Cristal $crystal + $soul Essência'
+                '${faccao > 0 ? ' + $faccao Essência de Facção' : ''} '
+                'para criar esta carta no Nível 1?',
             'Criar')) {
           return;
         }
         final p = ref.read(currentPlayerProvider)!;
         await _run(
-            () => ref.read(cardEconomyServiceProvider).create(p.id, widget.cardId),
+            () => ref
+                .read(cardEconomyServiceProvider)
+                .create(p.id, widget.cardId, concept: widget.concept),
             'Carta criada!');
       },
     );

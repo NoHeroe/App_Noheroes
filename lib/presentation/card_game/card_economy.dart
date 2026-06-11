@@ -28,15 +28,23 @@ class CardEconomyService {
   final SupabaseClient _client;
 
   /// Snapshot de economia da carta (posse, custos, saldos, flags `can`).
-  Future<Map<String, dynamic>> cardInfo(String playerId, String cardId) async {
-    final res = await _client.rpc('cg_card_info',
-        params: {'p_player': playerId, 'p_card_id': cardId});
+  Future<Map<String, dynamic>> cardInfo(String playerId, String cardId,
+      {String? concept}) async {
+    final res = await _client.rpc('cg_card_info', params: {
+      'p_player': playerId,
+      'p_card_id': cardId,
+      if (concept != null) 'p_concept': concept,
+    });
     return (res as Map).cast<String, dynamic>();
   }
 
-  Future<CgResult> create(String playerId, String cardId) async =>
-      CgResult.fromRpc(await _client.rpc('cg_create_card',
-          params: {'p_player': playerId, 'p_card_id': cardId}));
+  Future<CgResult> create(String playerId, String cardId,
+          {String? concept}) async =>
+      CgResult.fromRpc(await _client.rpc('cg_create_card', params: {
+        'p_player': playerId,
+        'p_card_id': cardId,
+        if (concept != null) 'p_concept': concept,
+      }));
 
   Future<CgResult> disenchant(String playerId, String cardId,
           {String? concept}) async =>
