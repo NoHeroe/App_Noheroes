@@ -1,22 +1,28 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../settings/settings_provider.dart';
 
 /// Bloco 1 do restyle do Santuário (mockup v3).
 ///
 /// Camadas atmosféricas empilhadas. Os painters animados (névoa, faíscas)
 /// ficam em [RepaintBoundary] pra isolar repaint. Grão e colunas são
 /// estáticos (seedados — nunca regeram por frame).
-class SanctuaryAtmosphere extends StatefulWidget {
+///
+/// Respeita o toggle global `backgroundAnimationsProvider` (Configurações):
+/// OFF = controllers parados + camadas animadas não montadas (só estáticas).
+class SanctuaryAtmosphere extends ConsumerStatefulWidget {
   const SanctuaryAtmosphere({super.key});
 
   @override
-  State<SanctuaryAtmosphere> createState() => _SanctuaryAtmosphereState();
+  ConsumerState<SanctuaryAtmosphere> createState() =>
+      _SanctuaryAtmosphereState();
 }
 
-class _SanctuaryAtmosphereState extends State<SanctuaryAtmosphere>
+class _SanctuaryAtmosphereState extends ConsumerState<SanctuaryAtmosphere>
     with TickerProviderStateMixin {
   late final AnimationController _fog;
   late final AnimationController _embers;
@@ -55,6 +61,16 @@ class _SanctuaryAtmosphereState extends State<SanctuaryAtmosphere>
 
   @override
   Widget build(BuildContext context) {
+    // Toggle global (Configurações). OFF = só camadas estáticas + controllers
+    // parados (alívio de performance).
+    final animate = ref.watch(backgroundAnimationsProvider);
+    if (animate) {
+      if (!_fog.isAnimating) _fog.repeat();
+      if (!_embers.isAnimating) _embers.repeat();
+    } else {
+      _fog.stop();
+      _embers.stop();
+    }
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -94,30 +110,32 @@ class _SanctuaryAtmosphereState extends State<SanctuaryAtmosphere>
           ),
         ),
 
-        // 3. Névoa (A roxa + B vermelha) — drift lento
-        RepaintBoundary(
-          child: AnimatedBuilder(
-            animation: _fog,
-            builder: (_, __) =>
-                CustomPaint(painter: _FogPainter(_fog.value), size: Size.infinite),
+        // 3. Névoa (A roxa + B vermelha) — drift lento (animada → gated)
+        if (animate)
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _fog,
+              builder: (_, __) => CustomPaint(
+                  painter: _FogPainter(_fog.value), size: Size.infinite),
+            ),
           ),
-        ),
 
         // 4. Colunas góticas (estático)
         const RepaintBoundary(
           child: CustomPaint(painter: _ColumnsPainter(), size: Size.infinite),
         ),
 
-        // 5. Faíscas (embers)
-        RepaintBoundary(
-          child: AnimatedBuilder(
-            animation: _embers,
-            builder: (_, __) => CustomPaint(
-              painter: _EmbersPainter(_embers.value, _emberSpecs),
-              size: Size.infinite,
+        // 5. Faíscas (embers) — animada → gated
+        if (animate)
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _embers,
+              builder: (_, __) => CustomPaint(
+                painter: _EmbersPainter(_embers.value, _emberSpecs),
+                size: Size.infinite,
+              ),
             ),
           ),
-        ),
 
         // 6. Vignette
         const DecoratedBox(

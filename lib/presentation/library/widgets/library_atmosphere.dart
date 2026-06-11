@@ -1,21 +1,26 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../settings/settings_provider.dart';
 
 /// Atmosfera da Biblioteca (Fatia 2 / ajuste) — mesma linguagem do
 /// Santuário: radial roxo→preto + glow topo + névoa + **faíscas (embers)**
 /// + **silhueta de estantes** (no lugar dos arcos góticos) + vignette +
 /// grão. Painters animados em [RepaintBoundary]; estantes/grão estáticos.
-class LibraryAtmosphere extends StatefulWidget {
+///
+/// Respeita o toggle global `backgroundAnimationsProvider` (Configurações):
+/// OFF = controllers parados + camadas animadas não montadas (só estáticas).
+class LibraryAtmosphere extends ConsumerStatefulWidget {
   const LibraryAtmosphere({super.key});
 
   @override
-  State<LibraryAtmosphere> createState() => _LibraryAtmosphereState();
+  ConsumerState<LibraryAtmosphere> createState() => _LibraryAtmosphereState();
 }
 
-class _LibraryAtmosphereState extends State<LibraryAtmosphere>
+class _LibraryAtmosphereState extends ConsumerState<LibraryAtmosphere>
     with TickerProviderStateMixin {
   late final AnimationController _fog;
   late final AnimationController _embers;
@@ -53,6 +58,14 @@ class _LibraryAtmosphereState extends State<LibraryAtmosphere>
 
   @override
   Widget build(BuildContext context) {
+    final animate = ref.watch(backgroundAnimationsProvider);
+    if (animate) {
+      if (!_fog.isAnimating) _fog.repeat();
+      if (!_embers.isAnimating) _embers.repeat();
+    } else {
+      _fog.stop();
+      _embers.stop();
+    }
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -90,28 +103,30 @@ class _LibraryAtmosphereState extends State<LibraryAtmosphere>
             ),
           ),
         ),
-        // Névoa sutil
-        RepaintBoundary(
-          child: AnimatedBuilder(
-            animation: _fog,
-            builder: (_, __) => CustomPaint(
-                painter: _FogPainter(_fog.value), size: Size.infinite),
+        // Névoa sutil (animada → gated)
+        if (animate)
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _fog,
+              builder: (_, __) => CustomPaint(
+                  painter: _FogPainter(_fog.value), size: Size.infinite),
+            ),
           ),
-        ),
         // Silhueta de estantes (lugar dos arcos góticos do Santuário)
         const RepaintBoundary(
           child: CustomPaint(painter: _ShelvesPainter(), size: Size.infinite),
         ),
-        // Faíscas (embers)
-        RepaintBoundary(
-          child: AnimatedBuilder(
-            animation: _embers,
-            builder: (_, __) => CustomPaint(
-              painter: _EmbersPainter(_embers.value, _emberSpecs),
-              size: Size.infinite,
+        // Faíscas (embers) — animada → gated
+        if (animate)
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _embers,
+              builder: (_, __) => CustomPaint(
+                painter: _EmbersPainter(_embers.value, _emberSpecs),
+                size: Size.infinite,
+              ),
             ),
           ),
-        ),
         // Vignette
         const DecoratedBox(
           decoration: BoxDecoration(

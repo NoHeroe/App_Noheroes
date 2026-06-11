@@ -13,6 +13,7 @@ import '../../../domain/models/faction_buff_multipliers.dart';
 import '../../../domain/models/inventory_entry_with_spec.dart';
 import '../../../domain/models/player_snapshot.dart';
 import '../../shared/widgets/feature_chip.dart';
+import '../../settings/settings_provider.dart';
 import '../../shared/widgets/nh_atmosphere.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
 import '../../shared/widgets/app_snack.dart';
@@ -965,33 +966,55 @@ class _AppliedRuneSection extends ConsumerWidget {
 
 // ── Modelo 3D do personagem (placeholder: character.glb do projeto antigo) ──
 // Ocupa o mesmo espaço/slot do antigo "Avatar 2D". Toca a animação embutida.
-class _Character3DView extends StatefulWidget {
+class _Character3DView extends ConsumerStatefulWidget {
   const _Character3DView();
 
   @override
-  State<_Character3DView> createState() => _Character3DViewState();
+  ConsumerState<_Character3DView> createState() => _Character3DViewState();
 }
 
-class _Character3DViewState extends State<_Character3DView> {
+class _Character3DViewState extends ConsumerState<_Character3DView> {
   final Flutter3DController _controller = Flutter3DController();
+  // Nome da animação embutida no glb (guardado pra dar play/pause conforme o
+  // toggle global). Null até o modelo carregar.
+  String? _animName;
+  bool _loaded = false;
+
+  void _applyAnimationState(bool animate) {
+    if (!_loaded) return;
+    try {
+      if (animate) {
+        _animName != null
+            ? _controller.playAnimation(animationName: _animName)
+            : _controller.playAnimation();
+      } else {
+        _controller.pauseAnimation();
+      }
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
+    // O modelo 3D é a animação mais pesada do app — respeita o toggle global
+    // (Configurações). OFF = pausa o loop embutido (modelo segue visível,
+    // parado). Reage a mudanças do toggle em runtime via ref.listen.
+    ref.listen<bool>(backgroundAnimationsProvider, (_, next) {
+      _applyAnimationState(next);
+    });
     return Flutter3DViewer(
       src: 'assets/models/character.glb',
       controller: _controller,
       progressBarColor: AppColors.purpleLight,
       enableTouch: true,
       onLoad: (modelAddress) async {
-        // Toca a primeira animação embutida no glb (placeholder).
+        _loaded = true;
+        // Descobre a primeira animação embutida no glb (placeholder).
         try {
           final anims = await _controller.getAvailableAnimations();
-          if (anims.isNotEmpty) {
-            _controller.playAnimation(animationName: anims.first);
-          }
-        } catch (_) {
-          _controller.playAnimation();
-        }
+          if (anims.isNotEmpty) _animName = anims.first;
+        } catch (_) {}
+        // Só toca se o toggle de animações estiver ligado.
+        _applyAnimationState(ref.read(backgroundAnimationsProvider));
         // Câmera padrão: enquadra do torso pra cima, mais próxima. O usuário
         // ainda pode orbitar/zoom livremente. (Valores podem precisar de ajuste
         // fino conforme o modelo final.)

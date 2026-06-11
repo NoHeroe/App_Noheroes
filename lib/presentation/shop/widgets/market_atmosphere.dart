@@ -1,20 +1,27 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../settings/settings_provider.dart';
 
 /// Atmosfera do Mercado — mesma linguagem do Santuário/Biblioteca, mas com
 /// paleta QUENTE de bazar à luz de lanterna: radial âmbar→preto + dois glows
 /// de lanterna que tremulam (esq/dir) + névoa quente + silhueta de barracas
 /// (toldos + caixotes) + faíscas douradas + vignette + grão. Painters animados
 /// em [RepaintBoundary]; silhueta/grão estáticos.
-class MarketAtmosphere extends StatefulWidget {
+///
+/// Respeita o toggle global `backgroundAnimationsProvider` (Configurações):
+/// OFF = controllers parados; névoa/faíscas não montadas e as lanternas
+/// renderizam estáticas (intensidade fixa) pra manter a cena iluminada.
+class MarketAtmosphere extends ConsumerStatefulWidget {
   const MarketAtmosphere({super.key});
 
   @override
-  State<MarketAtmosphere> createState() => _MarketAtmosphereState();
+  ConsumerState<MarketAtmosphere> createState() => _MarketAtmosphereState();
 }
 
-class _MarketAtmosphereState extends State<MarketAtmosphere>
+class _MarketAtmosphereState extends ConsumerState<MarketAtmosphere>
     with TickerProviderStateMixin {
   late final AnimationController _fog;
   late final AnimationController _embers;
@@ -56,6 +63,16 @@ class _MarketAtmosphereState extends State<MarketAtmosphere>
 
   @override
   Widget build(BuildContext context) {
+    final animate = ref.watch(backgroundAnimationsProvider);
+    if (animate) {
+      if (!_fog.isAnimating) _fog.repeat();
+      if (!_embers.isAnimating) _embers.repeat();
+      if (!_flicker.isAnimating) _flicker.repeat(reverse: true);
+    } else {
+      _fog.stop();
+      _embers.stop();
+      _flicker.stop();
+    }
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -74,44 +91,56 @@ class _MarketAtmosphereState extends State<MarketAtmosphere>
             ),
           ),
         ),
-        // Dois glows de LANTERNA que tremulam (cantos superiores).
-        RepaintBoundary(
-          child: AnimatedBuilder(
-            animation: _flicker,
-            builder: (_, __) {
-              final f = 0.82 + _flicker.value * 0.18;
-              return Stack(
-                fit: StackFit.expand,
-                children: [
-                  _lanternGlow(const Alignment(-0.78, -0.82), 300, f),
-                  _lanternGlow(const Alignment(0.82, -0.66), 260, 1.62 - f),
-                ],
-              );
-            },
+        // Dois glows de LANTERNA. Animados → tremulam; OFF → intensidade fixa
+        // (cena segue iluminada, sem custo de animação).
+        if (animate)
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _flicker,
+              builder: (_, __) {
+                final f = 0.82 + _flicker.value * 0.18;
+                return Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _lanternGlow(const Alignment(-0.78, -0.82), 300, f),
+                    _lanternGlow(const Alignment(0.82, -0.66), 260, 1.62 - f),
+                  ],
+                );
+              },
+            ),
+          )
+        else
+          Stack(
+            fit: StackFit.expand,
+            children: [
+              _lanternGlow(const Alignment(-0.78, -0.82), 300, 0.9),
+              _lanternGlow(const Alignment(0.82, -0.66), 260, 0.72),
+            ],
           ),
-        ),
-        // Névoa quente sutil.
-        RepaintBoundary(
-          child: AnimatedBuilder(
-            animation: _fog,
-            builder: (_, __) => CustomPaint(
-                painter: _FogPainter(_fog.value), size: Size.infinite),
+        // Névoa quente sutil (animada → gated).
+        if (animate)
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _fog,
+              builder: (_, __) => CustomPaint(
+                  painter: _FogPainter(_fog.value), size: Size.infinite),
+            ),
           ),
-        ),
         // Silhueta de barracas de mercado (toldos + caixotes).
         const RepaintBoundary(
           child: CustomPaint(painter: _StallsPainter(), size: Size.infinite),
         ),
-        // Faíscas (embers) douradas subindo.
-        RepaintBoundary(
-          child: AnimatedBuilder(
-            animation: _embers,
-            builder: (_, __) => CustomPaint(
-              painter: _EmbersPainter(_embers.value, _emberSpecs),
-              size: Size.infinite,
+        // Faíscas (embers) douradas subindo (animada → gated).
+        if (animate)
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _embers,
+              builder: (_, __) => CustomPaint(
+                painter: _EmbersPainter(_embers.value, _emberSpecs),
+                size: Size.infinite,
+              ),
             ),
           ),
-        ),
         // Vignette.
         const DecoratedBox(
           decoration: BoxDecoration(
