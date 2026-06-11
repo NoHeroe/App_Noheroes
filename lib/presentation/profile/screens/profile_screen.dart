@@ -265,6 +265,25 @@ class _BodyMetricsCard extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           _MetricRow(
+            label: 'Sexo',
+            value: _sexLabel(player.sex),
+            editKey: 'profile-edit-sex',
+            onEdit: () => _editSex(context, ref),
+          ),
+          const SizedBox(height: 8),
+          _MetricRow(
+            label: 'Idade',
+            value: player.age == null ? '—' : '${player.age} anos',
+            editKey: 'profile-edit-age',
+            onEdit: () => _editDialog(
+              context: context,
+              ref: ref,
+              field: _Field.age,
+              current: player.age,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _MetricRow(
             label: 'IMC',
             value: bmi == null ? '—' : bmi.toStringAsFixed(1),
             editKey: null,
@@ -287,15 +306,26 @@ class _BodyMetricsCard extends ConsumerWidget {
     required _Field field,
     required int? current,
   }) async {
-    final isWeight = field == _Field.weight;
-    final min = isWeight
-        ? BodyMetricsService.minWeightKg
-        : BodyMetricsService.minHeightCm;
-    final max = isWeight
-        ? BodyMetricsService.maxWeightKg
-        : BodyMetricsService.maxHeightCm;
-    final unit = isWeight ? 'kg' : 'cm';
-    final title = isWeight ? 'Peso' : 'Altura';
+    final (min, max, unit, title) = switch (field) {
+      _Field.weight => (
+          BodyMetricsService.minWeightKg,
+          BodyMetricsService.maxWeightKg,
+          'kg',
+          'Peso'
+        ),
+      _Field.height => (
+          BodyMetricsService.minHeightCm,
+          BodyMetricsService.maxHeightCm,
+          'cm',
+          'Altura'
+        ),
+      _Field.age => (
+          BodyMetricsService.minAge,
+          BodyMetricsService.maxAge,
+          'anos',
+          'Idade'
+        ),
+    };
     final ctrl = TextEditingController(text: current?.toString() ?? '');
 
     final newValue = await showDialog<int>(
@@ -312,15 +342,58 @@ class _BodyMetricsCard extends ConsumerWidget {
 
     await service.save(
       playerId: player.id,
-      weightKg: isWeight ? newValue : null,
-      heightCm: isWeight ? null : newValue,
+      weightKg: field == _Field.weight ? newValue : null,
+      heightCm: field == _Field.height ? newValue : null,
+      age: field == _Field.age ? newValue : null,
     );
+    await _refresh(ref);
+  }
+
+  Future<void> _editSex(BuildContext context, WidgetRef ref) async {
+    final chosen = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Sexo',
+            style: GoogleFonts.cinzelDecorative(
+                color: AppColors.gold, fontSize: 15)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final opt in const [
+              (BodyMetricsService.sexMale, 'Masculino'),
+              (BodyMetricsService.sexFemale, 'Feminino'),
+            ])
+              ListTile(
+                title: Text(opt.$2,
+                    style: GoogleFonts.roboto(color: AppColors.txt)),
+                trailing: player.sex == opt.$1
+                    ? const Icon(Icons.check, color: AppColors.gold)
+                    : null,
+                onTap: () => Navigator.pop(ctx, opt.$1),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (chosen == null) return;
+    await service.save(playerId: player.id, sex: chosen);
+    await _refresh(ref);
+  }
+
+  Future<void> _refresh(WidgetRef ref) async {
     final fresh =
         await PlayerDao(ref.read(supabaseClientProvider)).findById(player.id);
     if (fresh != null) {
       ref.read(currentPlayerProvider.notifier).state = fresh;
     }
   }
+
+  static String _sexLabel(String? s) => switch (s) {
+        BodyMetricsService.sexMale => 'Masculino',
+        BodyMetricsService.sexFemale => 'Feminino',
+        _ => '—',
+      };
 
   Color _categoryColor(String c) => switch (c) {
         BodyMetricsService.categoryNormal => AppColors.rarityUncommon,
@@ -331,7 +404,7 @@ class _BodyMetricsCard extends ConsumerWidget {
       };
 }
 
-enum _Field { weight, height }
+enum _Field { weight, height, age }
 
 class _RecommendationsCard extends StatelessWidget {
   final Player player;
@@ -349,7 +422,9 @@ class _RecommendationsCard extends StatelessWidget {
         children: [
           _MetricRow(
             label: 'Água',
-            value: water == null ? '—' : '$water ml',
+            value: water == null
+                ? '—'
+                : '${(water / 1000).toStringAsFixed(water % 1000 == 0 ? 0 : 1)} L',
             editKey: null,
           ),
           const SizedBox(height: 8),

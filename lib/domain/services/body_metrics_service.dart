@@ -66,17 +66,32 @@ class BodyMetricsService {
   }
 
   /// Água recomendada em ml/dia. Null se peso falta.
+  ///
+  /// Mais realista com idade + sexo: ml/kg cai com a idade
+  /// (<30: 40 / 30–55: 35 / >55: 30) e mulheres têm menor % de água
+  /// corporal (fator 0.95). Sem idade/sexo cai no 35 ml/kg padrão.
   int? recommendedWaterMl(Player player) {
     final w = player.weightKg;
     if (w == null) return null;
-    return w * 35;
+    final age = player.age;
+    final double perKg = age == null
+        ? 35
+        : age < 30
+            ? 40
+            : age <= 55
+                ? 35
+                : 30;
+    final sexFactor = player.sex == 'female' ? 0.95 : 1.0;
+    return (w * perKg * sexFactor).round();
   }
 
   /// Proteína recomendada em g/dia (perfil ativo). Null se peso falta.
+  /// Idosos (>60) recebem 1.8 g/kg (prevenção de sarcopenia); demais 1.6.
   int? recommendedProteinG(Player player) {
     final w = player.weightKg;
     if (w == null) return null;
-    return (w * 1.6).round();
+    final gPerKg = (player.age ?? 0) > 60 ? 1.8 : 1.6;
+    return (w * gPerKg).round();
   }
 
   /// Persiste peso/altura. Lança ArgumentError se algum valor estiver
@@ -85,10 +100,20 @@ class BodyMetricsService {
   /// Publica [BodyMetricsUpdated] pós-save. `isFirstTime=true` quando ambos
   /// os campos estavam null antes (primeira calibração — onboarding);
   /// `false` em edições.
+  static const int minAge = 5;
+  static const int maxAge = 120;
+  static const String sexMale = 'male';
+  static const String sexFemale = 'female';
+
+  bool isValidAge(int years) => years >= minAge && years <= maxAge;
+  bool isValidSex(String s) => s == sexMale || s == sexFemale;
+
   Future<void> save({
     required String playerId,
     int? weightKg,
     int? heightCm,
+    String? sex,
+    int? age,
   }) async {
     if (weightKg != null && !isValidWeight(weightKg)) {
       throw ArgumentError(
@@ -98,12 +123,18 @@ class BodyMetricsService {
       throw ArgumentError(
           'heightCm fora do range ($minHeightCm-$maxHeightCm): $heightCm');
     }
+    if (sex != null && !isValidSex(sex)) {
+      throw ArgumentError("sex inválido (esperado '$sexMale'/'$sexFemale'): $sex");
+    }
+    if (age != null && !isValidAge(age)) {
+      throw ArgumentError('age fora do range ($minAge-$maxAge): $age');
+    }
     final before = await _dao.findById(playerId);
     final isFirstTime =
         before != null && before.weightKg == null && before.heightCm == null;
 
     await _dao.updateBodyMetrics(playerId,
-        weightKg: weightKg, heightCm: heightCm);
+        weightKg: weightKg, heightCm: heightCm, sex: sex, age: age);
 
     _bus.publish(BodyMetricsUpdated(
       playerId: playerId,

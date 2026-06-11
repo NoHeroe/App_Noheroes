@@ -91,10 +91,12 @@ class PlayerDao {
 
   /// Persiste peso/altura (ranges validados pelo BodyMetricsService antes).
   Future<void> updateBodyMetrics(String id,
-      {int? weightKg, int? heightCm}) async {
+      {int? weightKg, int? heightCm, String? sex, int? age}) async {
     final patch = <String, dynamic>{};
     if (weightKg != null) patch['weight_kg'] = weightKg;
     if (heightCm != null) patch['height_cm'] = heightCm;
+    if (sex != null) patch['sex'] = sex;
+    if (age != null) patch['age'] = age;
     if (patch.isEmpty) return;
     await _client.from('players').update(patch).eq('id', id);
   }

@@ -75,6 +75,10 @@ class Player {
   // Dados físicos
   final int? weightKg;
   final int? heightCm;
+  // Sexo biológico ('male'/'female') e idade — para cálculo realista de
+  // água/proteína (BodyMetricsService). Null = ainda não informado.
+  final String? sex;
+  final int? age;
 
   // Streaks / contadores
   final int dailyMissionsStreak;
@@ -129,6 +133,8 @@ class Player {
     this.lastDailyMissionRollover,
     this.weightKg,
     this.heightCm,
+    this.sex,
+    this.age,
     this.dailyMissionsStreak = 0,
     this.totalGemsSpent = 0,
     this.peakLevel = 1,
@@ -200,6 +206,8 @@ class Player {
         lastDailyMissionRollover: (m['last_daily_mission_rollover'] as num?)?.toInt(),
         weightKg: (m['weight_kg'] as num?)?.toInt(),
         heightCm: (m['height_cm'] as num?)?.toInt(),
+        sex: m['sex'] as String?,
+        age: (m['age'] as num?)?.toInt(),
         dailyMissionsStreak: _int(m['daily_missions_streak']),
         totalGemsSpent: _int(m['total_gems_spent']),
         peakLevel: _int(m['peak_level'], 1),
@@ -253,6 +261,8 @@ class Player {
         'last_daily_mission_rollover': lastDailyMissionRollover,
         'weight_kg': weightKg,
         'height_cm': heightCm,
+        'sex': sex,
+        'age': age,
         'daily_missions_streak': dailyMissionsStreak,
         'total_gems_spent': totalGemsSpent,
         'peak_level': peakLevel,
@@ -304,6 +314,8 @@ class Player {
     int? lastDailyMissionRollover,
     int? weightKg,
     int? heightCm,
+    String? sex,
+    int? age,
     int? dailyMissionsStreak,
     int? totalGemsSpent,
     int? peakLevel,
@@ -357,6 +369,8 @@ class Player {
             lastDailyMissionRollover ?? this.lastDailyMissionRollover,
         weightKg: weightKg ?? this.weightKg,
         heightCm: heightCm ?? this.heightCm,
+        sex: sex ?? this.sex,
+        age: age ?? this.age,
         dailyMissionsStreak: dailyMissionsStreak ?? this.dailyMissionsStreak,
         totalGemsSpent: totalGemsSpent ?? this.totalGemsSpent,
         peakLevel: peakLevel ?? this.peakLevel,
