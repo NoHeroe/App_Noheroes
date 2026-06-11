@@ -307,7 +307,7 @@ class CardBattleEngine {
     if (relic.isFlash) {
       // Uso único: aplica efeito (cura) e descarta — não fica equipada.
       var hp = target.currentHp;
-      final heal = relic.grants.heal;
+      final heal = relic.grants.heal == null ? null : relic.scaledHeal;
       if (heal != null) {
         hp = (hp + heal).clamp(0, target.maxHp);
       }
@@ -322,7 +322,7 @@ class CardBattleEngine {
 
       // Cura instantânea concedida também aplica ao equipar.
       var hp = target.currentHp;
-      final heal = relic.grants.heal;
+      final heal = relic.grants.heal == null ? null : relic.scaledHeal;
       if (heal != null) {
         hp = (hp + heal).clamp(0, target.maxHp);
       }

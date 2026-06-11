@@ -66,9 +66,9 @@ class CreatureInPlay {
   /// PV máximo: HP base da carta + `hpBonus` das relíquias + bônus permanente
   /// (Roubo de PV).
   int get maxHp {
-    var total = card.hp + bonusMaxHp;
+    var total = card.effectiveHp + bonusMaxHp;
     for (final r in relics) {
-      total += r.grants.hpBonus ?? 0;
+      total += r.scaledHpBonus;
     }
     return total;
   }
@@ -100,7 +100,7 @@ class CreatureInPlay {
   int get armor {
     var total = 0;
     for (final r in relics) {
-      total += r.grants.armor ?? 0;
+      total += r.scaledArmor;
     }
     if (hasKeyword(AbilityKeyword.escudo)) total += kEscudoArmor;
     return total;
@@ -125,13 +125,13 @@ class CreatureInPlay {
   /// (verdadeiro) NÃO são escalados por relíquia de ATK genérica — pra reforçá-los
   /// é preciso item específico. (hpBonus/armor de relíquia seguem valendo p/ todos.)
   int get atk {
-    var total = card.atk;
+    var total = card.effectiveAtk;
     final type = effectiveDamageType;
     final scalesAtk =
         type == DamageType.corpoACorpo || type == DamageType.aDistancia;
     if (scalesAtk) {
       for (final r in relics) {
-        total += r.grants.atkBonus ?? 0;
+        total += r.scaledAtkBonus;
       }
     }
     return total;

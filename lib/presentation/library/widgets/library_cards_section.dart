@@ -8,6 +8,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_models.dart';
 import '../../card_game/card_ownership.dart';
+import '../../card_game/card_economy.dart';
 import '../../card_game/widgets/game_card_face.dart';
 import '../../card_game/widgets/card_economy_actions.dart';
 import '../../shared/widgets/nh_back_button.dart';
@@ -310,6 +311,8 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
     // logado o provider já devolve set vazio.
     final owned =
         ref.watch(cardOwnershipProvider).value ?? const <String>{};
+    final levels =
+        ref.watch(cardLevelsProvider).value ?? const <String, int>{};
     final source = _sourceFor(catalog);
     final cards = _filter(source, owned);
 
@@ -345,7 +348,8 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
                         controller: _pageController,
                         onPageChanged: (p) => setState(() => _page = p),
                         itemCount: pageCount,
-                        itemBuilder: (_, page) => _cardPage(cards, page, owned),
+                        itemBuilder: (_, page) =>
+                          _cardPage(cards, page, owned, levels),
                       ),
                     ),
                     // Seta DIREITA (próxima página).
@@ -401,7 +405,8 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
   }
 
   /// Uma página com até 4 cartas em grade 2x2 (preenche a altura disponível).
-  Widget _cardPage(List<_CardVM> cards, int page, Set<String> owned) {
+  Widget _cardPage(
+      List<_CardVM> cards, int page, Set<String> owned, Map<String, int> levels) {
     final start = page * _perPage;
     Widget cell(int offset) {
       final i = start + offset;
@@ -414,6 +419,7 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
           child: _CardTile(
             card: card,
             unlocked: unlocked,
+            level: levels[card.id] ?? 1,
             onTap: () => _openDetail(card, unlocked),
           ),
         ),
@@ -759,11 +765,13 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
 class _CardTile extends StatelessWidget {
   final _CardVM card;
   final bool unlocked;
+  final int level;
   final VoidCallback onTap;
   const _CardTile({
     required this.card,
     required this.unlocked,
     required this.onTap,
+    this.level = 1,
   });
 
   @override
@@ -807,14 +815,18 @@ class _CardTile extends StatelessWidget {
   }
 
   /// Carta com o MESMO visual da partida (GameCardFace), sem o slot de item.
+  /// Quando a carta está aprimorada (level > 1) mostra stats EFETIVOS (+10%/nv)
+  /// e um selo "Nv X".
   Widget _buildTile(BuildContext context) {
     final isCreature = card.kind == _CardKind.creature;
+    final atkEff = cgScaleStat(card.atk, level);
+    final pvEff = cgScaleStat(card.pv, level);
     final Widget footer = isCreature
         ? Row(
             children: [
               typeGlyph(card.damageType ?? DamageType.corpoACorpo, size: 12),
               const SizedBox(width: 3),
-              Text('${card.atk}',
+              Text('$atkEff',
                   style: GoogleFonts.robotoMono(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -822,7 +834,7 @@ class _CardTile extends StatelessWidget {
               const Spacer(),
               const Icon(Icons.favorite, size: 10, color: Colors.white),
               const SizedBox(width: 3),
-              Text('${card.pv}',
+              Text('$pvEff',
                   style: GoogleFonts.robotoMono(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -846,6 +858,21 @@ class _CardTile extends StatelessWidget {
       showItemSlot: false, // coleção não mostra slot de item
       effects: isCreature ? effectIconsFromAbilities(card.abilities) : const [],
       footer: footer,
+      cornerBadge: level > 1
+          ? Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                color: AppColors.gold.withValues(alpha: 0.9),
+              ),
+              child: Text('Nv $level',
+                  style: GoogleFonts.roboto(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black)),
+            )
+          : null,
     );
   }
 }

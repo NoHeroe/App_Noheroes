@@ -121,6 +121,15 @@ String damageTypeToString(DamageType t) {
 /// `concepts`: 1 conceito (normal) ou até 2 (elite). `abilities` é uma lista
 /// extensível (pode ser vazia) de identificadores; o engine MVP não as
 /// interpreta.
+/// Escala de stat pelo NÍVEL de aprimoramento (SPEC economia v1): +10% por
+/// nível acima de 1, arredondando **pra cima**. Nível 1 = sem mudança.
+/// DÉBITO: client-side (PvE). Quando o PvP server-authoritative chegar, o
+/// catálogo + a escala migram pro Supabase.
+int cgScaleStat(int base, int level) {
+  if (level <= 1 || base == 0) return base;
+  return (base * (1 + 0.1 * (level - 1))).ceil();
+}
+
 class CreatureCard {
   const CreatureCard({
     required this.id,
@@ -133,6 +142,7 @@ class CreatureCard {
     required this.rarity,
     this.relicSlots = 1,
     this.abilities = const <String>[],
+    this.level = 1,
   });
 
   final String id;
@@ -145,6 +155,28 @@ class CreatureCard {
   final Rarity rarity;
   final int relicSlots;
   final List<String> abilities;
+
+  /// Nível de aprimoramento (1..8). Injetado de `player_cards.level` na montagem
+  /// do loadout; o catálogo/JSON não traz nível (sempre 1).
+  final int level;
+
+  /// ATK/HP efetivos pelo nível (+10%/nível, base = nível 1).
+  int get effectiveAtk => cgScaleStat(atk, level);
+  int get effectiveHp => cgScaleStat(hp, level);
+
+  CreatureCard withLevel(int newLevel) => CreatureCard(
+        id: id,
+        nome: nome,
+        concepts: concepts,
+        cost: cost,
+        atk: atk,
+        hp: hp,
+        damageType: damageType,
+        rarity: rarity,
+        relicSlots: relicSlots,
+        abilities: abilities,
+        level: newLevel,
+      );
 
   factory CreatureCard.fromJson(Map<String, dynamic> json) {
     return CreatureCard(
@@ -263,6 +295,7 @@ class RelicCard {
     required this.rarity,
     this.cost = 0,
     this.isFlash = false,
+    this.level = 1,
   });
 
   final String id;
@@ -276,6 +309,26 @@ class RelicCard {
   final RelicGrants grants;
   final Rarity rarity;
   final bool isFlash;
+
+  /// Nível de aprimoramento (1..5). Injetado de `player_cards.level`.
+  final int level;
+
+  /// Bônus de relíquia escalados pelo nível (+10%/nível). `abilities` não escalam.
+  int get scaledAtkBonus => cgScaleStat(grants.atkBonus ?? 0, level);
+  int get scaledHpBonus => cgScaleStat(grants.hpBonus ?? 0, level);
+  int get scaledArmor => cgScaleStat(grants.armor ?? 0, level);
+  int get scaledHeal => cgScaleStat(grants.heal ?? 0, level);
+
+  RelicCard withLevel(int newLevel) => RelicCard(
+        id: id,
+        nome: nome,
+        concepts: concepts,
+        grants: grants,
+        rarity: rarity,
+        cost: cost,
+        isFlash: isFlash,
+        level: newLevel,
+      );
 
   /// Universal: equipa em qualquer criatura, independente de conceito.
   bool get isUniversal => concepts.contains(CardConcept.neutro);

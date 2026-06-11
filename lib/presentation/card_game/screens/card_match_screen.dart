@@ -13,6 +13,7 @@ import '../../../data/services/card_match_reward_service.dart';
 import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_game.dart';
 import '../../shared/tutorial_manager.dart';
+import '../card_economy.dart';
 import '../deck_repository.dart';
 import '../pve_match_controller.dart';
 import '../widgets/game_card_face.dart';
@@ -154,6 +155,15 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     }
     if (deck == null || !deck.isValid) return null;
 
+    // Níveis de aprimoramento (SPEC v1): injeta level por carta pra escalar os
+    // stats no engine. Sem níveis → tudo nível 1 (sem mudança).
+    Map<String, int> levels;
+    try {
+      levels = await ref.read(cardLevelsProvider.future);
+    } catch (_) {
+      levels = const {};
+    }
+
     final creatureById = {for (final c in catalog.creatures) c.id: c};
     final relicById = {for (final r in catalog.relics) r.id: r};
 
@@ -161,13 +171,13 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     for (final id in deck.creatureIds) {
       final c = creatureById[id];
       if (c == null) return null;
-      creatures.add(c);
+      creatures.add(c.withLevel(levels[id] ?? 1));
     }
     final relics = <RelicCard>[];
     for (final id in deck.relicIds) {
       final r = relicById[id];
       if (r == null) return null;
-      relics.add(r);
+      relics.add(r.withLevel(levels[id] ?? 1));
     }
 
     if (creatures.length != 9 || relics.length != 9) return null;

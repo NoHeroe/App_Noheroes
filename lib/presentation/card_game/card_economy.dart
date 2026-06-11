@@ -50,6 +50,23 @@ class CardEconomyService {
 final cardEconomyServiceProvider = Provider<CardEconomyService>(
     (ref) => CardEconomyService(ref.watch(supabaseClientProvider)));
 
+/// Níveis de aprimoramento das cartas possuídas (`card_id` → level). Vazio sem
+/// login. Usado pra injetar o nível no loadout da partida (escala de stats) e
+/// exibir nível na Coleção.
+final cardLevelsProvider = FutureProvider<Map<String, int>>((ref) async {
+  final player = ref.watch(currentPlayerProvider);
+  if (player == null) return const <String, int>{};
+  final rows = await ref
+      .read(supabaseClientProvider)
+      .from('player_cards')
+      .select('card_id, level');
+  final list = (rows as List).cast<Map<String, dynamic>>();
+  return {
+    for (final r in list)
+      (r['card_id'] as String): ((r['level'] as int?) ?? 1),
+  };
+});
+
 /// Mensagem PT-BR para cada `reason` das RPCs de economia.
 String cgReasonLabel(String? reason) {
   switch (reason) {
