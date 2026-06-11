@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/config/faction_alliances.dart' show kSecretFactionUnlockKey;
 import '../../../core/constants/app_colors.dart';
+import '../../shared/widgets/nh_back_button.dart';
 import '../../../core/events/faction_events.dart' show FactionJoined;
 import '../../../core/events/reward_events.dart' show AchievementUnlocked;
 // Sprint 3.1 Bloco 1 — QuestAdmissionService e factionsServiceProvider
@@ -313,25 +314,9 @@ class _FactionSelectionScreenState extends ConsumerState<FactionSelectionScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ITEM 3 — botão voltar (pop se houver pilha, senão /sanctuary).
-          GestureDetector(
-            onTap: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/sanctuary');
-              }
-            },
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                border: Border.all(color: AppColors.border),
-                borderRadius: BorderRadius.circular(10),
-                color: AppColors.surface,
-              ),
-              child: const Icon(Icons.arrow_back_ios_new,
-                  color: AppColors.textSecondary, size: 16),
-            ),
+          NhBackButton(
+            onTap: () =>
+                context.canPop() ? context.pop() : context.go('/sanctuary'),
           ),
           Expanded(
             child: Column(

@@ -9,6 +9,7 @@ import '../../../data/database/daos/player_dao.dart';
 import '../../../domain/models/achievement_definition.dart';
 import '../../../domain/models/player_daily_mission_stats.dart';
 import '../../shared/widgets/app_snack.dart';
+import '../../shared/widgets/nh_atmosphere.dart';
 import '../../shared/widgets/nh_back_button.dart';
 import '../utils/achievement_progress.dart';
 import '../utils/reward_display_helper.dart';
@@ -115,7 +116,10 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.black,
-      body: SafeArea(
+      body: Stack(
+        children: [
+          const NhAtmosphere(),
+          SafeArea(
         child: FutureBuilder<_AchievementsViewData>(
           future: _future,
           builder: (ctx, snap) {
@@ -161,6 +165,8 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
             );
           },
         ),
+      ),
+        ],
       ),
     );
   }

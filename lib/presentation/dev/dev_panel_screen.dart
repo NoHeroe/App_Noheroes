@@ -1130,7 +1130,8 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
         backgroundColor: AppColors.surface,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.gold),
-          onPressed: () => context.go('/sanctuary'),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/sanctuary'),
         ),
         title: Text('DEV PANEL',
             style: GoogleFonts.cinzelDecorative(

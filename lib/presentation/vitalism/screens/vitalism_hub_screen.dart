@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../shared/widgets/nh_back_button.dart';
 import '../../../data/datasources/local/vitalism_unique_service.dart';
 import '../../../domain/enums/affinity_tier.dart';
 import '../../shared/widgets/app_snack.dart';
@@ -171,11 +172,7 @@ class _HubHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back,
-                color: AppColors.textSecondary, size: 20),
-            onPressed: onBack,
-          ),
+          NhBackButton(size: 36, onTap: onBack),
           Expanded(
             child: Center(
               child: Text(

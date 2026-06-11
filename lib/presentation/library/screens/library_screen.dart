@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../shared/widgets/nh_back_button.dart';
 import '../../../domain/entities/diary_entry.dart';
 import '../widgets/library_atmosphere.dart';
 import '../widgets/library_cards_section.dart';
@@ -778,11 +779,7 @@ class _SectionHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: onBack,
-            child: const Icon(Icons.arrow_back_ios,
-                color: AppColors.textSecondary, size: 20),
-          ),
+          NhBackButton(size: 36, onTap: onBack),
           const SizedBox(width: 12),
           Text(title,
               style: GoogleFonts.cinzelDecorative(
