@@ -99,7 +99,10 @@ class _VitalismHubScreenState extends ConsumerState<VitalismHubScreen> {
             SafeArea(
               child: Column(
                 children: [
-                  _HubHeader(onBack: () => context.go('/sanctuary')),
+                  _HubHeader(
+                      onBack: () => context.canPop()
+                          ? context.pop()
+                          : context.go('/sanctuary')),
                   const SizedBox(height: 18),
                   GestureDetector(
                     onTap: _onCrystalTap,

@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../shared/widgets/nh_atmosphere.dart';
+import '../../shared/widgets/nh_back_button.dart';
 import '../../../data/database/daos/player_dao.dart';
 import '../../../core/utils/item_equip_policy.dart';
 import '../../../domain/enums/item_type.dart';
@@ -312,44 +314,39 @@ class _EnchantScreenState extends ConsumerState<EnchantScreen>
     }
     return Scaffold(
       backgroundColor: AppColors.black,
-      body: SafeArea(
-        child: _loading
-            ? const Center(
-                child: CircularProgressIndicator(
-                    strokeWidth: 2, color: AppColors.purpleLight),
-              )
-            : _error != null
-                ? _ErrorView(message: _error!)
-                : Column(
-                    children: [
-                      _buildHeader(player?.gems ?? 0),
-                      _buildTabs(),
-                      Expanded(child: _buildTabContent()),
-                    ],
-                  ),
+      body: Stack(
+        children: [
+          const NhAtmosphere(glow: AppColors.purpleLight),
+          SafeArea(
+            child: _loading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: AppColors.purpleLight),
+                  )
+                : _error != null
+                    ? _ErrorView(message: _error!)
+                    : Column(
+                        children: [
+                          _buildHeader(player?.gems ?? 0),
+                          _buildTabs(),
+                          Expanded(child: _buildTabContent()),
+                        ],
+                      ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildHeader(int gems) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => context.go('/sanctuary'),
-            child: const Icon(Icons.arrow_back_ios,
-                color: AppColors.textSecondary, size: 18),
+          NhBackButton(
+            onTap: () =>
+                context.canPop() ? context.pop() : context.go('/sanctuary'),
           ),
-          const SizedBox(width: 12),
-          const Icon(Icons.auto_awesome,
-              color: AppColors.purpleLight, size: 22),
-          const SizedBox(width: 8),
-          Text('ENCANTAMENTO',
-              style: GoogleFonts.cinzelDecorative(
-                  fontSize: 16,
-                  color: AppColors.purpleLight,
-                  letterSpacing: 3)),
           const Spacer(),
           Text('💎 $gems',
               style: GoogleFonts.roboto(
