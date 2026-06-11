@@ -13,6 +13,7 @@ import '../../../domain/models/faction_buff_multipliers.dart';
 import '../../../domain/models/inventory_entry_with_spec.dart';
 import '../../../domain/models/player_snapshot.dart';
 import '../../shared/widgets/feature_chip.dart';
+import '../../shared/widgets/nh_atmosphere.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
 import '../../shared/widgets/app_snack.dart';
 // Sprint 3.4 Etapa D (D17) — barras de status (HP/VT|MP/XP) migraram do
@@ -76,6 +77,7 @@ class CharacterScreen extends ConsumerWidget {
       backgroundColor: AppColors.black,
       body: Stack(
         children: [
+          const NhAtmosphere(),
           SafeArea(
             child: Column(
               children: [

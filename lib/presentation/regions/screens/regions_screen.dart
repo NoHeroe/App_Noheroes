@@ -5,6 +5,7 @@ import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../shared/widgets/app_snack.dart';
 import '../../shared/widgets/nh_bottom_nav.dart';
+import '../../shared/widgets/nh_atmosphere.dart';
 import 'region_detail_screen.dart';
 
 const _regions = [
@@ -88,6 +89,7 @@ class RegionsScreen extends ConsumerWidget {
       backgroundColor: AppColors.black,
       body: Stack(
         children: [
+          const NhAtmosphere(),
           SafeArea(
             child: Column(
           children: [

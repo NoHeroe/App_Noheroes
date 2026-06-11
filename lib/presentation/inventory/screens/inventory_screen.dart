@@ -13,6 +13,7 @@ import '../../../domain/models/inventory_entry_with_spec.dart';
 import '../../../domain/models/player_snapshot.dart';
 import '../../shared/widgets/feature_chip.dart';
 import '../../shared/widgets/nh_back_button.dart';
+import '../../shared/widgets/nh_atmosphere.dart';
 import '../../sanctuary/widgets/sanctuary_header_widgets.dart';
 
 class InventoryScreen extends ConsumerStatefulWidget {
@@ -64,16 +65,21 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
     // (estava emprestando indevidamente currentIndex:1 de Missões).
     return Scaffold(
       backgroundColor: AppColors.black,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 6),
-            _buildFilterChips(),
-            const SizedBox(height: 6),
-            Expanded(child: _buildContent()),
-          ],
-        ),
+      body: Stack(
+        children: [
+          const NhAtmosphere(),
+          SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 6),
+                _buildFilterChips(),
+                const SizedBox(height: 6),
+                Expanded(child: _buildContent()),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

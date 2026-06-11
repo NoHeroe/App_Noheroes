@@ -10,6 +10,7 @@ import '../../../domain/card_game/card_models.dart';
 import '../card_ownership.dart';
 import '../deck_repository.dart';
 import '../widgets/game_card_face.dart';
+import '../../shared/widgets/nh_atmosphere.dart';
 
 /// Construtor de Deck (ACDA).
 ///
@@ -67,14 +68,9 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
       backgroundColor: AppColors.black,
       body: Stack(
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment(0, -0.3),
-                radius: 1.4,
-                colors: [Color(0xFF1A0020), Color(0xFF0A000A), AppColors.black],
-              ),
-            ),
+          const NhAtmosphere(
+            glow: Color(0xFF8B3DFF),
+            base: [Color(0xFF1A0020), Color(0xFF0A000A), AppColors.black],
           ),
           SafeArea(
             child: Column(

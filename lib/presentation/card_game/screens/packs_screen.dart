@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../shared/widgets/nh_atmosphere.dart';
 import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_models.dart';
 import '../card_ownership.dart';
@@ -195,14 +196,9 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
       backgroundColor: AppColors.black,
       body: Stack(
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment(0, -0.3),
-                radius: 1.4,
-                colors: [Color(0xFF1A0020), Color(0xFF0A000A), AppColors.black],
-              ),
-            ),
+          const NhAtmosphere(
+            glow: Color(0xFF8B3DFF),
+            base: [Color(0xFF1A0020), Color(0xFF0A000A), AppColors.black],
           ),
           SafeArea(
             child: Column(
