@@ -142,28 +142,33 @@ class GameCardFace extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Nome no TOPO da carta, menor, com leve fundo escuro p/
-                  // legibilidade sobre a arte. (Raridade saiu daqui → bandeira
-                  // pendurada na borda esquerda.)
+                  // Nome no TOPO da carta — SEM contorno/caixa, centralizado e
+                  // completo (até 2 linhas, espaçamento apertado). Fica logo
+                  // abaixo do alcance do cristal de custo (topo-centro). Sombra
+                  // suave garante legibilidade sobre a arte. (Raridade =
+                  // bandeira na borda esquerda.)
                   Positioned(
-                    top: 4,
-                    left: 17,
-                    right: 6,
-                    child: Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0B0810).withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      child: Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.cinzelDecorative(
-                            fontSize: 7,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary),
+                    top: 13,
+                    left: 14,
+                    right: 14,
+                    child: Text(
+                      name,
+                      maxLines: 2,
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.cinzelDecorative(
+                        fontSize: 6.5,
+                        height: 1.04,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                        shadows: const [
+                          Shadow(
+                              color: Color(0xCC000000),
+                              blurRadius: 3,
+                              offset: Offset(0, 1)),
+                          Shadow(color: Color(0x99000000), blurRadius: 2),
+                        ],
                       ),
                     ),
                   ),
