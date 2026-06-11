@@ -326,6 +326,12 @@ class FactionAdmissionProgressService {
     await _persistMeta(mission.id, meta);
   }
 
+  /// Aprovação forçada e AGUARDÁVEL — exposta pública para o dev tool.
+  /// Roda a RPC + semanal + eventos de forma awaited, evitando a corrida
+  /// do handler fire-and-forget (`_handleApproved`) com o refetch do caller.
+  Future<void> approveNow(String playerId, String factionId) =>
+      _approveAdmission(playerId, factionId);
+
   /// Aprovação atômica via RPC `approve_faction_admission` (promove
   /// faction_type + welcome bonus +100 insígnias idempotente + upsert
   /// da membership). Depois atribui a semanal de facção (domínio

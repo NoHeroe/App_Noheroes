@@ -478,20 +478,24 @@ class _DevPanelScreenState extends ConsumerState<DevPanelScreen> {
       ));
     }
 
-    // Última missão completa = admissão aprovada. Handler externo do
-    // listener (`_handleApproved`) detecta e promove faction_type.
-    bus.publish(FactionAdmissionApproved(
-      playerId: player.id,
-      factionId: factionId,
-      attemptCount: 1,
-    ));
-
-    // Pequeno delay pro handler processar antes de invalidate.
-    await Future<void>.delayed(const Duration(milliseconds: 50));
+    // Última missão completa = admissão aprovada. Aprova AGORA de forma
+    // AWAITED (RPC `approve_faction_admission` + semanal + eventos), em vez
+    // de só publicar o evento e correr contra o handler fire-and-forget.
+    // Sem isso o refetch abaixo pegava o player ANTES da RPC promover
+    // faction_type (pending:X → X) — a facção parecia não atribuída.
+    try {
+      await ref
+          .read(factionAdmissionProgressServiceProvider)
+          .approveNow(player.id, factionId);
+    } catch (e) {
+      if (!mounted) return;
+      AppSnack.error(context, 'Falha ao aprovar admissão: $e');
+      return;
+    }
     if (!mounted) return;
 
     // Refresh do currentPlayerProvider pra UI refletir faction_type
-    // novo imediatamente.
+    // novo imediatamente (agora a RPC já rodou).
     final fresh =
         await PlayerDao(ref.read(supabaseClientProvider)).findById(player.id);
     if (!mounted) return;
