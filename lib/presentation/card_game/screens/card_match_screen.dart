@@ -530,7 +530,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         // Mão sobe e desloca levemente pra direita (CEO) + menu de ação
         // sobreposto (flutua sobre o topo do leque sem empurrar o HUD).
         Transform.translate(
-          offset: const Offset(16, -12),
+          offset: const Offset(16, -18),
           child: Stack(
             clipBehavior: Clip.none,
             children: [
@@ -1388,7 +1388,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
               width: cardW * 0.6,
               height: cardH * 0.6,
               child: Stack(children: [
-                IgnorePointer(child: _gameFaceFor(card)),
+                IgnorePointer(child: _gameFaceFor(card, minimal: true)),
                 Positioned(
                   top: 2,
                   left: 0,
@@ -1440,7 +1440,8 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
 
   /// Constrói a `GameCardFace` de uma carta (criatura ou relíquia) — usada pela
   /// mão e pela miniatura de preview.
-  Widget _gameFaceFor(Object card, {bool selected = false, bool dimmed = false}) {
+  Widget _gameFaceFor(Object card,
+      {bool selected = false, bool dimmed = false, bool minimal = false}) {
     final creature = card is CreatureCard ? card : null;
     final relic = card is RelicCard ? card : null;
     final concepts = creature?.concepts ?? relic!.concepts;
@@ -1494,10 +1495,14 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
           ? damageTypeIcon(creature.damageType)
           : (relic!.isFlash ? Icons.bolt : Icons.auto_awesome),
       // Criaturas na mão mostram o slot de item (vazio) + efeitos inatos.
-      showItemSlot: creature != null,
-      effects: creature != null ? _creatureEffectIcons(creature) : const [],
-      footer: footer,
-      cornerBadge: badge,
+      // Preview (minimal): nada disso — só arte + nome.
+      showItemSlot: creature != null && !minimal,
+      effects: (creature != null && !minimal)
+          ? _creatureEffectIcons(creature)
+          : const [],
+      minimal: minimal,
+      footer: minimal ? const SizedBox.shrink() : footer,
+      cornerBadge: minimal ? null : badge,
       selected: selected,
       dimmed: dimmed,
     );

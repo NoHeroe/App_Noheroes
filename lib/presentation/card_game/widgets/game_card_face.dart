@@ -31,6 +31,7 @@ class GameCardFace extends StatelessWidget {
     this.itemIcon,
     this.showItemSlot = false,
     this.effects = const <IconData>[],
+    this.minimal = false,
   });
 
   final String name;
@@ -68,6 +69,10 @@ class GameCardFace extends StatelessWidget {
   /// Brasões de EFEITO (keywords) — pequenos círculos na borda esquerda que
   /// vazam ~40% pra fora, abaixo da bandeira de raridade.
   final List<IconData> effects;
+
+  /// MÍNIMO (preview da próxima carta): esconde custo, slot de item, brasões,
+  /// bandeira de raridade e os pontos de conceito — só arte + nome, mais clean.
+  final bool minimal;
 
   Color get _concept => conceptColor(concepts);
 
@@ -162,7 +167,7 @@ class GameCardFace extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (concepts.length > 1)
+                  if (concepts.length > 1 && !minimal)
                     Positioned(
                       top: 3,
                       right: 3,
@@ -208,10 +213,11 @@ class GameCardFace extends StatelessWidget {
         card,
         // Bandeira de RARIDADE pendurada rente ao TOPO, na borda esquerda
         // (mini banner virado pra baixo, sem estourar). Lendária = RGB animado.
-        Positioned(top: 0, left: 3, child: _RarityPennant(rarity: rarity)),
+        if (!minimal)
+          Positioned(top: 0, left: 3, child: _RarityPennant(rarity: rarity)),
         // Brasões de EFEITO (keywords) na borda esquerda, abaixo da bandeira,
         // vazando ~40% pra fora.
-        if (effects.isNotEmpty)
+        if (effects.isNotEmpty && !minimal)
           Positioned(
             top: 34,
             left: -7,
@@ -221,14 +227,15 @@ class GameCardFace extends StatelessWidget {
               ],
             ),
           ),
-        Positioned(
-          top: -12, // metade dos 24px do diamante acima da borda
-          left: 0,
-          right: 0,
-          child: Center(child: CrystalGem(value: cost)),
-        ),
+        if (!minimal)
+          Positioned(
+            top: -12, // metade dos 24px do diamante acima da borda
+            left: 0,
+            right: 0,
+            child: Center(child: CrystalGem(value: cost)),
+          ),
         // Slot de ITEM (pentágono) cravado na borda INFERIOR-centro.
-        if (showItemSlot)
+        if (showItemSlot && !minimal)
           Positioned(
             bottom: -14,
             left: 0,
@@ -593,17 +600,19 @@ class _PennantClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     final w = size.width, h = size.height;
-    const notch = 6.0, r = 3.5;
-    // Banner com NOTCH central + cantos inferiores arredondados (o canto que
-    // "olha pra fora" da carta fica suave, rente ao fim).
+    const notch = 6.0, r = 3.5, tlr = 6.0;
+    // Banner com NOTCH central + cantos inferiores arredondados + canto
+    // SUPERIOR-ESQUERDO arredondado (segue a curvatura da carta).
     return Path()
-      ..moveTo(0, 0)
+      ..moveTo(tlr, 0)
       ..lineTo(w, 0)
       ..lineTo(w, h - r)
       ..quadraticBezierTo(w, h, w - r, h)
       ..lineTo(w / 2, h - notch)
       ..lineTo(r, h)
       ..quadraticBezierTo(0, h, 0, h - r)
+      ..lineTo(0, tlr)
+      ..quadraticBezierTo(0, 0, tlr, 0)
       ..close();
   }
 
