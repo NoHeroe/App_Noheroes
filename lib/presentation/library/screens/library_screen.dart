@@ -8,6 +8,7 @@ import '../../../domain/entities/diary_entry.dart';
 import '../widgets/library_atmosphere.dart';
 import '../widgets/library_cards_section.dart';
 import '../../shared/widgets/nh_medallion.dart';
+import '../../shared/widgets/app_snack.dart';
 import 'dart:math' as math;
 
 class LibraryScreen extends ConsumerStatefulWidget {
@@ -103,14 +104,38 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen>
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 0),
-                      child: NhMedallion(
-                        label: 'Diário',
-                        icon: Icons.auto_stories_outlined,
-                        size: 76,
-                        onTap: () => _navigate(0),
-                      ),
+                    // Diário + Encantamento (bloqueado até o Nível 20).
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NhMedallion(
+                          label: 'Diário',
+                          icon: Icons.auto_stories_outlined,
+                          size: 76,
+                          onTap: () => _navigate(0),
+                        ),
+                        const SizedBox(height: 12),
+                        Builder(builder: (context) {
+                          final level =
+                              ref.watch(currentPlayerProvider)?.level ?? 1;
+                          final locked = level < 20;
+                          return NhMedallion(
+                            label: 'Encantamento',
+                            icon: Icons.auto_awesome,
+                            size: 76,
+                            locked: locked,
+                            badge: locked ? 'NÍVEL 20' : null,
+                            onTap: () {
+                              if (locked) {
+                                AppSnack.warning(context,
+                                    'O Encantamento abre no Nível 20.');
+                              } else {
+                                context.go('/enchant');
+                              }
+                            },
+                          );
+                        }),
+                      ],
                     ),
                     Padding(
                       padding: const EdgeInsets.only(top: 34),
