@@ -545,9 +545,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                   ),
                 ),
               ),
-              // Turno no MEIO, um pouco mais BAIXO (CEO 2026-06-12).
+              // Turno no MEIO da banda, entre os dois campos (CEO 2026-06-12).
               Align(
-                alignment: const Alignment(0, -0.02),
+                alignment: const Alignment(0, -0.09),
                 child: _turnIndicator(ui),
               ),
               Align(
@@ -718,13 +718,18 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         !ui.playLocked &&
         player.deck.isNotEmpty &&
         player.crystals >= kExtraDrawCost;
-    // Layout (CEO 2026-06-12): meus contadores + cristal CENTRALIZADOS; o grupo
-    // de ações (comprar carta · cemitério · herói) ancorado à DIREITA.
+    // Layout (CEO 2026-06-12): CEMITÉRIO (carta-caveira) no canto inferior
+    // ESQUERDO (oposto do herói); contadores + cristal ao CENTRO; COMPRAR CARTA
+    // (vira carta) + HERÓI à DIREITA.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 2, 8, 10),
+      padding: const EdgeInsets.fromLTRB(8, 2, 8, 10),
       child: Stack(
         alignment: Alignment.center,
         children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: _cemeteryCard(player),
+          ),
           Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -742,9 +747,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                _drawButton(canDraw),
-                const SizedBox(width: 10),
-                _cemeteryButton(player),
+                _drawCard(canDraw),
                 if (player.heroId != null) ...[
                   const SizedBox(width: 10),
                   _heroCard(ui, player),
@@ -752,6 +755,104 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// Carta de COMPRAR CARTA (CEO 2026-06-12): mesmo tamanho da carta do herói;
+  /// ícone de comprar carta em cima + uma carta "de lado". Paga 1 cristal.
+  Widget _drawCard(bool enabled) {
+    const w = 46.0;
+    const h = w * 206 / 142;
+    const accent = AppColors.gold;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: enabled
+          ? () => ref.read(pveMatchControllerProvider.notifier).drawCard()
+          : null,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Opacity(
+            opacity: enabled ? 1 : 0.5,
+            child: Container(
+              width: w,
+              height: h,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(7),
+                gradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF2C2348), Color(0xFF140D22)],
+                ),
+                border: Border.all(
+                    color: accent.withValues(alpha: 0.85), width: 1.3),
+                boxShadow: enabled
+                    ? [
+                        BoxShadow(
+                            color: accent.withValues(alpha: 0.35),
+                            blurRadius: 6,
+                            spreadRadius: 0.5)
+                      ]
+                    : null,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.add_card, size: 15, color: AppColors.goldLt),
+                  const SizedBox(height: 1),
+                  Transform.rotate(
+                    angle: 1.4, // carta "de lado"
+                    child: const Text('🃏', style: TextStyle(fontSize: 15)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text('1 💎',
+              style: GoogleFonts.robotoMono(
+                  fontSize: 8,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+
+  /// Carta do CEMITÉRIO (CEO 2026-06-12): mesmo tamanho da carta do herói, com
+  /// uma caveira; canto inferior ESQUERDO. Toca → peek das cartas mortas.
+  Widget _cemeteryCard(BoardSide player) {
+    const w = 46.0;
+    const h = w * 206 / 142;
+    final n = player.graveyard.length;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _showCemetery,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: w,
+            height: h,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(7),
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF241B30), Color(0xFF0E0A16)],
+              ),
+              border: Border.all(color: AppColors.borderViolet, width: 1.3),
+            ),
+            child: const Center(
+              child: Text('💀', style: TextStyle(fontSize: 22)),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text('$n',
+              style: GoogleFonts.robotoMono(
+                  fontSize: 9, color: AppColors.textSecondary)),
         ],
       ),
     );
@@ -820,34 +921,6 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                   fontSize: 8,
                   color: used ? AppColors.textMuted : accent,
                   fontWeight: FontWeight.w700)),
-        ],
-      ),
-    );
-  }
-
-  /// Botão do CEMITÉRIO (ADR-0028): peek das cartas mortas/descartadas dos dois
-  /// lados. A contagem fica no rótulo.
-  Widget _cemeteryButton(BoardSide player) {
-    final n = player.graveyard.length;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: _showCemetery,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: const Color(0xFF2A2140),
-              border: Border.all(color: AppColors.borderViolet),
-            ),
-            child: const Text('🪦', style: TextStyle(fontSize: 16)),
-          ),
-          const SizedBox(height: 2),
-          Text('$n',
-              style: GoogleFonts.robotoMono(
-                  fontSize: 9, color: AppColors.textSecondary)),
         ],
       ),
     );
@@ -1134,37 +1207,6 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     if (o is CreatureCard) return o.nome;
     if (o is RelicCard) return o.nome;
     return cardId(o);
-  }
-
-  /// Botão de COMPRA EXTRA de carta (ADR-0028): paga 1 cristal, +1 carta.
-  Widget _drawButton(bool enabled) {
-    return Opacity(
-      opacity: enabled ? 1 : 0.4,
-      child: GestureDetector(
-        onTap: enabled
-            ? () => ref.read(pveMatchControllerProvider.notifier).drawCard()
-            : null,
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: const Color(0xFF2A2140),
-                border: Border.all(color: AppColors.gold),
-              ),
-              child: const Icon(Icons.add_card, size: 18, color: AppColors.goldLt),
-            ),
-            const SizedBox(height: 2),
-            Text('1 💎',
-                style: GoogleFonts.robotoMono(
-                    fontSize: 9, color: AppColors.textSecondary)),
-          ],
-        ),
-      ),
-    );
   }
 
   /// Contador branco (monstros / itens): ícone EM CIMA, número EMBAIXO.
