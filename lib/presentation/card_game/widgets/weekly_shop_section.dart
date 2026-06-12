@@ -132,19 +132,43 @@ class _WeeklyShopSectionState extends ConsumerState<WeeklyShopSection> {
       sub: 'x$amount · $bought/$limit esta semana',
       priceLabel: useGems ? '$priceGems' : '$priceGold',
       gems: useGems,
+      icon: _iconFor(it['item_key'] as String? ?? ''),
       onTap: () => _buy(it['item_key'] as String),
     );
   }
 
   Widget _rotativeCard(Map rot) {
     return _shopRow(
-      name: '★ ${rot['name']}',
+      name: '${rot['name']}',
       sub: 'x${rot['amount']} · oferta rotativa da semana',
       priceLabel: '${rot['gems']}',
       gems: true,
       highlight: true,
+      icon: Icons.star,
       onTap: () => _buy('rotative'),
     );
+  }
+
+  /// Ícone que simboliza o item da loja (CEO 2026-06-12: ícone à esquerda).
+  IconData _iconFor(String key) {
+    if (key.contains('shard') || key.contains('lasca')) {
+      return Icons.layers_outlined;
+    }
+    if (key.contains('soul') ||
+        key.contains('essence') ||
+        key.contains('essenc') ||
+        key.contains('emblem')) {
+      return Icons.auto_awesome;
+    }
+    if (key.contains('stardust') || key.contains('dust') || key.contains('poeira')) {
+      return Icons.blur_on;
+    }
+    if (key.contains('pack') || key.contains('pacote')) {
+      return Icons.inventory_2_outlined;
+    }
+    if (key.contains('gem')) return Icons.diamond;
+    if (key.contains('gold') || key.contains('coin')) return Icons.monetization_on;
+    return Icons.category_outlined;
   }
 
   Widget _shopRow({
@@ -152,13 +176,15 @@ class _WeeklyShopSectionState extends ConsumerState<WeeklyShopSection> {
     required String sub,
     required String priceLabel,
     required bool gems,
+    required IconData icon,
     required VoidCallback onTap,
     bool highlight = false,
   }) {
     final cur = gems ? AppColors.conceptCelestial : AppColors.gold;
+    final accent = highlight ? AppColors.gold : AppColors.purpleLt;
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         gradient: const LinearGradient(
@@ -173,6 +199,19 @@ class _WeeklyShopSectionState extends ConsumerState<WeeklyShopSection> {
       ),
       child: Row(
         children: [
+          // Ícone do item à ESQUERDA.
+          Container(
+            width: 38,
+            height: 38,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(9),
+              color: accent.withValues(alpha: 0.12),
+              border: Border.all(color: accent.withValues(alpha: 0.5)),
+            ),
+            child: Icon(icon, size: 20, color: accent),
+          ),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
