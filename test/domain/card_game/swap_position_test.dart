@@ -22,7 +22,7 @@ MatchState _state(List<CreatureInPlay?> aLanes, {int crystals = 3}) {
         .copyWith(lanes: pad(aLanes), crystals: crystals),
     sideB: BoardSide.initial(SideId.b, makeLoadout(prefix: 'B')),
     activeSide: SideId.a,
-    turn: 2,
+    turn: 3,
     phase: MatchPhase.jogo,
     rng: makeRng(1),
   );

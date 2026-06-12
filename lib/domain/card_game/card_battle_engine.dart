@@ -74,9 +74,10 @@ class CardBattleEngine {
         detail: 'a carta-bônus entrou no topo do deck',
       ));
     }
-    // TURNO 1 = PREPARATÓRIO (CEO 2026-06-12): sem compra de cartas (nem a grátis
-    // do round, nem passivas que compram/espiam). A mão fica com o deal inicial.
-    if (s.turn > 1) {
+    // TURNOS 1 e 2 = PREPARATÓRIOS (CEO 2026-06-12): o 1º turno de CADA lado é
+    // prep — sem compra de cartas (nem a grátis, nem passivas de compra/espiar).
+    // Compra começa no turno 3. A mão fica com o deal inicial até lá.
+    if (s.turn > 2) {
       // ADR-0028: compra 1 carta GRÁTIS por round.
       newSide = _drawOne(newSide);
       // Passiva do Trapaceiro: chance de comprar 1 carta extra grátis.
@@ -876,11 +877,11 @@ class CardBattleEngine {
       ));
     }
 
-    // TURNO 1 = PREPARATÓRIO (CEO 2026-06-12): sem DoT e sem Fase de Ataque
-    // (sem combate), independente de quem começa. A compra grátis do turno 1
-    // também é pulada (ver `_beginTurn`).
+    // TURNOS 1 e 2 = PREPARATÓRIOS (CEO 2026-06-12): o 1º turno de CADA lado é
+    // prep — sem DoT e sem Fase de Ataque (sem combate). Combate começa no turno
+    // 3. A compra também é pulada nesses turnos (ver `_beginTurn`).
     var state = s;
-    if (s.turn > 1) {
+    if (s.turn > 2) {
       // DoT (Sangramento/Veneno) ANTES da Fase de Ataque: dispara quando o dono
       // da carta afetada clica "encerrar turno" (início do processamento deste
       // endTurn), não durante as ações dele. Atinge as criaturas DESTE lado.

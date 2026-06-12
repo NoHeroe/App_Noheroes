@@ -11,7 +11,7 @@ const engine = CardBattleEngine();
 MatchState _stateWith({
   required List<CreatureInPlay> aLanes,
   required List<CreatureInPlay> bLanes,
-  int turn = 2, // turno 1 é preparatório (sem combate); combate testa a partir do 2
+  int turn = 3, // turno 1 é preparatório (sem combate); combate testa a partir do 2
 }) {
   List<CreatureInPlay?> pad(List<CreatureInPlay> xs) {
     final l = List<CreatureInPlay?>.filled(kLaneCount, null);
@@ -147,7 +147,7 @@ void main() {
         sideA: aSide,
         sideB: bSide,
         activeSide: SideId.a,
-        turn: 2,
+        turn: 3,
         phase: MatchPhase.jogo,
         rng: makeRng(),
       );
@@ -208,7 +208,7 @@ void main() {
         sideA: aSide,
         sideB: bSide,
         activeSide: SideId.a,
-        turn: 2,
+        turn: 3,
         phase: MatchPhase.jogo,
         rng: makeRng(),
       );

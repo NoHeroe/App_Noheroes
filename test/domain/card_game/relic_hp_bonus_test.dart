@@ -30,7 +30,7 @@ void main() {
       sideA: a,
       sideB: b,
       activeSide: SideId.a,
-      turn: 2,
+      turn: 3,
       phase: MatchPhase.jogo,
       rng: makeRng(1),
     );

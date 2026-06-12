@@ -29,7 +29,7 @@ MatchState _withLanes(
     sideA: a.copyWith(lanes: pad(aL)),
     sideB: b.copyWith(lanes: pad(bL)),
     activeSide: active,
-    turn: 2,
+    turn: 3,
     phase: MatchPhase.jogo,
     rng: makeRng(1),
   );

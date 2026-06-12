@@ -29,7 +29,7 @@ MatchState _stateWith({
     sideA: BoardSide.initial(SideId.a, a).copyWith(lanes: pad(aLanes)),
     sideB: BoardSide.initial(SideId.b, b).copyWith(lanes: pad(bLanes)),
     activeSide: activeSide,
-    turn: 2,
+    turn: 3,
     phase: MatchPhase.jogo,
     rng: makeRng(seed),
   );
