@@ -37,6 +37,7 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
 
   // Receita selecionada (exibida na bigorna) + animação de faíscas.
   RecipeSpec? _selected;
+  int _qty = 1; // multiplicador de quantidade (forja N de uma vez).
   late final AnimationController _spark;
   bool _forging = false;
 
@@ -46,7 +47,12 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
     _tab = TabController(length: 3, vsync: this);
     // Trocar de aba limpa a seleção (anvil sempre coerente com a aba ativa).
     _tab.addListener(() {
-      if (_tab.indexIsChanging) setState(() => _selected = null);
+      if (_tab.indexIsChanging) {
+        setState(() {
+          _selected = null;
+          _qty = 1;
+        });
+      }
     });
     _spark = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 750));
@@ -205,15 +211,37 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
     return _currentCoins >= r.costCoins;
   }
 
-  // Forja a receita selecionada com animação de faíscas na bigorna.
+  /// Quantas vezes a receita [r] pode ser forjada com os materiais/ouro atuais
+  /// (teto 99). Alimenta o multiplicador.
+  int _maxCraftable(RecipeSpec r) {
+    var max = 99;
+    for (final m in r.materials) {
+      if (m.quantity > 0) {
+        max = math.min(max, (_currentMaterials[m.itemKey] ?? 0) ~/ m.quantity);
+      }
+    }
+    if (r.costCoins > 0) max = math.min(max, _currentCoins ~/ r.costCoins);
+    return max.clamp(0, 99);
+  }
+
+  // Forja a receita selecionada `_qty` vezes (multiplicador), com faíscas.
   Future<void> _craftSelected() async {
     final r = _selected;
     if (r == null || _forging || !_previewCraftable(r)) return;
+    final n = _qty.clamp(1, _maxCraftable(r));
+    if (n < 1) return;
     setState(() => _forging = true);
     _spark.forward(from: 0);
-    await _craft(r); // valida + debita + reload (mantém _selected).
+    for (var i = 0; i < n; i++) {
+      if (!mounted) break;
+      if (!_previewCraftable(r)) break; // segurança: acabaram os materiais.
+      await _craft(r); // valida + debita + reload a cada forja.
+    }
     if (!mounted) return;
-    setState(() => _forging = false);
+    setState(() {
+      _forging = false;
+      _qty = 1;
+    });
   }
 
   // ── Build ────────────────────────────────────────────────────────────────
@@ -440,17 +468,86 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
                 letterSpacing: 1,
                 color: r == null ? AppColors.txtMut : AppColors.textPrimary),
           ),
+          // Multiplicador de quantidade (CEO 2026-06-12): forja N de uma vez.
+          if (r != null) ...[
+            const SizedBox(height: 6),
+            _qtyStepper(_maxCraftable(r), accent),
+          ],
           const SizedBox(height: 8),
           _ActionButton(
             label: r == null
                 ? 'SELECIONE UMA RECEITA'
-                : (r.type == RecipeType.forge ? 'FORJAR' : 'CRIAR'),
+                : '${r.type == RecipeType.forge ? 'FORJAR' : 'CRIAR'}'
+                    '${_qty > 1 ? ' ×$_qty' : ''}',
             color: (craftable && !_forging) ? accent : AppColors.textMuted,
             enabled: craftable && !_forging,
             onTap: _craftSelected,
           ),
         ],
       ),
+    );
+  }
+
+  /// Stepper do multiplicador (− N + · MÁX), limitado pelo que dá pra forjar.
+  Widget _qtyStepper(int max, Color accent) {
+    Widget stepBtn(IconData icon, bool enabled, VoidCallback onTap) {
+      return GestureDetector(
+        onTap: enabled ? onTap : null,
+        behavior: HitTestBehavior.opaque,
+        child: Opacity(
+          opacity: enabled ? 1 : 0.35,
+          child: Container(
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: const Color(0x33100C15),
+              border: Border.all(color: AppColors.borderViolet),
+            ),
+            child: Icon(icon, size: 16, color: AppColors.textPrimary),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        stepBtn(Icons.remove, _qty > 1 && !_forging,
+            () => setState(() => _qty--)),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 44,
+          child: Text('×$_qty',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.cinzelDecorative(
+                  fontSize: 16, color: AppColors.textPrimary)),
+        ),
+        const SizedBox(width: 8),
+        stepBtn(Icons.add, _qty < max && !_forging,
+            () => setState(() => _qty = (_qty + 1).clamp(1, max))),
+        const SizedBox(width: 10),
+        GestureDetector(
+          onTap: (max > 1 && !_forging) ? () => setState(() => _qty = max) : null,
+          behavior: HitTestBehavior.opaque,
+          child: Opacity(
+            opacity: (max > 1 && !_forging) ? 1 : 0.35,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: accent.withValues(alpha: 0.7)),
+              ),
+              child: Text('MÁX ($max)',
+                  style: GoogleFonts.roboto(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: accent)),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -528,7 +625,10 @@ class _ForgeScreenState extends ConsumerState<ForgeScreen>
         itemNames: _itemNames,
         itemTypes: _itemTypes,
         selected: _selected?.key == list[i].key,
-        onTap: () => setState(() => _selected = list[i]),
+        onTap: () => setState(() {
+          _selected = list[i];
+          _qty = 1;
+        }),
       ),
     );
   }
