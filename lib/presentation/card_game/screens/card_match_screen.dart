@@ -10,6 +10,7 @@ import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/datasources/local/tutorial_service.dart';
 import '../../../data/services/card_match_reward_service.dart';
+import '../card_hero_prefs.dart';
 import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_game.dart';
 import '../../shared/tutorial_manager.dart';
@@ -44,6 +45,8 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   String? _bootError;
   CardLoadout? _playerLoadout;
   CardLoadout? _botLoadout;
+  HeroId? _playerHero; // ADR-0028: herói do jogador (prefs) e do bot (aleatório).
+  HeroId? _botHero;
 
   // Recompensa de partida (ponto #1): concedida 1× ao terminar; exibida no
   // overlay de fim. `_rewardRequested` evita conceder de novo no rebuild.
@@ -106,6 +109,10 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       _botLoadout = _isTutorial
           ? _buildEasyBotLoadout(catalog)
           : _buildBotLoadout(catalog);
+      // ADR-0028: herói do jogador (prefs) + herói aleatório pro bot.
+      _playerHero = await CardHeroPrefs.get();
+      _botHero = HeroId.values[math.Random().nextInt(HeroId.values.length)];
+      if (!mounted) return;
       setState(() => _boot = _BootStatus.ready);
       _startMatch();
 
@@ -134,6 +141,8 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
           _playerLoadout!,
           _botLoadout!,
           seed: seed,
+          heroA: _playerHero,
+          heroB: _botHero,
         );
   }
 
@@ -655,6 +664,50 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
             _hudCounter(Icons.auto_awesome, '${player.availableRelicCount}'),
             const SizedBox(width: 14),
             _drawButton(canDraw),
+            if (player.heroId != null) ...[
+              const SizedBox(width: 14),
+              _heroButton(ui, player),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Botão da ATIVA do herói (ADR-0028), 1×/partida.
+  Widget _heroButton(PveMatchUiState ui, BoardSide player) {
+    final enabled =
+        ui.isPlayerTurn && !ui.playLocked && !player.heroActiveUsed;
+    return Opacity(
+      opacity: enabled ? 1 : 0.4,
+      child: GestureDetector(
+        onTap: enabled
+            ? () => ref.read(pveMatchControllerProvider.notifier).useHeroActive()
+            : null,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: const Color(0xFF2A2140),
+                border: Border.all(
+                    color: player.heroActiveUsed
+                        ? AppColors.textMuted
+                        : AppColors.purpleLight),
+              ),
+              child: Icon(Icons.flare,
+                  size: 18,
+                  color: player.heroActiveUsed
+                      ? AppColors.textMuted
+                      : AppColors.purpleLight),
+            ),
+            const SizedBox(height: 2),
+            Text('Herói',
+                style: GoogleFonts.robotoMono(
+                    fontSize: 9, color: AppColors.textSecondary)),
           ],
         ),
       ),

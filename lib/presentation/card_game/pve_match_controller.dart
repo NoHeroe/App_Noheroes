@@ -199,13 +199,16 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     CardLoadout player,
     CardLoadout bot, {
     int seed = 0,
+    HeroId? heroA,
+    HeroId? heroB,
     Duration botStepDelay = const Duration(milliseconds: 1300),
   }) async {
     if (_busy) return;
     _busy = true;
     try {
       _botStepDelay = botStepDelay;
-      final match = _engine.start(player, bot, seed: seed);
+      final match =
+          _engine.start(player, bot, seed: seed, heroA: heroA, heroB: heroB);
       final youStart = match.activeSide == SideId.a;
 
       state = PveMatchUiState(

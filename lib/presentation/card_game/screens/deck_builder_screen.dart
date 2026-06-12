@@ -7,6 +7,8 @@ import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_models.dart';
+import '../../../domain/card_game/hero.dart';
+import '../card_hero_prefs.dart';
 import '../card_ownership.dart';
 import '../deck_repository.dart';
 import '../../shared/widgets/nh_back_button.dart';
@@ -37,6 +39,8 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
   bool _seeded = false; // pré-carrega o deck ativo só uma vez.
   bool _saving = false;
 
+  HeroId _hero = HeroId.trapaceiro; // ADR-0028: herói representante (prefs).
+
   static const int _max = 9;
 
   // Paginação horizontal: 9 cartas por página (3x3), com setas + swipe.
@@ -45,9 +49,76 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
   int _page = 0;
 
   @override
+  void initState() {
+    super.initState();
+    CardHeroPrefs.get().then((h) {
+      if (mounted) setState(() => _hero = h);
+    });
+  }
+
+  @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  /// Seletor de HERÓI representante (ADR-0028): 5 chips horizontais; tocar salva
+  /// no prefs. A passiva é fixa; a descrição mostra passiva + ativa.
+  Widget _heroSelector() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('HERÓI · ${heroLabel(_hero)}',
+              style: GoogleFonts.cinzelDecorative(
+                  fontSize: 12, color: AppColors.goldLt, letterSpacing: 1)),
+          const SizedBox(height: 2),
+          Text('${heroPassive(_hero)}  ·  Ativa: ${heroActive(_hero)}',
+              style: GoogleFonts.roboto(fontSize: 9.5, color: AppColors.txtMut)),
+          const SizedBox(height: 6),
+          SizedBox(
+            height: 34,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                for (final h in HeroId.values)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => _hero = h);
+                        CardHeroPrefs.set(h);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 7),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(999),
+                          color: h == _hero
+                              ? AppColors.purple.withValues(alpha: 0.30)
+                              : const Color(0x33100C15),
+                          border: Border.all(
+                              color: h == _hero
+                                  ? AppColors.purpleLight
+                                  : AppColors.borderViolet),
+                        ),
+                        child: Text(heroLabel(h),
+                            style: GoogleFonts.roboto(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: h == _hero
+                                    ? AppColors.txt
+                                    : AppColors.txtMut)),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Aplica uma mudança de filtro/aba e VOLTA pra primeira página.
@@ -77,7 +148,8 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
             child: Column(
               children: [
                 _buildHeader(),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
+                _heroSelector(),
                 Expanded(
                   child: _buildContent(catalogAsync, ownedAsync, deckAsync),
                 ),
