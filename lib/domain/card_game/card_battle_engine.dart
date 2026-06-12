@@ -56,6 +56,21 @@ class CardBattleEngine {
     );
     // ADR-0028: compra 1 carta GRÁTIS por round (no-op se a mão já está cheia).
     newSide = _drawOne(newSide);
+    // Passiva do Trapaceiro: chance de comprar 1 carta extra grátis.
+    if (side.heroId == HeroId.trapaceiro &&
+        s.rng.nextDouble() < kTrapaceiroDrawChance) {
+      final before = newSide.hand.length;
+      newSide = _drawOne(newSide);
+      if (newSide.hand.length > before) {
+        events.add(AbilityTriggered(
+          side: side.id,
+          cardId: 'hero',
+          cardName: heroLabel(HeroId.trapaceiro),
+          ability: 'Trapaceiro',
+          detail: 'comprou 1 carta extra',
+        ));
+      }
+    }
     newSide = _applyStartOfTurnBuffs(newSide, events);
     var state = s.withSide(side.id, newSide).copyWith(phase: MatchPhase.jogo);
     // Auras de início de turno que debuffam o INIMIGO (Lote 3b): Desmoralizar /
@@ -184,13 +199,17 @@ class CardBattleEngine {
           c.hasKeyword(AbilityKeyword.investida) ? kInvestidaBonus : 0;
       // Cooldown de Atordoar decai 1 por turno do dono.
       final newCd = c.atordoarCooldown > 0 ? c.atordoarCooldown - 1 : 0;
+      // Esquiva temporária (Assassino) decai no início do turno do dono.
+      final newEsq = c.esquivaBuffTurns > 0 ? c.esquivaBuffTurns - 1 : 0;
       if (c.inspirarBonus != inspirarB ||
           c.investidaBonus != investidaB ||
-          c.atordoarCooldown != newCd) {
+          c.atordoarCooldown != newCd ||
+          c.esquivaBuffTurns != newEsq) {
         lanes[i] = c.copyWith(
           inspirarBonus: inspirarB,
           investidaBonus: investidaB,
           atordoarCooldown: newCd,
+          esquivaBuffTurns: newEsq,
         );
         changed = true;
       }
@@ -512,6 +531,31 @@ class CardBattleEngine {
     return side.copyWith(hand: hand, deck: deck);
   }
 
+  /// Passiva do Assassino (ADR-0028): no fim do turno do dono, `kAssassino
+  /// EsquivaChance` de dar Esquiva 100% (1 turno) a UMA criatura aleatória dele.
+  MatchState _applyAssassinoPassive(
+      MatchState s, SideId sideId, List<MatchEvent> events) {
+    final side = s.sideOf(sideId);
+    if (side.heroId != HeroId.assassino) return s;
+    final living = side.creaturesInPlay;
+    if (living.isEmpty) return s;
+    if (s.rng.nextDouble() >= kAssassinoEsquivaChance) return s;
+    final pick = living[s.rng.nextInt(living.length)];
+    final lanes = List<CreatureInPlay?>.from(side.lanes);
+    final idx =
+        lanes.indexWhere((c) => c != null && c.instanceId == pick.instanceId);
+    if (idx < 0) return s;
+    lanes[idx] = pick.copyWith(esquivaBuffTurns: 1);
+    events.add(AbilityTriggered(
+      side: sideId,
+      cardId: pick.instanceId,
+      cardName: pick.card.nome,
+      ability: 'Assassino',
+      detail: 'concedeu Esquiva (100%) a ${pick.card.nome} por 1 turno',
+    ));
+    return s.withSide(sideId, side.copyWith(lanes: lanes));
+  }
+
   /// Manda uma carta pro cemitério do lado (mortes/descartes — ADR-0028).
   BoardSide _toGraveyard(BoardSide side, Object card) =>
       side.copyWith(graveyard: List<Object>.from(side.graveyard)..add(card));
@@ -743,6 +787,10 @@ class CardBattleEngine {
     // Cemitério (ADR-0028): criaturas que estavam em jogo e sumiram do jogo
     // (não estão em lanes/mão/deck) morreram nesta resolução → cemitério.
     state = _reapGraveyard(state, preInPlay);
+
+    // Passiva do Assassino: ao fim do turno do dono, chance de conceder Esquiva
+    // (100%, 1 turno) a uma criatura aleatória — protege na rodada do oponente.
+    state = _applyAssassinoPassive(state, state.activeSide, events);
 
     // Expira buffs temporários (Inspirar do lado que termina; Investida do
     // oponente — aplicada no turno anterior dele, valeu a rodada inteira).
@@ -1675,6 +1723,8 @@ class CardBattleEngine {
   /// por seed).
   bool _rollEvade(MatchState s, CreatureInPlay attacker, CreatureInPlay target,
       DamageType type) {
+    // Esquiva TEMPORÁRIA 100% (passiva do Assassino): evade tudo enquanto dura.
+    if (target.esquivaBuffTurns > 0) return true;
     // Esquiva (herói/ADR-0028): evade QUALQUER tipo de ataque (independe de Voo).
     if (target.hasKeyword(AbilityKeyword.esquiva) &&
         s.rng.nextDouble() < kEsquivaChance) {

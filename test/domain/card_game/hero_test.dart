@@ -109,6 +109,92 @@ void main() {
       expect(after.sideA.heroActiveUsed, isTrue);
     });
 
+    test('Trapaceiro PASSIVA: chance de comprar 1 carta extra no início do turno',
+        () {
+      // A = trapaceiro, mão de 2; ativo = B. Ao começar o turno de A: 1 grátis +
+      // (chance) 1 extra. Escaneia um seed em que a passiva dispara → mão 4.
+      BoardSide aHand2(int seed) {
+        final a0 = BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(seed));
+        return a0.copyWith(
+          heroId: HeroId.trapaceiro,
+          hand: a0.hand.sublist(0, 2),
+          deck: <Object>[...a0.hand.sublist(2), ...a0.deck],
+        );
+      }
+
+      var hitSeed = -1;
+      for (var seed = 0; seed < 300; seed++) {
+        final s = MatchState(
+          sideA: aHand2(seed),
+          sideB: BoardSide.initial(SideId.b, makeLoadout(prefix: 'B'), makeRng(seed + 1)),
+          activeSide: SideId.b,
+          turn: 2,
+          phase: MatchPhase.jogo,
+          rng: makeRng(seed),
+        );
+        final after = engine.endTurn(s);
+        final fired = after.lastTurnEvents
+            .whereType<AbilityTriggered>()
+            .any((e) => e.ability == 'Trapaceiro');
+        if (fired) {
+          expect(after.sideA.hand.length, 4, reason: '2 + grátis + extra');
+          hitSeed = seed;
+          break;
+        }
+      }
+      expect(hitSeed, greaterThanOrEqualTo(0));
+    });
+
+    test('Assassino PASSIVA: concede Esquiva (buff) a uma criatura ao fim do turno',
+        () {
+      // A = assassino com uma criatura; ativo = A. Ao terminar, chance de buff.
+      var hitSeed = -1;
+      for (var seed = 0; seed < 300; seed++) {
+        final a = BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(seed))
+            .copyWith(
+                heroId: HeroId.assassino,
+                lanes: [_inPlay(id: 'ace', atk: 0, hp: 10), null, null]);
+        final s = MatchState(
+          sideA: a,
+          sideB: BoardSide.initial(SideId.b, makeLoadout(prefix: 'B'), makeRng(seed + 1)),
+          activeSide: SideId.a,
+          turn: 2,
+          phase: MatchPhase.jogo,
+          rng: makeRng(seed),
+        );
+        final after = engine.endTurn(s);
+        if (after.lastTurnEvents
+            .whereType<AbilityTriggered>()
+            .any((e) => e.ability == 'Assassino')) {
+          expect(after.sideA.creaturesInPlay.first.esquivaBuffTurns, greaterThan(0));
+          hitSeed = seed;
+          break;
+        }
+      }
+      expect(hitSeed, greaterThanOrEqualTo(0));
+    });
+
+    test('Esquiva 100% (buff): evade o ataque com certeza', () {
+      final a = BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(1))
+          .copyWith(lanes: [
+        _inPlay(id: 'shielded', atk: 0, hp: 10).copyWith(esquivaBuffTurns: 1),
+        null,
+        null
+      ]);
+      final b = BoardSide.initial(SideId.b, makeLoadout(prefix: 'B'), makeRng(2))
+          .copyWith(lanes: [_inPlay(id: 'hitter', atk: 5), null, null]);
+      final s = MatchState(
+        sideA: a,
+        sideB: b,
+        activeSide: SideId.b, // B ataca A
+        turn: 2,
+        phase: MatchPhase.jogo,
+        rng: makeRng(9),
+      );
+      final after = engine.endTurn(s);
+      expect(after.sideA.creaturesInPlay.first.currentHp, 10); // evadiu 100%.
+    });
+
     test('sem herói: UseHeroActive é no-op', () {
       final s = MatchState(
         sideA: BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(1)),

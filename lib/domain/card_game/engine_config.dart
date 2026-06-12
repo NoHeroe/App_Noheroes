@@ -199,6 +199,13 @@ const double kEsquivaChance = 0.5;
 /// Cristais que o Trapaceiro ROUBA do oponente na ativa. 🎚️
 const int kTrapaceiroSteal = 2;
 
+/// Chance da PASSIVA do Trapaceiro comprar 1 carta grátis no início do turno. 🎚️
+const double kTrapaceiroDrawChance = 0.30;
+
+/// Chance da PASSIVA do Assassino conceder Esquiva (100%, 1 turno) a uma carta
+/// aleatória no fim do turno do dono (protege na rodada do oponente). 🎚️
+const double kAssassinoEsquivaChance = 0.30;
+
 /// Bônus de ataque corpo a corpo de Inspirar (aliados, até o fim do turno). 🎚️
 const int kInspirarBonus = 1;
 

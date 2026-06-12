@@ -67,6 +67,7 @@ class CreatureInPlay {
     this.ressureicaoUsed = false,
     this.transformed = false,
     this.nevoaArmed = false,
+    this.esquivaBuffTurns = 0,
   });
 
   final CreatureCard card;
@@ -140,6 +141,10 @@ class CreatureInPlay {
 
   /// Névoa (Lote 7) armada: já sofreu dano e o PRÓXIMO golpe será prevenido.
   final bool nevoaArmed;
+
+  /// Esquiva TEMPORÁRIA de 100% (passiva do Assassino, ADR-0028): turnos
+  /// restantes. >0 = evade tudo. Decai no início do turno do dono.
+  final int esquivaBuffTurns;
 
   /// keyword FUNCIONAL: tem a keyword E não está suprimida por Doença (Doença
   /// desativa Inspirar, Desmoralizar e Reflexo Mágico na criatura doente).
@@ -361,6 +366,7 @@ class CreatureInPlay {
     bool? ressureicaoUsed,
     bool? transformed,
     bool? nevoaArmed,
+    int? esquivaBuffTurns,
   }) {
     return CreatureInPlay(
       card: card ?? this.card,
@@ -384,6 +390,7 @@ class CreatureInPlay {
       ressureicaoUsed: ressureicaoUsed ?? this.ressureicaoUsed,
       transformed: transformed ?? this.transformed,
       nevoaArmed: nevoaArmed ?? this.nevoaArmed,
+      esquivaBuffTurns: esquivaBuffTurns ?? this.esquivaBuffTurns,
     );
   }
 }
