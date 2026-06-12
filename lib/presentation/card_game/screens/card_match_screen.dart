@@ -760,12 +760,12 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
-  /// Carta de COMPRAR CARTA (CEO 2026-06-12): mesmo tamanho da carta do herói;
-  /// ícone de comprar carta em cima + uma carta "de lado". Paga 1 cristal.
+  /// Carta de COMPRAR CARTA = o DECK (CEO 2026-06-12): a ilustração da CAPA da
+  /// carta (CardBack), maior, com o ícone de comprar carta girado 90° em cima.
+  /// Paga 1 cristal.
   Widget _drawCard(bool enabled) {
-    const w = 46.0;
-    const h = w * 206 / 142;
-    const accent = AppColors.gold;
+    const h = 80.0;
+    const w = h * CardBack.kAspect;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: enabled
@@ -776,35 +776,29 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         children: [
           Opacity(
             opacity: enabled ? 1 : 0.5,
-            child: Container(
+            child: SizedBox(
               width: w,
               height: h,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(7),
-                gradient: const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF2C2348), Color(0xFF140D22)],
-                ),
-                border: Border.all(
-                    color: accent.withValues(alpha: 0.85), width: 1.3),
-                boxShadow: enabled
-                    ? [
-                        BoxShadow(
-                            color: accent.withValues(alpha: 0.35),
-                            blurRadius: 6,
-                            spreadRadius: 0.5)
-                      ]
-                    : null,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Stack(
+                alignment: Alignment.topCenter,
                 children: [
-                  const Icon(Icons.add_card, size: 15, color: AppColors.goldLt),
-                  const SizedBox(height: 1),
-                  Transform.rotate(
-                    angle: 1.4, // carta "de lado"
-                    child: const Text('🃏', style: TextStyle(fontSize: 15)),
+                  const CardBack(height: h, radius: 7),
+                  Positioned(
+                    top: 5,
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.black.withValues(alpha: 0.55),
+                        border: Border.all(
+                            color: AppColors.gold.withValues(alpha: 0.85)),
+                      ),
+                      child: Transform.rotate(
+                        angle: 1.5708, // 90°
+                        child: const Icon(Icons.add_card,
+                            size: 16, color: AppColors.goldLt),
+                      ),
+                    ),
                   ),
                 ],
               ),
