@@ -415,6 +415,75 @@ IconData keywordIcon(AbilityKeyword k) {
   }
 }
 
+/// Descrição curta (1 linha) de cada keyword — usada na LEGENDA da partida
+/// (glossário). Exaustivo: keyword nova quebra a compilação até descrever.
+String keywordDescription(AbilityKeyword k) {
+  switch (k) {
+    case AbilityKeyword.provocar:
+      return 'Atrai os ataques à distância/mágicos inimigos para si.';
+    case AbilityKeyword.escudo:
+      return 'Armadura inata: reduz o dano físico recebido.';
+    case AbilityKeyword.voo:
+      return 'Evade ataques (50% melee / 25% à distância) de quem não voa.';
+    case AbilityKeyword.ataqueDuplo:
+      return 'Acerto melee da frente dá dano verdadeiro extra na retaguarda.';
+    case AbilityKeyword.alcance:
+      return 'Pode atacar corpo a corpo mesmo da retaguarda.';
+    case AbilityKeyword.inspirar:
+      return 'No início do turno, aliados ganham +ataque corpo a corpo.';
+    case AbilityKeyword.pisotear:
+      return 'Dano físico excedente transborda para a próxima criatura.';
+    case AbilityKeyword.silencio:
+      return 'Enquanto viva, inimigos não usam ataque mágico nem cura.';
+    case AbilityKeyword.furtividade:
+      return 'Na retaguarda, não pode ser alvo de à distância/mágico.';
+    case AbilityKeyword.cristalDeDrenagem:
+      return 'Ao destruir uma criatura, +1 cristal no próximo turno.';
+    case AbilityKeyword.rouboDePv:
+      return 'Ao acertar um ataque, ganha +PV atual e máximo.';
+    case AbilityKeyword.investida:
+      return 'No início do turno, +ataque melee até a rodada do oponente.';
+    case AbilityKeyword.espinhos:
+      return 'Ao ser atingida por melee, causa dano verdadeiro ao atacante.';
+    case AbilityKeyword.escudoEspelhado:
+      return 'Reduz o dano mágico recebido (armadura mágica).';
+    case AbilityKeyword.escudoSagrado:
+      return 'Reduz o dano físico E mágico recebido.';
+    case AbilityKeyword.contraAtaque:
+      return 'Ao ser atingida por melee, 50% de revidar com seu ataque.';
+    case AbilityKeyword.inabalavel:
+      return 'Se fosse destruída, ressuscita com vida cheia (1×/partida).';
+    case AbilityKeyword.sangramento:
+      return 'Acerto físico aplica dano/turno acumulável (decai sozinho).';
+    case AbilityKeyword.veneno:
+      return 'Ao acertar, 1 de dano/turno permanente (cura remove).';
+    case AbilityKeyword.atordoar:
+      return 'Acerto melee faz o alvo pular o próximo ataque (tem cooldown).';
+    case AbilityKeyword.enredar:
+      return 'Ao acertar alvo com Voo, tira o Voo e o prende por 1 turno.';
+    case AbilityKeyword.desmoralizar:
+      return 'No início do turno, reduz o ataque melee dos inimigos.';
+    case AbilityKeyword.suprimirMagia:
+      return 'No início do turno, reduz o ataque mágico dos inimigos.';
+    case AbilityKeyword.doenca:
+      return 'Ao acertar, adoece o alvo (perde Inspirar/Desmoralizar).';
+    case AbilityKeyword.surto:
+      return 'Ao acertar alvo doente, remove a doença e reduz o PV máximo.';
+    case AbilityKeyword.andorinha:
+      return 'Ao destruir uma criatura, +ataque e +PV máximo permanentes.';
+    case AbilityKeyword.crescimento:
+      return 'Após ser curada, +ataque e +PV máximo permanentes.';
+    case AbilityKeyword.mimico:
+      return 'Ao entrar em jogo, copia stats e habilidades de outra criatura.';
+    case AbilityKeyword.zumbi:
+      return 'Ao morrer, volta enfraquecida para a mão (1×).';
+    case AbilityKeyword.ressurreicao:
+      return 'Se fosse destruída, ressuscita com PV reduzido (1×/partida).';
+    case AbilityKeyword.transformar:
+      return 'Com o PV baixo, ativa a 2ª forma (cura + bônus de ataque/PV).';
+  }
+}
+
 /// Brasões de efeito a partir das strings de habilidade de uma carta.
 List<IconData> effectIconsFromAbilities(List<String> abilities) => abilities
     .map(abilityKeywordFromString)

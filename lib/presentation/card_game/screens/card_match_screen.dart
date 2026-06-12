@@ -766,6 +766,96 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
           ),
         );
 
+    Widget sectionTitle(String t) => Padding(
+          padding: const EdgeInsets.only(top: 10, bottom: 4),
+          child: Text(t,
+              style: GoogleFonts.robotoMono(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.gold)),
+        );
+
+    Widget abilityRow(AbilityKeyword k) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 18,
+                height: 18,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFFE8C66A), Color(0xFF8A6A2A)],
+                  ),
+                ),
+                child: Icon(keywordIcon(k), size: 11, color: Colors.white),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: RichText(
+                  text: TextSpan(
+                    style: GoogleFonts.robotoMono(
+                        fontSize: 10.5, color: AppColors.textSecondary),
+                    children: [
+                      TextSpan(
+                          text: '${abilityKeywordLabel(k)} — ',
+                          style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w700)),
+                      TextSpan(text: keywordDescription(k)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+
+    // Habilidades agrupadas pelos lotes (ordem do enum).
+    const offensive = [
+      AbilityKeyword.provocar,
+      AbilityKeyword.ataqueDuplo,
+      AbilityKeyword.alcance,
+      AbilityKeyword.inspirar,
+      AbilityKeyword.pisotear,
+      AbilityKeyword.cristalDeDrenagem,
+      AbilityKeyword.rouboDePv,
+      AbilityKeyword.investida,
+    ];
+    const defensive = [
+      AbilityKeyword.escudo,
+      AbilityKeyword.voo,
+      AbilityKeyword.silencio,
+      AbilityKeyword.furtividade,
+      AbilityKeyword.espinhos,
+      AbilityKeyword.escudoEspelhado,
+      AbilityKeyword.escudoSagrado,
+      AbilityKeyword.contraAtaque,
+      AbilityKeyword.inabalavel,
+    ];
+    const status = [
+      AbilityKeyword.sangramento,
+      AbilityKeyword.veneno,
+      AbilityKeyword.atordoar,
+      AbilityKeyword.enredar,
+      AbilityKeyword.desmoralizar,
+      AbilityKeyword.suprimirMagia,
+      AbilityKeyword.doenca,
+      AbilityKeyword.surto,
+    ];
+    const exotic = [
+      AbilityKeyword.andorinha,
+      AbilityKeyword.crescimento,
+      AbilityKeyword.mimico,
+      AbilityKeyword.zumbi,
+      AbilityKeyword.ressurreicao,
+      AbilityKeyword.transformar,
+    ];
+
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -820,6 +910,14 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                   'Enredado — sem Voo, pula o próximo ataque'),
               statusRow(Icons.trending_down, const Color(0xFFE08A4A),
                   'Desmoralizado / Suprimido — ataque reduzido'),
+              sectionTitle('Habilidades · Ofensivas / utilidade'),
+              for (final k in offensive) abilityRow(k),
+              sectionTitle('Habilidades · Defensivas'),
+              for (final k in defensive) abilityRow(k),
+              sectionTitle('Habilidades · Status / controle'),
+              for (final k in status) abilityRow(k),
+              sectionTitle('Habilidades · Exóticas'),
+              for (final k in exotic) abilityRow(k),
             ],
           ),
         ),
