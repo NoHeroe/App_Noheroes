@@ -990,46 +990,68 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         !side.lanes
             .any((c) => c != null && c.instanceId == h.targetCardId);
 
-    // Ordem VISUAL das lanes: frente (lane 0) no MEIO; slot 2 (lane 1) à
-    // esquerda; slot 3 (lane 2) à direita.
-    const visualOrder = <int>[1, 0, 2];
+    // Ordem VISUAL das lanes: frente (lane 0) no MEIO; lane 1 à esquerda; lane
+    // 2 à direita. Posição calculada (Stack) pra a criatura DESLIZAR entre lanes
+    // ao avançar (AnimatedPositioned keyed por instanceId) em vez de teleportar.
+    int visualOf(int lane) => lane == 0 ? 1 : (lane == 1 ? 0 : 2);
+    const laneDepth = <double>[0, 13, 22]; // stagger em cunha (lane0 na frente)
+    final dir = isPlayerSide ? 1.0 : -1.0;
+
+    Widget cell(int lane) => _laneSlot(
+          ui,
+          side.lanes[lane],
+          lane: lane,
+          isPlayerSide: isPlayerSide,
+          laneHighlighted: highlightLanes.contains(lane),
+          targetHighlighted: side.lanes[lane] != null &&
+              highlightTargets.contains(side.lanes[lane]!.instanceId),
+        );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: SizedBox(
-        height: 152, // slots maiores (CEO) — sem mudar a posição relativa
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+        height: 152,
+        child: LayoutBuilder(
+          builder: (context, cons) {
+            const gap = 6.0;
+            final slotW = (cons.maxWidth - 2 * gap) / 3;
+            double xOf(int lane) => visualOf(lane) * (slotW + gap);
+            double yOf(int lane) => laneDepth[lane] * dir;
+            return Stack(
+              clipBehavior: Clip.none,
               children: [
-                for (var i = 0; i < visualOrder.length; i++) ...[
-                  if (i > 0) const SizedBox(width: 6),
-                  Expanded(
-                    child: _laneSlot(
-                      ui,
-                      side.lanes[visualOrder[i]],
-                      lane: visualOrder[i],
-                      isPlayerSide: isPlayerSide,
-                      laneHighlighted:
-                          highlightLanes.contains(visualOrder[i]),
-                      targetHighlighted: side.lanes[visualOrder[i]] != null &&
-                          highlightTargets.contains(
-                              side.lanes[visualOrder[i]]!.instanceId),
+                for (var lane = 0; lane < kLaneCount; lane++)
+                  if (side.lanes[lane] == null)
+                    Positioned(
+                      key: ValueKey<String>('empty_${side.id.name}_$lane'),
+                      left: xOf(lane),
+                      top: yOf(lane),
+                      width: slotW,
+                      height: 152,
+                      child: cell(lane),
+                    )
+                  else
+                    AnimatedPositioned(
+                      key: ValueKey<String>(
+                          'cre_${side.lanes[lane]!.instanceId}'),
+                      duration: const Duration(milliseconds: 320),
+                      curve: Curves.easeInOut,
+                      left: xOf(lane),
+                      top: yOf(lane),
+                      width: slotW,
+                      height: 152,
+                      child: cell(lane),
                     ),
+                if (orphanTarget) ...[
+                  if (h.targetDied && !h.isHeal)
+                    Positioned.fill(child: Center(child: _shardBurst(h))),
+                  Positioned.fill(
+                    child: Center(child: _floatingHighlightText(h)),
                   ),
                 ],
               ],
-            ),
-            if (orphanTarget) ...[
-              if (h.targetDied && !h.isHeal)
-                Positioned.fill(child: Center(child: _shardBurst(h))),
-              Positioned.fill(
-                child: Center(child: _floatingHighlightText(h)),
-              ),
-            ],
-          ],
+            );
+          },
         ),
       ),
     );
@@ -1120,26 +1142,12 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
             isFront: isFront,
             borderOverride: isMoving ? AppColors.gold : borderOverride);
 
+    // O tabuleiro agora DESLIZA as criaturas entre lanes (AnimatedPositioned no
+    // _lanesRow, keyed por instanceId) em vez de fazer cross-fade — o cross-fade
+    // (AnimatedSwitcher) fazia a carta "teleportar" ao avançar.
     Widget tile = AspectRatio(
       aspectRatio: 142 / 206,
-      child: AnimatedSwitcher(
-        // Mais lento/suave pra reduzir o "flicker" quando o tabuleiro avança
-        // (morte + compactação) entre os passos do replay.
-        duration: const Duration(milliseconds: 380),
-        switchInCurve: Curves.easeOut,
-        switchOutCurve: Curves.easeIn,
-        transitionBuilder: (child, anim) => FadeTransition(
-          opacity: anim,
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.94, end: 1).animate(anim),
-            child: child,
-          ),
-        ),
-        child: KeyedSubtree(
-          key: ValueKey<String>(creature?.instanceId ?? 'empty$lane'),
-          child: content,
-        ),
-      ),
+      child: content,
     );
 
     // Corte de espada do atacante MELEE: wrappa o card ANTES da investida, pra
@@ -1243,15 +1251,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       );
     }
 
-    // Stagger em CUNHA: frente (lane 0) avançada na direção do inimigo; slot 2
-    // e 3 recuados pra longe da linha central (3 mais que 2). Jogador recua pra
-    // baixo; bot pra cima.
-    const laneDepth = <double>[0, 13, 22]; // lane0 frente, lane1, lane2
-    final staggerDy = laneDepth[lane] * (isPlayerSide ? 1 : -1);
-
-    return Transform.translate(
-      offset: Offset(0, staggerDy),
-      child: Center(
+    // (O stagger em CUNHA agora é aplicado via `top` no _lanesRow — ver
+    // `_laneStaggerY` — pra deslizar junto com o avanço entre lanes.)
+    return Center(
         child: GestureDetector(
           onTap: () {
             if (!ui.isPlayerTurn || ui.playLocked) return;
@@ -1305,7 +1307,6 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
           },
           child: tile,
         ),
-      ),
     );
   }
 
