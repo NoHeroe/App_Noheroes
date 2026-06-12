@@ -7,6 +7,7 @@ import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../shared/widgets/nh_atmosphere.dart';
 import '../../shared/widgets/nh_back_button.dart';
+import '../../sanctuary/widgets/sanctuary_header_widgets.dart';
 import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_models.dart';
 import '../card_ownership.dart';
@@ -266,7 +267,7 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildHeader(gold, gems),
+                  _buildHeader(),
                   const TabBar(
                     indicatorColor: AppColors.gold,
                     labelColor: AppColors.goldLt,
@@ -334,7 +335,8 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
   }
 
   // ── Header ──────────────────────────────────────────────────────────
-  Widget _buildHeader(int gold, int gems) {
+  // Header SEM título (CEO 2026-06-12): só voltar + carteira PADRÃO do Santuário.
+  Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Row(
@@ -342,64 +344,8 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
           NhBackButton(
             onTap: () => context.canPop() ? context.pop() : context.go('/library'),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'PACOTES',
-                  style: GoogleFonts.cinzelDecorative(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 2,
-                    color: AppColors.goldLt,
-                    shadows: [
-                      Shadow(
-                          color: AppColors.gold.withValues(alpha: 0.5),
-                          blurRadius: 12),
-                    ],
-                  ),
-                ),
-                Text(
-                  'Obtenção de cartas',
-                  style: GoogleFonts.roboto(
-                      fontSize: 11, letterSpacing: 2, color: AppColors.txtMut),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              _currencyPill(Icons.monetization_on, AppColors.gold, gold),
-              const SizedBox(height: 6),
-              _currencyPill(
-                  Icons.diamond, AppColors.conceptCelestial, gems),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _currencyPill(IconData icon, Color color, int amount) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: const Color(0xB3100C15),
-        border: Border.all(color: color.withValues(alpha: 0.5)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
-          Text('$amount',
-              style: GoogleFonts.roboto(
-                  fontSize: 13, fontWeight: FontWeight.w700, color: color)),
+          const Spacer(),
+          const SanctuaryWalletPills(),
         ],
       ),
     );
