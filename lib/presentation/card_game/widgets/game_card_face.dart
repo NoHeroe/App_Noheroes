@@ -427,6 +427,19 @@ IconData keywordIcon(AbilityKeyword k) {
       return Icons.add_moderator;
     case AbilityKeyword.cristalAdicional:
       return Icons.diamond_outlined;
+    // Lote 7.
+    case AbilityKeyword.espinhoDeEscudo:
+      return Icons.shield_outlined;
+    case AbilityKeyword.nevoa:
+      return Icons.cloud;
+    case AbilityKeyword.antiAereo:
+      return Icons.airline_stops;
+    case AbilityKeyword.quebraArmadura:
+      return Icons.heart_broken;
+    case AbilityKeyword.explosaoMagica:
+      return Icons.bubble_chart;
+    case AbilityKeyword.nevoaToxica:
+      return Icons.cloud_queue;
   }
 }
 
@@ -510,6 +523,18 @@ String keywordDescription(AbilityKeyword k) {
       return 'Se já tem armadura, ganha +1 de armadura.';
     case AbilityKeyword.cristalAdicional:
       return 'Ao ser sacrificada, gera +1 cristal.';
+    case AbilityKeyword.espinhoDeEscudo:
+      return 'Ao sofrer qualquer dano, devolve dano à fonte.';
+    case AbilityKeyword.nevoa:
+      return 'Após sofrer dano, o próximo golpe é prevenido.';
+    case AbilityKeyword.antiAereo:
+      return 'Ignora o Voo do alvo e causa dano extra a quem voa.';
+    case AbilityKeyword.quebraArmadura:
+      return 'Causa dano extra a alvos com armadura.';
+    case AbilityKeyword.explosaoMagica:
+      return 'Dano mágico excedente transborda na próxima criatura.';
+    case AbilityKeyword.nevoaToxica:
+      return 'No início do turno, adoece todos os inimigos.';
   }
 }
 

@@ -169,6 +169,20 @@ const int kEncantarArmaduraBonus = 1;
 /// Cristal extra gerado por Cristal Adicional ao sacrificar a criatura. 🎚️
 const int kCristalAdicionalCrystals = 1;
 
+// ── Lote 7 — magnitudes 🎚️ ───────────────────────────────────────────────────
+
+/// Dano verdadeiro que Espinho de Escudo devolve à fonte ao sofrer dano. 🎚️
+const int kEspinhoDeEscudoDamage = 1;
+
+/// Dano extra de Anti-Aéreo contra alvos que voam. 🎚️
+const int kAntiAereoBonus = 1;
+
+/// Dano físico extra de Quebra de Armadura contra alvos com armadura. 🎚️
+const int kQuebraArmaduraBonus = 1;
+
+/// Acúmulos de Doença que Névoa Tóxica aplica a todos os inimigos por turno. 🎚️
+const int kNevoaToxicaStacks = 1;
+
 /// Bônus de ataque corpo a corpo de Inspirar (aliados, até o fim do turno). 🎚️
 const int kInspirarBonus = 1;
 

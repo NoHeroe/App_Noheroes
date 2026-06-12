@@ -839,6 +839,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       AbilityKeyword.investida,
       AbilityKeyword.furia,
       AbilityKeyword.cristalAdicional,
+      AbilityKeyword.antiAereo,
+      AbilityKeyword.quebraArmadura,
+      AbilityKeyword.explosaoMagica,
     ];
     const defensive = [
       AbilityKeyword.escudo,
@@ -855,6 +858,8 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       AbilityKeyword.perseveranca,
       AbilityKeyword.vigilante,
       AbilityKeyword.encantarArmadura,
+      AbilityKeyword.espinhoDeEscudo,
+      AbilityKeyword.nevoa,
     ];
     const status = [
       AbilityKeyword.sangramento,
@@ -865,6 +870,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       AbilityKeyword.suprimirMagia,
       AbilityKeyword.doenca,
       AbilityKeyword.surto,
+      AbilityKeyword.nevoaToxica,
     ];
     const exotic = [
       AbilityKeyword.andorinha,

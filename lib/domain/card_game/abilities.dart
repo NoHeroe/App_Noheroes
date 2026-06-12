@@ -11,9 +11,9 @@
 /// e o engine as ignora silenciosamente.
 library;
 
-/// As 38 habilidades com runtime no engine (12 originais + 5 do Lote 2 + 4 do
-/// Lote 3a de status/DoT + 4 do Lote 3b de auras/combo Doença-Surto + 6 do
-/// Lote 5 de exóticas + Reflexo Mágico + 6 do Lote 6 de imunidades/utilidades).
+/// As 44 habilidades com runtime no engine (12 originais + 5 do Lote 2 + 4 do
+/// Lote 3a + 4 do Lote 3b + 6 do Lote 5 + Reflexo Mágico + 6 do Lote 6 +
+/// 6 do Lote 7).
 enum AbilityKeyword {
   /// Redireciona ataques à distância/mágicos inimigos para esta criatura.
   provocar,
@@ -170,6 +170,31 @@ enum AbilityKeyword {
 
   /// Ao ser sacrificada, gera +🎚️ `kCristalAdicionalCrystals` cristal extra.
   cristalAdicional,
+
+  // ── Lote 7 (mais defensivas/ofensivas) ────────────────────────────────────
+
+  /// Ao SOFRER dano (qualquer tipo, dano > 0), causa 🎚️ `kEspinhoDeEscudoDamage`
+  /// de dano verdadeiro à fonte — salvo se a fonte também tiver Espinho de Escudo.
+  espinhoDeEscudo,
+
+  /// Ao sofrer dano, entra em Névoa; o PRÓXIMO dano é prevenido e o estado some.
+  nevoa,
+
+  /// Os ataques corpo a corpo/à distância desta criatura ignoram o Voo do alvo,
+  /// e causam +🎚️ `kAntiAereoBonus` de dano a quem voa.
+  antiAereo,
+
+  /// Alvos COM armadura sofrem +🎚️ `kQuebraArmaduraBonus` de dano físico desta
+  /// criatura.
+  quebraArmadura,
+
+  /// Dano MÁGICO excedente transborda para a próxima criatura inimiga (espelho
+  /// mágico de Pisotear).
+  explosaoMagica,
+
+  /// No início do turno do dono, aplica 🎚️ `kNevoaToxicaStacks` acúmulo(s) de
+  /// Doença a TODOS os inimigos.
+  nevoaToxica,
 }
 
 /// Nome canônico (forma "bonita" com espaço/acento) — usado em eventos
@@ -252,6 +277,18 @@ String abilityKeywordLabel(AbilityKeyword k) {
       return 'Encantar Armadura';
     case AbilityKeyword.cristalAdicional:
       return 'Cristal Adicional';
+    case AbilityKeyword.espinhoDeEscudo:
+      return 'Espinho de Escudo';
+    case AbilityKeyword.nevoa:
+      return 'Névoa';
+    case AbilityKeyword.antiAereo:
+      return 'Anti-Aéreo';
+    case AbilityKeyword.quebraArmadura:
+      return 'Quebra de Armadura';
+    case AbilityKeyword.explosaoMagica:
+      return 'Explosão Mágica';
+    case AbilityKeyword.nevoaToxica:
+      return 'Névoa Tóxica';
   }
 }
 
@@ -327,4 +364,11 @@ const Map<String, AbilityKeyword> _canonical = {
   'furia': AbilityKeyword.furia,
   'encantararmadura': AbilityKeyword.encantarArmadura,
   'cristaladicional': AbilityKeyword.cristalAdicional,
+  'espinhodeescudo': AbilityKeyword.espinhoDeEscudo,
+  'nevoa': AbilityKeyword.nevoa,
+  'antiaereo': AbilityKeyword.antiAereo,
+  'quebradearmadura': AbilityKeyword.quebraArmadura,
+  'quebraarmadura': AbilityKeyword.quebraArmadura,
+  'explosaomagica': AbilityKeyword.explosaoMagica,
+  'nevoatoxica': AbilityKeyword.nevoaToxica,
 };

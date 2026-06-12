@@ -57,7 +57,44 @@ class CardBattleEngine {
     // Auras de início de turno que debuffam o INIMIGO (Lote 3b): Desmoralizar /
     // Suprimir Magia. Reduzem o atk do oponente até a rodada dele.
     state = _applyEnemyAuras(state, side.id, events);
+    // Névoa Tóxica (Lote 7): aplica Doença a todos os inimigos.
+    state = _applyNevoaToxica(state, side.id, events);
     return state;
+  }
+
+  /// Névoa Tóxica: se o lado [auraOwner] tem alguma criatura com a keyword, no
+  /// início do turno dele aplica `kNevoaToxicaStacks` de Doença a TODOS os
+  /// inimigos (respeitando imunidade).
+  MatchState _applyNevoaToxica(
+      MatchState s, SideId auraOwner, List<MatchEvent> events) {
+    final owner = s.sideOf(auraOwner);
+    final emitters = owner.creaturesInPlay
+        .where((c) => c.hasKeyword(AbilityKeyword.nevoaToxica))
+        .toList();
+    if (emitters.isEmpty) return s;
+
+    final enemyId = auraOwner == SideId.a ? SideId.b : SideId.a;
+    final enemy = s.sideOf(enemyId);
+    final lanes = List<CreatureInPlay?>.from(enemy.lanes);
+    var changed = false;
+    for (var i = 0; i < lanes.length; i++) {
+      final c = lanes[i];
+      if (c == null || !c.isAlive) continue;
+      if (c.immuneTo(AbilityKeyword.doenca)) continue;
+      lanes[i] = c.copyWith(diseaseStacks: c.diseaseStacks + kNevoaToxicaStacks);
+      changed = true;
+    }
+    if (!changed) return s;
+    for (final e in emitters) {
+      events.add(AbilityTriggered(
+        side: auraOwner,
+        cardId: e.instanceId,
+        cardName: e.card.nome,
+        ability: abilityKeywordLabel(AbilityKeyword.nevoaToxica),
+        detail: '+$kNevoaToxicaStacks de Doença em todos os inimigos',
+      ));
+    }
+    return s.withSide(enemyId, enemy.copyWith(lanes: lanes));
   }
 
   /// Aplica as auras do lado [auraOwner] que reduzem o ataque do INIMIGO:
@@ -1024,6 +1061,21 @@ class CardBattleEngine {
       damage = damage - target.magicArmor; // Escudo Espelhado / Escudo Sagrado
     }
     if (damage < 0) damage = 0;
+    // ---- Lote 7: bônus de dano por atacante ----
+    // Anti-Aéreo: dano extra contra quem voa.
+    if (attacker.hasKeyword(AbilityKeyword.antiAereo) && target.canFly) {
+      damage += kAntiAereoBonus;
+    }
+    // Quebra de Armadura: dano FÍSICO extra contra alvo com armadura.
+    if (physical &&
+        attacker.hasKeyword(AbilityKeyword.quebraArmadura) &&
+        target.armor > 0) {
+      damage += kQuebraArmaduraBonus;
+    }
+    // Névoa: o PRÓXIMO golpe (estado armado) é prevenido.
+    final hasNevoa = target.hasKeyword(AbilityKeyword.nevoa);
+    final nevoaPreventing = hasNevoa && target.nevoaArmed && !magicReflected;
+    if (nevoaPreventing) damage = 0;
     if (magicReflected) damage = 0; // o alvo IGNORA o dano (reflete abaixo).
     final hpBefore = target.currentHp;
     // Inabalável: se morreria, ressuscita com vida cheia (1×/partida).
@@ -1061,6 +1113,20 @@ class CardBattleEngine {
     final survivor = defLanes[targetLaneIdx];
     if (survivor != null && !magicReflected) {
       var t = survivor;
+      // Névoa (Lote 7): sofreu o golpe → arma; se este golpe foi prevenido →
+      // desarma. (Prevê 1 a cada 2 golpes.)
+      if (hasNevoa) {
+        t = t.copyWith(nevoaArmed: !nevoaPreventing);
+        if (nevoaPreventing) {
+          events.add(AbilityTriggered(
+            side: defSide.id,
+            cardId: t.instanceId,
+            cardName: t.card.nome,
+            ability: abilityKeywordLabel(AbilityKeyword.nevoa),
+            detail: 'a Névoa preveniu o dano',
+          ));
+        }
+      }
       // Sangramento: só dano físico; +1 acúmulo e reseta a duração.
       if (physical && attacker.hasKeyword(AbilityKeyword.sangramento)) {
         t = t.copyWith(
@@ -1259,6 +1325,42 @@ class CardBattleEngine {
           }
         }
       }
+
+      // ---- Explosão Mágica (Lote 7): dano MÁGICO excedente transborda para a
+      // próxima criatura inimiga (espelho mágico de Pisotear). ----
+      if (type == DamageType.magico &&
+          overflow > 0 &&
+          attacker.hasKeyword(AbilityKeyword.explosaoMagica)) {
+        var nextIdx = -1;
+        for (var i = targetLaneIdx + 1; i < defLanes.length; i++) {
+          final c = defLanes[i];
+          if (c != null && c.isAlive) {
+            nextIdx = i;
+            break;
+          }
+        }
+        if (nextIdx >= 0) {
+          final next = defLanes[nextIdx]!;
+          var spill = overflow - next.magicArmor; // transbordo mágico
+          if (spill < 0) spill = 0;
+          final lethalN = _resolveLethal(next, next.currentHp - spill);
+          final nextDied = lethalN.died;
+          defLanes[nextIdx] = lethalN.creature;
+          if (nextDied) anyDeath = true;
+          events.add(AbilityTriggered(
+            side: atkSide.id,
+            cardId: attacker.instanceId,
+            cardName: attacker.card.nome,
+            ability: abilityKeywordLabel(AbilityKeyword.explosaoMagica),
+            detail: 'transbordou $spill de dano mágico em ${next.card.nome}'
+                '${nextDied ? ' (destruída)' : ''}',
+          ));
+          if (nextDied &&
+              attacker.hasKeyword(AbilityKeyword.cristalDeDrenagem)) {
+            gainDrainCrystal(next.card.nome);
+          }
+        }
+      }
     }
 
     // ---- Ataque Duplo: melee DA FRENTE que acerta (não evadido) causa dano
@@ -1419,6 +1521,29 @@ class CardBattleEngine {
       }
     }
 
+    // ---- Espinho de Escudo (Lote 7): ao SOFRER dano (qualquer tipo), devolve
+    // dano verdadeiro à fonte — salvo se a fonte também tiver. ----
+    if (!attackerDied &&
+        damage > 0 &&
+        target.hasKeyword(AbilityKeyword.espinhoDeEscudo) &&
+        !attacker.hasKeyword(AbilityKeyword.espinhoDeEscudo)) {
+      final res =
+          _resolveLethal(attacker, attacker.currentHp - kEspinhoDeEscudoDamage);
+      events.add(AbilityTriggered(
+        side: defSide.id,
+        cardId: target.instanceId,
+        cardName: target.card.nome,
+        ability: abilityKeywordLabel(AbilityKeyword.espinhoDeEscudo),
+        detail: '$kEspinhoDeEscudoDamage de dano em '
+            '${attacker.card.nome}${res.died ? ' (destruída)' : ''}',
+      ));
+      if (res.died) {
+        attackerDied = true;
+      } else {
+        attacker = res.creature!;
+      }
+    }
+
     // ---- Consolida lados ----
     final atkLanes = List<CreatureInPlay?>.from(atkSide.lanes);
     atkLanes[attackerLaneIdx] = attackerDied ? null : attacker;
@@ -1450,6 +1575,8 @@ class CardBattleEngine {
   bool _rollEvade(MatchState s, CreatureInPlay attacker, CreatureInPlay target,
       DamageType type) {
     if (!target.canFly) return false; // sem Voo ou enredada (Voo removido).
+    // Anti-Aéreo: os ataques do atacante NÃO ativam o Voo do alvo.
+    if (attacker.hasKeyword(AbilityKeyword.antiAereo)) return false;
     if (attacker.hasKeyword(AbilityKeyword.voo)) return false;
     final double chance;
     switch (type) {

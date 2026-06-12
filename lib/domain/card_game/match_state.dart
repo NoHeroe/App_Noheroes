@@ -65,6 +65,7 @@ class CreatureInPlay {
     this.permanentAtkBonus = 0,
     this.ressureicaoUsed = false,
     this.transformed = false,
+    this.nevoaArmed = false,
   });
 
   final CreatureCard card;
@@ -135,6 +136,9 @@ class CreatureInPlay {
 
   /// Transformar já disparou (2ª forma ativa). Não dispara de novo.
   final bool transformed;
+
+  /// Névoa (Lote 7) armada: já sofreu dano e o PRÓXIMO golpe será prevenido.
+  final bool nevoaArmed;
 
   /// keyword FUNCIONAL: tem a keyword E não está suprimida por Doença (Doença
   /// desativa Inspirar, Desmoralizar e Reflexo Mágico na criatura doente).
@@ -355,6 +359,7 @@ class CreatureInPlay {
     int? permanentAtkBonus,
     bool? ressureicaoUsed,
     bool? transformed,
+    bool? nevoaArmed,
   }) {
     return CreatureInPlay(
       card: card ?? this.card,
@@ -377,6 +382,7 @@ class CreatureInPlay {
       permanentAtkBonus: permanentAtkBonus ?? this.permanentAtkBonus,
       ressureicaoUsed: ressureicaoUsed ?? this.ressureicaoUsed,
       transformed: transformed ?? this.transformed,
+      nevoaArmed: nevoaArmed ?? this.nevoaArmed,
     );
   }
 }
