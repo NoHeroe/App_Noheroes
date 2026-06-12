@@ -59,6 +59,9 @@ class CreatureInPlay {
     this.stunned = false,
     this.entangled = false,
     this.atordoarCooldown = 0,
+    this.desmoralizadoMelee = 0,
+    this.suprimidoMagico = 0,
+    this.diseaseStacks = 0,
   });
 
   final CreatureCard card;
@@ -105,6 +108,30 @@ class CreatureInPlay {
   /// Cooldown da habilidade Atordoar DESTA criatura (atacante): >0 = não pode
   /// atordoar ainda. Decai no início do turno do dono.
   final int atordoarCooldown;
+
+  // ── Lote 3b: auras de redução (debuff vindo do inimigo) + Doença ─────────
+  /// Redução temporária de ataque MELEE (Desmoralizar inimigo). Expira no fim
+  /// do turno desta criatura. Aplicada no início do turno do dono da aura.
+  final int desmoralizadoMelee;
+
+  /// Redução temporária de ataque MÁGICO (Suprimir Magia inimigo). Expira no
+  /// fim do turno desta criatura.
+  final int suprimidoMagico;
+
+  /// Acúmulos de Doença. >0 suprime Inspirar/Desmoralizar desta criatura e
+  /// arma o gatilho do Surto. Removida por cura ou ao Surto detonar.
+  final int diseaseStacks;
+
+  /// keyword FUNCIONAL: tem a keyword E não está suprimida por Doença (Doença
+  /// desativa Inspirar e Desmoralizar na criatura doente).
+  bool functionalKeyword(AbilityKeyword k) {
+    if (!hasKeyword(k)) return false;
+    if (diseaseStacks > 0 &&
+        (k == AbilityKeyword.inspirar || k == AbilityKeyword.desmoralizar)) {
+      return false;
+    }
+    return true;
+  }
 
   /// Tem DoT ativo (sangramento ou veneno)?
   bool get hasDot => bleedStacks > 0 || poisoned;
@@ -211,6 +238,16 @@ class CreatureInPlay {
       byType[DamageType.corpoACorpo] =
           byType[DamageType.corpoACorpo]! + meleeBuff;
     }
+    // Debuffs de aura (Lote 3b): Desmoralizar reduz melee; Suprimir Magia reduz
+    // mágico. Clampa em 0 (não vira ataque negativo).
+    if (desmoralizadoMelee > 0 && byType.containsKey(DamageType.corpoACorpo)) {
+      final m = byType[DamageType.corpoACorpo]! - desmoralizadoMelee;
+      byType[DamageType.corpoACorpo] = m < 0 ? 0 : m;
+    }
+    if (suprimidoMagico > 0 && byType.containsKey(DamageType.magico)) {
+      final m = byType[DamageType.magico]! - suprimidoMagico;
+      byType[DamageType.magico] = m < 0 ? 0 : m;
+    }
     final out = <CardAttack>[];
     for (final dt in DamageType.values) {
       final v = byType[dt];
@@ -248,6 +285,9 @@ class CreatureInPlay {
     bool? stunned,
     bool? entangled,
     int? atordoarCooldown,
+    int? desmoralizadoMelee,
+    int? suprimidoMagico,
+    int? diseaseStacks,
   }) {
     return CreatureInPlay(
       card: card,
@@ -264,6 +304,9 @@ class CreatureInPlay {
       stunned: stunned ?? this.stunned,
       entangled: entangled ?? this.entangled,
       atordoarCooldown: atordoarCooldown ?? this.atordoarCooldown,
+      desmoralizadoMelee: desmoralizadoMelee ?? this.desmoralizadoMelee,
+      suprimidoMagico: suprimidoMagico ?? this.suprimidoMagico,
+      diseaseStacks: diseaseStacks ?? this.diseaseStacks,
     );
   }
 }

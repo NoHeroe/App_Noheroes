@@ -53,7 +53,65 @@ class CardBattleEngine {
       sacrificedThisTurn: false,
     );
     newSide = _applyStartOfTurnBuffs(newSide, events);
-    return s.withSide(side.id, newSide).copyWith(phase: MatchPhase.jogo);
+    var state = s.withSide(side.id, newSide).copyWith(phase: MatchPhase.jogo);
+    // Auras de início de turno que debuffam o INIMIGO (Lote 3b): Desmoralizar /
+    // Suprimir Magia. Reduzem o atk do oponente até a rodada dele.
+    state = _applyEnemyAuras(state, side.id, events);
+    return state;
+  }
+
+  /// Aplica as auras do lado [auraOwner] que reduzem o ataque do INIMIGO:
+  /// Desmoralizar (melee) e Suprimir Magia (mágico). Só o maior aplica (bônus
+  /// fixo → aplica 1× se houver ≥1 com a aura, ignorando quem está doente).
+  /// O debuff dura até a rodada do inimigo (limpo em `_expireEndOfTurnBuffs`).
+  MatchState _applyEnemyAuras(
+      MatchState s, SideId auraOwner, List<MatchEvent> events) {
+    final owner = s.sideOf(auraOwner);
+    final enemyId = auraOwner == SideId.a ? SideId.b : SideId.a;
+    final enemy = s.sideOf(enemyId);
+
+    final desmoralizers = owner.creaturesInPlay
+        .where((c) => c.functionalKeyword(AbilityKeyword.desmoralizar))
+        .toList();
+    final suppressors = owner.creaturesInPlay
+        .where((c) => c.functionalKeyword(AbilityKeyword.suprimirMagia))
+        .toList();
+    if (desmoralizers.isEmpty && suppressors.isEmpty) return s;
+
+    final melee = desmoralizers.isNotEmpty ? kDesmoralizarReduction : 0;
+    final magic = suppressors.isNotEmpty ? kSuprimirReduction : 0;
+
+    final lanes = List<CreatureInPlay?>.from(enemy.lanes);
+    var changed = false;
+    for (var i = 0; i < lanes.length; i++) {
+      final c = lanes[i];
+      if (c == null) continue;
+      if (c.desmoralizadoMelee != melee || c.suprimidoMagico != magic) {
+        lanes[i] = c.copyWith(desmoralizadoMelee: melee, suprimidoMagico: magic);
+        changed = true;
+      }
+    }
+
+    for (final d in desmoralizers) {
+      events.add(AbilityTriggered(
+        side: auraOwner,
+        cardId: d.instanceId,
+        cardName: d.card.nome,
+        ability: abilityKeywordLabel(AbilityKeyword.desmoralizar),
+        detail: '-$kDesmoralizarReduction de ataque melee nos inimigos',
+      ));
+    }
+    for (final sup in suppressors) {
+      events.add(AbilityTriggered(
+        side: auraOwner,
+        cardId: sup.instanceId,
+        cardName: sup.card.nome,
+        ability: abilityKeywordLabel(AbilityKeyword.suprimirMagia),
+        detail: '-$kSuprimirReduction de ataque mágico nos inimigos',
+      ));
+    }
+
+    return changed ? s.withSide(enemyId, enemy.copyWith(lanes: lanes)) : s;
   }
 
   /// Inspirar: aliados (não o inspirador) ganham 🎚️ `kInspirarBonus` de
@@ -65,8 +123,9 @@ class CardBattleEngine {
     final living = side.creaturesInPlay;
     if (living.isEmpty) return side;
 
-    final inspirers =
-        living.where((c) => c.hasKeyword(AbilityKeyword.inspirar)).toList();
+    final inspirers = living
+        .where((c) => c.functionalKeyword(AbilityKeyword.inspirar))
+        .toList();
 
     final lanes = List<CreatureInPlay?>.from(side.lanes);
     var changed = false;
@@ -127,7 +186,10 @@ class CardBattleEngine {
   /// - Investida do lado OPOSTO (aplicada no turno anterior dele, durou "até
   ///   o fim do turno do oponente" — que é exatamente o turno que termina).
   MatchState _expireEndOfTurnBuffs(MatchState s, SideId ending) {
-    BoardSide clear(BoardSide side, {required bool inspirar, required bool investida}) {
+    BoardSide clear(BoardSide side,
+        {required bool inspirar,
+        required bool investida,
+        required bool debuff}) {
       final lanes = List<CreatureInPlay?>.from(side.lanes);
       var changed = false;
       for (var i = 0; i < lanes.length; i++) {
@@ -135,10 +197,20 @@ class CardBattleEngine {
         if (c == null) continue;
         final newInspirar = inspirar ? 0 : c.inspirarBonus;
         final newInvestida = investida ? 0 : c.investidaBonus;
+        // Debuffs de aura (Desmoralizar/Suprimir) expiram no fim do turno do
+        // lado debuffado — após ele já ter atacado com o atk reduzido.
+        final newDesmo = debuff ? 0 : c.desmoralizadoMelee;
+        final newSupr = debuff ? 0 : c.suprimidoMagico;
         if (c.inspirarBonus != newInspirar ||
-            c.investidaBonus != newInvestida) {
+            c.investidaBonus != newInvestida ||
+            c.desmoralizadoMelee != newDesmo ||
+            c.suprimidoMagico != newSupr) {
           lanes[i] = c.copyWith(
-              inspirarBonus: newInspirar, investidaBonus: newInvestida);
+            inspirarBonus: newInspirar,
+            investidaBonus: newInvestida,
+            desmoralizadoMelee: newDesmo,
+            suprimidoMagico: newSupr,
+          );
           changed = true;
         }
       }
@@ -146,10 +218,12 @@ class CardBattleEngine {
     }
 
     final other = ending == SideId.a ? SideId.b : SideId.a;
-    var state = s.withSide(
-        ending, clear(s.sideOf(ending), inspirar: true, investida: false));
+    var state = s.withSide(ending,
+        clear(s.sideOf(ending), inspirar: true, investida: false, debuff: true));
     state = state.withSide(
-        other, clear(state.sideOf(other), inspirar: false, investida: true));
+        other,
+        clear(state.sideOf(other),
+            inspirar: false, investida: true, debuff: false));
     return state;
   }
 
@@ -879,7 +953,47 @@ class CardBattleEngine {
           detail: 'enredou ${t.card.nome} (perdeu Voo, pula o próximo ataque)',
         ));
       }
-      if (!identical(t, survivor)) defLanes[targetLaneIdx] = t;
+
+      // ---- Doença / Surto (Lote 3b): só em dano físico/verdadeiro ----
+      final physicalOrTrue = physical || type == DamageType.vitalismo;
+      if (physicalOrTrue) {
+        // Surto detona a Doença EXISTENTE antes de aplicar uma nova: remove a
+        // Doença e reduz o PV MÁXIMO (permanente) por acúmulo.
+        if (attacker.hasKeyword(AbilityKeyword.surto) && t.diseaseStacks > 0) {
+          final reduce = t.diseaseStacks * kSurtoMaxHpPerStack;
+          var nt = t.copyWith(
+            diseaseStacks: 0,
+            bonusMaxHp: t.bonusMaxHp - reduce,
+          );
+          if (nt.currentHp > nt.maxHp) nt = nt.copyWith(currentHp: nt.maxHp);
+          final surtoKilled = !nt.isAlive;
+          events.add(AbilityTriggered(
+            side: atkSide.id,
+            cardId: attacker.instanceId,
+            cardName: attacker.card.nome,
+            ability: abilityKeywordLabel(AbilityKeyword.surto),
+            detail: '-$reduce de PV máximo em ${nt.card.nome}'
+                '${surtoKilled ? ' (destruída)' : ''}',
+          ));
+          t = nt;
+          if (surtoKilled) anyDeath = true;
+        }
+        // Doença: aplica/empilha se o alvo ainda está vivo.
+        if (t.isAlive && attacker.hasKeyword(AbilityKeyword.doenca)) {
+          t = t.copyWith(diseaseStacks: t.diseaseStacks + 1);
+          events.add(AbilityTriggered(
+            side: atkSide.id,
+            cardId: attacker.instanceId,
+            cardName: attacker.card.nome,
+            ability: abilityKeywordLabel(AbilityKeyword.doenca),
+            detail: '${t.diseaseStacks} acúmulo(s) de Doença em ${t.card.nome}',
+          ));
+        }
+      }
+
+      if (!identical(t, survivor)) {
+        defLanes[targetLaneIdx] = t.isAlive ? t : null;
+      }
     }
 
     // ---- Roubo de PV: ao ACERTAR (dano > 0), +PV atual e máx ----
@@ -1199,8 +1313,8 @@ class CardBattleEngine {
       amount: amount,
     ));
 
-    // Cura LIMPA DoT (Sangramento e Veneno) do alvo (regra do CEO).
-    final cleansed = target.hasDot;
+    // Cura LIMPA DoT (Sangramento, Veneno) e Doença do alvo (regra do CEO).
+    final cleansed = target.hasDot || target.diseaseStacks > 0;
     if (cleansed) {
       events.add(AbilityTriggered(
         side: side.id,
@@ -1217,6 +1331,7 @@ class CardBattleEngine {
       bleedStacks: 0,
       bleedTurns: 0,
       poisoned: false,
+      diseaseStacks: 0,
     );
     return side.copyWith(lanes: newLanes);
   }

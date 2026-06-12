@@ -11,8 +11,8 @@
 /// e o engine as ignora silenciosamente.
 library;
 
-/// As 21 habilidades com runtime no engine (12 originais + 5 do Lote 2 + 4 do
-/// Lote 3a de status/DoT).
+/// As 25 habilidades com runtime no engine (12 originais + 5 do Lote 2 + 4 do
+/// Lote 3a de status/DoT + 4 do Lote 3b de auras/combo Doença-Surto).
 enum AbilityKeyword {
   /// Redireciona ataques à distância/mágicos inimigos para esta criatura.
   provocar,
@@ -97,6 +97,27 @@ enum AbilityKeyword {
   /// Ao ACERTAR um alvo com Voo (🎚️ `kEnredarChance`), enreda: remove o Voo e
   /// prende — o alvo pula a próxima Fase de Ataque dele. Só afeta alvos voadores.
   enredar,
+
+  // ── Lote 3b (auras de redução + combo Doença/Surto) ──────────────────────
+
+  /// Aura: no início do turno do dono, reduz o ataque MELEE de todos os inimigos
+  /// em 🎚️ `kDesmoralizarReduction` (só o maior aplica). Dura a rodada do
+  /// inimigo (até ele atacar). Suprimida pela Doença na criatura que a possui.
+  desmoralizar,
+
+  /// Aura: no início do turno do dono, reduz o ataque MÁGICO de todos os
+  /// inimigos em 🎚️ `kSuprimirReduction` (só o maior aplica). Dura a rodada do
+  /// inimigo (até ele atacar).
+  suprimirMagia,
+
+  /// Ao causar dano físico/verdadeiro, aplica 1 acúmulo de Doença no alvo.
+  /// Enquanto doente, o alvo perde Inspirar e Desmoralizar (suprimidas).
+  /// Removível por cura.
+  doenca,
+
+  /// Ao causar dano físico/verdadeiro a um alvo DOENTE: remove a Doença e reduz
+  /// o PV MÁXIMO do alvo (permanente) em acúmulos × 🎚️ `kSurtoMaxHpPerStack`.
+  surto,
 }
 
 /// Nome canônico (forma "bonita" com espaço/acento) — usado em eventos
@@ -145,6 +166,14 @@ String abilityKeywordLabel(AbilityKeyword k) {
       return 'Atordoar';
     case AbilityKeyword.enredar:
       return 'Enredar';
+    case AbilityKeyword.desmoralizar:
+      return 'Desmoralizar';
+    case AbilityKeyword.suprimirMagia:
+      return 'Suprimir Magia';
+    case AbilityKeyword.doenca:
+      return 'Doença';
+    case AbilityKeyword.surto:
+      return 'Surto';
   }
 }
 
@@ -201,4 +230,8 @@ const Map<String, AbilityKeyword> _canonical = {
   'veneno': AbilityKeyword.veneno,
   'atordoar': AbilityKeyword.atordoar,
   'enredar': AbilityKeyword.enredar,
+  'desmoralizar': AbilityKeyword.desmoralizar,
+  'suprimirmagia': AbilityKeyword.suprimirMagia,
+  'doenca': AbilityKeyword.doenca,
+  'surto': AbilityKeyword.surto,
 };

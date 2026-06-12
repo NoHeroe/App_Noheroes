@@ -46,6 +46,9 @@ CreatureInPlay inPlay({
   bool stunned = false,
   bool entangled = false,
   int atordoarCooldown = 0,
+  int desmoralizadoMelee = 0,
+  int suprimidoMagico = 0,
+  int diseaseStacks = 0,
 }) {
   return CreatureInPlay(
     card: creature(id: id, atk: atk, hp: hp, damageType: type, abilities: abilities),
@@ -57,6 +60,9 @@ CreatureInPlay inPlay({
     stunned: stunned,
     entangled: entangled,
     atordoarCooldown: atordoarCooldown,
+    desmoralizadoMelee: desmoralizadoMelee,
+    suprimidoMagico: suprimidoMagico,
+    diseaseStacks: diseaseStacks,
   );
 }
 
@@ -273,6 +279,109 @@ void main() {
       expect(flyer.entangled, isFalse); // limpou.
       expect(flyer.canFly, isTrue); // Voo de volta.
       expect(_hasAbilityEvent(after, 'Enredar'), isTrue);
+    });
+  });
+
+  group('Desmoralizar (aura)', () {
+    test('reduz o ataque melee dos inimigos no início do turno do dono', () {
+      // A tem Desmoralizador; rodamos endTurn(B) -> _beginTurn(A) aplica a aura
+      // sobre B. 'bruiser' de B fica com -1 de melee.
+      final s = _stateWith(
+        aLanes: [inPlay(id: 'demor', atk: 0, hp: 20, abilities: ['Desmoralizar'])],
+        bLanes: [inPlay(id: 'bruiser', atk: 5, hp: 10)],
+      ).copyWith(activeSide: SideId.b);
+      final after = engine.endTurn(s);
+      final bruiser = _find(after.sideB, 'bruiser');
+      expect(bruiser.desmoralizadoMelee, kDesmoralizarReduction);
+      expect(bruiser.atk, 5 - kDesmoralizarReduction); // atk efetivo reduzido.
+      expect(_hasAbilityEvent(after, 'Desmoralizar'), isTrue);
+    });
+
+    test('debuff expira no fim do turno do lado debuffado', () {
+      // 'bruiser' de B já desmoralizado; ao fim do turno de B, limpa.
+      final s = _stateWith(
+        aLanes: [inPlay(id: 'dummy', atk: 0, hp: 10)],
+        bLanes: [inPlay(id: 'bruiser', atk: 5, hp: 10, desmoralizadoMelee: 1)],
+      ).copyWith(activeSide: SideId.b);
+      final after = engine.endTurn(s);
+      expect(_find(after.sideB, 'bruiser').desmoralizadoMelee, 0);
+    });
+  });
+
+  group('Suprimir Magia (aura)', () {
+    test('reduz o ataque mágico dos inimigos', () {
+      final s = _stateWith(
+        aLanes: [inPlay(id: 'supr', atk: 0, hp: 20, abilities: ['Suprimir Magia'])],
+        bLanes: [inPlay(id: 'mage', atk: 5, hp: 10, type: DamageType.magico)],
+      ).copyWith(activeSide: SideId.b);
+      final after = engine.endTurn(s);
+      final mage = _find(after.sideB, 'mage');
+      expect(mage.suprimidoMagico, kSuprimirReduction);
+      expect(mage.atk, 5 - kSuprimirReduction);
+    });
+  });
+
+  group('Doença', () {
+    test('aplica acúmulo ao acertar dano físico', () {
+      final s = _stateWith(
+        aLanes: [inPlay(id: 'atk', atk: 2, abilities: ['Doença'])],
+        bLanes: [inPlay(id: 'def', atk: 0, hp: 10)],
+      );
+      final after = engine.endTurn(s);
+      expect(_find(after.sideB, 'def').diseaseStacks, 1);
+      expect(_hasAbilityEvent(after, 'Doença'), isTrue);
+    });
+
+    test('suprime Inspirar do inspirador doente', () {
+      // B: inspirador DOENTE + aliado. endTurn(A) -> _beginTurn(B): o aliado NÃO
+      // é inspirado (Inspirar suprimida pela Doença).
+      final s = _stateWith(
+        aLanes: [inPlay(id: 'dummy', atk: 0, hp: 10)],
+        bLanes: [
+          inPlay(id: 'insp', atk: 0, hp: 10, abilities: ['Inspirar'], diseaseStacks: 1),
+          inPlay(id: 'ally', atk: 3, hp: 10),
+        ],
+      );
+      final after = engine.endTurn(s); // ativo = A -> inicia o turno de B.
+      expect(_find(after.sideB, 'ally').inspirarBonus, 0);
+    });
+
+    test('controle: inspirador SÃO inspira o aliado', () {
+      final s = _stateWith(
+        aLanes: [inPlay(id: 'dummy', atk: 0, hp: 10)],
+        bLanes: [
+          inPlay(id: 'insp', atk: 0, hp: 10, abilities: ['Inspirar']),
+          inPlay(id: 'ally', atk: 3, hp: 10),
+        ],
+      );
+      final after = engine.endTurn(s);
+      expect(_find(after.sideB, 'ally').inspirarBonus, kInspirarBonus);
+    });
+  });
+
+  group('Surto', () {
+    test('detona Doença: remove acúmulos e reduz o PV máximo', () {
+      // 'def' já doente (2 acúmulos); A acerta com Surto (físico).
+      final s = _stateWith(
+        aLanes: [inPlay(id: 'atk', atk: 1, abilities: ['Surto'])],
+        bLanes: [inPlay(id: 'def', atk: 0, hp: 10, diseaseStacks: 2)],
+      );
+      final after = engine.endTurn(s);
+      final def = _find(after.sideB, 'def');
+      expect(def.diseaseStacks, 0); // detonou.
+      expect(def.maxHp, 10 - 2 * kSurtoMaxHpPerStack); // PV máx reduzido.
+      expect(def.currentHp, lessThanOrEqualTo(def.maxHp));
+      expect(_hasAbilityEvent(after, 'Surto'), isTrue);
+    });
+
+    test('sem Doença no alvo, Surto não faz nada', () {
+      final s = _stateWith(
+        aLanes: [inPlay(id: 'atk', atk: 1, abilities: ['Surto'])],
+        bLanes: [inPlay(id: 'def', atk: 0, hp: 10)],
+      );
+      final after = engine.endTurn(s);
+      expect(_find(after.sideB, 'def').maxHp, 10); // intacto.
+      expect(_hasAbilityEvent(after, 'Surto'), isFalse);
     });
   });
 }

@@ -113,6 +113,19 @@ const int kAtordoarCooldownTurns = 1;
 /// Chance de Enredar ao acertar um alvo com Voo (0..1). 🎚️
 const double kEnredarChance = 0.5;
 
+// ── Lote 3b (auras de redução + combo Doença/Surto) — magnitudes 🎚️ ──────────
+
+/// Redução de ataque MELEE que Desmoralizar aplica aos inimigos (só o maior). 🎚️
+const int kDesmoralizarReduction = 1;
+
+/// Redução de ataque MÁGICO que Suprimir Magia aplica aos inimigos (só o
+/// maior). 🎚️
+const int kSuprimirReduction = 1;
+
+/// Redução de PV MÁXIMO por acúmulo de Doença quando o Surto detona (permanente
+/// — o PV atual encolhe junto). 🎚️
+const int kSurtoMaxHpPerStack = 1;
+
 /// Bônus de ataque corpo a corpo de Inspirar (aliados, até o fim do turno). 🎚️
 const int kInspirarBonus = 1;
 
