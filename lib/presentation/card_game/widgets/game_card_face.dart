@@ -399,6 +399,19 @@ IconData keywordIcon(AbilityKeyword k) {
       return Icons.coronavirus;
     case AbilityKeyword.surto:
       return Icons.whatshot;
+    // Lote 5 (exóticas).
+    case AbilityKeyword.andorinha:
+      return Icons.flutter_dash;
+    case AbilityKeyword.crescimento:
+      return Icons.trending_up;
+    case AbilityKeyword.mimico:
+      return Icons.content_copy;
+    case AbilityKeyword.zumbi:
+      return Icons.sentiment_very_dissatisfied;
+    case AbilityKeyword.ressurreicao:
+      return Icons.autorenew;
+    case AbilityKeyword.transformar:
+      return Icons.change_circle;
   }
 }
 

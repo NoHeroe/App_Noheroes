@@ -62,6 +62,9 @@ class CreatureInPlay {
     this.desmoralizadoMelee = 0,
     this.suprimidoMagico = 0,
     this.diseaseStacks = 0,
+    this.permanentAtkBonus = 0,
+    this.ressureicaoUsed = false,
+    this.transformed = false,
   });
 
   final CreatureCard card;
@@ -121,6 +124,17 @@ class CreatureInPlay {
   /// Acúmulos de Doença. >0 suprime Inspirar/Desmoralizar desta criatura e
   /// arma o gatilho do Surto. Removida por cura ou ao Surto detonar.
   final int diseaseStacks;
+
+  // ── Lote 5: exóticas ─────────────────────────────────────────────────────
+  /// Bônus PERMANENTE somado a TODOS os ataques (Andorinha, Crescimento,
+  /// Transformar). Acumula ao longo da partida.
+  final int permanentAtkBonus;
+
+  /// Ressurreição já usada (auto-revive com PV reduzido, 1×).
+  final bool ressureicaoUsed;
+
+  /// Transformar já disparou (2ª forma ativa). Não dispara de novo.
+  final bool transformed;
 
   /// keyword FUNCIONAL: tem a keyword E não está suprimida por Doença (Doença
   /// desativa Inspirar e Desmoralizar na criatura doente).
@@ -248,6 +262,12 @@ class CreatureInPlay {
       final m = byType[DamageType.magico]! - suprimidoMagico;
       byType[DamageType.magico] = m < 0 ? 0 : m;
     }
+    // Bônus PERMANENTE (Andorinha/Crescimento/Transformar) em TODOS os ataques.
+    if (permanentAtkBonus > 0) {
+      for (final k in byType.keys.toList()) {
+        byType[k] = byType[k]! + permanentAtkBonus;
+      }
+    }
     final out = <CardAttack>[];
     for (final dt in DamageType.values) {
       final v = byType[dt];
@@ -288,6 +308,9 @@ class CreatureInPlay {
     int? desmoralizadoMelee,
     int? suprimidoMagico,
     int? diseaseStacks,
+    int? permanentAtkBonus,
+    bool? ressureicaoUsed,
+    bool? transformed,
   }) {
     return CreatureInPlay(
       card: card,
@@ -307,6 +330,9 @@ class CreatureInPlay {
       desmoralizadoMelee: desmoralizadoMelee ?? this.desmoralizadoMelee,
       suprimidoMagico: suprimidoMagico ?? this.suprimidoMagico,
       diseaseStacks: diseaseStacks ?? this.diseaseStacks,
+      permanentAtkBonus: permanentAtkBonus ?? this.permanentAtkBonus,
+      ressureicaoUsed: ressureicaoUsed ?? this.ressureicaoUsed,
+      transformed: transformed ?? this.transformed,
     );
   }
 }

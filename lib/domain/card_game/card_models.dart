@@ -164,6 +164,28 @@ class CreatureCard {
   int get effectiveAtk => cgScaleStat(atk, level);
   int get effectiveHp => cgScaleStat(hp, level);
 
+  CreatureCard copyWith({
+    String? id,
+    String? nome,
+    int? atk,
+    int? hp,
+    DamageType? damageType,
+    List<String>? abilities,
+  }) =>
+      CreatureCard(
+        id: id ?? this.id,
+        nome: nome ?? this.nome,
+        concepts: concepts,
+        cost: cost,
+        atk: atk ?? this.atk,
+        hp: hp ?? this.hp,
+        damageType: damageType ?? this.damageType,
+        rarity: rarity,
+        relicSlots: relicSlots,
+        abilities: abilities ?? this.abilities,
+        level: level,
+      );
+
   CreatureCard withLevel(int newLevel) => CreatureCard(
         id: id,
         nome: nome,

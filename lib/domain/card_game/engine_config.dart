@@ -126,6 +126,32 @@ const int kSuprimirReduction = 1;
 /// — o PV atual encolhe junto). 🎚️
 const int kSurtoMaxHpPerStack = 1;
 
+// ── Lote 5 (exóticas) — magnitudes 🎚️ calibráveis ────────────────────────────
+
+/// Ganho PERMANENTE (todos os ataques + PV máximo) de Andorinha por abate. 🎚️
+const int kAndorinhaGain = 1;
+
+/// Ganho PERMANENTE (todos os ataques + PV máximo) de Crescimento por cura. 🎚️
+const int kCrescimentoGain = 1;
+
+/// Penalidade de ATK da Carta Zumbi ao voltar pra mão enfraquecida. 🎚️
+const int kZumbiAtkPenalty = 1;
+
+/// Penalidade de PV da Carta Zumbi ao voltar pra mão enfraquecida. 🎚️
+const int kZumbiHpPenalty = 1;
+
+/// Fração do PV máximo com que a Ressurreição revive (0..1). 🎚️
+const double kRessurreicaoPercent = 0.5;
+
+/// Limiar de PV (fração do máximo) que dispara a 2ª forma de Transformar. 🎚️
+const double kTransformarTrigger = 0.5;
+
+/// Bônus de ATK (todos os ataques) ao transformar. 🎚️
+const int kTransformarAtkBonus = 2;
+
+/// Bônus de PV máximo ao transformar (cura ao novo máximo). 🎚️
+const int kTransformarHpBonus = 2;
+
 /// Bônus de ataque corpo a corpo de Inspirar (aliados, até o fim do turno). 🎚️
 const int kInspirarBonus = 1;
 

@@ -296,6 +296,38 @@ class CardBattleEngine {
     return s.withSide(side.id, newSide);
   }
 
+  /// Mímico: monta a carta a jogar copiando stats (atk/PV/tipo) e keywords de um
+  /// alvo em jogo. Alvo = `targetId` (aliado ou inimigo), senão o de maior ATK
+  /// em jogo. Mantém id/nome/custo/conceito do mímico. Sem alvo, retorna [mimic].
+  CreatureCard _mimicCard(MatchState s, CreatureCard mimic, String? targetId) {
+    final all = <CreatureInPlay>[
+      ...s.sideA.creaturesInPlay,
+      ...s.sideB.creaturesInPlay,
+    ];
+    CreatureInPlay? target;
+    if (targetId != null) {
+      for (final c in all) {
+        if (c.instanceId == targetId) {
+          target = c;
+          break;
+        }
+      }
+    }
+    if (target == null) {
+      for (final c in all) {
+        if (target == null || c.card.atk > target.card.atk) target = c;
+      }
+    }
+    if (target == null) return mimic; // nada em jogo pra copiar
+    final tc = target.card;
+    return mimic.copyWith(
+      atk: tc.atk,
+      hp: tc.hp,
+      damageType: tc.damageType,
+      abilities: tc.abilities,
+    );
+  }
+
   MatchState _playCreature(MatchState s, PlayCreature a) {
     final side = s.active;
     final idx =
@@ -318,7 +350,14 @@ class CardBattleEngine {
       requested = count; // auto/bot sem lane: encaixa após a última
     }
 
-    final placed = CreatureInPlay(card: card, currentHp: card.hp, lane: 0);
+    // Mímico (Lote 5): ao entrar, copia stats+keywords de um alvo (aliado ou
+    // inimigo). Alvo marcado em `a.mimicTargetId`; sem marca, auto-escolhe o
+    // mais forte em jogo. Sem alvo possível, entra como a própria carta.
+    final isMimic = card.abilities
+        .any((x) => abilityKeywordFromString(x) == AbilityKeyword.mimico);
+    final playCard = isMimic ? _mimicCard(s, card, a.mimicTargetId) : card;
+    final placed =
+        CreatureInPlay(card: playCard, currentHp: playCard.hp, lane: 0);
 
     if (count < kLaneCount) {
       // Há vaga: encaixe front-packed (paga o custo da carta).
@@ -591,6 +630,7 @@ class CardBattleEngine {
     final lanes = List<CreatureInPlay?>.from(side.lanes);
     var anyDeath = false;
     var changed = false;
+    final zombies = <CreatureInPlay>[]; // mortos por DoT com Carta Zumbi
     for (var i = 0; i < lanes.length; i++) {
       final c = lanes[i];
       if (c == null || !c.isAlive || !c.hasDot) continue;
@@ -605,10 +645,16 @@ class CardBattleEngine {
           bleedTurns: newBleedTurns,
           bleedStacks: newBleedTurns == 0 ? 0 : c.bleedStacks,
         );
+        // Transformar: o tick pode derrubar o PV abaixo do limiar.
+        updated = _maybeTransform(updated, side.id, events);
       }
       lanes[i] = updated;
       changed = true;
-      if (lethal.died) anyDeath = true;
+      if (lethal.died) {
+        anyDeath = true;
+        // Carta Zumbi: morto por DoT volta enfraquecido pra mão.
+        zombies.add(c);
+      }
       events.add(StatusDamageResolved(
         side: side.id,
         cardId: c.instanceId,
@@ -623,13 +669,17 @@ class CardBattleEngine {
           side: side.id,
           cardId: c.instanceId,
           cardName: c.card.nome,
-          ability: abilityKeywordLabel(AbilityKeyword.inabalavel),
-          detail: 'resistiu à destruição (DoT) e voltou com vida cheia',
+          ability: abilityKeywordLabel(lethal.revivedBy!),
+          detail: 'resistiu à destruição (DoT) e voltou em jogo',
         ));
       }
     }
     if (!changed) return s;
     var newSide = side.copyWith(lanes: lanes);
+    for (final z in zombies) {
+      final card = _zombieCard(z);
+      if (card != null) newSide = _addZombieToHand(newSide, card, events);
+    }
     if (anyDeath) newSide = _advanceLanes(newSide);
     return s.withSide(side.id, newSide);
   }
@@ -801,19 +851,95 @@ class CardBattleEngine {
   /// (newHp ≤ 0) mas tiver Inabalável ainda não-usado, ela NÃO morre —
   /// ressuscita com vida cheia e marca o uso (1×/partida). Retorna a criatura
   /// resultante (null se morreu de verdade) + se morreu/reviveu.
-  ({CreatureInPlay? creature, bool died, bool revived}) _resolveLethal(
-      CreatureInPlay c, int newHp) {
+  ({CreatureInPlay? creature, bool died, bool revived, AbilityKeyword? revivedBy})
+      _resolveLethal(CreatureInPlay c, int newHp) {
     if (newHp > 0) {
-      return (creature: c.copyWith(currentHp: newHp), died: false, revived: false);
+      return (
+        creature: c.copyWith(currentHp: newHp),
+        died: false,
+        revived: false,
+        revivedBy: null,
+      );
     }
+    // Inabalável: revive com VIDA CHEIA (1×).
     if (c.hasKeyword(AbilityKeyword.inabalavel) && !c.inabalavelUsed) {
       return (
         creature: c.copyWith(currentHp: c.maxHp, inabalavelUsed: true),
         died: false,
         revived: true,
+        revivedBy: AbilityKeyword.inabalavel,
       );
     }
-    return (creature: null, died: true, revived: false);
+    // Ressurreição: revive com PV REDUZIDO (1×). Cede vez à Inabalável acima.
+    if (c.hasKeyword(AbilityKeyword.ressurreicao) && !c.ressureicaoUsed) {
+      final hp = (c.maxHp * kRessurreicaoPercent).floor().clamp(1, c.maxHp);
+      return (
+        creature: c.copyWith(currentHp: hp, ressureicaoUsed: true),
+        died: false,
+        revived: true,
+        revivedBy: AbilityKeyword.ressurreicao,
+      );
+    }
+    return (creature: null, died: true, revived: false, revivedBy: null);
+  }
+
+  /// Transformar: ao cair a ≤ `kTransformarTrigger` do PV máximo (e viva, não
+  /// transformada), ativa a 2ª forma — bônus permanente de ataque + PV máximo,
+  /// curando ao novo máximo. 1×. Aplicada onde a criatura toma dano e sobrevive.
+  CreatureInPlay _maybeTransform(
+      CreatureInPlay c, SideId side, List<MatchEvent> events) {
+    if (!c.isAlive ||
+        c.transformed ||
+        !c.hasKeyword(AbilityKeyword.transformar)) {
+      return c;
+    }
+    if (c.currentHp > (c.maxHp * kTransformarTrigger)) return c;
+    var nc = c.copyWith(
+      permanentAtkBonus: c.permanentAtkBonus + kTransformarAtkBonus,
+      bonusMaxHp: c.bonusMaxHp + kTransformarHpBonus,
+      transformed: true,
+    );
+    nc = nc.copyWith(currentHp: nc.maxHp); // cura ao novo máximo
+    events.add(AbilityTriggered(
+      side: side,
+      cardId: c.instanceId,
+      cardName: c.card.nome,
+      ability: abilityKeywordLabel(AbilityKeyword.transformar),
+      detail: 'ativou a 2ª forma (+$kTransformarAtkBonus ataque, '
+          '+$kTransformarHpBonus PV máximo)',
+    ));
+    return nc;
+  }
+
+  /// Carta Zumbi: ao morrer, devolve a CARTA enfraquecida (−`kZumbiAtkPenalty`
+  /// atk / −`kZumbiHpPenalty` PV) e SEM a keyword Zumbi (1×). null se [c] não é
+  /// Zumbi. (Relíquias são descartadas — a carta volta "nua".)
+  CreatureCard? _zombieCard(CreatureInPlay c) {
+    if (!c.hasKeyword(AbilityKeyword.zumbi)) return null;
+    final base = c.card;
+    final atk = (base.atk - kZumbiAtkPenalty).clamp(0, base.atk);
+    final hp = (base.hp - kZumbiHpPenalty).clamp(1, base.hp);
+    final abilities = base.abilities
+        .where((a) => abilityKeywordFromString(a) != AbilityKeyword.zumbi)
+        .toList(growable: false);
+    return base.copyWith(atk: atk, hp: hp, abilities: abilities);
+  }
+
+  /// Adiciona uma carta à MÃO do lado (ou ao topo do deck se a mão está cheia),
+  /// narrando o retorno do Zumbi.
+  BoardSide _addZombieToHand(
+      BoardSide side, CreatureCard card, List<MatchEvent> events) {
+    events.add(AbilityTriggered(
+      side: side.id,
+      cardId: card.id,
+      cardName: card.nome,
+      ability: abilityKeywordLabel(AbilityKeyword.zumbi),
+      detail: 'voltou pra mão enfraquecida',
+    ));
+    if (side.hand.length < kHandSize) {
+      return side.copyWith(hand: List<Object>.from(side.hand)..add(card));
+    }
+    return side.copyWith(deck: List<Object>.from(side.deck)..insert(0, card));
   }
 
   (BoardSide, BoardSide) _resolveAttack(
@@ -873,8 +999,10 @@ class CardBattleEngine {
         side: defSide.id,
         cardId: target.instanceId,
         cardName: target.card.nome,
-        ability: abilityKeywordLabel(AbilityKeyword.inabalavel),
-        detail: 'resistiu à destruição e voltou com vida cheia',
+        ability: abilityKeywordLabel(lethalT.revivedBy!),
+        detail: lethalT.revivedBy == AbilityKeyword.inabalavel
+            ? 'resistiu à destruição e voltou com vida cheia'
+            : 'ressuscitou com PV reduzido',
       ));
     }
     if (died) anyDeath = true;
@@ -991,6 +1119,9 @@ class CardBattleEngine {
         }
       }
 
+      // ---- Transformar (Lote 5): caiu a ≤ limiar → ativa a 2ª forma ----
+      t = _maybeTransform(t, defSide.id, events);
+
       if (!identical(t, survivor)) {
         defLanes[targetLaneIdx] = t.isAlive ? t : null;
       }
@@ -1023,11 +1154,31 @@ class CardBattleEngine {
       ));
     }
 
+    // Carta Zumbi: se o alvo principal morreu, volta enfraquecido pra mão dele.
+    final mainZombie = died ? _zombieCard(target) : null;
+
     if (died) {
       // Cristal de Drenagem: destruiu com seu ataque (vale também para as
       // mortes por Pisotear/Ataque Duplo abaixo — regra uniforme documentada).
       if (attacker.hasKeyword(AbilityKeyword.cristalDeDrenagem)) {
         gainDrainCrystal(target.card.nome);
+      }
+
+      // Andorinha: ao destruir uma criatura, ganho PERMANENTE (todos os ataques
+      // + PV máximo).
+      if (attacker.hasKeyword(AbilityKeyword.andorinha)) {
+        attacker = attacker.copyWith(
+          permanentAtkBonus: attacker.permanentAtkBonus + kAndorinhaGain,
+          bonusMaxHp: attacker.bonusMaxHp + kAndorinhaGain,
+          currentHp: attacker.currentHp + kAndorinhaGain,
+        );
+        events.add(AbilityTriggered(
+          side: atkSide.id,
+          cardId: attacker.instanceId,
+          cardName: attacker.card.nome,
+          ability: abilityKeywordLabel(AbilityKeyword.andorinha),
+          detail: '+$kAndorinhaGain permanente em ataque e PV máximo',
+        ));
       }
 
       // ---- Pisotear: dano FÍSICO excedente transborda para a próxima
@@ -1172,9 +1323,18 @@ class CardBattleEngine {
       lanes: atkLanes,
       pendingCrystals: atkSide.pendingCrystals + pendingGain,
     );
-    if (attackerDied) newAtkSide = _advanceLanes(newAtkSide);
+    // Carta Zumbi: atacante morto por retaliação (Espinhos/Contra-Ataque) volta
+    // enfraquecido pra mão do dono.
+    if (attackerDied) {
+      final z = _zombieCard(attacker);
+      if (z != null) newAtkSide = _addZombieToHand(newAtkSide, z, events);
+      newAtkSide = _advanceLanes(newAtkSide);
+    }
 
     var newDefSide = defSide.copyWith(lanes: defLanes);
+    if (mainZombie != null) {
+      newDefSide = _addZombieToHand(newDefSide, mainZombie, events);
+    }
     if (anyDeath) newDefSide = _advanceLanes(newDefSide);
 
     return (newAtkSide, newDefSide);
@@ -1325,14 +1485,33 @@ class CardBattleEngine {
       ));
     }
 
-    final newLanes = List<CreatureInPlay?>.from(side.lanes);
-    newLanes[laneIdx] = target.copyWith(
+    var healedC = target.copyWith(
       currentHp: healed,
       bleedStacks: 0,
       bleedTurns: 0,
       poisoned: false,
       diseaseStacks: 0,
     );
+
+    // Crescimento (Lote 5): após ser CURADA, ganho PERMANENTE (todos os ataques
+    // + PV máximo).
+    if (healedC.hasKeyword(AbilityKeyword.crescimento)) {
+      healedC = healedC.copyWith(
+        permanentAtkBonus: healedC.permanentAtkBonus + kCrescimentoGain,
+        bonusMaxHp: healedC.bonusMaxHp + kCrescimentoGain,
+        currentHp: healedC.currentHp + kCrescimentoGain,
+      );
+      events.add(AbilityTriggered(
+        side: side.id,
+        cardId: target.instanceId,
+        cardName: target.card.nome,
+        ability: abilityKeywordLabel(AbilityKeyword.crescimento),
+        detail: '+$kCrescimentoGain permanente em ataque e PV máximo',
+      ));
+    }
+
+    final newLanes = List<CreatureInPlay?>.from(side.lanes);
+    newLanes[laneIdx] = healedC;
     return side.copyWith(lanes: newLanes);
   }
 

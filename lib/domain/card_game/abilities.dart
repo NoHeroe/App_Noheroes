@@ -11,8 +11,9 @@
 /// e o engine as ignora silenciosamente.
 library;
 
-/// As 25 habilidades com runtime no engine (12 originais + 5 do Lote 2 + 4 do
-/// Lote 3a de status/DoT + 4 do Lote 3b de auras/combo Doença-Surto).
+/// As 31 habilidades com runtime no engine (12 originais + 5 do Lote 2 + 4 do
+/// Lote 3a de status/DoT + 4 do Lote 3b de auras/combo Doença-Surto + 6 do
+/// Lote 5 de exóticas).
 enum AbilityKeyword {
   /// Redireciona ataques à distância/mágicos inimigos para esta criatura.
   provocar,
@@ -118,6 +119,32 @@ enum AbilityKeyword {
   /// Ao causar dano físico/verdadeiro a um alvo DOENTE: remove a Doença e reduz
   /// o PV MÁXIMO do alvo (permanente) em acúmulos × 🎚️ `kSurtoMaxHpPerStack`.
   surto,
+
+  // ── Lote 5 (exóticas) ─────────────────────────────────────────────────────
+
+  /// Ao DESTRUIR uma criatura inimiga, ganha 🎚️ `kAndorinhaGain` PERMANENTE em
+  /// TODOS os ataques e no PV máximo.
+  andorinha,
+
+  /// Após ser CURADA, ganha 🎚️ `kCrescimentoGain` PERMANENTE em todos os ataques
+  /// e no PV máximo.
+  crescimento,
+
+  /// Ao ENTRAR em jogo, copia stats (atk/PV/tipo) e keywords de um alvo marcado
+  /// (aliado ou inimigo). Cópia única na entrada.
+  mimico,
+
+  /// Ao morrer, em vez de ir pro cemitério, VOLTA PRA MÃO enfraquecida
+  /// (−🎚️ `kZumbiAtkPenalty` atk / −🎚️ `kZumbiHpPenalty` PV) e sem Zumbi (1×).
+  zumbi,
+
+  /// Auto-revive: se fosse destruída, volta com PV REDUZIDO
+  /// (🎚️ `kRessurreicaoPercent` do máximo). 1×/partida. (Inabalável = vida cheia.)
+  ressurreicao,
+
+  /// Ao cair a 🎚️ `kTransformarTrigger` do PV máximo, ativa a 2ª forma: cura ao
+  /// novo máximo e ganha 🎚️ `kTransformarAtkBonus`/`kTransformarHpBonus`. 1×.
+  transformar,
 }
 
 /// Nome canônico (forma "bonita" com espaço/acento) — usado em eventos
@@ -174,6 +201,18 @@ String abilityKeywordLabel(AbilityKeyword k) {
       return 'Doença';
     case AbilityKeyword.surto:
       return 'Surto';
+    case AbilityKeyword.andorinha:
+      return 'Andorinha';
+    case AbilityKeyword.crescimento:
+      return 'Crescimento';
+    case AbilityKeyword.mimico:
+      return 'Mímico';
+    case AbilityKeyword.zumbi:
+      return 'Carta Zumbi';
+    case AbilityKeyword.ressurreicao:
+      return 'Ressurreição';
+    case AbilityKeyword.transformar:
+      return 'Transformar';
   }
 }
 
@@ -234,4 +273,11 @@ const Map<String, AbilityKeyword> _canonical = {
   'suprimirmagia': AbilityKeyword.suprimirMagia,
   'doenca': AbilityKeyword.doenca,
   'surto': AbilityKeyword.surto,
+  'andorinha': AbilityKeyword.andorinha,
+  'crescimento': AbilityKeyword.crescimento,
+  'mimico': AbilityKeyword.mimico,
+  'cartazumbi': AbilityKeyword.zumbi,
+  'zumbi': AbilityKeyword.zumbi,
+  'ressurreicao': AbilityKeyword.ressurreicao,
+  'transformar': AbilityKeyword.transformar,
 };

@@ -6,14 +6,18 @@ sealed class GameAction {
 }
 
 /// Joga uma criatura do pool pagando seu custo. `lane` opcional: se null, o
-/// engine escolhe a lane livre mais à frente disponível.
+/// engine escolhe a lane livre mais à frente disponível. `mimicTargetId`:
+/// instanceId da criatura (aliada ou inimiga) que um MÍMICO copia ao entrar —
+/// se null e a carta for Mímico, o engine auto-escolhe (mais forte em jogo).
 class PlayCreature extends GameAction {
-  const PlayCreature(this.cardId, {this.lane});
+  const PlayCreature(this.cardId, {this.lane, this.mimicTargetId});
   final String cardId;
   final int? lane;
+  final String? mimicTargetId;
 
   @override
-  String toString() => 'PlayCreature($cardId, lane=$lane)';
+  String toString() =>
+      'PlayCreature($cardId, lane=$lane${mimicTargetId != null ? ', mimic=$mimicTargetId' : ''})';
 }
 
 /// Equipa uma relíquia do pool numa criatura PRÓPRIA do mesmo conceito.
