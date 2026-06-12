@@ -10,6 +10,7 @@ import 'abilities.dart';
 import 'card_models.dart';
 import 'engine_config.dart';
 import 'game_action.dart';
+import 'hero.dart';
 import 'match_events.dart';
 import 'match_state.dart';
 
@@ -22,13 +23,14 @@ class CardBattleEngine {
 
   /// Cria a partida: moeda (rng) decide quem começa; aplica o início de turno
   /// do lado ativo (+cristais). Fase resultante = `jogo`.
-  MatchState start(CardLoadout a, CardLoadout b, {int seed = 0}) {
+  MatchState start(CardLoadout a, CardLoadout b,
+      {int seed = 0, HeroId? heroA, HeroId? heroB}) {
     final rng = Random(seed);
     final starter = rng.nextBool() ? SideId.a : SideId.b;
 
     var state = MatchState(
-      sideA: BoardSide.initial(SideId.a, a, rng),
-      sideB: BoardSide.initial(SideId.b, b, rng),
+      sideA: BoardSide.initial(SideId.a, a, rng, heroA),
+      sideB: BoardSide.initial(SideId.b, b, rng, heroB),
       activeSide: starter,
       turn: 1,
       phase: MatchPhase.jogo,
@@ -291,8 +293,47 @@ class CardBattleEngine {
         return _swapPosition(s, action);
       case DrawCard():
         return _drawCardPaid(s);
+      case UseHeroActive():
+        return _useHeroActive(s);
       case Pass():
         return s; // no-op: fim da sequência é sinalizado via endTurn.
+    }
+  }
+
+  /// Ativa do herói (ADR-0028), 1×/partida. Despacha por herói. Fase B implementa
+  /// as ativas só-engine (Trapaceiro, Assassino); as que dependem de UI/cartas
+  /// novas (Cartomante recuar, Oráculo, Coringa) ficam para a Fase C e NÃO
+  /// consomem o uso (retornam estado inalterado).
+  MatchState _useHeroActive(MatchState s) {
+    final side = s.active;
+    if (side.heroId == null || side.heroActiveUsed) return s;
+    final opp = s.opponent;
+    switch (side.heroId!) {
+      case HeroId.trapaceiro:
+        // Rouba kTrapaceiroSteal cristais do oponente (clamp ao que ele tem).
+        final stolen =
+            opp.crystals < kTrapaceiroSteal ? opp.crystals : kTrapaceiroSteal;
+        final ns = side.copyWith(
+            crystals: side.crystals + stolen, heroActiveUsed: true);
+        final no = opp.copyWith(crystals: opp.crystals - stolen);
+        return s.withSide(side.id, ns).withSide(opp.id, no);
+      case HeroId.assassino:
+        // Mata 1 carta aleatória do DECK do oponente → cemitério dele.
+        var ns = side.copyWith(heroActiveUsed: true);
+        var st = s.withSide(side.id, ns);
+        if (opp.deck.isNotEmpty) {
+          final deck = List<Object>.from(opp.deck);
+          final killed = deck.removeAt(s.rng.nextInt(deck.length));
+          final no = opp.copyWith(
+              deck: deck,
+              graveyard: List<Object>.from(opp.graveyard)..add(killed));
+          st = st.withSide(opp.id, no);
+        }
+        return st;
+      case HeroId.cartomante:
+      case HeroId.oraculo:
+      case HeroId.coringa:
+        return s; // Fase C — não consome o uso ainda.
     }
   }
 
@@ -1634,6 +1675,11 @@ class CardBattleEngine {
   /// por seed).
   bool _rollEvade(MatchState s, CreatureInPlay attacker, CreatureInPlay target,
       DamageType type) {
+    // Esquiva (herói/ADR-0028): evade QUALQUER tipo de ataque (independe de Voo).
+    if (target.hasKeyword(AbilityKeyword.esquiva) &&
+        s.rng.nextDouble() < kEsquivaChance) {
+      return true;
+    }
     if (!target.canFly) return false; // sem Voo ou enredada (Voo removido).
     // Anti-Aéreo: os ataques do atacante NÃO ativam o Voo do alvo.
     if (attacker.hasKeyword(AbilityKeyword.antiAereo)) return false;

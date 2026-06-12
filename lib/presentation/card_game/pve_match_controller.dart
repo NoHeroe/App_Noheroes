@@ -618,6 +618,8 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
         return 'A IA reposicionou uma criatura.';
       case DrawCard():
         return 'A IA comprou uma carta (−$kExtraDrawCost cristal).';
+      case UseHeroActive():
+        return 'A IA usou a habilidade do herói.';
       case Pass():
         return 'A IA passou.';
     }

@@ -191,6 +191,14 @@ const int kQuebraArmaduraBonus = 1;
 /// Acúmulos de Doença que Névoa Tóxica aplica a todos os inimigos por turno. 🎚️
 const int kNevoaToxicaStacks = 1;
 
+// ── Heróis (ADR-0028) — magnitudes 🎚️ ────────────────────────────────────────
+
+/// Chance de Esquiva evadir QUALQUER tipo de ataque (0..1). 🎚️
+const double kEsquivaChance = 0.5;
+
+/// Cristais que o Trapaceiro ROUBA do oponente na ativa. 🎚️
+const int kTrapaceiroSteal = 2;
+
 /// Bônus de ataque corpo a corpo de Inspirar (aliados, até o fim do turno). 🎚️
 const int kInspirarBonus = 1;
 

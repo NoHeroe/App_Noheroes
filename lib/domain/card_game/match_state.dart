@@ -10,6 +10,7 @@ import 'dart:math';
 import 'abilities.dart';
 import 'card_models.dart';
 import 'engine_config.dart';
+import 'hero.dart';
 import 'match_events.dart';
 
 /// Fase atual da partida.
@@ -404,6 +405,8 @@ class BoardSide {
     required this.sacrificedThisTurn,
     this.pendingCrystals = 0,
     this.graveyard = const <Object>[],
+    this.heroId,
+    this.heroActiveUsed = false,
   });
 
   final SideId id;
@@ -431,6 +434,12 @@ class BoardSide {
   /// CEMITÉRIO (ADR-0028): cartas que MORRERAM em combate ou foram DESCARTADAS
   /// (sacrifício, penalidade, etc.). Fonte para efeitos (reanimação, Assassino).
   final List<Object> graveyard;
+
+  /// HERÓI representante deste lado (ADR-0028). null = sem herói (compat).
+  final HeroId? heroId;
+
+  /// A ativa do herói (1×/partida) já foi usada?
+  final bool heroActiveUsed;
 
   /// Criaturas vivas no tabuleiro, em ordem de lane (frente→retaguarda).
   List<CreatureInPlay> get creaturesInPlay {
@@ -498,6 +507,8 @@ class BoardSide {
     bool? sacrificedThisTurn,
     int? pendingCrystals,
     List<Object>? graveyard,
+    HeroId? heroId,
+    bool? heroActiveUsed,
   }) {
     return BoardSide(
       id: id,
@@ -508,6 +519,8 @@ class BoardSide {
       sacrificedThisTurn: sacrificedThisTurn ?? this.sacrificedThisTurn,
       pendingCrystals: pendingCrystals ?? this.pendingCrystals,
       graveyard: graveyard ?? this.graveyard,
+      heroId: heroId ?? this.heroId,
+      heroActiveUsed: heroActiveUsed ?? this.heroActiveUsed,
     );
   }
 
@@ -515,7 +528,8 @@ class BoardSide {
   /// cartas, **garantindo `kInitialHandCreatures` criaturas** + o resto
   /// aleatório. Com [rng] embaralha determinístico por seed; sem rng mantém a
   /// ordem do loadout (testes controlados).
-  static BoardSide initial(SideId id, CardLoadout loadout, [Random? rng]) {
+  static BoardSide initial(SideId id, CardLoadout loadout,
+      [Random? rng, HeroId? heroId]) {
     final pile = <Object>[...loadout.creatures, ...loadout.relics];
     if (rng != null) pile.shuffle(rng);
 
@@ -542,6 +556,7 @@ class BoardSide {
       hand: hand,
       deck: deck,
       sacrificedThisTurn: false,
+      heroId: heroId,
     );
   }
 }

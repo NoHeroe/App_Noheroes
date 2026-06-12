@@ -73,6 +73,16 @@ class DrawCard extends GameAction {
   String toString() => 'DrawCard()';
 }
 
+/// Usa a ATIVA do herói representante do lado (ADR-0028), 1×/partida. O efeito
+/// depende do herói (despachado no engine). No-op se não há herói, se já foi
+/// usada, ou se o herói ainda não tem ativa implementada.
+class UseHeroActive extends GameAction {
+  const UseHeroActive();
+
+  @override
+  String toString() => 'UseHeroActive()';
+}
+
 /// Encerra a Fase de Jogo do lado ativo (sinaliza fim da sequência de ações).
 class Pass extends GameAction {
   const Pass();

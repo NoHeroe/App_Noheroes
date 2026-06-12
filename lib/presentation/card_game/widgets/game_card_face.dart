@@ -440,6 +440,8 @@ IconData keywordIcon(AbilityKeyword k) {
       return Icons.bubble_chart;
     case AbilityKeyword.nevoaToxica:
       return Icons.cloud_queue;
+    case AbilityKeyword.esquiva:
+      return Icons.directions_run;
   }
 }
 
@@ -535,6 +537,8 @@ String keywordDescription(AbilityKeyword k) {
       return 'Dano mágico excedente transborda na próxima criatura.';
     case AbilityKeyword.nevoaToxica:
       return 'No início do turno, adoece todos os inimigos.';
+    case AbilityKeyword.esquiva:
+      return 'Evade qualquer tipo de ataque (chance).';
   }
 }
 

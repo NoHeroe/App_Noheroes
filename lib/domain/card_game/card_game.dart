@@ -6,5 +6,6 @@ export 'card_battle_engine.dart';
 export 'card_models.dart';
 export 'engine_config.dart';
 export 'game_action.dart';
+export 'hero.dart';
 export 'match_events.dart';
 export 'match_state.dart';

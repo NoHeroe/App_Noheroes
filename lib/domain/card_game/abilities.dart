@@ -11,9 +11,9 @@
 /// e o engine as ignora silenciosamente.
 library;
 
-/// As 44 habilidades com runtime no engine (12 originais + 5 do Lote 2 + 4 do
+/// As 45 habilidades com runtime no engine (12 originais + 5 do Lote 2 + 4 do
 /// Lote 3a + 4 do Lote 3b + 6 do Lote 5 + Reflexo Mágico + 6 do Lote 6 +
-/// 6 do Lote 7).
+/// 6 do Lote 7 + Esquiva dos heróis).
 enum AbilityKeyword {
   /// Redireciona ataques à distância/mágicos inimigos para esta criatura.
   provocar,
@@ -195,6 +195,13 @@ enum AbilityKeyword {
   /// No início do turno do dono, aplica 🎚️ `kNevoaToxicaStacks` acúmulo(s) de
   /// Doença a TODOS os inimigos.
   nevoaToxica,
+
+  // ── Heróis (ADR-0028) ─────────────────────────────────────────────────────
+
+  /// Evasão AMPLA: evade QUALQUER tipo de ataque com 🎚️ `kEsquivaChance` (≠ Voo,
+  /// que é por tipo). Não evita DoTs já ativos (Sangramento/Veneno/Doença). O
+  /// Assassino concede uma Esquiva temporária de 100% (ver herói).
+  esquiva,
 }
 
 /// Nome canônico (forma "bonita" com espaço/acento) — usado em eventos
@@ -289,6 +296,8 @@ String abilityKeywordLabel(AbilityKeyword k) {
       return 'Explosão Mágica';
     case AbilityKeyword.nevoaToxica:
       return 'Névoa Tóxica';
+    case AbilityKeyword.esquiva:
+      return 'Esquiva';
   }
 }
 
@@ -371,4 +380,5 @@ const Map<String, AbilityKeyword> _canonical = {
   'quebraarmadura': AbilityKeyword.quebraArmadura,
   'explosaomagica': AbilityKeyword.explosaoMagica,
   'nevoatoxica': AbilityKeyword.nevoaToxica,
+  'esquiva': AbilityKeyword.esquiva,
 };

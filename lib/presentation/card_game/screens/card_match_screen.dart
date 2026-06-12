@@ -899,6 +899,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       AbilityKeyword.encantarArmadura,
       AbilityKeyword.espinhoDeEscudo,
       AbilityKeyword.nevoa,
+      AbilityKeyword.esquiva,
     ];
     const status = [
       AbilityKeyword.sangramento,
