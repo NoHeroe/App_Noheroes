@@ -159,16 +159,25 @@ class _PackRevealOverlayState extends State<PackRevealOverlay> {
           _novaBadge(),
           const SizedBox(height: 10),
         ],
-        GameCardFace(
-          name: _nameOf(entry.card),
-          cost: _costOf(entry.card),
-          concepts: _conceptsOf(entry.card),
-          rarity: _rarityOf(entry.card),
-          artIcon: _artIconOf(entry.card),
-          effects: _effectsOf(entry.card),
-          footer: _footerOf(entry.card),
+        // ALTURA LIMITADA obrigatória: a GameCardFace usa Column+Expanded, que
+        // não se mede em altura ilimitada (o Center daqui é unbounded). Sem isto
+        // a carta não renderiza e o erro de layout mata o toque de avançar — daí
+        // o bug "as cartas não aparecem / não avança". Mesmo aspect ratio (0.62)
+        // do grid de resumo.
+        SizedBox(
           width: width,
-          glowColor: glow.withValues(alpha: 0.5),
+          height: width / 0.62,
+          child: GameCardFace(
+            name: _nameOf(entry.card),
+            cost: _costOf(entry.card),
+            concepts: _conceptsOf(entry.card),
+            rarity: _rarityOf(entry.card),
+            artIcon: _artIconOf(entry.card),
+            effects: _effectsOf(entry.card),
+            footer: _footerOf(entry.card),
+            width: width,
+            glowColor: glow.withValues(alpha: 0.5),
+          ),
         ),
         const SizedBox(height: 12),
         Text(

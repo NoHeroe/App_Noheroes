@@ -203,6 +203,12 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
       });
       // Revelação em tela cheia (Clash Royale): carta a carta + PULAR.
       await PackRevealOverlay.show(context, entries);
+      // O overlay já mostrou tudo; limpa o reveal inline (fallback) pra ele não
+      // ficar sobrando atrás. Se entries veio vazio (catálogo sem match), mantém
+      // o reveal inline em lista como degradação.
+      if (entries.isNotEmpty && mounted) {
+        setState(() => _reveal = null);
+      }
     } catch (e) {
       _snack('Erro de rede. Tente novamente.');
     } finally {
