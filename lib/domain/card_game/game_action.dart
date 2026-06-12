@@ -83,6 +83,31 @@ class UseHeroActive extends GameAction {
   String toString() => 'UseHeroActive()';
 }
 
+/// Reposiciona 1 carta dentro do topo (`kOraculoPeekCount`) do DECK — passiva da
+/// Oráculo (ADR-0028). Move a carta do índice [from] para [to] (ambos no topo).
+/// `from == to` ou índices fora do topo = só limpa o peek pendente (pular).
+/// No-op se não há peek pendente.
+class ReorderDeck extends GameAction {
+  const ReorderDeck(this.from, this.to);
+  final int from;
+  final int to;
+
+  @override
+  String toString() => 'ReorderDeck($from -> $to)';
+}
+
+/// ATIVA da Oráculo (ADR-0028), 1×/partida. A revelação do deck+mão do oponente
+/// é feita na UI; esta ação aplica a ESCOLHA: se [shuffle], embaralha a mão do
+/// oponente de volta no deck e ele recompra a mesma quantidade (você ganha
+/// `kOraculoShuffleCrystals`); senão, você ganha `kOraculoKeepCrystals`.
+class OraculoActive extends GameAction {
+  const OraculoActive(this.shuffle);
+  final bool shuffle;
+
+  @override
+  String toString() => 'OraculoActive(shuffle=$shuffle)';
+}
+
 /// Encerra a Fase de Jogo do lado ativo (sinaliza fim da sequência de ações).
 class Pass extends GameAction {
   const Pass();

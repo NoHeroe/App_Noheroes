@@ -47,6 +47,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   CardLoadout? _botLoadout;
   HeroId? _playerHero; // ADR-0028: herói do jogador (prefs) e do bot (aleatório).
   HeroId? _botHero;
+  Object? _bonusCard; // ADR-0028 Fase C: carta-bônus do Cartomante (montagem).
 
   // Recompensa de partida (ponto #1): concedida 1× ao terminar; exibida no
   // overlay de fim. `_rewardRequested` evita conceder de novo no rebuild.
@@ -61,6 +62,10 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   // Mímico (Lote 5): criatura (aliada OU inimiga) marcada pra copiar ao jogar um
   // Mímico da mão. Toca-se a criatura pra marcar; depois toca-se a lane pra jogar.
   String? _mimicTargetId;
+
+  // Oráculo (ADR-0028 Fase C): guarda de reentrância do diálogo de peek
+  // (passiva "espiar/reordenar"), pra não abrir duas vezes na mesma vez.
+  bool _peekDialogOpen = false;
 
   /// A carta selecionada da mão é um Mímico (criatura com a keyword)?
   bool _selectedIsMimic(PveMatchUiState ui) {
@@ -112,6 +117,29 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       // ADR-0028: herói do jogador (prefs) + herói aleatório pro bot.
       _playerHero = await CardHeroPrefs.get();
       _botHero = HeroId.values[math.Random().nextInt(HeroId.values.length)];
+      // Cartomante (Fase C): resolve a carta-bônus escolhida na montagem.
+      _bonusCard = null;
+      if (_playerHero == HeroId.cartomante) {
+        final bonusId = await CardHeroPrefs.getBonusCardId();
+        if (bonusId != null) {
+          Object? found;
+          for (final c in catalog.creatures) {
+            if (c.id == bonusId) {
+              found = c;
+              break;
+            }
+          }
+          if (found == null) {
+            for (final r in catalog.relics) {
+              if (r.id == bonusId) {
+                found = r;
+                break;
+              }
+            }
+          }
+          _bonusCard = found;
+        }
+      }
       if (!mounted) return;
       setState(() => _boot = _BootStatus.ready);
       _startMatch();
@@ -143,6 +171,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
           seed: seed,
           heroA: _playerHero,
           heroB: _botHero,
+          bonusCardA: _bonusCard,
         );
   }
 
@@ -315,31 +344,44 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   /// Recuar uma criatura própria pra mão (custo kReturnVoluntaryCost; não
   /// encerra a vez). Confirma antes; avisa se faltam cristais.
   Future<void> _confirmReturnToHand(CreatureInPlay c) async {
-    final crystals =
-        ref.read(pveMatchControllerProvider).playerBoard?.crystals ?? 0;
-    if (crystals < kReturnVoluntaryCost) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          duration: const Duration(milliseconds: 1400),
-          backgroundColor: AppColors.surfaceVeil,
-          content: Text(
-            'Cristais insuficientes para recuar (precisa de $kReturnVoluntaryCost).',
-            style: GoogleFonts.roboto(color: AppColors.textPrimary, fontSize: 12),
-          ),
-        ));
-      }
+    final board = ref.read(pveMatchControllerProvider).playerBoard;
+    final crystals = board?.crystals ?? 0;
+    // Cartomante (ADR-0028 Fase C): a ativa concede 1 recuo GRÁTIS (custo 0),
+    // honrando o teto da mão.
+    final free = board?.freeRecuoPending ?? false;
+    if (free && (board?.hand.length ?? 0) >= kHandSize) {
+      _toast('Mão cheia: não dá pra recuar agora (teto de $kHandSize).');
+      return;
+    }
+    if (!free && crystals < kReturnVoluntaryCost) {
+      _toast('Cristais insuficientes para recuar (precisa de '
+          '$kReturnVoluntaryCost).');
       return;
     }
     final ok = await _confirmDialog(
-      title: 'Recuar pra mão?',
-      message: '${c.card.nome} volta pra sua mão por $kReturnVoluntaryCost '
-          'cristais. Relíquias equipadas são descartadas.',
+      title: free ? 'Recuar de graça?' : 'Recuar pra mão?',
+      message: free
+          ? '${c.card.nome} volta pra sua mão SEM custo (Cartomante). '
+              'Relíquias equipadas são descartadas.'
+          : '${c.card.nome} volta pra sua mão por $kReturnVoluntaryCost '
+              'cristais. Relíquias equipadas são descartadas.',
       confirmLabel: 'Recuar',
       confirmColor: AppColors.mp,
     );
     if (ok == true) {
       ref.read(pveMatchControllerProvider.notifier).returnToHand(c.instanceId);
     }
+  }
+
+  /// Toast curto reaproveitável (avisos de ação).
+  void _toast(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: const Duration(milliseconds: 1600),
+      backgroundColor: AppColors.surfaceVeil,
+      content: Text(message,
+          style: GoogleFonts.roboto(color: AppColors.textPrimary, fontSize: 12)),
+    ));
   }
 
   Future<bool?> _confirmDialog({
@@ -426,6 +468,21 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   @override
   Widget build(BuildContext context) {
     final ui = ref.watch(pveMatchControllerProvider);
+
+    // Oráculo (ADR-0028): quando a passiva arma o peek e é a vez do jogador,
+    // abre o diálogo de espiar/reordenar (pós-frame, guard contra reentrância).
+    ref.listen<PveMatchUiState>(pveMatchControllerProvider, (prev, next) {
+      if (next.phase == PveMatchPhase.playerTurn &&
+          next.playerBoard?.heroId == HeroId.oraculo &&
+          (next.playerBoard?.oraculoPeekPending ?? false) &&
+          !_peekDialogOpen) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || _peekDialogOpen) return;
+          final pb = ref.read(pveMatchControllerProvider).playerBoard;
+          if (pb != null && pb.oraculoPeekPending) _showOraculoPeekDialog(pb);
+        });
+      }
+    });
 
     // Concede a recompensa 1× quando a partida termina (pós-frame pra não
     // mutar provider durante o build).
@@ -681,9 +738,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     return Opacity(
       opacity: enabled ? 1 : 0.4,
       child: GestureDetector(
-        onTap: enabled
-            ? () => ref.read(pveMatchControllerProvider.notifier).useHeroActive()
-            : null,
+        onTap: enabled ? () => _onHeroTap(player) : null,
         behavior: HitTestBehavior.opaque,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -712,6 +767,226 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         ),
       ),
     );
+  }
+
+  /// Despacha a ATIVA do herói por tipo (ADR-0028 Fase C). Oráculo abre o
+  /// diálogo de espreita (escolha embaralhar/não); Cartomante usa a ativa e,
+  /// se habilitar o recuo grátis, avisa o jogador; os demais usam direto.
+  Future<void> _onHeroTap(BoardSide player) async {
+    final controller = ref.read(pveMatchControllerProvider.notifier);
+    switch (player.heroId!) {
+      case HeroId.oraculo:
+        await _oraculoRevealDialog(player);
+        return;
+      case HeroId.cartomante:
+        final ok = controller.useHeroActive();
+        if (ok) {
+          final after = ref.read(pveMatchControllerProvider).playerBoard;
+          if (after?.freeRecuoPending ?? false) {
+            _toast('Cartomante: toque 2× numa criatura sua para recuá-la de '
+                'graça (ou ignore).');
+          }
+        }
+        return;
+      case HeroId.trapaceiro:
+      case HeroId.assassino:
+      case HeroId.coringa:
+        controller.useHeroActive();
+        return;
+    }
+  }
+
+  /// ATIVA da Oráculo (ADR-0028): revela mão+baralho do oponente e oferece
+  /// embaralhar (+`kOraculoShuffleCrystals`) ou manter (+`kOraculoKeepCrystals`).
+  Future<void> _oraculoRevealDialog(BoardSide player) async {
+    final opp = ref.read(pveMatchControllerProvider).botBoard;
+    if (opp == null) return;
+    final choice = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceAlt,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: AppColors.border),
+        ),
+        title: Text('Oráculo — espreita o oponente',
+            style: GoogleFonts.cinzelDecorative(
+                fontSize: 15, color: AppColors.textPrimary)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _revealSection('Mão do oponente (${opp.hand.length})', opp.hand),
+                const SizedBox(height: 10),
+                _revealSection(
+                    'Baralho (${opp.deck.length}) — ordem de compra', opp.deck),
+                const SizedBox(height: 10),
+                Text(
+                  'Embaralhar devolve a mão dele ao deck e ele recompra a mesma '
+                  'quantidade.',
+                  style: GoogleFonts.roboto(
+                      fontSize: 11, color: AppColors.textMuted, height: 1.3),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(null),
+            child: Text('Voltar',
+                style: GoogleFonts.roboto(color: AppColors.textMuted)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('Manter (+$kOraculoKeepCrystals 💎)',
+                style: GoogleFonts.roboto(
+                    color: AppColors.gold, fontWeight: FontWeight.w600)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text('Embaralhar (+$kOraculoShuffleCrystals 💎)',
+                style: GoogleFonts.roboto(
+                    color: AppColors.purpleLight, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+    if (choice == null || !mounted) return;
+    ref.read(pveMatchControllerProvider.notifier).useOraculoActive(choice);
+  }
+
+  Widget _revealSection(String title, List<Object> cards) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title,
+            style: GoogleFonts.robotoMono(
+                fontSize: 11, color: AppColors.purpleLight)),
+        const SizedBox(height: 4),
+        if (cards.isEmpty)
+          Text('— vazio —',
+              style:
+                  GoogleFonts.roboto(fontSize: 12, color: AppColors.textMuted))
+        else
+          ...cards.map((c) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 1),
+                child: Text('• ${_objName(c)}',
+                    style: GoogleFonts.roboto(
+                        fontSize: 12, color: AppColors.textSecondary)),
+              )),
+      ],
+    );
+  }
+
+  /// PASSIVA da Oráculo (ADR-0028): diálogo de espiar as próximas
+  /// `kOraculoPeekCount` cartas do próprio deck e mover 1 pra qualquer posição.
+  /// 1º toque escolhe a carta; 2º toque escolhe o destino. "Manter ordem" pula.
+  Future<void> _showOraculoPeekDialog(BoardSide player) async {
+    if (_peekDialogOpen) return;
+    _peekDialogOpen = true;
+    final deck = player.deck;
+    final n = deck.length < kOraculoPeekCount ? deck.length : kOraculoPeekCount;
+    final cards = deck.sublist(0, n);
+    final controller = ref.read(pveMatchControllerProvider.notifier);
+    int? from;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          backgroundColor: AppColors.surfaceAlt,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: const BorderSide(color: AppColors.border),
+          ),
+          title: Text('Oráculo — próximas $n cartas',
+              style: GoogleFonts.cinzelDecorative(
+                  fontSize: 15, color: AppColors.textPrimary)),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  from == null
+                      ? 'Toque numa carta para movê-la.'
+                      : 'Agora toque na posição de destino.',
+                  style: GoogleFonts.roboto(
+                      fontSize: 12, color: AppColors.textMuted),
+                ),
+                const SizedBox(height: 8),
+                ...List.generate(n, (i) {
+                  final selected = from == i;
+                  return GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      if (from == null) {
+                        setLocal(() => from = i);
+                      } else {
+                        final f = from!;
+                        Navigator.of(ctx).pop();
+                        controller.reorderDeck(f, i);
+                      }
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 2),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: selected
+                            ? const Color(0xFF3A2E55)
+                            : const Color(0xFF221A33),
+                        border: Border.all(
+                            color:
+                                selected ? AppColors.gold : AppColors.border),
+                      ),
+                      child: Row(
+                        children: [
+                          Text('${i + 1}.',
+                              style: GoogleFonts.robotoMono(
+                                  fontSize: 12, color: AppColors.purpleLight)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(_objName(cards[i]),
+                                style: GoogleFonts.roboto(
+                                    fontSize: 12.5,
+                                    color: AppColors.textPrimary)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                controller.reorderDeck(0, 0); // manter ordem (limpa o peek)
+              },
+              child: Text('Manter ordem',
+                  style: GoogleFonts.roboto(color: AppColors.textSecondary)),
+            ),
+          ],
+        ),
+      ),
+    );
+    _peekDialogOpen = false;
+  }
+
+  /// Nome exibível de uma carta (criatura/relíquia) da mão/deck.
+  String _objName(Object o) {
+    if (o is CreatureCard) return o.nome;
+    if (o is RelicCard) return o.nome;
+    return cardId(o);
   }
 
   /// Botão de COMPRA EXTRA de carta (ADR-0028): paga 1 cristal, +1 carta.

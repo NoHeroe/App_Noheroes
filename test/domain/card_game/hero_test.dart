@@ -253,6 +253,194 @@ void main() {
       expect(hitSeed, greaterThanOrEqualTo(0));
     });
 
+    test('Cartomante PASSIVA: carta-bônus entra no topo do deck após o turno 4',
+        () {
+      final bonus = creature(id: 'bonus_x', atk: 9, hp: 9);
+      final a0 = BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(1));
+      final a = a0.copyWith(
+        heroId: HeroId.cartomante,
+        bonusCard: bonus,
+        hand: a0.hand.sublist(0, 2), // espaço pra compra grátis puxar o bônus
+        deck: <Object>[...a0.hand.sublist(2), ...a0.deck],
+      );
+      final b = BoardSide.initial(SideId.b, makeLoadout(prefix: 'B'), makeRng(2))
+          .copyWith(lanes: [_inPlay(id: 'bg', atk: 0, hp: 10), null, null]);
+      // Ativo = B, turno 4: ao encerrar, vira 5 e roda o _beginTurn de A.
+      final s = MatchState(
+        sideA: a,
+        sideB: b,
+        activeSide: SideId.b,
+        turn: 4,
+        phase: MatchPhase.jogo,
+        rng: makeRng(3),
+      );
+      final after = engine.endTurn(s);
+      expect(after.sideA.bonusInjected, isTrue);
+      expect(
+        after.sideA.hand.whereType<CreatureCard>().any((c) => c.id == 'bonus_x'),
+        isTrue,
+        reason: 'bônus no topo do deck → puxado pela compra grátis do turno 5',
+      );
+    });
+
+    test('Cartomante PASSIVA: bônus NÃO entra antes/igual ao turno 4', () {
+      final bonus = creature(id: 'bonus_y', atk: 9, hp: 9);
+      final a0 = BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(1));
+      final a = a0.copyWith(
+        heroId: HeroId.cartomante,
+        bonusCard: bonus,
+        hand: a0.hand.sublist(0, 2),
+        deck: <Object>[...a0.hand.sublist(2), ...a0.deck],
+      );
+      final b = BoardSide.initial(SideId.b, makeLoadout(prefix: 'B'), makeRng(2))
+          .copyWith(lanes: [_inPlay(id: 'bg', atk: 0, hp: 10), null, null]);
+      // Ativo = B, turno 3 → vira 4 (não > 4): bônus ainda não entra.
+      final s = MatchState(
+        sideA: a,
+        sideB: b,
+        activeSide: SideId.b,
+        turn: 3,
+        phase: MatchPhase.jogo,
+        rng: makeRng(3),
+      );
+      final after = engine.endTurn(s);
+      expect(after.sideA.bonusInjected, isFalse);
+      expect(
+        after.sideA.hand.whereType<CreatureCard>().any((c) => c.id == 'bonus_y'),
+        isFalse,
+      );
+    });
+
+    test('Cartomante ATIVA: puxa 2 cartas e habilita 1 recuo GRÁTIS', () {
+      final a0 = BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(1));
+      final a = a0.copyWith(
+        heroId: HeroId.cartomante,
+        crystals: 0, // sem cristais: prova que o recuo do Cartomante é grátis
+        hand: a0.hand.sublist(0, 1), // espaço pra puxar 2
+        deck: <Object>[...a0.hand.sublist(1), ...a0.deck],
+        lanes: [_inPlay(id: 'mycreat', atk: 2, hp: 5), null, null],
+      );
+      final s = MatchState(
+        sideA: a,
+        sideB: BoardSide.initial(SideId.b, makeLoadout(prefix: 'B'), makeRng(2)),
+        activeSide: SideId.a,
+        turn: 2,
+        phase: MatchPhase.jogo,
+        rng: makeRng(3),
+      );
+      final afterActive = engine.apply(s, const UseHeroActive());
+      expect(afterActive.sideA.hand.length, 1 + kCartomanteDrawCount);
+      expect(afterActive.sideA.heroActiveUsed, isTrue);
+      expect(afterActive.sideA.freeRecuoPending, isTrue);
+      // Recuo grátis: a criatura volta pra mão sem gastar cristal (tinha 0).
+      final afterRecuo = engine.apply(afterActive, const ReturnToHand('mycreat'));
+      expect(afterRecuo.sideA.crystals, 0);
+      expect(afterRecuo.sideA.freeRecuoPending, isFalse);
+      expect(
+        afterRecuo.sideA.creaturesInPlay.any((c) => c.instanceId == 'mycreat'),
+        isFalse,
+      );
+      expect(
+        afterRecuo.sideA.hand
+            .whereType<CreatureCard>()
+            .any((c) => c.id == 'mycreat'),
+        isTrue,
+      );
+    });
+
+    test('Oráculo PASSIVA: dispara o peek no início do turno', () {
+      var hitSeed = -1;
+      for (var seed = 0; seed < 300; seed++) {
+        final a = BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(seed))
+            .copyWith(heroId: HeroId.oraculo);
+        final b = BoardSide.initial(SideId.b, makeLoadout(prefix: 'B'), makeRng(seed + 1))
+            .copyWith(lanes: [_inPlay(id: 'bg', atk: 0, hp: 10), null, null]);
+        final s = MatchState(
+          sideA: a,
+          sideB: b,
+          activeSide: SideId.b, // ao encerrar, roda o _beginTurn de A (oráculo)
+          turn: 2,
+          phase: MatchPhase.jogo,
+          rng: makeRng(seed),
+        );
+        final after = engine.endTurn(s);
+        if (after.sideA.oraculoPeekPending) {
+          hitSeed = seed;
+          break;
+        }
+      }
+      expect(hitSeed, greaterThanOrEqualTo(0));
+    });
+
+    test('Oráculo ReorderDeck: move a carta do topo-5 e limpa o pending', () {
+      final a0 = BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(1));
+      final a = a0.copyWith(heroId: HeroId.oraculo, oraculoPeekPending: true);
+      final s = MatchState(
+        sideA: a,
+        sideB: BoardSide.initial(SideId.b, makeLoadout(prefix: 'B'), makeRng(2)),
+        activeSide: SideId.a,
+        turn: 2,
+        phase: MatchPhase.jogo,
+        rng: makeRng(3),
+      );
+      final third = a.deck[2];
+      final after = engine.apply(s, const ReorderDeck(2, 0));
+      expect(after.sideA.oraculoPeekPending, isFalse);
+      expect(identical(after.sideA.deck.first, third), isTrue);
+    });
+
+    test('Oráculo ReorderDeck sem peek pendente: no-op', () {
+      final a = BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(1))
+          .copyWith(heroId: HeroId.oraculo); // peek = false
+      final s = MatchState(
+        sideA: a,
+        sideB: BoardSide.initial(SideId.b, makeLoadout(prefix: 'B'), makeRng(2)),
+        activeSide: SideId.a,
+        turn: 2,
+        phase: MatchPhase.jogo,
+        rng: makeRng(3),
+      );
+      final after = engine.apply(s, const ReorderDeck(2, 0));
+      expect(identical(after, s), isTrue);
+    });
+
+    test('Oráculo ATIVA (embaralhar): mão do oponente recompra; +1 cristal', () {
+      final a = BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(1))
+          .copyWith(heroId: HeroId.oraculo, crystals: 2);
+      final b = BoardSide.initial(SideId.b, makeLoadout(prefix: 'B'), makeRng(2));
+      final s = MatchState(
+        sideA: a,
+        sideB: b,
+        activeSide: SideId.a,
+        turn: 2,
+        phase: MatchPhase.jogo,
+        rng: makeRng(3),
+      );
+      final after = engine.apply(s, const OraculoActive(true));
+      expect(after.sideA.crystals, 2 + kOraculoShuffleCrystals);
+      expect(after.sideA.heroActiveUsed, isTrue);
+      expect(after.sideB.hand.length, b.hand.length); // mesma quantidade
+      expect(after.sideB.deck.length, b.deck.length); // total preservado
+    });
+
+    test('Oráculo ATIVA (não embaralhar): +2 cristais, oponente intacto', () {
+      final a = BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(1))
+          .copyWith(heroId: HeroId.oraculo, crystals: 0);
+      final b = BoardSide.initial(SideId.b, makeLoadout(prefix: 'B'), makeRng(2));
+      final s = MatchState(
+        sideA: a,
+        sideB: b,
+        activeSide: SideId.a,
+        turn: 2,
+        phase: MatchPhase.jogo,
+        rng: makeRng(3),
+      );
+      final after = engine.apply(s, const OraculoActive(false));
+      expect(after.sideA.crystals, kOraculoKeepCrystals);
+      expect(after.sideA.heroActiveUsed, isTrue);
+      expect(identical(after.sideB, b), isTrue); // não tocou no oponente
+    });
+
     test('sem herói: UseHeroActive é no-op', () {
       final s = MatchState(
         sideA: BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(1)),

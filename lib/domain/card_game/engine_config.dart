@@ -210,6 +210,29 @@ const double kAssassinoEsquivaChance = 0.30;
 /// dele morre (em uma lane livre). 🎚️
 const double kCoringaSpawnChance = 0.25;
 
+// ── Heróis Fase C: Cartomante & Oráculo (ADR-0028) — magnitudes 🎚️ ───────────
+
+/// Quantas cartas a ATIVA do Cartomante puxa (respeitando o teto da mão). 🎚️
+const int kCartomanteDrawCount = 2;
+
+/// A carta-bônus do Cartomante (definida na montagem) entra no TOPO do deck
+/// DEPOIS deste turno: `s.turn > este valor` → injetada 1× (turno 5+). 🎚️
+const int kCartomanteBonusAfterTurn = 4;
+
+/// Chance da PASSIVA da Oráculo, no início do turno, de espiar as próximas
+/// cartas do próprio deck e reposicionar 1 delas. 🎚️
+const double kOraculoPeekChance = 0.30;
+
+/// Quantas cartas do topo do deck a Oráculo espia/reordena. 🎚️
+const int kOraculoPeekCount = 5;
+
+/// Cristais ganhos pela ATIVA da Oráculo SE escolher EMBARALHAR a mão do
+/// oponente de volta no deck (e ele recompra a mesma quantidade). 🎚️
+const int kOraculoShuffleCrystals = 1;
+
+/// Cristais ganhos pela ATIVA da Oráculo SE escolher NÃO embaralhar. 🎚️
+const int kOraculoKeepCrystals = 2;
+
 /// Bônus de ataque corpo a corpo de Inspirar (aliados, até o fim do turno). 🎚️
 const int kInspirarBonus = 1;
 

@@ -53,7 +53,27 @@ class CardBattleEngine {
       crystals: base + kCrystalsPerTurn + side.pendingCrystals,
       pendingCrystals: 0,
       sacrificedThisTurn: false,
+      // Limpa flags de turno que possam ter sobrado (recuo-grátis do Cartomante
+      // não usado; peek pendente da Oráculo não resolvido) antes de re-decidir.
+      freeRecuoPending: false,
+      oraculoPeekPending: false,
     );
+    // Passiva do CARTOMANTE: injeta a carta-bônus no TOPO do deck (1× só), após
+    // o turno `kCartomanteBonusAfterTurn`. A compra grátis abaixo a puxa pra mão.
+    if (side.heroId == HeroId.cartomante &&
+        !side.bonusInjected &&
+        side.bonusCard != null &&
+        s.turn > kCartomanteBonusAfterTurn) {
+      final deck = List<Object>.from(newSide.deck)..insert(0, side.bonusCard!);
+      newSide = newSide.copyWith(deck: deck, bonusInjected: true);
+      events.add(AbilityTriggered(
+        side: side.id,
+        cardId: 'hero',
+        cardName: heroLabel(HeroId.cartomante),
+        ability: 'Cartomante',
+        detail: 'a carta-bônus entrou no topo do deck',
+      ));
+    }
     // ADR-0028: compra 1 carta GRÁTIS por round (no-op se a mão já está cheia).
     newSide = _drawOne(newSide);
     // Passiva do Trapaceiro: chance de comprar 1 carta extra grátis.
@@ -70,6 +90,20 @@ class CardBattleEngine {
           detail: 'comprou 1 carta extra',
         ));
       }
+    }
+    // Passiva da ORÁCULO: chance de espiar/reordenar as próximas cartas (UI
+    // humana resolve via ReorderDeck; bot auto-resolve em botActions).
+    if (side.heroId == HeroId.oraculo &&
+        newSide.deck.length >= 2 &&
+        s.rng.nextDouble() < kOraculoPeekChance) {
+      newSide = newSide.copyWith(oraculoPeekPending: true);
+      events.add(AbilityTriggered(
+        side: side.id,
+        cardId: 'hero',
+        cardName: heroLabel(HeroId.oraculo),
+        ability: 'Oráculo',
+        detail: 'pode reordenar as próximas cartas do deck',
+      ));
     }
     newSide = _applyStartOfTurnBuffs(newSide, events);
     var state = s.withSide(side.id, newSide).copyWith(phase: MatchPhase.jogo);
@@ -314,6 +348,10 @@ class CardBattleEngine {
         return _drawCardPaid(s);
       case UseHeroActive():
         return _useHeroActive(s);
+      case ReorderDeck():
+        return _reorderDeck(s, action);
+      case OraculoActive():
+        return _oraculoActive(s, action);
       case Pass():
         return s; // no-op: fim da sequência é sinalizado via endTurn.
     }
@@ -357,9 +395,77 @@ class CardBattleEngine {
         return s.withSide(
             side.id, side.copyWith(hand: hand, heroActiveUsed: true));
       case HeroId.cartomante:
+        // Puxa kCartomanteDrawCount cartas (respeita o teto da mão) e habilita
+        // 1 recuo GRÁTIS (consumido por ReturnToHand). Não consome o uso se não
+        // há absolutamente nada a fazer (sem compra possível E sem criatura).
+        final canDraw = side.deck.isNotEmpty && side.hand.length < kHandSize;
+        if (!canDraw && !side.hasCreatureInPlay) return s;
+        var cs = side;
+        for (var i = 0; i < kCartomanteDrawCount; i++) {
+          cs = _drawOne(cs);
+        }
+        cs = cs.copyWith(
+          heroActiveUsed: true,
+          freeRecuoPending: side.hasCreatureInPlay,
+        );
+        return s.withSide(side.id, cs);
       case HeroId.oraculo:
-        return s; // Fase C (UI) — não consome o uso ainda.
+        return s; // ativa via OraculoActive (precisa da escolha embaralhar/não).
     }
+  }
+
+  /// Reposiciona 1 carta no topo do deck — passiva da Oráculo (ADR-0028).
+  /// Consome o `oraculoPeekPending`. `from == to`/índices inválidos = só limpa
+  /// o pending (o dono escolheu não mexer). No-op se não há peek pendente.
+  MatchState _reorderDeck(MatchState s, ReorderDeck a) {
+    final side = s.active;
+    if (!side.oraculoPeekPending) return s;
+    final n = side.deck.length < kOraculoPeekCount
+        ? side.deck.length
+        : kOraculoPeekCount;
+    var newSide = side.copyWith(oraculoPeekPending: false);
+    final valid = a.from != a.to &&
+        a.from >= 0 &&
+        a.to >= 0 &&
+        a.from < n &&
+        a.to < n;
+    if (valid) {
+      final deck = List<Object>.from(side.deck);
+      final card = deck.removeAt(a.from);
+      deck.insert(a.to, card);
+      newSide = newSide.copyWith(deck: deck);
+    }
+    return s.withSide(side.id, newSide);
+  }
+
+  /// ATIVA da Oráculo (ADR-0028), 1×/partida. `shuffle`: embaralha a mão do
+  /// oponente de volta no deck e ele recompra a MESMA quantidade (+`kOraculo
+  /// ShuffleCrystals` pra você); senão, só ganha `kOraculoKeepCrystals`. A
+  /// revelação do deck+mão do oponente é feita na UI.
+  MatchState _oraculoActive(MatchState s, OraculoActive a) {
+    final side = s.active;
+    if (side.heroId != HeroId.oraculo || side.heroActiveUsed) return s;
+    final opp = s.opponent;
+    if (a.shuffle) {
+      final n = opp.hand.length;
+      final deck = List<Object>.from(opp.deck)..addAll(opp.hand);
+      deck.shuffle(s.rng);
+      final newHand = <Object>[];
+      for (var i = 0; i < n && deck.isNotEmpty; i++) {
+        newHand.add(deck.removeAt(0));
+      }
+      final no = opp.copyWith(hand: newHand, deck: deck);
+      final ns = side.copyWith(
+        crystals: side.crystals + kOraculoShuffleCrystals,
+        heroActiveUsed: true,
+      );
+      return s.withSide(side.id, ns).withSide(opp.id, no);
+    }
+    final ns = side.copyWith(
+      crystals: side.crystals + kOraculoKeepCrystals,
+      heroActiveUsed: true,
+    );
+    return s.withSide(side.id, ns);
   }
 
   /// Compra EXTRA paga (ADR-0028): −`kExtraDrawCost` cristais, +1 carta na mão.
@@ -402,7 +508,12 @@ class CardBattleEngine {
   /// descartadas (MVP). No-op se a criatura não está em jogo ou faltam cristais.
   MatchState _returnToHand(MatchState s, ReturnToHand a) {
     final side = s.active;
-    if (side.crystals < kReturnVoluntaryCost) return s;
+    // Ativa do Cartomante concede 1 recuo grátis (custo 0). Honra o teto da mão
+    // (decisão CEO 2026-06-12): mão cheia → recuo bloqueado.
+    final free = side.freeRecuoPending;
+    if (free && side.hand.length >= kHandSize) return s;
+    final cost = free ? 0 : kReturnVoluntaryCost;
+    if (side.crystals < cost) return s;
     final target = side.creaturesInPlay
         .where((c) => c.instanceId == a.creatureId)
         .firstOrNull;
@@ -415,7 +526,8 @@ class CardBattleEngine {
     final newSide = side.copyWith(
       lanes: _packedToLanes(packed),
       hand: hand,
-      crystals: side.crystals - kReturnVoluntaryCost,
+      crystals: side.crystals - cost,
+      freeRecuoPending: false, // consome o recuo grátis (no-op se já era false).
     );
     return s.withSide(side.id, newSide);
   }
@@ -2043,6 +2155,29 @@ class CardBattleEngine {
     var sim = s;
     final engine = this;
 
+    // 0. HERÓI (ADR-0028): resolve o peek pendente da Oráculo e decide usar a
+    // ativa (1×/partida) ANTES de jogar (Trapaceiro/Cartomante geram recursos).
+    if (sim.active.heroId != null) {
+      if (sim.active.oraculoPeekPending) {
+        final act = _botReorderDeck(sim.active);
+        final after = engine.apply(sim, act);
+        if (!identical(after, sim)) {
+          actions.add(act);
+          sim = after;
+        }
+      }
+      if (!sim.active.heroActiveUsed) {
+        final act = _botHeroActive(sim);
+        if (act != null) {
+          final after = engine.apply(sim, act);
+          if (!identical(after, sim)) {
+            actions.add(act);
+            sim = after;
+          }
+        }
+      }
+    }
+
     // 1. Preenche lanes vazias jogando criaturas que cabem, POSICIONANDO por
     // tipo: melee busca a frente (lane vazia de menor índice); ranged a
     // retaguarda (maior índice); mágico/cura/vitalismo preferem retaguarda.
@@ -2140,6 +2275,48 @@ class CardBattleEngine {
     final count = side.creaturesInPlay.length;
     if (count >= kLaneCount) return null;
     return card.damageType == DamageType.corpoACorpo ? 0 : count;
+  }
+
+  /// Heurística do bot p/ a passiva da Oráculo: sobe ao topo a criatura de maior
+  /// ATK dentre as `kOraculoPeekCount` próximas; se nada melhor, só limpa o peek.
+  GameAction _botReorderDeck(BoardSide side) {
+    final n = side.deck.length < kOraculoPeekCount
+        ? side.deck.length
+        : kOraculoPeekCount;
+    var bestIdx = -1;
+    var bestAtk = -1;
+    for (var i = 0; i < n; i++) {
+      final c = side.deck[i];
+      if (c is CreatureCard && c.atk > bestAtk) {
+        bestAtk = c.atk;
+        bestIdx = i;
+      }
+    }
+    if (bestIdx <= 0) return const ReorderDeck(0, 0); // nada melhor ou já no topo.
+    return ReorderDeck(bestIdx, 0);
+  }
+
+  /// Heurística do bot p/ a ATIVA do herói (1×/partida). Retorna null = não usa
+  /// agora. Trapaceiro/Assassino/Coringa/Cartomante via `UseHeroActive`; Oráculo
+  /// decide embaralhar (mão do oponente cheia) ou ficar com +cristais.
+  GameAction? _botHeroActive(MatchState s) {
+    final side = s.active;
+    final opp = s.opponent;
+    switch (side.heroId!) {
+      case HeroId.trapaceiro:
+        return opp.crystals > 0 ? const UseHeroActive() : null;
+      case HeroId.assassino:
+        return opp.deck.isNotEmpty ? const UseHeroActive() : null;
+      case HeroId.coringa:
+        return side.hand.length < kHandSize ? const UseHeroActive() : null;
+      case HeroId.cartomante:
+        return (side.deck.isNotEmpty && side.hand.length < kHandSize) ||
+                side.hasCreatureInPlay
+            ? const UseHeroActive()
+            : null;
+      case HeroId.oraculo:
+        return OraculoActive(opp.hand.length >= kHandSize);
+    }
   }
 
   /// Escolhe uma carta do pool para sacrificar visando habilitar uma jogada:

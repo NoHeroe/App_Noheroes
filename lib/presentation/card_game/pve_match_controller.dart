@@ -201,14 +201,21 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     int seed = 0,
     HeroId? heroA,
     HeroId? heroB,
+    Object? bonusCardA,
     Duration botStepDelay = const Duration(milliseconds: 1300),
   }) async {
     if (_busy) return;
     _busy = true;
     try {
       _botStepDelay = botStepDelay;
-      final match =
+      var match =
           _engine.start(player, bot, seed: seed, heroA: heroA, heroB: heroB);
+      // Cartomante (ADR-0028): a carta-bônus do jogador fica guardada fora do
+      // baralho até ser injetada no topo após o turno 4.
+      if (heroA == HeroId.cartomante && bonusCardA != null) {
+        match = match.withSide(
+            SideId.a, match.sideA.copyWith(bonusCard: bonusCardA));
+      }
       final youStart = match.activeSide == SideId.a;
 
       state = PveMatchUiState(
@@ -321,6 +328,33 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
       onApplied: (before, after) =>
           hero == null ? 'Sem herói.' : 'Você usou ${heroLabel(hero)}.',
       invalidText: () => 'Ativa do herói indisponível.',
+    );
+  }
+
+  /// ATIVA da Oráculo (ADR-0028), 1×/partida: aplica a escolha embaralhar/não
+  /// (a revelação do deck+mão do oponente é feita na tela antes de chamar isto).
+  bool useOraculoActive(bool shuffle) {
+    if (state.playLocked) return false;
+    return _playerAction(
+      OraculoActive(shuffle),
+      onApplied: (before, after) => shuffle
+          ? 'Você (Oráculo) embaralhou a mão do oponente de volta no deck '
+              '(+$kOraculoShuffleCrystals cristal).'
+          : 'Você (Oráculo) leu o baralho do oponente '
+              '(+$kOraculoKeepCrystals cristais).',
+      invalidText: () => 'Ativa da Oráculo indisponível.',
+    );
+  }
+
+  /// PASSIVA da Oráculo (ADR-0028): reposiciona a carta do índice [from] para
+  /// [to] dentro do topo do deck (`from == to` = mantém). Consome o peek.
+  bool reorderDeck(int from, int to) {
+    return _playerAction(
+      ReorderDeck(from, to),
+      onApplied: (before, after) => from == to
+          ? 'Você manteve a ordem do baralho (Oráculo).'
+          : 'Você reposicionou uma carta no topo do baralho (Oráculo).',
+      invalidText: () => 'Reordenação indisponível.',
     );
   }
 
@@ -636,6 +670,12 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
         return 'A IA comprou uma carta (−$kExtraDrawCost cristal).';
       case UseHeroActive():
         return 'A IA usou a habilidade do herói.';
+      case ReorderDeck():
+        return 'A IA reordenou as próximas cartas do deck (Oráculo).';
+      case OraculoActive(:final shuffle):
+        return shuffle
+            ? 'A IA (Oráculo) embaralhou sua mão de volta no deck.'
+            : 'A IA (Oráculo) leu seu baralho e ganhou cristais.';
       case Pass():
         return 'A IA passou.';
     }

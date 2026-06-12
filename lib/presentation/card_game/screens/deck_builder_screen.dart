@@ -40,6 +40,7 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
   bool _saving = false;
 
   HeroId _hero = HeroId.trapaceiro; // ADR-0028: herói representante (prefs).
+  String? _bonusCardId; // ADR-0028 Fase C: carta-bônus do Cartomante (prefs).
 
   static const int _max = 9;
 
@@ -54,6 +55,9 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
     CardHeroPrefs.get().then((h) {
       if (mounted) setState(() => _hero = h);
     });
+    CardHeroPrefs.getBonusCardId().then((id) {
+      if (mounted) setState(() => _bonusCardId = id);
+    });
   }
 
   @override
@@ -64,7 +68,7 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
 
   /// Seletor de HERÓI representante (ADR-0028): 5 chips horizontais; tocar salva
   /// no prefs. A passiva é fixa; a descrição mostra passiva + ativa.
-  Widget _heroSelector() {
+  Widget _heroSelector(CardCatalog? catalog, Set<String>? owned) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
       child: Column(
@@ -116,6 +120,125 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
               ],
             ),
           ),
+          // Cartomante (ADR-0028 Fase C): carta-bônus definida na montagem,
+          // injetada no topo do deck após o turno 4.
+          if (_hero == HeroId.cartomante && catalog != null) ...[
+            const SizedBox(height: 6),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _pickBonusCard(catalog, owned ?? const <String>{}),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: const Color(0x33100C15),
+                  border: Border.all(color: AppColors.goldLt),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.auto_awesome, size: 14, color: AppColors.goldLt),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        _bonusCardId == null
+                            ? 'Escolher carta-bônus (entra após o turno 4)'
+                            : 'Bônus: ${_cardNameById(catalog, _bonusCardId!)}',
+                        style: GoogleFonts.roboto(fontSize: 10.5, color: AppColors.txt),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _cardNameById(CardCatalog catalog, String id) {
+    for (final c in catalog.creatures) {
+      if (c.id == id) return c.nome;
+    }
+    for (final r in catalog.relics) {
+      if (r.id == id) return r.nome;
+    }
+    return id;
+  }
+
+  /// Picker da carta-bônus do Cartomante: cartas POSSUÍDAS que NÃO estão no deck
+  /// (id distinto — evita instanceId duplicado em jogo). Persiste no prefs.
+  Future<void> _pickBonusCard(CardCatalog catalog, Set<String> owned) async {
+    final inDeck = <String>{..._creatureIds, ..._relicIds};
+    final options = <Object>[
+      ...catalog.creatures
+          .where((c) => owned.contains(c.id) && !inDeck.contains(c.id)),
+      ...catalog.relics
+          .where((r) => owned.contains(r.id) && !inDeck.contains(r.id)),
+    ];
+    String objId(Object o) =>
+        o is CreatureCard ? o.id : (o as RelicCard).id;
+    String objName(Object o) =>
+        o is CreatureCard ? o.nome : (o as RelicCard).nome;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceAlt,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: AppColors.borderViolet),
+        ),
+        title: Text('Carta-bônus do Cartomante',
+            style:
+                GoogleFonts.cinzelDecorative(fontSize: 15, color: AppColors.txt)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: options.isEmpty
+              ? Text(
+                  'Nenhuma carta possuída fora do deck para usar como bônus.',
+                  style:
+                      GoogleFonts.roboto(fontSize: 12, color: AppColors.txtMut))
+              : SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final o in options)
+                        ListTile(
+                          dense: true,
+                          title: Text(objName(o),
+                              style: GoogleFonts.roboto(
+                                  fontSize: 13, color: AppColors.txt)),
+                          trailing: _bonusCardId == objId(o)
+                              ? const Icon(Icons.check,
+                                  size: 16, color: AppColors.goldLt)
+                              : null,
+                          onTap: () {
+                            setState(() => _bonusCardId = objId(o));
+                            CardHeroPrefs.setBonusCardId(objId(o));
+                            Navigator.of(ctx).pop();
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+        ),
+        actions: [
+          if (_bonusCardId != null)
+            TextButton(
+              onPressed: () {
+                setState(() => _bonusCardId = null);
+                CardHeroPrefs.setBonusCardId(null);
+                Navigator.of(ctx).pop();
+              },
+              child: Text('Remover',
+                  style: GoogleFonts.roboto(color: AppColors.txtMut)),
+            ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child:
+                Text('Fechar', style: GoogleFonts.roboto(color: AppColors.txt)),
+          ),
         ],
       ),
     );
@@ -149,7 +272,7 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
               children: [
                 _buildHeader(),
                 const SizedBox(height: 4),
-                _heroSelector(),
+                _heroSelector(catalogAsync.valueOrNull, ownedAsync.valueOrNull),
                 Expanded(
                   child: _buildContent(catalogAsync, ownedAsync, deckAsync),
                 ),

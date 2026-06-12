@@ -419,6 +419,10 @@ class BoardSide {
     this.graveyard = const <Object>[],
     this.heroId,
     this.heroActiveUsed = false,
+    this.bonusCard,
+    this.bonusInjected = false,
+    this.oraculoPeekPending = false,
+    this.freeRecuoPending = false,
   });
 
   final SideId id;
@@ -452,6 +456,24 @@ class BoardSide {
 
   /// A ativa do herói (1×/partida) já foi usada?
   final bool heroActiveUsed;
+
+  /// CARTA-BÔNUS do Cartomante (ADR-0028 Fase C): definida na montagem do deck,
+  /// guardada FORA do baralho até ser injetada. null = sem bônus. `CreatureCard`
+  /// ou `RelicCard`.
+  final Object? bonusCard;
+
+  /// A carta-bônus do Cartomante já foi injetada no deck (1× só, após o turno
+  /// `kCartomanteBonusAfterTurn`)?
+  final bool bonusInjected;
+
+  /// Passiva da Oráculo disparou neste turno: aguarda o dono espiar/reordenar
+  /// as próximas `kOraculoPeekCount` cartas do deck (UI humana) ou o bot
+  /// auto-resolver. Consumido por `ReorderDeck`.
+  final bool oraculoPeekPending;
+
+  /// Ativa do Cartomante habilitou 1 recuo GRÁTIS (custo 0) neste turno —
+  /// consumido pelo próximo `ReturnToHand`. Limpo no início do turno.
+  final bool freeRecuoPending;
 
   /// Criaturas vivas no tabuleiro, em ordem de lane (frente→retaguarda).
   List<CreatureInPlay> get creaturesInPlay {
@@ -521,6 +543,10 @@ class BoardSide {
     List<Object>? graveyard,
     HeroId? heroId,
     bool? heroActiveUsed,
+    Object? bonusCard,
+    bool? bonusInjected,
+    bool? oraculoPeekPending,
+    bool? freeRecuoPending,
   }) {
     return BoardSide(
       id: id,
@@ -533,6 +559,10 @@ class BoardSide {
       graveyard: graveyard ?? this.graveyard,
       heroId: heroId ?? this.heroId,
       heroActiveUsed: heroActiveUsed ?? this.heroActiveUsed,
+      bonusCard: bonusCard ?? this.bonusCard,
+      bonusInjected: bonusInjected ?? this.bonusInjected,
+      oraculoPeekPending: oraculoPeekPending ?? this.oraculoPeekPending,
+      freeRecuoPending: freeRecuoPending ?? this.freeRecuoPending,
     );
   }
 
