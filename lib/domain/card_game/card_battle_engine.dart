@@ -779,13 +779,14 @@ class CardBattleEngine {
       }
       newRelics.add(relic);
 
-      // Cura instantânea concedida também aplica ao equipar.
-      var hp = target.currentHp;
+      // O +PV de uma relíquia sobe o PV ATUAL junto do máximo (decisão CEO
+      // 2026-06-12): 4/4 + relíquia(+1) => 5/5; 3/5 => 4/6. NÃO é cura ao máximo
+      // — só adiciona o bônus. A cura instantânea (`heal`) soma por cima.
+      updated = target.copyWith(relics: newRelics);
+      var hp = target.currentHp + relic.scaledHpBonus;
       final heal = relic.grants.heal == null ? null : relic.scaledHeal;
-      if (heal != null) {
-        hp = (hp + heal).clamp(0, target.maxHp);
-      }
-      updated = target.copyWith(relics: newRelics, currentHp: hp);
+      if (heal != null) hp += heal;
+      updated = updated.copyWith(currentHp: hp.clamp(0, updated.maxHp));
     }
 
     final newLanes = List<CreatureInPlay?>.from(side.lanes);
