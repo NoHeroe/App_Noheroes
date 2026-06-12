@@ -206,6 +206,10 @@ const double kTrapaceiroDrawChance = 0.30;
 /// aleatória no fim do turno do dono (protege na rodada do oponente). 🎚️
 const double kAssassinoEsquivaChance = 0.30;
 
+/// Chance da PASSIVA do Coringa de invocar uma Caixa Coringa quando uma criatura
+/// dele morre (em uma lane livre). 🎚️
+const double kCoringaSpawnChance = 0.25;
+
 /// Bônus de ataque corpo a corpo de Inspirar (aliados, até o fim do turno). 🎚️
 const int kInspirarBonus = 1;
 

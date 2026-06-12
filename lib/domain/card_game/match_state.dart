@@ -275,6 +275,11 @@ class CreatureInPlay {
   List<CardAttack> get attacks {
     final base = card.damageType;
     final byType = <DamageType, int>{base: card.effectiveAtk};
+    // Ataques NATIVOS adicionais (ADR-0028, ex.: Fragmento do Deus Louco), já
+    // escalados por nível como o ATK base.
+    for (final e in card.extraAttacks.entries) {
+      byType[e.key] = (byType[e.key] ?? 0) + cgScaleStat(e.value, card.level);
+    }
     for (final r in relics) {
       final bonus = r.scaledAtkBonus;
       if (bonus <= 0) continue;

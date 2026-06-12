@@ -349,10 +349,16 @@ class CardBattleEngine {
           st = st.withSide(opp.id, no);
         }
         return st;
+      case HeroId.coringa:
+        // Põe o "Fragmento do Deus Louco" na mão (se houver espaço).
+        if (side.hand.length >= kHandSize) return s; // mão cheia → não consome.
+        final hand = List<Object>.from(side.hand)
+          ..add(fragmentoDoDeusLoucoCard());
+        return s.withSide(
+            side.id, side.copyWith(hand: hand, heroActiveUsed: true));
       case HeroId.cartomante:
       case HeroId.oraculo:
-      case HeroId.coringa:
-        return s; // Fase C — não consome o uso ainda.
+        return s; // Fase C (UI) — não consome o uso ainda.
     }
   }
 
@@ -564,8 +570,8 @@ class CardBattleEngine {
   /// no início do endTurn e NÃO está mais em jogo nem na mão/deck do seu lado
   /// morreu → a carta vai pro cemitério. (Revividas seguem em jogo; Zumbi volta
   /// pra mão com o mesmo id, então não é contada como morta.)
-  MatchState _reapGraveyard(
-      MatchState s, Map<SideId, List<CreatureInPlay>> pre) {
+  MatchState _reapGraveyard(MatchState s,
+      Map<SideId, List<CreatureInPlay>> pre, List<MatchEvent> events) {
     var st = s;
     for (final sideId in const [SideId.a, SideId.b]) {
       final side = st.sideOf(sideId);
@@ -578,12 +584,35 @@ class CardBattleEngine {
         for (final c in pre[sideId]!)
           if (!present.contains(c.instanceId)) c.card,
       ];
-      if (dead.isNotEmpty) {
-        st = st.withSide(
-            sideId,
-            side.copyWith(
-                graveyard: List<Object>.from(side.graveyard)..addAll(dead)));
+      if (dead.isEmpty) continue;
+      var newSide =
+          side.copyWith(graveyard: List<Object>.from(side.graveyard)..addAll(dead));
+
+      // Passiva do Coringa: por carta morta, chance de invocar uma Caixa Coringa
+      // numa lane livre.
+      if (side.heroId == HeroId.coringa) {
+        final packed = newSide.creaturesInPlay.toList();
+        var spawned = 0;
+        for (var i = 0; i < dead.length; i++) {
+          if (packed.length >= kLaneCount) break;
+          if (s.rng.nextDouble() < kCoringaSpawnChance) {
+            packed.add(CreatureInPlay(
+                card: caixaCoringaCard(), currentHp: 1, lane: 0));
+            spawned++;
+          }
+        }
+        if (spawned > 0) {
+          newSide = newSide.copyWith(lanes: _packedToLanes(packed));
+          events.add(AbilityTriggered(
+            side: sideId,
+            cardId: 'caixa_coringa',
+            cardName: 'Caixa Coringa',
+            ability: 'Coringa',
+            detail: 'invocou $spawned Caixa(s) Coringa no lugar das mortas',
+          ));
+        }
       }
+      st = st.withSide(sideId, newSide);
     }
     return st;
   }
@@ -786,7 +815,7 @@ class CardBattleEngine {
 
     // Cemitério (ADR-0028): criaturas que estavam em jogo e sumiram do jogo
     // (não estão em lanes/mão/deck) morreram nesta resolução → cemitério.
-    state = _reapGraveyard(state, preInPlay);
+    state = _reapGraveyard(state, preInPlay, events);
 
     // Passiva do Assassino: ao fim do turno do dono, chance de conceder Esquiva
     // (100%, 1 turno) a uma criatura aleatória — protege na rodada do oponente.

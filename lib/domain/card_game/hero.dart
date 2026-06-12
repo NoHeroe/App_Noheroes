@@ -3,8 +3,40 @@
 /// Cartomante, Oráculo, Coringa, Assassino). Spec canônica: vault `herois.md`.
 library;
 
+import 'card_models.dart';
+
 /// Os 5 heróis iniciais.
 enum HeroId { trapaceiro, cartomante, oraculo, coringa, assassino }
+
+/// Carta da CAIXA CORINGA (passiva do Coringa, ADR-0028): NÃO-colecionável (não
+/// vai no deck). 1 PV, 1 ATK mágico, Escudo Sagrado.
+CreatureCard caixaCoringaCard() => CreatureCard(
+      id: 'caixa_coringa',
+      nome: 'Caixa Coringa',
+      concepts: const [CardConcept.neutro],
+      cost: 0,
+      atk: 1,
+      hp: 1,
+      damageType: DamageType.magico,
+      rarity: Rarity.comum,
+      abilities: const ['Escudo Sagrado'],
+    );
+
+/// FRAGMENTO DO DEUS LOUCO (ativa do Coringa, ADR-0028): épica, 4 PV, 2 físico +
+/// 2 mágico + 2 à distância (ataques nativos), habilidade Alcance. Existe também
+/// no `creatures.json` (colecionável); este é o objeto usado pela ativa.
+CreatureCard fragmentoDoDeusLoucoCard() => CreatureCard(
+      id: 'fragmento_deus_louco',
+      nome: 'Fragmento do Deus Louco',
+      concepts: const [CardConcept.corrompido],
+      cost: 4,
+      atk: 2,
+      hp: 4,
+      damageType: DamageType.corpoACorpo,
+      rarity: Rarity.epica,
+      abilities: const ['Alcance'],
+      extraAttacks: const {DamageType.magico: 2, DamageType.aDistancia: 2},
+    );
 
 /// Nome exibível do herói.
 String heroLabel(HeroId h) {

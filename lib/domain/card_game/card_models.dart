@@ -145,6 +145,7 @@ class CreatureCard {
     this.level = 1,
     this.transformInto,
     this.transformTo,
+    this.extraAttacks = const <DamageType, int>{},
   });
 
   final String id;
@@ -168,6 +169,11 @@ class CreatureCard {
   /// adota os stats/tipo/keywords de [transformTo] (mantendo o id original).
   final String? transformInto;
   final CreatureCard? transformTo;
+
+  /// Ataques NATIVOS adicionais por tipo (ADR-0028, ex.: Fragmento do Deus Louco
+  /// = físico base + {mágico, à distância}). Somam aos ataques no engine; escalam
+  /// por nível como o ATK base.
+  final Map<DamageType, int> extraAttacks;
 
   /// ATK/HP efetivos pelo nível (+10%/nível, base = nível 1).
   int get effectiveAtk => cgScaleStat(atk, level);
@@ -196,6 +202,7 @@ class CreatureCard {
         level: level,
         transformInto: transformInto,
         transformTo: transformTo ?? this.transformTo,
+        extraAttacks: extraAttacks,
       );
 
   CreatureCard withLevel(int newLevel) => CreatureCard(
@@ -212,6 +219,7 @@ class CreatureCard {
         level: newLevel,
         transformInto: transformInto,
         transformTo: transformTo,
+        extraAttacks: extraAttacks,
       );
 
   factory CreatureCard.fromJson(Map<String, dynamic> json) {
@@ -231,6 +239,12 @@ class CreatureCard {
           .map((e) => e as String)
           .toList(growable: false),
       transformInto: json['transforma_em'] as String?,
+      extraAttacks: <DamageType, int>{
+        for (final e in (json['extra_attacks'] as Map<String, dynamic>? ??
+                const <String, dynamic>{})
+            .entries)
+          damageTypeFromString(e.key): e.value as int,
+      },
     );
   }
 
@@ -246,6 +260,11 @@ class CreatureCard {
         'relic_slots': relicSlots,
         'abilities': abilities,
         if (transformInto != null) 'transforma_em': transformInto,
+        if (extraAttacks.isNotEmpty)
+          'extra_attacks': {
+            for (final e in extraAttacks.entries)
+              damageTypeToString(e.key): e.value,
+          },
       };
 
   @override

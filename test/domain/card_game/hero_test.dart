@@ -195,6 +195,64 @@ void main() {
       expect(after.sideA.creaturesInPlay.first.currentHp, 10); // evadiu 100%.
     });
 
+    test('Coringa ATIVA: põe o Fragmento do Deus Louco na mão', () {
+      final base = _heroState(hero: HeroId.coringa);
+      // Abre espaço na mão (capacidade 4) pra caber o Fragmento.
+      final s = base.withSide(
+          SideId.a, base.sideA.copyWith(hand: base.sideA.hand.sublist(0, 2)));
+      final after = engine.apply(s, const UseHeroActive());
+      expect(
+        after.sideA.hand
+            .whereType<CreatureCard>()
+            .any((c) => c.id == 'fragmento_deus_louco'),
+        isTrue,
+      );
+      expect(after.sideA.heroActiveUsed, isTrue);
+    });
+
+    test('Fragmento do Deus Louco tem 3 ataques nativos', () {
+      final c = CreatureInPlay(
+          card: fragmentoDoDeusLoucoCard(), currentHp: 4, lane: 0);
+      final types = c.attacks.map((a) => a.type).toSet();
+      expect(types, containsAll(<DamageType>{
+        DamageType.corpoACorpo,
+        DamageType.magico,
+        DamageType.aDistancia,
+      }));
+    });
+
+    test('Coringa PASSIVA: invoca Caixa Coringa quando uma carta morre', () {
+      var hitSeed = -1;
+      for (var seed = 0; seed < 300; seed++) {
+        final a = BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(seed))
+            .copyWith(
+                heroId: HeroId.coringa,
+                lanes: [_inPlay(id: 'doomed', atk: 0, hp: 4), null, null]);
+        final b = BoardSide.initial(SideId.b, makeLoadout(prefix: 'B'), makeRng(seed + 1))
+            .copyWith(lanes: [_inPlay(id: 'killer', atk: 99), null, null]);
+        final s = MatchState(
+          sideA: a,
+          sideB: b,
+          activeSide: SideId.b, // B mata a criatura de A
+          turn: 2,
+          phase: MatchPhase.jogo,
+          rng: makeRng(seed),
+        );
+        final after = engine.endTurn(s);
+        if (after.lastTurnEvents
+            .whereType<AbilityTriggered>()
+            .any((e) => e.ability == 'Coringa')) {
+          expect(
+            after.sideA.creaturesInPlay.any((c) => c.card.id == 'caixa_coringa'),
+            isTrue,
+          );
+          hitSeed = seed;
+          break;
+        }
+      }
+      expect(hitSeed, greaterThanOrEqualTo(0));
+    });
+
     test('sem herói: UseHeroActive é no-op', () {
       final s = MatchState(
         sideA: BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(1)),
