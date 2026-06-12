@@ -346,13 +346,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   Future<void> _confirmReturnToHand(CreatureInPlay c) async {
     final board = ref.read(pveMatchControllerProvider).playerBoard;
     final crystals = board?.crystals ?? 0;
-    // Cartomante (ADR-0028 Fase C): a ativa concede 1 recuo GRÁTIS (custo 0),
-    // honrando o teto da mão.
+    // Cartomante (ADR-0028 Fase C): a ativa concede 1 recuo GRÁTIS (custo 0).
+    // Sem teto de mão (correção CEO 2026-06-12) — nunca bloqueia por mão cheia.
     final free = board?.freeRecuoPending ?? false;
-    if (free && (board?.hand.length ?? 0) >= kHandSize) {
-      _toast('Mão cheia: não dá pra recuar agora (teto de $kHandSize).');
-      return;
-    }
     if (!free && crystals < kReturnVoluntaryCost) {
       _toast('Cristais insuficientes para recuar (precisa de '
           '$kReturnVoluntaryCost).');
@@ -702,9 +698,10 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   /// cristal facetado (com borda) · itens — todos juntos no centro do rodapé.
   Widget _bottomHud(PveMatchUiState ui, BoardSide player) {
     // ADR-0028: compra EXTRA paga (1 cristal) — habilita quando dá pra comprar.
+    // Sem teto de mão (correção CEO 2026-06-12): compra extra só exige deck +
+    // cristais.
     final canDraw = ui.isPlayerTurn &&
         !ui.playLocked &&
-        player.hand.length < kHandSize &&
         player.deck.isNotEmpty &&
         player.crystals >= kExtraDrawCost;
     return Padding(

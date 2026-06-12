@@ -19,7 +19,10 @@ void main() {
       expect(s.active.crystals, kCrystalsPerTurn);
       expect(s.opponent.crystals, 0);
       expect(s.sideA.remainingCreatureCount, 9);
-      expect(s.sideA.hand.length, kHandSize);
+      // Sem teto de mão: o lado ATIVO já puxou a carta grátis do turno 1 (deal
+      // 4 + 1 = 5); o oponente ainda tem o deal inicial de 4.
+      expect(s.active.hand.length, kInitialHandSize + 1);
+      expect(s.opponent.hand.length, kInitialHandSize);
     });
   });
 

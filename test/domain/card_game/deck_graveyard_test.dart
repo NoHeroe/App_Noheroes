@@ -36,13 +36,17 @@ MatchState _withLanes(
 }
 
 void main() {
-  test('mão inicial: 4 cartas, garantindo ≥2 criaturas', () {
+  test('deal inicial: 4 cartas (≥2 criaturas); ativo puxa a grátis (→5)', () {
+    // Deal inicial PURO (sem o início de turno): 4 cartas, ≥2 criaturas.
+    final a = BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(7));
+    expect(a.hand.length, kInitialHandSize); // 4
+    expect(a.handCreatures.length, greaterThanOrEqualTo(kInitialHandCreatures));
+    // Após start, o lado ATIVO já puxou a carta grátis do turno 1 → 5 (sem teto);
+    // o oponente segue com o deal de 4.
     final s = engine.start(makeLoadout(prefix: 'A'), makeLoadout(prefix: 'B'),
         seed: 7);
-    expect(s.sideA.hand.length, kHandSize); // 4
-    expect(s.sideA.handCreatures.length, greaterThanOrEqualTo(kInitialHandCreatures));
-    expect(s.sideB.hand.length, kHandSize);
-    expect(s.sideB.handCreatures.length, greaterThanOrEqualTo(kInitialHandCreatures));
+    expect(s.active.hand.length, kInitialHandSize + 1);
+    expect(s.opponent.hand.length, kInitialHandSize);
   });
 
   test('compra 1 GRÁTIS no início do turno (mão < 4)', () {
@@ -78,11 +82,23 @@ void main() {
       expect(after.sideA.crystals, 3 - kExtraDrawCost);
     });
 
-    test('mão cheia → no-op (não cobra)', () {
+    test('sem teto: compra extra acima de 4 funciona', () {
+      // Correção CEO 2026-06-12: a mão não tem teto durante a partida.
       final s = _withLanes(_aWithHand(4, crystals: 3),
           BoardSide.initial(SideId.b, makeLoadout(prefix: 'B')), const [], const []);
       final after = engine.apply(s, const DrawCard());
-      expect(after.sideA.hand.length, 4);
+      expect(after.sideA.hand.length, 5);
+      expect(after.sideA.crystals, 3 - kExtraDrawCost);
+    });
+
+    test('deck vazio → no-op (não cobra)', () {
+      final a0 = BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(1));
+      final a = a0.copyWith(deck: const <Object>[], crystals: 3);
+      final s = _withLanes(
+          a, BoardSide.initial(SideId.b, makeLoadout(prefix: 'B')),
+          const [], const []);
+      final after = engine.apply(s, const DrawCard());
+      expect(after.sideA.hand.length, a.hand.length);
       expect(after.sideA.crystals, 3);
     });
 

@@ -28,10 +28,11 @@ const int kStallTurnLimit = 40;
 /// Quantas cartas o lado perde ao terminar o turno sem criaturas em jogo. 🎚️
 const int kNoCreaturePenaltyCards = 1;
 
-/// Tamanho/capacidade da MÃO. 🎚️ (ADR-0028: mão de 4, sem auto-refill ao jogar.)
-/// Mão inicial = 2 criaturas aleatórias + 2 quaisquer; depois compra 1 grátis/
-/// round + compras extras pagas (`kExtraDrawCost`).
-const int kHandSize = 4;
+/// Tamanho INICIAL da mão. 🎚️ (ADR-0028, corrigido CEO 2026-06-12: a mão começa
+/// com 4 = 2 criaturas aleatórias + 2 quaisquer; durante a partida NÃO há teto —
+/// a mão cresce livremente com a compra 1 grátis/round, compras pagas
+/// (`kExtraDrawCost`) e cartas dadas pelos heróis.)
+const int kInitialHandSize = 4;
 
 /// Custo em cristais de uma compra EXTRA de carta durante a partida (além da
 /// grátis de início de round). 🎚️ (ADR-0028.)

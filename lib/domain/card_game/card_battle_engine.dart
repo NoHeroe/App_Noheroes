@@ -388,17 +388,16 @@ class CardBattleEngine {
         }
         return st;
       case HeroId.coringa:
-        // Põe o "Fragmento do Deus Louco" na mão (se houver espaço).
-        if (side.hand.length >= kHandSize) return s; // mão cheia → não consome.
+        // Põe o "Fragmento do Deus Louco" na mão (sem teto de mão).
         final hand = List<Object>.from(side.hand)
           ..add(fragmentoDoDeusLoucoCard());
         return s.withSide(
             side.id, side.copyWith(hand: hand, heroActiveUsed: true));
       case HeroId.cartomante:
-        // Puxa kCartomanteDrawCount cartas (respeita o teto da mão) e habilita
-        // 1 recuo GRÁTIS (consumido por ReturnToHand). Não consome o uso se não
-        // há absolutamente nada a fazer (sem compra possível E sem criatura).
-        final canDraw = side.deck.isNotEmpty && side.hand.length < kHandSize;
+        // Puxa kCartomanteDrawCount cartas (sem teto de mão) e habilita 1 recuo
+        // GRÁTIS (consumido por ReturnToHand). Não consome o uso se não há
+        // absolutamente nada a fazer (deck vazio E sem criatura pra recuar).
+        final canDraw = side.deck.isNotEmpty;
         if (!canDraw && !side.hasCreatureInPlay) return s;
         var cs = side;
         for (var i = 0; i < kCartomanteDrawCount; i++) {
@@ -472,10 +471,8 @@ class CardBattleEngine {
   /// No-op se mão cheia, deck vazio ou cristais insuficientes.
   MatchState _drawCardPaid(MatchState s) {
     final side = s.active;
-    if (side.hand.length >= kHandSize ||
-        side.deck.isEmpty ||
-        side.crystals < kExtraDrawCost) {
-      return s;
+    if (side.deck.isEmpty || side.crystals < kExtraDrawCost) {
+      return s; // sem teto de mão: só barra deck vazio / cristais insuficientes.
     }
     var newSide = _drawOne(side);
     newSide = newSide.copyWith(crystals: newSide.crystals - kExtraDrawCost);
@@ -508,10 +505,9 @@ class CardBattleEngine {
   /// descartadas (MVP). No-op se a criatura não está em jogo ou faltam cristais.
   MatchState _returnToHand(MatchState s, ReturnToHand a) {
     final side = s.active;
-    // Ativa do Cartomante concede 1 recuo grátis (custo 0). Honra o teto da mão
-    // (decisão CEO 2026-06-12): mão cheia → recuo bloqueado.
+    // Ativa do Cartomante concede 1 recuo grátis (custo 0). Sem teto de mão
+    // (correção CEO 2026-06-12), o recuo nunca é bloqueado por mão cheia.
     final free = side.freeRecuoPending;
-    if (free && side.hand.length >= kHandSize) return s;
     final cost = free ? 0 : kReturnVoluntaryCost;
     if (side.crystals < cost) return s;
     final target = side.creaturesInPlay
@@ -638,11 +634,11 @@ class CardBattleEngine {
     return lanes;
   }
 
-  /// Compra automática: repõe a mão do topo do deck até `kHandSize`.
-  /// Compra UMA carta do topo do deck pra mão (ADR-0028 — sem auto-refill).
-  /// No-op se a mão está cheia (`kHandSize`) ou o deck acabou.
+  /// Puxa 1 carta do topo do deck pra mão. SEM teto de mão (ADR-0028 corrigido
+  /// CEO 2026-06-12 — a mão começa com `kInitialHandSize` e cresce livre).
+  /// No-op só se o deck acabou.
   BoardSide _drawOne(BoardSide side) {
-    if (side.hand.length >= kHandSize || side.deck.isEmpty) return side;
+    if (side.deck.isEmpty) return side;
     final hand = List<Object>.from(side.hand);
     final deck = List<Object>.from(side.deck);
     hand.add(deck.removeAt(0));
@@ -1294,10 +1290,8 @@ class CardBattleEngine {
       ability: abilityKeywordLabel(AbilityKeyword.zumbi),
       detail: 'voltou pra mão enfraquecida',
     ));
-    if (side.hand.length < kHandSize) {
-      return side.copyWith(hand: List<Object>.from(side.hand)..add(card));
-    }
-    return side.copyWith(deck: List<Object>.from(side.deck)..insert(0, card));
+    // Sem teto de mão: a Carta Zumbi sempre volta pra mão.
+    return side.copyWith(hand: List<Object>.from(side.hand)..add(card));
   }
 
   (BoardSide, BoardSide) _resolveAttack(
@@ -2309,14 +2303,14 @@ class CardBattleEngine {
       case HeroId.assassino:
         return opp.deck.isNotEmpty ? const UseHeroActive() : null;
       case HeroId.coringa:
-        return side.hand.length < kHandSize ? const UseHeroActive() : null;
+        return const UseHeroActive(); // sem teto de mão: sempre cabe.
       case HeroId.cartomante:
-        return (side.deck.isNotEmpty && side.hand.length < kHandSize) ||
-                side.hasCreatureInPlay
+        return side.deck.isNotEmpty || side.hasCreatureInPlay
             ? const UseHeroActive()
             : null;
       case HeroId.oraculo:
-        return OraculoActive(opp.hand.length >= kHandSize);
+        // Embaralha se o oponente tem uma mão "cheia" (heurística por limiar).
+        return OraculoActive(opp.hand.length >= kInitialHandSize);
     }
   }
 

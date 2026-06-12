@@ -403,7 +403,8 @@ class CreatureInPlay {
 /// Estado de um lado do tabuleiro.
 ///
 /// Modelo de MÃO (Card Monsters): o loadout de 18 cartas vira um [deck]
-/// embaralhado; a [hand] são as ≤ `kHandSize` cartas visíveis/jogáveis; jogar
+/// embaralhado; a [hand] começa com `kInitialHandSize` cartas (sem teto durante
+/// a partida) visíveis/jogáveis; jogar
 /// uma carta COMPRA a próxima do topo do deck repondo a mão. Cartas na mão/deck
 /// são `CreatureCard` ou `RelicCard` misturadas (mesmo padrão `Object`+`is` da
 /// UI) — use os helpers `cardId`/`cardCost` de `card_models.dart`.
@@ -432,7 +433,8 @@ class BoardSide {
 
   final int crystals;
 
-  /// MÃO: cartas visíveis/jogáveis (≤ `kHandSize`), criaturas e relíquias
+  /// MÃO: cartas visíveis/jogáveis (sem teto; começa com `kInitialHandSize`),
+  /// criaturas e relíquias
   /// misturadas, em ordem de compra.
   final List<Object> hand;
 
@@ -587,8 +589,8 @@ class BoardSide {
         i++;
       }
     }
-    // 2) completa a mão até kHandSize com o que vier do topo (qualquer tipo).
-    while (hand.length < kHandSize && deck.isNotEmpty) {
+    // 2) completa a mão inicial até kInitialHandSize com o topo (qualquer tipo).
+    while (hand.length < kInitialHandSize && deck.isNotEmpty) {
       hand.add(deck.removeAt(0));
     }
     return BoardSide(
