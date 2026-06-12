@@ -780,24 +780,21 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
               width: w,
               height: h,
               child: Stack(
-                alignment: Alignment.topCenter,
+                alignment: Alignment.center,
                 children: [
                   const CardBack(height: h, radius: 7),
-                  Positioned(
-                    top: 5,
-                    child: Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.black.withValues(alpha: 0.55),
-                        border: Border.all(
-                            color: AppColors.gold.withValues(alpha: 0.85)),
-                      ),
-                      child: Transform.rotate(
-                        angle: 1.5708, // 90°
-                        child: const Icon(Icons.add_card,
-                            size: 16, color: AppColors.goldLt),
-                      ),
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.black.withValues(alpha: 0.55),
+                      border: Border.all(
+                          color: AppColors.gold.withValues(alpha: 0.85)),
+                    ),
+                    child: Transform.rotate(
+                      angle: 1.5708, // 90°
+                      child: const Icon(Icons.add_card,
+                          size: 18, color: AppColors.goldLt),
                     ),
                   ),
                 ],
