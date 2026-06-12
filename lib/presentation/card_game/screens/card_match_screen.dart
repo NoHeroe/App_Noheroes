@@ -720,9 +720,11 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
             _hudCounter(Icons.auto_awesome, '${player.availableRelicCount}'),
             const SizedBox(width: 14),
             _drawButton(canDraw),
+            const SizedBox(width: 14),
+            _cemeteryButton(player),
             if (player.heroId != null) ...[
               const SizedBox(width: 14),
-              _heroButton(ui, player),
+              _heroCard(ui, player),
             ],
           ],
         ),
@@ -730,43 +732,164 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
-  /// Botão da ATIVA do herói (ADR-0028), 1×/partida.
-  Widget _heroButton(PveMatchUiState ui, BoardSide player) {
-    final enabled =
-        ui.isPlayerTurn && !ui.playLocked && !player.heroActiveUsed;
-    return Opacity(
-      opacity: enabled ? 1 : 0.4,
-      child: GestureDetector(
-        onTap: enabled ? () => _onHeroTap(player) : null,
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+  /// CARTA do herói no HUD (ADR-0028 / feedback CEO 2026-06-12): substitui a
+  /// "próxima" + o antigo botão. Exibe o herói como uma mini-carta; tocar usa a
+  /// ATIVA (1×/partida). Acende quando a ativa está disponível; apaga após usar.
+  Widget _heroCard(PveMatchUiState ui, BoardSide player) {
+    final hero = player.heroId!;
+    final used = player.heroActiveUsed;
+    final enabled = ui.isPlayerTurn && !ui.playLocked && !used;
+    final accent = used ? AppColors.textMuted : AppColors.gold;
+    const w = 46.0;
+    const h = w * 206 / 142;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: enabled ? () => _onHeroTap(player) : null,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Opacity(
+            opacity: enabled ? 1 : 0.6,
+            child: Container(
+              width: w,
+              height: h,
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 3),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: const Color(0xFF2A2140),
-                border: Border.all(
-                    color: player.heroActiveUsed
-                        ? AppColors.textMuted
-                        : AppColors.purpleLight),
+                borderRadius: BorderRadius.circular(7),
+                gradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF2C2348), Color(0xFF140D22)],
+                ),
+                border:
+                    Border.all(color: accent.withValues(alpha: 0.85), width: 1.3),
+                boxShadow: enabled
+                    ? [
+                        BoxShadow(
+                            color: accent.withValues(alpha: 0.4),
+                            blurRadius: 7,
+                            spreadRadius: 0.5)
+                      ]
+                    : null,
               ),
-              child: Icon(Icons.flare,
-                  size: 18,
-                  color: player.heroActiveUsed
-                      ? AppColors.textMuted
-                      : AppColors.purpleLight),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(_heroIcon(hero), size: 17, color: accent),
+                  const SizedBox(height: 2),
+                  Text(
+                    _heroShort(hero),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.cinzelDecorative(
+                        fontSize: 6.5, color: AppColors.textPrimary),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 2),
-            Text('Herói',
-                style: GoogleFonts.robotoMono(
-                    fontSize: 9, color: AppColors.textSecondary)),
-          ],
-        ),
+          ),
+          const SizedBox(height: 2),
+          Text(used ? 'usada' : 'ATIVA',
+              style: GoogleFonts.robotoMono(
+                  fontSize: 8,
+                  color: used ? AppColors.textMuted : accent,
+                  fontWeight: FontWeight.w700)),
+        ],
       ),
     );
   }
+
+  /// Botão do CEMITÉRIO (ADR-0028): peek das cartas mortas/descartadas dos dois
+  /// lados. A contagem fica no rótulo.
+  Widget _cemeteryButton(BoardSide player) {
+    final n = player.graveyard.length;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _showCemetery,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: const Color(0xFF2A2140),
+              border: Border.all(color: AppColors.borderViolet),
+            ),
+            child: const Text('🪦', style: TextStyle(fontSize: 16)),
+          ),
+          const SizedBox(height: 2),
+          Text('$n',
+              style: GoogleFonts.robotoMono(
+                  fontSize: 9, color: AppColors.textSecondary)),
+        ],
+      ),
+    );
+  }
+
+  /// Diálogo do cemitério: lista as cartas mortas/descartadas dos dois lados.
+  void _showCemetery() {
+    final ui = ref.read(pveMatchControllerProvider);
+    final me = ui.playerBoard;
+    final bot = ui.botBoard;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surfaceAlt,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: AppColors.border),
+        ),
+        title: Text('Cemitério 🪦',
+            style: GoogleFonts.cinzelDecorative(
+                fontSize: 15, color: AppColors.textPrimary)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _revealSection('Seu cemitério (${me?.graveyard.length ?? 0})',
+                    me?.graveyard ?? const <Object>[]),
+                const SizedBox(height: 10),
+                _revealSection('Cemitério da IA (${bot?.graveyard.length ?? 0})',
+                    bot?.graveyard ?? const <Object>[]),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Fechar',
+                style: GoogleFonts.roboto(color: AppColors.textSecondary)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Ícone temático por herói (mini-carta do HUD).
+  IconData _heroIcon(HeroId h) {
+    switch (h) {
+      case HeroId.trapaceiro:
+        return Icons.casino;
+      case HeroId.cartomante:
+        return Icons.style;
+      case HeroId.oraculo:
+        return Icons.visibility;
+      case HeroId.coringa:
+        return Icons.auto_awesome;
+      case HeroId.assassino:
+        return Icons.gps_fixed;
+    }
+  }
+
+  /// Nome curto do herói (sem artigo) pra caber na mini-carta.
+  String _heroShort(HeroId h) =>
+      heroLabel(h).replaceFirst('O ', '').replaceFirst('A ', '');
 
   /// Despacha a ATIVA do herói por tipo (ADR-0028 Fase C). Oráculo abre o
   /// diálogo de espreita (escolha embaralhar/não); Cartomante usa a ativa e,
@@ -1990,8 +2113,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   Widget _handFan(PveMatchUiState ui, BoardSide player) {
     final controller = ref.read(pveMatchControllerProvider.notifier);
     final cards = player.hand;
-    final next = player.nextCard;
-    final n = cards.length + (next != null ? 1 : 0);
+    // #60 (CEO 2026-06-12): a "próxima" SAIU do HUD — o rodapé agora tem a carta
+    // do herói + comprar carta + cemitério. O leque mostra só a mão.
+    final n = cards.length;
 
     const cardH = 132.0;
     const cardW = cardH * 142 / 206; // ~91
@@ -2023,7 +2147,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
             clipBehavior: Clip.none,
             children: [
               for (final i in order)
-                _fanCard(ui, controller, cards, next, i, n,
+                _fanCard(ui, controller, cards, null, i, n,
                     left: startX + step * i,
                     cardW: cardW,
                     cardH: cardH,

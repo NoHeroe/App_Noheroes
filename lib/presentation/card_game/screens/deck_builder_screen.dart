@@ -29,7 +29,7 @@ class DeckBuilderScreen extends ConsumerStatefulWidget {
 }
 
 class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
-  int _tab = 0; // 0 = criaturas, 1 = relíquias
+  int _tab = 0; // 0 = criaturas, 1 = relíquias, 2 = heróis
   CardConcept? _conceptFilter; // null = Todos
 
   // Seleção atual (ids), em ordem de inserção.
@@ -66,95 +66,129 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
     super.dispose();
   }
 
-  /// Seletor de HERÓI representante (ADR-0028): 5 chips horizontais; tocar salva
-  /// no prefs. A passiva é fixa; a descrição mostra passiva + ativa.
-  Widget _heroSelector(CardCatalog? catalog, Set<String>? owned) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('HERÓI · ${heroLabel(_hero)}',
-              style: GoogleFonts.cinzelDecorative(
-                  fontSize: 12, color: AppColors.goldLt, letterSpacing: 1)),
-          const SizedBox(height: 2),
-          Text('${heroPassive(_hero)}  ·  Ativa: ${heroActive(_hero)}',
-              style: GoogleFonts.roboto(fontSize: 9.5, color: AppColors.txtMut)),
-          const SizedBox(height: 6),
-          SizedBox(
-            height: 34,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                for (final h in HeroId.values)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _hero = h);
-                        CardHeroPrefs.set(h);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 7),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(999),
-                          color: h == _hero
-                              ? AppColors.purple.withValues(alpha: 0.30)
-                              : const Color(0x33100C15),
-                          border: Border.all(
-                              color: h == _hero
-                                  ? AppColors.purpleLight
-                                  : AppColors.borderViolet),
-                        ),
-                        child: Text(heroLabel(h),
-                            style: GoogleFonts.roboto(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: h == _hero
-                                    ? AppColors.txt
-                                    : AppColors.txtMut)),
-                      ),
-                    ),
-                  ),
-              ],
+  // ── Aba HERÓIS (ADR-0028 / CEO 2026-06-12): escolhe o herói representante ──
+  /// Lista os 5 heróis padrão como cartas selecionáveis (passiva + ativa). Quando
+  /// o Cartomante está selecionado, mostra o picker da carta-bônus.
+  Widget _buildHeroGrid(CardCatalog? catalog, Set<String>? owned) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      children: [
+        for (final h in HeroId.values) _heroOptionCard(h),
+        if (_hero == HeroId.cartomante && catalog != null) ...[
+          const SizedBox(height: 4),
+          _bonusTile(catalog, owned ?? const <String>{}),
+        ],
+      ],
+    );
+  }
+
+  Widget _heroOptionCard(HeroId h) {
+    final selected = h == _hero;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        setState(() => _hero = h);
+        CardHeroPrefs.set(h);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: selected
+              ? AppColors.purple.withValues(alpha: 0.18)
+              : const Color(0x33100C15),
+          border: Border.all(
+              color: selected ? AppColors.goldLt : AppColors.borderViolet,
+              width: selected ? 1.4 : 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0x33100C15),
+                border: Border.all(
+                    color:
+                        selected ? AppColors.goldLt : AppColors.borderViolet),
+              ),
+              child: Icon(_heroIcon(h),
+                  size: 20,
+                  color: selected ? AppColors.goldLt : AppColors.purpleLt),
             ),
-          ),
-          // Cartomante (ADR-0028 Fase C): carta-bônus definida na montagem,
-          // injetada no topo do deck após o turno 4.
-          if (_hero == HeroId.cartomante && catalog != null) ...[
-            const SizedBox(height: 6),
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => _pickBonusCard(catalog, owned ?? const <String>{}),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: const Color(0x33100C15),
-                  border: Border.all(color: AppColors.goldLt),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.auto_awesome, size: 14, color: AppColors.goldLt),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        _bonusCardId == null
-                            ? 'Escolher carta-bônus (entra após o turno 4)'
-                            : 'Bônus: ${_cardNameById(catalog, _bonusCardId!)}',
-                        style: GoogleFonts.roboto(fontSize: 10.5, color: AppColors.txt),
-                      ),
-                    ),
-                  ],
-                ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(heroLabel(h),
+                      style: GoogleFonts.cinzelDecorative(
+                          fontSize: 13,
+                          color: selected ? AppColors.txt : AppColors.txt2)),
+                  const SizedBox(height: 3),
+                  Text('Passiva: ${heroPassive(h)}',
+                      style: GoogleFonts.roboto(
+                          fontSize: 10, color: AppColors.txtMut, height: 1.25)),
+                  Text('Ativa: ${heroActive(h)}',
+                      style: GoogleFonts.roboto(
+                          fontSize: 10, color: AppColors.txtMut, height: 1.25)),
+                ],
               ),
             ),
+            if (selected)
+              const Icon(Icons.check_circle, size: 18, color: AppColors.goldLt),
           ],
-        ],
+        ),
       ),
     );
+  }
+
+  Widget _bonusTile(CardCatalog catalog, Set<String> owned) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _pickBonusCard(catalog, owned),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: const Color(0x33100C15),
+          border: Border.all(color: AppColors.goldLt),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.auto_awesome, size: 16, color: AppColors.goldLt),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                _bonusCardId == null
+                    ? 'Cartomante: escolher carta-bônus (entra após o turno 4)'
+                    : 'Carta-bônus: ${_cardNameById(catalog, _bonusCardId!)}',
+                style: GoogleFonts.roboto(fontSize: 11, color: AppColors.txt),
+              ),
+            ),
+            const Icon(Icons.edit, size: 14, color: AppColors.txtMut),
+          ],
+        ),
+      ),
+    );
+  }
+
+  IconData _heroIcon(HeroId h) {
+    switch (h) {
+      case HeroId.trapaceiro:
+        return Icons.casino;
+      case HeroId.cartomante:
+        return Icons.style;
+      case HeroId.oraculo:
+        return Icons.visibility;
+      case HeroId.coringa:
+        return Icons.auto_awesome;
+      case HeroId.assassino:
+        return Icons.gps_fixed;
+    }
   }
 
   String _cardNameById(CardCatalog catalog, String id) {
@@ -272,7 +306,6 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
               children: [
                 _buildHeader(),
                 const SizedBox(height: 4),
-                _heroSelector(catalogAsync.valueOrNull, ownedAsync.valueOrNull),
                 Expanded(
                   child: _buildContent(catalogAsync, ownedAsync, deckAsync),
                 ),
@@ -345,7 +378,9 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
         Expanded(
           child: _tab == 0
               ? _buildCreatureGrid(ownedCreatures)
-              : _buildRelicGrid(ownedRelics, deckCreatures),
+              : _tab == 1
+                  ? _buildRelicGrid(ownedRelics, deckCreatures)
+                  : _buildHeroGrid(catalog, owned),
         ),
         // Contador + Salvar no RODAPÉ.
         _buildStatusBar(),
@@ -447,6 +482,7 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
         children: [
           Expanded(child: _tabBtn(0, 'CRIATURAS', Icons.pets)),
           Expanded(child: _tabBtn(1, 'RELÍQUIAS', Icons.shield_outlined)),
+          Expanded(child: _tabBtn(2, 'HERÓIS', Icons.shield_moon)),
         ],
       ),
     );
@@ -522,10 +558,27 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
       );
     }
 
+    // Slot do HERÓI (ADR-0028 / CEO 2026-06-12): fila de 3 slots CENTRALIZADA
+    // acima das 2 fileiras; o herói ocupa o slot do meio (cols 3-5 alinham com a
+    // grade). Tocar abre a aba Heróis. Os 2 laterais ficam de placeholder.
+    Widget heroSlot(int i) {
+      if (i == _max ~/ 2) {
+        return _miniSlot(
+          concept: AppColors.goldLt,
+          icon: _heroIcon(_hero),
+          onTap: () => _onFilterChanged(() => _tab = 2),
+        );
+      }
+      if (i == _max ~/ 2 - 1 || i == _max ~/ 2 + 1) return _miniSlot();
+      return const SizedBox();
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
+          _deckPreviewRow(Icons.shield_moon, heroSlot),
+          const SizedBox(height: 6),
           _deckPreviewRow(Icons.pets, creatureSlot),
           const SizedBox(height: 6),
           _deckPreviewRow(Icons.shield_outlined, relicSlot),

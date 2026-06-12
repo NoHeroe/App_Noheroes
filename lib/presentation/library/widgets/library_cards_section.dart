@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_models.dart';
+import '../../../domain/card_game/hero.dart';
 import '../../card_game/card_ownership.dart';
 import '../../card_game/card_economy.dart';
 import '../../card_game/widgets/game_card_face.dart';
@@ -314,6 +315,9 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
   }
 
   Widget _buildBody(CardCatalog catalog) {
+    // Aba HERÓIS (ADR-0028 / CEO 2026-06-12): os 5 heróis padrão (sempre
+    // disponíveis) listados na coleção, sem o modelo de carta/posse.
+    if (_tab == 2) return _buildHeroCollection();
     // Posse REAL é assíncrona: enquanto carrega/erro, trata como "nada
     // desbloqueado" (não crasha; UI mostra tudo bloqueado). Sem player
     // logado o provider já devolve set vazio.
@@ -502,6 +506,84 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
   }
 
   // ── Tabs (vidro deslizante) ─────────────────────────────────────────
+  /// Aba HERÓIS da coleção (ADR-0028): os 5 heróis padrão como tiles de info
+  /// (sempre disponíveis — não dependem de posse/raridade).
+  Widget _buildHeroCollection() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+          child: Text('${HeroId.values.length} heróis disponíveis',
+              style: GoogleFonts.roboto(fontSize: 12, color: AppColors.txtMut)),
+        ),
+        for (final h in HeroId.values)
+          Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: const Color(0x33100C15),
+              border: Border.all(color: AppColors.borderViolet),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0x33100C15),
+                    border: Border.all(
+                        color: AppColors.goldLt.withValues(alpha: 0.6)),
+                  ),
+                  child: Icon(_heroIcon(h), size: 22, color: AppColors.goldLt),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(heroLabel(h),
+                          style: GoogleFonts.cinzelDecorative(
+                              fontSize: 13, color: AppColors.txt)),
+                      const SizedBox(height: 3),
+                      Text('Passiva: ${heroPassive(h)}',
+                          style: GoogleFonts.roboto(
+                              fontSize: 10,
+                              color: AppColors.txtMut,
+                              height: 1.25)),
+                      Text('Ativa: ${heroActive(h)}',
+                          style: GoogleFonts.roboto(
+                              fontSize: 10,
+                              color: AppColors.txtMut,
+                              height: 1.25)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  IconData _heroIcon(HeroId h) {
+    switch (h) {
+      case HeroId.trapaceiro:
+        return Icons.casino;
+      case HeroId.cartomante:
+        return Icons.style;
+      case HeroId.oraculo:
+        return Icons.visibility;
+      case HeroId.coringa:
+        return Icons.auto_awesome;
+      case HeroId.assassino:
+        return Icons.gps_fixed;
+    }
+  }
+
   Widget _buildTabs() {
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
@@ -518,15 +600,18 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
           ),
           child: LayoutBuilder(
             builder: (context, c) {
-              final tabW = (c.maxWidth - 6) / 2;
+              final tabW = c.maxWidth / 3;
               return Stack(
                 children: [
-                  // Indicador deslizante
+                  // Indicador deslizante (3 posições: criaturas/relíquias/heróis).
                   AnimatedAlign(
                     duration: const Duration(milliseconds: 220),
                     curve: Curves.easeOut,
-                    alignment:
-                        _tab == 0 ? Alignment.centerLeft : Alignment.centerRight,
+                    alignment: _tab == 0
+                        ? Alignment.centerLeft
+                        : _tab == 1
+                            ? Alignment.center
+                            : Alignment.centerRight,
                     child: Container(
                       width: tabW,
                       height: 30,
@@ -551,6 +636,7 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
                     children: [
                       _tabBtn(0, 'CRIATURAS', Icons.pets, tabW),
                       _tabBtn(1, 'RELÍQUIAS', Icons.shield_outlined, tabW),
+                      _tabBtn(2, 'HERÓIS', Icons.shield_moon, tabW),
                     ],
                   ),
                 ],
