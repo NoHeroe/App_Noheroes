@@ -36,16 +36,15 @@ MatchState _withLanes(
 }
 
 void main() {
-  test('deal inicial: 4 cartas (≥2 criaturas); ativo puxa a grátis (→5)', () {
-    // Deal inicial PURO (sem o início de turno): 4 cartas, ≥2 criaturas.
+  test('deal inicial: 4 cartas (≥2 criaturas); turno 1 não compra', () {
+    // Deal inicial PURO: 4 cartas, ≥2 criaturas.
     final a = BoardSide.initial(SideId.a, makeLoadout(prefix: 'A'), makeRng(7));
     expect(a.hand.length, kInitialHandSize); // 4
     expect(a.handCreatures.length, greaterThanOrEqualTo(kInitialHandCreatures));
-    // Após start, o lado ATIVO já puxou a carta grátis do turno 1 → 5 (sem teto);
-    // o oponente segue com o deal de 4.
+    // Turno 1 = preparatório: sem compra grátis; os dois lados com 4.
     final s = engine.start(makeLoadout(prefix: 'A'), makeLoadout(prefix: 'B'),
         seed: 7);
-    expect(s.active.hand.length, kInitialHandSize + 1);
+    expect(s.active.hand.length, kInitialHandSize);
     expect(s.opponent.hand.length, kInitialHandSize);
   });
 

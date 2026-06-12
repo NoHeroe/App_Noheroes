@@ -74,36 +74,40 @@ class CardBattleEngine {
         detail: 'a carta-bônus entrou no topo do deck',
       ));
     }
-    // ADR-0028: compra 1 carta GRÁTIS por round (no-op se a mão já está cheia).
-    newSide = _drawOne(newSide);
-    // Passiva do Trapaceiro: chance de comprar 1 carta extra grátis.
-    if (side.heroId == HeroId.trapaceiro &&
-        s.rng.nextDouble() < kTrapaceiroDrawChance) {
-      final before = newSide.hand.length;
+    // TURNO 1 = PREPARATÓRIO (CEO 2026-06-12): sem compra de cartas (nem a grátis
+    // do round, nem passivas que compram/espiam). A mão fica com o deal inicial.
+    if (s.turn > 1) {
+      // ADR-0028: compra 1 carta GRÁTIS por round.
       newSide = _drawOne(newSide);
-      if (newSide.hand.length > before) {
+      // Passiva do Trapaceiro: chance de comprar 1 carta extra grátis.
+      if (side.heroId == HeroId.trapaceiro &&
+          s.rng.nextDouble() < kTrapaceiroDrawChance) {
+        final before = newSide.hand.length;
+        newSide = _drawOne(newSide);
+        if (newSide.hand.length > before) {
+          events.add(AbilityTriggered(
+            side: side.id,
+            cardId: 'hero',
+            cardName: heroLabel(HeroId.trapaceiro),
+            ability: 'Trapaceiro',
+            detail: 'comprou 1 carta extra',
+          ));
+        }
+      }
+      // Passiva da ORÁCULO: chance de espiar/reordenar as próximas cartas (UI
+      // humana resolve via ReorderDeck; bot auto-resolve em botActions).
+      if (side.heroId == HeroId.oraculo &&
+          newSide.deck.length >= 2 &&
+          s.rng.nextDouble() < kOraculoPeekChance) {
+        newSide = newSide.copyWith(oraculoPeekPending: true);
         events.add(AbilityTriggered(
           side: side.id,
           cardId: 'hero',
-          cardName: heroLabel(HeroId.trapaceiro),
-          ability: 'Trapaceiro',
-          detail: 'comprou 1 carta extra',
+          cardName: heroLabel(HeroId.oraculo),
+          ability: 'Oráculo',
+          detail: 'pode reordenar as próximas cartas do deck',
         ));
       }
-    }
-    // Passiva da ORÁCULO: chance de espiar/reordenar as próximas cartas (UI
-    // humana resolve via ReorderDeck; bot auto-resolve em botActions).
-    if (side.heroId == HeroId.oraculo &&
-        newSide.deck.length >= 2 &&
-        s.rng.nextDouble() < kOraculoPeekChance) {
-      newSide = newSide.copyWith(oraculoPeekPending: true);
-      events.add(AbilityTriggered(
-        side: side.id,
-        cardId: 'hero',
-        cardName: heroLabel(HeroId.oraculo),
-        ability: 'Oráculo',
-        detail: 'pode reordenar as próximas cartas do deck',
-      ));
     }
     newSide = _applyStartOfTurnBuffs(newSide, events);
     var state = s.withSide(side.id, newSide).copyWith(phase: MatchPhase.jogo);
@@ -872,32 +876,38 @@ class CardBattleEngine {
       ));
     }
 
-    // DoT (Sangramento/Veneno) ANTES da Fase de Ataque: dispara quando o dono
-    // da carta afetada clica "encerrar turno" (início do processamento deste
-    // endTurn), não durante as ações dele. Atinge as criaturas DESTE lado.
-    final beforeDot = events.length;
-    var state = _resolveStatusTicks(s, events);
-    record(state, beforeDot);
-    final winAfterDot = _checkVictory(state);
-    if (winAfterDot != null) {
-      final fin = state.copyWith(
-        phase: MatchPhase.fim,
-        winner: winAfterDot,
-        lastTurnEvents: List.unmodifiable(events),
-      );
-      return (finalState: fin, steps: steps);
-    }
+    // TURNO 1 = PREPARATÓRIO (CEO 2026-06-12): sem DoT e sem Fase de Ataque
+    // (sem combate), independente de quem começa. A compra grátis do turno 1
+    // também é pulada (ver `_beginTurn`).
+    var state = s;
+    if (s.turn > 1) {
+      // DoT (Sangramento/Veneno) ANTES da Fase de Ataque: dispara quando o dono
+      // da carta afetada clica "encerrar turno" (início do processamento deste
+      // endTurn), não durante as ações dele. Atinge as criaturas DESTE lado.
+      final beforeDot = events.length;
+      state = _resolveStatusTicks(state, events);
+      record(state, beforeDot);
+      final winAfterDot = _checkVictory(state);
+      if (winAfterDot != null) {
+        final fin = state.copyWith(
+          phase: MatchPhase.fim,
+          winner: winAfterDot,
+          lastTurnEvents: List.unmodifiable(events),
+        );
+        return (finalState: fin, steps: steps);
+      }
 
-    // Fase de Ataque automática (grava 1 step por ação de ataque/cura).
-    state = _resolveAttackPhase(state, events, steps);
-    final winAfterAttack = _checkVictory(state);
-    if (winAfterAttack != null) {
-      final fin = state.copyWith(
-        phase: MatchPhase.fim,
-        winner: winAfterAttack,
-        lastTurnEvents: List.unmodifiable(events),
-      );
-      return (finalState: fin, steps: steps);
+      // Fase de Ataque automática (grava 1 step por ação de ataque/cura).
+      state = _resolveAttackPhase(state, events, steps);
+      final winAfterAttack = _checkVictory(state);
+      if (winAfterAttack != null) {
+        final fin = state.copyWith(
+          phase: MatchPhase.fim,
+          winner: winAfterAttack,
+          lastTurnEvents: List.unmodifiable(events),
+        );
+        return (finalState: fin, steps: steps);
+      }
     }
 
     // Penalidade: terminar o turno sem criaturas no tabuleiro.

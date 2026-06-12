@@ -26,7 +26,7 @@ MatchState _stateWith({
     sideB: BoardSide.initial(SideId.b, makeLoadout(prefix: 'B'))
         .copyWith(lanes: pad(bLanes)),
     activeSide: SideId.a,
-    turn: 1,
+    turn: 2,
     phase: MatchPhase.jogo,
     rng: makeRng(seed),
   );
@@ -168,7 +168,7 @@ void main() {
           sacrificedThisTurn: false,
         ),
         activeSide: SideId.a,
-        turn: 1,
+        turn: 2,
         phase: MatchPhase.jogo,
         rng: makeRng(1),
       );

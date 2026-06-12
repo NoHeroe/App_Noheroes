@@ -545,9 +545,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                   ),
                 ),
               ),
-              // Turno no MEIO, entre desistir (esq) e encerrar (dir).
+              // Turno no MEIO, um pouco mais BAIXO (CEO 2026-06-12).
               Align(
-                alignment: const Alignment(0, -0.16),
+                alignment: const Alignment(0, -0.02),
                 child: _turnIndicator(ui),
               ),
               Align(
@@ -624,10 +624,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                 child: _lanesRow(ui, bot, isPlayerSide: false),
               ),
               const SizedBox(height: 60), // banda central (botões voltar/encerrar)
-              // O tabuleiro do JOGADOR desce um pouco (CEO) sem mexer no do bot:
-              // Transform.translate não afeta o layout/centralização.
+              // Tabuleiro do JOGADOR um pouco mais ALTO (CEO 2026-06-12).
               Transform.translate(
-                offset: const Offset(0, 20),
+                offset: const Offset(0, 6),
                 child: AbsorbPointer(
                   absorbing: !interactive,
                   child: _lanesRow(ui, player, isPlayerSide: true),
@@ -719,28 +718,41 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         !ui.playLocked &&
         player.deck.isNotEmpty &&
         player.crystals >= kExtraDrawCost;
+    // Layout (CEO 2026-06-12): meus contadores + cristal CENTRALIZADOS; o grupo
+    // de ações (comprar carta · cemitério · herói) ancorado à DIREITA.
     return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 2, 0, 10),
-      child: Center(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _hudCounter(Icons.pets, '${player.availableCreatureCount}'),
-            const SizedBox(width: 14),
-            CrystalGem(value: player.crystals, size: 42),
-            const SizedBox(width: 14),
-            _hudCounter(Icons.auto_awesome, '${player.availableRelicCount}'),
-            const SizedBox(width: 14),
-            _drawButton(canDraw),
-            const SizedBox(width: 14),
-            _cemeteryButton(player),
-            if (player.heroId != null) ...[
-              const SizedBox(width: 14),
-              _heroCard(ui, player),
+      padding: const EdgeInsets.fromLTRB(10, 2, 8, 10),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _hudCounter(Icons.pets, '${player.availableCreatureCount}'),
+              const SizedBox(width: 12),
+              CrystalGem(value: player.crystals, size: 40),
+              const SizedBox(width: 12),
+              _hudCounter(Icons.auto_awesome, '${player.availableRelicCount}'),
             ],
-          ],
-        ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _drawButton(canDraw),
+                const SizedBox(width: 10),
+                _cemeteryButton(player),
+                if (player.heroId != null) ...[
+                  const SizedBox(width: 10),
+                  _heroCard(ui, player),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -2163,11 +2175,12 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         builder: (context, cons) {
           final width = cons.maxWidth;
           final usable = (width - cardW).clamp(0.0, double.infinity);
-          // Passo entre cartas: cabe todas sem rolar (sobrepõe se faltar espaço).
+          // Cartas mais JUNTAS (CEO 2026-06-12): mais sobreposição (clamp menor).
           final step =
-              n > 1 ? (usable / (n - 1)).clamp(0.0, cardW * 0.94) : 0.0;
+              n > 1 ? (usable / (n - 1)).clamp(0.0, cardW * 0.72) : 0.0;
           final span = step * (n - 1) + cardW;
-          final startX = (width - span) / 2;
+          // Um pouco mais à ESQUERDA do centro (CEO).
+          final startX = (width - span) / 2 - 18;
           final center = (n - 1) / 2;
 
           // Ordem de pintura: selecionada por último (fica na frente).
@@ -2211,8 +2224,8 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     final isPreview = i >= cards.length;
     final card = isPreview ? next! : cards[i];
     final offset = i - center;
-    final rot = isPreview ? 0.0 : offset * 0.045; // leque
-    final arcDy = offset.abs() * 3.0; // bordas levemente mais baixas
+    final rot = isPreview ? 0.0 : offset * 0.075; // leque mais acentuado (CEO)
+    final arcDy = offset.abs() * 5.0; // arco mais forte: bordas mais baixas
 
     if (isPreview) {
       // Preview da próxima carta: um pouco mais pra ESQUERDA e ainda mais pra
