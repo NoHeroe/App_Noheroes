@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../notifications/notifications_screen.dart';
 import '../../../core/utils/npc_session.dart';
 import '../../../data/datasources/local/npc_reputation_service.dart';
 // Sprint 3.1 Bloco 1 — ShadowQuestService e QuestAdmissionService foram
@@ -314,7 +315,8 @@ class _SanctuaryScreenState extends ConsumerState<SanctuaryScreen> {
                             context, 'Caixa de entrada em breve.'),
                         onFriends: () =>
                             AppSnack.warning(context, 'Amigos em breve.'),
-                        onBell: () => context.go('/notifications'),
+                        onBell: () =>
+                            NotificationsScreen.showPanel(context),
                       ).animate(delay: 80.ms).fadeIn(duration: 400.ms),
                       const SizedBox(height: 20),
                       const CaelumDayBanner()

@@ -6,6 +6,7 @@ import '../../../app/providers.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../card_game/deck_repository.dart';
 import '../../shared/widgets/app_snack.dart';
+import '../../shared/widgets/nh_back_button.dart';
 
 /// Modelo de um submodo (uma "bolinha") dentro de um grupo/estilo de jogo.
 class _SubMode {
@@ -306,20 +307,8 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                   child: Row(
                     children: [
-                      GestureDetector(
-                        onTap: () => context.go('/sanctuary'),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: AppColors.border),
-                            borderRadius: BorderRadius.circular(10),
-                            color: AppColors.surface,
-                          ),
-                          child: const Icon(Icons.arrow_back_ios_new,
-                              color: AppColors.textSecondary, size: 18),
-                        ),
-                      ),
+                      // Botão voltar PADRÃO (CEO 2026-06-12).
+                      NhBackButton(onTap: () => context.go('/sanctuary')),
                     ],
                   ),
                 ),

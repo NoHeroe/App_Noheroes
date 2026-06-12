@@ -63,7 +63,27 @@ final _seedNotifications = [
 ];
 
 class NotificationsScreen extends ConsumerStatefulWidget {
-  const NotificationsScreen({super.key});
+  /// `asPanel`: renderiza como PAINEL (sem Scaffold/atmosfera/voltar) pra abrir
+  /// como bottom sheet do sino do Santuário (CEO 2026-06-12: tab, não página).
+  const NotificationsScreen({super.key, this.asPanel = false});
+
+  final bool asPanel;
+
+  /// Abre as notificações como um PAINEL deslizante (tab) em vez de navegar.
+  static Future<void> showPanel(BuildContext context) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const FractionallySizedBox(
+        heightFactor: 0.82,
+        child: ClipRRect(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+          child: NotificationsScreen(asPanel: true),
+        ),
+      ),
+    );
+  }
 
   @override
   ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
@@ -199,9 +219,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               child: Row(
                 children: [
                   NhBackButton(
-                    onTap: () => context.canPop()
-                        ? context.pop()
-                        : context.go('/sanctuary'),
+                    onTap: widget.asPanel
+                        ? () => Navigator.of(context).maybePop()
+                        : () => context.canPop()
+                            ? context.pop()
+                            : context.go('/sanctuary'),
                   ),
                   const Spacer(),
                   if (unread > 0) ...[
