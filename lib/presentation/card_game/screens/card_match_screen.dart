@@ -17,6 +17,7 @@ import '../../shared/tutorial_manager.dart';
 import '../card_economy.dart';
 import '../deck_repository.dart';
 import '../pve_match_controller.dart';
+import '../widgets/card_back.dart';
 import '../widgets/game_card_face.dart';
 
 /// PARTIDA JOGÁVEL do Modo Cartas (ACDA) — PvE interativo.
@@ -595,6 +596,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     return Column(
       children: [
         _botInfoBar(bot, ui),
+        _opponentHandBacks(bot),
         // Tabuleiros AGRUPADOS no centro (mais perto um do outro): a banda
         // central de 60px guarda os botões laterais; o conjunto inteiro fica
         // centralizado verticalmente em vez de espalhado nas bordas.
@@ -1094,6 +1096,54 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Mão do OPONENTE como COSTAS de carta (ADR-0028 / feedback CEO 2026-06-12):
+  /// o jogador vê a QUANTIDADE de cartas na mão do bot sem ver o conteúdo. Leque
+  /// compacto e sobreposto; com a mão sem teto, limita o nº de costas visíveis e
+  /// mostra o total numérico ao lado.
+  Widget _opponentHandBacks(BoardSide bot) {
+    final n = bot.hand.length;
+    if (n == 0) return const SizedBox(height: 6);
+    const h = 38.0;
+    const w = h * CardBack.kAspect; // largura de cada costa
+    const maxShown = 8;
+    final shown = n > maxShown ? maxShown : n;
+    const step = 13.0; // sobreposição
+    final span = step * (shown - 1) + w;
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: SizedBox(
+        height: h + 2,
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: span,
+                height: h,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    for (var i = 0; i < shown; i++)
+                      Positioned(
+                        left: i * step,
+                        child: const CardBack(height: h, radius: 5),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 7),
+              Text('$n',
+                  style: GoogleFonts.robotoMono(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textSecondary)),
+            ],
+          ),
         ),
       ),
     );

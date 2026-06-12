@@ -77,4 +77,5 @@ flutter:
     - assets/data/guild_ascension.json
     - assets/data/card_game/creatures.json
     - assets/data/card_game/relics.json
+    - assets/images/card_game/
     - assets/fonts/
