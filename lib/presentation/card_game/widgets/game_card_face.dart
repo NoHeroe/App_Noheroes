@@ -83,10 +83,30 @@ class GameCardFace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Destaque por RARIDADE (CEO 2026-06-12): épica/lendária/elite ganham borda
+    // e brilho na cor da raridade (na exibição e na revelação).
+    final rarCol = switch (rarity) {
+      Rarity.comum => AppColors.cardComum,
+      Rarity.rara => AppColors.cardRara,
+      Rarity.epica => AppColors.cardEpica,
+      Rarity.lendaria => AppColors.cardLendaria,
+      Rarity.elite => AppColors.cardElite,
+    };
+    final isHigh = rarity == Rarity.epica ||
+        rarity == Rarity.lendaria ||
+        rarity == Rarity.elite;
     final border = borderOverride ??
-        (selected ? AppColors.purpleLight : _concept.withValues(alpha: 0.35));
+        (selected
+            ? AppColors.purpleLight
+            : isHigh
+                ? rarCol.withValues(alpha: 0.75)
+                : _concept.withValues(alpha: 0.35));
     final glow = glowColor ??
-        (selected ? AppColors.purpleGlow : _concept.withValues(alpha: 0.12));
+        (selected
+            ? AppColors.purpleGlow
+            : isHigh
+                ? rarCol.withValues(alpha: 0.5)
+                : _concept.withValues(alpha: 0.12));
 
     final card = Container(
       width: width,
@@ -98,9 +118,13 @@ class GameCardFace extends StatelessWidget {
           colors: [Color(0xFF211A2E), Color(0xFF0B0810)],
         ),
         border: Border.all(
-            color: border, width: (selected || borderOverride != null) ? 1.6 : 1),
+            color: border,
+            width: (selected || borderOverride != null || isHigh) ? 1.6 : 1),
         boxShadow: [
-          BoxShadow(color: glow, blurRadius: selected ? 10 : 8, spreadRadius: 1),
+          BoxShadow(
+              color: glow,
+              blurRadius: (selected || isHigh) ? 12 : 8,
+              spreadRadius: isHigh ? 1.5 : 1),
         ],
       ),
       child: Padding(
