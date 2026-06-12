@@ -55,6 +55,18 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   // mesma = recuar pra mão. Só pra trás.
   String? _movingCreatureId;
 
+  // Mímico (Lote 5): criatura (aliada OU inimiga) marcada pra copiar ao jogar um
+  // Mímico da mão. Toca-se a criatura pra marcar; depois toca-se a lane pra jogar.
+  String? _mimicTargetId;
+
+  /// A carta selecionada da mão é um Mímico (criatura com a keyword)?
+  bool _selectedIsMimic(PveMatchUiState ui) {
+    final sel = _selectedPoolCard(ui);
+    return sel is CreatureCard &&
+        sel.abilities
+            .any((a) => abilityKeywordFromString(a) == AbilityKeyword.mimico);
+  }
+
   // Tutorial guiado da 1ª partida (ponto #2): bot fraco + diálogos. Detectado
   // no boot pra montar o bot fácil; o tutorial roda por cima da partida.
   bool _isTutorial = false;
@@ -1056,9 +1068,19 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     final controller = ref.read(pveMatchControllerProvider.notifier);
     final isFront = lane == 0;
 
+    // Mímico (Lote 5): com um Mímico selecionado, TODA criatura em jogo (aliada
+    // ou inimiga) vira candidata a cópia; a marcada fica dourada.
+    final mimicSelecting =
+        _selectedIsMimic(ui) && ui.isPlayerTurn && !ui.playLocked;
+    final mimicCandidate = mimicSelecting && creature != null;
+    final mimicMarked =
+        mimicCandidate && _mimicTargetId == creature.instanceId;
+
     Color? borderOverride;
     if (laneHighlighted) borderOverride = AppColors.purpleLight;
     if (targetHighlighted) borderOverride = AppColors.gold;
+    if (mimicCandidate) borderOverride = AppColors.conceptMagico;
+    if (mimicMarked) borderOverride = AppColors.gold;
 
     // Papel desta criatura no evento de combate sendo narrado (replay).
     final h = ui.highlight;
@@ -1220,7 +1242,17 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       child: Center(
         child: GestureDetector(
           onTap: () {
-            if (!isPlayerSide || !ui.isPlayerTurn || ui.playLocked) return;
+            if (!ui.isPlayerTurn || ui.playLocked) return;
+            // Mímico: tocar QUALQUER criatura (aliada ou inimiga) marca/desmarca
+            // como alvo da cópia (antes do guard de lado — alvo pode ser inimigo).
+            if (mimicSelecting && creature != null) {
+              setState(() => _mimicTargetId =
+                  _mimicTargetId == creature.instanceId
+                      ? null
+                      : creature.instanceId);
+              return;
+            }
+            if (!isPlayerSide) return;
             final selectedId = ui.selectedCardId;
             if (selectedId == null) {
               // Fluxo de REPOSICIONAMENTO (select + click; só pra trás):
@@ -1250,8 +1282,11 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
             }
             if (laneHighlighted) {
               // Criatura: joga aqui (empurra se o slot estiver ocupado; a
-              // engine decide normal vs cheio→volta-pra-mão).
-              controller.playCreature(selectedId, lane: lane);
+              // engine decide normal vs cheio→volta-pra-mão). Mímico: leva o
+              // alvo marcado (ou null → engine auto-escolhe o mais forte).
+              final mimicId = _selectedIsMimic(ui) ? _mimicTargetId : null;
+              controller.playCreature(selectedId, lane: lane, mimicTargetId: mimicId);
+              if (_mimicTargetId != null) setState(() => _mimicTargetId = null);
             } else if (targetHighlighted && creature != null) {
               controller.playRelic(selectedId, creature.instanceId);
             }

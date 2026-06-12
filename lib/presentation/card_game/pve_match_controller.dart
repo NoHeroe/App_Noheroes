@@ -257,7 +257,7 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
   /// Joga uma criatura do pool do jogador. `lane` null = engine escolhe a
   /// lane livre mais à frente. Retorna false se não for a vez do jogador ou
   /// se o engine recusar (no-op).
-  bool playCreature(String cardId, {int? lane}) {
+  bool playCreature(String cardId, {int? lane, String? mimicTargetId}) {
     // Detecta (ANTES de aplicar) a jogada especial de "tabuleiro cheio →
     // carta empurrada volta pra mão", que custa 3 cristais e ENCERRA a vez.
     final match = state.match;
@@ -267,7 +267,7 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
         _engine.isFullBoardReturnPlay(match, cardId, lane);
 
     final ok = _playerAction(
-      PlayCreature(cardId, lane: lane),
+      PlayCreature(cardId, lane: lane, mimicTargetId: mimicTargetId),
       onApplied: (before, after) {
         final name = _creatureName(before, cardId);
         final placed = _findCreature(after.sideOf(state.playerSide), cardId);
