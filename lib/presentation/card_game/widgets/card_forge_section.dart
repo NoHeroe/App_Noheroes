@@ -7,8 +7,13 @@ import '../../../core/constants/app_colors.dart';
 import '../card_economy.dart';
 
 /// Seção "EMBLEMAS" do Ferreiro (hybrid — ADR economia v1): forja de Emblema de
-/// Evolução e fusão de Essências, executadas via RPCs do card game sobre
-/// `player_cg_resources`. Renderizada DENTRO da tela do Ferreiro (sem tela nova).
+/// Evolução e fusão de Essências, via RPCs do card game sobre `player_cg_resources`.
+///
+/// Redesenho (CEO 2026-06-11): só esta aba muda. Sem título no topo; materiais
+/// como PILLS no topo-direito (padrão do Santuário). Cada receita é um "card de
+/// produto": título dentro do card, ÍCONE GRANDE do produto final à esquerda, a
+/// receita (ícones de insumo + quantidade + nome em miniatura) ao lado, e um
+/// botão pequeno de forjar no canto inferior-direito.
 class CardForgeSection extends ConsumerStatefulWidget {
   const CardForgeSection({super.key});
 
@@ -27,6 +32,21 @@ class _CardForgeSectionState extends ConsumerState<CardForgeSection> {
     'lendaria': 'Lendária',
   };
   int _idx(String r) => _rarities.indexOf(r) + 1;
+  String _next(String r) => _rarities[(_idx(r)).clamp(0, _rarities.length - 1)];
+
+  Color _rarColor(String r) {
+    switch (r) {
+      case 'comum':
+        return AppColors.cardComum;
+      case 'rara':
+        return AppColors.cardRara;
+      case 'epica':
+        return AppColors.cardEpica;
+      case 'lendaria':
+        return AppColors.cardLendaria;
+    }
+    return AppColors.cardComum;
+  }
 
   void _snack(String msg, {bool ok = false}) {
     if (!mounted) return;
@@ -64,153 +84,81 @@ class _CardForgeSectionState extends ConsumerState<CardForgeSection> {
     int n(String k) => res[k] ?? 0;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 28),
       children: [
-        _resourcePanel(n),
+        // Materiais como PILLS no topo-direito (padrão Santuário; sem título).
+        Align(
+          alignment: Alignment.centerRight,
+          child: Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              _pill(Icons.blur_on, AppColors.conceptMagico, 'Poeira', n('stardust')),
+              _pill(Icons.layers_outlined, const Color(0xFF9FB4D8), 'Lasca carta',
+                  n('card_shard')),
+              _pill(Icons.layers_outlined, AppColors.purpleLt, 'Lasca relíquia',
+                  n('relic_shard')),
+            ],
+          ),
+        ),
         const SizedBox(height: 14),
-        _header('FORJAR EMBLEMA',
-            '10×nível Lascas + 2 Essências + 100×nível Poeira → 1 Emblema'),
-        const SizedBox(height: 8),
-        for (final kind in const ['card', 'relic']) ...[
-          _kindLabel(kind),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final r in _rarities)
-                _forgeTile(kind, r, n),
-            ],
-          ),
-          const SizedBox(height: 10),
-        ],
-        const SizedBox(height: 8),
-        _header('FUNDIR ESSÊNCIA',
-            '5 Essências de uma raridade + 50×nível Poeira → 1 da seguinte'),
-        const SizedBox(height: 8),
-        for (final kind in const ['card', 'relic']) ...[
-          _kindLabel(kind),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final r in const ['comum', 'rara', 'epica'])
-                _fuseTile(kind, r, n),
-            ],
-          ),
-          const SizedBox(height: 10),
-        ],
+
+        // FUNDIR ESSÊNCIA — combina 5 de uma raridade na seguinte (carta/relíquia).
+        for (final kind in const ['card', 'relic'])
+          for (final r in const ['comum', 'rara', 'epica'])
+            _fuseCard(kind, r, n),
+
+        // FORJAR EMBLEMA — sobe o nível da carta (carta/relíquia, por raridade).
+        for (final kind in const ['card', 'relic'])
+          for (final r in _rarities) _emblemCard(kind, r, n),
       ],
     );
   }
 
-  /// Painel "SEUS RECURSOS" — visibilidade dos materiais do card game.
-  Widget _resourcePanel(int Function(String) n) {
-    Widget chip(IconData ic, String label, int v) => Container(
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            color: const Color(0x33100C15),
-            border: Border.all(color: AppColors.borderViolet),
-          ),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(ic, size: 13, color: AppColors.purpleLt),
-            const SizedBox(width: 5),
-            Text('$label ',
-                style: GoogleFonts.roboto(fontSize: 10.5, color: AppColors.txtMut)),
-            Text('$v',
-                style: GoogleFonts.robotoMono(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.goldLt)),
-          ]),
-        );
-    const rLetters = {'comum': 'C', 'rara': 'R', 'epica': 'É', 'lendaria': 'L'};
+  // ── Pill de material (topo-direito) ─────────────────────────────────────
+  Widget _pill(IconData icon, Color color, String label, int value) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(8, 4, 10, 4),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: const Color(0x22100C15),
-        border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
+        borderRadius: BorderRadius.circular(999),
+        gradient: const LinearGradient(
+          colors: [Color(0xE6141019), Color(0xE60A080E)],
+        ),
+        border: Border.all(color: AppColors.borderViolet),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text('SEUS RECURSOS',
-              style: GoogleFonts.cinzelDecorative(
-                  fontSize: 12, color: AppColors.goldLt, letterSpacing: 1.5)),
-          const SizedBox(height: 8),
-          Wrap(spacing: 7, runSpacing: 7, children: [
-            chip(Icons.blur_on, 'Poeira', n('stardust')),
-            chip(Icons.layers_outlined, 'Lasca C', n('card_shard')),
-            chip(Icons.layers_outlined, 'Lasca R', n('relic_shard')),
-            for (final r in _rarities)
-              chip(Icons.auto_awesome, 'Ess.C·${rLetters[r]}', n('card_soul_$r')),
-            for (final r in _rarities)
-              chip(Icons.auto_awesome, 'Ess.R·${rLetters[r]}', n('relic_soul_$r')),
-            for (final r in _rarities)
-              chip(Icons.military_tech_outlined, 'Embl.C·${rLetters[r]}',
-                  n('card_scroll_$r')),
-            for (final r in _rarities)
-              chip(Icons.military_tech_outlined, 'Embl.R·${rLetters[r]}',
-                  n('relic_runes_$r')),
-          ]),
+          Icon(icon, color: color, size: 13),
+          const SizedBox(width: 5),
+          Text('$value',
+              style: GoogleFonts.roboto(
+                  fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.txt)),
         ],
       ),
     );
   }
 
-  Widget _header(String title, String sub) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style: GoogleFonts.cinzelDecorative(
-                  fontSize: 14, color: AppColors.goldLt, letterSpacing: 1.5)),
-          const SizedBox(height: 2),
-          Text(sub,
-              style: GoogleFonts.roboto(fontSize: 10.5, color: AppColors.txtMut)),
-        ],
-      );
+  String _kindLabel(String kind) => kind == 'relic' ? 'Relíquia' : 'Carta';
 
-  Widget _kindLabel(String kind) => Text(
-        kind == 'relic' ? 'Relíquia' : 'Carta',
-        style: GoogleFonts.roboto(
-            fontSize: 11, letterSpacing: 1, color: AppColors.txt2),
-      );
-
-  Widget _forgeTile(String kind, String rarity, int Function(String) n) {
-    final idx = _idx(rarity);
-    final lascaKey = kind == 'relic' ? 'relic_shard' : 'card_shard';
+  // ── Receita: FUNDIR (5 essências r + poeira → 1 essência seguinte) ──────
+  Widget _fuseCard(String kind, String rarity, int Function(String) n) {
     final soulKey = '${kind == 'relic' ? 'relic_soul_' : 'card_soul_'}$rarity';
-    final needLasca = 10 * idx;
-    const needSoul = 2;
-    final needPoeira = 100 * idx;
-    final can = n(lascaKey) >= needLasca &&
-        n(soulKey) >= needSoul &&
-        n('stardust') >= needPoeira &&
-        !_busy;
-    return _tile(
-      title: _rarLabel[rarity]!,
-      cost: '$needLasca L · $needSoul E · $needPoeira P',
-      can: can,
-      onTap: () => _run(
-          () => ref
-              .read(cardEconomyServiceProvider)
-              .forgeEmblem(ref.read(currentPlayerProvider)!.id, kind, rarity),
-          'Emblema forjado!'),
-    );
-  }
-
-  Widget _fuseTile(String kind, String rarity, int Function(String) n) {
-    final idx = _idx(rarity);
-    final soulKey = '${kind == 'relic' ? 'relic_soul_' : 'card_soul_'}$rarity';
-    final needPoeira = 50 * idx;
-    final can =
-        n(soulKey) >= 5 && n('stardust') >= needPoeira && !_busy;
-    return _tile(
-      title: '${_rarLabel[rarity]!} →',
-      cost: '5 E · $needPoeira P',
+    final needPoeira = 50 * _idx(rarity);
+    final nextR = _next(rarity);
+    final can = n(soulKey) >= 5 && n('stardust') >= needPoeira && !_busy;
+    return _productCard(
+      title: 'Essência ${_rarLabel[nextR]} (${_kindLabel(kind)})',
+      finalIcon: Icons.auto_awesome,
+      finalColor: _rarColor(nextR),
+      inputs: [
+        _Ingredient(Icons.auto_awesome, _rarColor(rarity), 5, 'Essência',
+            n(soulKey) >= 5),
+        _Ingredient(Icons.blur_on, AppColors.conceptMagico, needPoeira, 'Poeira',
+            n('stardust') >= needPoeira),
+      ],
+      action: 'Fundir',
       can: can,
       onTap: () => _run(
           () => ref
@@ -220,48 +168,157 @@ class _CardForgeSectionState extends ConsumerState<CardForgeSection> {
     );
   }
 
-  Widget _tile({
+  // ── Receita: FORJAR EMBLEMA (lascas + 2 essências + poeira → emblema) ────
+  Widget _emblemCard(String kind, String rarity, int Function(String) n) {
+    final lascaKey = kind == 'relic' ? 'relic_shard' : 'card_shard';
+    final soulKey = '${kind == 'relic' ? 'relic_soul_' : 'card_soul_'}$rarity';
+    final needLasca = 10 * _idx(rarity);
+    const needSoul = 2;
+    final needPoeira = 100 * _idx(rarity);
+    final can = n(lascaKey) >= needLasca &&
+        n(soulKey) >= needSoul &&
+        n('stardust') >= needPoeira &&
+        !_busy;
+    return _productCard(
+      title: 'Emblema ${_rarLabel[rarity]} (${_kindLabel(kind)})',
+      finalIcon: Icons.military_tech,
+      finalColor: _rarColor(rarity),
+      inputs: [
+        _Ingredient(Icons.layers_outlined, const Color(0xFF9FB4D8), needLasca,
+            'Lasca', n(lascaKey) >= needLasca),
+        _Ingredient(Icons.auto_awesome, _rarColor(rarity), needSoul, 'Essência',
+            n(soulKey) >= needSoul),
+        _Ingredient(Icons.blur_on, AppColors.conceptMagico, needPoeira, 'Poeira',
+            n('stardust') >= needPoeira),
+      ],
+      action: 'Forjar',
+      can: can,
+      onTap: () => _run(
+          () => ref
+              .read(cardEconomyServiceProvider)
+              .forgeEmblem(ref.read(currentPlayerProvider)!.id, kind, rarity),
+          'Emblema forjado!'),
+    );
+  }
+
+  // ── Card de produto genérico ────────────────────────────────────────────
+  Widget _productCard({
     required String title,
-    required String cost,
+    required IconData finalIcon,
+    required Color finalColor,
+    required List<_Ingredient> inputs,
+    required String action,
     required bool can,
     required VoidCallback onTap,
   }) {
-    return Opacity(
-      opacity: can ? 1 : 0.45,
-      child: GestureDetector(
-        onTap: can ? onTap : null,
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          width: 150,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: const Color(0x33100C15),
-            border: Border.all(color: AppColors.gold.withValues(alpha: 0.45)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.fromLTRB(12, 9, 10, 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: const Color(0x33100C15),
+        border: Border.all(color: finalColor.withValues(alpha: 0.45)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Título DENTRO do card, destacado no topo.
+          Text(title,
+              style: GoogleFonts.cinzelDecorative(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.goldLt)),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.military_tech_outlined,
-                      size: 15, color: AppColors.goldLt),
-                  const SizedBox(width: 6),
-                  Text(title,
-                      style: GoogleFonts.roboto(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.txt)),
-                ],
+              // Ícone GRANDE do produto final, à esquerda.
+              Container(
+                width: 52,
+                height: 52,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: finalColor.withValues(alpha: 0.12),
+                  border: Border.all(color: finalColor.withValues(alpha: 0.6)),
+                ),
+                child: Icon(finalIcon, size: 30, color: finalColor),
               ),
-              const SizedBox(height: 4),
-              Text(cost,
-                  style: GoogleFonts.robotoMono(
-                      fontSize: 10, color: AppColors.txt2)),
+              const SizedBox(width: 12),
+              // A RECEITA: ícones dos insumos + quantidade + nome em miniatura.
+              Expanded(
+                child: Wrap(
+                  spacing: 12,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.start,
+                  children: [for (final ing in inputs) _ingredient(ing)],
+                ),
+              ),
             ],
           ),
-        ),
+          // Botão pequeno no canto inferior-direito.
+          Align(
+            alignment: Alignment.centerRight,
+            child: Opacity(
+              opacity: can ? 1 : 0.4,
+              child: GestureDetector(
+                onTap: can ? onTap : null,
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  margin: const EdgeInsets.only(top: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: const Color(0xFF2A2140),
+                    border: Border.all(color: AppColors.gold),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.hardware, size: 13, color: AppColors.goldLt),
+                      const SizedBox(width: 5),
+                      Text(action,
+                          style: GoogleFonts.roboto(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.goldLt)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
+
+  /// Um insumo da receita: ícone + quantidade (vermelha se faltar) + nome mini.
+  Widget _ingredient(_Ingredient ing) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(ing.icon, size: 22, color: ing.color),
+        const SizedBox(height: 1),
+        Text('${ing.qty}',
+            style: GoogleFonts.robotoMono(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: ing.enough ? AppColors.txt : AppColors.hp)),
+        Text(ing.name,
+            style: GoogleFonts.roboto(fontSize: 8.5, color: AppColors.txtMut)),
+      ],
+    );
+  }
+}
+
+/// Insumo de uma receita (ícone + quantidade necessária + nome + suficiência).
+class _Ingredient {
+  final IconData icon;
+  final Color color;
+  final int qty;
+  final String name;
+  final bool enough;
+  const _Ingredient(this.icon, this.color, this.qty, this.name, this.enough);
 }
