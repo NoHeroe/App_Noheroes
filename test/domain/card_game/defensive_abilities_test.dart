@@ -207,49 +207,41 @@ void main() {
   });
 
   group('Reflexo Mágico', () {
-    // Sem Voo/Ataque Duplo, a 1ª rolagem de rng é a do reflexo. Escaneia seeds.
-    bool reflected(int seed) {
+    test('100%: alvo ileso e atacante toma o dano mágico cheio', () {
       final s = _stateWith(
         aLanes: [inPlay(id: 'mage', atk: 4, hp: 10, type: DamageType.magico)],
         bLanes: [inPlay(id: 'def', atk: 0, hp: 10, abilities: ['Reflexo Mágico'])],
-        seed: seed,
-      );
-      final after = engine.endTurn(s);
-      return after.lastTurnEvents
-          .whereType<AbilityTriggered>()
-          .any((e) => e.ability == 'Reflexo Mágico');
-    }
-
-    test('quando reflete: alvo ileso e atacante toma o dano mágico', () {
-      var hit = -1;
-      for (var seed = 0; seed < 200; seed++) {
-        if (reflected(seed)) {
-          hit = seed;
-          break;
-        }
-      }
-      expect(hit, greaterThanOrEqualTo(0));
-      final s = _stateWith(
-        aLanes: [inPlay(id: 'mage', atk: 4, hp: 10, type: DamageType.magico)],
-        bLanes: [inPlay(id: 'def', atk: 0, hp: 10, abilities: ['Reflexo Mágico'])],
-        seed: hit,
       );
       final after = engine.endTurn(s);
       expect(_hpOf(after.sideB, 'def'), 10); // ignorou o dano.
-      expect(_hpOf(after.sideA, 'mage'), 10 - 4); // devolvido ao atacante.
+      expect(_hpOf(after.sideA, 'mage'), 10 - 4); // dano cheio devolvido.
     });
 
-    test('dispara em ~75%: existe seed que reflete e seed que não', () {
-      int? on, off;
-      for (var seed = 0; seed < 200 && (on == null || off == null); seed++) {
-        if (reflected(seed)) {
-          on ??= seed;
-        } else {
-          off ??= seed;
-        }
-      }
-      expect(on, isNotNull);
-      expect(off, isNotNull);
+    test('dois refletores: loop +1/loop, lançado aleatoriamente num dos dois',
+        () {
+      final s = _stateWith(
+        aLanes: [
+          inPlay(id: 'mage', atk: 4, hp: 20, type: DamageType.magico, abilities: [
+            'Reflexo Mágico'
+          ])
+        ],
+        bLanes: [inPlay(id: 'def', atk: 0, hp: 20, abilities: ['Reflexo Mágico'])],
+      );
+      final after = engine.endTurn(s);
+      final expectedDmg = 4 + (kReflexoLoopLimit - 1) * kReflexoLoopGain;
+      final hpA = _hpOf(after.sideA, 'mage');
+      final hpB = _hpOf(after.sideB, 'def');
+      // exatamente UM dos dois tomou o dano acumulado do loop.
+      final aHit = hpA == 20 - expectedDmg;
+      final bHit = hpB == 20 - expectedDmg;
+      expect(aHit ^ bHit, isTrue,
+          reason: 'um (e só um) dos refletores recebe o dano do loop');
+      expect(
+        after.lastTurnEvents
+            .whereType<AbilityTriggered>()
+            .any((e) => e.ability == 'Reflexo Mágico' && e.detail.contains('loop')),
+        isTrue,
+      );
     });
   });
 

@@ -93,9 +93,14 @@ const int kEscudoSagradoArmor = 1;
 /// Chance de Contra-Ataque ao ser atingida por melee (0..1). 🎚️
 const double kContraAtaqueChance = 0.5;
 
-/// Chance de Reflexo Mágico IGNORAR o dano mágico e devolvê-lo ao atacante
-/// (0..1). 🎚️ (vault: 75%).
-const double kReflexoMagicoChance = 0.75;
+/// Reflexo Mágico: SEMPRE (100%) ignora o dano mágico e o devolve ao atacante
+/// (decisão do CEO 2026-06-11). Se o atacante TAMBÉM tiver Reflexo, vira loop:
+/// quica entre os dois, +`kReflexoLoopGain` de dano por loop, e após
+/// `kReflexoLoopLimit` loops é lançado ALEATORIAMENTE em um dos dois. 🎚️
+const int kReflexoLoopLimit = 4;
+
+/// Dano extra por loop de Reflexo (anti-loop infinito quando dois refletem). 🎚️
+const int kReflexoLoopGain = 1;
 
 // ── Lote 3a (status / DoT) — magnitudes 🎚️ calibráveis ───────────────────────
 

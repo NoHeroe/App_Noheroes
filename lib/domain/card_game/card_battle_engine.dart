@@ -978,11 +978,10 @@ class CardBattleEngine {
     var pendingGain = 0;
     var anyDeath = false;
 
-    // ---- Reflexo Mágico: ao ser atingida por MÁGICO, chance de IGNORAR o dano
-    // e devolvê-lo ao atacante. (Suprimido por Doença via functionalKeyword.) ----
+    // ---- Reflexo Mágico: ao ser atingida por MÁGICO, IGNORA o dano e devolve-o
+    // ao atacante (100%). (Suprimido por Doença via functionalKeyword.) ----
     final magicReflected = type == DamageType.magico &&
-        target.functionalKeyword(AbilityKeyword.reflexoMagico) &&
-        s.rng.nextDouble() < kReflexoMagicoChance;
+        target.functionalKeyword(AbilityKeyword.reflexoMagico);
 
     // ---- Dano principal ---- (valor deste ataque específico — multi-ataque)
     final raw = value;
@@ -1324,21 +1323,64 @@ class CardBattleEngine {
       }
     }
 
-    // ---- Reflexo Mágico: devolve o dano mágico (raw) ao atacante ----
+    // ---- Reflexo Mágico: devolve o dano mágico ao atacante. Se o ATACANTE
+    // também reflete, vira LOOP (quica entre os dois, +kReflexoLoopGain/loop);
+    // após kReflexoLoopLimit loops é lançado ALEATORIAMENTE num dos dois. ----
     if (magicReflected && !attackerDied) {
-      final res = _resolveLethal(attacker, attacker.currentHp - raw);
-      events.add(AbilityTriggered(
-        side: defSide.id,
-        cardId: target.instanceId,
-        cardName: target.card.nome,
-        ability: abilityKeywordLabel(AbilityKeyword.reflexoMagico),
-        detail: 'refletiu $raw de dano mágico em '
-            '${attacker.card.nome}${res.died ? ' (destruída)' : ''}',
-      ));
-      if (res.died) {
-        attackerDied = true;
+      final attackerReflects =
+          attacker.functionalKeyword(AbilityKeyword.reflexoMagico);
+      if (!attackerReflects) {
+        // Caso simples: o atacante toma o dano refletido (raw).
+        final res = _resolveLethal(attacker, attacker.currentHp - raw);
+        events.add(AbilityTriggered(
+          side: defSide.id,
+          cardId: target.instanceId,
+          cardName: target.card.nome,
+          ability: abilityKeywordLabel(AbilityKeyword.reflexoMagico),
+          detail: 'refletiu $raw de dano mágico em '
+              '${attacker.card.nome}${res.died ? ' (destruída)' : ''}',
+        ));
+        if (res.died) {
+          attackerDied = true;
+        } else {
+          attacker = res.creature!;
+        }
       } else {
-        attacker = res.creature!;
+        // LOOP: os dois refletem. +1/loop até o limite; depois, aleatório.
+        final loopDmg = raw + (kReflexoLoopLimit - 1) * kReflexoLoopGain;
+        final hitAttacker = s.rng.nextBool();
+        if (hitAttacker) {
+          final res = _resolveLethal(attacker, attacker.currentHp - loopDmg);
+          events.add(AbilityTriggered(
+            side: defSide.id,
+            cardId: target.instanceId,
+            cardName: target.card.nome,
+            ability: abilityKeywordLabel(AbilityKeyword.reflexoMagico),
+            detail: 'loop de reflexo ($kReflexoLoopLimit loops): $loopDmg em '
+                '${attacker.card.nome}${res.died ? ' (destruída)' : ''}',
+          ));
+          if (res.died) {
+            attackerDied = true;
+          } else {
+            attacker = res.creature!;
+          }
+        } else {
+          // o ALVO (o outro refletor) toma o dano acumulado.
+          final tgt = defLanes[targetLaneIdx];
+          if (tgt != null) {
+            final res = _resolveLethal(tgt, tgt.currentHp - loopDmg);
+            defLanes[targetLaneIdx] = res.creature;
+            if (res.died) anyDeath = true;
+            events.add(AbilityTriggered(
+              side: defSide.id,
+              cardId: target.instanceId,
+              cardName: target.card.nome,
+              ability: abilityKeywordLabel(AbilityKeyword.reflexoMagico),
+              detail: 'loop de reflexo ($kReflexoLoopLimit loops): $loopDmg em '
+                  '${tgt.card.nome}${res.died ? ' (destruída)' : ''}',
+            ));
+          }
+        }
       }
     }
 

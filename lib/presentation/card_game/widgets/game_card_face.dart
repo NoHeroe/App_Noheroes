@@ -454,7 +454,7 @@ String keywordDescription(AbilityKeyword k) {
     case AbilityKeyword.contraAtaque:
       return 'Ao ser atingida por melee, 50% de revidar com seu ataque.';
     case AbilityKeyword.reflexoMagico:
-      return 'Ao ser atingida por mágico, % de ignorar e devolver o dano.';
+      return 'Ignora o dano mágico e o devolve ao atacante (loop se ambos têm).';
     case AbilityKeyword.inabalavel:
       return 'Se fosse destruída, ressuscita com vida cheia (1×/partida).';
     case AbilityKeyword.sangramento:
