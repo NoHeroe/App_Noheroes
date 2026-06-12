@@ -8,6 +8,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../domain/card_game/card_catalog.dart';
 import '../../../domain/card_game/card_models.dart';
 import '../../../domain/card_game/hero.dart';
+import '../../card_game/screens/stellar_forge_screen.dart';
 import '../../card_game/card_ownership.dart';
 import '../../card_game/card_economy.dart';
 import '../../card_game/widgets/game_card_face.dart';
@@ -201,10 +202,9 @@ class LibraryCardsSection extends ConsumerStatefulWidget {
 
 class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
   int _tab = 0; // 0 = criaturas, 1 = relíquias
-  String _query = '';
+  static const String _query = ''; // busca removida (CEO 2026-06-12)
   CardConcept? _conceptFilter; // null = Todos
   _OwnershipView _view = _OwnershipView.all; // default = Todas
-  final _searchCtrl = TextEditingController();
 
   // Paginação horizontal: 4 cartas por página (2x2), com setas + swipe.
   static const int _perPage = 4;
@@ -215,7 +215,6 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
 
   @override
   void dispose() {
-    _searchCtrl.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -491,15 +490,47 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
     );
   }
 
-  // ── Header: voltar + BUSCA (sem título — busca no lugar dele) ────────
+  // ── Header: voltar + FORJA ESTELAR (CEO 2026-06-12: substitui a busca) ──
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       child: Row(
         children: [
           NhBackButton(onTap: widget.onBack),
-          const SizedBox(width: 12),
-          Expanded(child: _buildSearch()),
+          const Spacer(),
+          Text('Forja Estelar',
+              style: GoogleFonts.cinzelDecorative(
+                  fontSize: 11, color: AppColors.goldLt, letterSpacing: 1)),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                  builder: (_) => const StellarForgeScreen()),
+            ),
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF2A1B40), Color(0xFF140D22)],
+                ),
+                border: Border.all(
+                    color: AppColors.goldLt.withValues(alpha: 0.75), width: 1.4),
+                boxShadow: [
+                  BoxShadow(
+                      color: AppColors.gold.withValues(alpha: 0.3),
+                      blurRadius: 8),
+                ],
+              ),
+              child: const Icon(Icons.auto_awesome,
+                  size: 20, color: AppColors.goldLt),
+            ),
+          ),
         ],
       ),
     );
@@ -676,41 +707,6 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
     );
   }
 
-  // ── Search ──────────────────────────────────────────────────────────
-  Widget _buildSearch() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF100C15), Color(0xFF09070C)],
-        ),
-        border: Border.all(color: AppColors.borderViolet),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.search, color: AppColors.txtMut, size: 18),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              controller: _searchCtrl,
-              onChanged: (v) => _onFilterChanged(() => _query = v),
-              style: GoogleFonts.roboto(
-                  fontSize: 13, color: AppColors.txt),
-              cursorColor: AppColors.purpleLt,
-              decoration: InputDecoration(
-                isDense: true,
-                border: InputBorder.none,
-                hintText: 'Buscar carta...',
-                hintStyle: GoogleFonts.roboto(
-                    fontSize: 13, color: AppColors.txtMut),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   // ── Filtros de conceito (chips compactos em Wrap, sem scroll) ───────
   Widget _buildFilters() {
