@@ -19,6 +19,7 @@ import '../deck_repository.dart';
 import '../pve_match_controller.dart';
 import '../widgets/card_back.dart';
 import '../widgets/game_card_face.dart';
+import '../widgets/magic_dust_overlay.dart';
 
 /// PARTIDA JOGÁVEL do Modo Cartas (ACDA) — PvE interativo.
 ///
@@ -500,19 +501,31 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         backgroundColor: AppColors.black,
         body: Stack(
           children: [
-            Container(
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment(0, -0.3),
-                  radius: 1.4,
-                  colors: [
-                    Color(0xFF1A0020),
-                    Color(0xFF0A000A),
-                    AppColors.black,
-                  ],
+            // FUNDO do tabuleiro (CEO 2026-06-12): arte de superfície + leve
+            // escurecimento nas bordas pra leitura, e poeira mágica dourada por
+            // cima do fundo (atrás do conteúdo).
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/card_game/card_game_background.png',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const ColoredBox(
+                  color: Color(0xFF120016),
                 ),
               ),
             ),
+            const Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment(0, -0.15),
+                    radius: 1.3,
+                    colors: [Colors.transparent, Color(0x66060008)],
+                    stops: [0.55, 1.0],
+                  ),
+                ),
+              ),
+            ),
+            const Positioned.fill(child: MagicDustOverlay()),
             SafeArea(child: _body(ui)),
             // Botões laterais no MEIO (banda entre os dois tabuleiros): voltar à
             // esquerda, encerrar jogada (espadas cruzadas) à direita.
@@ -1230,43 +1243,64 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   /// mostra o total numérico ao lado.
   Widget _opponentHandBacks(BoardSide bot) {
     final n = bot.hand.length;
-    if (n == 0) return const SizedBox(height: 6);
-    const h = 38.0;
-    const w = h * CardBack.kAspect; // largura de cada costa
+    if (n == 0) return const SizedBox(height: 8);
+    // Dobrado (CEO 2026-06-12) e em LEQUE espelhado (direção oposta à do jogador).
+    const h = 72.0;
+    const w = h * CardBack.kAspect;
     const maxShown = 8;
     final shown = n > maxShown ? maxShown : n;
-    const step = 13.0; // sobreposição
-    final span = step * (shown - 1) + w;
     return Padding(
-      padding: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.only(top: 2, bottom: 2),
       child: SizedBox(
-        height: h + 2,
-        child: Center(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: span,
-                height: h,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    for (var i = 0; i < shown; i++)
-                      Positioned(
-                        left: i * step,
-                        child: const CardBack(height: h, radius: 5),
+        height: h + 16,
+        child: LayoutBuilder(
+          builder: (context, cons) {
+            final width = cons.maxWidth;
+            final usable = (width - w).clamp(0.0, double.infinity);
+            final step =
+                shown > 1 ? (usable / (shown - 1)).clamp(0.0, w * 0.72) : 0.0;
+            final span = step * (shown - 1) + w;
+            final startX = (width - span) / 2;
+            final center = (shown - 1) / 2;
+            final maxArc = center * 3.0;
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                for (var i = 0; i < shown; i++)
+                  Builder(builder: (_) {
+                    final offset = i - center;
+                    // Espelhado do leque do jogador: tilt invertido e arco que
+                    // abre PRA BAIXO (centro mais baixo, bordas mais altas).
+                    return Positioned(
+                      left: startX + step * i,
+                      top: maxArc - offset.abs() * 3.0,
+                      child: Transform.rotate(
+                        angle: -offset * 0.05,
+                        child:
+                            const SizedBox(width: w, height: h, child: CardBack(radius: 6)),
                       ),
-                  ],
+                    );
+                  }),
+                Positioned(
+                  right: 10,
+                  top: 2,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.black.withValues(alpha: 0.55),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text('$n',
+                        style: GoogleFonts.robotoMono(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textSecondary)),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 7),
-              Text('$n',
-                  style: GoogleFonts.robotoMono(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary)),
-            ],
-          ),
+              ],
+            );
+          },
         ),
       ),
     );
