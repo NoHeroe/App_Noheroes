@@ -308,6 +308,19 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     );
   }
 
+  /// Usa a ATIVA do herói (ADR-0028), 1×/partida. No-op se não há herói, já foi
+  /// usada, ou a ativa daquele herói ainda não tem efeito (Fase C).
+  bool useHeroActive() {
+    if (state.playLocked) return false;
+    final hero = state.match?.sideOf(state.playerSide).heroId;
+    return _playerAction(
+      const UseHeroActive(),
+      onApplied: (before, after) =>
+          hero == null ? 'Sem herói.' : 'Você usou ${heroLabel(hero)}.',
+      invalidText: () => 'Ativa do herói indisponível.',
+    );
+  }
+
   /// Compra EXTRA de carta (ADR-0028): paga `kExtraDrawCost` cristais e puxa 1
   /// carta do deck pra mão. No-op se mão cheia, deck vazio ou sem cristais.
   bool drawCard() {
