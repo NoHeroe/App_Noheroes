@@ -63,6 +63,16 @@ class SwapPosition extends GameAction {
   String toString() => 'SwapPosition($creatureId <-> $targetId)';
 }
 
+/// Compra EXTRA de carta durante a partida (ADR-0028): paga `kExtraDrawCost`
+/// cristais e puxa 1 carta do topo do deck pra mão. No-op se mão cheia, deck
+/// vazio ou cristais insuficientes.
+class DrawCard extends GameAction {
+  const DrawCard();
+
+  @override
+  String toString() => 'DrawCard()';
+}
+
 /// Encerra a Fase de Jogo do lado ativo (sinaliza fim da sequência de ações).
 class Pass extends GameAction {
   const Pass();

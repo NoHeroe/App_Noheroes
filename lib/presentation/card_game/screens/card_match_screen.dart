@@ -635,6 +635,12 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   /// HUD inferior COMPACTO e centralizado (sem moldura por ora): monstros ·
   /// cristal facetado (com borda) · itens — todos juntos no centro do rodapé.
   Widget _bottomHud(PveMatchUiState ui, BoardSide player) {
+    // ADR-0028: compra EXTRA paga (1 cristal) — habilita quando dá pra comprar.
+    final canDraw = ui.isPlayerTurn &&
+        !ui.playLocked &&
+        player.hand.length < kHandSize &&
+        player.deck.isNotEmpty &&
+        player.crystals >= kExtraDrawCost;
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 2, 0, 10),
       child: Center(
@@ -647,6 +653,39 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
             CrystalGem(value: player.crystals, size: 42),
             const SizedBox(width: 14),
             _hudCounter(Icons.auto_awesome, '${player.availableRelicCount}'),
+            const SizedBox(width: 14),
+            _drawButton(canDraw),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Botão de COMPRA EXTRA de carta (ADR-0028): paga 1 cristal, +1 carta.
+  Widget _drawButton(bool enabled) {
+    return Opacity(
+      opacity: enabled ? 1 : 0.4,
+      child: GestureDetector(
+        onTap: enabled
+            ? () => ref.read(pveMatchControllerProvider.notifier).drawCard()
+            : null,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: const Color(0xFF2A2140),
+                border: Border.all(color: AppColors.gold),
+              ),
+              child: const Icon(Icons.add_card, size: 18, color: AppColors.goldLt),
+            ),
+            const SizedBox(height: 2),
+            Text('1 💎',
+                style: GoogleFonts.robotoMono(
+                    fontSize: 9, color: AppColors.textSecondary)),
           ],
         ),
       ),

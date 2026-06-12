@@ -52,6 +52,8 @@ class CardBattleEngine {
       pendingCrystals: 0,
       sacrificedThisTurn: false,
     );
+    // ADR-0028: compra 1 carta GRÁTIS por round (no-op se a mão já está cheia).
+    newSide = _drawOne(newSide);
     newSide = _applyStartOfTurnBuffs(newSide, events);
     var state = s.withSide(side.id, newSide).copyWith(phase: MatchPhase.jogo);
     // Auras de início de turno que debuffam o INIMIGO (Lote 3b): Desmoralizar /
@@ -287,9 +289,25 @@ class CardBattleEngine {
         return _returnToHand(s, action);
       case SwapPosition():
         return _swapPosition(s, action);
+      case DrawCard():
+        return _drawCardPaid(s);
       case Pass():
         return s; // no-op: fim da sequência é sinalizado via endTurn.
     }
+  }
+
+  /// Compra EXTRA paga (ADR-0028): −`kExtraDrawCost` cristais, +1 carta na mão.
+  /// No-op se mão cheia, deck vazio ou cristais insuficientes.
+  MatchState _drawCardPaid(MatchState s) {
+    final side = s.active;
+    if (side.hand.length >= kHandSize ||
+        side.deck.isEmpty ||
+        side.crystals < kExtraDrawCost) {
+      return s;
+    }
+    var newSide = _drawOne(side);
+    newSide = newSide.copyWith(crystals: newSide.crystals - kExtraDrawCost);
+    return s.withSide(side.id, newSide);
   }
 
   /// Troca a posição de duas criaturas PRÓPRIAS — a selecionada vai pra trás
@@ -405,12 +423,12 @@ class CardBattleEngine {
       final insertPos = requested < count ? requested : count; // clamp à fila
       final list = List<CreatureInPlay>.from(packed)..insert(insertPos, placed);
       final hand = List<Object>.from(side.hand)..removeAt(idx);
-      var newSide = side.copyWith(
+      final newSide = side.copyWith(
         lanes: _packedToLanes(list),
         hand: hand,
         crystals: side.crystals - card.cost,
       );
-      newSide = _refillHand(newSide); // compra automática
+      // ADR-0028: sem auto-refill — a mão só repõe via 1 grátis/round + compra paga.
       return s.withSide(side.id, newSide);
     }
 
@@ -443,14 +461,46 @@ class CardBattleEngine {
   }
 
   /// Compra automática: repõe a mão do topo do deck até `kHandSize`.
-  BoardSide _refillHand(BoardSide side) {
+  /// Compra UMA carta do topo do deck pra mão (ADR-0028 — sem auto-refill).
+  /// No-op se a mão está cheia (`kHandSize`) ou o deck acabou.
+  BoardSide _drawOne(BoardSide side) {
     if (side.hand.length >= kHandSize || side.deck.isEmpty) return side;
     final hand = List<Object>.from(side.hand);
     final deck = List<Object>.from(side.deck);
-    while (hand.length < kHandSize && deck.isNotEmpty) {
-      hand.add(deck.removeAt(0));
-    }
+    hand.add(deck.removeAt(0));
     return side.copyWith(hand: hand, deck: deck);
+  }
+
+  /// Manda uma carta pro cemitério do lado (mortes/descartes — ADR-0028).
+  BoardSide _toGraveyard(BoardSide side, Object card) =>
+      side.copyWith(graveyard: List<Object>.from(side.graveyard)..add(card));
+
+  /// Reconcilia mortes de combate (ADR-0028): cada criatura que estava em jogo
+  /// no início do endTurn e NÃO está mais em jogo nem na mão/deck do seu lado
+  /// morreu → a carta vai pro cemitério. (Revividas seguem em jogo; Zumbi volta
+  /// pra mão com o mesmo id, então não é contada como morta.)
+  MatchState _reapGraveyard(
+      MatchState s, Map<SideId, List<CreatureInPlay>> pre) {
+    var st = s;
+    for (final sideId in const [SideId.a, SideId.b]) {
+      final side = st.sideOf(sideId);
+      final present = <String>{
+        for (final c in side.creaturesInPlay) c.instanceId,
+        for (final c in side.hand) cardId(c),
+        for (final c in side.deck) cardId(c),
+      };
+      final dead = <Object>[
+        for (final c in pre[sideId]!)
+          if (!present.contains(c.instanceId)) c.card,
+      ];
+      if (dead.isNotEmpty) {
+        st = st.withSide(
+            sideId,
+            side.copyWith(
+                graveyard: List<Object>.from(side.graveyard)..addAll(dead)));
+      }
+    }
+    return st;
   }
 
   /// Esta jogada de criatura é o caso especial "tabuleiro cheio → carta volta
@@ -515,13 +565,12 @@ class CardBattleEngine {
     final newLanes = List<CreatureInPlay?>.from(side.lanes);
     newLanes[laneIdx] = updated;
 
-    // Cobra o custo em cristais (vale para equipamento E flash) e compra.
-    var newSide = side.copyWith(
+    // Cobra o custo em cristais (vale para equipamento E flash). Sem auto-refill.
+    final newSide = side.copyWith(
       lanes: newLanes,
       hand: newHand,
       crystals: side.crystals - relic.cost,
     );
-    newSide = _refillHand(newSide); // compra automática
     return s.withSide(side.id, newSide);
   }
 
@@ -550,7 +599,7 @@ class CardBattleEngine {
       crystals: side.crystals + gain,
       sacrificedThisTurn: true,
     );
-    newSide = _refillHand(newSide); // compra automática
+    newSide = _toGraveyard(newSide, card); // sacrifício = descarte → cemitério
     return s.withSide(side.id, newSide);
   }
 
@@ -579,6 +628,13 @@ class CardBattleEngine {
     if (s.isOver) {
       return (finalState: s, steps: const <MatchReplayStep>[]);
     }
+
+    // Cemitério (ADR-0028): snapshot das criaturas em jogo ANTES da resolução —
+    // as que sumirem do jogo (lanes/mão/deck) ao fim morreram → vão pro cemitério.
+    final preInPlay = <SideId, List<CreatureInPlay>>{
+      SideId.a: s.sideA.creaturesInPlay,
+      SideId.b: s.sideB.creaturesInPlay,
+    };
 
     // Log estruturado da resolução deste endTurn + keyframes do replay.
     final events = <MatchEvent>[];
@@ -642,6 +698,10 @@ class CardBattleEngine {
       record(fin, beforeStall);
       return (finalState: fin, steps: steps);
     }
+
+    // Cemitério (ADR-0028): criaturas que estavam em jogo e sumiram do jogo
+    // (não estão em lanes/mão/deck) morreram nesta resolução → cemitério.
+    state = _reapGraveyard(state, preInPlay);
 
     // Expira buffs temporários (Inspirar do lado que termina; Investida do
     // oponente — aplicada no turno anterior dele, valeu a rodada inteira).
@@ -1770,6 +1830,7 @@ class CardBattleEngine {
 
     final hand = List<Object>.from(side.hand);
     final deck = List<Object>.from(side.deck);
+    final lostCards = <Object>[];
 
     for (var i = 0; i < kNoCreaturePenaltyCards; i++) {
       final total = hand.length + deck.length;
@@ -1777,6 +1838,7 @@ class CardBattleEngine {
       final pick = s.rng.nextInt(total);
       final Object lost =
           pick < hand.length ? hand.removeAt(pick) : deck.removeAt(pick - hand.length);
+      lostCards.add(lost);
       events.add(NoCreaturePenaltyApplied(
         side: side.id,
         lostCardId: cardId(lost),
@@ -1786,8 +1848,12 @@ class CardBattleEngine {
       ));
     }
 
-    var newSide = side.copyWith(hand: hand, deck: deck);
-    newSide = _refillHand(newSide); // se perdeu da mão, repõe do deck
+    // Carta perdida = descarte → cemitério (ADR-0028). Sem auto-refill.
+    final newSide = side.copyWith(
+      hand: hand,
+      deck: deck,
+      graveyard: List<Object>.from(side.graveyard)..addAll(lostCards),
+    );
     return s.withSide(side.id, newSide);
   }
 

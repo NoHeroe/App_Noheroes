@@ -308,6 +308,19 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     );
   }
 
+  /// Compra EXTRA de carta (ADR-0028): paga `kExtraDrawCost` cristais e puxa 1
+  /// carta do deck pra mão. No-op se mão cheia, deck vazio ou sem cristais.
+  bool drawCard() {
+    if (state.playLocked) return false;
+    return _playerAction(
+      const DrawCard(),
+      onApplied: (before, after) =>
+          'Você comprou uma carta (−$kExtraDrawCost cristal).',
+      invalidText: () =>
+          'Não dá pra comprar (mão cheia, deck vazio ou sem cristais).',
+    );
+  }
+
   /// Troca a posição de uma criatura PRÓPRIA com outra ATRÁS dela (movimento só
   /// pra trás), por `kReturnVoluntaryCost` cristais. NÃO encerra a vez.
   bool swapPosition(String creatureId, String targetId) {
@@ -603,6 +616,8 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
       case SwapPosition():
         // O bot não reposiciona no MVP; exaustividade do switch.
         return 'A IA reposicionou uma criatura.';
+      case DrawCard():
+        return 'A IA comprou uma carta (−$kExtraDrawCost cristal).';
       case Pass():
         return 'A IA passou.';
     }

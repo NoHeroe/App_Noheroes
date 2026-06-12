@@ -403,6 +403,7 @@ class BoardSide {
     required this.deck,
     required this.sacrificedThisTurn,
     this.pendingCrystals = 0,
+    this.graveyard = const <Object>[],
   });
 
   final SideId id;
@@ -426,6 +427,10 @@ class BoardSide {
   /// Ataque, creditados no início do PRÓXIMO turno deste lado (cristais não
   /// fazem carry-over, então o crédito imediato seria perdido no reset).
   final int pendingCrystals;
+
+  /// CEMITÉRIO (ADR-0028): cartas que MORRERAM em combate ou foram DESCARTADAS
+  /// (sacrifício, penalidade, etc.). Fonte para efeitos (reanimação, Assassino).
+  final List<Object> graveyard;
 
   /// Criaturas vivas no tabuleiro, em ordem de lane (frente→retaguarda).
   List<CreatureInPlay> get creaturesInPlay {
@@ -492,6 +497,7 @@ class BoardSide {
     List<Object>? deck,
     bool? sacrificedThisTurn,
     int? pendingCrystals,
+    List<Object>? graveyard,
   }) {
     return BoardSide(
       id: id,
@@ -501,23 +507,40 @@ class BoardSide {
       deck: deck ?? this.deck,
       sacrificedThisTurn: sacrificedThisTurn ?? this.sacrificedThisTurn,
       pendingCrystals: pendingCrystals ?? this.pendingCrystals,
+      graveyard: graveyard ?? this.graveyard,
     );
   }
 
-  /// Monta o lado inicial: deck = 18 cartas (criaturas+relíquias); mão = as
-  /// primeiras `kHandSize`. Com [rng] (partida real) o deck é embaralhado
-  /// determinístico por seed; sem rng (testes que montam estados controlados)
-  /// mantém a ordem do loadout.
+  /// Monta o lado inicial (ADR-0028): deck = 18 cartas embaralhadas; mão = 4
+  /// cartas, **garantindo `kInitialHandCreatures` criaturas** + o resto
+  /// aleatório. Com [rng] embaralha determinístico por seed; sem rng mantém a
+  /// ordem do loadout (testes controlados).
   static BoardSide initial(SideId id, CardLoadout loadout, [Random? rng]) {
     final pile = <Object>[...loadout.creatures, ...loadout.relics];
     if (rng != null) pile.shuffle(rng);
-    final handCount = pile.length < kHandSize ? pile.length : kHandSize;
+
+    final hand = <Object>[];
+    final deck = List<Object>.from(pile);
+    // 1) puxa as primeiras `kInitialHandCreatures` CRIATURAS pra mão.
+    var creaturesNeeded = kInitialHandCreatures;
+    for (var i = 0; i < deck.length && creaturesNeeded > 0; ) {
+      if (deck[i] is CreatureCard) {
+        hand.add(deck.removeAt(i));
+        creaturesNeeded--;
+      } else {
+        i++;
+      }
+    }
+    // 2) completa a mão até kHandSize com o que vier do topo (qualquer tipo).
+    while (hand.length < kHandSize && deck.isNotEmpty) {
+      hand.add(deck.removeAt(0));
+    }
     return BoardSide(
       id: id,
       lanes: List<CreatureInPlay?>.filled(kLaneCount, null),
       crystals: 0,
-      hand: List<Object>.from(pile.sublist(0, handCount)),
-      deck: List<Object>.from(pile.sublist(handCount)),
+      hand: hand,
+      deck: deck,
       sacrificedThisTurn: false,
     );
   }

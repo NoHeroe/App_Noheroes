@@ -24,7 +24,7 @@ void main() {
   });
 
   group('playCreature', () {
-    test('paga cost, posiciona na frente, sai da mão e compra reposição', () {
+    test('paga cost, posiciona na frente, sai da mão SEM repor (ADR-0028)', () {
       final aL = makeLoadout(prefix: 'A', cost: 1);
       final bL = makeLoadout(prefix: 'B');
       final seed = seedWithMixedHand(aL, bL);
@@ -38,8 +38,9 @@ void main() {
       expect(side.crystals, kCrystalsPerTurn - 1);
       expect(side.lanes[0]!.instanceId, creatureId);
       expect(_inHand(side, creatureId), isFalse, reason: 'saiu da mão');
-      expect(side.hand.length, handBefore,
-          reason: 'compra automática repõe a mão');
+      // ADR-0028: sem auto-refill — a mão encolhe ao jogar.
+      expect(side.hand.length, handBefore - 1,
+          reason: 'mão não repõe automaticamente ao jogar');
     });
 
     test('rejeita se cristais insuficientes (no-op)', () {

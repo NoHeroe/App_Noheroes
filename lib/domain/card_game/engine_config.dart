@@ -28,9 +28,17 @@ const int kStallTurnLimit = 40;
 /// Quantas cartas o lado perde ao terminar o turno sem criaturas em jogo. 🎚️
 const int kNoCreaturePenaltyCards = 1;
 
-/// Tamanho da MÃO (cartas visíveis/jogáveis). O resto fica no deck (compra). 🎚️
-/// Modelo Card Monsters: deck embaralhado, mão de 5, compra automática ao jogar.
-const int kHandSize = 5;
+/// Tamanho/capacidade da MÃO. 🎚️ (ADR-0028: mão de 4, sem auto-refill ao jogar.)
+/// Mão inicial = 2 criaturas aleatórias + 2 quaisquer; depois compra 1 grátis/
+/// round + compras extras pagas (`kExtraDrawCost`).
+const int kHandSize = 4;
+
+/// Custo em cristais de uma compra EXTRA de carta durante a partida (além da
+/// grátis de início de round). 🎚️ (ADR-0028.)
+const int kExtraDrawCost = 1;
+
+/// Quantas criaturas a mão inicial garante (o resto da mão é aleatório). 🎚️
+const int kInitialHandCreatures = 2;
 
 /// Custo em cristais da jogada especial "tabuleiro cheio → carta empurrada
 /// volta pra mão" (bloqueia o resto das ações do turno). 🎚️
