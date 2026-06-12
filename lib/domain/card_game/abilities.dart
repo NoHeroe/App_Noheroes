@@ -11,9 +11,9 @@
 /// e o engine as ignora silenciosamente.
 library;
 
-/// As 31 habilidades com runtime no engine (12 originais + 5 do Lote 2 + 4 do
+/// As 32 habilidades com runtime no engine (12 originais + 5 do Lote 2 + 4 do
 /// Lote 3a de status/DoT + 4 do Lote 3b de auras/combo Doença-Surto + 6 do
-/// Lote 5 de exóticas).
+/// Lote 5 de exóticas + Reflexo Mágico).
 enum AbilityKeyword {
   /// Redireciona ataques à distância/mágicos inimigos para esta criatura.
   provocar,
@@ -72,6 +72,10 @@ enum AbilityKeyword {
   /// Ao ser atingida por melee, 🎚️ `kContraAtaqueChance` de contra-atacar com
   /// um ataque melee (= ataque melee da defensora) no atacante.
   contraAtaque,
+
+  /// Ao ser atingida por MÁGICO, 🎚️ `kReflexoMagicoChance` de IGNORAR o dano e
+  /// devolvê-lo ao atacante. Suprimido pela Doença na criatura que o possui.
+  reflexoMagico,
 
   /// Se fosse ser destruída, NÃO é: ressuscita com vida cheia. 1×/partida.
   inabalavel,
@@ -183,6 +187,8 @@ String abilityKeywordLabel(AbilityKeyword k) {
       return 'Escudo Sagrado';
     case AbilityKeyword.contraAtaque:
       return 'Contra-Ataque';
+    case AbilityKeyword.reflexoMagico:
+      return 'Reflexo Mágico';
     case AbilityKeyword.inabalavel:
       return 'Inabalável';
     case AbilityKeyword.sangramento:
@@ -264,6 +270,8 @@ const Map<String, AbilityKeyword> _canonical = {
   'escudoespelhado': AbilityKeyword.escudoEspelhado,
   'escudosagrado': AbilityKeyword.escudoSagrado,
   'contraataque': AbilityKeyword.contraAtaque,
+  'reflexomagico': AbilityKeyword.reflexoMagico,
+  'reflexaomagica': AbilityKeyword.reflexoMagico,
   'inabalavel': AbilityKeyword.inabalavel,
   'sangramento': AbilityKeyword.sangramento,
   'veneno': AbilityKeyword.veneno,

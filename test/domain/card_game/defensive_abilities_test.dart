@@ -206,6 +206,53 @@ void main() {
     });
   });
 
+  group('Reflexo Mágico', () {
+    // Sem Voo/Ataque Duplo, a 1ª rolagem de rng é a do reflexo. Escaneia seeds.
+    bool reflected(int seed) {
+      final s = _stateWith(
+        aLanes: [inPlay(id: 'mage', atk: 4, hp: 10, type: DamageType.magico)],
+        bLanes: [inPlay(id: 'def', atk: 0, hp: 10, abilities: ['Reflexo Mágico'])],
+        seed: seed,
+      );
+      final after = engine.endTurn(s);
+      return after.lastTurnEvents
+          .whereType<AbilityTriggered>()
+          .any((e) => e.ability == 'Reflexo Mágico');
+    }
+
+    test('quando reflete: alvo ileso e atacante toma o dano mágico', () {
+      var hit = -1;
+      for (var seed = 0; seed < 200; seed++) {
+        if (reflected(seed)) {
+          hit = seed;
+          break;
+        }
+      }
+      expect(hit, greaterThanOrEqualTo(0));
+      final s = _stateWith(
+        aLanes: [inPlay(id: 'mage', atk: 4, hp: 10, type: DamageType.magico)],
+        bLanes: [inPlay(id: 'def', atk: 0, hp: 10, abilities: ['Reflexo Mágico'])],
+        seed: hit,
+      );
+      final after = engine.endTurn(s);
+      expect(_hpOf(after.sideB, 'def'), 10); // ignorou o dano.
+      expect(_hpOf(after.sideA, 'mage'), 10 - 4); // devolvido ao atacante.
+    });
+
+    test('dispara em ~75%: existe seed que reflete e seed que não', () {
+      int? on, off;
+      for (var seed = 0; seed < 200 && (on == null || off == null); seed++) {
+        if (reflected(seed)) {
+          on ??= seed;
+        } else {
+          off ??= seed;
+        }
+      }
+      expect(on, isNotNull);
+      expect(off, isNotNull);
+    });
+  });
+
   group('Inabalável', () {
     test('golpe letal NÃO destrói: ressuscita com vida cheia, 1×', () {
       final s = _stateWith(

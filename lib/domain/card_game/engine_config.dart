@@ -93,6 +93,10 @@ const int kEscudoSagradoArmor = 1;
 /// Chance de Contra-Ataque ao ser atingida por melee (0..1). 🎚️
 const double kContraAtaqueChance = 0.5;
 
+/// Chance de Reflexo Mágico IGNORAR o dano mágico e devolvê-lo ao atacante
+/// (0..1). 🎚️ (vault: 75%).
+const double kReflexoMagicoChance = 0.75;
+
 // ── Lote 3a (status / DoT) — magnitudes 🎚️ calibráveis ───────────────────────
 
 /// Dano verdadeiro por ACÚMULO de Sangramento, por tick. 🎚️

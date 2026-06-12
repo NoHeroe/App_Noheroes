@@ -978,6 +978,12 @@ class CardBattleEngine {
     var pendingGain = 0;
     var anyDeath = false;
 
+    // ---- Reflexo Mágico: ao ser atingida por MÁGICO, chance de IGNORAR o dano
+    // e devolvê-lo ao atacante. (Suprimido por Doença via functionalKeyword.) ----
+    final magicReflected = type == DamageType.magico &&
+        target.functionalKeyword(AbilityKeyword.reflexoMagico) &&
+        s.rng.nextDouble() < kReflexoMagicoChance;
+
     // ---- Dano principal ---- (valor deste ataque específico — multi-ataque)
     final raw = value;
     var damage = raw;
@@ -989,6 +995,7 @@ class CardBattleEngine {
       damage = damage - target.magicArmor; // Escudo Espelhado / Escudo Sagrado
     }
     if (damage < 0) damage = 0;
+    if (magicReflected) damage = 0; // o alvo IGNORA o dano (reflete abaixo).
     final hpBefore = target.currentHp;
     // Inabalável: se morreria, ressuscita com vida cheia (1×/partida).
     final lethalT = _resolveLethal(target, hpBefore - damage);
@@ -1021,8 +1028,9 @@ class CardBattleEngine {
     ));
 
     // ---- Lote 3a: status aplicados pelo ATACANTE ao acertar (alvo vivo) ----
+    // Ataque mágico REFLETIDO não "acerta" — pula os procs on-hit do atacante.
     final survivor = defLanes[targetLaneIdx];
-    if (survivor != null) {
+    if (survivor != null && !magicReflected) {
       var t = survivor;
       // Sangramento: só dano físico; +1 acúmulo e reseta a duração.
       if (physical && attacker.hasKeyword(AbilityKeyword.sangramento)) {
@@ -1313,6 +1321,24 @@ class CardBattleEngine {
         } else {
           attacker = res.creature!;
         }
+      }
+    }
+
+    // ---- Reflexo Mágico: devolve o dano mágico (raw) ao atacante ----
+    if (magicReflected && !attackerDied) {
+      final res = _resolveLethal(attacker, attacker.currentHp - raw);
+      events.add(AbilityTriggered(
+        side: defSide.id,
+        cardId: target.instanceId,
+        cardName: target.card.nome,
+        ability: abilityKeywordLabel(AbilityKeyword.reflexoMagico),
+        detail: 'refletiu $raw de dano mágico em '
+            '${attacker.card.nome}${res.died ? ' (destruída)' : ''}',
+      ));
+      if (res.died) {
+        attackerDied = true;
+      } else {
+        attacker = res.creature!;
       }
     }
 

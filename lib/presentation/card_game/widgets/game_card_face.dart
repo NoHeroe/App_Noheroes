@@ -379,6 +379,8 @@ IconData keywordIcon(AbilityKeyword k) {
       return Icons.health_and_safety;
     case AbilityKeyword.contraAtaque:
       return Icons.replay;
+    case AbilityKeyword.reflexoMagico:
+      return Icons.flare;
     case AbilityKeyword.inabalavel:
       return Icons.anchor;
     // Lote 3a (status / DoT).
@@ -451,6 +453,8 @@ String keywordDescription(AbilityKeyword k) {
       return 'Reduz o dano físico E mágico recebido.';
     case AbilityKeyword.contraAtaque:
       return 'Ao ser atingida por melee, 50% de revidar com seu ataque.';
+    case AbilityKeyword.reflexoMagico:
+      return 'Ao ser atingida por mágico, % de ignorar e devolver o dano.';
     case AbilityKeyword.inabalavel:
       return 'Se fosse destruída, ressuscita com vida cheia (1×/partida).';
     case AbilityKeyword.sangramento:

@@ -137,11 +137,13 @@ class CreatureInPlay {
   final bool transformed;
 
   /// keyword FUNCIONAL: tem a keyword E não está suprimida por Doença (Doença
-  /// desativa Inspirar e Desmoralizar na criatura doente).
+  /// desativa Inspirar, Desmoralizar e Reflexo Mágico na criatura doente).
   bool functionalKeyword(AbilityKeyword k) {
     if (!hasKeyword(k)) return false;
     if (diseaseStacks > 0 &&
-        (k == AbilityKeyword.inspirar || k == AbilityKeyword.desmoralizar)) {
+        (k == AbilityKeyword.inspirar ||
+            k == AbilityKeyword.desmoralizar ||
+            k == AbilityKeyword.reflexoMagico)) {
       return false;
     }
     return true;
