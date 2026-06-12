@@ -704,8 +704,132 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                 ],
               ),
             ),
+            // Botão de LEGENDA (tipos de dano + status) — canto direito.
+            Align(
+              alignment: Alignment.centerRight,
+              child: IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                icon: const Icon(Icons.menu_book,
+                    size: 18, color: AppColors.textSecondary),
+                tooltip: 'Legenda',
+                onPressed: _showLegend,
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Diálogo de LEGENDA: os 5 tipos de dano (com destaque pra vitalismo/cura,
+  /// menos óbvios) + os ícones de status transitório do tabuleiro.
+  void _showLegend() {
+    Widget typeRow(DamageType t, String label) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              Container(
+                width: 22,
+                height: 22,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: damageTypeColor(t).withValues(alpha: 0.28),
+                  border: Border.all(color: damageTypeColor(t), width: 1),
+                ),
+                child: typeGlyph(t, size: 12),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(label,
+                    style: GoogleFonts.robotoMono(
+                        fontSize: 11, color: AppColors.textPrimary)),
+              ),
+            ],
+          ),
+        );
+
+    Widget statusRow(IconData icon, Color color, String label) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Row(
+            children: [
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(label,
+                    style: GoogleFonts.robotoMono(
+                        fontSize: 10.5, color: AppColors.textSecondary)),
+              ),
+            ],
+          ),
+        );
+
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1426),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: AppColors.borderViolet),
+        ),
+        title: Text('Legenda',
+            style: GoogleFonts.cinzelDecorative(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Tipos de dano',
+                  style: GoogleFonts.robotoMono(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.gold)),
+              const SizedBox(height: 4),
+              typeRow(DamageType.corpoACorpo, 'Corpo a corpo — ataca da frente'),
+              typeRow(
+                  DamageType.aDistancia, 'À distância — ataca da retaguarda'),
+              typeRow(DamageType.magico, 'Mágico — mira o menor PV'),
+              typeRow(
+                  DamageType.vitalismo, 'Vitalismo — dano verdadeiro (sem armadura)'),
+              typeRow(DamageType.cura, 'Cura — restaura PV de um aliado'),
+              const SizedBox(height: 10),
+              Text('Status no tabuleiro',
+                  style: GoogleFonts.robotoMono(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.gold)),
+              const SizedBox(height: 4),
+              statusRow(Icons.shield, const Color(0xFF9FB4D8),
+                  'Armadura — reduz dano físico'),
+              statusRow(Icons.auto_awesome, AppColors.conceptMagico,
+                  'Armadura mágica — reduz dano mágico'),
+              statusRow(Icons.water_drop, AppColors.hp,
+                  'Sangramento — dano/turno (nº = acúmulos), some sozinho'),
+              statusRow(Icons.science, AppColors.conceptChrysalis,
+                  'Veneno — 1 dano/turno permanente (cura remove)'),
+              statusRow(Icons.coronavirus, AppColors.purpleLight,
+                  'Doença — suprime buffs; alvo do Surto'),
+              statusRow(
+                  Icons.stars, AppColors.gold, 'Atordoado — pula o próximo ataque'),
+              statusRow(Icons.hub, AppColors.conceptVita,
+                  'Enredado — sem Voo, pula o próximo ataque'),
+              statusRow(Icons.trending_down, const Color(0xFFE08A4A),
+                  'Desmoralizado / Suprimido — ataque reduzido'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Fechar',
+                style: GoogleFonts.robotoMono(color: AppColors.purpleLight)),
+          ),
+        ],
       ),
     );
   }
@@ -1229,6 +1353,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       showItemSlot: true,
       itemIcon: c.relics.isNotEmpty ? _relicSlotIcon(c.relics.first) : null,
       effects: c.keywords.map(keywordIcon).toList(),
+      statusOverlay: buildCardStatusOverlay(c),
       footer: _boardFooter(c),
     )
         .animate(onPlay: (ctrl) => ctrl.repeat(reverse: true))
@@ -1264,13 +1389,8 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
           const SizedBox(width: 6),
         ],
         const Spacer(),
-        if (c.armor > 0) ...[
-          const Icon(Icons.shield, size: 8, color: AppColors.textSecondary),
-          Text('${c.armor} ',
-              style: GoogleFonts.robotoMono(
-                  fontSize: 8, color: AppColors.textSecondary)),
-        ],
-        // Só a vida ATUAL, colorida: branco = cheia (no original); vermelho =
+        // Armadura/status migraram pro overlay da arte (statusOverlay). Aqui
+        // fica só a vida ATUAL, colorida: branco = cheia (no original); vermelho =
         // abaixo do total; verde = acima da vida original. Coraçãozinho branco.
         const Icon(Icons.favorite, size: 9, color: Colors.white),
         const SizedBox(width: 2),

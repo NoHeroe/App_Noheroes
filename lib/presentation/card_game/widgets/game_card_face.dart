@@ -31,6 +31,7 @@ class GameCardFace extends StatelessWidget {
     this.itemIcon,
     this.showItemSlot = false,
     this.effects = const <IconData>[],
+    this.statusOverlay,
     this.minimal = false,
   });
 
@@ -69,6 +70,10 @@ class GameCardFace extends StatelessWidget {
   /// Brasões de EFEITO (keywords) — pequenos círculos na borda esquerda que
   /// vazam ~40% pra fora, abaixo da bandeira de raridade.
   final List<IconData> effects;
+
+  /// Camada de STATUS transitório (armadura/sangramento/veneno/doença/atordoar
+  /// etc.) sobreposta no canto inferior-esquerdo da arte. null = sem status.
+  final Widget? statusOverlay;
 
   /// MÍNIMO (preview da próxima carta): esconde custo, slot de item, brasões,
   /// bandeira de raridade e os pontos de conceito — só arte + nome, mais clean.
@@ -197,6 +202,8 @@ class GameCardFace extends StatelessWidget {
                     ),
                   if (cornerBadge != null)
                     Positioned(bottom: 3, right: 3, child: cornerBadge!),
+                  if (statusOverlay != null && !minimal)
+                    Positioned(bottom: 3, left: 3, child: statusOverlay!),
                 ],
               ),
             ),
@@ -363,6 +370,35 @@ IconData keywordIcon(AbilityKeyword k) {
       return Icons.bloodtype;
     case AbilityKeyword.investida:
       return Icons.bolt;
+    // Lote 2 (defensivas).
+    case AbilityKeyword.espinhos:
+      return Icons.grass;
+    case AbilityKeyword.escudoEspelhado:
+      return Icons.flip;
+    case AbilityKeyword.escudoSagrado:
+      return Icons.health_and_safety;
+    case AbilityKeyword.contraAtaque:
+      return Icons.replay;
+    case AbilityKeyword.inabalavel:
+      return Icons.anchor;
+    // Lote 3a (status / DoT).
+    case AbilityKeyword.sangramento:
+      return Icons.water_drop;
+    case AbilityKeyword.veneno:
+      return Icons.science;
+    case AbilityKeyword.atordoar:
+      return Icons.stars;
+    case AbilityKeyword.enredar:
+      return Icons.hub;
+    // Lote 3b (auras / combo).
+    case AbilityKeyword.desmoralizar:
+      return Icons.trending_down;
+    case AbilityKeyword.suprimirMagia:
+      return Icons.auto_fix_off;
+    case AbilityKeyword.doenca:
+      return Icons.coronavirus;
+    case AbilityKeyword.surto:
+      return Icons.whatshot;
   }
 }
 
@@ -372,6 +408,79 @@ List<IconData> effectIconsFromAbilities(List<String> abilities) => abilities
     .whereType<AbilityKeyword>()
     .map(keywordIcon)
     .toList();
+
+/// Camada de STATUS transitório de uma criatura no tabuleiro: armadura (física
+/// e mágica), DoT (sangramento/veneno), doença, atordoamento/enredamento e
+/// debuffs de aura (Desmoralizar/Suprimir). Retorna null se não há nada ativo —
+/// aí a carta fica limpa. Empilha chips pequenos no canto inferior-esquerdo.
+Widget? buildCardStatusOverlay(CreatureInPlay c) {
+  final chips = <Widget>[];
+  if (c.armor > 0) {
+    chips.add(_StatusChip(Icons.shield, const Color(0xFF9FB4D8), '${c.armor}'));
+  }
+  if (c.magicArmor > 0) {
+    chips.add(_StatusChip(
+        Icons.auto_awesome, AppColors.conceptMagico, '${c.magicArmor}'));
+  }
+  if (c.bleedStacks > 0) {
+    chips.add(_StatusChip(Icons.water_drop, AppColors.hp, '${c.bleedStacks}'));
+  }
+  if (c.poisoned) {
+    chips.add(_StatusChip(Icons.science, AppColors.conceptChrysalis));
+  }
+  if (c.diseaseStacks > 0) {
+    chips.add(_StatusChip(
+        Icons.coronavirus, AppColors.purpleLight, '${c.diseaseStacks}'));
+  }
+  if (c.stunned) chips.add(_StatusChip(Icons.stars, AppColors.gold));
+  if (c.entangled) chips.add(_StatusChip(Icons.hub, AppColors.conceptVita));
+  if (c.desmoralizadoMelee > 0 || c.suprimidoMagico > 0) {
+    chips.add(_StatusChip(Icons.trending_down, const Color(0xFFE08A4A)));
+  }
+  if (chips.isEmpty) return null;
+  return Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: chips,
+  );
+}
+
+/// Chip minúsculo de status: ícone colorido + número opcional, sobre fundo
+/// escuro translúcido. Usado por [buildCardStatusOverlay].
+class _StatusChip extends StatelessWidget {
+  const _StatusChip(this.icon, this.color, [this.text]);
+  final IconData icon;
+  final Color color;
+  final String? text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+      decoration: BoxDecoration(
+        color: const Color(0xCC000000),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.6), width: 0.6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 8, color: color),
+          if (text != null) ...[
+            const SizedBox(width: 1),
+            Text(text!,
+                style: GoogleFonts.robotoMono(
+                    fontSize: 8,
+                    height: 1,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white)),
+          ],
+        ],
+      ),
+    );
+  }
+}
 
 /// Glifo de ESPADA única (vertical, ponta pra cima) — ícone do ATK físico.
 class _SwordGlyph extends CustomPainter {
