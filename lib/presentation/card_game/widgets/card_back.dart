@@ -28,9 +28,12 @@ class CardBack extends StatelessWidget {
       borderRadius: BorderRadius.circular(radius),
       child: Image.asset(
         _asset,
-        fit: BoxFit.cover,
-        // Sem a arte ainda: placeholder. Quando o CEO soltar card_back.png na
-        // pasta, ele aparece automaticamente (mesma proporção → sem corte).
+        // ESTICA pra preencher a carta (142:206) — full-bleed, SEM borda/margem.
+        // A arte é mais alta que a carta, então "engorda e encurta" um pouco
+        // (distorção aceita pelo CEO 2026-06-12: "a carta é pra ficar como
+        // definido"). Se ficar ruim, refinamos depois (re-export mais largo).
+        fit: BoxFit.fill,
+        // Sem a arte ainda: placeholder estilo NoHeroes.
         errorBuilder: (_, __, ___) => _placeholder(),
       ),
     );
