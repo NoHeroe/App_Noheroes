@@ -34,11 +34,21 @@ class CardCatalog {
   }
 
   /// Parse puro (sem Flutter) — útil para testes que leem o arquivo via dart:io.
+  /// 2º passo: resolve `transforma_em` (id) → `transformTo` (a carta-2ª-forma),
+  /// pra Transformar (Lote 5) virar outra carta sem o engine precisar do catálogo.
   static List<CreatureCard> parseCreatures(String jsonStr) {
     final list = jsonDecode(jsonStr) as List<dynamic>;
-    return list
+    final cards = list
         .map((e) => CreatureCard.fromJson(e as Map<String, dynamic>))
         .toList(growable: false);
+    final byId = <String, CreatureCard>{for (final c in cards) c.id: c};
+    return cards.map((c) {
+      final into = c.transformInto;
+      if (into != null && byId.containsKey(into)) {
+        return c.copyWith(transformTo: byId[into]);
+      }
+      return c;
+    }).toList(growable: false);
   }
 
   static List<RelicCard> parseRelics(String jsonStr) {

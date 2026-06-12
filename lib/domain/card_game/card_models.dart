@@ -143,6 +143,8 @@ class CreatureCard {
     this.relicSlots = 1,
     this.abilities = const <String>[],
     this.level = 1,
+    this.transformInto,
+    this.transformTo,
   });
 
   final String id;
@@ -160,6 +162,13 @@ class CreatureCard {
   /// do loadout; o catálogo/JSON não traz nível (sempre 1).
   final int level;
 
+  /// 2ª forma de Transformar (Lote 5): `transforma_em` no JSON = id de OUTRA
+  /// carta. [transformInto] guarda o id cru; [transformTo] é a carta resolvida
+  /// (2º passo em `card_catalog.parseCreatures`). Ao transformar, a criatura
+  /// adota os stats/tipo/keywords de [transformTo] (mantendo o id original).
+  final String? transformInto;
+  final CreatureCard? transformTo;
+
   /// ATK/HP efetivos pelo nível (+10%/nível, base = nível 1).
   int get effectiveAtk => cgScaleStat(atk, level);
   int get effectiveHp => cgScaleStat(hp, level);
@@ -171,6 +180,7 @@ class CreatureCard {
     int? hp,
     DamageType? damageType,
     List<String>? abilities,
+    CreatureCard? transformTo,
   }) =>
       CreatureCard(
         id: id ?? this.id,
@@ -184,6 +194,8 @@ class CreatureCard {
         relicSlots: relicSlots,
         abilities: abilities ?? this.abilities,
         level: level,
+        transformInto: transformInto,
+        transformTo: transformTo ?? this.transformTo,
       );
 
   CreatureCard withLevel(int newLevel) => CreatureCard(
@@ -198,6 +210,8 @@ class CreatureCard {
         relicSlots: relicSlots,
         abilities: abilities,
         level: newLevel,
+        transformInto: transformInto,
+        transformTo: transformTo,
       );
 
   factory CreatureCard.fromJson(Map<String, dynamic> json) {
@@ -216,6 +230,7 @@ class CreatureCard {
       abilities: (json['abilities'] as List<dynamic>? ?? const [])
           .map((e) => e as String)
           .toList(growable: false),
+      transformInto: json['transforma_em'] as String?,
     );
   }
 
@@ -230,6 +245,7 @@ class CreatureCard {
         'rarity': rarityToString(rarity),
         'relic_slots': relicSlots,
         'abilities': abilities,
+        if (transformInto != null) 'transforma_em': transformInto,
       };
 
   @override

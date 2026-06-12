@@ -894,6 +894,25 @@ class CardBattleEngine {
       return c;
     }
     if (c.currentHp > (c.maxHp * kTransformarTrigger)) return c;
+
+    // 2ª forma ESPECÍFICA (transforma_em): vira outra carta, mantendo o id
+    // original (instanceId estável). Cai pro boost genérico se a carta não tem
+    // 2ª forma definida.
+    final into = c.card.transformTo;
+    if (into != null) {
+      final newCard = into.copyWith(id: c.card.id); // preserva instanceId/lane
+      var nc = c.copyWith(card: newCard, transformed: true);
+      nc = nc.copyWith(currentHp: nc.maxHp); // cura ao novo máximo
+      events.add(AbilityTriggered(
+        side: side,
+        cardId: c.instanceId,
+        cardName: c.card.nome,
+        ability: abilityKeywordLabel(AbilityKeyword.transformar),
+        detail: 'transformou-se em ${newCard.nome}',
+      ));
+      return nc;
+    }
+
     var nc = c.copyWith(
       permanentAtkBonus: c.permanentAtkBonus + kTransformarAtkBonus,
       bonusMaxHp: c.bonusMaxHp + kTransformarHpBonus,

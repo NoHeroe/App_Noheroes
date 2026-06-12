@@ -111,7 +111,26 @@ void main() {
     expect(_ability(after, 'Carta Zumbi'), isTrue);
   });
 
-  test('Transformar: cair ao limiar ativa a 2ª forma (cura + bônus)', () {
+  test('Transformar (2ª forma específica): vira a carta de transforma_em', () {
+    final form2 = creature(id: 'dragao', atk: 9, hp: 30, abilities: ['Voo']);
+    final base = creature(id: 'ovo', atk: 2, hp: 10, abilities: ['Transformar'])
+        .copyWith(transformTo: form2);
+    final s = _stateWith(
+      aLanes: [inPlay(id: 'atk', atk: 6, hp: 10)],
+      bLanes: [CreatureInPlay(card: base, currentHp: 10, lane: 0)],
+    );
+    final after = engine.endTurn(s);
+    final m = _find(after.sideB, 'ovo'); // instanceId preservado (= id 'ovo').
+    expect(m.transformed, isTrue);
+    expect(m.card.nome, 'dragao'); // adotou a 2ª forma.
+    expect(m.card.atk, 9);
+    expect(m.hasKeyword(AbilityKeyword.voo), isTrue);
+    expect(m.maxHp, 30);
+    expect(m.currentHp, 30); // curou ao novo máximo.
+  });
+
+  test('Transformar (genérico): sem transforma_em, ativa boost (cura + bônus)',
+      () {
     final s = _stateWith(
       // atk 6 leva o defensor de 10 -> 4 (≤ 50%): dispara.
       aLanes: [inPlay(id: 'atk', atk: 6, hp: 10)],

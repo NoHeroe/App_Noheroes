@@ -294,6 +294,7 @@ class CreatureInPlay {
   int get effectiveAtk => atk;
 
   CreatureInPlay copyWith({
+    CreatureCard? card,
     int? currentHp,
     int? lane,
     List<RelicCard>? relics,
@@ -315,7 +316,7 @@ class CreatureInPlay {
     bool? transformed,
   }) {
     return CreatureInPlay(
-      card: card,
+      card: card ?? this.card,
       currentHp: currentHp ?? this.currentHp,
       lane: lane ?? this.lane,
       relics: relics ?? this.relics,
