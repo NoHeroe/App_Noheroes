@@ -86,8 +86,11 @@ class CardBattleEngine {
     for (var i = 0; i < lanes.length; i++) {
       final c = lanes[i];
       if (c == null) continue;
-      if (c.desmoralizadoMelee != melee || c.suprimidoMagico != magic) {
-        lanes[i] = c.copyWith(desmoralizadoMelee: melee, suprimidoMagico: magic);
+      // Imunidade/Perseverança: criatura imune não recebe o debuff.
+      final m = c.immuneTo(AbilityKeyword.desmoralizar) ? 0 : melee;
+      final sup = c.immuneTo(AbilityKeyword.suprimirMagia) ? 0 : magic;
+      if (c.desmoralizadoMelee != m || c.suprimidoMagico != sup) {
+        lanes[i] = c.copyWith(desmoralizadoMelee: m, suprimidoMagico: sup);
         changed = true;
       }
     }
@@ -494,9 +497,15 @@ class CardBattleEngine {
     if (idx < 0) return s; // carta não está na mão
 
     final card = side.hand[idx];
-    final gain = card is RelicCard
+    var gain = card is RelicCard
         ? kSacrificeRelicCrystals
         : kSacrificeCreatureCrystals;
+    // Cristal Adicional (Lote 6): criatura sacrificada gera cristal extra.
+    if (card is CreatureCard &&
+        card.abilities.any(
+            (x) => abilityKeywordFromString(x) == AbilityKeyword.cristalAdicional)) {
+      gain += kCristalAdicionalCrystals;
+    }
 
     final newHand = List<Object>.from(side.hand)..removeAt(idx);
     var newSide = side.copyWith(
@@ -779,8 +788,10 @@ class CardBattleEngine {
         final type = atk.type;
 
         // Silêncio (aura): enquanto o INIMIGO tiver criatura com Silêncio viva,
-        // este lado não usa ataque mágico nem cura.
-        if (type == DamageType.magico || type == DamageType.cura) {
+        // este lado não usa ataque mágico nem cura. (Imunidade/Perseverança = a
+        // criatura ignora o Silêncio e ataca normalmente.)
+        if ((type == DamageType.magico || type == DamageType.cura) &&
+            !creature.immuneTo(AbilityKeyword.silencio)) {
           final silencer = defender.creaturesInPlay
               .where((c) => c.hasKeyword(AbilityKeyword.silencio))
               .firstOrNull;
@@ -1097,6 +1108,7 @@ class CardBattleEngine {
       if (attacker.hasKeyword(AbilityKeyword.enredar) &&
           t.canFly &&
           !t.entangled &&
+          !t.immuneTo(AbilityKeyword.enredar) &&
           s.rng.nextDouble() < kEnredarChance) {
         t = t.copyWith(entangled: true);
         events.add(AbilityTriggered(
@@ -1132,8 +1144,10 @@ class CardBattleEngine {
           t = nt;
           if (surtoKilled) anyDeath = true;
         }
-        // Doença: aplica/empilha se o alvo ainda está vivo.
-        if (t.isAlive && attacker.hasKeyword(AbilityKeyword.doenca)) {
+        // Doença: aplica/empilha se o alvo ainda está vivo (e não imune).
+        if (t.isAlive &&
+            attacker.hasKeyword(AbilityKeyword.doenca) &&
+            !t.immuneTo(AbilityKeyword.doenca)) {
           t = t.copyWith(diseaseStacks: t.diseaseStacks + 1);
           events.add(AbilityTriggered(
             side: atkSide.id,
@@ -1302,7 +1316,8 @@ class CardBattleEngine {
     if (type == DamageType.corpoACorpo) {
       final targetAlive = defLanes[targetLaneIdx] != null;
 
-      if (target.hasKeyword(AbilityKeyword.espinhos)) {
+      if (target.hasKeyword(AbilityKeyword.espinhos) &&
+          !attacker.immuneTo(AbilityKeyword.espinhos)) {
         final res = _resolveLethal(attacker, attacker.currentHp - kEspinhosDamage);
         events.add(AbilityTriggered(
           side: defSide.id,
@@ -1322,6 +1337,7 @@ class CardBattleEngine {
       if (!attackerDied &&
           targetAlive &&
           target.hasKeyword(AbilityKeyword.contraAtaque) &&
+          !attacker.immuneTo(AbilityKeyword.contraAtaque) &&
           s.rng.nextDouble() < kContraAtaqueChance) {
         var cdmg = target.atk - attacker.armor; // contra-ataque melee → armadura reduz
         if (cdmg < 0) cdmg = 0;

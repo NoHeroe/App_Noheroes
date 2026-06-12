@@ -837,6 +837,8 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       AbilityKeyword.cristalDeDrenagem,
       AbilityKeyword.rouboDePv,
       AbilityKeyword.investida,
+      AbilityKeyword.furia,
+      AbilityKeyword.cristalAdicional,
     ];
     const defensive = [
       AbilityKeyword.escudo,
@@ -849,6 +851,10 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       AbilityKeyword.contraAtaque,
       AbilityKeyword.reflexoMagico,
       AbilityKeyword.inabalavel,
+      AbilityKeyword.imunidade,
+      AbilityKeyword.perseveranca,
+      AbilityKeyword.vigilante,
+      AbilityKeyword.encantarArmadura,
     ];
     const status = [
       AbilityKeyword.sangramento,

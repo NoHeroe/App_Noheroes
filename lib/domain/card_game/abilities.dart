@@ -11,9 +11,9 @@
 /// e o engine as ignora silenciosamente.
 library;
 
-/// As 32 habilidades com runtime no engine (12 originais + 5 do Lote 2 + 4 do
+/// As 38 habilidades com runtime no engine (12 originais + 5 do Lote 2 + 4 do
 /// Lote 3a de status/DoT + 4 do Lote 3b de auras/combo Doença-Surto + 6 do
-/// Lote 5 de exóticas + Reflexo Mágico).
+/// Lote 5 de exóticas + Reflexo Mágico + 6 do Lote 6 de imunidades/utilidades).
 enum AbilityKeyword {
   /// Redireciona ataques à distância/mágicos inimigos para esta criatura.
   provocar,
@@ -149,6 +149,27 @@ enum AbilityKeyword {
   /// Ao cair a 🎚️ `kTransformarTrigger` do PV máximo, ativa a 2ª forma: cura ao
   /// novo máximo e ganha 🎚️ `kTransformarAtkBonus`/`kTransformarHpBonus`. 1×.
   transformar,
+
+  // ── Lote 6 (imunidades + utilidades) ──────────────────────────────────────
+
+  /// Imune a Desmoralizar, Suprimir Magia e Silêncio (e a Flash inimigo).
+  imunidade,
+
+  /// Imune a Doença, Enredar, Silêncio, Desmoralizar e Suprimir Magia.
+  perseveranca,
+
+  /// Imune a Contra-Ataque, Espinhos e Enredar.
+  vigilante,
+
+  /// Ataque corpo a corpo atual +(PV máximo − PV atual) — quanto mais ferida,
+  /// mais forte o golpe melee.
+  furia,
+
+  /// Se já tem armadura (relíquia/Escudo), ganha +🎚️ `kEncantarArmaduraBonus`.
+  encantarArmadura,
+
+  /// Ao ser sacrificada, gera +🎚️ `kCristalAdicionalCrystals` cristal extra.
+  cristalAdicional,
 }
 
 /// Nome canônico (forma "bonita" com espaço/acento) — usado em eventos
@@ -219,6 +240,18 @@ String abilityKeywordLabel(AbilityKeyword k) {
       return 'Ressurreição';
     case AbilityKeyword.transformar:
       return 'Transformar';
+    case AbilityKeyword.imunidade:
+      return 'Imunidade';
+    case AbilityKeyword.perseveranca:
+      return 'Perseverança';
+    case AbilityKeyword.vigilante:
+      return 'Vigilante';
+    case AbilityKeyword.furia:
+      return 'Fúria';
+    case AbilityKeyword.encantarArmadura:
+      return 'Encantar Armadura';
+    case AbilityKeyword.cristalAdicional:
+      return 'Cristal Adicional';
   }
 }
 
@@ -288,4 +321,10 @@ const Map<String, AbilityKeyword> _canonical = {
   'zumbi': AbilityKeyword.zumbi,
   'ressurreicao': AbilityKeyword.ressurreicao,
   'transformar': AbilityKeyword.transformar,
+  'imunidade': AbilityKeyword.imunidade,
+  'perseveranca': AbilityKeyword.perseveranca,
+  'vigilante': AbilityKeyword.vigilante,
+  'furia': AbilityKeyword.furia,
+  'encantararmadura': AbilityKeyword.encantarArmadura,
+  'cristaladicional': AbilityKeyword.cristalAdicional,
 };

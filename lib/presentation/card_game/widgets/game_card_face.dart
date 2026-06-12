@@ -414,6 +414,19 @@ IconData keywordIcon(AbilityKeyword k) {
       return Icons.autorenew;
     case AbilityKeyword.transformar:
       return Icons.change_circle;
+    // Lote 6 (imunidades / utilidades).
+    case AbilityKeyword.imunidade:
+      return Icons.verified_user;
+    case AbilityKeyword.perseveranca:
+      return Icons.fitness_center;
+    case AbilityKeyword.vigilante:
+      return Icons.remove_red_eye;
+    case AbilityKeyword.furia:
+      return Icons.local_fire_department;
+    case AbilityKeyword.encantarArmadura:
+      return Icons.add_moderator;
+    case AbilityKeyword.cristalAdicional:
+      return Icons.diamond_outlined;
   }
 }
 
@@ -485,6 +498,18 @@ String keywordDescription(AbilityKeyword k) {
       return 'Se fosse destruída, ressuscita com PV reduzido (1×/partida).';
     case AbilityKeyword.transformar:
       return 'Com o PV baixo, ativa a 2ª forma (cura + bônus de ataque/PV).';
+    case AbilityKeyword.imunidade:
+      return 'Imune a Desmoralizar, Suprimir Magia e Silêncio.';
+    case AbilityKeyword.perseveranca:
+      return 'Imune a Doença, Enredar, Silêncio, Desmoralizar e Suprimir Magia.';
+    case AbilityKeyword.vigilante:
+      return 'Imune a Contra-Ataque, Espinhos e Enredar.';
+    case AbilityKeyword.furia:
+      return '+ataque melee igual ao PV que falta (PV máximo − atual).';
+    case AbilityKeyword.encantarArmadura:
+      return 'Se já tem armadura, ganha +1 de armadura.';
+    case AbilityKeyword.cristalAdicional:
+      return 'Ao ser sacrificada, gera +1 cristal.';
   }
 }
 

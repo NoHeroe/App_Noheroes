@@ -197,6 +197,33 @@ class CreatureInPlay {
 
   bool hasKeyword(AbilityKeyword k) => keywords.contains(k);
 
+  /// Imunidade (Lote 6) a um efeito: Imunidade / Perseverança / Vigilante cobrem
+  /// conjuntos diferentes. "imune a X" = X não a afeta (para Espinhos/Contra-
+  /// Ataque o afetado é o ATACANTE; para os demais, o alvo/portador).
+  bool immuneTo(AbilityKeyword effect) {
+    if (hasKeyword(AbilityKeyword.imunidade) &&
+        (effect == AbilityKeyword.desmoralizar ||
+            effect == AbilityKeyword.suprimirMagia ||
+            effect == AbilityKeyword.silencio)) {
+      return true;
+    }
+    if (hasKeyword(AbilityKeyword.perseveranca) &&
+        (effect == AbilityKeyword.doenca ||
+            effect == AbilityKeyword.enredar ||
+            effect == AbilityKeyword.silencio ||
+            effect == AbilityKeyword.desmoralizar ||
+            effect == AbilityKeyword.suprimirMagia)) {
+      return true;
+    }
+    if (hasKeyword(AbilityKeyword.vigilante) &&
+        (effect == AbilityKeyword.contraAtaque ||
+            effect == AbilityKeyword.espinhos ||
+            effect == AbilityKeyword.enredar)) {
+      return true;
+    }
+    return false;
+  }
+
   /// Armadura derivada: soma das `armor` das relíquias equipadas + armadura
   /// inata de Escudo (🎚️ `kEscudoArmor`).
   int get armor {
@@ -206,6 +233,10 @@ class CreatureInPlay {
     }
     if (hasKeyword(AbilityKeyword.escudo)) total += kEscudoArmor;
     if (hasKeyword(AbilityKeyword.escudoSagrado)) total += kEscudoSagradoArmor;
+    // Encantar Armadura (Lote 6): só dá bônus se JÁ existe armadura.
+    if (total > 0 && hasKeyword(AbilityKeyword.encantarArmadura)) {
+      total += kEncantarArmaduraBonus;
+    }
     return total;
   }
 
@@ -253,6 +284,16 @@ class CreatureInPlay {
     if (meleeBuff > 0 && byType.containsKey(DamageType.corpoACorpo)) {
       byType[DamageType.corpoACorpo] =
           byType[DamageType.corpoACorpo]! + meleeBuff;
+    }
+    // Fúria (Lote 6): +ataque melee = PV máximo − PV atual (quanto mais ferida,
+    // mais forte). Dinâmico, recalculado a cada leitura.
+    if (hasKeyword(AbilityKeyword.furia) &&
+        byType.containsKey(DamageType.corpoACorpo)) {
+      final missing = maxHp - currentHp;
+      if (missing > 0) {
+        byType[DamageType.corpoACorpo] =
+            byType[DamageType.corpoACorpo]! + missing;
+      }
     }
     // Debuffs de aura (Lote 3b): Desmoralizar reduz melee; Suprimir Magia reduz
     // mágico. Clampa em 0 (não vira ataque negativo).

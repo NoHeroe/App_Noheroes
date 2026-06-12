@@ -161,6 +161,14 @@ const int kTransformarAtkBonus = 2;
 /// Bônus de PV máximo ao transformar (cura ao novo máximo). 🎚️
 const int kTransformarHpBonus = 2;
 
+// ── Lote 6 (imunidades + utilidades) — magnitudes 🎚️ ─────────────────────────
+
+/// Armadura extra de Encantar Armadura (só se já houver armadura). 🎚️
+const int kEncantarArmaduraBonus = 1;
+
+/// Cristal extra gerado por Cristal Adicional ao sacrificar a criatura. 🎚️
+const int kCristalAdicionalCrystals = 1;
+
 /// Bônus de ataque corpo a corpo de Inspirar (aliados, até o fim do turno). 🎚️
 const int kInspirarBonus = 1;
 
