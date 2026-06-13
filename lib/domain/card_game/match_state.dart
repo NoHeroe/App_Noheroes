@@ -68,6 +68,7 @@ class CreatureInPlay {
     this.transformed = false,
     this.nevoaArmed = false,
     this.esquivaBuffTurns = 0,
+    this.armorPool,
   });
 
   final CreatureCard card;
@@ -145,6 +146,12 @@ class CreatureInPlay {
   /// Esquiva TEMPORÁRIA de 100% (passiva do Assassino, ADR-0028): turnos
   /// restantes. >0 = evade tudo. Decai no início do turno do dono.
   final int esquivaBuffTurns;
+
+  /// Armadura física RESTANTE (pool que DESGASTA — CEO 2026-06-12). `null` =
+  /// pool cheio (= [armorMax]). Conforme golpes físicos batem, ela absorve o
+  /// golpe inteiro e decai; quando o dano ≥ pool, quebra (vai a 0). Mágico a
+  /// ignora; Quebra de Armadura fura e a zera.
+  final int? armorPool;
 
   /// keyword FUNCIONAL: tem a keyword E não está suprimida por Doença (Doença
   /// desativa Inspirar, Desmoralizar e Reflexo Mágico na criatura doente).
@@ -234,20 +241,49 @@ class CreatureInPlay {
     return false;
   }
 
-  /// Armadura derivada: soma das `armor` das relíquias equipadas + armadura
-  /// inata de Escudo (🎚️ `kEscudoArmor`).
-  int get armor {
+  /// Magnitude de uma keyword com parâmetro `_N` nas strings de habilidade
+  /// (carta + relíquias). Devolve o MAIOR valor encontrado, ou [fallback] se a
+  /// keyword existe sem número, ou 0 se nem existe. Ex.: "escudo_4" → 4.
+  int keywordValue(AbilityKeyword k, int fallback) {
+    var best = -1;
+    void scan(Iterable<String> tokens) {
+      for (final a in tokens) {
+        if (abilityKeywordFromString(a) != k) continue;
+        final mag = abilityMagnitude(a) ?? fallback;
+        if (mag > best) best = mag;
+      }
+    }
+
+    scan(card.abilities);
+    for (final r in relics) {
+      scan(r.grants.abilities);
+    }
+    return best < 0 ? 0 : best;
+  }
+
+  /// Armadura MÁXIMA derivada: soma das `armor` das relíquias equipadas +
+  /// armadura inata de Escudo (🎚️ `kEscudoArmor`, ou a magnitude de "escudo_N").
+  int get armorMax {
     var total = 0;
     for (final r in relics) {
       total += r.scaledArmor;
     }
-    if (hasKeyword(AbilityKeyword.escudo)) total += kEscudoArmor;
+    total += keywordValue(AbilityKeyword.escudo, kEscudoArmor);
     if (hasKeyword(AbilityKeyword.escudoSagrado)) total += kEscudoSagradoArmor;
     // Encantar Armadura (Lote 6): só dá bônus se JÁ existe armadura.
     if (total > 0 && hasKeyword(AbilityKeyword.encantarArmadura)) {
       total += kEncantarArmaduraBonus;
     }
     return total;
+  }
+
+  /// Armadura física RESTANTE do pool (desgasta em combate). Sem dano = cheia
+  /// (= [armorMax]). Nunca passa do máximo nem fica negativa.
+  int get armor {
+    final max = armorMax;
+    final cur = armorPool ?? max;
+    if (cur < 0) return 0;
+    return cur > max ? max : cur;
   }
 
   /// Armadura MÁGICA (reduz dano mágico): Escudo Espelhado + Escudo Sagrado.
@@ -372,6 +408,7 @@ class CreatureInPlay {
     bool? transformed,
     bool? nevoaArmed,
     int? esquivaBuffTurns,
+    int? armorPool,
   }) {
     return CreatureInPlay(
       card: card ?? this.card,
@@ -396,6 +433,7 @@ class CreatureInPlay {
       transformed: transformed ?? this.transformed,
       nevoaArmed: nevoaArmed ?? this.nevoaArmed,
       esquivaBuffTurns: esquivaBuffTurns ?? this.esquivaBuffTurns,
+      armorPool: armorPool ?? this.armorPool,
     );
   }
 }

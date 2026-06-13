@@ -1351,33 +1351,48 @@ class CardBattleEngine {
     var damage = raw;
     final physical =
         type == DamageType.corpoACorpo || type == DamageType.aDistancia;
-    if (physical) {
-      damage = damage - target.armor; // Escudo / Escudo Sagrado
-    } else if (type == DamageType.magico) {
-      damage = damage - target.magicArmor; // Escudo Espelhado / Escudo Sagrado
-    }
-    if (damage < 0) damage = 0;
-    // ---- Lote 7: bônus de dano por atacante ----
-    // Anti-Aéreo: dano extra contra quem voa.
+    // Anti-Aéreo: dano extra contra quem voa (faz parte do golpe).
     if (attacker.hasKeyword(AbilityKeyword.antiAereo) && target.canFly) {
       damage += kAntiAereoBonus;
-    }
-    // Quebra de Armadura: dano FÍSICO extra contra alvo com armadura.
-    if (physical &&
-        attacker.hasKeyword(AbilityKeyword.quebraArmadura) &&
-        target.armor > 0) {
-      damage += kQuebraArmaduraBonus;
     }
     // Névoa: o PRÓXIMO golpe (estado armado) é prevenido.
     final hasNevoa = target.hasKeyword(AbilityKeyword.nevoa);
     final nevoaPreventing = hasNevoa && target.nevoaArmed && !magicReflected;
-    if (nevoaPreventing) damage = 0;
-    if (magicReflected) damage = 0; // o alvo IGNORA o dano (reflete abaixo).
+    final prevented = nevoaPreventing || magicReflected;
+
+    // ---- Armadura física = POOL que DESGASTA (CEO 2026-06-12) ----
+    // Físico não-prevenido: a armadura absorve o golpe INTEIRO (PV não cai) e
+    // decai; se dano ≥ pool, quebra (vai a 0, sem transbordar pro PV). Quebra
+    // de Armadura FURA (dano vai ao PV) e zera a armadura. Mágico ignora o pool
+    // (só Escudo Espelhado/Sagrado reduzem, fixo). Verdadeiro ignora tudo.
+    int? newArmorPool;
+    if (prevented) {
+      damage = 0; // golpe cancelado; a armadura NÃO desgasta.
+    } else if (physical) {
+      final pool = target.armor;
+      if (attacker.hasKeyword(AbilityKeyword.quebraArmadura)) {
+        if (pool > 0) newArmorPool = 0; // fura + destrói a armadura
+        // damage segue íntegro para o PV.
+      } else if (pool > 0) {
+        newArmorPool = damage < pool ? pool - damage : 0; // absorve o golpe
+        damage = 0;
+      }
+    } else if (type == DamageType.magico) {
+      damage = damage - target.magicArmor; // Escudo Espelhado / Sagrado (fixo)
+    }
+    if (damage < 0) damage = 0;
+
     final hpBefore = target.currentHp;
     // Inabalável: se morreria, ressuscita com vida cheia (1×/partida).
     final lethalT = _resolveLethal(target, hpBefore - damage);
     final died = lethalT.died;
-    defLanes[targetLaneIdx] = lethalT.creature;
+    // Atualiza o pool de armadura no alvo sobrevivente (se desgastou/quebrou).
+    if (lethalT.creature != null && newArmorPool != null) {
+      defLanes[targetLaneIdx] =
+          lethalT.creature!.copyWith(armorPool: newArmorPool);
+    } else {
+      defLanes[targetLaneIdx] = lethalT.creature;
+    }
     if (lethalT.revived) {
       events.add(AbilityTriggered(
         side: defSide.id,

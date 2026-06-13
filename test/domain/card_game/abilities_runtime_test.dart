@@ -110,14 +110,17 @@ void main() {
   });
 
   group('Escudo (armadura inata)', () {
-    test('reduz dano físico e SOMA com armadura de relíquia', () {
+    test('SOMA com armadura de relíquia num pool único que desgasta', () {
       final s = _stateWith(
-        aLanes: [inPlay(id: 'atk', atk: 5)],
+        aLanes: [inPlay(id: 'atk', atk: 1)],
         bLanes: [inPlay(id: 'def', hp: 10, armor: 1, abilities: ['Escudo'])],
       );
       final after = engine.endTurn(s);
-      // armadura total = 1 (relíquia) + kEscudoArmor (1) = 2 -> dano 3.
-      expect(_find(after.sideB, 'def').currentHp, 10 - (5 - 1 - kEscudoArmor));
+      // pool = 1 (relíquia) + kEscudoArmor (inato); absorve o golpe de 1 e
+      // desgasta 1 (prova a SOMA). PV intacto.
+      final def = _find(after.sideB, 'def');
+      expect(def.currentHp, 10);
+      expect(def.armor, 1 + kEscudoArmor - 1);
     });
   });
 
@@ -133,7 +136,9 @@ void main() {
         ],
       );
       final after = engine.endTurn(s);
-      expect(_find(after.sideB, 'b_front').currentHp, 7); // 4 - 1 armadura.
+      // Armadura do front (pool 1) absorve o golpe inteiro: PV intacto, quebra.
+      expect(_find(after.sideB, 'b_front').currentHp, 10);
+      expect(_find(after.sideB, 'b_front').armor, 0);
       // Hit extra: dano VERDADEIRO (ignora os 5 de armadura) na retaguarda.
       expect(_find(after.sideB, 'b_back').currentHp, 6);
       final procs = after.lastTurnEvents

@@ -50,20 +50,48 @@ CreatureInPlay inPlay({
 }
 
 void main() {
-  group('armadura', () {
-    test('reduz dano físico (corpoACorpo)', () {
+  // Armadura = POOL que DESGASTA (CEO 2026-06-12): dano físico é absorvido
+  // INTEIRO (PV não cai); a armadura decai pelo dano e, se dano ≥ pool, quebra
+  // (vai a 0, overkill perdido). Mágico/verdadeiro ignoram. À distância conta
+  // como físico.
+  group('armadura (pool que desgasta)', () {
+    test('dano físico < armadura: desgasta o pool, PV intacto', () {
+      // 1 PV, 3 armadura, toma 2 → sobra 1 de armadura, PV intacto.
       final s = _stateWith(
-        aLanes: [inPlay(id: 'atk', atk: 5, type: DamageType.corpoACorpo)],
-        bLanes: [inPlay(id: 'def', hp: 10, armor: 2)],
+        aLanes: [inPlay(id: 'atk', atk: 2, type: DamageType.corpoACorpo)],
+        bLanes: [inPlay(id: 'def', hp: 1, armor: 3)],
       );
       final after = engine.endTurn(s);
-      // 5 - 2 = 3 de dano. hp 10 -> 7.
-      expect(after.sideB.lanes[0]!.currentHp, 7);
+      final def = after.sideB.lanes[0]!;
+      expect(def.currentHp, 1);
+      expect(def.armor, 1); // 3 - 2
     });
 
-    test('reduz dano à distância', () {
-      // Combate posicional: ranged precisa estar na RETAGUARDA para atacar —
-      // dummy melee atk 0 segura a frente (intenção do teste: armadura).
+    test('dano físico = armadura: quebra a armadura, sobrevive', () {
+      final s = _stateWith(
+        aLanes: [inPlay(id: 'atk', atk: 3, type: DamageType.corpoACorpo)],
+        bLanes: [inPlay(id: 'def', hp: 1, armor: 3)],
+      );
+      final after = engine.endTurn(s);
+      final def = after.sideB.lanes[0]!;
+      expect(def.currentHp, 1);
+      expect(def.armor, 0); // quebrou
+    });
+
+    test('dano físico > armadura: absorve o golpe inteiro (overkill perdido)',
+        () {
+      // 1 PV, 3 armadura, toma 4 → armadura quebra e absorve tudo; sobrevive.
+      final s = _stateWith(
+        aLanes: [inPlay(id: 'atk', atk: 4, type: DamageType.corpoACorpo)],
+        bLanes: [inPlay(id: 'def', hp: 1, armor: 3)],
+      );
+      final after = engine.endTurn(s);
+      final def = after.sideB.lanes[0]!;
+      expect(def.currentHp, 1);
+      expect(def.armor, 0);
+    });
+
+    test('à distância conta como físico (também é absorvido)', () {
       final s = _stateWith(
         aLanes: [
           inPlay(id: 'dummy', atk: 0, type: DamageType.corpoACorpo),
@@ -72,35 +100,29 @@ void main() {
         bLanes: [inPlay(id: 'def', hp: 10, armor: 3)],
       );
       final after = engine.endTurn(s);
-      // Lane oposta (1) vazia -> fallback na frente. 5-3=2.
-      expect(after.sideB.lanes[0]!.currentHp, 8);
+      final def = after.sideB.lanes[0]!;
+      expect(def.currentHp, 10); // absorvido
+      expect(def.armor, 0); // 5 ≥ 3 quebrou
     });
 
-    test('NÃO reduz dano mágico', () {
+    test('mágico ignora a armadura (não desgasta)', () {
       final s = _stateWith(
         aLanes: [inPlay(id: 'atk', atk: 5, type: DamageType.magico)],
         bLanes: [inPlay(id: 'def', hp: 10, armor: 4)],
       );
       final after = engine.endTurn(s);
-      expect(after.sideB.lanes[0]!.currentHp, 5); // ignora armor
+      final def = after.sideB.lanes[0]!;
+      expect(def.currentHp, 5); // ignora armor
+      expect(def.armor, 4); // intacta
     });
 
-    test('NÃO reduz vitalismo (dano verdadeiro)', () {
+    test('vitalismo (verdadeiro) ignora a armadura', () {
       final s = _stateWith(
         aLanes: [inPlay(id: 'atk', atk: 5, type: DamageType.vitalismo)],
         bLanes: [inPlay(id: 'def', hp: 10, armor: 4)],
       );
       final after = engine.endTurn(s);
       expect(after.sideB.lanes[0]!.currentHp, 5);
-    });
-
-    test('dano nunca fica negativo (mín 0)', () {
-      final s = _stateWith(
-        aLanes: [inPlay(id: 'atk', atk: 1, type: DamageType.corpoACorpo)],
-        bLanes: [inPlay(id: 'def', hp: 10, armor: 5)],
-      );
-      final after = engine.endTurn(s);
-      expect(after.sideB.lanes[0]!.currentHp, 10);
     });
   });
 

@@ -53,7 +53,7 @@ CreatureInPlay inPlay({
 
 void main() {
   group('AttackResolved', () {
-    test('corpoACorpo: damageDealt = atk - armor, rawDamage = atk', () {
+    test('corpoACorpo: armadura absorve → damageDealt = 0, rawDamage = atk', () {
       final s = _stateWith(
         aLanes: [inPlay(id: 'atk', atk: 5, type: DamageType.corpoACorpo)],
         bLanes: [inPlay(id: 'def', hp: 10, armor: 2)],
@@ -69,9 +69,9 @@ void main() {
       expect(e.targetCardId, 'def');
       expect(e.targetName, 'def');
       expect(e.damageType, DamageType.corpoACorpo);
-      expect(e.rawDamage, 5);
-      expect(e.damageDealt, 3); // 5 - 2 armor
-      expect(e.targetHpAfter, 7);
+      expect(e.rawDamage, 5); // o golpe bruto continua sendo 5
+      expect(e.damageDealt, 0); // armadura (pool) absorveu o golpe inteiro
+      expect(e.targetHpAfter, 10); // PV intacto
       expect(e.targetDied, isFalse);
     });
 
@@ -322,7 +322,7 @@ void main() {
       expect(text, contains('AttackResolved'));
       expect(text, contains('atk'));
       expect(text, contains('def'));
-      expect(text, contains('dealt=3'));
+      expect(text, contains('dealt=0')); // armadura absorveu (pool)
     });
   });
 }

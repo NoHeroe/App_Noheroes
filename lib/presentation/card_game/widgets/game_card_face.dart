@@ -483,7 +483,7 @@ String keywordDescription(AbilityKeyword k) {
     case AbilityKeyword.provocar:
       return 'Atrai os ataques à distância/mágicos inimigos para si.';
     case AbilityKeyword.escudo:
-      return 'Armadura inata: reduz o dano físico recebido.';
+      return 'Armadura inata: pool que absorve o dano físico (desgasta).';
     case AbilityKeyword.voo:
       return 'Evade ataques (50% melee / 25% à distância) de quem não voa.';
     case AbilityKeyword.ataqueDuplo:
@@ -509,7 +509,7 @@ String keywordDescription(AbilityKeyword k) {
     case AbilityKeyword.escudoEspelhado:
       return 'Reduz o dano mágico recebido (armadura mágica).';
     case AbilityKeyword.escudoSagrado:
-      return 'Reduz o dano físico E mágico recebido.';
+      return 'Absorve dano físico (pool de armadura) e reduz o mágico.';
     case AbilityKeyword.contraAtaque:
       return 'Ao ser atingida por melee, 50% de revidar com seu ataque.';
     case AbilityKeyword.reflexoMagico:

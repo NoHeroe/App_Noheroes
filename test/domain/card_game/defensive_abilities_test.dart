@@ -130,7 +130,7 @@ void main() {
   });
 
   group('Escudo Sagrado', () {
-    test('reduz dano FÍSICO', () {
+    test('absorve dano FÍSICO (pool físico)', () {
       final s = _stateWith(
         aLanes: [inPlay(id: 'atk', atk: 3, hp: 10)],
         bLanes: [
@@ -138,7 +138,8 @@ void main() {
         ],
       );
       final after = engine.endTurn(s);
-      expect(_hpOf(after.sideB, 'def'), 10 - (3 - kEscudoSagradoArmor));
+      // pool físico = kEscudoSagradoArmor; absorve o golpe inteiro (PV intacto).
+      expect(_hpOf(after.sideB, 'def'), 10);
     });
 
     test('reduz dano MÁGICO', () {

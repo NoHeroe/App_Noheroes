@@ -59,8 +59,8 @@ enum AbilityKeyword {
   // ── Lote 2 (defensivas) ──────────────────────────────────────────────────
 
   /// Ao ser atingida por melee, causa 🎚️ `kEspinhosDamage` de dano verdadeiro
-  /// ao atacante. (Simplificação: o "danifica a armadura primeiro" do rascunho
-  /// não se aplica — armadura aqui é redução fixa por golpe, não pool.)
+  /// ao atacante (independe da armadura — Espinhos sempre reflete, mesmo se o
+  /// golpe foi absorvido pelo pool de armadura).
   espinhos,
 
   /// Reduz dano MÁGICO recebido em 🎚️ `kEscudoEspelhadoArmor` (armadura mágica).

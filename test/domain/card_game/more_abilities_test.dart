@@ -113,14 +113,17 @@ void main() {
     expect(_hpOf(after.sideB, 'flyer'), 10 - (3 + kAntiAereoBonus));
   });
 
-  test('Quebra de Armadura: dano físico extra contra alvo com armadura', () {
+  test('Quebra de Armadura: fura a armadura (dano vai ao PV) e a destrói', () {
     final s = _stateWith(
       aLanes: [inPlay(id: 'atk', atk: 5, hp: 10, abilities: ['Quebra de Armadura'])],
       bLanes: [inPlay(id: 'def', atk: 0, hp: 10, armor: 2)],
     );
     final after = engine.endTurn(s);
-    // 5 - 2 (armadura) + kQuebraArmaduraBonus.
-    expect(_hpOf(after.sideB, 'def'), 10 - (5 - 2 + kQuebraArmaduraBonus));
+    // Ignora os 2 de armadura: 5 de dano direto no PV; e zera a armadura.
+    expect(_hpOf(after.sideB, 'def'), 5);
+    final def = after.sideB.creaturesInPlay
+        .firstWhere((c) => c.instanceId == 'def');
+    expect(def.armor, 0);
   });
 
   test('Explosão Mágica: dano mágico excedente transborda', () {
