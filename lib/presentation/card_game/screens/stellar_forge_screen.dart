@@ -49,7 +49,7 @@ class _StellarForgeScreenState extends ConsumerState<StellarForgeScreen>
   int _rarIdx(String r) => _rarities.indexOf(r) + 1;
   String _rarNext(String r) =>
       _rarities[_rarIdx(r).clamp(0, _rarities.length - 1)];
-  String _kindLabel(String k) => k == 'relic' ? 'Relíquia' : 'Carta';
+  String _kindLabel(String k) => k == 'relic' ? 'Relíquia' : 'Criatura';
   Color _rarColor(String r) => switch (r) {
         'comum' => AppColors.cardComum,
         'rara' => AppColors.cardRara,
@@ -69,7 +69,7 @@ class _StellarForgeScreenState extends ConsumerState<StellarForgeScreen>
         final nextR = _rarNext(r);
         out.add(_CardRecipe(
           key: 'fuse_${kind}_$r',
-          title: 'Essência ${_rarLabel[nextR]} (${_kindLabel(kind)})',
+          title: 'Essência de ${_kindLabel(kind)} ${_rarLabel[nextR]}',
           kind: kind,
           rarity: r,
           opType: 'fuse',
@@ -89,7 +89,7 @@ class _StellarForgeScreenState extends ConsumerState<StellarForgeScreen>
         final soulKey = '${kind == 'relic' ? 'relic_soul_' : 'card_soul_'}$r';
         out.add(_CardRecipe(
           key: 'emblem_${kind}_$r',
-          title: 'Emblema ${_rarLabel[r]} (${_kindLabel(kind)})',
+          title: 'Emblema de ${_kindLabel(kind)} ${_rarLabel[r]}',
           kind: kind,
           rarity: r,
           opType: 'emblem',
@@ -182,11 +182,17 @@ class _StellarForgeScreenState extends ConsumerState<StellarForgeScreen>
                 _anvilStation(res),
                 const Divider(height: 16, color: AppColors.borderViolet),
                 Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                  child: GridView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.82, // levemente alongado
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                    ),
                     itemCount: recipes.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (_, i) => _recipeTile(recipes[i], res),
+                    itemBuilder: (_, i) => _recipeCard(recipes[i], res),
                   ),
                 ),
                 _bottomBar(res),
@@ -221,10 +227,6 @@ class _StellarForgeScreenState extends ConsumerState<StellarForgeScreen>
                   color: AppColors.goldLt, size: 15),
             ),
           ),
-          const SizedBox(width: 12),
-          Text('FORJA ESTELAR',
-              style: GoogleFonts.cinzelDecorative(
-                  fontSize: 16, color: AppColors.goldLt, letterSpacing: 2)),
         ],
       ),
     );
@@ -233,65 +235,50 @@ class _StellarForgeScreenState extends ConsumerState<StellarForgeScreen>
   Widget _anvilStation(Map<String, int> res) {
     final r = _selected;
     final accent = r?.finalColor ?? AppColors.gold;
-    final name = r == null ? 'Escolha uma receita abaixo' : r.title;
+    // CEO 2026-06-12: sem texto; o ícone do item flutua um pouco ACIMA da bigorna.
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          SizedBox(
-            height: 128,
-            child: AnimatedBuilder(
-              animation: _spark,
-              builder: (_, __) => Stack(
-                alignment: Alignment.center,
-                children: [
-                  const Positioned.fill(
-                      child: CustomPaint(painter: _AnvilPainter())),
-                  Align(
-                    alignment: const Alignment(0, -0.55),
-                    child: Transform.scale(
-                      scale: 1.0 + math.sin(_spark.value * math.pi) * 0.12,
-                      child: Container(
-                        width: 46,
-                        height: 46,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: accent.withValues(alpha: 0.12),
-                          border: Border.all(color: accent.withValues(alpha: 0.6)),
-                        ),
-                        child: Icon(r?.finalIcon ?? Icons.auto_awesome,
-                            size: 26, color: accent),
-                      ),
+      child: SizedBox(
+        height: 132,
+        child: AnimatedBuilder(
+          animation: _spark,
+          builder: (_, __) => Stack(
+            alignment: Alignment.center,
+            children: [
+              const Positioned.fill(
+                  child: CustomPaint(painter: _AnvilPainter())),
+              Align(
+                alignment: const Alignment(0, -0.78),
+                child: Transform.scale(
+                  scale: 1.0 + math.sin(_spark.value * math.pi) * 0.12,
+                  child: Container(
+                    width: 50,
+                    height: 50,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      color: accent.withValues(alpha: 0.12),
+                      border: Border.all(color: accent.withValues(alpha: 0.6)),
+                      boxShadow: [
+                        BoxShadow(
+                            color: accent.withValues(alpha: 0.35),
+                            blurRadius: 12),
+                      ],
                     ),
+                    child: Icon(r?.finalIcon ?? Icons.auto_awesome,
+                        size: 28, color: accent),
                   ),
-                  if (_spark.value > 0)
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: CustomPaint(painter: _SparkPainter(_spark.value)),
-                      ),
-                    ),
-                ],
+                ),
               ),
-            ),
+              if (_spark.value > 0)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(painter: _SparkPainter(_spark.value)),
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.cinzelDecorative(
-                  fontSize: 12,
-                  letterSpacing: 1,
-                  color: r == null ? AppColors.txtMut : AppColors.textPrimary)),
-          if (r != null) ...[
-            const SizedBox(height: 6),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 14,
-              children: [for (final ing in r.ingredients) _ingChip(ing, res)],
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
@@ -312,7 +299,9 @@ class _StellarForgeScreenState extends ConsumerState<StellarForgeScreen>
     );
   }
 
-  Widget _recipeTile(_CardRecipe r, Map<String, int> res) {
+  /// Card de receita (CEO 2026-06-12): vertical — ícone grande centralizado,
+  /// título abaixo, custo abaixo do título. Em grade dupla, levemente alongado.
+  Widget _recipeCard(_CardRecipe r, Map<String, int> res) {
     final selected = _selected?.key == r.key;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -321,52 +310,71 @@ class _StellarForgeScreenState extends ConsumerState<StellarForgeScreen>
         _qty = 1;
       }),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           color: selected
               ? r.finalColor.withValues(alpha: 0.14)
               : const Color(0x33100C15),
           border: Border.all(
-              color:
-                  selected ? r.finalColor : r.finalColor.withValues(alpha: 0.45),
-              width: selected ? 1.5 : 1),
+              color: selected
+                  ? r.finalColor
+                  : r.finalColor.withValues(alpha: 0.45),
+              width: selected ? 1.6 : 1),
         ),
-        child: Row(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Ícone grande centralizado
             Container(
-              width: 46,
-              height: 46,
+              width: 62,
+              height: 62,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(14),
                 color: r.finalColor.withValues(alpha: 0.12),
                 border: Border.all(color: r.finalColor.withValues(alpha: 0.6)),
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                            color: r.finalColor.withValues(alpha: 0.35),
+                            blurRadius: 12)
+                      ]
+                    : null,
               ),
-              child: Icon(r.finalIcon, size: 26, color: r.finalColor),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  Text(r.title,
-                      style: GoogleFonts.cinzelDecorative(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.goldLt)),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 12,
-                    children: [
-                      for (final ing in r.ingredients) _ingChip(ing, res)
-                    ],
-                  ),
+                  Icon(r.finalIcon, size: 36, color: r.finalColor),
+                  if (selected)
+                    const Positioned(
+                      top: -2,
+                      right: -2,
+                      child: Icon(Icons.check_circle,
+                          size: 16, color: AppColors.goldLt),
+                    ),
                 ],
               ),
             ),
-            if (selected)
-              const Icon(Icons.check_circle, size: 18, color: AppColors.goldLt),
+            const SizedBox(height: 10),
+            // Título abaixo do ícone
+            Text(r.title,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.cinzelDecorative(
+                    fontSize: 11.5,
+                    height: 1.15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.goldLt)),
+            const SizedBox(height: 8),
+            // Custo abaixo do título
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 12,
+              runSpacing: 4,
+              children: [for (final ing in r.ingredients) _ingChip(ing, res)],
+            ),
           ],
         ),
       ),

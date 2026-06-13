@@ -49,6 +49,7 @@ class CreatureInPlay {
     required this.card,
     required this.currentHp,
     required this.lane,
+    this.uid,
     this.relics = const <RelicCard>[],
     this.bonusMaxHp = 0,
     this.inspirarBonus = 0,
@@ -76,6 +77,12 @@ class CreatureInPlay {
 
   /// Lane ocupada (0 = frente).
   final int lane;
+
+  /// Id ÚNICO por INSTÂNCIA. `null` → usa `card.id` (criaturas normais do deck
+  /// têm card.id único por lado, então não colidem). TOKENS duplicados (ex.:
+  /// várias "Caixa Coringa" do Coringa) recebem um uid explícito, pra mira,
+  /// morte e Key de UI distinguirem cópias idênticas. Estável via copyWith.
+  final String? uid;
 
   /// Relíquias equipadas (flash NÃO entra aqui — é consumida ao equipar).
   final List<RelicCard> relics;
@@ -180,7 +187,7 @@ class CreatureInPlay {
   /// o Voo enquanto dura).
   bool get canFly => hasKeyword(AbilityKeyword.voo) && !entangled;
 
-  String get instanceId => card.id;
+  String get instanceId => uid ?? card.id;
 
   /// PV máximo: HP base da carta + `hpBonus` das relíquias + bônus permanente
   /// (Roubo de PV).
@@ -398,6 +405,7 @@ class CreatureInPlay {
     CreatureCard? card,
     int? currentHp,
     int? lane,
+    String? uid,
     List<RelicCard>? relics,
     int? bonusMaxHp,
     int? inspirarBonus,
@@ -423,6 +431,7 @@ class CreatureInPlay {
       card: card ?? this.card,
       currentHp: currentHp ?? this.currentHp,
       lane: lane ?? this.lane,
+      uid: uid ?? this.uid,
       relics: relics ?? this.relics,
       bonusMaxHp: bonusMaxHp ?? this.bonusMaxHp,
       inspirarBonus: inspirarBonus ?? this.inspirarBonus,
@@ -571,16 +580,29 @@ class BoardSide {
     return total;
   }
 
-  /// Monstros ainda disponíveis para jogar (mão + deck) — exibido no HUD.
-  int get availableCreatureCount =>
-      hand.whereType<CreatureCard>().length +
-      deck.whereType<CreatureCard>().length;
+  /// Monstros ATIVOS exibidos no HUD: em jogo + mão + deck (CEO 2026-06-13).
+  /// Exclui os mortos (cemitério). Igual ao [remainingCreatureCount] — a mesma
+  /// contagem que decide a derrota —, então o contador bate com a regra de fim.
+  int get availableCreatureCount => remainingCreatureCount;
 
-  /// Itens (relíquias) ainda disponíveis para usar (mão + deck) — exibido no
-  /// HUD.
-  int get availableRelicCount =>
-      hand.whereType<RelicCard>().length +
-      deck.whereType<RelicCard>().length;
+  /// Relíquias ATIVAS exibidas no HUD: na mão + no deck + EQUIPADAS em criaturas
+  /// vivas (CEO 2026-06-13). Exclui as descartadas (cemitério). Conta IDs
+  /// distintos — cada carta é única no loadout MVP.
+  int get availableRelicCount {
+    final ids = <String>{};
+    for (final r in hand.whereType<RelicCard>()) {
+      ids.add(r.id);
+    }
+    for (final r in deck.whereType<RelicCard>()) {
+      ids.add(r.id);
+    }
+    for (final c in creaturesInPlay) {
+      for (final r in c.relics) {
+        ids.add(r.id);
+      }
+    }
+    return ids.length;
+  }
 
   BoardSide copyWith({
     List<CreatureInPlay?>? lanes,

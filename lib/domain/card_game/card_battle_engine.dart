@@ -48,9 +48,14 @@ class CardBattleEngine {
   /// (Inspirar/Investida). Procs narráveis vão para [events].
   MatchState _beginTurn(MatchState s, List<MatchEvent> events) {
     final side = s.active;
+    // Cristais ACUMULAM (CEO 2026-06-13): o ganho por turno é uma RAMPA
+    // (`crystalGain`) que soma ao saldo NÃO gasto (carry-over) — sem teto de
+    // saldo, viabilizando cartas caras (7+). Turnos 1-2 = só os 3 iniciais.
+    // Drenagem entra via pendingCrystals.
+    final income = crystalGain(s.turn);
     final base = kCrystalsCarryOver ? side.crystals : 0;
     var newSide = side.copyWith(
-      crystals: base + kCrystalsPerTurn + side.pendingCrystals,
+      crystals: base + income + side.pendingCrystals,
       pendingCrystals: 0,
       sacrificedThisTurn: false,
       // Limpa flags de turno que possam ter sobrado (recuo-grátis do Cartomante
@@ -714,8 +719,15 @@ class CardBattleEngine {
         for (var i = 0; i < dead.length; i++) {
           if (packed.length >= kLaneCount) break;
           if (s.rng.nextDouble() < kCoringaSpawnChance) {
+            // uid ÚNICO e DETERMINÍSTICO por token (lado_turno_índice): várias
+            // Caixas dividem o card.id, então sem uid próprio elas colidiriam em
+            // mira/morte/Key de UI (uma morrer faria as duas "morrerem").
             packed.add(CreatureInPlay(
-                card: caixaCoringaCard(), currentHp: 1, lane: 0));
+              card: caixaCoringaCard(),
+              currentHp: 1,
+              lane: 0,
+              uid: 'caixa_coringa#${sideId.name}_${s.turn}_$spawned',
+            ));
             spawned++;
           }
         }

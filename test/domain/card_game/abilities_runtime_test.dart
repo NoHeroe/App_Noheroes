@@ -496,8 +496,10 @@ void main() {
               .where((e) => e.ability == 'Cristal de Drenagem'),
           hasLength(1));
 
-      s = engine.endTurn(s); // turno de B acaba -> início do turno de A.
-      expect(s.sideA.crystals, kCrystalsPerTurn + kCristalDeDrenagemCrystals);
+      final beforeA = s.sideA.crystals; // saldo de A ACUMULA entre turnos
+      s = engine.endTurn(s); // turno de B (4) acaba -> início do turno de A (5).
+      expect(s.sideA.crystals,
+          beforeA + crystalGain(5) + kCristalDeDrenagemCrystals);
       expect(s.sideA.pendingCrystals, 0);
     });
 

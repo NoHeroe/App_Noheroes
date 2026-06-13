@@ -16,7 +16,7 @@ void main() {
           seed: 1);
       expect(s.phase, MatchPhase.jogo);
       expect(s.turn, 1);
-      expect(s.active.crystals, kCrystalsPerTurn);
+      expect(s.active.crystals, kStartingCrystals);
       expect(s.opponent.crystals, 0);
       expect(s.sideA.remainingCreatureCount, 9);
       // Turno 1 = PREPARATÓRIO: ninguém compra (nem a grátis); os dois lados
@@ -38,7 +38,7 @@ void main() {
 
       s = engine.apply(s, PlayCreature(creatureId));
       final side = s.sideOf(activeId);
-      expect(side.crystals, kCrystalsPerTurn - 1);
+      expect(side.crystals, kStartingCrystals - 1);
       expect(side.lanes[0]!.instanceId, creatureId);
       expect(_inHand(side, creatureId), isFalse, reason: 'saiu da mão');
       // ADR-0028: sem auto-refill — a mão encolhe ao jogar.
@@ -266,7 +266,7 @@ void main() {
 
       final side = s.sideOf(activeId);
       expect(side.lanes[0]!.relics.length, 1);
-      expect(side.crystals, kCrystalsPerTurn - 1 - 2);
+      expect(side.crystals, kStartingCrystals - 1 - 2);
       expect(_inHand(side, relicId), isFalse);
     });
 
@@ -284,7 +284,7 @@ void main() {
       final side = s.sideOf(activeId);
       // Flash não fica equipada, mas o custo foi cobrado.
       expect(side.lanes[0]!.relics, isEmpty);
-      expect(side.crystals, kCrystalsPerTurn - 1 - 1);
+      expect(side.crystals, kStartingCrystals - 1 - 1);
       expect(_inHand(side, relicId), isFalse);
     });
 
@@ -302,7 +302,7 @@ void main() {
       expect(identical(s, before), isTrue, reason: 'deve ser no-op');
       expect(s.active.lanes[0]!.relics, isEmpty);
       expect(_inHand(s.active, relicId), isTrue);
-      expect(s.active.crystals, kCrystalsPerTurn - 1);
+      expect(s.active.crystals, kStartingCrystals - 1);
     });
 
     test('bot não propõe relíquia impagável', () {

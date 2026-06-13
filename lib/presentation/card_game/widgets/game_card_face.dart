@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -30,7 +31,8 @@ class GameCardFace extends StatelessWidget {
     this.cornerBadge,
     this.itemIcon,
     this.showItemSlot = false,
-    this.effects = const <IconData>[],
+    this.effects = const <CardGlyph>[],
+    this.debuffs = const <CardGlyph>[],
     this.statusOverlay,
     this.minimal = false,
     this.showCost = true,
@@ -68,9 +70,14 @@ class GameCardFace extends StatelessWidget {
   /// Mostra o slot de item (pentágono) cravado na borda inferior.
   final bool showItemSlot;
 
-  /// Brasões de EFEITO (keywords) — pequenos círculos na borda esquerda que
-  /// vazam ~40% pra fora, abaixo da bandeira de raridade.
-  final List<IconData> effects;
+  /// Brasões de EFEITO (keywords) — pequenos círculos ROXOS na borda esquerda
+  /// que vazam ~40% pra fora, abaixo da bandeira de raridade. + habilidades =
+  /// + brasões.
+  final List<CardGlyph> effects;
+
+  /// DEBUFFS (status negativos) — bolinhas VERMELHAS no TOPO-DIREITA (ao lado do
+  /// cristal de custo). + debuffs = + bolinhas (CEO 2026-06-13).
+  final List<CardGlyph> debuffs;
 
   /// Camada de STATUS transitório (armadura/sangramento/veneno/doença/atordoar
   /// etc.) sobreposta no canto inferior-esquerdo da arte. null = sem status.
@@ -263,7 +270,18 @@ class GameCardFace extends StatelessWidget {
             left: -7,
             child: Column(
               children: [
-                for (final ic in effects.take(4)) _EffectCrest(icon: ic),
+                for (final g in effects.take(4)) _EffectCrest(glyph: g),
+              ],
+            ),
+          ),
+        // Debuffs (bolinhas vermelhas) no topo-direita, ao lado do custo.
+        if (debuffs.isNotEmpty && !minimal)
+          Positioned(
+            top: 2,
+            right: -7,
+            child: Column(
+              children: [
+                for (final g in debuffs.take(5)) _DebuffCrest(glyph: g),
               ],
             ),
           ),
@@ -323,6 +341,55 @@ Color rarityColor(Rarity r) {
   }
 }
 
+/// Um glifo de carta que pode ser um ícone SVG profissional (game-icons.net,
+/// monocromático e tingível) OU um [IconData] do Material como fallback.
+/// [build] renderiza: SVG tingido via ColorFilter(srcIn), ou Icon colorido.
+/// Toda keyword/tipo sem SVG mapeado degrada para o Material sem quebrar.
+class CardGlyph {
+  const CardGlyph({this.svg, required this.fallback});
+
+  /// Caminho do asset SVG (game-icons.net) ou null → usa o [fallback].
+  final String? svg;
+  final IconData fallback;
+
+  Widget build({required double size, required Color color}) {
+    final s = svg;
+    if (s != null) {
+      return SvgPicture.asset(
+        s,
+        width: size,
+        height: size,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      );
+    }
+    return Icon(fallback, size: size, color: color);
+  }
+}
+
+/// Ícones RPG profissionais (game-icons.net, CC BY 3.0). Monocromáticos →
+/// tingidos por cor em runtime. Crédito vai na tela de Créditos do app.
+const String _kRpgBase = 'assets/icons/rpg';
+
+/// Caminho do SVG RPG de cada tipo de dano.
+String? damageTypeSvg(DamageType t) {
+  switch (t) {
+    case DamageType.corpoACorpo:
+      return '$_kRpgBase/crossed-swords.svg';
+    case DamageType.aDistancia:
+      return '$_kRpgBase/high-shot.svg';
+    case DamageType.magico:
+      return '$_kRpgBase/magic-swirl.svg';
+    case DamageType.vitalismo:
+      return '$_kRpgBase/sun-radiations.svg';
+    case DamageType.cura:
+      return '$_kRpgBase/healing.svg';
+  }
+}
+
+/// Glifo (SVG RPG + fallback Material) de um tipo de dano.
+CardGlyph damageTypeGlyph(DamageType t) =>
+    CardGlyph(svg: damageTypeSvg(t), fallback: damageTypeIcon(t));
+
 /// Ícone de arte por tipo de dano (placeholder consistente da arte da carta).
 IconData damageTypeIcon(DamageType t) {
   switch (t) {
@@ -361,14 +428,7 @@ Color damageTypeColor(DamageType t) {
 /// Material). Compartilhado entre a PARTIDA e a COLEÇÃO pra manter o mesmo
 /// visual de carta.
 Widget typeGlyph(DamageType type, {double size = 12}) {
-  if (type == DamageType.corpoACorpo) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: const CustomPaint(painter: _SwordGlyph(Colors.white)),
-    );
-  }
-  return Icon(damageTypeIcon(type), size: size, color: Colors.white);
+  return damageTypeGlyph(type).build(size: size, color: Colors.white);
 }
 
 /// Ícone (brasão) de uma keyword de habilidade.
@@ -482,6 +542,116 @@ IconData keywordIcon(AbilityKeyword k) {
   }
 }
 
+/// Caminho do SVG RPG (game-icons.net) de cada keyword. Exaustivo: keyword nova
+/// quebra a compilação até ter um ícone (ou degrada se eu retornar null aqui).
+String? keywordSvg(AbilityKeyword k) {
+  String p(String n) => '$_kRpgBase/$n.svg';
+  switch (k) {
+    case AbilityKeyword.provocar:
+      return p('shouting');
+    case AbilityKeyword.escudo:
+      return p('checked-shield');
+    case AbilityKeyword.voo:
+      return p('feathered-wing');
+    case AbilityKeyword.ataqueDuplo:
+      return p('sword-array');
+    case AbilityKeyword.alcance:
+      return p('spear-hook');
+    case AbilityKeyword.inspirar:
+      return p('rally-the-troops');
+    case AbilityKeyword.pisotear:
+      return p('boot-stomp');
+    case AbilityKeyword.silencio:
+      return p('silence');
+    case AbilityKeyword.furtividade:
+      return p('hooded-figure');
+    case AbilityKeyword.cristalDeDrenagem:
+      return p('crystal-cluster');
+    case AbilityKeyword.rouboDePv:
+      return p('vampire-dracula');
+    case AbilityKeyword.investida:
+      return p('charging-bull');
+    case AbilityKeyword.espinhos:
+      return p('thorn-helix');
+    case AbilityKeyword.escudoEspelhado:
+      return p('shield-reflect');
+    case AbilityKeyword.escudoSagrado:
+      return p('healing-shield');
+    case AbilityKeyword.contraAtaque:
+      return p('sword-clash');
+    case AbilityKeyword.reflexoMagico:
+      return p('mirror-mirror');
+    case AbilityKeyword.inabalavel:
+      return p('stone-tower');
+    case AbilityKeyword.sangramento:
+      return p('bleeding-wound');
+    case AbilityKeyword.veneno:
+      return p('poison-bottle');
+    case AbilityKeyword.atordoar:
+      return p('knockout');
+    case AbilityKeyword.enredar:
+      return p('curling-vines');
+    case AbilityKeyword.desmoralizar:
+      return p('despair');
+    case AbilityKeyword.suprimirMagia:
+      return p('cancel');
+    case AbilityKeyword.doenca:
+      return p('virus');
+    case AbilityKeyword.surto:
+      return p('biohazard');
+    case AbilityKeyword.andorinha:
+      return p('swallow');
+    case AbilityKeyword.crescimento:
+      return p('growth');
+    case AbilityKeyword.mimico:
+      return p('mimic-chest');
+    case AbilityKeyword.zumbi:
+      return p('shambling-zombie');
+    case AbilityKeyword.ressurreicao:
+      return p('angel-wings');
+    case AbilityKeyword.transformar:
+      return p('transform');
+    case AbilityKeyword.imunidade:
+      return p('spiked-halo');
+    case AbilityKeyword.perseveranca:
+      return p('muscle-up');
+    case AbilityKeyword.vigilante:
+      return p('eye-target');
+    case AbilityKeyword.furia:
+      return p('enrage');
+    case AbilityKeyword.encantarArmadura:
+      return p('armor-upgrade');
+    case AbilityKeyword.cristalAdicional:
+      return p('cut-diamond');
+    case AbilityKeyword.espinhoDeEscudo:
+      return p('spiked-shield');
+    case AbilityKeyword.nevoa:
+      return p('fog');
+    case AbilityKeyword.antiAereo:
+      return p('missile-swarm');
+    case AbilityKeyword.quebraArmadura:
+      return p('broken-shield');
+    case AbilityKeyword.explosaoMagica:
+      return p('sparkles');
+    case AbilityKeyword.nevoaToxica:
+      return p('poison-cloud');
+    case AbilityKeyword.esquiva:
+      return p('dodging');
+    case AbilityKeyword.recuo:
+      return p('return-arrow');
+    case AbilityKeyword.percepcao:
+      return p('all-seeing-eye');
+    case AbilityKeyword.executor:
+      return p('guillotine');
+    case AbilityKeyword.cura:
+      return p('healing');
+  }
+}
+
+/// Glifo (SVG RPG + fallback Material) de uma keyword.
+CardGlyph keywordGlyph(AbilityKeyword k) =>
+    CardGlyph(svg: keywordSvg(k), fallback: keywordIcon(k));
+
 /// Descrição curta (1 linha) de cada keyword — usada na LEGENDA da partida
 /// (glossário). Exaustivo: keyword nova quebra a compilação até descrever.
 String keywordDescription(AbilityKeyword k) {
@@ -587,11 +757,11 @@ String keywordDescription(AbilityKeyword k) {
   }
 }
 
-/// Brasões de efeito a partir das strings de habilidade de uma carta.
-List<IconData> effectIconsFromAbilities(List<String> abilities) => abilities
+/// Brasões de efeito (glifos RPG) a partir das strings de habilidade da carta.
+List<CardGlyph> effectGlyphsFromAbilities(List<String> abilities) => abilities
     .map(abilityKeywordFromString)
     .whereType<AbilityKeyword>()
-    .map(keywordIcon)
+    .map(keywordGlyph)
     .toList();
 
 /// Camada de STATUS transitório de uma criatura no tabuleiro: armadura (física
@@ -611,16 +781,18 @@ Widget? buildCardStatusOverlay(CreatureInPlay c) {
     chips.add(_StatusChip(Icons.water_drop, AppColors.hp, '${c.bleedStacks}'));
   }
   if (c.poisoned) {
-    chips.add(_StatusChip(Icons.science, AppColors.conceptChrysalis));
+    chips.add(const _StatusChip(Icons.science, AppColors.conceptChrysalis));
   }
   if (c.diseaseStacks > 0) {
     chips.add(_StatusChip(
         Icons.coronavirus, AppColors.purpleLight, '${c.diseaseStacks}'));
   }
-  if (c.stunned) chips.add(_StatusChip(Icons.stars, AppColors.gold));
-  if (c.entangled) chips.add(_StatusChip(Icons.hub, AppColors.conceptVita));
+  if (c.stunned) chips.add(const _StatusChip(Icons.stars, AppColors.gold));
+  if (c.entangled) {
+    chips.add(const _StatusChip(Icons.hub, AppColors.conceptVita));
+  }
   if (c.desmoralizadoMelee > 0 || c.suprimidoMagico > 0) {
-    chips.add(_StatusChip(Icons.trending_down, const Color(0xFFE08A4A)));
+    chips.add(const _StatusChip(Icons.trending_down, Color(0xFFE08A4A)));
   }
   if (chips.isEmpty) return null;
   return Column(
@@ -667,38 +839,6 @@ class _StatusChip extends StatelessWidget {
   }
 }
 
-/// Glifo de ESPADA única (vertical, ponta pra cima) — ícone do ATK físico.
-class _SwordGlyph extends CustomPainter {
-  const _SwordGlyph(this.color);
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size s) {
-    final w = s.width, h = s.height;
-    final cx = w / 2;
-    final fill = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-    final line = Paint()
-      ..color = color
-      ..strokeWidth = w * 0.11
-      ..strokeCap = StrokeCap.round;
-    final blade = Path()
-      ..moveTo(cx, h * 0.04)
-      ..lineTo(cx - w * 0.11, h * 0.20)
-      ..lineTo(cx - w * 0.11, h * 0.60)
-      ..lineTo(cx + w * 0.11, h * 0.60)
-      ..lineTo(cx + w * 0.11, h * 0.20)
-      ..close();
-    canvas.drawPath(blade, fill);
-    canvas.drawLine(Offset(w * 0.16, h * 0.63), Offset(w * 0.84, h * 0.63), line);
-    canvas.drawLine(Offset(cx, h * 0.63), Offset(cx, h * 0.88), line);
-    canvas.drawCircle(Offset(cx, h * 0.92), w * 0.09, fill);
-  }
-
-  @override
-  bool shouldRepaint(covariant _SwordGlyph old) => old.color != color;
-}
 
 /// Cristal facetado com um número (custo da carta OU contador de cristais do
 /// HUD). `size` escala tudo. Mesma DNA visual nos dois usos (pedido do CEO).
@@ -833,9 +973,11 @@ class _CrystalFacets extends CustomPainter {
 }
 
 /// Brasão redondo de EFEITO (keyword) — pequeno, dourado, ícone branco.
+/// Brasão de HABILIDADE (esquerda) — círculo ROXO com ícone branco (CEO
+/// 2026-06-13: era dourado).
 class _EffectCrest extends StatelessWidget {
-  const _EffectCrest({required this.icon});
-  final IconData icon;
+  const _EffectCrest({required this.glyph});
+  final CardGlyph glyph;
 
   @override
   Widget build(BuildContext context) {
@@ -849,12 +991,39 @@ class _EffectCrest extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFE8C66A), Color(0xFF8A6A2A)],
+          colors: [Color(0xFFB07BE8), Color(0xFF5A2E8A)],
         ),
-        border: Border.all(color: const Color(0xFF1A140A), width: 1),
+        border: Border.all(color: const Color(0xFF120A1E), width: 1),
         boxShadow: const [BoxShadow(color: Color(0x88000000), blurRadius: 3)],
       ),
-      child: Icon(icon, size: 10, color: Colors.white),
+      child: glyph.build(size: 10, color: Colors.white),
+    );
+  }
+}
+
+/// Bolinha de DEBUFF (direita, topo) — círculo VERMELHO com ícone branco.
+class _DebuffCrest extends StatelessWidget {
+  const _DebuffCrest({required this.glyph});
+  final CardGlyph glyph;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 14,
+      height: 14,
+      margin: const EdgeInsets.only(bottom: 3),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFE86A6A), Color(0xFF8A2424)],
+        ),
+        border: Border.all(color: const Color(0xFF1E0A0A), width: 1),
+        boxShadow: const [BoxShadow(color: Color(0x88000000), blurRadius: 3)],
+      ),
+      child: glyph.build(size: 9, color: Colors.white),
     );
   }
 }

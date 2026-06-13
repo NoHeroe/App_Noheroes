@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // HapticFeedback (impacto do pouso)
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,7 +19,9 @@ import '../card_economy.dart';
 import '../deck_repository.dart';
 import '../pve_match_controller.dart';
 import '../widgets/card_back.dart';
+import '../widgets/combat_vfx.dart';
 import '../widgets/game_card_face.dart';
+import '../widgets/match_intro.dart';
 import '../widgets/magic_dust_overlay.dart';
 
 /// PARTIDA JOGÁVEL do Modo Cartas (ACDA) — PvE interativo.
@@ -42,7 +45,8 @@ class CardMatchScreen extends ConsumerStatefulWidget {
 
 enum _BootStatus { loading, noDeck, error, ready }
 
-class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
+class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
+    with SingleTickerProviderStateMixin {
   _BootStatus _boot = _BootStatus.loading;
   String? _bootError;
   CardLoadout? _playerLoadout;
@@ -81,10 +85,83 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   // no boot pra montar o bot fácil; o tutorial roda por cima da partida.
   bool _isTutorial = false;
 
+  // Intro cinematográfica (CEO 2026-06-13): nuvens → diálogo IA → moeda → 1º
+  // banner. `_introDone` libera a tela. `_turnBannerPlayer` (null = sem banner;
+  // true/false = de quem é o turno anunciado) dispara o banner recorrente a cada
+  // virada de turno; `_bannerKey` força o re-mount pra re-animar.
+  bool _introDone = false;
+  bool? _turnBannerPlayer;
+  Key _bannerKey = UniqueKey();
+
+  // Tutorial da 1ª partida só abre DEPOIS da intro cinematográfica (senão os
+  // diálogos colidem com nuvens/moeda/banner). Guardado no boot, disparado em
+  // [_onIntroComplete].
+  String? _pendingTutorialPlayerId;
+
+  // Animação da jogada da IA (CEO 2026-06-13): a carta voa da mão da IA, vira
+  // (verso→frente) e expande até a lane. `_flying` = a notificação em voo AGORA
+  // (estado local de UI). GlobalKeys dão as posições origem (mão da IA) e
+  // destino (lane do bot) pra converter coordenadas no Stack do Scaffold.
+  final GlobalKey _matchStackKey = GlobalKey();
+  final GlobalKey _botHandKey = GlobalKey();
+  final GlobalKey _playerHandKey = GlobalKey();
+  final Map<int, GlobalKey> _botLaneKeys = {
+    0: GlobalKey(),
+    1: GlobalKey(),
+    2: GlobalKey(),
+  };
+  final Map<int, GlobalKey> _playerLaneKeys = {
+    0: GlobalKey(),
+    1: GlobalKey(),
+    2: GlobalKey(),
+  };
+  // Voo em andamento (IA ou jogador): guarda a NOTIFICAÇÃO + a GEOMETRIA capturada
+  // no disparo (origem/destino/tamanho), pra animação NÃO depender de lookup de
+  // render-box durante o build (era uma das causas do restart no meio do voo).
+  _Flight? _flying;
+  int _flightSeq = 0; // id monotônico → Key única e estável por voo
+  CardPlayNotification? _lastHandledBotNotif; // idempotência do gatilho do bot
+  // Pisca o cemitério (vermelho + caveira) a cada carta que entra nele. Incrementa
+  // por morte/descarte do MEU lado → vira a Key do efeito one-shot (CEO 2026-06-13).
+  int _cemeteryFlashSeq = 0;
+  // Criatura recém-pousada de um voo → a carta real surge com fade-in (revela os
+  // detalhes que a carta voadora mínima escondia). Limpo logo após o fade.
+  String? _justLandedId;
+  // Tremor de tela no impacto do pouso da carta (CEO 2026-06-13). Controller
+  // leve, próprio; dispara em [_onFlightComplete].
+  late final AnimationController _shakeCtrl;
+
   @override
   void initState() {
     super.initState();
     _bootMatch();
+    _shakeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    // Pré-carrega as texturas de VFX (Kenney Particle Pack) pra não engasgar no
+    // 1º efeito de combate.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      for (final path in CombatVfx.all) {
+        precacheImage(AssetImage(path), context);
+      }
+      // Texturas das NUVENS da intro — pré-carregadas pra cobrirem o campo já no
+      // 1º frame (sem flash do tabuleiro antes das nuvens, CEO 2026-06-13).
+      for (final path in const [
+        'assets/vfx/particles/smoke_03.png',
+        'assets/vfx/particles/smoke_06.png',
+        'assets/vfx/particles/smoke_09.png',
+      ]) {
+        precacheImage(AssetImage(path), context);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _shakeCtrl.dispose();
+    super.dispose();
   }
 
   // ---------------------------------------------------------------------------
@@ -143,16 +220,11 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         }
       }
       if (!mounted) return;
+      // Tutorial (1ª partida) só abre após a intro — guardado aqui.
+      _pendingTutorialPlayerId =
+          (_isTutorial && playerId != null) ? playerId : null;
       setState(() => _boot = _BootStatus.ready);
       _startMatch();
-
-      if (_isTutorial && playerId != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            TutorialManager.cardGameIntro(context, playerId: playerId);
-          }
-        });
-      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -163,9 +235,11 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   }
 
   void _startMatch() {
-    // Nova partida: zera o estado de recompensa do round anterior.
+    // Nova partida: zera o estado de recompensa do round anterior + a intro.
     _reward = null;
     _rewardRequested = false;
+    _introDone = false;
+    _turnBannerPlayer = null;
     final seed = math.Random().nextInt(0x7fffffff);
     ref.read(pveMatchControllerProvider.notifier).startMatch(
           _playerLoadout!,
@@ -174,7 +248,36 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
           heroA: _playerHero,
           heroB: _botHero,
           bonusCardA: _bonusCard,
+          gateOpening: true, // a IA só joga depois da intro (ver playOpening)
         );
+  }
+
+  /// Fim da intro cinematográfica: libera a tela e, se a IA começa, roda a 1ª
+  /// vez dela (que estava gateada).
+  void _onIntroComplete() {
+    if (!mounted) return;
+    setState(() => _introDone = true);
+    ref.read(pveMatchControllerProvider.notifier).playOpening();
+    // Tutorial da 1ª partida (se houver) abre agora, sobre a partida já revelada.
+    final tid = _pendingTutorialPlayerId;
+    if (tid != null) {
+      _pendingTutorialPlayerId = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) TutorialManager.cardGameIntro(context, playerId: tid);
+      });
+    }
+  }
+
+  /// Dispara o banner de turno recorrente (pós-frame pra não mutar no meio do
+  /// build). `_bannerKey` novo re-monta o TurnBanner pra re-animar.
+  void _triggerTurnBanner(bool playerTurn) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _turnBannerPlayer = playerTurn;
+        _bannerKey = UniqueKey();
+      });
+    });
   }
 
   /// Concede a recompensa de partida (1×) quando termina. Server-authoritative:
@@ -470,6 +573,34 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     // Oráculo (ADR-0028): quando a passiva arma o peek e é a vez do jogador,
     // abre o diálogo de espiar/reordenar (pós-frame, guard contra reentrância).
     ref.listen<PveMatchUiState>(pveMatchControllerProvider, (prev, next) {
+      // IA jogou criatura → anima a carta voando da mão dela até a lane. Dispara
+      // pós-frame (as GlobalKeys já layoutaram a criatura na lane destino).
+      final notif = next.botPlayNotification;
+      if (notif != null && _flying == null && notif != _lastHandledBotNotif) {
+        _lastHandledBotNotif = notif; // 1 voo por notificação (anti re-trigger)
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || _flying != null) return;
+          final flight = _computeFlight(notif);
+          if (flight != null) _beginFlight(flight);
+        });
+      }
+      // Morte/descarte → entrou carta no MEU cemitério: ele pisca vermelho +
+      // caveira (CEO 2026-06-13). Sinal robusto (qualquer causa): cresceu o
+      // graveyard do meu lado. (O cemitério da IA não fica na tela.)
+      final prevGrave = prev?.playerBoard?.graveyard.length ?? 0;
+      final nextGrave = next.playerBoard?.graveyard.length ?? 0;
+      if (nextGrave > prevGrave) {
+        setState(() => _cemeteryFlashSeq++);
+      }
+      // Banner de turno a cada VIRADA (depois da intro): "Seu Turno" / "Turno
+      // do Oponente". Só na transição PARA playerTurn/botTurn (ignora resolving).
+      if (_introDone && !next.isFinished && prev?.phase != next.phase) {
+        if (next.phase == PveMatchPhase.playerTurn) {
+          _triggerTurnBanner(true);
+        } else if (next.phase == PveMatchPhase.botTurn) {
+          _triggerTurnBanner(false);
+        }
+      }
       if (next.phase == PveMatchPhase.playerTurn &&
           next.playerBoard?.heroId == HeroId.oraculo &&
           (next.playerBoard?.oraculoPeekPending ?? false) &&
@@ -500,6 +631,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       child: Scaffold(
         backgroundColor: AppColors.black,
         body: Stack(
+          key: _matchStackKey,
           children: [
             // FUNDO do tabuleiro (CEO 2026-06-12): arte de superfície + leve
             // escurecimento nas bordas pra leitura, e poeira mágica dourada por
@@ -508,6 +640,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
               child: Image.asset(
                 'assets/images/card_game/card_game_background.png',
                 fit: BoxFit.cover,
+                // Decodifica num tamanho-tela (não no PNG cheio) → menos memória e
+                // banda de GPU no fundo, sem perda visível (CEO 2026-06-13).
+                cacheWidth: 1080,
                 errorBuilder: (_, __, ___) => const ColoredBox(
                   color: Color(0xFF120016),
                 ),
@@ -525,39 +660,72 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                 ),
               ),
             ),
-            const Positioned.fill(child: MagicDustOverlay()),
+            // Poeira mágica SEMPRE montada (não recria partículas a cada virada).
+            // `active` liga/desliga o controller: nas fases de turno ela tica;
+            // no replay de COMBATE ela PARA (sem rebuild 60fps competindo com os
+            // VFX de golpe/morte — onde o lag mais incomodava) (CEO 2026-06-13).
+            Positioned.fill(
+              child: MagicDustOverlay(
+                active: ui.phase == PveMatchPhase.playerTurn ||
+                    ui.phase == PveMatchPhase.botTurn,
+              ),
+            ),
+            // Véu opaco no BOOT/matchmaking: o campo de batalha NÃO pode piscar
+            // antes das nuvens da intro (CEO 2026-06-13). Cobre a janela
+            // boot→intro; a intro (com véu próprio, opaco no 1º frame) assume a
+            // cobertura assim que monta, então a transição é sem corte. Mesma cor
+            // do véu da intro pra emendar perfeito. O spinner do `_body` fica
+            // POR CIMA (renderizado depois no Stack).
+            if (!_introDone &&
+                !(_boot == _BootStatus.ready &&
+                    ui.match != null &&
+                    !ui.isFinished))
+              const Positioned.fill(
+                child: ColoredBox(color: Color(0xFF0A0912)),
+              ),
             SafeArea(child: _body(ui)),
-            // Botões laterais no MEIO (banda entre os dois tabuleiros): voltar à
-            // esquerda, encerrar jogada (espadas cruzadas) à direita.
-            if (_boot == _BootStatus.ready && ui.match != null && !ui.isFinished)
-              ...[
-              Align(
-                alignment: const Alignment(-1, -0.16),
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 6),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _sideBackButton(),
-                      const SizedBox(width: 8),
-                      _logButton(ui),
-                    ],
-                  ),
-                ),
+            // (Os 3 botões agora vivem na BANDA CENTRAL do _matchBody —
+            // `_centralButtonBand` —, simétricos e ancorados entre os tabuleiros.)
+            // Banner de turno recorrente (trava input enquanto visível).
+            if (_boot == _BootStatus.ready &&
+                !ui.isFinished &&
+                _turnBannerPlayer != null) ...[
+              const Positioned.fill(
+                child: AbsorbPointer(child: SizedBox.expand()),
               ),
-              // Turno no MEIO da banda, entre os dois campos (CEO 2026-06-12).
-              Align(
-                alignment: const Alignment(0, -0.09),
-                child: _turnIndicator(ui),
-              ),
-              Align(
-                alignment: const Alignment(1, -0.16),
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: _endTurnButton(ui),
+              Positioned.fill(
+                child: TurnBanner(
+                  key: _bannerKey,
+                  playerTurn: _turnBannerPlayer!,
+                  onDone: () {
+                    if (mounted) setState(() => _turnBannerPlayer = null);
+                  },
                 ),
               ),
             ],
+            // Intro cinematográfica (1× por partida): nuvens → IA → moeda →
+            // 1º banner. Trava tudo até terminar.
+            if (_boot == _BootStatus.ready &&
+                ui.match != null &&
+                !ui.isFinished &&
+                !_introDone)
+              Positioned.fill(
+                child: MatchIntroOverlay(
+                  playerStarts: ui.phase == PveMatchPhase.playerTurn,
+                  onComplete: _onIntroComplete,
+                ),
+              ),
+            // Carta voando da mão → lane (jogada da IA OU do jogador). Widget
+            // PRÓPRIO com Key única + AnimationController próprio: imune a
+            // rebuilds/troca de índice no Stack (banner de turno etc.), então a
+            // animação roda UMA vez só, sem reiniciar no meio (CEO 2026-06-13).
+            if (_flying != null)
+              _CardFlightOverlay(
+                key: ValueKey<int>(_flying!.seq),
+                flight: _flying!,
+                faceBuilder: (w) => _flyingFace(_flying!.notif.creature, w),
+                onComplete: _onFlightComplete,
+              ),
             if (ui.isFinished && _boot == _BootStatus.ready)
               _matchOverOverlay(ui),
           ],
@@ -599,8 +767,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     final player = ui.playerBoard!;
     // Bloqueado durante o replay/bot E quando playLocked (troca com tabuleiro
     // cheio → só resta encerrar o turno). O botão de encerrar fica ativo à parte.
-    final interactive =
-        ui.phase == PveMatchPhase.playerTurn && !ui.playLocked;
+    final interactive = ui.phase == PveMatchPhase.playerTurn &&
+        !ui.playLocked &&
+        _flying == null; // voo de carta = ação: trava input até pousar (respiro)
 
     // Tabuleiro em FOCO. Banda central (entre os dois lados) guarda os botões
     // laterais (sobrepostos no build). Sem log no meio. Mão = baralho aberto.
@@ -614,25 +783,49 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         // central de 60px guarda os botões laterais; o conjunto inteiro fica
         // centralizado verticalmente em vez de espalhado nas bordas.
         Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // O tabuleiro do OPONENTE sobe um pouco (CEO), sem mexer no resto:
-              // Transform.translate não afeta o layout/centralização.
-              Transform.translate(
-                offset: const Offset(0, -18),
-                child: _lanesRow(ui, bot, isPlayerSide: false),
+          // Tremor de tela no impacto do pouso (CEO 2026-06-13): só o TABULEIRO
+          // treme (fundo/HUD/overlays ficam quietos). `child` fixo + RepaintBoundary
+          // = o Column é construído uma vez; só o Transform recalcula por frame e o
+          // repaint fica contido. Custo zero quando parado (t == 0 → child direto).
+          child: AnimatedBuilder(
+            animation: _shakeCtrl,
+            builder: (_, child) {
+              final t = _shakeCtrl.value;
+              if (t == 0) return child!;
+              final amp = 5.0 * (1.0 - t); // decai até 0
+              final dx = math.sin(t * 3 * math.pi) * amp;
+              return Transform.translate(
+                offset: Offset(dx, dx * 0.6),
+                child: child,
+              );
+            },
+            child: RepaintBoundary(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // O tabuleiro do OPONENTE sobe um pouco (CEO), sem mexer no resto:
+                  // Transform.translate não afeta o layout/centralização.
+                  Transform.translate(
+                    offset: const Offset(0, -18),
+                    child: _lanesRow(ui, bot, isPlayerSide: false),
+                  ),
+                  // Respiro: nenhuma ação (inclusive encerrar turno) durante o voo
+                  // de uma carta — só responde de novo quando a carta pousa.
+                  IgnorePointer(
+                    ignoring: _flying != null,
+                    child: _centralButtonBand(ui),
+                  ),
+                  // Tabuleiro do JOGADOR desce um pouco (CEO 2026-06-13: "bem pouco").
+                  Transform.translate(
+                    offset: const Offset(0, 12),
+                    child: AbsorbPointer(
+                      absorbing: !interactive,
+                      child: _lanesRow(ui, player, isPlayerSide: true),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 60), // banda central (botões voltar/encerrar)
-              // Tabuleiro do JOGADOR um pouco mais ALTO (CEO 2026-06-12).
-              Transform.translate(
-                offset: const Offset(0, 6),
-                child: AbsorbPointer(
-                  absorbing: !interactive,
-                  child: _lanesRow(ui, player, isPlayerSide: true),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
         // Mão sobe e desloca levemente pra direita (CEO) + menu de ação
@@ -666,44 +859,202 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
-  /// Indicador de TURNO no centro da banda (entre desistir e encerrar). Na vez
-  /// da IA, mostra um spinner.
-  Widget _turnIndicator(PveMatchUiState ui) {
+  /// Banda central ENTRE os tabuleiros: os 3 botões redondos SEMPRE simétricos —
+  /// voltar+log à esquerda, encerrar-turno à direita. Ancorada ao layout REAL
+  /// (altura fixa entre as duas fileiras), nunca a uma fração da tela — acaba
+  /// com o ajuste manual de altura (CEO 2026-06-13). Fora de AbsorbPointer, então
+  /// voltar/log/encerrar respondem sempre (encerrar segue gateado no próprio botão).
+  Widget _centralButtonBand(PveMatchUiState ui) {
+    return SizedBox(
+      height: 60,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            _sideBackButton(),
+            const SizedBox(width: 8),
+            _logButton(ui),
+            const Spacer(),
+            _endTurnButton(ui),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Captura a GEOMETRIA do voo (origem na mão, destino na lane, tamanho do slot)
+  /// UMA vez, no instante do disparo. A animação em si roda no `_CardFlightOverlay`
+  /// (widget próprio, com Key única e AnimationController próprio), que NÃO faz
+  /// lookup de render-box durante o build — assim o voo nunca "pisca" pra
+  /// SizedBox nem reinicia quando o Stack rebuilda (CEO 2026-06-13).
+  /// Retorna null se o layout ainda não resolveu (→ sem voo; a carta aparece
+  /// normal, sem animação — degrada com elegância).
+  _Flight? _computeFlight(CardPlayNotification n) {
+    final stackBox =
+        _matchStackKey.currentContext?.findRenderObject() as RenderBox?;
+    final handKey = n.fromBot ? _botHandKey : _playerHandKey;
+    final laneKeys = n.fromBot ? _botLaneKeys : _playerLaneKeys;
+    final handBox = handKey.currentContext?.findRenderObject() as RenderBox?;
+    final laneBox =
+        laneKeys[n.toLane]?.currentContext?.findRenderObject() as RenderBox?;
+    if (stackBox == null || handBox == null || laneBox == null) {
+      assert(() {
+        debugPrint('[_computeFlight] render-box nulo → voo ignorado '
+            '(fromBot=${n.fromBot}, lane=${n.toLane})');
+        return true;
+      }());
+      return null;
+    }
+    Offset centerIn(RenderBox b) =>
+        stackBox.globalToLocal(b.localToGlobal(b.size.center(Offset.zero)));
+
+    // Tamanho final = encaixe EXATO no slot (deriva da lane, não hard-coded):
+    // AspectRatio 142/206 dentro da célula da lane.
+    const aspect = 142 / 206; // largura/altura
+    double cardH = laneBox.size.height;
+    double cardW = cardH * aspect;
+    if (cardW > laneBox.size.width) {
+      cardW = laneBox.size.width;
+      cardH = cardW / aspect;
+    }
+
+    return _Flight(
+      seq: ++_flightSeq,
+      notif: n,
+      start: centerIn(handBox),
+      end: centerIn(laneBox),
+      cardW: cardW,
+      cardH: cardH,
+    );
+  }
+
+  /// Voo terminou (o `_CardFlightOverlay` avisou): revela a criatura real na lane
+  /// com fade-in (`_justLandedId`) e encerra o voo.
+  void _onFlightComplete() {
+    if (!mounted) return;
+    final id = _flying?.notif.creature.instanceId;
+    final fromBot = _flying?.notif.fromBot ?? false;
+    setState(() {
+      if (id != null) _justLandedId = id;
+      _flying = null;
+    });
+    if (id != null) _scheduleLandedClear(id);
+    // Impacto (tremor de tela + haptic) SÓ na MINHA jogada. A carta do bot só voa
+    // e pousa — sem tremer a tela toda a cada ação dele (menos custo por ação e
+    // menos ruído visual; era parte do "flick" no turno da IA) (CEO 2026-06-13).
+    if (!fromBot) _triggerLandingShake();
+  }
+
+  /// Impacto do pouso da MINHA carta: leve tremor de tela + vibração tátil sutil.
+  void _triggerLandingShake() {
+    HapticFeedback.lightImpact();
+    _shakeCtrl.forward(from: 0);
+  }
+
+  /// Arma o voo + uma REDE DE SEGURANÇA: se por algum motivo raro o overlay sumir
+  /// sem chamar `_onFlightComplete`, libera o input depois de uma folga pra a tela
+  /// nunca ficar travada com `_flying` preso (CEO 2026-06-13).
+  void _beginFlight(_Flight flight) {
+    setState(() => _flying = flight);
+    final seq = flight.seq;
+    final ms = flight.notif.fromBot ? 1400 : 1000; // > duração do voo + folga
+    Future<void>.delayed(Duration(milliseconds: ms), () {
+      if (mounted && _flying?.seq == seq) _onFlightComplete();
+    });
+  }
+
+  /// Face MÍNIMA da carta voadora (sem dano/cristal/relíquia/habilidades): no voo
+  /// a carta fica "leve e menos bugada"; os detalhes entram com fade-in suave ao
+  /// pousar na lane (CEO 2026-06-13).
+  Widget _flyingFace(CreatureInPlay c, double w) => GameCardFace(
+        width: w,
+        name: c.card.nome,
+        cost: c.card.cost,
+        concepts: c.card.concepts,
+        rarity: c.card.rarity,
+        artIcon: damageTypeIcon(c.effectiveDamageType),
+        minimal: true,
+        footer: const SizedBox.shrink(),
+      );
+
+  /// Após o fade-in da carta recém-pousada, esquece o id (evita reanimar em
+  /// rebuilds futuros). Guard por id pra não cancelar um pouso mais recente.
+  void _scheduleLandedClear(String id) {
+    Future<void>.delayed(const Duration(milliseconds: 360), () {
+      if (mounted && _justLandedId == id) {
+        setState(() => _justLandedId = null);
+      }
+    });
+  }
+
+  /// IDs das criaturas no MEU tabuleiro AGORA (pré-jogada) — base pro diff que
+  /// descobre qual carta acabou de ser colocada.
+  Set<String> _playerInstanceIds(PveMatchUiState ui) {
+    final side = ui.match?.sideOf(ui.playerSide);
+    if (side == null) return const <String>{};
+    return {
+      for (final c in side.lanes)
+        if (c != null) c.instanceId,
+    };
+  }
+
+  /// Dispara o voo da carta do JOGADOR (mão → slot) logo após `playCreature`.
+  /// Descobre a criatura recém-colocada pelo diff de instanceIds (robusto ao
+  /// empurrão/front-pack). Arma `_flying` SÍNCRONO (não pós-frame): assim a carta
+  /// real já entra ESCONDIDA no mesmo rebuild da jogada — sem o flash de "carta
+  /// posta e depois reanimada" (CEO 2026-06-13). A lane destino (vazia ou cheia)
+  /// já tem GlobalKey e foi layoutada no frame anterior, então o `_computeFlight`
+  /// acha a posição de imediato.
+  void _triggerPlayerFlight(Set<String> before) {
+    if (!mounted || _flying != null) return;
+    final ui = ref.read(pveMatchControllerProvider);
+    final side = ui.match?.sideOf(ui.playerSide);
+    if (side == null) return;
+    CreatureInPlay? placed;
+    for (final c in side.lanes) {
+      if (c != null && !before.contains(c.instanceId)) {
+        placed = c;
+        break;
+      }
+    }
+    final found = placed;
+    if (found == null) return; // nada novo (jogada inválida/relíquia) → sem voo
+    final flight = _computeFlight(CardPlayNotification(
+      creature: found,
+      toLane: found.lane,
+      fromBot: false,
+    ));
+    if (flight != null) _beginFlight(flight);
+  }
+
+  /// Indicador de TURNO compacto, ao lado do livro de skills no topo (CEO
+  /// 2026-06-13). Mini spinner roxo na vez da IA.
+  Widget _turnIndicatorTop(PveMatchUiState ui) {
     final turn = ui.match?.turn ?? 0;
     final botPlaying = ui.phase == PveMatchPhase.botTurn ||
         ui.phase == PveMatchPhase.resolving;
-    return Column(
+    return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('TURNO',
+        Text('TURNO ',
             style: GoogleFonts.cinzelDecorative(
-                fontSize: 8, color: AppColors.textMuted, letterSpacing: 2)),
+                fontSize: 8, color: AppColors.textMuted, letterSpacing: 1)),
         Text('$turn',
             style: GoogleFonts.cinzelDecorative(
-                fontSize: 18,
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary)),
-        if (botPlaying)
-          Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(
-                  width: 9,
-                  height: 9,
-                  child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(AppColors.purple)),
-                ),
-                const SizedBox(width: 4),
-                Text('IA',
-                    style: GoogleFonts.roboto(
-                        fontSize: 9, color: AppColors.textMuted)),
-              ],
-            ),
+        if (botPlaying) ...[
+          const SizedBox(width: 4),
+          const SizedBox(
+            width: 9,
+            height: 9,
+            child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.purple)),
           ),
+        ],
       ],
     );
   }
@@ -734,11 +1085,13 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _hudCounter(Icons.pets, '${player.availableCreatureCount}'),
+              _hudCounter(Icons.pets, '${player.availableCreatureCount}',
+                  svg: 'assets/icons/rpg/bestial-fangs.svg'),
               const SizedBox(width: 12),
               CrystalGem(value: player.crystals, size: 40),
               const SizedBox(width: 12),
-              _hudCounter(Icons.auto_awesome, '${player.availableRelicCount}'),
+              _hudCounter(Icons.auto_awesome, '${player.availableRelicCount}',
+                  svg: 'assets/icons/rpg/rune-stone.svg'),
             ],
           ),
           Align(
@@ -791,22 +1144,30 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                       border: Border.all(
                           color: AppColors.gold.withValues(alpha: 0.85)),
                     ),
-                    child: Transform.rotate(
-                      angle: 1.5708, // 90°
-                      child: const Icon(Icons.add_card,
-                          size: 18, color: AppColors.goldLt),
-                    ),
+                    child: const CardGlyph(
+                      svg: 'assets/icons/rpg/card-draw.svg',
+                      fallback: Icons.add_card,
+                    ).build(size: 18, color: AppColors.goldLt),
                   ),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 2),
-          Text('1 💎',
-              style: GoogleFonts.robotoMono(
-                  fontSize: 8,
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w700)),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('1 ',
+                  style: GoogleFonts.robotoMono(
+                      fontSize: 9,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w700)),
+              const CardGlyph(
+                svg: 'assets/icons/rpg/cut-diamond.svg',
+                fallback: Icons.diamond,
+              ).build(size: 11, color: const Color(0xFF7FD8E8)),
+            ],
+          ),
         ],
       ),
     );
@@ -817,29 +1178,89 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   Widget _cemeteryCard(BoardSide player) {
     const w = 46.0;
     const h = w * 206 / 142;
+    const flashRed = Color(0xFFE5403A);
     final n = player.graveyard.length;
+    final seq = _cemeteryFlashSeq;
+
+    final tomb = Container(
+      width: w,
+      height: h,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(7),
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF241B30), Color(0xFF0E0A16)],
+        ),
+        border: Border.all(color: AppColors.borderViolet, width: 1.3),
+      ),
+      child: Center(
+        child: const CardGlyph(
+          svg: 'assets/icons/rpg/tombstone.svg',
+          fallback: Icons.book,
+        ).build(size: 26, color: AppColors.borderViolet),
+      ),
+    );
+
+    // Flash de morte (CEO 2026-06-13): a cada carta que ENTRA no cemitério, ele
+    // BRILHA em vermelho + uma CAVEIRA vermelha pulsa por cima — uma vez, keyed
+    // por `seq` (replays só quando uma nova carta morre). seq==0 = sem morte ainda.
+    // Cemitério LIMPO no repouso; a cada carta que entra (kill/descarte) um FLASH
+    // vermelho + CAVEIRA aparece POR CIMA e SOME. O glow vive num OVERLAY próprio
+    // (não no túmulo) que esvanece até 0 — nunca deixa brilho preso (bug "glow
+    // vermelho constante", CEO 2026-06-13). Keyed por `seq` → replay a cada morte.
+    final Widget cell = Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+        tomb, // SEMPRE limpo
+        if (seq > 0)
+          IgnorePointer(
+            child: SizedBox(
+              width: w,
+              height: h,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(7),
+                      boxShadow: [
+                        BoxShadow(
+                            color: flashRed.withValues(alpha: 0.85),
+                            blurRadius: 16,
+                            spreadRadius: 2),
+                      ],
+                    ),
+                  ),
+                  const CardGlyph(
+                    svg: 'assets/icons/rpg/skull.svg',
+                    fallback: Icons.warning_amber_rounded,
+                  ).build(size: 30, color: flashRed),
+                ],
+              ),
+            ),
+          )
+              .animate(key: ValueKey<int>(seq))
+              .fadeIn(duration: 110.ms)
+              .scaleXY(
+                  begin: 0.5,
+                  end: 1.1,
+                  duration: 240.ms,
+                  curve: Curves.easeOutBack)
+              .then(delay: 150.ms)
+              .fadeOut(duration: 380.ms),
+      ],
+    );
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: _showCemetery,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: w,
-            height: h,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(7),
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF241B30), Color(0xFF0E0A16)],
-              ),
-              border: Border.all(color: AppColors.borderViolet, width: 1.3),
-            ),
-            child: const Center(
-              child: Text('💀', style: TextStyle(fontSize: 22)),
-            ),
-          ),
+          cell,
           const SizedBox(height: 2),
           Text('$n',
               style: GoogleFonts.robotoMono(
@@ -1201,11 +1622,12 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   }
 
   /// Contador branco (monstros / itens): ícone EM CIMA, número EMBAIXO.
-  Widget _hudCounter(IconData icon, String value, {double size = 18}) {
+  Widget _hudCounter(IconData icon, String value,
+      {double size = 18, String? svg}) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: size, color: Colors.white),
+        CardGlyph(svg: svg, fallback: icon).build(size: size, color: Colors.white),
         Text(value,
             style: GoogleFonts.cinzelDecorative(
                 fontSize: size * 0.85,
@@ -1254,26 +1676,34 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _hudCounter(Icons.pets, '${bot.availableCreatureCount}',
-                      size: 14),
+                      size: 14, svg: 'assets/icons/rpg/bestial-fangs.svg'),
                   const SizedBox(width: 12),
                   CrystalGem(value: bot.crystals, size: 26),
                   const SizedBox(width: 12),
                   _hudCounter(Icons.auto_awesome, '${bot.availableRelicCount}',
-                      size: 14),
+                      size: 14, svg: 'assets/icons/rpg/rune-stone.svg'),
                 ],
               ),
             ),
-            // Botão de LEGENDA (tipos de dano + status) — canto direito.
+            // TURNO (compacto) + livro de LEGENDA — canto direito (CEO 2026-06-13).
             Align(
               alignment: Alignment.centerRight,
-              child: IconButton(
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                icon: const Icon(Icons.menu_book,
-                    size: 18, color: AppColors.textSecondary),
-                tooltip: 'Legenda',
-                onPressed: _showLegend,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _turnIndicatorTop(ui),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints:
+                        const BoxConstraints(minWidth: 32, minHeight: 32),
+                    icon: const Icon(Icons.menu_book,
+                        size: 18, color: AppColors.textSecondary),
+                    tooltip: 'Legenda',
+                    onPressed: _showLegend,
+                  ),
+                ],
               ),
             ),
           ],
@@ -1297,6 +1727,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     return Padding(
       padding: const EdgeInsets.only(top: 2, bottom: 2),
       child: SizedBox(
+        key: _botHandKey, // origem do voo da carta jogada pela IA
         height: h + 16,
         child: LayoutBuilder(
           builder: (context, cons) {
@@ -1420,7 +1851,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                     colors: [Color(0xFFE8C66A), Color(0xFF8A6A2A)],
                   ),
                 ),
-                child: Icon(keywordIcon(k), size: 11, color: Colors.white),
+                child: keywordGlyph(k).build(size: 11, color: Colors.white),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -1624,6 +2055,25 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
               highlightTargets.contains(side.lanes[lane]!.instanceId),
         );
 
+    // Chaves de lane ÚNICAS. Normalmente 'cre_<cardId>' (instanceId == cardId),
+    // mas TOKENS idênticos (ex.: várias "Caixa Coringa" do Coringa) dividem o
+    // mesmo cardId → desempata pra não duplicar Key no Stack e crashar o build
+    // ("Duplicate keys found", CEO 2026-06-13). A 1ª ocorrência mantém a chave
+    // limpa (slide normal das criaturas únicas); duplicatas ganham sufixo.
+    final laneKeyOf = <int, String>{};
+    final keySeen = <String, int>{};
+    for (var lane = 0; lane < kLaneCount; lane++) {
+      final c = side.lanes[lane];
+      if (c == null) {
+        laneKeyOf[lane] = 'empty_${side.id.name}_$lane';
+      } else {
+        final base = 'cre_${c.instanceId}';
+        final n = keySeen[base] ?? 0;
+        keySeen[base] = n + 1;
+        laneKeyOf[lane] = n == 0 ? base : '$base#$n';
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       child: SizedBox(
@@ -1640,24 +2090,31 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                 for (var lane = 0; lane < kLaneCount; lane++)
                   if (side.lanes[lane] == null)
                     Positioned(
-                      key: ValueKey<String>('empty_${side.id.name}_$lane'),
+                      key: ValueKey<String>(laneKeyOf[lane]!),
                       left: xOf(lane),
                       top: yOf(lane),
                       width: slotW,
                       height: 152,
-                      child: cell(lane),
+                      child: KeyedSubtree(
+                        key: (isPlayerSide ? _playerLaneKeys : _botLaneKeys)[
+                            lane],
+                        child: cell(lane),
+                      ),
                     )
                   else
                     AnimatedPositioned(
-                      key: ValueKey<String>(
-                          'cre_${side.lanes[lane]!.instanceId}'),
+                      key: ValueKey<String>(laneKeyOf[lane]!),
                       duration: const Duration(milliseconds: 320),
                       curve: Curves.easeInOut,
                       left: xOf(lane),
                       top: yOf(lane),
                       width: slotW,
                       height: 152,
-                      child: cell(lane),
+                      child: KeyedSubtree(
+                        key: (isPlayerSide ? _playerLaneKeys : _botLaneKeys)[
+                            lane],
+                        child: cell(lane),
+                      ),
                     ),
                 if (orphanTarget) ...[
                   if (h.targetDied && !h.isHeal)
@@ -1747,17 +2204,70 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         h.attackerCardId == cid &&
         !isHlTarget;
 
+    // Já estilhaçou numa batida anterior DESTE step (Pisotear/Ataque Duplo) ou
+    // no respiro pós-morte: o snapshot pré-ataque ainda contém a carta, mas ela
+    // não deve "ressuscitar" enquanto o destaque está noutra ação. Renderiza o
+    // slot vazio/transparente até o próximo step compactar o tabuleiro.
+    final shattered =
+        creature != null && h != null && cid != null &&
+            h.deadIds.contains(cid) && h.targetCardId != cid;
+    // Anti-duplicação: esconde a criatura SÓ enquanto ela está de fato VOANDO
+    // (`_flying`). A carta da IA está no lado do bot (fromBot); a minha, no meu
+    // lado. NÃO usar `botPlayNotification` aqui — o controller a segura ~1500ms
+    // (ritmo do bot), MUITO além do voo de 900ms: a carta ficava invisível ~600ms
+    // depois de pousar e sumia de vez se o voo nem iniciasse (bug "carta da IA
+    // invisível", CEO 2026-06-13). O flash de 1 frame na publicação é imperceptível.
+    final flyingHere = creature != null &&
+        _flying != null &&
+        _flying!.notif.creature.instanceId == creature.instanceId &&
+        (isPlayerSide == !_flying!.notif.fromBot);
+    if (shattered || flyingHere) {
+      return const Center(
+        child: AspectRatio(
+          aspectRatio: 142 / 206,
+          child: SizedBox.expand(),
+        ),
+      );
+    }
+
     // Conteúdo: card no formato da coleção ou slot vazio. AnimatedSwitcher
     // keyed no instanceId → "frente sai / retaguarda entra" faz cross-fade
     // (a substituição passa a LER visualmente).
     final isMoving = isPlayerSide &&
         creature != null &&
         _movingCreatureId == creature.instanceId;
-    final Widget content = creature == null
+    Widget content = creature == null
         ? _emptyLane(lane, laneHighlighted)
         : _boardCard(creature,
             isFront: isFront,
             borderOverride: isMoving ? AppColors.gold : borderOverride);
+    // Acabou de pousar de um voo (IA/jogador): a carta voadora era MÍNIMA — agora
+    // a carta real surge com fade-in + leve assentamento, revelando os detalhes
+    // (dano/cristal/relíquia/habilidades) de forma suave (CEO 2026-06-13).
+    if (creature != null && creature.instanceId == _justLandedId) {
+      content = content
+          .animate()
+          .fadeIn(duration: 300.ms, curve: Curves.easeOut)
+          .scaleXY(begin: 0.93, end: 1, duration: 340.ms, curve: Curves.easeOutBack);
+    }
+    // MORTE (CEO 2026-06-13): no beat em que esta criatura é o alvo que MORRE, a
+    // carta vira P&B (grayscale) + ganha trincas de vidro; o estilhaço cinza voa
+    // por cima (ver `_shardBurst` → CombatVfx.deathShatter).
+    final isDying = creature != null &&
+        h != null &&
+        cid != null &&
+        isHlTarget &&
+        h.targetDied &&
+        !h.isHeal;
+    if (isDying) {
+      // Sequência fiel (CEO 2026-06-13): o golpe mortal TREME a carta VIVA
+      // (colorida) primeiro; só DEPOIS do tremor ela perde a cor + trinca, segura
+      // um instante e então estilhaça. Por isso o cinza entra após o tremor
+      // (`+ _kDeathShakeMs`). Magia: + a viagem do projétil (~1120ms).
+      final grayDelayMs =
+          (h.damageType == DamageType.magico ? 1120 : 0) + _kDeathShakeMs;
+      content = _DelayedGrayscale(delayMs: grayDelayMs, child: content);
+    }
 
     // O tabuleiro agora DESLIZA as criaturas entre lanes (AnimatedPositioned no
     // _lanesRow, keyed por instanceId) em vez de fazer cross-fade — o cross-fade
@@ -1784,7 +2294,37 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
             bottom: isPlayerSide ? null : -16,
             left: 0,
             right: 0,
-            child: Center(child: _slashFlash(h)),
+            child: Center(
+              child: RepaintBoundary(
+                child: _slashFlash(h, isPlayerSide: isPlayerSide),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // CANALIZAÇÃO de magia no ATACANTE (CEO 2026-06-13): orbe arcano que surge,
+    // cresce girando (parado) e libera — sobre a carta, virado pro inimigo.
+    final showChannel = h != null &&
+        isHlAttacker &&
+        !h.evaded &&
+        h.damageType == DamageType.magico;
+    if (creature != null && showChannel) {
+      tile = Stack(
+        clipBehavior: Clip.none,
+        children: [
+          tile,
+          Positioned(
+            top: isPlayerSide ? -30 : null,
+            bottom: isPlayerSide ? null : -30,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: RepaintBoundary(
+                child: CombatVfx.magicChannel(color: AppColors.conceptMagico),
+              ),
+            ),
           ),
         ],
       );
@@ -1815,9 +2355,19 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
                     duration: 320.ms,
                     curve: Curves.easeOut);
           case DamageType.magico:
+            // MAGIA TEATRAL (CEO 2026-06-13): a carta INCHA carregando a magia
+            // (~640ms, lento) enquanto o orbe cresce girando (overlay), e dá um
+            // COICE pra trás ao LIBERAR — então o projétil sai (overlay do alvo).
+            tile = tile
+                .animate(key: ObjectKey(h))
+                .scaleXY(begin: 1, end: 1.07, duration: 640.ms, curve: Curves.easeInOut)
+                .then()
+                .moveY(begin: 0, end: -16 * dir, duration: 130.ms, curve: Curves.easeOut)
+                .scaleXY(begin: 1, end: 1 / 1.07, duration: 130.ms)
+                .then()
+                .moveY(begin: 0, end: 16 * dir, duration: 240.ms, curve: Curves.easeOut);
           case DamageType.aDistancia:
-            // Lança projétil/flecha (viaja no overlay do alvo): recuo curto de
-            // "conjuração/saque" + leve crescimento.
+            // Lança flecha (viaja no overlay do alvo): recuo curto de "saque".
             tile = tile
                 .animate(key: ObjectKey(h))
                 .moveY(
@@ -1838,10 +2388,36 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       } else if (isHlAbility) {
         tile = tile.animate(key: ObjectKey(h)).shimmer(
             duration: 550.ms, color: AppColors.gold.withValues(alpha: 0.35));
-      } else if (isHlTarget && !h.isHeal) {
+      } else if (isHlTarget && !h.isHeal && h.targetDied) {
+        // MORTE: IMPACTO (tremor) → DESPEDAÇAR. Pra MAGIA o impacto só acontece
+        // quando o projétil CHEGA (~1120ms), então o tremor/quebra são atrasados.
+        final magicHit = h.damageType == DamageType.magico;
+        final hitDelay =
+            magicHit ? const Duration(milliseconds: 1120) : Duration.zero;
         tile = tile
             .animate(key: ObjectKey(h))
-            .shake(hz: 7, duration: 340.ms, rotation: 0.012);
+            .shake(
+                delay: hitDelay,
+                hz: magicHit ? 7 : 8,
+                duration: _kDeathShakeMs.ms,
+                rotation: magicHit ? 0.03 : 0.014)
+            // segura a carta TRINCADA (P&B + vidro) um tempo e então DESPEDAÇA:
+            // some RÁPIDO com um leve "estouro" pra FORA (não encolhe — encolher
+            // lia como "separa e some"), virando os cacos (CEO 2026-06-13).
+            .then(delay: _kDeathCrackHoldMs.ms)
+            .fadeOut(duration: 160.ms, curve: Curves.easeOut)
+            .scaleXY(
+                begin: 1, end: 1.08, duration: 160.ms, curve: Curves.easeOut);
+      } else if (isHlTarget && !h.isHeal) {
+        // Tremor do alvo no impacto. MAGIA = forte e ATRASADO (chega o projétil).
+        final magicHit = h.damageType == DamageType.magico;
+        final hitDelay =
+            magicHit ? const Duration(milliseconds: 1120) : Duration.zero;
+        tile = tile.animate(key: ObjectKey(h)).shake(
+            delay: hitDelay,
+            hz: magicHit ? 6 : 7,
+            duration: magicHit ? 520.ms : 340.ms,
+            rotation: magicHit ? 0.032 : 0.012);
       } else if (isHlTarget && h.isHeal) {
         tile = tile.animate(key: ObjectKey(h)).shimmer(
             duration: 550.ms,
@@ -1857,7 +2433,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         children: [
           tile,
           if (isHlTarget && !hh.isHeal && !hh.evaded)
-            Positioned.fill(child: _impactOverlay(hh, isPlayerSide)),
+            Positioned.fill(
+              child: RepaintBoundary(child: _impactOverlay(hh, isPlayerSide)),
+            ),
           // Morte: com o replay pré-estado o alvo morto ainda está visível no
           // passo — o shatter estilhaça SOBRE o tile (some no passo seguinte,
           // quando o tabuleiro avança). Antes só existia no caminho "órfão".
@@ -1873,7 +2451,8 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     return Center(
         child: GestureDetector(
           onTap: () {
-            if (!ui.isPlayerTurn || ui.playLocked) return;
+            // Voo de carta em andamento = ação em curso: ignora toques (respiro).
+            if (!ui.isPlayerTurn || ui.playLocked || _flying != null) return;
             // Mímico: tocar QUALQUER criatura (aliada ou inimiga) marca/desmarca
             // como alvo da cópia (antes do guard de lado — alvo pode ser inimigo).
             if (mimicSelecting && creature != null) {
@@ -1916,8 +2495,11 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
               // engine decide normal vs cheio→volta-pra-mão). Mímico: leva o
               // alvo marcado (ou null → engine auto-escolhe o mais forte).
               final mimicId = _selectedIsMimic(ui) ? _mimicTargetId : null;
+              final before = _playerInstanceIds(ui);
               controller.playCreature(selectedId, lane: lane, mimicTargetId: mimicId);
               if (_mimicTargetId != null) setState(() => _mimicTargetId = null);
+              // Anima a MINHA carta voando da mão até o slot (CEO 2026-06-13).
+              _triggerPlayerFlight(before);
             } else if (targetHighlighted && creature != null) {
               controller.playRelic(selectedId, creature.instanceId);
             }
@@ -1927,129 +2509,114 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     );
   }
 
-  /// Overlay de impacto no card do alvo, por tipo de ataque: projétil/flecha
-  /// que entra do lado do atacante (mágico/à distância) + burst de impacto.
+  /// Overlay de impacto no card do alvo, por tipo de ataque (texturas Kenney,
+  /// tingidas por elemento): mágico = orbe arcano que viaja + impacto; à
+  /// distância = bolt/streak que viaja + impacto; melee/verdadeiro = impacto
+  /// imediato (o corte em si é o `_slashFlash` no atacante).
   Widget _impactOverlay(CombatHighlight h, bool isPlayerSideTarget) {
     final type = h.damageType;
-    final isProjectile =
-        type == DamageType.magico || type == DamageType.aDistancia;
+    final isMagic = type == DamageType.magico;
+    final isProjectile = isMagic || type == DamageType.aDistancia;
 
-    final IconData impactIcon;
     final Color color;
     switch (type) {
       case DamageType.magico:
-        impactIcon = Icons.blur_on;
         color = AppColors.conceptMagico;
       case DamageType.aDistancia:
-        impactIcon = Icons.close;
         color = AppColors.gold;
       case DamageType.corpoACorpo:
       case DamageType.vitalismo:
       case DamageType.cura:
       case null:
-        impactIcon = Icons.flare;
         color = AppColors.hp;
     }
 
     // O projétil entra pela borda do lado do atacante e VIAJA até o alvo: alvo
-    // do jogador (embaixo) leva tiro de cima; alvo do bot (em cima) leva tiro
-    // de baixo. Distância maior (60px) pra cruzar visivelmente a banda central.
-    final startDy = isPlayerSideTarget ? -60.0 : 60.0;
+    // do jogador (embaixo) leva tiro de cima; alvo do bot (em cima) de baixo.
+    final startDy = isPlayerSideTarget ? -66.0 : 66.0;
 
+    // MAGIA TEATRAL (CEO 2026-06-13): o projétil é GRANDE e LENTO, lançado só
+    // quando a canalização libera (~640ms), chega ~1120ms e estoura num impacto
+    // grande e exagerado (onda de choque). Os outros (flecha) seguem rápidos.
+    if (isMagic) {
+      const launchMs = 640; // a canalização libera
+      const travelMs = 480; // voo lento
+      const arriveMs = launchMs + travelMs; // ~1120
+      return IgnorePointer(
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            KeyedSubtree(
+              key: ValueKey('fxProj_${identityHashCode(h)}'),
+              child: CombatVfx.projectile(
+                travel: Offset(0, startDy * 1.1),
+                color: color,
+                size: 44,
+                durationMs: travelMs,
+                delayMs: launchMs,
+              ),
+            ),
+            KeyedSubtree(
+              key: ValueKey('fxImpact_${identityHashCode(h)}'),
+              child: CombatVfx.magicImpact(color: color, delayMs: arriveMs),
+            ),
+          ],
+        ),
+      );
+    }
+
+    const projMs = 250;
+    final impactDelay = isProjectile ? projMs : 40;
     return IgnorePointer(
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
           if (isProjectile)
-            Icon(type == DamageType.aDistancia ? Icons.navigation : Icons.circle,
-                    size: type == DamageType.aDistancia ? 14 : 11, color: color)
-                // Keys DISTINTAS por filho (projétil vs burst): senão os dois
-                // ficam com a mesma key no mesmo Stack → "Duplicate keys".
-                // Estável por evento (identityHashCode de h) pra reiniciar a
-                // animação a cada highlight novo.
-                .animate(key: ValueKey('fxProj_${identityHashCode(h)}'))
-                .moveY(
-                    begin: startDy,
-                    end: 0,
-                    duration: 240.ms,
-                    curve: Curves.easeIn)
-                .fadeOut(delay: 210.ms, duration: 60.ms),
-          Icon(impactIcon, size: 26, color: color)
-              .animate(key: ValueKey('fxImpact_${identityHashCode(h)}'))
-              .scaleXY(
-                  begin: 0.3,
-                  end: 1.2,
-                  delay: isProjectile ? 200.ms : 60.ms,
-                  duration: 160.ms,
-                  curve: Curves.easeOut)
-              .fadeIn(delay: isProjectile ? 200.ms : 60.ms, duration: 80.ms)
-              .then()
-              .fadeOut(duration: 180.ms),
+            KeyedSubtree(
+              key: ValueKey('fxProj_${identityHashCode(h)}'),
+              child: CombatVfx.projectile(
+                travel: Offset(0, startDy),
+                color: color,
+                arrow: type == DamageType.aDistancia,
+                durationMs: projMs,
+              ),
+            ),
+          KeyedSubtree(
+            key: ValueKey('fxImpact_${identityHashCode(h)}'),
+            child: CombatVfx.impactBurst(color: color, delayMs: impactDelay),
+          ),
         ],
       ),
     );
   }
 
-  /// Corte de espada (flash) do golpe melee: risco curvo brilhante que cresce
-  /// e some no pico da investida do atacante (quando "encosta" no alvo).
-  Widget _slashFlash(CombatHighlight h) {
-    return IgnorePointer(
-      child: SizedBox(
-        width: 50,
-        height: 50,
-        child: CustomPaint(painter: _SlashPainter(AppColors.gold)),
-      )
-          .animate(key: ObjectKey(h))
-          .fadeIn(delay: 250.ms, duration: 60.ms)
-          .scaleXY(
-              begin: 0.45,
-              end: 1.35,
-              delay: 250.ms,
-              duration: 160.ms,
-              curve: Curves.easeOut)
-          .then()
-          .fadeOut(duration: 170.ms),
+  /// Corte do golpe melee: arco de energia (textura slash do Kenney) que sobe
+  /// no pico da investida do atacante (quando "encosta" no alvo) + faíscas.
+  Widget _slashFlash(CombatHighlight h, {bool isPlayerSide = true}) {
+    return KeyedSubtree(
+      key: ObjectKey(h),
+      child: CombatVfx.slashArc(
+        color: const Color(0xFFEDE7FF),
+        delayMs: 230,
+        flip: !isPlayerSide,
+      ),
     );
   }
 
-  /// Burst de cacos (morte de uma carta) — ancorado onde o número da morte
-  /// flutua. 8 fragmentos voam pra fora e somem.
+  /// Morte de uma carta: flash branco + ESTILHAÇOS de vidro CINZA (formas
+  /// irregulares) caindo. Ancorado sobre o tile do alvo (ou centro órfão).
   Widget _shardBurst(CombatHighlight h) {
-    return IgnorePointer(
-      child: KeyedSubtree(
-        key: ObjectKey(h),
-        child: SizedBox(
-          width: 60,
-          height: 60,
-          child: Stack(alignment: Alignment.center, children: [
-            for (var i = 0; i < 8; i++) _shard(i),
-          ]),
-        ),
-      ),
+    final magic = h.damageType == DamageType.magico;
+    // Estilhaça DEPOIS do tremor + hold da carta trincada (sincroniza com o início
+    // do fadeOut do tile). Magia: + a viagem do projétil (~1120ms). Cabe no
+    // orçamento do passo (evento 1150/2000ms + respiro 800ms).
+    final delayMs = (magic ? 1120 : 0) + _kDeathShakeMs + _kDeathCrackHoldMs;
+    return KeyedSubtree(
+      key: ObjectKey(h),
+      child: CombatVfx.deathShatter(delayMs: delayMs),
     );
-  }
-
-  Widget _shard(int i) {
-    final angle = (i / 8) * 2 * math.pi;
-    final dx = math.cos(angle) * 26;
-    final dy = math.sin(angle) * 26;
-    return Container(
-      width: 7,
-      height: 7,
-      decoration: BoxDecoration(
-        color: AppColors.hp.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(1),
-      ),
-    )
-        .animate()
-        .move(
-            begin: Offset.zero,
-            end: Offset(dx, dy),
-            duration: 420.ms,
-            curve: Curves.easeOut)
-        .rotate(begin: 0, end: 0.6, duration: 420.ms)
-        .fadeOut(delay: 200.ms, duration: 220.ms);
   }
 
   /// Slot de lane vazio (placeholder no formato/raio do card).
@@ -2103,68 +2670,139 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   /// glow pulse LEVE na cor do conceito (carta "viva" no tabuleiro).
   Widget _boardCard(CreatureInPlay c,
       {required bool isFront, Color? borderOverride}) {
-    final glow = conceptColor(c.card.concepts);
-    return GameCardFace(
-      name: c.card.nome,
-      cost: c.card.cost,
-      concepts: c.card.concepts,
-      rarity: c.card.rarity,
-      artIcon: damageTypeIcon(c.effectiveDamageType),
-      borderOverride: borderOverride,
-      cornerBadge: isFront
-          ? const Icon(Icons.flag, size: 11, color: AppColors.gold)
-          : null,
-      showItemSlot: true,
-      itemIcon: c.relics.isNotEmpty ? _relicSlotIcon(c.relics.first) : null,
-      effects: c.keywords.map(keywordIcon).toList(),
-      statusOverlay: buildCardStatusOverlay(c),
-      footer: _boardFooter(c),
-    )
-        .animate(onPlay: (ctrl) => ctrl.repeat(reverse: true))
-        .boxShadow(
-          duration: 1400.ms,
-          curve: Curves.easeInOut,
-          borderRadius: BorderRadius.circular(10),
-          begin: BoxShadow(
-              color: glow.withValues(alpha: 0.0),
-              blurRadius: 3,
-              spreadRadius: 0),
-          end: BoxShadow(
-              color: glow.withValues(alpha: 0.45),
-              blurRadius: 12,
-              spreadRadius: 1),
-        );
+    // Glow ESTÁTICO (sem pulse) na cor do TIPO DE DANO da carta, leve — "carta
+    // viva" no tabuleiro, mesmo padrão pra todas (CEO 2026-06-13). Antes era um
+    // pulse na cor do conceito; agora reflete o tipo (físico/mágico/arqueiro/…) e
+    // não pisca.
+    final glow = damageTypeColor(c.effectiveDamageType);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: glow.withValues(alpha: 0.22),
+            blurRadius: 9,
+            spreadRadius: 0.5,
+          ),
+        ],
+      ),
+      child: GameCardFace(
+        name: c.card.nome,
+        cost: c.card.cost,
+        concepts: c.card.concepts,
+        rarity: c.card.rarity,
+        artIcon: damageTypeIcon(c.effectiveDamageType),
+        borderOverride: borderOverride,
+        cornerBadge: isFront
+            ? const Icon(Icons.flag, size: 11, color: AppColors.gold)
+            : null,
+        showItemSlot: true,
+        itemIcon: c.relics.isNotEmpty ? _relicSlotIcon(c.relics.first) : null,
+        effects: c.keywords.map(keywordGlyph).toList(),
+        // CEO 2026-06-13: defesas vão pro rodapé (acima da vida); debuffs viram
+        // bolinhas vermelhas no topo-direita (statusOverlay aposentado aqui).
+        debuffs: _debuffGlyphs(c),
+        footer: _boardFooter(c),
+      ),
+    );
   }
 
   Widget _boardFooter(CreatureInPlay c) {
-    // Barra de vida REMOVIDA (CEO); as keywords viraram brasões na borda
-    // esquerda (ver GameCardFace.effectCrests). Aqui fica só a linha de stats.
+    // CEO 2026-06-13: tipos de ataque EMPILHADOS (esquerda) · defesas EM CIMA da
+    // vida (direita), com ícones da mesma cor/tamanho da vida.
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        // Multi-ataque: 1 par (ícone do tipo + valor) por ataque da criatura.
-        for (final a in c.attacks) ...[
-          typeGlyph(a.type, size: 12),
+        // Multi-ataque: 1 linha (ícone do tipo + valor) por tipo, empilhadas.
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final a in c.attacks)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 1),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    typeGlyph(a.type, size: 11),
+                    const SizedBox(width: 2),
+                    Text('${a.value}',
+                        style: GoogleFonts.robotoMono(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.gold)),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        const Spacer(),
+        // Defesas EM CIMA da vida (mesma cor/tamanho de ícone que a vida).
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (c.armor > 0) _defenseLine(Icons.shield, c.armor),
+            if (c.magicArmor > 0) _defenseLine(Icons.auto_awesome, c.magicArmor),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.favorite, size: 9, color: Colors.white),
+                const SizedBox(width: 2),
+                // PV com contagem ANIMADA (CEO 2026-06-13): ao mudar (dano/cura)
+                // o número desce/sobe contando, em vez de pular. Sem animação no
+                // 1º build (Tween só com end → não conta do zero ao entrar).
+                TweenAnimationBuilder<double>(
+                  tween: Tween<double>(end: c.currentHp.toDouble()),
+                  duration: const Duration(milliseconds: 450),
+                  curve: Curves.easeOut,
+                  builder: (ctx, val, _) => Text('${val.round()}',
+                      style: GoogleFonts.robotoMono(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: _boardHpColor(c))),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Linha de defesa (acima da vida): ícone branco tamanho 9 (igual à vida) +
+  /// valor branco.
+  Widget _defenseLine(IconData icon, int value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 1),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 9, color: Colors.white),
           const SizedBox(width: 2),
-          Text('${a.value}',
+          Text('$value',
               style: GoogleFonts.robotoMono(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.gold)),
-          const SizedBox(width: 6),
+                  color: Colors.white)),
         ],
-        const Spacer(),
-        // Armadura/status migraram pro overlay da arte (statusOverlay). Aqui
-        // fica só a vida ATUAL, colorida: branco = cheia (no original); vermelho =
-        // abaixo do total; verde = acima da vida original. Coraçãozinho branco.
-        const Icon(Icons.favorite, size: 9, color: Colors.white),
-        const SizedBox(width: 2),
-        Text('${c.currentHp}',
-            style: GoogleFonts.robotoMono(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: _boardHpColor(c))),
-      ],
+      ),
     );
+  }
+
+  /// Glifos RPG dos DEBUFFS ativos (viram bolinhas vermelhas no topo-direita).
+  List<CardGlyph> _debuffGlyphs(CreatureInPlay c) {
+    final out = <CardGlyph>[];
+    if (c.bleedStacks > 0) out.add(keywordGlyph(AbilityKeyword.sangramento));
+    if (c.poisoned) out.add(keywordGlyph(AbilityKeyword.veneno));
+    if (c.diseaseStacks > 0) out.add(keywordGlyph(AbilityKeyword.doenca));
+    if (c.stunned) out.add(keywordGlyph(AbilityKeyword.atordoar));
+    if (c.entangled) out.add(keywordGlyph(AbilityKeyword.enredar));
+    if (c.desmoralizadoMelee > 0) {
+      out.add(keywordGlyph(AbilityKeyword.desmoralizar));
+    }
+    if (c.suprimidoMagico > 0) out.add(keywordGlyph(AbilityKeyword.suprimirMagia));
+    return out;
   }
 
   Widget _logLine(MatchLogEntry entry) {
@@ -2203,6 +2841,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
     }
 
     return SizedBox(
+      key: _playerHandKey, // origem do voo da carta jogada pelo jogador
       height: cardH + 20,
       child: LayoutBuilder(
         builder: (context, cons) {
@@ -2381,7 +3020,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
       // Preview (minimal): nada disso — só arte + nome.
       showItemSlot: creature != null && !minimal,
       effects: (creature != null && !minimal)
-          ? effectIconsFromAbilities(creature.abilities)
+          ? effectGlyphsFromAbilities(creature.abilities)
           : const [],
       minimal: minimal,
       footer: minimal ? const SizedBox.shrink() : footer,
@@ -2479,30 +3118,40 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   /// Só ativo na vez do jogador.
   Widget _endTurnButton(PveMatchUiState ui) {
     final enabled = ui.phase == PveMatchPhase.playerTurn;
-    final fg = enabled ? Colors.white : Colors.white.withValues(alpha: 0.5);
+    final fg = enabled ? AppColors.goldLt : AppColors.goldLt.withValues(alpha: 0.45);
+    // Paleta da CARTA DO HERÓI (CEO 2026-06-13): corpo roxo-escuro + dourado.
     return GestureDetector(
       onTap: enabled ? _onEndTurnPressed : null,
-      child: Container(
-        width: 52,
-        height: 52,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: enabled
-              ? AppColors.purple
-              : AppColors.purple.withValues(alpha: 0.22),
-          border: Border.all(
-              color: enabled ? AppColors.purpleLight : AppColors.border,
-              width: 1.5),
-          boxShadow: enabled
-              ? const [
-                  BoxShadow(
-                      color: AppColors.purpleGlow,
-                      blurRadius: 12,
-                      spreadRadius: 1)
-                ]
-              : null,
+      child: Opacity(
+        opacity: enabled ? 1 : 0.55,
+        child: Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF2C2348), Color(0xFF140D22)],
+            ),
+            border:
+                Border.all(color: AppColors.gold.withValues(alpha: 0.9), width: 1.6),
+            boxShadow: enabled
+                ? [
+                    BoxShadow(
+                        color: AppColors.gold.withValues(alpha: 0.4),
+                        blurRadius: 12,
+                        spreadRadius: 1)
+                  ]
+                : null,
+          ),
+          child: Center(
+            child: const CardGlyph(
+              svg: 'assets/icons/rpg/crossed-swords.svg',
+              fallback: Icons.sports_martial_arts,
+            ).build(size: 26, color: fg),
+          ),
         ),
-        child: Center(child: _CrossedSwords(color: fg, size: 26)),
       ),
     );
   }
@@ -2516,11 +3165,16 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         height: 44,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppColors.surface,
-          border: Border.all(color: AppColors.border, width: 1.4),
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF2C2348), Color(0xFF140D22)],
+          ),
+          border:
+              Border.all(color: AppColors.gold.withValues(alpha: 0.8), width: 1.4),
         ),
         child: const Icon(Icons.arrow_back_ios_new,
-            size: 16, color: AppColors.textSecondary),
+            size: 16, color: AppColors.goldLt),
       ),
     );
   }
@@ -2535,11 +3189,16 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
         height: 44,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppColors.surface,
-          border: Border.all(color: AppColors.border, width: 1.4),
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF2C2348), Color(0xFF140D22)],
+          ),
+          border:
+              Border.all(color: AppColors.gold.withValues(alpha: 0.8), width: 1.4),
         ),
         child: const Icon(Icons.receipt_long_outlined,
-            size: 18, color: AppColors.textSecondary),
+            size: 18, color: AppColors.goldLt),
       ),
     );
   }
@@ -2807,106 +3466,207 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen> {
   }
 }
 
-/// Ícone de ESPADAS CRUZADAS (botão de encerrar jogada). Desenhado via
-/// CustomPaint pra não depender de glyph/emoji (renderiza igual em qualquer
-/// device).
-class _CrossedSwords extends StatelessWidget {
-  const _CrossedSwords({required this.color, this.size = 24});
+/// Geometria imutável de UM voo de carta (mão → lane), capturada no disparo. Ter
+/// tudo pré-calculado faz o `_CardFlightOverlay` NÃO precisar de lookup de
+/// render-box durante o build → animação estável, sem reinício no meio.
+class _Flight {
+  const _Flight({
+    required this.seq,
+    required this.notif,
+    required this.start,
+    required this.end,
+    required this.cardW,
+    required this.cardH,
+  });
 
-  final Color color;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) =>
-      CustomPaint(size: Size.square(size), painter: _SwordsPainter(color));
+  final int seq; // id único do voo → vira a Key do overlay
+  final CardPlayNotification notif;
+  final Offset start; // centro da origem (mão), no espaço do Stack da partida
+  final Offset end; // centro do destino (lane)
+  final double cardW;
+  final double cardH;
 }
 
-class _SwordsPainter extends CustomPainter {
-  _SwordsPainter(this.color);
-  final Color color;
+/// Overlay que anima UMA carta voando da mão até a lane. Tem ciclo de vida
+/// próprio (AnimationController que roda `forward()` UMA vez no initState) e Key
+/// única (via `_Flight.seq`): rebuilds do Stack pai e trocas de índice entre os
+/// filhos condicionais (banner de turno etc.) não recriam o estado, então a
+/// animação NÃO reinicia no meio do voo (bug CEO 2026-06-13).
+///
+/// Dois sabores:
+///  • IA (`fromBot`): verso sai da mão, VIRA por `scaleX` (sem perspectiva 3D) e
+///    expande até a lane.
+///  • Jogador: a carta (de frente) sobe, cresce e DESCE encaixando com impacto.
+/// Em ambos a carta é MÍNIMA; os detalhes entram com fade-in quando a criatura
+/// real é revelada na lane (lado do `_CardMatchScreenState`).
+class _CardFlightOverlay extends StatefulWidget {
+  const _CardFlightOverlay({
+    super.key,
+    required this.flight,
+    required this.faceBuilder,
+    required this.onComplete,
+  });
+
+  final _Flight flight;
+  final Widget Function(double width) faceBuilder;
+  final VoidCallback onComplete;
 
   @override
-  void paint(Canvas canvas, Size s) {
-    // Desenha DUAS espadas reais cruzadas em X: cada uma com lâmina
-    // afilada (ponta), guarda (cross-guard), punho e pomo. Renderizadas
-    // por transform (espada vertical) rotacionada ±40°.
-    _drawSword(canvas, s, 0.7); // \ (ponta sup-esq)
-    _drawSword(canvas, s, -0.7); // / (ponta sup-dir)
-  }
-
-  void _drawSword(Canvas canvas, Size s, double angle) {
-    final w = s.width;
-    final h = s.height;
-    canvas.save();
-    canvas.translate(w / 2, h / 2);
-    canvas.rotate(angle);
-
-    final fill = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-    final line = Paint()
-      ..color = color
-      ..strokeWidth = w * 0.07
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    final guardY = h * 0.12; // altura da guarda
-    final bladeHalf = w * 0.05; // meia-largura da lâmina
-
-    // Lâmina: ponta afilada no topo, alargando até a guarda.
-    final blade = Path()
-      ..moveTo(0, -h * 0.46) // ponta
-      ..lineTo(-bladeHalf, -h * 0.34)
-      ..lineTo(-bladeHalf, guardY)
-      ..lineTo(bladeHalf, guardY)
-      ..lineTo(bladeHalf, -h * 0.34)
-      ..close();
-    canvas.drawPath(blade, fill);
-
-    // Guarda (cross-guard) perpendicular logo abaixo da lâmina.
-    canvas.drawLine(
-        Offset(-w * 0.17, guardY), Offset(w * 0.17, guardY), line);
-    // Punho.
-    canvas.drawLine(Offset(0, guardY), Offset(0, h * 0.32), line);
-    // Pomo (esfera no fim do punho).
-    canvas.drawCircle(Offset(0, h * 0.36), w * 0.05, fill);
-
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant _SwordsPainter old) => old.color != color;
+  State<_CardFlightOverlay> createState() => _CardFlightOverlayState();
 }
 
-/// Risco de CORTE de espada (golpe melee): arco curvo grosso na cor do golpe +
-/// um realce branco fino sobreposto (brilho da lâmina). Desenhado via
-/// CustomPaint pra renderizar igual em qualquer device.
-class _SlashPainter extends CustomPainter {
-  _SlashPainter(this.color);
-  final Color color;
+class _CardFlightOverlayState extends State<_CardFlightOverlay>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
 
   @override
-  void paint(Canvas canvas, Size s) {
-    final path = Path()
-      ..moveTo(s.width * 0.10, s.height * 0.80)
-      ..quadraticBezierTo(s.width * 0.52, s.height * 0.06,
-          s.width * 0.92, s.height * 0.38);
-
-    final stroke = Paint()
-      ..color = color
-      ..strokeWidth = s.width * 0.13
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-    canvas.drawPath(path, stroke);
-
-    final shine = Paint()
-      ..color = Colors.white.withValues(alpha: 0.85)
-      ..strokeWidth = s.width * 0.045
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-    canvas.drawPath(path, shine);
+  void initState() {
+    super.initState();
+    final ms = widget.flight.notif.fromBot ? 900 : 600;
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: ms),
+    );
+    _ctrl.addStatusListener((status) {
+      // mounted guard: se a tela sair no meio do voo, não chama de volta.
+      if (status == AnimationStatus.completed && mounted) {
+        widget.onComplete();
+      }
+    });
+    _ctrl.forward();
   }
 
   @override
-  bool shouldRepaint(covariant _SlashPainter old) => old.color != color;
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final f = widget.flight;
+    final n = f.notif;
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: AnimatedBuilder(
+          animation: _ctrl,
+          builder: (ctx, _) {
+            final t = _ctrl.value;
+            late final double dx;
+            late final double dy;
+            late final double scale;
+            late final Widget faceChild;
+            if (n.fromBot) {
+              final ease = Curves.easeOut.transform(t);
+              dx = f.start.dx + (f.end.dx - f.start.dx) * ease;
+              final arc = math.sin(t * math.pi) * 28; // pequeno arco pra cima
+              dy = f.start.dy + (f.end.dy - f.start.dy) * ease - arc;
+              scale = 0.72 + 0.28 * t; // expande
+              // Flip por scaleX (1→0→1): borda some no meio, sem esticão.
+              final flipT = ((t - 0.28) / 0.34).clamp(0.0, 1.0);
+              final flipScaleX =
+                  math.cos(flipT * math.pi).abs().clamp(0.05, 1.0);
+              final showBack = flipT < 0.5;
+              faceChild = Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.diagonal3Values(flipScaleX, 1, 1),
+                child: showBack
+                    ? CardBack(height: f.cardH, radius: 10)
+                    : widget.faceBuilder(f.cardW),
+              );
+            } else {
+              // Jogador: sobe + cresce, depois desce e encaixa com impacto.
+              final ease = Curves.easeInOut.transform(t);
+              dx = f.start.dx + (f.end.dx - f.start.dx) * ease;
+              final lift = math.sin(t * math.pi) * 42; // pico acima do destino
+              dy = f.start.dy + (f.end.dy - f.start.dy) * ease - lift;
+              final grow = t < 0.6
+                  ? 0.82 + (1.28 - 0.82) * (t / 0.6)
+                  : 1.28 +
+                      (1.0 - 1.28) *
+                          Curves.easeOutBack.transform((t - 0.6) / 0.4);
+              scale = grow.clamp(0.7, 1.4); // overshoot < 1 = squash de impacto
+              faceChild = widget.faceBuilder(f.cardW);
+            }
+            // SEM `Positioned`: o IgnorePointer (um RenderObject) fica entre este
+            // widget e o Stack, então `Positioned` seria rejeitado e a carta
+            // cairia em constraints de tela cheia (esticão). `Transform.translate`
+            // + `Align` posicionam sem depender de pai-Stack.
+            return Transform.translate(
+              offset: Offset(dx - f.cardW / 2, dy - f.cardH / 2),
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: SizedBox(
+                  width: f.cardW,
+                  height: f.cardH,
+                  child: Transform.scale(scale: scale, child: faceChild),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
 }
+
+// Sequência de morte (CEO 2026-06-13): impacto → P&B + trinca + TREMOR (segura um
+// tempo) → ESTILHAÇA + esvanece. Tremor dura `_kDeathShakeMs`; depois a carta ainda
+// fica trincada `_kDeathCrackHoldMs` antes de despedaçar (deixa o trincado "ler").
+const int _kDeathShakeMs = 340;
+const int _kDeathCrackHoldMs = 180;
+
+/// Filtro de luminância (P&B) reutilizado — `const` pra não recriar por frame.
+const ColorFilter _kGrayscaleFilter = ColorFilter.matrix(<double>[
+  0.2126, 0.7152, 0.0722, 0, 0,
+  0.2126, 0.7152, 0.0722, 0, 0,
+  0.2126, 0.7152, 0.0722, 0, 0,
+  0, 0, 0, 1, 0,
+]);
+
+/// Aplica P&B + trincas de vidro sobre a carta APÓS `delayMs` (0 = imediato).
+/// Self-contained: tem o próprio estado/timer, então quando o tile da carta morta
+/// é removido (fim do beat) o widget é descartado — e numa eventual ressurreição
+/// a carta nasce sem cinza (estado novo). Resolve o "cadáver cinza" antecipado das
+/// mortes mágicas (golpe chega ~1120ms depois). (CEO 2026-06-13)
+class _DelayedGrayscale extends StatefulWidget {
+  const _DelayedGrayscale({required this.delayMs, required this.child});
+  final int delayMs;
+  final Widget child;
+
+  @override
+  State<_DelayedGrayscale> createState() => _DelayedGrayscaleState();
+}
+
+class _DelayedGrayscaleState extends State<_DelayedGrayscale> {
+  bool _gray = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.delayMs <= 0) {
+      _gray = true;
+    } else {
+      Future<void>.delayed(Duration(milliseconds: widget.delayMs), () {
+        if (mounted) setState(() => _gray = true);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_gray) return widget.child;
+    return ColorFiltered(
+      colorFilter: _kGrayscaleFilter,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          widget.child,
+          Positioned.fill(child: CombatVfx.glassCrack()),
+        ],
+      ),
+    );
+  }
+}
+
+

@@ -61,6 +61,7 @@ class CombatHighlight {
     this.targetDied = false,
     this.ability,
     this.damageType,
+    this.deadIds = const <String>{},
   });
 
   /// Tipo do ataque (dirige a animação: físico avança+espada, mágico projétil,
@@ -88,6 +89,40 @@ class CombatHighlight {
 
   /// Nome canônico da habilidade que disparou (eventos `AbilityTriggered`).
   final String? ability;
+
+  /// IDs de criaturas que JÁ morreram em batidas anteriores DESTE mesmo step
+  /// (o snapshot do step é pré-ataque, então elas ainda constam no estado mas
+  /// já estilhaçaram). A UI as mantém ocultas em vez de "ressuscitá-las" quando
+  /// o destaque passa para a próxima batida (caso Pisotear/Ataque Duplo).
+  final Set<String> deadIds;
+
+  CombatHighlight withDeadIds(Set<String> ids) => CombatHighlight(
+        attackerCardId: attackerCardId,
+        targetCardId: targetCardId,
+        attackerSide: attackerSide,
+        targetSide: targetSide,
+        amount: amount,
+        isHeal: isHeal,
+        evaded: evaded,
+        targetDied: targetDied,
+        ability: ability,
+        damageType: damageType,
+        deadIds: ids,
+      );
+}
+
+/// Uma criatura acabou de ser JOGADA: a tela anima a carta saindo da mão até a
+/// lane (CEO 2026-06-13). `fromBot` decide a coreografia (IA: vira+expande do
+/// topo; jogador: cresce+desce com impacto). `creature` traz `card` e `lane`.
+class CardPlayNotification {
+  const CardPlayNotification({
+    required this.creature,
+    required this.toLane,
+    this.fromBot = true,
+  });
+  final CreatureInPlay creature;
+  final int toLane;
+  final bool fromBot;
 }
 
 /// Estado imutável consumido pela tela. `match == null` apenas em `idle`.
@@ -101,6 +136,7 @@ class PveMatchUiState {
     this.playerWon,
     this.highlight,
     this.playLocked = false,
+    this.botPlayNotification,
   });
 
   final MatchState? match;
@@ -125,6 +161,10 @@ class PveMatchUiState {
   /// Resetado no início de cada turno do jogador.
   final bool playLocked;
 
+  /// A IA acabou de jogar uma criatura → anima a carta voando da mão até a lane.
+  /// null fora desse instante (segue o mesmo padrão "clearX" do highlight).
+  final CardPlayNotification? botPlayNotification;
+
   SideId get botSideId => playerSide == SideId.a ? SideId.b : SideId.a;
 
   BoardSide? get playerBoard => match?.sideOf(playerSide);
@@ -143,6 +183,8 @@ class PveMatchUiState {
     CombatHighlight? highlight,
     bool clearHighlight = false,
     bool? playLocked,
+    CardPlayNotification? botPlayNotification,
+    bool clearBotPlayNotification = false,
   }) {
     return PveMatchUiState(
       match: match ?? this.match,
@@ -154,6 +196,9 @@ class PveMatchUiState {
       playerWon: playerWon ?? this.playerWon,
       highlight: clearHighlight ? null : (highlight ?? this.highlight),
       playLocked: playLocked ?? this.playLocked,
+      botPlayNotification: clearBotPlayNotification
+          ? null
+          : (botPlayNotification ?? this.botPlayNotification),
     );
   }
 }
@@ -170,15 +215,33 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
   // Ritmo deliberado estilo Card Monsters: cada jogada do bot e cada golpe do
   // replay precisam ser LEGÍVEIS. Valores base tunáveis (o CEO afina no flutter
   // run). O delay de evento precisa caber a animação do golpe + número + morte.
-  // 1300ms nas jogadas do bot (CEO achou "um pouco rápido" a 1000).
-  Duration _botStepDelay = const Duration(milliseconds: 1300);
+  // 1500ms nas jogadas do bot (CEO 2026-06-13: ainda "rápido" a 1300 — mais ar).
+  Duration _botStepDelay = const Duration(milliseconds: 1500);
 
   /// Delay entre EVENTOS narrados da Fase de Ataque (replay passo a passo).
   /// Acompanha o pacing do bot: `Duration.zero` (testes) => replay síncrono,
   /// sem highlight. Mesmo valor para os DOIS lados (ritmo simétrico).
   Duration get _eventStepDelay => _botStepDelay > Duration.zero
-      ? const Duration(milliseconds: 1200)
+      ? const Duration(milliseconds: 1150)
       : Duration.zero;
+
+  /// RESPIRO entre ações de combate (CEO 2026-06-13, fidelidade Card Monsters):
+  /// após o golpe animar, o destaque some e há uma pausa curta antes do próximo.
+  /// `Duration.zero` nos testes (replay síncrono).
+  Duration get _breathDelay => _botStepDelay > Duration.zero
+      ? const Duration(milliseconds: 800)
+      : Duration.zero;
+
+  /// Duração da batida por TIPO: a MAGIA é teatral (canaliza ~640ms + voo ~480ms
+  /// + impacto), então precisa de uma batida mais longa pra animação caber
+  /// (CEO 2026-06-13). Os outros tipos usam o ritmo padrão.
+  Duration _eventDelayFor(CombatHighlight? h) {
+    if (_eventStepDelay == Duration.zero) return Duration.zero; // testes/sync
+    if (h?.damageType == DamageType.magico && h?.isHeal == false) {
+      return const Duration(milliseconds: 2000);
+    }
+    return _eventStepDelay;
+  }
 
   /// Guard de reentrância: cobre `startMatch` e `endPlayerTurn` (pipelines
   /// async). Ações síncronas do jogador também respeitam.
@@ -203,6 +266,7 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     HeroId? heroB,
     Object? bonusCardA,
     Duration botStepDelay = const Duration(milliseconds: 1300),
+    bool gateOpening = false,
   }) async {
     if (_busy) return;
     _busy = true;
@@ -233,10 +297,34 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
       );
 
       if (!youStart) {
-        await _runBotTurn();
+        // Com a intro cinematográfica (nuvens/moeda/banner), a vez do bot só
+        // roda quando a UI chamar [playOpening] — senão o bot agiria por baixo
+        // do overlay. Sem gate (testes), roda já.
+        if (gateOpening) {
+          _openingGated = true;
+        } else {
+          await _runBotTurn();
+        }
       }
     } finally {
       _busy = false;
+    }
+  }
+
+  /// O bot começou e a abertura foi GATEADA pela intro: a UI chama isto quando
+  /// a sequência de entrada termina, pra rodar a 1ª vez do bot. No-op se o
+  /// jogador começa ou se não havia gate.
+  bool _openingGated = false;
+  Future<void> playOpening() async {
+    if (!_openingGated) return;
+    _openingGated = false;
+    if (state.phase == PveMatchPhase.botTurn && !_busy) {
+      _busy = true;
+      try {
+        await _runBotTurn();
+      } finally {
+        _busy = false;
+      }
     }
   }
 
@@ -532,8 +620,21 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
       match = _engine.apply(match, action);
       if (identical(match, before)) continue; // bot tentou algo inválido: pula
 
+      // Jogou criatura → notifica a tela pra animar a carta voando da mão da IA
+      // até a lane (a criatura já está no `match`; a UI a esconde até o voo
+      // acabar — ver _flying na tela). Outras ações limpam a notificação.
+      CardPlayNotification? notif;
+      if (action is PlayCreature) {
+        final placed = _findCreature(match.sideOf(state.botSideId), action.cardId);
+        if (placed != null) {
+          notif = CardPlayNotification(creature: placed, toLane: placed.lane);
+        }
+      }
+
       state = state.copyWith(
         match: match,
+        botPlayNotification: notif,
+        clearBotPlayNotification: notif == null,
         log: _appended(MatchLogEntry(
           text: _botActionText(before, match, action),
           kind: MatchLogKind.bot,
@@ -545,6 +646,8 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
         await Future<void>.delayed(_botStepDelay);
       }
       if (_aborted) return;
+      // Voo terminou (delay > animação) → libera a notificação.
+      if (notif != null) state = state.copyWith(clearBotPlayNotification: true);
     }
 
     // Fase de Ataque do bot (replay passo a passo).
@@ -710,41 +813,96 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     }
 
     // Replay passo a passo: a cada step o TABULEIRO avança (HP cai, morto sai,
-    // retaguarda avança) e o destaque visual anima o evento principal.
+    // retaguarda avança). DENTRO de um step, cada AÇÃO vira uma BATIDA própria —
+    // golpe, morte, proc — com sua animação e seu respiro (fidelidade Card
+    // Monsters: "toda ação leva seu tempo"). Antes só o evento principal animava,
+    // então Pisotear/Ataque Duplo somavam 2 cartas de uma vez sem estilhaçar a
+    // segunda. Mortes já narradas acumulam em `dead` e ficam OCULTAS nas batidas
+    // seguintes (o snapshot do step é pré-ataque e ainda as contém).
     for (final step in steps) {
       if (_aborted) {
         state = state.copyWith(match: finalState, clearHighlight: true);
         return;
       }
-      final primary = _primaryEvent(step.events);
-      final highlight = primary == null ? null : _highlightFor(primary);
-      state = state.copyWith(
-        match: step.state,
-        highlight: highlight,
-        clearHighlight: highlight == null,
-        log: _appendedAll(<MatchLogEntry>[
-          for (final e in step.events)
-            MatchLogEntry(
-                text: _eventText(e), kind: MatchLogKind.combat, turn: turn),
-        ]),
-      );
-      await Future<void>.delayed(_eventStepDelay);
+      final beats = _beatsFor(step.events);
+      final dead = <String>{};
+      var firstBeat = true;
+      for (final beat in beats) {
+        if (_aborted) {
+          state = state.copyWith(match: finalState, clearHighlight: true);
+          return;
+        }
+        var highlight = _highlightFor(beat.first);
+        if (highlight != null &&
+            highlight.targetDied &&
+            highlight.targetCardId != null) {
+          dead.add(highlight.targetCardId!);
+        }
+        highlight = highlight?.withDeadIds(<String>{...dead});
+        state = state.copyWith(
+          match: step.state,
+          highlight: highlight,
+          clearHighlight: highlight == null,
+          // Loga TODOS os eventos do step na 1ª batida (ordem/texto idênticos ao
+          // comportamento antigo — mantém os testes do controller verdes).
+          log: firstBeat
+              ? _appendedAll(<MatchLogEntry>[
+                  for (final e in step.events)
+                    MatchLogEntry(
+                        text: _eventText(e),
+                        kind: MatchLogKind.combat,
+                        turn: turn),
+                ])
+              : null,
+        );
+        firstBeat = false;
+        await Future<void>.delayed(_eventDelayFor(highlight));
+        // RESPIRO (CEO 2026-06-13): a ação assenta (destaque some) e há uma pausa
+        // curta antes da próxima — ações ficam discretas. Mortes já estilhaçadas
+        // permanecem ocultas no respiro (highlight-fantasma só com `deadIds`).
+        if (highlight != null && _breathDelay > Duration.zero) {
+          if (_aborted) {
+            state = state.copyWith(match: finalState, clearHighlight: true);
+            return;
+          }
+          final ghost =
+              dead.isEmpty ? null : CombatHighlight(deadIds: <String>{...dead});
+          state = state.copyWith(
+            match: step.state,
+            highlight: ghost,
+            clearHighlight: ghost == null,
+          );
+          await Future<void>.delayed(_breathDelay);
+        }
+      }
     }
     if (!mounted) return;
     // Crava o estado final exato (vira de turno / buffs) e limpa o destaque.
     state = state.copyWith(match: finalState, clearHighlight: true);
   }
 
-  /// Evento "âncora" de um step para o destaque visual: prioriza ataque/evasão/
-  /// cura (ancorados em atacante+alvo) sobre procs de habilidade.
-  MatchEvent? _primaryEvent(List<MatchEvent> events) {
-    if (events.isEmpty) return null;
+  /// Quebra os eventos de um step em "batidas" animáveis. Cada ÂNCORA (ataque,
+  /// evasão, cura, dano de status) inicia uma batida própria; os
+  /// `AbilityTriggered` seguintes (procs: Roubo de PV, Espinhos, Cristal de
+  /// Drenagem…) anexam à batida corrente. Procs sem âncora à frente viram batida
+  /// própria (ex.: buff de relíquia, pular fase por Atordoar). A 1ª posição de
+  /// cada batida é a âncora usada para o destaque visual.
+  List<List<MatchEvent>> _beatsFor(List<MatchEvent> events) {
+    if (events.isEmpty) return const <List<MatchEvent>>[];
+    bool isAnchor(MatchEvent e) =>
+        e is AttackResolved ||
+        e is AttackEvaded ||
+        e is HealResolved ||
+        e is StatusDamageResolved;
+    final beats = <List<MatchEvent>>[];
     for (final e in events) {
-      if (e is AttackResolved || e is AttackEvaded || e is HealResolved) {
-        return e;
+      if (beats.isEmpty || isAnchor(e)) {
+        beats.add(<MatchEvent>[e]);
+      } else {
+        beats.last.add(e);
       }
     }
-    return events.first;
+    return beats;
   }
 
   /// Mapeia um [MatchEvent] para o destaque visual correspondente.

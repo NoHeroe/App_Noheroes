@@ -13,6 +13,7 @@ import '../card_ownership.dart';
 import '../deck_repository.dart';
 import '../../shared/widgets/nh_back_button.dart';
 import '../widgets/game_card_face.dart';
+import '../widgets/card_detail_sheet.dart';
 import '../../shared/widgets/nh_atmosphere.dart';
 
 /// Construtor de Deck (ACDA).
@@ -66,82 +67,52 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
     super.dispose();
   }
 
-  // ── Aba HERÓIS (ADR-0028 / CEO 2026-06-12): escolhe o herói representante ──
-  /// Lista os 5 heróis padrão como cartas selecionáveis (passiva + ativa). Quando
-  /// o Cartomante está selecionado, mostra o picker da carta-bônus.
+  // ── Aba HERÓIS (CEO 2026-06-12): mesmo esquema da Coleção ──────────────
+  /// Os 5 heróis como CARTAS (GameCardFace, sem custo/atk/PV), no mesmo grid 3x3
+  /// das criaturas/relíquias. O herói selecionado fica destacado (check verde).
+  /// Cartomante selecionado → picker da carta-bônus abaixo do grid.
   Widget _buildHeroGrid(CardCatalog? catalog, Set<String>? owned) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+    const heroes = HeroId.values;
+    return Column(
       children: [
-        for (final h in HeroId.values) _heroOptionCard(h),
-        if (_hero == HeroId.cartomante && catalog != null) ...[
-          const SizedBox(height: 4),
-          _bonusTile(catalog, owned ?? const <String>{}),
-        ],
+        Expanded(
+          child: _pagedGrid(heroes.length, (i) => _heroCardTile(heroes[i])),
+        ),
+        if (_hero == HeroId.cartomante && catalog != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+            child: _bonusTile(catalog, owned ?? const <String>{}),
+          ),
       ],
     );
   }
 
-  Widget _heroOptionCard(HeroId h) {
+  /// Carta de herói. Tap abre o detalhe (igual às demais); a seleção do herói
+  /// representante acontece pelo botão dentro do detalhe.
+  Widget _heroCardTile(HeroId h) {
     final selected = h == _hero;
     return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        setState(() => _hero = h);
-        CardHeroPrefs.set(h);
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: selected
-              ? AppColors.purple.withValues(alpha: 0.18)
-              : const Color(0x33100C15),
-          border: Border.all(
-              color: selected ? AppColors.goldLt : AppColors.borderViolet,
-              width: selected ? 1.4 : 1),
+      onTap: () => _openHeroDetail(h),
+      child: GameCardFace(
+        name: heroLabel(h),
+        cost: 0,
+        showCost: false, // herói não tem custo de cristal
+        concepts: [heroConcept(h)],
+        rarity: heroRarity(h),
+        artIcon: _heroIcon(h),
+        showItemSlot: false,
+        footer: Center(
+          child: Text('HERÓI',
+              style: GoogleFonts.roboto(
+                  fontSize: 8.5, letterSpacing: 1, color: AppColors.txtMut)),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0x33100C15),
-                border: Border.all(
-                    color:
-                        selected ? AppColors.goldLt : AppColors.borderViolet),
-              ),
-              child: Icon(_heroIcon(h),
-                  size: 20,
-                  color: selected ? AppColors.goldLt : AppColors.purpleLt),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(heroLabel(h),
-                      style: GoogleFonts.cinzelDecorative(
-                          fontSize: 13,
-                          color: selected ? AppColors.txt : AppColors.txt2)),
-                  const SizedBox(height: 3),
-                  Text('Passiva: ${heroPassive(h)}',
-                      style: GoogleFonts.roboto(
-                          fontSize: 10, color: AppColors.txtMut, height: 1.25)),
-                  Text('Ativa: ${heroActive(h)}',
-                      style: GoogleFonts.roboto(
-                          fontSize: 10, color: AppColors.txtMut, height: 1.25)),
-                ],
-              ),
-            ),
-            if (selected)
-              const Icon(Icons.check_circle, size: 18, color: AppColors.goldLt),
-          ],
-        ),
+        borderOverride: selected ? AppColors.shadowAscending : null,
+        glowColor:
+            selected ? AppColors.shadowAscending.withValues(alpha: 0.4) : null,
+        cornerBadge: selected
+            ? const Icon(Icons.check_circle,
+                size: 16, color: AppColors.shadowAscending)
+            : null,
       ),
     );
   }
@@ -201,79 +172,156 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
     return id;
   }
 
-  /// Picker da carta-bônus do Cartomante: cartas POSSUÍDAS que NÃO estão no deck
-  /// (id distinto — evita instanceId duplicado em jogo). Persiste no prefs.
+  /// Picker da carta-bônus do Cartomante (CEO 2026-06-12): cartas POSSUÍDAS fora
+  /// do deck — QUALQUER tipo exceto heróis — exibidas como CARTAS (visualizável).
+  /// Tap → detalhe (igual ao resto) com botão "Selecionar como bônus".
   Future<void> _pickBonusCard(CardCatalog catalog, Set<String> owned) async {
     final inDeck = <String>{..._creatureIds, ..._relicIds};
-    final options = <Object>[
-      ...catalog.creatures
-          .where((c) => owned.contains(c.id) && !inDeck.contains(c.id)),
-      ...catalog.relics
-          .where((r) => owned.contains(r.id) && !inDeck.contains(r.id)),
+    final vms = <CardVM>[
+      for (final c in catalog.creatures)
+        if (owned.contains(c.id) && !inDeck.contains(c.id))
+          CardVM.fromCreature(c),
+      for (final r in catalog.relics)
+        if (owned.contains(r.id) && !inDeck.contains(r.id)) CardVM.fromRelic(r),
     ];
-    String objId(Object o) =>
-        o is CreatureCard ? o.id : (o as RelicCard).id;
-    String objName(Object o) =>
-        o is CreatureCard ? o.nome : (o as RelicCard).nome;
-    await showDialog<void>(
+
+    void selectBonus(String id) {
+      setState(() => _bonusCardId = id);
+      CardHeroPrefs.setBonusCardId(id);
+      Navigator.of(context).pop(); // fecha o detalhe
+      Navigator.of(context).pop(); // fecha o picker
+    }
+
+    await showModalBottomSheet<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surfaceAlt,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: AppColors.borderViolet),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(sheetCtx).size.height * 0.8,
         ),
-        title: Text('Carta-bônus do Cartomante',
-            style:
-                GoogleFonts.cinzelDecorative(fontSize: 15, color: AppColors.txt)),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: options.isEmpty
-              ? Text(
-                  'Nenhuma carta possuída fora do deck para usar como bônus.',
-                  style:
-                      GoogleFonts.roboto(fontSize: 12, color: AppColors.txtMut))
-              : SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (final o in options)
-                        ListTile(
-                          dense: true,
-                          title: Text(objName(o),
-                              style: GoogleFonts.roboto(
-                                  fontSize: 13, color: AppColors.txt)),
-                          trailing: _bonusCardId == objId(o)
-                              ? const Icon(Icons.check,
-                                  size: 16, color: AppColors.goldLt)
-                              : null,
-                          onTap: () {
-                            setState(() => _bonusCardId = objId(o));
-                            CardHeroPrefs.setBonusCardId(objId(o));
-                            Navigator.of(ctx).pop();
-                          },
-                        ),
-                    ],
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF181221), Color(0xFF0A0810)],
+          ),
+          border: Border.all(color: AppColors.goldLt.withValues(alpha: 0.35)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 44,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(2),
+                    color: AppColors.borderViolet,
                   ),
                 ),
-        ),
-        actions: [
-          if (_bonusCardId != null)
-            TextButton(
-              onPressed: () {
-                setState(() => _bonusCardId = null);
-                CardHeroPrefs.setBonusCardId(null);
-                Navigator.of(ctx).pop();
-              },
-              child: Text('Remover',
-                  style: GoogleFonts.roboto(color: AppColors.txtMut)),
+                Row(
+                  children: [
+                    const Icon(Icons.auto_awesome,
+                        size: 16, color: AppColors.goldLt),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text('Carta-bônus do Cartomante',
+                          style: GoogleFonts.cinzelDecorative(
+                              fontSize: 15, color: AppColors.goldLt)),
+                    ),
+                    if (_bonusCardId != null)
+                      TextButton(
+                        onPressed: () {
+                          setState(() => _bonusCardId = null);
+                          CardHeroPrefs.setBonusCardId(null);
+                          Navigator.of(sheetCtx).pop();
+                        },
+                        child: Text('Remover',
+                            style:
+                                GoogleFonts.roboto(color: AppColors.txtMut)),
+                      ),
+                  ],
+                ),
+                Text('Qualquer carta possuída fora do deck (entra após o turno 4).',
+                    style: GoogleFonts.roboto(
+                        fontSize: 11, color: AppColors.txtMut)),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: vms.isEmpty
+                      ? Center(
+                          child: Text(
+                              'Nenhuma carta possuída fora do deck.',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.roboto(
+                                  fontSize: 12, color: AppColors.txtMut)),
+                        )
+                      : GridView.builder(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            childAspectRatio: 0.72,
+                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 8,
+                          ),
+                          itemCount: vms.length,
+                          itemBuilder: (_, i) {
+                            final vm = vms[i];
+                            final isSel = vm.id == _bonusCardId;
+                            return GestureDetector(
+                              onTap: () => showCardDetail<void>(
+                                context,
+                                card: vm,
+                                showEconomy: false,
+                                bottomAction: CardDetailActionButton(
+                                  label: 'Selecionar como bônus',
+                                  icon: Icons.auto_awesome,
+                                  color: AppColors.goldLt,
+                                  onTap: () => selectBonus(vm.id),
+                                ),
+                              ),
+                              child: GameCardFace(
+                                name: vm.name,
+                                cost: vm.cost,
+                                concepts: vm.concepts,
+                                rarity: vm.rarity,
+                                artIcon: vm.icon,
+                                showItemSlot: false,
+                                footer: Center(
+                                  child: Text(
+                                    vm.isCreature
+                                        ? '${vm.atk}/${vm.pv}'
+                                        : vm.relicTag.toUpperCase(),
+                                    style: GoogleFonts.roboto(
+                                        fontSize: 8.5,
+                                        letterSpacing: 1,
+                                        color: AppColors.txtMut),
+                                  ),
+                                ),
+                                borderOverride:
+                                    isSel ? AppColors.goldLt : null,
+                                glowColor: isSel
+                                    ? AppColors.gold.withValues(alpha: 0.4)
+                                    : null,
+                                cornerBadge: isSel
+                                    ? const Icon(Icons.check_circle,
+                                        size: 16, color: AppColors.goldLt)
+                                    : null,
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ],
             ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child:
-                Text('Fechar', style: GoogleFonts.roboto(color: AppColors.txt)),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -774,7 +822,7 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
         ],
       );
       return GestureDetector(
-        onTap: () => _toggleCreature(c.id),
+        onTap: () => _openCreatureDetail(c),
         child: GameCardFace(
           name: c.nome,
           cost: c.cost,
@@ -782,7 +830,7 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
           rarity: c.rarity,
           artIcon: _damageIcon(c.damageType),
           showItemSlot: false,
-          effects: effectIconsFromAbilities(c.abilities),
+          effects: effectGlyphsFromAbilities(c.abilities),
           footer: footer,
           borderOverride: inDeck ? AppColors.shadowAscending : null,
           glowColor: inDeck
@@ -825,7 +873,7 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
       final highlight =
           inDeck ? AppColors.shadowAscending : (dead ? AppColors.gold : null);
       return GestureDetector(
-        onTap: () => _toggleRelic(r.id),
+        onTap: () => _openRelicDetail(r),
         child: GameCardFace(
           name: r.nome,
           cost: r.cost,
@@ -968,6 +1016,76 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
         _relicIds.add(id);
       }
     });
+  }
+
+  // ── Detalhe + Selecionar (CEO 2026-06-12) ───────────────────────────
+  /// Tap em qualquer carta abre o MESMO detalhe da Coleção (dados completos),
+  /// com um botão de seleção no rodapé. Vale p/ criatura, relíquia e herói.
+  void _openCreatureDetail(CreatureCard c) {
+    final inDeck = _creatureIds.contains(c.id);
+    showCardDetail<void>(
+      context,
+      card: CardVM.fromCreature(c),
+      showEconomy: false,
+      bottomAction: CardDetailActionButton(
+        label: inDeck ? 'Remover do deck' : 'Adicionar ao deck',
+        icon: inDeck ? Icons.remove_circle_outline : Icons.add_circle_outline,
+        color: inDeck ? AppColors.gold : AppColors.shadowAscending,
+        onTap: () {
+          if (!inDeck && _creatureIds.length >= _max) {
+            Navigator.of(context).pop();
+            _showSnack('Deck cheio: máximo $_max criaturas.', isError: true);
+            return;
+          }
+          _toggleCreature(c.id);
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
+  void _openRelicDetail(RelicCard r) {
+    final inDeck = _relicIds.contains(r.id);
+    showCardDetail<void>(
+      context,
+      card: CardVM.fromRelic(r),
+      showEconomy: false,
+      bottomAction: CardDetailActionButton(
+        label: inDeck ? 'Remover do deck' : 'Adicionar ao deck',
+        icon: inDeck ? Icons.remove_circle_outline : Icons.add_circle_outline,
+        color: inDeck ? AppColors.gold : AppColors.shadowAscending,
+        onTap: () {
+          if (!inDeck && _relicIds.length >= _max) {
+            Navigator.of(context).pop();
+            _showSnack('Deck cheio: máximo $_max relíquias.', isError: true);
+            return;
+          }
+          _toggleRelic(r.id);
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
+  void _openHeroDetail(HeroId h) {
+    final selected = h == _hero;
+    showCardDetail<void>(
+      context,
+      card: CardVM.fromHero(h),
+      showEconomy: false,
+      bottomAction: CardDetailActionButton(
+        label: selected ? 'Herói selecionado' : 'Selecionar herói',
+        icon: selected ? Icons.check_circle : Icons.check_circle_outline,
+        color: selected ? AppColors.gold : AppColors.shadowAscending,
+        onTap: () {
+          if (!selected) {
+            setState(() => _hero = h);
+            CardHeroPrefs.set(h);
+          }
+          Navigator.of(context).pop();
+        },
+      ),
+    );
   }
 
   // ── Salvar ──────────────────────────────────────────────────────────

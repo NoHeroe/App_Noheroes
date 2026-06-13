@@ -197,7 +197,9 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
             _craftBlock(info, asCopy: true),
           ],
         ] else
-          _craftBlock(info),
+          // CEO 2026-06-12: carta BLOQUEADA (não-possuída) não pode ser criada
+          // do zero — só obtendo em pacote/recompensa.
+          _lockedCardNote(),
         if (player != null && (info['player_level'] as num? ?? 1) < 3)
           _lockNote('Criação e desencante abrem no Nível 3 · Aprimorar no Nível 5'),
       ],
@@ -635,6 +637,32 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Text(text,
             style: GoogleFonts.roboto(fontSize: 12, color: AppColors.txtMut)),
+      );
+
+  /// Carta bloqueada (não-possuída): não pode ser criada do zero.
+  Widget _lockedCardNote() => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          color: const Color(0x22D8323F),
+          border: Border.all(
+              color: AppColors.conceptCorrompido.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.lock_outline,
+                size: 18, color: AppColors.conceptCorrompido),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Carta bloqueada — obtenha em pacotes ou recompensas. '
+                'Cartas que você ainda não tem não podem ser criadas do zero.',
+                style: GoogleFonts.roboto(
+                    fontSize: 11.5, height: 1.35, color: AppColors.txt2),
+              ),
+            ),
+          ],
+        ),
       );
 
   Widget _lockNote(String text) => Padding(

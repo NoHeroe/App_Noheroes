@@ -319,15 +319,25 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
       );
     }
 
+    // CEO 2026-06-12: mesmo padrão da Forja Estelar — grid 2 colunas de cards
+    // verticais (ícone + nome), botões empilhados, quantidade no topo-direito.
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
       children: [
-        for (final pack in _packs) ...[
-          _buildPackCard(pack, gold, gems),
-          const SizedBox(height: 12),
-        ],
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 0.72, // levemente alongado
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+          ),
+          itemCount: _packs.length,
+          itemBuilder: (_, i) => _packCard(_packs[i], gold, gems),
+        ),
         if (_reveal != null) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           _buildReveal(_reveal!),
         ],
       ],
@@ -351,67 +361,49 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
     );
   }
 
-  static String _rarLabel(String r) => switch (r) {
-        'rara' => 'rara',
-        'epica' => 'épica',
-        'lendaria' => 'lendária',
-        _ => r,
-      };
-
-  // ── Card de um tipo de pacote ───────────────────────────────────────
-  Widget _buildPackCard(Map<String, dynamic> pack, int gold, int gems) {
+  // ── Card de pacote (vertical, padrão Forja Estelar) ─────────────────
+  Widget _packCard(Map<String, dynamic> pack, int gold, int gems) {
     final type = pack['pack_type'] as String;
     final name = (pack['display_name'] as String?) ?? 'Pacote';
     final count = _counts[type] ?? 0;
-    final minC = (pack['min_count'] as num?)?.toInt() ?? 5;
-    final maxC = (pack['max_count'] as num?)?.toInt() ?? 5;
-    final guarantee = pack['guarantee_rarity'] as String?;
     final buyable = pack['buyable'] == true;
     final priceGold = (pack['price_gold'] as num?)?.toInt();
     final priceGems = (pack['price_gems'] as num?)?.toInt();
 
-    final extras = <String>[
-      minC == maxC ? '$minC cartas' : '$minC-$maxC cartas',
-      if (guarantee != null) 'garante 1 ${_rarLabel(guarantee)}',
-      if ((pack['elite_chance'] as num? ?? 0) > 0) 'chance de elite',
-      if ((pack['exclusive_chance'] as num? ?? 0) > 0) 'chance de exclusiva',
-    ];
-
     final useGems = (priceGems ?? 0) > 0;
-    final affordable =
-        useGems ? gems >= priceGems! : ((priceGold ?? 0) > 0 && gold >= priceGold!);
-    final canBuy = buyable && affordable && !_busy;
+    final hasBuy = buyable && (useGems ? (priceGems ?? 0) > 0 : (priceGold ?? 0) > 0);
+    final affordable = useGems
+        ? gems >= (priceGems ?? 0)
+        : ((priceGold ?? 0) > 0 && gold >= (priceGold ?? 0));
+    final canBuy = hasBuy && affordable && !_busy;
     final canOpen = count >= 1 && !_busy;
-    final String? buyLabel = !buyable
-        ? null
-        : useGems
-            ? 'COMPRAR ($priceGems gemas)'
-            : ((priceGold ?? 0) > 0 ? 'COMPRAR ($priceGold)' : null);
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF221A2E), Color(0xFF0B0810)],
-        ),
-        border: Border.all(
-            color: count > 0
-                ? AppColors.gold.withValues(alpha: 0.5)
-                : AppColors.purple.withValues(alpha: 0.35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
+    return Stack(
+      children: [
+        Container(
+          padding: const EdgeInsets.fromLTRB(10, 14, 10, 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF221A2E), Color(0xFF0B0810)],
+            ),
+            border: Border.all(
+                color: count > 0
+                    ? AppColors.gold.withValues(alpha: 0.5)
+                    : AppColors.purple.withValues(alpha: 0.35)),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Ícone grande centralizado
               Container(
-                width: 48,
-                height: 48,
+                width: 60,
+                height: 60,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                   gradient: RadialGradient(colors: [
                     AppColors.purple.withValues(alpha: 0.55),
                     const Color(0xFF0B0810),
@@ -419,139 +411,134 @@ class _PacksScreenState extends ConsumerState<PacksScreen> {
                   border:
                       Border.all(color: AppColors.purple.withValues(alpha: 0.5)),
                 ),
-                child: const Icon(Icons.inventory_2,
-                    size: 24, color: Colors.white),
+                child:
+                    const Icon(Icons.inventory_2, size: 32, color: Colors.white),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(name,
-                        style: GoogleFonts.cinzelDecorative(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.goldLt)),
-                    const SizedBox(height: 2),
-                    Text(extras.join(' · '),
-                        style: GoogleFonts.roboto(
-                            fontSize: 11, color: AppColors.txt2)),
-                  ],
-                ),
-              ),
-              if (count > 0)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    color: AppColors.gold.withValues(alpha: 0.16),
-                    border: Border.all(color: AppColors.gold.withValues(alpha: 0.6)),
-                  ),
-                  child: Text('x$count',
-                      style: GoogleFonts.roboto(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.goldLt)),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              if (buyLabel != null) ...[
-                Expanded(
-                  child: _actionButton(
-                    label: buyLabel,
-                    icon: Icons.shopping_cart_outlined,
-                    enabled: canBuy,
-                    loading: _buying == type,
-                    primary: false,
-                    onTap: () => _buy(type),
-                  ),
-                ),
-                const SizedBox(width: 10),
+              const SizedBox(height: 8),
+              // Nome abaixo do ícone
+              Text(name,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.cinzelDecorative(
+                      fontSize: 12,
+                      height: 1.15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.goldLt)),
+              const SizedBox(height: 10),
+              // Botões empilhados: comprar (símbolo + valor) em cima · abrir embaixo.
+              if (hasBuy) ...[
+                _buyButton(useGems, useGems ? priceGems! : priceGold!, canBuy,
+                    _buying == type, () => _buy(type)),
+                const SizedBox(height: 6),
               ],
-              Expanded(
-                child: _actionButton(
-                  label: 'ABRIR',
-                  icon: Icons.auto_awesome,
-                  enabled: canOpen,
-                  loading: _opening == type,
-                  primary: true,
-                  onTap: () => _open(type),
+              _openButton(canOpen, _opening == type, () => _open(type)),
+              if (!hasBuy && count == 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text('Eventos / recompensas',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.roboto(
+                          fontSize: 9.5, color: AppColors.txtMut)),
                 ),
-              ),
             ],
           ),
-          if (buyLabel == null && count == 0)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text('Obtido em eventos e recompensas.',
-                  style: GoogleFonts.roboto(
-                      fontSize: 10.5, color: AppColors.txtMut)),
-            ),
-        ],
-      ),
+        ),
+        // Quantidade no topo-direito.
+        Positioned(top: 6, right: 6, child: _qtyBadge(count)),
+      ],
     );
   }
 
-  Widget _actionButton({
-    required String label,
-    required IconData icon,
-    required bool enabled,
-    required bool loading,
-    required bool primary,
-    required VoidCallback onTap,
-  }) {
-    final base = primary ? AppColors.purple : AppColors.gold;
+  Widget _buyButton(
+      bool gems, int price, bool enabled, bool loading, VoidCallback onTap) {
+    final color = gems ? AppColors.purpleLt : AppColors.gold;
+    final icon = gems ? Icons.diamond_outlined : Icons.monetization_on;
     return Opacity(
       opacity: enabled ? 1 : 0.4,
       child: GestureDetector(
         onTap: enabled ? onTap : null,
         behavior: HitTestBehavior.opaque,
         child: Container(
-          height: 46,
+          width: double.infinity,
+          height: 36,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: LinearGradient(
-              colors: [
-                base.withValues(alpha: 0.32),
-                base.withValues(alpha: 0.12),
-              ],
-            ),
-            border: Border.all(color: base.withValues(alpha: 0.55)),
+            borderRadius: BorderRadius.circular(10),
+            color: color.withValues(alpha: 0.14),
+            border: Border.all(color: color.withValues(alpha: 0.55)),
           ),
           child: loading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                      color: AppColors.txt, strokeWidth: 2.2),
+              ? SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(color: color, strokeWidth: 2),
                 )
               : Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(icon, size: 16, color: AppColors.txt),
-                    const SizedBox(width: 7),
-                    Flexible(
-                      child: Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.roboto(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.8,
-                          color: AppColors.txt,
-                        ),
-                      ),
-                    ),
+                    Icon(icon, size: 15, color: color),
+                    const SizedBox(width: 5),
+                    Text('$price',
+                        style: GoogleFonts.robotoMono(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: color)),
                   ],
                 ),
         ),
       ),
+    );
+  }
+
+  Widget _openButton(bool enabled, bool loading, VoidCallback onTap) {
+    return Opacity(
+      opacity: enabled ? 1 : 0.4,
+      child: GestureDetector(
+        onTap: enabled ? onTap : null,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          width: double.infinity,
+          height: 36,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: AppColors.purple.withValues(alpha: 0.16),
+            border: Border.all(color: AppColors.purple.withValues(alpha: 0.5)),
+          ),
+          child: loading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      color: AppColors.purpleLt, strokeWidth: 2),
+                )
+              : Text('ABRIR',
+                  style: GoogleFonts.roboto(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 2,
+                      color: AppColors.purpleLt)),
+        ),
+      ),
+    );
+  }
+
+  Widget _qtyBadge(int count) {
+    final on = count > 0;
+    final color = on ? AppColors.gold : AppColors.txtMut;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: const Color(0xCC0B0810),
+        border: Border.all(color: color.withValues(alpha: on ? 0.6 : 0.35)),
+      ),
+      child: Text('x$count',
+          style: GoogleFonts.roboto(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: on ? AppColors.goldLt : AppColors.txtMut)),
     );
   }
 

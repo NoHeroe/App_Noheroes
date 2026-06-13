@@ -7,11 +7,41 @@ library;
 /// Número de lanes por lado (0 = frente).
 const int kLaneCount = 3;
 
-/// Cristais ganhos no início do turno. 🎚️
-const int kCrystalsPerTurn = 3;
+/// Cristais com que cada lado COMEÇA (na 1ª vez dele — turnos 1 e 2, que são
+/// preparatórios). 🎚️
+const int kStartingCrystals = 3;
 
-/// Cristais acumulam entre turnos? 🎚️ (não — zera no início do turno).
-const bool kCrystalsCarryOver = false;
+/// TETO do ganho por turno — a rampa não passa disso. 🎚️ (CEO 2026-06-13:
+/// "teto de ganho".) O SALDO de cristais não tem teto (acumula); só o quanto
+/// se ganha POR turno é limitado.
+const int kCrystalGainCap = 5;
+
+/// Cristais ACUMULAM entre turnos? 🎚️ SIM (CEO 2026-06-13): o saldo não gasto
+/// passa pro próximo turno + o ganho do turno, SEM teto de saldo — viabiliza
+/// cartas caras (7+). O ganho POR turno é uma RAMPA (ver `crystalGain`).
+const bool kCrystalsCarryOver = true;
+
+/// Ganho de cristais no INÍCIO de um turno (RAMPA — CEO 2026-06-13). Soma ao
+/// saldo NÃO gasto (acumula). Simétrica por índice de turno do lado, pra os dois
+/// jogadores ramparem igual (n = 1ª, 2ª, 3ª… vez daquele lado):
+///   n1 → só os 3 iniciais (sem ganho de turno)   saldo s/ gasto: 3
+///   n2 → +1                                                       4
+///   n3, n4 → +2                                                   6, 8
+///   n5+ → +3, subindo +1 a cada 3 vezes (teto kCrystalGainCap)    11, 14, 17, 21…
+/// Turnos globais 1 e 2 = 1ª vez de cada lado (preparatórios): só os 3 iniciais.
+int crystalGain(int turn) {
+  if (turn <= 2) return kStartingCrystals; // 1ª vez do lado: recebe os 3 iniciais
+  final n = turn.isOdd ? (turn + 1) ~/ 2 : turn ~/ 2; // índice do lado (>= 2)
+  final int g;
+  if (n == 2) {
+    g = 1;
+  } else if (n <= 4) {
+    g = 2;
+  } else {
+    g = 3 + ((n - 5) ~/ 3);
+  }
+  return g > kCrystalGainCap ? kCrystalGainCap : g;
+}
 
 /// Cristal ganho ao sacrificar uma relíquia. 🎚️
 const int kSacrificeRelicCrystals = 1;

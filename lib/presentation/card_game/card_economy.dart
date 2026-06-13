@@ -134,6 +134,8 @@ String cgReasonLabel(String? reason) {
       return 'Recursos insuficientes.';
     case 'not_craftable':
       return 'Esta carta não pode ser criada.';
+    case 'locked':
+      return 'Carta bloqueada — obtenha em pacotes/recompensas antes de criar.';
     case 'not_disenchantable':
       return 'Esta carta não pode ser desencantada.';
     case 'not_owned':

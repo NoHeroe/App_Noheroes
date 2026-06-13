@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -57,10 +59,28 @@ class BattleHubScreen extends ConsumerStatefulWidget {
   ConsumerState<BattleHubScreen> createState() => _BattleHubScreenState();
 }
 
-class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
+class _BattleHubScreenState extends ConsumerState<BattleHubScreen>
+    with SingleTickerProviderStateMixin {
   /// Submodo selecionado por grupo (índice do estilo -> índice do submodo).
   /// Ausente = nenhum submodo selecionado naquele grupo.
   final Map<int, int> _selected = {};
+
+  /// Pulso contínuo p/ o brilho + partículas do botão quando um modo é escolhido.
+  late final AnimationController _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1700))
+      ..repeat();
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
 
   // ── Definição dos grupos / submodos ────────────────────────────────────
   late final List<_PlayStyle> _styles = [
@@ -330,132 +350,20 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
     );
   }
 
-  // ── Um grupo: botão grande + fileira de bolinhas + miniatura ───────────
+  // ── Um grupo: botão HEXAGONAL (estilo COMBATE, maior) + bolinhas ───────
   Widget _buildStyleGroup(int styleIndex, int level) {
     final style = _styles[styleIndex];
     final groupLocked = style.inDev || level < style.requiredLevel;
     final selIndex = _selected[styleIndex];
     final hasSelection = !groupLocked && selIndex != null;
-    final color = style.color;
+    // CEO 2026-06-12: paleta DOURADA (igual ao botão COMBATE de referência).
+    const color = AppColors.gold;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Botão grande. Bloqueado → cadeado + cinza, não joga.
-        GestureDetector(
-          onTap: () =>
-              groupLocked ? _onLockedGroupTap(style) : _onPlay(styleIndex),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: hasSelection
-                    ? color.withValues(alpha: 0.9)
-                    : AppColors.border,
-                width: hasSelection ? 1.6 : 1,
-              ),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: hasSelection
-                    ? [
-                        color.withValues(alpha: 0.28),
-                        color.withValues(alpha: 0.06),
-                      ]
-                    : [AppColors.surface, AppColors.surface],
-              ),
-              boxShadow: hasSelection
-                  ? [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.25),
-                        blurRadius: 18,
-                        spreadRadius: 1,
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Opacity(
-              opacity: groupLocked ? 0.55 : 1,
-              child: Row(
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: groupLocked
-                          ? AppColors.textMuted.withValues(alpha: 0.12)
-                          : color.withValues(alpha: hasSelection ? 0.22 : 0.10),
-                      border: Border.all(
-                          color: groupLocked
-                              ? AppColors.textMuted.withValues(alpha: 0.4)
-                              : color.withValues(
-                                  alpha: hasSelection ? 0.7 : 0.3)),
-                    ),
-                    child: Icon(
-                      groupLocked
-                          ? Icons.lock
-                          : (hasSelection
-                              ? Icons.play_arrow_rounded
-                              : style.icon),
-                      color: groupLocked ? AppColors.textMuted : color,
-                      size: hasSelection ? 30 : 26,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          hasSelection
-                              ? 'JOGAR — ${style.subModes[selIndex].label}'
-                              : style.title,
-                          style: GoogleFonts.cinzelDecorative(
-                            fontSize: 15,
-                            color: groupLocked
-                                ? AppColors.textMuted
-                                : (hasSelection
-                                    ? color
-                                    : AppColors.textPrimary),
-                            letterSpacing: 1,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          groupLocked
-                              ? (style.inDev
-                                  ? 'Em desenvolvimento'
-                                  : 'Desbloqueia no nível ${style.requiredLevel}')
-                              : (hasSelection ? style.title : style.subtitle),
-                          style: GoogleFonts.roboto(
-                            fontSize: 11,
-                            color: hasSelection
-                                ? AppColors.textSecondary
-                                : AppColors.textMuted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    groupLocked
-                        ? Icons.lock_outline
-                        : (hasSelection
-                            ? Icons.chevron_right_rounded
-                            : Icons.touch_app_outlined),
-                    color: groupLocked
-                        ? AppColors.textMuted
-                        : (hasSelection ? color : AppColors.textMuted),
-                    size: 22,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+        _hexGroupButton(styleIndex, style, groupLocked, hasSelection, selIndex,
+            color),
 
         // Bolinhas + miniatura só pra grupos desbloqueados.
         if (!groupLocked) ...[
@@ -488,7 +396,7 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline, size: 13, color: color),
+                  const Icon(Icons.info_outline, size: 13, color: color),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -574,4 +482,249 @@ class _BattleHubScreenState extends ConsumerState<BattleHubScreen> {
       ),
     );
   }
+
+  // ── Botão hexagonal (estilo COMBATE, maior, paleta do grupo) ───────────
+  /// Quando um modo é escolhido (hasSelection), o hexágono ganha brilho
+  /// PULSANTE + PARTÍCULAS (CEO 2026-06-12). Sem ícone de "tap".
+  Widget _hexGroupButton(int styleIndex, _PlayStyle style, bool groupLocked,
+      bool hasSelection, int? selIndex, Color color) {
+    final shellColor = groupLocked ? AppColors.textMuted : color;
+    final content =
+        _hexContent(style, groupLocked, hasSelection, selIndex, color);
+    void onTap() =>
+        groupLocked ? _onLockedGroupTap(style) : _onPlay(styleIndex);
+
+    if (!hasSelection) {
+      return GestureDetector(
+        onTap: onTap,
+        child: _hexShell(color: shellColor, glow: 0, child: content),
+      );
+    }
+    // Selecionado: pulso + partículas.
+    return AnimatedBuilder(
+      animation: _pulse,
+      builder: (_, __) {
+        final pulse = 0.5 + 0.5 * math.sin(_pulse.value * 2 * math.pi);
+        return GestureDetector(
+          onTap: onTap,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              _hexShell(
+                  color: shellColor, glow: 0.5 + 0.5 * pulse, child: content),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                      painter: _HexParticlePainter(_pulse.value, color)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _hexShell(
+      {required Color color, required double glow, required Widget child}) {
+    final top = Color.lerp(
+        const Color(0xFF2A2139), color, 0.16 + 0.16 * glow)!;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.14 + 0.36 * glow),
+            blurRadius: 18 + 22 * glow,
+            spreadRadius: 0.5 + 1.5 * glow,
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          ClipPath(
+            clipper: _HexClipper(),
+            child: Container(
+              width: double.infinity, // hex preenche a largura toda (fill cheio)
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 36, vertical: 22),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [top, const Color(0xFF0D0A13)],
+                ),
+              ),
+              child: child,
+            ),
+          ),
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _HexBorderPainter(
+                  color.withValues(alpha: 0.55 + 0.35 * glow), 1.5 + glow),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _hexContent(_PlayStyle style, bool groupLocked, bool hasSelection,
+      int? selIndex, Color color) {
+    final icon = groupLocked
+        ? Icons.lock
+        : (hasSelection ? Icons.play_arrow_rounded : style.icon);
+    final titleText = hasSelection
+        ? 'JOGAR — ${style.subModes[selIndex!].label}'
+        : style.title;
+    final subText = groupLocked
+        ? (style.inDev
+            ? 'Em desenvolvimento'
+            : 'Desbloqueia no nível ${style.requiredLevel}')
+        : (hasSelection ? style.title : style.subtitle);
+    return Opacity(
+      opacity: groupLocked ? 0.6 : 1,
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: groupLocked
+                  ? AppColors.textMuted.withValues(alpha: 0.12)
+                  : color.withValues(alpha: hasSelection ? 0.22 : 0.12),
+              border: Border.all(
+                  color: groupLocked
+                      ? AppColors.textMuted.withValues(alpha: 0.4)
+                      : color.withValues(alpha: hasSelection ? 0.75 : 0.4)),
+            ),
+            child: Icon(icon,
+                color: groupLocked ? AppColors.textMuted : color,
+                size: hasSelection ? 30 : 26),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  titleText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.cinzelDecorative(
+                    fontSize: 16,
+                    letterSpacing: 1,
+                    color: groupLocked
+                        ? AppColors.textMuted
+                        : (hasSelection ? color : AppColors.textPrimary),
+                    shadows: hasSelection
+                        ? [
+                            Shadow(
+                                color: color.withValues(alpha: 0.6),
+                                blurRadius: 12)
+                          ]
+                        : null,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  subText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.roboto(
+                    fontSize: 11,
+                    color: hasSelection
+                        ? AppColors.textSecondary
+                        : AppColors.textMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Hexágono (apontado nas laterais) — recorte + contorno + partículas ──────
+Path _hexPath(Size size) {
+  final w = size.width, h = size.height;
+  const inset = 0.04;
+  return Path()
+    ..moveTo(w * inset, 0)
+    ..lineTo(w * (1 - inset), 0)
+    ..lineTo(w, h / 2)
+    ..lineTo(w * (1 - inset), h)
+    ..lineTo(w * inset, h)
+    ..lineTo(0, h / 2)
+    ..close();
+}
+
+class _HexClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) => _hexPath(size);
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
+}
+
+class _HexBorderPainter extends CustomPainter {
+  final Color color;
+  final double width;
+  _HexBorderPainter(this.color, this.width);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = width
+      ..strokeJoin = StrokeJoin.miter
+      ..color = color;
+    canvas.drawPath(_hexPath(size), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _HexBorderPainter old) =>
+      old.color != color || old.width != width;
+}
+
+/// Embers (faíscas) douradas estilo "aceitar do LoL": sobem com balanço
+/// horizontal, velocidades/tamanhos variados, surgem embaixo e somem em cima,
+/// cintilando. Movimento orgânico (não uma cachoeira rígida).
+class _HexParticlePainter extends CustomPainter {
+  final double t; // 0..1 loop
+  final Color color;
+  _HexParticlePainter(this.t, this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const n = 24;
+    for (var i = 0; i < n; i++) {
+      final seed = ((i * 73) % 100) / 100.0;
+      final seed2 = ((i * 137) % 100) / 100.0;
+      final speed = 0.6 + seed * 0.9; // cada ember tem ritmo próprio
+      final phase = ((t * speed) + seed) % 1.0;
+      // posição base espalhada + balanço senoidal (sway) ao subir.
+      final baseX = size.width * (0.04 + seed2 * 0.92);
+      final sway =
+          math.sin((phase * 1.6 + seed) * math.pi * 2) * (6 + 10 * seed);
+      final x = baseX + sway;
+      final y = size.height * (1 - phase) - 2;
+      // fade-in embaixo, fade-out em cima.
+      final fade = (phase < 0.18 ? phase / 0.18 : (1 - phase) / 0.82)
+          .clamp(0.0, 1.0);
+      final twinkle = 0.45 + 0.55 * (0.5 + 0.5 * math.sin((t * 3 + seed2) * math.pi * 2));
+      final a = (fade * 0.9 * twinkle).clamp(0.0, 1.0);
+      final r = 1.0 + 1.9 * seed;
+      final p = Paint()
+        ..color = color.withValues(alpha: a)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 0.8 + seed);
+      canvas.drawCircle(Offset(x, y), r, p);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _HexParticlePainter old) => old.t != t;
 }

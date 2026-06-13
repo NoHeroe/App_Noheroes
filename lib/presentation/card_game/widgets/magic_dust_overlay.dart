@@ -9,12 +9,17 @@ import 'package:flutter/material.dart';
 class MagicDustOverlay extends StatefulWidget {
   const MagicDustOverlay({
     super.key,
-    this.count = 40,
+    this.count = 14,
     this.color = const Color(0xFFE7C766),
+    this.active = true,
   });
 
   final int count;
   final Color color;
+
+  /// Quando `false`, o controller PARA (não tica 60fps) e o overlay some — pra
+  /// não gastar frame no replay de combate, quando os VFX pesam (CEO 2026-06-13).
+  final bool active;
 
   @override
   State<MagicDustOverlay> createState() => _MagicDustOverlayState();
@@ -69,9 +74,19 @@ class _MagicDustOverlayState extends State<MagicDustOverlay>
         twinkle: (2 + r.nextInt(4)).toDouble(),
       );
     });
-    // Ciclo longo = deriva lenta.
-    _c = AnimationController(vsync: this, duration: const Duration(seconds: 70))
-      ..repeat();
+    // Ciclo longo = deriva lenta. Só roda quando ATIVO (fora do combate).
+    _c = AnimationController(vsync: this, duration: const Duration(seconds: 70));
+    if (widget.active) _c.repeat();
+  }
+
+  @override
+  void didUpdateWidget(MagicDustOverlay old) {
+    super.didUpdateWidget(old);
+    if (widget.active && !_c.isAnimating) {
+      _c.repeat();
+    } else if (!widget.active && _c.isAnimating) {
+      _c.stop();
+    }
   }
 
   @override
@@ -82,6 +97,7 @@ class _MagicDustOverlayState extends State<MagicDustOverlay>
 
   @override
   Widget build(BuildContext context) {
+    if (!widget.active) return const SizedBox.shrink();
     return IgnorePointer(
       child: RepaintBoundary(
         child: AnimatedBuilder(
@@ -105,8 +121,10 @@ class _DustPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.8);
+    // SEM MaskFilter.blur (CEO 2026-06-13): o blur por partícula POR FRAME era o
+    // maior custo de GPU da tela (40 passes de blur/frame). Pontos finos crisp +
+    // contagem reduzida (14) dão o mesmo clima por uma fração do custo.
+    final paint = Paint();
     for (final p in ps) {
       final px = ((p.x + p.nx * t) % 1.0) * size.width;
       final py = ((p.y + p.ny * t) % 1.0) * size.height;
