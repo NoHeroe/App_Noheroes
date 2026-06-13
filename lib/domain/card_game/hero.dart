@@ -86,6 +86,35 @@ String heroActive(HeroId h) {
   }
 }
 
+/// Conceito (facção) do herói — usado no visual de carta (CEO 2026-06-12).
+CardConcept heroConcept(HeroId h) {
+  switch (h) {
+    case HeroId.trapaceiro:
+      return CardConcept.chrysalis;
+    case HeroId.cartomante:
+      return CardConcept.celestial;
+    case HeroId.oraculo:
+      return CardConcept.magico;
+    case HeroId.coringa:
+      return CardConcept.vitalismo;
+    case HeroId.assassino:
+      return CardConcept.corrompido;
+  }
+}
+
+/// Raridade do herói — usada no visual de carta e no drop de pacote de herói.
+Rarity heroRarity(HeroId h) {
+  switch (h) {
+    case HeroId.coringa:
+      return Rarity.epica;
+    case HeroId.trapaceiro:
+    case HeroId.cartomante:
+    case HeroId.oraculo:
+    case HeroId.assassino:
+      return Rarity.rara;
+  }
+}
+
 /// Canoniza um id cru (do deck builder / JSON) para o enum.
 HeroId? heroIdFromString(String? raw) {
   switch (raw) {
