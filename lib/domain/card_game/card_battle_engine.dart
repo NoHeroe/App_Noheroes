@@ -1383,6 +1383,24 @@ class CardBattleEngine {
     if (damage < 0) damage = 0;
 
     final hpBefore = target.currentHp;
+    // Executor: ao acertar (dano > 0), se o golpe deixaria o alvo com PV baixo
+    // (≤ kExecutorThreshold) e ainda vivo, finaliza (vira letal). Cai no caminho
+    // normal de morte (Cristal de Drenagem/Andorinha/Zumbi disparam).
+    if (!prevented &&
+        damage > 0 &&
+        attacker.hasKeyword(AbilityKeyword.executor)) {
+      final hpAfter = hpBefore - damage;
+      if (hpAfter > 0 && hpAfter <= kExecutorThreshold) {
+        damage = hpBefore;
+        events.add(AbilityTriggered(
+          side: atkSide.id,
+          cardId: attacker.instanceId,
+          cardName: attacker.card.nome,
+          ability: abilityKeywordLabel(AbilityKeyword.executor),
+          detail: 'executou ${target.card.nome} (PV baixo)',
+        ));
+      }
+    }
     // Inabalável: se morreria, ressuscita com vida cheia (1×/partida).
     final lethalT = _resolveLethal(target, hpBefore - damage);
     final died = lethalT.died;
@@ -1544,18 +1562,21 @@ class CardBattleEngine {
       }
     }
 
-    // ---- Roubo de PV: ao ACERTAR (dano > 0), +PV atual e máx ----
+    // ---- Roubo de PV: ao ACERTAR (dano > 0), +PV atual e máx (magnitude `_N`,
+    // ex.: vampirismo_2 = 2) ----
     if (damage > 0 && attacker.hasKeyword(AbilityKeyword.rouboDePv)) {
+      final steal =
+          attacker.keywordValue(AbilityKeyword.rouboDePv, kRouboDePvAmount);
       attacker = attacker.copyWith(
-        bonusMaxHp: attacker.bonusMaxHp + kRouboDePvAmount,
-        currentHp: attacker.currentHp + kRouboDePvAmount,
+        bonusMaxHp: attacker.bonusMaxHp + steal,
+        currentHp: attacker.currentHp + steal,
       );
       events.add(AbilityTriggered(
         side: atkSide.id,
         cardId: attacker.instanceId,
         cardName: attacker.card.nome,
         ability: abilityKeywordLabel(AbilityKeyword.rouboDePv),
-        detail: '+$kRouboDePvAmount PV atual e máximo',
+        detail: '+$steal PV atual e máximo',
       ));
     }
 
@@ -1731,13 +1752,15 @@ class CardBattleEngine {
 
       if (target.hasKeyword(AbilityKeyword.espinhos) &&
           !attacker.immuneTo(AbilityKeyword.espinhos)) {
-        final res = _resolveLethal(attacker, attacker.currentHp - kEspinhosDamage);
+        final thorns =
+            target.keywordValue(AbilityKeyword.espinhos, kEspinhosDamage);
+        final res = _resolveLethal(attacker, attacker.currentHp - thorns);
         events.add(AbilityTriggered(
           side: defSide.id,
           cardId: target.instanceId,
           cardName: target.card.nome,
           ability: abilityKeywordLabel(AbilityKeyword.espinhos),
-          detail: '$kEspinhosDamage de dano verdadeiro em '
+          detail: '$thorns de dano verdadeiro em '
               '${attacker.card.nome}${res.died ? ' (destruída)' : ''}',
         ));
         if (res.died) {
@@ -1946,14 +1969,24 @@ class CardBattleEngine {
         type == DamageType.aDistancia || type == DamageType.magico;
     if (!redirectable) return candidates.first.instanceId;
 
-    bool hidden(CreatureInPlay c) =>
+    // Percepção (skill nova): o atacante IGNORA a Furtividade do alvo e foca
+    // alvos furtivos da retaguarda.
+    final piercesStealth = attacker.hasKeyword(AbilityKeyword.percepcao);
+    bool stealthRear(CreatureInPlay c) =>
         c.lane != frontLane && c.hasKeyword(AbilityKeyword.furtividade);
+    bool hidden(CreatureInPlay c) => !piercesStealth && stealthRear(c);
 
     // 1) Provocar (o de menor lane se vários). Se o provocador estiver
     // furtivo na retaguarda, o redirecionamento falha e cai no padrão.
     final taunter =
         alive.where((c) => c.hasKeyword(AbilityKeyword.provocar)).firstOrNull;
     if (taunter != null && !hidden(taunter)) return taunter.instanceId;
+
+    // 1.5) Percepção: foca primeiro um alvo furtivo da retaguarda (se houver).
+    if (piercesStealth) {
+      final furtive = candidates.where(stealthRear).firstOrNull;
+      if (furtive != null) return furtive.instanceId;
+    }
 
     // 2) Furtividade: pula candidatos furtivos na retaguarda.
     for (final c in candidates) {

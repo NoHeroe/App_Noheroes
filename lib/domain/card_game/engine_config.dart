@@ -242,7 +242,12 @@ const int kInspirarBonus = 1;
 const int kInvestidaBonus = 1;
 
 /// Quanto Roubo de PV soma ao PV atual E máximo ao acertar (dano > 0). 🎚️
+/// Magnitude por carta via token `roubo_de_pv_N` (ex.: vampirismo_2 = 2).
 const int kRouboDePvAmount = 1;
+
+/// Executor: ao ACERTAR, se o golpe deixaria o alvo com PV atual ≤ este limite
+/// (e ainda vivo), finaliza (mata). 🎚️
+const int kExecutorThreshold = 2;
 
 /// Cristais ganhos por Cristal de Drenagem ao destruir uma criatura inimiga.
 /// Creditados via `pendingCrystals` no início do PRÓXIMO turno do dono
