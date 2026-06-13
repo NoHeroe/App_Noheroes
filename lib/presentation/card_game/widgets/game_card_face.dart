@@ -33,6 +33,7 @@ class GameCardFace extends StatelessWidget {
     this.effects = const <IconData>[],
     this.statusOverlay,
     this.minimal = false,
+    this.showCost = true,
   });
 
   final String name;
@@ -78,6 +79,9 @@ class GameCardFace extends StatelessWidget {
   /// MÍNIMO (preview da próxima carta): esconde custo, slot de item, brasões,
   /// bandeira de raridade e os pontos de conceito — só arte + nome, mais clean.
   final bool minimal;
+
+  /// Exibe o cristal de custo no topo. false = cartas sem custo (ex.: heróis).
+  final bool showCost;
 
   Color get _concept => conceptColor(concepts);
 
@@ -263,7 +267,7 @@ class GameCardFace extends StatelessWidget {
               ],
             ),
           ),
-        if (!minimal)
+        if (!minimal && showCost)
           Positioned(
             top: -12, // metade dos 24px do diamante acima da borda
             left: 0,

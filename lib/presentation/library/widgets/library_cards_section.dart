@@ -23,7 +23,7 @@ import '../../shared/widgets/nh_back_button.dart';
 /// inspeção sempre liberada (tap abre detalhe). Vive como seção dentro de
 /// `/library` (back volta pro hub).
 
-enum _CardKind { creature, relic }
+enum _CardKind { creature, relic, hero }
 
 /// Filtro de visão da coleção (combina com tab/busca/conceito).
 enum _OwnershipView { all, owned, locked }
@@ -132,6 +132,9 @@ class _CardVM {
   final String relicTag; // "Equipamento" | "Flash"
   final RelicGrants? grants;
   final bool isUniversal;
+  // Herói (sem dano/PV/custo — só passiva + ativa)
+  final String passive;
+  final String active;
 
   const _CardVM({
     required this.id,
@@ -149,7 +152,11 @@ class _CardVM {
     this.relicTag = '',
     this.grants,
     this.isUniversal = false,
+    this.passive = '',
+    this.active = '',
   });
+
+  bool get isHero => kind == _CardKind.hero;
 
   Color get conceptColor => _conceptColor(concepts);
   Color get rarityColor => _rarityColor(rarity);
@@ -189,6 +196,36 @@ class _CardVM {
         grants: r.grants,
         isUniversal: r.isUniversal,
       );
+
+  /// Herói (CEO 2026-06-12): mesma carta que criatura/relíquia, mas SEM dano/
+  /// PV/custo — só conceito, raridade, passiva e ativa.
+  factory _CardVM.fromHero(HeroId h) => _CardVM(
+        id: heroIdToString(h),
+        name: heroLabel(h),
+        kind: _CardKind.hero,
+        concepts: [heroConcept(h)],
+        rarity: heroRarity(h),
+        cost: 0,
+        icon: _heroIcon(h),
+        passive: heroPassive(h),
+        active: heroActive(h),
+      );
+}
+
+/// Ícone de arte do herói (compartilhado pela carta e pelo detalhe).
+IconData _heroIcon(HeroId h) {
+  switch (h) {
+    case HeroId.trapaceiro:
+      return Icons.casino;
+    case HeroId.cartomante:
+      return Icons.style;
+    case HeroId.oraculo:
+      return Icons.visibility;
+    case HeroId.coringa:
+      return Icons.auto_awesome;
+    case HeroId.assassino:
+      return Icons.gps_fixed;
+  }
 }
 
 class LibraryCardsSection extends ConsumerStatefulWidget {
@@ -228,9 +265,11 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
     if (_pageController.hasClients) _pageController.jumpToPage(0);
   }
 
-  List<_CardVM> _sourceFor(CardCatalog catalog) => _tab == 0
-      ? catalog.creatures.map(_CardVM.fromCreature).toList()
-      : catalog.relics.map(_CardVM.fromRelic).toList();
+  List<_CardVM> _sourceFor(CardCatalog catalog) => switch (_tab) {
+        0 => catalog.creatures.map(_CardVM.fromCreature).toList(),
+        1 => catalog.relics.map(_CardVM.fromRelic).toList(),
+        _ => HeroId.values.map(_CardVM.fromHero).toList(),
+      };
 
   List<_CardVM> _filter(List<_CardVM> source, Set<String> owned) =>
       source.where((c) {
@@ -314,9 +353,8 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
   }
 
   Widget _buildBody(CardCatalog catalog) {
-    // Aba HERÓIS (ADR-0028 / CEO 2026-06-12): os 5 heróis padrão (sempre
-    // disponíveis) listados na coleção, sem o modelo de carta/posse.
-    if (_tab == 2) return _buildHeroCollection();
+    // Aba HERÓIS (CEO 2026-06-12): os 5 heróis fluem pelo MESMO grid de cartas
+    // (já estão no cards_catalog/player_cards → posse e nível funcionam).
     // Posse REAL é assíncrona: enquanto carrega/erro, trata como "nada
     // desbloqueado" (não crasha; UI mostra tudo bloqueado). Sem player
     // logado o provider já devolve set vazio.
@@ -389,7 +427,9 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
                 TextSpan(
                   text: _tab == 0
                       ? 'Criaturas desbloqueadas '
-                      : 'Relíquias desbloqueadas ',
+                      : _tab == 1
+                          ? 'Relíquias desbloqueadas '
+                          : 'Heróis desbloqueados ',
                   style: GoogleFonts.roboto(
                       fontSize: 11,
                       letterSpacing: 1.5,
@@ -537,84 +577,6 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
   }
 
   // ── Tabs (vidro deslizante) ─────────────────────────────────────────
-  /// Aba HERÓIS da coleção (ADR-0028): os 5 heróis padrão como tiles de info
-  /// (sempre disponíveis — não dependem de posse/raridade).
-  Widget _buildHeroCollection() {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-          child: Text('${HeroId.values.length} heróis disponíveis',
-              style: GoogleFonts.roboto(fontSize: 12, color: AppColors.txtMut)),
-        ),
-        for (final h in HeroId.values)
-          Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: const Color(0x33100C15),
-              border: Border.all(color: AppColors.borderViolet),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0x33100C15),
-                    border: Border.all(
-                        color: AppColors.goldLt.withValues(alpha: 0.6)),
-                  ),
-                  child: Icon(_heroIcon(h), size: 22, color: AppColors.goldLt),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(heroLabel(h),
-                          style: GoogleFonts.cinzelDecorative(
-                              fontSize: 13, color: AppColors.txt)),
-                      const SizedBox(height: 3),
-                      Text('Passiva: ${heroPassive(h)}',
-                          style: GoogleFonts.roboto(
-                              fontSize: 10,
-                              color: AppColors.txtMut,
-                              height: 1.25)),
-                      Text('Ativa: ${heroActive(h)}',
-                          style: GoogleFonts.roboto(
-                              fontSize: 10,
-                              color: AppColors.txtMut,
-                              height: 1.25)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-
-  IconData _heroIcon(HeroId h) {
-    switch (h) {
-      case HeroId.trapaceiro:
-        return Icons.casino;
-      case HeroId.cartomante:
-        return Icons.style;
-      case HeroId.oraculo:
-        return Icons.visibility;
-      case HeroId.coringa:
-        return Icons.auto_awesome;
-      case HeroId.assassino:
-        return Icons.gps_fixed;
-    }
-  }
-
   Widget _buildTabs() {
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
@@ -911,6 +873,7 @@ class _CardTile extends StatelessWidget {
     final isCreature = card.kind == _CardKind.creature;
     final atkEff = cgScaleStat(card.atk, level);
     final pvEff = cgScaleStat(card.pv, level);
+    // Rodapé: criatura = ATK/PV · relíquia = tag · herói = "HERÓI" (sem stats).
     final Widget footer = isCreature
         ? Row(
             children: [
@@ -932,7 +895,7 @@ class _CardTile extends StatelessWidget {
             ],
           )
         : Center(
-            child: Text(card.relicTag.toUpperCase(),
+            child: Text(card.isHero ? 'HERÓI' : card.relicTag.toUpperCase(),
                 style: GoogleFonts.roboto(
                     fontSize: 9,
                     letterSpacing: 1.5,
@@ -946,6 +909,7 @@ class _CardTile extends StatelessWidget {
       rarity: card.rarity,
       artIcon: card.icon,
       showItemSlot: false, // coleção não mostra slot de item
+      showCost: !card.isHero, // herói não tem custo de cristal
       effects: isCreature ? effectIconsFromAbilities(card.abilities) : const [],
       footer: footer,
       cornerBadge: level > 1
@@ -1055,7 +1019,7 @@ class _CardDetailSheet extends StatelessWidget {
                             const SizedBox(width: 6),
                             Text(
                               '${_rarityLabel(card.rarity)} · '
-                              '${card.kind == _CardKind.creature ? 'Criatura' : 'Relíquia'}',
+                              '${card.kind == _CardKind.creature ? 'Criatura' : card.kind == _CardKind.hero ? 'Herói' : 'Relíquia'}',
                               style: GoogleFonts.roboto(
                                   fontSize: 12, color: AppColors.txt2),
                             ),
@@ -1129,6 +1093,7 @@ class _CardDetailSheet extends StatelessWidget {
                 baseAtk: card.atk,
                 baseHp: card.pv,
                 isCreature: card.kind == _CardKind.creature,
+                isHero: card.isHero,
                 concept: card.primaryConceptName,
               ),
             ],
@@ -1140,6 +1105,14 @@ class _CardDetailSheet extends StatelessWidget {
 
   List<Widget> _buildStatRows() {
     final rows = <Widget>[];
+
+    if (card.kind == _CardKind.hero) {
+      // Herói: sem custo/ataque/PV/tipo/slots — só passiva e ativa.
+      rows.add(_effectBlock(card.passive, title: 'PASSIVA'));
+      rows.add(const SizedBox(height: 10));
+      rows.add(_effectBlock(card.active, title: 'ATIVA'));
+      return rows;
+    }
 
     if (card.kind == _CardKind.creature) {
       rows.add(_statRow('Custo', '${card.cost}', Icons.local_fire_department));
@@ -1221,7 +1194,7 @@ class _CardDetailSheet extends StatelessWidget {
     );
   }
 
-  Widget _effectBlock(String text) {
+  Widget _effectBlock(String text, {String title = 'EFEITO'}) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -1232,7 +1205,7 @@ class _CardDetailSheet extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('EFEITO',
+          Text(title,
               style: GoogleFonts.roboto(
                   fontSize: 10,
                   letterSpacing: 1.5,

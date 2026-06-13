@@ -20,6 +20,9 @@ class CardEconomyActions extends ConsumerStatefulWidget {
   final int baseHp;
   final bool isCreature;
 
+  /// Herói: não tem atk/hp/escala de stat — o preview de nível some.
+  final bool isHero;
+
   /// Conceito primário (não-neutro) da carta — usado no desencante pra chance
   /// de Essência de Facção (cards_catalog não tem conceito no DB). null = neutro.
   final String? concept;
@@ -30,6 +33,7 @@ class CardEconomyActions extends ConsumerStatefulWidget {
     this.baseAtk = 0,
     this.baseHp = 0,
     this.isCreature = true,
+    this.isHero = false,
     this.concept,
   });
 
@@ -406,8 +410,10 @@ class _CardEconomyActionsState extends ConsumerState<CardEconomyActions> {
           Text(title,
               style: GoogleFonts.roboto(
                   fontSize: 10, letterSpacing: 0.5, color: accent)),
-          const SizedBox(height: 4),
-          if (widget.isCreature)
+          if (!widget.isHero) const SizedBox(height: 4),
+          if (widget.isHero)
+            const SizedBox.shrink()
+          else if (widget.isCreature)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
