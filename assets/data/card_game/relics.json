@@ -7,10 +7,12 @@
     ],
     "cost": 4,
     "grants": {
-      "raw_effect": "Dano mágico de gelo + chance de Silêncio (a refinar)",
+      "atk_bonus": 3,
+      "attack_type": "corpo_a_corpo",
       "abilities": [
-        "Silencio"
-      ]
+        "silencio"
+      ],
+      "raw_effect": "Dano mágico de gelo + chance de Silêncio (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -23,9 +25,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+1 de ataque (corpo a corpo)",
       "atk_bonus": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+1 de ataque (corpo a corpo)"
     },
     "rarity": "comum",
     "is_flash": false
@@ -38,9 +40,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+1 de ataque (corpo a corpo)",
       "atk_bonus": 1,
-      "abilities": []
+      "attack_type": "magico",
+      "abilities": [],
+      "raw_effect": "+1 de ataque (corpo a corpo)"
     },
     "rarity": "comum",
     "is_flash": false
@@ -53,9 +56,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+1 de ataque (corpo a corpo)",
       "atk_bonus": 1,
-      "abilities": []
+      "attack_type": "a_distancia",
+      "abilities": [],
+      "raw_effect": "+1 de ataque (corpo a corpo)"
     },
     "rarity": "comum",
     "is_flash": false
@@ -68,9 +72,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+1 de ataque (corpo a corpo)",
       "atk_bonus": 1,
-      "abilities": []
+      "attack_type": "corpo_a_corpo",
+      "abilities": [],
+      "raw_effect": "+1 de ataque (corpo a corpo)"
     },
     "rarity": "comum",
     "is_flash": false
@@ -83,9 +88,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+1 de ataque (corpo a corpo)",
       "atk_bonus": 1,
-      "abilities": []
+      "attack_type": "magico",
+      "abilities": [],
+      "raw_effect": "+1 de ataque (corpo a corpo)"
     },
     "rarity": "comum",
     "is_flash": false
@@ -98,9 +104,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+1 de ataque (corpo a corpo)",
       "atk_bonus": 1,
-      "abilities": []
+      "attack_type": "vitalismo",
+      "abilities": [],
+      "raw_effect": "+1 de ataque (corpo a corpo)"
     },
     "rarity": "comum",
     "is_flash": false
@@ -113,9 +120,13 @@
     ],
     "cost": 4,
     "grants": {
-      "raw_effect": "Regen de PV (Cura) + Escudo Sagrado de última hora (a refinar)",
+      "hp_bonus": 2,
       "armor": 1,
-      "abilities": []
+      "heal": 2,
+      "abilities": [
+        "cura"
+      ],
+      "raw_effect": "Regen de PV (Cura) + Escudo Sagrado de última hora (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -128,11 +139,12 @@
     ],
     "cost": 4,
     "grants": {
-      "raw_effect": "Alcance + Ataque Duplo (a refinar)",
+      "atk_bonus": 3,
       "attack_type": "a_distancia",
       "abilities": [
-        "AtaqueDuplo"
-      ]
+        "ataque_duplo"
+      ],
+      "raw_effect": "Alcance + Ataque Duplo (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -145,11 +157,12 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Alcance + Ataque Duplo",
+      "atk_bonus": 1,
       "attack_type": "a_distancia",
       "abilities": [
-        "AtaqueDuplo"
-      ]
+        "ataque_duplo"
+      ],
+      "raw_effect": "Alcance + Ataque Duplo"
     },
     "rarity": "rara",
     "is_flash": false
@@ -162,11 +175,12 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Alcance + Ataque Duplo",
+      "atk_bonus": 1,
       "attack_type": "a_distancia",
       "abilities": [
-        "AtaqueDuplo"
-      ]
+        "ataque_duplo"
+      ],
+      "raw_effect": "Alcance + Ataque Duplo"
     },
     "rarity": "rara",
     "is_flash": false
@@ -179,11 +193,12 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Alcance + Ataque Duplo",
+      "atk_bonus": 1,
       "attack_type": "a_distancia",
       "abilities": [
-        "AtaqueDuplo"
-      ]
+        "ataque_duplo"
+      ],
+      "raw_effect": "Alcance + Ataque Duplo"
     },
     "rarity": "rara",
     "is_flash": false
@@ -196,11 +211,12 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Alcance + Ataque Duplo",
+      "atk_bonus": 1,
       "attack_type": "a_distancia",
       "abilities": [
-        "AtaqueDuplo"
-      ]
+        "ataque_duplo"
+      ],
+      "raw_effect": "Alcance + Ataque Duplo"
     },
     "rarity": "rara",
     "is_flash": false
@@ -213,11 +229,12 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Alcance + Ataque Duplo",
+      "atk_bonus": 1,
       "attack_type": "a_distancia",
       "abilities": [
-        "AtaqueDuplo"
-      ]
+        "ataque_duplo"
+      ],
+      "raw_effect": "Alcance + Ataque Duplo"
     },
     "rarity": "rara",
     "is_flash": false
@@ -230,11 +247,12 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Alcance + Ataque Duplo",
+      "atk_bonus": 1,
       "attack_type": "a_distancia",
       "abilities": [
-        "AtaqueDuplo"
-      ]
+        "ataque_duplo"
+      ],
+      "raw_effect": "Alcance + Ataque Duplo"
     },
     "rarity": "rara",
     "is_flash": false
@@ -247,8 +265,13 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Armazenamento dimensional — utilitário (a refinar)",
-      "abilities": []
+      "hp_bonus": 3,
+      "armor": 1,
+      "abilities": [
+        "recuo",
+        "escudo_sagrado"
+      ],
+      "raw_effect": "Armazenamento dimensional — utilitário (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -261,8 +284,11 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)",
-      "abilities": []
+      "armor": 1,
+      "abilities": [
+        "cristal_de_drenagem"
+      ],
+      "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -275,8 +301,8 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -289,8 +315,8 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -303,8 +329,8 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -317,8 +343,8 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -331,8 +357,8 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+sorte/ouro/XP — meta-economia (a refinar)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -345,8 +371,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Remove Silêncio/efeito negativo de 1 criatura (a refinar)",
-      "abilities": []
+      "heal": 1,
+      "abilities": [],
+      "raw_effect": "Remove Silêncio/efeito negativo de 1 criatura (a refinar)"
     },
     "rarity": "comum",
     "is_flash": true
@@ -359,8 +386,16 @@
     ],
     "cost": 6,
     "grants": {
-      "raw_effect": "IA tática — efeito lendário (a refinar)",
-      "abilities": []
+      "atk_bonus": 1,
+      "hp_bonus": 2,
+      "armor": 2,
+      "heal": 2,
+      "attack_type": "corpo_a_corpo",
+      "abilities": [
+        "recuo",
+        "percepcao"
+      ],
+      "raw_effect": "IA tática — efeito lendário (a refinar)"
     },
     "rarity": "lendaria",
     "is_flash": false
@@ -373,10 +408,11 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Imobiliza (Silêncio) 1 criatura (a refinar)",
       "abilities": [
-        "Silencio"
-      ]
+        "silencio",
+        "enredar"
+      ],
+      "raw_effect": "Imobiliza (Silêncio) 1 criatura (a refinar)"
     },
     "rarity": "comum",
     "is_flash": true
@@ -389,8 +425,12 @@
     ],
     "cost": 5,
     "grants": {
-      "raw_effect": "Explosão Mágica: dano alto em área (a refinar)",
-      "abilities": []
+      "atk_bonus": 5,
+      "attack_type": "a_distancia",
+      "abilities": [
+        "atordoar"
+      ],
+      "raw_effect": "Explosão Mágica: dano alto em área (a refinar)"
     },
     "rarity": "epica",
     "is_flash": true
@@ -403,10 +443,12 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Concede Furtividade a 1 criatura",
+      "atk_bonus": 1,
+      "attack_type": "corpo_a_corpo",
       "abilities": [
-        "Furtividade"
-      ]
+        "furtividade"
+      ],
+      "raw_effect": "Concede Furtividade a 1 criatura"
     },
     "rarity": "rara",
     "is_flash": true
@@ -419,10 +461,12 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Concede Furtividade a 1 criatura",
+      "atk_bonus": 1,
+      "attack_type": "magico",
       "abilities": [
-        "Furtividade"
-      ]
+        "furtividade"
+      ],
+      "raw_effect": "Concede Furtividade a 1 criatura"
     },
     "rarity": "rara",
     "is_flash": true
@@ -435,10 +479,12 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Concede Furtividade a 1 criatura",
+      "atk_bonus": 1,
+      "attack_type": "corpo_a_corpo",
       "abilities": [
-        "Furtividade"
-      ]
+        "furtividade"
+      ],
+      "raw_effect": "Concede Furtividade a 1 criatura"
     },
     "rarity": "rara",
     "is_flash": true
@@ -451,10 +497,12 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Concede Furtividade a 1 criatura",
+      "atk_bonus": 1,
+      "attack_type": "corpo_a_corpo",
       "abilities": [
-        "Furtividade"
-      ]
+        "furtividade"
+      ],
+      "raw_effect": "Concede Furtividade a 1 criatura"
     },
     "rarity": "rara",
     "is_flash": true
@@ -467,10 +515,12 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Concede Furtividade a 1 criatura",
+      "atk_bonus": 1,
+      "attack_type": "magico",
       "abilities": [
-        "Furtividade"
-      ]
+        "furtividade"
+      ],
+      "raw_effect": "Concede Furtividade a 1 criatura"
     },
     "rarity": "rara",
     "is_flash": true
@@ -483,10 +533,12 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Concede Furtividade a 1 criatura",
+      "atk_bonus": 1,
+      "attack_type": "vitalismo",
       "abilities": [
-        "Furtividade"
-      ]
+        "furtividade"
+      ],
+      "raw_effect": "Concede Furtividade a 1 criatura"
     },
     "rarity": "rara",
     "is_flash": true
@@ -499,10 +551,11 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Investida",
+      "armor": 1,
       "abilities": [
-        "Investida"
-      ]
+        "investida"
+      ],
+      "raw_effect": "Investida"
     },
     "rarity": "comum",
     "is_flash": false
@@ -515,10 +568,11 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Investida",
+      "armor": 1,
       "abilities": [
-        "Investida"
-      ]
+        "investida"
+      ],
+      "raw_effect": "Investida"
     },
     "rarity": "comum",
     "is_flash": false
@@ -531,10 +585,11 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Investida",
+      "armor": 1,
       "abilities": [
-        "Investida"
-      ]
+        "investida"
+      ],
+      "raw_effect": "Investida"
     },
     "rarity": "comum",
     "is_flash": false
@@ -547,10 +602,11 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Investida",
+      "armor": 1,
       "abilities": [
-        "Investida"
-      ]
+        "investida"
+      ],
+      "raw_effect": "Investida"
     },
     "rarity": "comum",
     "is_flash": false
@@ -563,10 +619,11 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Investida",
+      "armor": 1,
       "abilities": [
-        "Investida"
-      ]
+        "investida"
+      ],
+      "raw_effect": "Investida"
     },
     "rarity": "comum",
     "is_flash": false
@@ -579,10 +636,11 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Investida",
+      "armor": 1,
       "abilities": [
-        "Investida"
-      ]
+        "investida"
+      ],
+      "raw_effect": "Investida"
     },
     "rarity": "comum",
     "is_flash": false
@@ -595,9 +653,11 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Escudo Vitalista pequeno (bloqueia dano verdadeiro)",
       "armor": 1,
-      "abilities": []
+      "abilities": [
+        "suprimir_magia"
+      ],
+      "raw_effect": "Escudo Vitalista pequeno (bloqueia dano verdadeiro)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -610,8 +670,14 @@
     ],
     "cost": 5,
     "grants": {
-      "raw_effect": "+todos os atributos, mas impede outra armadura (a refinar)",
-      "abilities": []
+      "atk_bonus": 2,
+      "hp_bonus": 2,
+      "armor": 1,
+      "attack_type": "corpo_a_corpo",
+      "abilities": [
+        "espinhos"
+      ],
+      "raw_effect": "+todos os atributos, mas impede outra armadura (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -624,8 +690,14 @@
     ],
     "cost": 4,
     "grants": {
-      "raw_effect": "Atributos balanceados + utilitário aquático (a refinar)",
-      "abilities": []
+      "hp_bonus": 1,
+      "armor": 1,
+      "heal": 3,
+      "attack_type": "magico",
+      "abilities": [
+        "cura"
+      ],
+      "raw_effect": "Atributos balanceados + utilitário aquático (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -638,8 +710,14 @@
     ],
     "cost": 4,
     "grants": {
-      "raw_effect": "Punição (ponto fraco) + cresce a cada morte (a refinar)",
-      "abilities": []
+      "atk_bonus": 3,
+      "heal": 1,
+      "attack_type": "vitalismo",
+      "abilities": [
+        "andorinha",
+        "alcance"
+      ],
+      "raw_effect": "Punição (ponto fraco) + cresce a cada morte (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -652,10 +730,17 @@
     ],
     "cost": 0,
     "grants": {
-      "raw_effect": "+1 cristal neste turno",
-      "abilities": []
+      "atk_bonus": 1,
+      "hp_bonus": 2,
+      "heal": 1,
+      "attack_type": "magico",
+      "abilities": [
+        "cristal_de_drenagem",
+        "inspirar"
+      ],
+      "raw_effect": "+1 cristal neste turno"
     },
-    "rarity": "comum",
+    "rarity": "epica",
     "is_flash": true
   },
   {
@@ -666,10 +751,13 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Concede Ataque Duplo a uma criatura à distância (a refinar)",
+      "atk_bonus": 3,
+      "armor": 1,
+      "attack_type": "a_distancia",
       "abilities": [
-        "AtaqueDuplo"
-      ]
+        "ataque_duplo"
+      ],
+      "raw_effect": "Concede Ataque Duplo a uma criatura à distância (a refinar)"
     },
     "rarity": "comum",
     "is_flash": false
@@ -682,9 +770,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+1 de ataque mágico",
       "atk_bonus": 1,
-      "abilities": []
+      "attack_type": "magico",
+      "abilities": [],
+      "raw_effect": "+1 de ataque mágico"
     },
     "rarity": "comum",
     "is_flash": false
@@ -695,12 +784,19 @@
     "concepts": [
       "corrompido"
     ],
-    "cost": 6,
+    "cost": 7,
     "grants": {
-      "raw_effect": "Acumula sangue → invulnerabilidade temporária + crescimento permanente (a refinar)",
-      "abilities": []
+      "atk_bonus": 2,
+      "heal": 2,
+      "attack_type": "corpo_a_corpo",
+      "abilities": [
+        "roubo_de_pv",
+        "crescimento",
+        "inabalavel"
+      ],
+      "raw_effect": "Acumula sangue → invulnerabilidade temporária + crescimento permanente (a refinar)"
     },
-    "rarity": "epica",
+    "rarity": "elite",
     "is_flash": false
   },
   {
@@ -711,9 +807,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+1 PV",
       "hp_bonus": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+1 PV"
     },
     "rarity": "comum",
     "is_flash": false
@@ -726,9 +822,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+1 PV",
       "hp_bonus": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+1 PV"
     },
     "rarity": "comum",
     "is_flash": false
@@ -741,9 +837,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+1 PV",
       "hp_bonus": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+1 PV"
     },
     "rarity": "comum",
     "is_flash": false
@@ -756,9 +852,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+1 PV",
       "hp_bonus": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+1 PV"
     },
     "rarity": "comum",
     "is_flash": false
@@ -771,9 +867,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+1 PV",
       "hp_bonus": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+1 PV"
     },
     "rarity": "comum",
     "is_flash": false
@@ -786,9 +882,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+1 PV",
       "hp_bonus": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+1 PV"
     },
     "rarity": "comum",
     "is_flash": false
@@ -801,8 +897,8 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+drop de moedas/sorte — economia (a refinar)",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+drop de moedas/sorte — economia (a refinar)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -815,8 +911,8 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+drop de moedas/sorte — economia (a refinar)",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+drop de moedas/sorte — economia (a refinar)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -829,8 +925,8 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+drop de moedas/sorte — economia (a refinar)",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+drop de moedas/sorte — economia (a refinar)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -843,8 +939,8 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+drop de moedas/sorte — economia (a refinar)",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+drop de moedas/sorte — economia (a refinar)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -857,8 +953,8 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+drop de moedas/sorte — economia (a refinar)",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+drop de moedas/sorte — economia (a refinar)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -871,8 +967,8 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+drop de moedas/sorte — economia (a refinar)",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+drop de moedas/sorte — economia (a refinar)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -883,13 +979,18 @@
     "concepts": [
       "vitalismo"
     ],
-    "cost": 5,
+    "cost": 4,
     "grants": {
-      "raw_effect": "Escudo Espelhado: reflete dano recebido (a refinar)",
-      "armor": 1,
-      "abilities": []
+      "armor": 3,
+      "abilities": [
+        "reflexo_magico",
+        "escudo",
+        "contra_ataque",
+        "espinhos"
+      ],
+      "raw_effect": "Escudo Espelhado: reflete dano recebido (a refinar)"
     },
-    "rarity": "epica",
+    "rarity": "lendaria",
     "is_flash": false
   },
   {
@@ -900,9 +1001,9 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+2 PV",
       "hp_bonus": 2,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+2 PV"
     },
     "rarity": "comum",
     "is_flash": false
@@ -915,9 +1016,9 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+2 PV",
       "hp_bonus": 2,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+2 PV"
     },
     "rarity": "comum",
     "is_flash": false
@@ -930,9 +1031,9 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+2 PV",
       "hp_bonus": 2,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+2 PV"
     },
     "rarity": "comum",
     "is_flash": false
@@ -945,9 +1046,9 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+2 PV",
       "hp_bonus": 2,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+2 PV"
     },
     "rarity": "comum",
     "is_flash": false
@@ -960,9 +1061,9 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+2 PV",
       "hp_bonus": 2,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+2 PV"
     },
     "rarity": "comum",
     "is_flash": false
@@ -975,9 +1076,9 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+2 PV",
       "hp_bonus": 2,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+2 PV"
     },
     "rarity": "comum",
     "is_flash": false
@@ -990,8 +1091,13 @@
     ],
     "cost": 5,
     "grants": {
-      "raw_effect": "Roubo de PV + amplifica Cura + reduz Escudo inimigo (a refinar)",
-      "abilities": []
+      "heal": 2,
+      "abilities": [
+        "roubo_de_pv",
+        "crescimento",
+        "quebra_armadura"
+      ],
+      "raw_effect": "Roubo de PV + amplifica Cura + reduz Escudo inimigo (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -1004,8 +1110,12 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Sangramento (roadmap) + perfura armadura (a refinar)",
-      "abilities": []
+      "atk_bonus": 3,
+      "attack_type": "corpo_a_corpo",
+      "abilities": [
+        "quebra_armadura"
+      ],
+      "raw_effect": "Sangramento (roadmap) + perfura armadura (a refinar)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1019,8 +1129,14 @@
     ],
     "cost": 5,
     "grants": {
-      "raw_effect": "+ATK alto + Punição",
-      "abilities": []
+      "atk_bonus": 2,
+      "attack_type": "corpo_a_corpo",
+      "abilities": [
+        "quebra_armadura",
+        "alcance",
+        "doenca"
+      ],
+      "raw_effect": "+ATK alto + Punição"
     },
     "rarity": "epica",
     "is_flash": false
@@ -1033,11 +1149,16 @@
     ],
     "cost": 4,
     "grants": {
-      "raw_effect": "Escudo automático a 20% de PV + resistência adaptativa (a refinar)",
-      "armor": 1,
-      "abilities": []
+      "armor": 6,
+      "heal": 1,
+      "abilities": [
+        "escudo",
+        "escudo_sagrado",
+        "reflexo_magico"
+      ],
+      "raw_effect": "Escudo automático a 20% de PV + resistência adaptativa (a refinar)"
     },
-    "rarity": "epica",
+    "rarity": "lendaria",
     "is_flash": false
   },
   {
@@ -1048,10 +1169,12 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Escudo + 1 PV",
       "hp_bonus": 1,
-      "armor": 1,
-      "abilities": []
+      "armor": 2,
+      "abilities": [
+        "escudo"
+      ],
+      "raw_effect": "Escudo + 1 PV"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1064,10 +1187,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Escudo + 1 PV",
       "hp_bonus": 1,
       "armor": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Escudo + 1 PV"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1080,10 +1203,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Escudo + 1 PV",
       "hp_bonus": 1,
       "armor": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Escudo + 1 PV"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1096,10 +1219,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Escudo + 1 PV",
       "hp_bonus": 1,
       "armor": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Escudo + 1 PV"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1112,10 +1235,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Escudo + 1 PV",
       "hp_bonus": 1,
       "armor": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Escudo + 1 PV"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1128,10 +1251,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Escudo + 1 PV",
       "hp_bonus": 1,
       "armor": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Escudo + 1 PV"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1144,9 +1267,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Escudo: bloqueia 1 dano físico",
       "armor": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Escudo: bloqueia 1 dano físico"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1159,9 +1282,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Escudo: bloqueia 1 dano físico",
       "armor": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Escudo: bloqueia 1 dano físico"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1174,9 +1297,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Escudo: bloqueia 1 dano físico",
       "armor": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Escudo: bloqueia 1 dano físico"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1189,9 +1312,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Escudo: bloqueia 1 dano físico",
       "armor": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Escudo: bloqueia 1 dano físico"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1204,9 +1327,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Escudo: bloqueia 1 dano físico",
       "armor": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Escudo: bloqueia 1 dano físico"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1219,9 +1342,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Escudo: bloqueia 1 dano físico",
       "armor": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Escudo: bloqueia 1 dano físico"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1234,9 +1357,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+2 de ataque (corpo a corpo)",
       "atk_bonus": 2,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+2 de ataque (corpo a corpo)"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1249,9 +1372,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+2 de ataque (corpo a corpo)",
       "atk_bonus": 2,
-      "abilities": []
+      "attack_type": "magico",
+      "abilities": [],
+      "raw_effect": "+2 de ataque (corpo a corpo)"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1264,9 +1388,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+2 de ataque (corpo a corpo)",
       "atk_bonus": 2,
-      "abilities": []
+      "attack_type": "a_distancia",
+      "abilities": [],
+      "raw_effect": "+2 de ataque (corpo a corpo)"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1279,9 +1404,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+2 de ataque (corpo a corpo)",
       "atk_bonus": 2,
-      "abilities": []
+      "attack_type": "corpo_a_corpo",
+      "abilities": [],
+      "raw_effect": "+2 de ataque (corpo a corpo)"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1294,9 +1420,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+2 de ataque (corpo a corpo)",
       "atk_bonus": 2,
-      "abilities": []
+      "attack_type": "magico",
+      "abilities": [],
+      "raw_effect": "+2 de ataque (corpo a corpo)"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1309,9 +1436,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+2 de ataque (corpo a corpo)",
       "atk_bonus": 2,
-      "abilities": []
+      "attack_type": "vitalismo",
+      "abilities": [],
+      "raw_effect": "+2 de ataque (corpo a corpo)"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1324,10 +1452,12 @@
     ],
     "cost": 4,
     "grants": {
-      "raw_effect": "Cria ilusão + Furtividade temporária (a refinar)",
       "abilities": [
-        "Furtividade"
-      ]
+        "furtividade",
+        "desmoralizar",
+        "suprimir_magia"
+      ],
+      "raw_effect": "Cria ilusão + Furtividade temporária (a refinar)"
     },
     "rarity": "epica",
     "is_flash": true
@@ -1340,10 +1470,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Inspirar (buff pequeno aos aliados)",
       "abilities": [
-        "Inspirar"
-      ]
+        "inspirar"
+      ],
+      "raw_effect": "Inspirar (buff pequeno aos aliados)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1356,10 +1486,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Inspirar (buff pequeno aos aliados)",
       "abilities": [
-        "Inspirar"
-      ]
+        "inspirar"
+      ],
+      "raw_effect": "Inspirar (buff pequeno aos aliados)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1372,10 +1502,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Inspirar (buff pequeno aos aliados)",
       "abilities": [
-        "Inspirar"
-      ]
+        "inspirar"
+      ],
+      "raw_effect": "Inspirar (buff pequeno aos aliados)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1388,10 +1518,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Inspirar (buff pequeno aos aliados)",
       "abilities": [
-        "Inspirar"
-      ]
+        "inspirar"
+      ],
+      "raw_effect": "Inspirar (buff pequeno aos aliados)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1404,10 +1534,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Inspirar (buff pequeno aos aliados)",
       "abilities": [
-        "Inspirar"
-      ]
+        "inspirar"
+      ],
+      "raw_effect": "Inspirar (buff pequeno aos aliados)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1420,10 +1550,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Inspirar (buff pequeno aos aliados)",
       "abilities": [
-        "Inspirar"
-      ]
+        "inspirar"
+      ],
+      "raw_effect": "Inspirar (buff pequeno aos aliados)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1436,9 +1566,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+1 de ataque (corpo a corpo)",
-      "atk_bonus": 1,
-      "abilities": []
+      "atk_bonus": 3,
+      "abilities": [],
+      "raw_effect": "+1 de ataque (corpo a corpo)"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1451,9 +1581,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Cura pequena",
       "heal": 2,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Cura pequena"
     },
     "rarity": "comum",
     "is_flash": true
@@ -1467,8 +1597,16 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Sintetiza poções — Cura/utilitário (a refinar)",
-      "abilities": []
+      "atk_bonus": 1,
+      "hp_bonus": 1,
+      "armor": 1,
+      "heal": 1,
+      "attack_type": "a_distancia",
+      "abilities": [
+        "doenca",
+        "veneno"
+      ],
+      "raw_effect": "Sintetiza poções — Cura/utilitário (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -1481,8 +1619,8 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Pequeno dano de fogo a 1 criatura",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Pequeno dano de fogo a 1 criatura"
     },
     "rarity": "comum",
     "is_flash": true
@@ -1495,8 +1633,8 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Pequeno dano de fogo a 1 criatura",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Pequeno dano de fogo a 1 criatura"
     },
     "rarity": "comum",
     "is_flash": true
@@ -1509,8 +1647,8 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Pequeno dano de fogo a 1 criatura",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Pequeno dano de fogo a 1 criatura"
     },
     "rarity": "comum",
     "is_flash": true
@@ -1523,8 +1661,8 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Pequeno dano de fogo a 1 criatura",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Pequeno dano de fogo a 1 criatura"
     },
     "rarity": "comum",
     "is_flash": true
@@ -1537,8 +1675,8 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Pequeno dano de fogo a 1 criatura",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Pequeno dano de fogo a 1 criatura"
     },
     "rarity": "comum",
     "is_flash": true
@@ -1551,8 +1689,8 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Pequeno dano de fogo a 1 criatura",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Pequeno dano de fogo a 1 criatura"
     },
     "rarity": "comum",
     "is_flash": true
@@ -1565,8 +1703,12 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Imunidade a medo/controle — anti-Silêncio/Provocar (a refinar)",
-      "abilities": []
+      "atk_bonus": 2,
+      "attack_type": "corpo_a_corpo",
+      "abilities": [
+        "imunidade"
+      ],
+      "raw_effect": "Imunidade a medo/controle — anti-Silêncio/Provocar (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -1579,10 +1721,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Alcance: +1 de ataque à distância",
       "atk_bonus": 1,
       "attack_type": "a_distancia",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Alcance: +1 de ataque à distância"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1595,10 +1737,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Alcance: +1 de ataque à distância",
       "atk_bonus": 1,
       "attack_type": "a_distancia",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Alcance: +1 de ataque à distância"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1611,10 +1753,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Alcance: +1 de ataque à distância",
       "atk_bonus": 1,
       "attack_type": "a_distancia",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Alcance: +1 de ataque à distância"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1627,10 +1769,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Alcance: +1 de ataque à distância",
       "atk_bonus": 1,
       "attack_type": "a_distancia",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Alcance: +1 de ataque à distância"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1643,10 +1785,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Alcance: +1 de ataque à distância",
       "atk_bonus": 1,
       "attack_type": "a_distancia",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Alcance: +1 de ataque à distância"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1659,10 +1801,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Alcance: +1 de ataque à distância",
       "atk_bonus": 1,
       "attack_type": "a_distancia",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Alcance: +1 de ataque à distância"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1675,11 +1817,12 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Alcance + Ataque Duplo",
+      "atk_bonus": 3,
       "attack_type": "a_distancia",
       "abilities": [
-        "AtaqueDuplo"
-      ]
+        "ataque_duplo"
+      ],
+      "raw_effect": "Alcance + Ataque Duplo"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1692,10 +1835,12 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Concede Furtividade",
+      "atk_bonus": 1,
+      "attack_type": "a_distancia",
       "abilities": [
-        "Furtividade"
-      ]
+        "furtividade"
+      ],
+      "raw_effect": "Concede Furtividade"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1708,8 +1853,8 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Dano em área a criaturas inimigas (a refinar)",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Dano em área a criaturas inimigas (a refinar)"
     },
     "rarity": "rara",
     "is_flash": true
@@ -1722,10 +1867,13 @@
     ],
     "cost": 4,
     "grants": {
-      "raw_effect": "Amplifica à noite + Furtividade reforçada (a refinar)",
+      "atk_bonus": 3,
+      "armor": 1,
+      "attack_type": "corpo_a_corpo",
       "abilities": [
-        "Furtividade"
-      ]
+        "furtividade"
+      ],
+      "raw_effect": "Amplifica à noite + Furtividade reforçada (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -1738,9 +1886,13 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "+3 de ataque (corpo a corpo)",
-      "atk_bonus": 3,
-      "abilities": []
+      "atk_bonus": 2,
+      "abilities": [
+        "alcance",
+        "contra_ataque",
+        "ataque_duplo"
+      ],
+      "raw_effect": "+3 de ataque (corpo a corpo)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1753,9 +1905,12 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "+2 PV",
       "hp_bonus": 2,
-      "abilities": []
+      "heal": 2,
+      "abilities": [
+        "cura"
+      ],
+      "raw_effect": "+2 PV"
     },
     "rarity": "comum",
     "is_flash": false
@@ -1768,9 +1923,11 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Cura média",
       "heal": 4,
-      "abilities": []
+      "abilities": [
+        "cura"
+      ],
+      "raw_effect": "Cura média"
     },
     "rarity": "rara",
     "is_flash": true
@@ -1783,9 +1940,13 @@
     ],
     "cost": 5,
     "grants": {
-      "raw_effect": "Regen contínua (Cura) + Escudo (a refinar)",
       "armor": 1,
-      "abilities": []
+      "heal": 3,
+      "abilities": [
+        "cura",
+        "escudo"
+      ],
+      "raw_effect": "Regen contínua (Cura) + Escudo (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -1798,8 +1959,13 @@
     ],
     "cost": 4,
     "grants": {
-      "raw_effect": "Amplia potência de poções + sorte (a refinar)",
-      "abilities": []
+      "abilities": [
+        "cristal_de_drenagem",
+        "investida",
+        "inspirar",
+        "silencio"
+      ],
+      "raw_effect": "Amplia potência de poções + sorte (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -1812,8 +1978,12 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "+dano mágico, mas +custo (a refinar)",
-      "abilities": []
+      "atk_bonus": 3,
+      "attack_type": "magico",
+      "abilities": [
+        "reflexo_magico"
+      ],
+      "raw_effect": "+dano mágico, mas +custo (a refinar)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1826,9 +1996,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "+3 de ataque",
       "atk_bonus": 3,
-      "abilities": []
+      "attack_type": "corpo_a_corpo",
+      "abilities": [],
+      "raw_effect": "+3 de ataque"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1841,9 +2012,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "+3 de ataque",
       "atk_bonus": 3,
-      "abilities": []
+      "attack_type": "magico",
+      "abilities": [],
+      "raw_effect": "+3 de ataque"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1856,9 +2028,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "+3 de ataque",
       "atk_bonus": 3,
-      "abilities": []
+      "attack_type": "a_distancia",
+      "abilities": [],
+      "raw_effect": "+3 de ataque"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1871,9 +2044,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "+3 de ataque",
       "atk_bonus": 3,
-      "abilities": []
+      "attack_type": "corpo_a_corpo",
+      "abilities": [],
+      "raw_effect": "+3 de ataque"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1886,9 +2060,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "+3 de ataque",
       "atk_bonus": 3,
-      "abilities": []
+      "attack_type": "magico",
+      "abilities": [],
+      "raw_effect": "+3 de ataque"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1901,9 +2076,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "+3 de ataque",
       "atk_bonus": 3,
-      "abilities": []
+      "attack_type": "vitalismo",
+      "abilities": [],
+      "raw_effect": "+3 de ataque"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1917,11 +2093,17 @@
     ],
     "cost": 5,
     "grants": {
-      "raw_effect": "+ATK alto + Alcance + Roubo de PV + Sangramento (roadmap)",
+      "atk_bonus": 4,
       "attack_type": "a_distancia",
-      "abilities": []
+      "abilities": [
+        "roubo_de_pv",
+        "sangramento",
+        "contra_ataque",
+        "suprimir_magia"
+      ],
+      "raw_effect": "+ATK alto + Alcance + Roubo de PV + Sangramento (roadmap)"
     },
-    "rarity": "epica",
+    "rarity": "lendaria",
     "is_flash": false
   },
   {
@@ -1932,13 +2114,16 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Silêncio em 1 criatura",
+      "atk_bonus": 1,
+      "attack_type": "corpo_a_corpo",
       "abilities": [
-        "Silencio"
-      ]
+        "silencio",
+        "suprimir_magia"
+      ],
+      "raw_effect": "Silêncio em 1 criatura"
     },
     "rarity": "comum",
-    "is_flash": true
+    "is_flash": false
   },
   {
     "id": "leque_de_laminas_do_noryan",
@@ -1948,11 +2133,14 @@
     ],
     "cost": 4,
     "grants": {
-      "raw_effect": "Alcance + Ataque Duplo (a refinar)",
+      "atk_bonus": 5,
+      "armor": 3,
       "attack_type": "a_distancia",
       "abilities": [
-        "AtaqueDuplo"
-      ]
+        "ataque_duplo",
+        "alcance"
+      ],
+      "raw_effect": "Alcance + Ataque Duplo (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -1965,8 +2153,12 @@
     ],
     "cost": 5,
     "grants": {
-      "raw_effect": "Controle: transforma vítima em marionete; antídoto Manalium (a refinar)",
-      "abilities": []
+      "abilities": [
+        "doenca",
+        "veneno",
+        "sangramento"
+      ],
+      "raw_effect": "Controle: transforma vítima em marionete; antídoto Manalium (a refinar)"
     },
     "rarity": "epica",
     "is_flash": true
@@ -1979,10 +2171,11 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Furtividade",
       "abilities": [
-        "Furtividade"
-      ]
+        "furtividade",
+        "silencio"
+      ],
+      "raw_effect": "Furtividade"
     },
     "rarity": "rara",
     "is_flash": false
@@ -1995,10 +2188,11 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Furtividade",
       "abilities": [
-        "Furtividade"
-      ]
+        "furtividade",
+        "silencio"
+      ],
+      "raw_effect": "Furtividade"
     },
     "rarity": "rara",
     "is_flash": false
@@ -2011,10 +2205,11 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Furtividade",
       "abilities": [
-        "Furtividade"
-      ]
+        "furtividade",
+        "silencio"
+      ],
+      "raw_effect": "Furtividade"
     },
     "rarity": "rara",
     "is_flash": false
@@ -2027,10 +2222,11 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Furtividade",
       "abilities": [
-        "Furtividade"
-      ]
+        "furtividade",
+        "silencio"
+      ],
+      "raw_effect": "Furtividade"
     },
     "rarity": "rara",
     "is_flash": false
@@ -2043,10 +2239,11 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Furtividade",
       "abilities": [
-        "Furtividade"
-      ]
+        "furtividade",
+        "silencio"
+      ],
+      "raw_effect": "Furtividade"
     },
     "rarity": "rara",
     "is_flash": false
@@ -2059,10 +2256,11 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Furtividade",
       "abilities": [
-        "Furtividade"
-      ]
+        "furtividade",
+        "silencio"
+      ],
+      "raw_effect": "Furtividade"
     },
     "rarity": "rara",
     "is_flash": false
@@ -2075,8 +2273,11 @@
     ],
     "cost": 4,
     "grants": {
-      "raw_effect": "Durabilidade/longevidade — mantém vivo (a refinar)",
-      "abilities": []
+      "abilities": [
+        "escudo_sagrado",
+        "inabalavel"
+      ],
+      "raw_effect": "Durabilidade/longevidade — mantém vivo (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -2089,8 +2290,14 @@
     ],
     "cost": 4,
     "grants": {
-      "raw_effect": "+intelecto + conjuração mais barata + magia grátis (a refinar)",
-      "abilities": []
+      "atk_bonus": 4,
+      "hp_bonus": 2,
+      "attack_type": "magico",
+      "abilities": [
+        "cristal_de_drenagem",
+        "contra_ataque"
+      ],
+      "raw_effect": "+intelecto + conjuração mais barata + magia grátis (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -2103,8 +2310,9 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Dano de fogo + chamas persistentes a 1 criatura (a refinar)",
-      "abilities": []
+      "attack_type": "vitalismo",
+      "abilities": [],
+      "raw_effect": "Dano de fogo + chamas persistentes a 1 criatura (a refinar)"
     },
     "rarity": "comum",
     "is_flash": true
@@ -2117,8 +2325,14 @@
     ],
     "cost": 5,
     "grants": {
-      "raw_effect": "+atk/def sustentado + progresso (a refinar)",
-      "abilities": []
+      "atk_bonus": 2,
+      "armor": 4,
+      "heal": 1,
+      "attack_type": "corpo_a_corpo",
+      "abilities": [
+        "crescimento"
+      ],
+      "raw_effect": "+atk/def sustentado + progresso (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -2131,8 +2345,13 @@
     ],
     "cost": 5,
     "grants": {
-      "raw_effect": "Explosão Mágica: incineração em área + chamas persistentes (a refinar)",
-      "abilities": []
+      "atk_bonus": 4,
+      "attack_type": "magico",
+      "abilities": [
+        "reflexo_magico",
+        "escudo_sagrado"
+      ],
+      "raw_effect": "Explosão Mágica: incineração em área + chamas persistentes (a refinar)"
     },
     "rarity": "epica",
     "is_flash": true
@@ -2146,8 +2365,12 @@
     ],
     "cost": 4,
     "grants": {
-      "raw_effect": "Corrupção Drakkai progressiva ao contato (a refinar)",
-      "abilities": []
+      "abilities": [
+        "ressurreicao",
+        "andorinha",
+        "sangramento"
+      ],
+      "raw_effect": "Corrupção Drakkai progressiva ao contato (a refinar)"
     },
     "rarity": "epica",
     "is_flash": true
@@ -2160,8 +2383,10 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+ataque numa criatura neste turno",
-      "abilities": []
+      "atk_bonus": 3,
+      "attack_type": "vitalismo",
+      "abilities": [],
+      "raw_effect": "+ataque numa criatura neste turno"
     },
     "rarity": "rara",
     "is_flash": true
@@ -2174,8 +2399,8 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+ataque numa criatura neste turno",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+ataque numa criatura neste turno"
     },
     "rarity": "rara",
     "is_flash": true
@@ -2188,8 +2413,8 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+ataque numa criatura neste turno",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+ataque numa criatura neste turno"
     },
     "rarity": "rara",
     "is_flash": true
@@ -2202,8 +2427,8 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+ataque numa criatura neste turno",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+ataque numa criatura neste turno"
     },
     "rarity": "rara",
     "is_flash": true
@@ -2216,8 +2441,8 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+ataque numa criatura neste turno",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+ataque numa criatura neste turno"
     },
     "rarity": "rara",
     "is_flash": true
@@ -2230,8 +2455,8 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "+ataque numa criatura neste turno",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "+ataque numa criatura neste turno"
     },
     "rarity": "rara",
     "is_flash": true
@@ -2244,8 +2469,11 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Escape/teleporte — utilitário (a refinar)",
-      "abilities": []
+      "hp_bonus": 2,
+      "abilities": [
+        "recuo"
+      ],
+      "raw_effect": "Escape/teleporte — utilitário (a refinar)"
     },
     "rarity": "rara",
     "is_flash": true
@@ -2258,10 +2486,12 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Alcance: +1 de ataque à distância",
       "atk_bonus": 1,
       "attack_type": "a_distancia",
-      "abilities": []
+      "abilities": [
+        "contra_ataque"
+      ],
+      "raw_effect": "Alcance: +1 de ataque à distância"
     },
     "rarity": "comum",
     "is_flash": false
@@ -2274,9 +2504,9 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Cura média",
       "heal": 4,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Cura média"
     },
     "rarity": "rara",
     "is_flash": true
@@ -2289,9 +2519,9 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Cura média",
       "heal": 4,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Cura média"
     },
     "rarity": "rara",
     "is_flash": true
@@ -2304,9 +2534,9 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Cura média",
       "heal": 4,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Cura média"
     },
     "rarity": "rara",
     "is_flash": true
@@ -2319,9 +2549,9 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Cura média",
       "heal": 4,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Cura média"
     },
     "rarity": "rara",
     "is_flash": true
@@ -2334,9 +2564,9 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Cura média",
       "heal": 4,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Cura média"
     },
     "rarity": "rara",
     "is_flash": true
@@ -2349,9 +2579,9 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Cura média",
       "heal": 4,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Cura média"
     },
     "rarity": "rara",
     "is_flash": true
@@ -2364,9 +2594,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Cura pequena",
       "heal": 2,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Cura pequena"
     },
     "rarity": "comum",
     "is_flash": true
@@ -2379,9 +2609,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Cura pequena",
       "heal": 2,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Cura pequena"
     },
     "rarity": "comum",
     "is_flash": true
@@ -2394,9 +2624,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Cura pequena",
       "heal": 2,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Cura pequena"
     },
     "rarity": "comum",
     "is_flash": true
@@ -2409,9 +2639,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Cura pequena",
       "heal": 2,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Cura pequena"
     },
     "rarity": "comum",
     "is_flash": true
@@ -2424,9 +2654,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Cura pequena",
       "heal": 2,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Cura pequena"
     },
     "rarity": "comum",
     "is_flash": true
@@ -2439,9 +2669,9 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Cura pequena",
       "heal": 2,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Cura pequena"
     },
     "rarity": "comum",
     "is_flash": true
@@ -2455,8 +2685,14 @@
     ],
     "cost": 5,
     "grants": {
-      "raw_effect": "+ATK alto (3x atributos físicos) (a refinar)",
-      "abilities": []
+      "atk_bonus": 6,
+      "attack_type": "corpo_a_corpo",
+      "abilities": [
+        "espinhos",
+        "veneno",
+        "alcance"
+      ],
+      "raw_effect": "+ATK alto (3x atributos físicos) (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -2469,8 +2705,12 @@
     ],
     "cost": 4,
     "grants": {
-      "raw_effect": "Teletransporte + regen acelerada (Cura) (a refinar)",
-      "abilities": []
+      "heal": 2,
+      "abilities": [
+        "recuo",
+        "cura"
+      ],
+      "raw_effect": "Teletransporte + regen acelerada (Cura) (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -2484,11 +2724,16 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Maldição: penaliza o portador (a refinar)",
-      "abilities": []
+      "abilities": [
+        "doenca",
+        "veneno",
+        "atordoar",
+        "desmoralizar"
+      ],
+      "raw_effect": "Maldição: penaliza o portador (a refinar)"
     },
     "rarity": "rara",
-    "is_flash": false
+    "is_flash": true
   },
   {
     "id": "reliquia_de_mythrium",
@@ -2496,13 +2741,15 @@
     "concepts": [
       "celestial"
     ],
-    "cost": 5,
+    "cost": 2,
     "grants": {
-      "raw_effect": "Ressuscita um vitalista (a refinar)",
-      "abilities": []
+      "abilities": [
+        "inabalavel"
+      ],
+      "raw_effect": "Ressuscita um vitalista (a refinar)"
     },
     "rarity": "epica",
-    "is_flash": true
+    "is_flash": false
   },
   {
     "id": "revolver",
@@ -2512,10 +2759,10 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Alcance: +2 de ataque à distância",
       "atk_bonus": 2,
       "attack_type": "a_distancia",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Alcance: +2 de ataque à distância"
     },
     "rarity": "comum",
     "is_flash": false
@@ -2528,9 +2775,9 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Escudo Espelhado (+defesa mágica) + bênção (a refinar)",
       "armor": 1,
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Escudo Espelhado (+defesa mágica) + bênção (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -2543,12 +2790,13 @@
     ],
     "cost": 4,
     "grants": {
-      "raw_effect": "Aprisiona inimigo (Silêncio/remove temporário) (a refinar)",
       "abilities": [
-        "Silencio"
-      ]
+        "silencio",
+        "transformar"
+      ],
+      "raw_effect": "Aprisiona inimigo (Silêncio/remove temporário) (a refinar)"
     },
-    "rarity": "epica",
+    "rarity": "elite",
     "is_flash": true
   },
   {
@@ -2559,8 +2807,12 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Buff temporário de ataque com risco de corrupção (a refinar)",
-      "abilities": []
+      "atk_bonus": 1,
+      "heal": 1,
+      "abilities": [
+        "silencio"
+      ],
+      "raw_effect": "Buff temporário de ataque com risco de corrupção (a refinar)"
     },
     "rarity": "comum",
     "is_flash": true
@@ -2573,8 +2825,14 @@
     ],
     "cost": 5,
     "grants": {
-      "raw_effect": "Mantém Yato em corpo mortal-imortal (a refinar)",
-      "abilities": []
+      "armor": 6,
+      "heal": 2,
+      "abilities": [
+        "cura",
+        "escudo",
+        "ressurreicao"
+      ],
+      "raw_effect": "Mantém Yato em corpo mortal-imortal (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -2587,10 +2845,11 @@
     ],
     "cost": 2,
     "grants": {
-      "raw_effect": "Concede Furtividade",
       "abilities": [
-        "Furtividade"
-      ]
+        "furtividade",
+        "silencio"
+      ],
+      "raw_effect": "Concede Furtividade"
     },
     "rarity": "rara",
     "is_flash": false
@@ -2603,11 +2862,11 @@
     ],
     "cost": 1,
     "grants": {
-      "raw_effect": "Utilitário: revela/coordena (a refinar)",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Utilitário: revela/coordena (a refinar)"
     },
     "rarity": "comum",
-    "is_flash": false
+    "is_flash": true
   },
   {
     "id": "talisma_do_escudo_mal_amado",
@@ -2617,9 +2876,12 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Escudo Sagrado: +def + chance de anular ataque letal (a refinar)",
-      "armor": 1,
-      "abilities": []
+      "armor": 3,
+      "abilities": [
+        "espinhos",
+        "escudo_sagrado"
+      ],
+      "raw_effect": "Escudo Sagrado: +def + chance de anular ataque letal (a refinar)"
     },
     "rarity": "rara",
     "is_flash": false
@@ -2632,10 +2894,11 @@
     ],
     "cost": 4,
     "grants": {
-      "raw_effect": "Disfarce/ilusão — Furtividade (a refinar)",
       "abilities": [
-        "Furtividade"
-      ]
+        "furtividade",
+        "mimico"
+      ],
+      "raw_effect": "Disfarce/ilusão — Furtividade (a refinar)"
     },
     "rarity": "epica",
     "is_flash": false
@@ -2648,10 +2911,10 @@
     ],
     "cost": 3,
     "grants": {
-      "raw_effect": "Aeronave — utilitário (a refinar)",
-      "abilities": []
+      "abilities": [],
+      "raw_effect": "Aeronave — utilitário (a refinar)"
     },
     "rarity": "rara",
-    "is_flash": false
+    "is_flash": true
   }
 ]

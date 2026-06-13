@@ -202,6 +202,28 @@ enum AbilityKeyword {
   /// que é por tipo). Não evita DoTs já ativos (Sangramento/Veneno/Doença). O
   /// Assassino concede uma Esquiva temporária de 100% (ver herói).
   esquiva,
+
+  // ── Skills novas (docx do CEO, 2026-06-12) ───────────────────────────────
+
+  /// Volta uma criatura aliada da retaguarda pra mão (reposicionamento). Nas
+  /// relíquias (ARCA, Pedra do Regresso) = utilitário de escape; sem runtime
+  /// próprio no MVP além de sinalizar a intenção (recuo manual já existe).
+  recuo,
+
+  /// Revela criaturas Furtivas e pode mirá-las: ataques desta criatura ignoram
+  /// a Furtividade do alvo (foca alvos furtivos).
+  percepcao,
+
+  /// Ao acertar um ataque, EXECUTA (destrói) o alvo se o PV atual dele ficar
+  /// ≤ 🎚️ `kExecutorThreshold`. Ataques mágicos/verdadeiros também executam.
+  executor,
+}
+
+/// Magnitude opcional de uma keyword com parâmetro (ex.: "espinhos_3" → 3,
+/// "escudo_4" → 4, "roubo_de_pv_2" → 2). Null quando não há número.
+int? abilityMagnitude(String raw) {
+  final m = RegExp(r'(\d+)$').firstMatch(_fold(raw));
+  return m == null ? null : int.parse(m.group(1)!);
 }
 
 /// Nome canônico (forma "bonita" com espaço/acento) — usado em eventos
@@ -298,14 +320,26 @@ String abilityKeywordLabel(AbilityKeyword k) {
       return 'Névoa Tóxica';
     case AbilityKeyword.esquiva:
       return 'Esquiva';
+    case AbilityKeyword.recuo:
+      return 'Recuo';
+    case AbilityKeyword.percepcao:
+      return 'Percepção';
+    case AbilityKeyword.executor:
+      return 'Executor';
   }
 }
 
 /// Canoniza uma string de habilidade vinda dos dados. Aceita variantes com e
 /// sem espaço/acento/caixa ("AtaqueDuplo", "Silencio", "roubo de pv"...).
 /// Retorna null se não for uma keyword com runtime.
-AbilityKeyword? abilityKeywordFromString(String raw) =>
-    _canonical[_fold(raw)];
+AbilityKeyword? abilityKeywordFromString(String raw) {
+  final folded = _fold(raw);
+  final direct = _canonical[folded];
+  if (direct != null) return direct;
+  // Tira a magnitude no fim ("espinhos2" → "espinhos") e tenta de novo.
+  final base = folded.replaceFirst(RegExp(r'\d+$'), '');
+  return _canonical[base];
+}
 
 /// Normaliza: minúsculas, remove acentos e tudo que não for [a-z0-9].
 String _fold(String s) {
@@ -381,4 +415,16 @@ const Map<String, AbilityKeyword> _canonical = {
   'explosaomagica': AbilityKeyword.explosaoMagica,
   'nevoatoxica': AbilityKeyword.nevoaToxica,
   'esquiva': AbilityKeyword.esquiva,
+  // Skills novas (docx 2026-06-12).
+  'recuo': AbilityKeyword.recuo,
+  'recuar': AbilityKeyword.recuo,
+  'percepcao': AbilityKeyword.percepcao,
+  'executor': AbilityKeyword.executor,
+  // Aliases de grafia que aparecem nos dados crus.
+  'defesa': AbilityKeyword.escudo,
+  'vampirismo': AbilityKeyword.rouboDePv,
+  'reversaodefeitico': AbilityKeyword.reflexoMagico,
+  'quebraescudo': AbilityKeyword.quebraArmadura,
+  'duploataque': AbilityKeyword.ataqueDuplo,
+  'espinho': AbilityKeyword.espinhos,
 };

@@ -466,6 +466,13 @@ IconData keywordIcon(AbilityKeyword k) {
       return Icons.cloud_queue;
     case AbilityKeyword.esquiva:
       return Icons.directions_run;
+    // Skills novas (docx 2026-06-12).
+    case AbilityKeyword.recuo:
+      return Icons.keyboard_return;
+    case AbilityKeyword.percepcao:
+      return Icons.visibility;
+    case AbilityKeyword.executor:
+      return Icons.dangerous;
   }
 }
 
@@ -563,6 +570,12 @@ String keywordDescription(AbilityKeyword k) {
       return 'No início do turno, adoece todos os inimigos.';
     case AbilityKeyword.esquiva:
       return 'Evade qualquer tipo de ataque (chance).';
+    case AbilityKeyword.recuo:
+      return 'Volta uma criatura aliada da retaguarda para a mão.';
+    case AbilityKeyword.percepcao:
+      return 'Revela e mira criaturas Furtivas (ignora a Furtividade).';
+    case AbilityKeyword.executor:
+      return 'Ao acertar, destrói o alvo se ele ficar com PV muito baixo.';
   }
 }
 

@@ -103,9 +103,9 @@ void main() {
       expect(celestial.isCompatibleWith(magCreature), isFalse);
     });
 
-    test('contagem de flash = 47', () {
+    test('contagem de flash = 48', () {
       final flash = _loadRelics().where((r) => r.isFlash).length;
-      expect(flash, 47);
+      expect(flash, 48);
     });
 
     test('toda relíquia tem cost >= 0 (custo em cristais do frontmatter)', () {

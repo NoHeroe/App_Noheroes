@@ -11,7 +11,9 @@
     "damage_type": "corpo_a_corpo",
     "rarity": "comum",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "doenca"
+    ]
   },
   {
     "id": "aglomerado_de_celulas_estagio_2",
@@ -25,7 +27,9 @@
     "damage_type": "corpo_a_corpo",
     "rarity": "comum",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "doenca"
+    ]
   },
   {
     "id": "aglomerado_de_celulas_estagio_3",
@@ -39,7 +43,10 @@
     "damage_type": "corpo_a_corpo",
     "rarity": "rara",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "doenca",
+      "veneno"
+    ]
   },
   {
     "id": "azuos",
@@ -48,13 +55,19 @@
       "corrompido",
       "vitalismo"
     ],
-    "cost": 7,
+    "cost": 5,
     "atk": 6,
-    "hp": 7,
+    "hp": 6,
     "damage_type": "vitalismo",
     "rarity": "elite",
     "relic_slots": 2,
-    "abilities": []
+    "abilities": [
+      "roubo_de_pv_2",
+      "crescimento"
+    ],
+    "extra_attacks": {
+      "corpo_a_corpo": 6
+    }
   },
   {
     "id": "bandidos",
@@ -63,7 +76,7 @@
       "corrompido"
     ],
     "cost": 2,
-    "atk": 3,
+    "atk": 2,
     "hp": 2,
     "damage_type": "corpo_a_corpo",
     "rarity": "comum",
@@ -76,13 +89,18 @@
     "concepts": [
       "vitalismo"
     ],
-    "cost": 6,
-    "atk": 6,
+    "cost": 5,
+    "atk": 3,
     "hp": 6,
-    "damage_type": "corpo_a_corpo",
+    "damage_type": "a_distancia",
     "rarity": "epica",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "furtividade"
+    ],
+    "extra_attacks": {
+      "corpo_a_corpo": 3
+    }
   },
   {
     "id": "cacadores_de_recompensas",
@@ -112,7 +130,7 @@
     "rarity": "comum",
     "relic_slots": 1,
     "abilities": [
-      "Investida"
+      "investida"
     ]
   },
   {
@@ -122,13 +140,14 @@
       "magico"
     ],
     "cost": 3,
-    "atk": 2,
-    "hp": 6,
+    "atk": 1,
+    "hp": 5,
     "damage_type": "corpo_a_corpo",
     "rarity": "comum",
     "relic_slots": 1,
     "abilities": [
-      "Provocar"
+      "provocar",
+      "atordoar"
     ]
   },
   {
@@ -139,12 +158,18 @@
       "magico"
     ],
     "cost": 7,
-    "atk": 6,
+    "atk": 4,
     "hp": 6,
     "damage_type": "magico",
     "rarity": "lendaria",
     "relic_slots": 2,
-    "abilities": []
+    "abilities": [
+      "desmoralizar",
+      "espinhos_2"
+    ],
+    "extra_attacks": {
+      "corpo_a_corpo": 4
+    }
   },
   {
     "id": "cervo_chifre_de_cristal",
@@ -159,12 +184,12 @@
     "rarity": "rara",
     "relic_slots": 1,
     "abilities": [
-      "Inspirar"
+      "inspirar"
     ]
   },
   {
     "id": "chefao_das_aranhas_mutantes",
-    "nome": "Chefão das Aranhas Mutantes",
+    "nome": "Aranha Mutante",
     "concepts": [
       "corrompido"
     ],
@@ -174,7 +199,10 @@
     "damage_type": "corpo_a_corpo",
     "rarity": "epica",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "veneno",
+      "enredar"
+    ]
   },
   {
     "id": "couracados",
@@ -184,11 +212,13 @@
     ],
     "cost": 5,
     "atk": 4,
-    "hp": 6,
+    "hp": 8,
     "damage_type": "corpo_a_corpo",
     "rarity": "epica",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "escudo_sagrado"
+    ]
   },
   {
     "id": "crawlers",
@@ -202,7 +232,9 @@
     "damage_type": "corpo_a_corpo",
     "rarity": "comum",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "doenca"
+    ]
   },
   {
     "id": "demonios_comuns",
@@ -224,13 +256,16 @@
     "concepts": [
       "chrysalis"
     ],
-    "cost": 7,
+    "cost": 5,
     "atk": 6,
     "hp": 6,
     "damage_type": "corpo_a_corpo",
     "rarity": "lendaria",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "espinhos_3",
+      "desmoralizar"
+    ]
   },
   {
     "id": "desolados",
@@ -259,7 +294,8 @@
     "rarity": "epica",
     "relic_slots": 1,
     "abilities": [
-      "Roubo de PV"
+      "roubo_de_pv",
+      "reflexo_magico"
     ]
   },
   {
@@ -274,7 +310,9 @@
     "damage_type": "corpo_a_corpo",
     "rarity": "comum",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "investida"
+    ]
   },
   {
     "id": "diabrete_curupira",
@@ -289,7 +327,7 @@
     "rarity": "rara",
     "relic_slots": 1,
     "abilities": [
-      "Provocar"
+      "provocar"
     ]
   },
   {
@@ -305,7 +343,7 @@
     "rarity": "rara",
     "relic_slots": 1,
     "abilities": [
-      "Pisotear"
+      "pisotear"
     ]
   },
   {
@@ -321,7 +359,7 @@
     "rarity": "rara",
     "relic_slots": 1,
     "abilities": [
-      "Voo"
+      "enredar"
     ]
   },
   {
@@ -338,7 +376,7 @@
     "rarity": "lendaria",
     "relic_slots": 1,
     "abilities": [
-      "Escudo"
+      "escudo_4"
     ]
   },
   {
@@ -354,7 +392,9 @@
     "rarity": "epica",
     "relic_slots": 1,
     "abilities": [
-      "Pisotear"
+      "pisotear",
+      "escudo_sagrado",
+      "voo"
     ]
   },
   {
@@ -369,7 +409,10 @@
     "damage_type": "magico",
     "rarity": "epica",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "voo",
+      "veneno"
+    ]
   },
   {
     "id": "drakonianos",
@@ -384,7 +427,10 @@
     "damage_type": "corpo_a_corpo",
     "rarity": "rara",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "escudo",
+      "atordoar"
+    ]
   },
   {
     "id": "driades",
@@ -399,7 +445,8 @@
     "rarity": "rara",
     "relic_slots": 1,
     "abilities": [
-      "Provocar"
+      "provocar",
+      "cura"
     ]
   },
   {
@@ -415,7 +462,8 @@
     "rarity": "rara",
     "relic_slots": 1,
     "abilities": [
-      "Alcance"
+      "alcance",
+      "furtividade"
     ]
   },
   {
@@ -430,7 +478,9 @@
     "damage_type": "a_distancia",
     "rarity": "rara",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "furtividade"
+    ]
   },
   {
     "id": "gnoll_do_vazio",
@@ -444,7 +494,11 @@
     "damage_type": "vitalismo",
     "rarity": "epica",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "investida",
+      "atordoar",
+      "crescimento"
+    ]
   },
   {
     "id": "goblin_arqueiro",
@@ -487,7 +541,7 @@
     "rarity": "comum",
     "relic_slots": 1,
     "abilities": [
-      "Alcance"
+      "alcance"
     ]
   },
   {
@@ -504,7 +558,8 @@
     "rarity": "rara",
     "relic_slots": 1,
     "abilities": [
-      "Inspirar"
+      "inspirar",
+      "reflexo_magico"
     ]
   },
   {
@@ -520,7 +575,7 @@
     "rarity": "epica",
     "relic_slots": 1,
     "abilities": [
-      "Voo"
+      "voo"
     ]
   },
   {
@@ -537,7 +592,7 @@
     "rarity": "rara",
     "relic_slots": 1,
     "abilities": [
-      "Voo"
+      "voo"
     ]
   },
   {
@@ -553,7 +608,7 @@
     "rarity": "comum",
     "relic_slots": 1,
     "abilities": [
-      "Escudo"
+      "escudo"
     ]
   },
   {
@@ -569,7 +624,7 @@
     "rarity": "rara",
     "relic_slots": 1,
     "abilities": [
-      "Voo"
+      "voo"
     ]
   },
   {
@@ -585,7 +640,11 @@
     "damage_type": "magico",
     "rarity": "lendaria",
     "relic_slots": 2,
-    "abilities": []
+    "abilities": [
+      "cristal_de_drenagem",
+      "escudo_sagrado",
+      "contra_ataque"
+    ]
   },
   {
     "id": "koda_feet",
@@ -600,7 +659,13 @@
     "damage_type": "corpo_a_corpo",
     "rarity": "elite",
     "relic_slots": 2,
-    "abilities": []
+    "abilities": [
+      "roubo_de_pv_2",
+      "sangramento"
+    ],
+    "extra_attacks": {
+      "magico": 5
+    }
   },
   {
     "id": "kyanne_laville",
@@ -609,13 +674,18 @@
       "celestial",
       "magico"
     ],
-    "cost": 6,
-    "atk": 4,
+    "cost": 5,
+    "atk": 3,
     "hp": 5,
     "damage_type": "magico",
     "rarity": "lendaria",
     "relic_slots": 2,
-    "abilities": []
+    "abilities": [
+      "escudo_espelhado"
+    ],
+    "extra_attacks": {
+      "corpo_a_corpo": 3
+    }
   },
   {
     "id": "marionetes_do_culto",
@@ -629,7 +699,10 @@
     "damage_type": "magico",
     "rarity": "comum",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "escudo",
+      "escudo_espelhado"
+    ]
   },
   {
     "id": "milena",
@@ -644,7 +717,11 @@
     "damage_type": "vitalismo",
     "rarity": "lendaria",
     "relic_slots": 2,
-    "abilities": []
+    "abilities": [
+      "inabalavel",
+      "ressurreicao",
+      "contra_ataque"
+    ]
   },
   {
     "id": "mimico",
@@ -659,7 +736,10 @@
     "damage_type": "corpo_a_corpo",
     "rarity": "rara",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "mimico",
+      "transformar"
+    ]
   },
   {
     "id": "mimico_de_adaga",
@@ -674,7 +754,7 @@
     "rarity": "rara",
     "relic_slots": 1,
     "abilities": [
-      "Ataque Duplo"
+      "ataque_duplo"
     ]
   },
   {
@@ -690,7 +770,8 @@
     "rarity": "rara",
     "relic_slots": 1,
     "abilities": [
-      "Provocar"
+      "provocar",
+      "enredar"
     ]
   },
   {
@@ -706,7 +787,10 @@
     "rarity": "rara",
     "relic_slots": 1,
     "abilities": [
-      "Provocar"
+      "provocar",
+      "escudo_sagrado",
+      "escudo",
+      "escudo_espelhado"
     ]
   },
   {
@@ -721,7 +805,9 @@
     "damage_type": "corpo_a_corpo",
     "rarity": "rara",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "andorinha"
+    ]
   },
   {
     "id": "mimico_de_moedas",
@@ -736,7 +822,7 @@
     "rarity": "rara",
     "relic_slots": 1,
     "abilities": [
-      "Cristal de Drenagem"
+      "cristal_de_drenagem"
     ]
   },
   {
@@ -751,7 +837,9 @@
     "damage_type": "cura",
     "rarity": "rara",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "cura"
+    ]
   },
   {
     "id": "morto_vivo",
@@ -765,7 +853,9 @@
     "damage_type": "corpo_a_corpo",
     "rarity": "comum",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "zumbi"
+    ]
   },
   {
     "id": "myroth",
@@ -780,7 +870,11 @@
     "damage_type": "magico",
     "rarity": "lendaria",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "voo",
+      "atordoar",
+      "escudo"
+    ]
   },
   {
     "id": "n6_desconhecido",
@@ -788,13 +882,17 @@
     "concepts": [
       "chrysalis"
     ],
-    "cost": 8,
+    "cost": 6,
     "atk": 7,
     "hp": 7,
     "damage_type": "corpo_a_corpo",
     "rarity": "lendaria",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "atordoar",
+      "crescimento",
+      "andorinha"
+    ]
   },
   {
     "id": "nythor",
@@ -808,7 +906,11 @@
     "damage_type": "magico",
     "rarity": "epica",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "voo",
+      "sangramento",
+      "contra_ataque"
+    ]
   },
   {
     "id": "o_devorador",
@@ -822,7 +924,9 @@
     "damage_type": "magico",
     "rarity": "epica",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "reflexo_magico"
+    ]
   },
   {
     "id": "oni_vagante",
@@ -831,13 +935,16 @@
       "corrompido",
       "magico"
     ],
-    "cost": 7,
+    "cost": 6,
     "atk": 7,
     "hp": 5,
     "damage_type": "corpo_a_corpo",
     "rarity": "lendaria",
     "relic_slots": 2,
-    "abilities": []
+    "abilities": [
+      "ataque_duplo",
+      "desmoralizar"
+    ]
   },
   {
     "id": "parasitas_de_planta_e_fungo",
@@ -851,7 +958,9 @@
     "damage_type": "magico",
     "rarity": "rara",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "espinhos"
+    ]
   },
   {
     "id": "patas_sombrias",
@@ -866,7 +975,8 @@
     "rarity": "rara",
     "relic_slots": 1,
     "abilities": [
-      "Voo"
+      "contra_ataque",
+      "investida"
     ]
   },
   {
@@ -881,7 +991,9 @@
     "damage_type": "corpo_a_corpo",
     "rarity": "epica",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "furtividade"
+    ]
   },
   {
     "id": "presas_douradas",
@@ -896,7 +1008,9 @@
     "rarity": "epica",
     "relic_slots": 1,
     "abilities": [
-      "Escudo"
+      "escudo",
+      "pisotear",
+      "sangramento"
     ]
   },
   {
@@ -925,7 +1039,9 @@
     "damage_type": "corpo_a_corpo",
     "rarity": "comum",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "veneno"
+    ]
   },
   {
     "id": "sado",
@@ -940,7 +1056,12 @@
     "damage_type": "magico",
     "rarity": "lendaria",
     "relic_slots": 2,
-    "abilities": []
+    "abilities": [
+      "mimico",
+      "reflexo_magico",
+      "andorinha",
+      "cura"
+    ]
   },
   {
     "id": "sakura_anaoji",
@@ -948,13 +1069,17 @@
     "concepts": [
       "magico"
     ],
-    "cost": 5,
+    "cost": 4,
     "atk": 5,
     "hp": 3,
     "damage_type": "magico",
     "rarity": "lendaria",
     "relic_slots": 2,
-    "abilities": []
+    "abilities": [
+      "veneno",
+      "investida",
+      "ataque_duplo"
+    ]
   },
   {
     "id": "sentinela_da_areia_eterna",
@@ -969,8 +1094,9 @@
     "rarity": "epica",
     "relic_slots": 1,
     "abilities": [
-      "Provocar",
-      "Escudo"
+      "provocar",
+      "escudo",
+      "atordoar"
     ]
   },
   {
@@ -986,7 +1112,9 @@
     "rarity": "rara",
     "relic_slots": 1,
     "abilities": [
-      "Silêncio"
+      "silencio",
+      "cristal_de_drenagem",
+      "enredar"
     ]
   },
   {
@@ -1001,7 +1129,9 @@
     "damage_type": "corpo_a_corpo",
     "rarity": "rara",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "mimico"
+    ]
   },
   {
     "id": "sombras_mendigas",
@@ -1016,7 +1146,7 @@
     "rarity": "comum",
     "relic_slots": 1,
     "abilities": [
-      "Furtividade"
+      "furtividade"
     ]
   },
   {
@@ -1032,7 +1162,11 @@
     "damage_type": "magico",
     "rarity": "epica",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "silencio",
+      "furtividade",
+      "crescimento"
+    ]
   },
   {
     "id": "tigre_dente_de_sabre",
@@ -1046,7 +1180,9 @@
     "damage_type": "corpo_a_corpo",
     "rarity": "rara",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "investida"
+    ]
   },
   {
     "id": "tormento_sangrento",
@@ -1061,7 +1197,9 @@
     "rarity": "epica",
     "relic_slots": 1,
     "abilities": [
-      "Ataque Duplo"
+      "ataque_duplo",
+      "sangramento",
+      "executor"
     ]
   },
   {
@@ -1077,7 +1215,8 @@
     "rarity": "epica",
     "relic_slots": 1,
     "abilities": [
-      "Escudo"
+      "escudo",
+      "atordoar"
     ]
   },
   {
@@ -1092,7 +1231,11 @@
     "damage_type": "vitalismo",
     "rarity": "lendaria",
     "relic_slots": 2,
-    "abilities": []
+    "abilities": [
+      "crescimento",
+      "andorinha",
+      "investida"
+    ]
   },
   {
     "id": "vagantes",
@@ -1106,7 +1249,10 @@
     "damage_type": "corpo_a_corpo",
     "rarity": "epica",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "zumbi",
+      "atordoar"
+    ]
   },
   {
     "id": "varaak",
@@ -1121,7 +1267,11 @@
     "damage_type": "magico",
     "rarity": "epica",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "voo",
+      "escudo_sagrado",
+      "suprimir_magia"
+    ]
   },
   {
     "id": "vetrak_mancerion",
@@ -1136,7 +1286,10 @@
     "damage_type": "magico",
     "rarity": "lendaria",
     "relic_slots": 2,
-    "abilities": []
+    "abilities": [
+      "transformar",
+      "contra_ataque"
+    ]
   },
   {
     "id": "voidrins",
@@ -1151,7 +1304,11 @@
     "damage_type": "vitalismo",
     "rarity": "epica",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "crescimento",
+      "andorinha",
+      "desmoralizar"
+    ]
   },
   {
     "id": "ydros",
@@ -1165,7 +1322,9 @@
     "damage_type": "magico",
     "rarity": "lendaria",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "cura"
+    ]
   },
   {
     "id": "yuna_lannatary",
@@ -1179,7 +1338,14 @@
     "damage_type": "magico",
     "rarity": "elite",
     "relic_slots": 2,
-    "abilities": []
+    "abilities": [
+      "cura",
+      "escudo_sagrado",
+      "reflexo_magico"
+    ],
+    "extra_attacks": {
+      "corpo_a_corpo": 4
+    }
   },
   {
     "id": "zumbi_comum",
@@ -1193,6 +1359,8 @@
     "damage_type": "corpo_a_corpo",
     "rarity": "comum",
     "relic_slots": 1,
-    "abilities": []
+    "abilities": [
+      "zumbi"
+    ]
   }
 ]
