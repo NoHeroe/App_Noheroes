@@ -1122,6 +1122,25 @@ class CardBattleEngine {
       if (!creature0.isAlive) continue;
       final atkList = creature0.attacks;
 
+      // Buff PRÉ-ATAQUE com animação (CEO 2026-06-13): se a criatura entra na vez
+      // com Investida ATIVA, ela "ativa" o buff num passo PRÓPRIO (AbilityTriggered)
+      // ANTES de golpear — regra geral de buffs: animam primeiro, depois o ataque
+      // acontece (já buffado). O valor já está em `investidaBonus`; este beat é só
+      // o visual no replay (a animação some antes do golpe sair).
+      if (creature0.investidaBonus > 0 &&
+          atkList.any((a) => a.type == DamageType.corpoACorpo)) {
+        final preAtk = attacker;
+        final preDef = defender;
+        events.add(AbilityTriggered(
+          side: attacker.id,
+          cardId: attackerId,
+          cardName: creature0.card.nome,
+          ability: abilityKeywordLabel(AbilityKeyword.investida),
+          detail: 'investida: +${creature0.investidaBonus} de dano no golpe',
+        ));
+        snapPre(preAtk, preDef); // beat do buff, antes do(s) golpe(s)
+      }
+
       for (final atk in atkList) {
         if (!defender.hasCreatureInPlay) break;
 
