@@ -36,6 +36,7 @@ class GameCardFace extends StatelessWidget {
     this.statusOverlay,
     this.minimal = false,
     this.showCost = true,
+    this.glowByConcept = false,
   });
 
   final String name;
@@ -90,6 +91,10 @@ class GameCardFace extends StatelessWidget {
   /// Exibe o cristal de custo no topo. false = cartas sem custo (ex.: heróis).
   final bool showCost;
 
+  /// Glow na cor do CONCEITO (não da raridade) e bem SUAVE — usado nas cartas
+  /// IN-GAME (tabuleiro/mão). Coleção/pacotes mantêm o brilho de raridade.
+  final bool glowByConcept;
+
   Color get _concept => conceptColor(concepts);
 
   @override
@@ -112,12 +117,18 @@ class GameCardFace extends StatelessWidget {
             : isHigh
                 ? rarCol.withValues(alpha: 0.75)
                 : _concept.withValues(alpha: 0.35));
+    // IN-GAME (glowByConcept): glow SUAVE na cor do CONCEITO, ignorando a
+    // raridade (CEO 2026-06-13: "o glow reflete o conceito e bem mais fraco").
+    // Selecionada ainda pulsa roxo.
+    final weakGlow = glowByConcept && !selected;
     final glow = glowColor ??
         (selected
             ? AppColors.purpleGlow
-            : isHigh
-                ? rarCol.withValues(alpha: 0.5)
-                : _concept.withValues(alpha: 0.12));
+            : weakGlow
+                ? _concept.withValues(alpha: 0.13)
+                : isHigh
+                    ? rarCol.withValues(alpha: 0.5)
+                    : _concept.withValues(alpha: 0.12));
 
     final card = Container(
       width: width,
@@ -263,14 +274,16 @@ class GameCardFace extends StatelessWidget {
         // Mostrada também no preview (minimal) — faz parte da identidade da carta.
         Positioned(top: 0, left: 3, child: _RarityPennant(rarity: rarity)),
         // Brasões de EFEITO (keywords) na borda esquerda, abaixo da bandeira,
-        // vazando ~40% pra fora.
+        // vazando ~40% pra fora. SEM teto (CEO 2026-06-13): mostra TODAS as
+        // habilidades da carta — antes `take(4)` escondia a 5ª+ ("cartas não
+        // mostravam todos os atributos"). Mesmo design nos 4 contextos.
         if (effects.isNotEmpty && !minimal)
           Positioned(
             top: 34,
             left: -7,
             child: Column(
               children: [
-                for (final g in effects.take(4)) _EffectCrest(glyph: g),
+                for (final g in effects) _EffectCrest(glyph: g),
               ],
             ),
           ),
@@ -281,7 +294,7 @@ class GameCardFace extends StatelessWidget {
             right: -7,
             child: Column(
               children: [
-                for (final g in debuffs.take(5)) _DebuffCrest(glyph: g),
+                for (final g in debuffs) _DebuffCrest(glyph: g),
               ],
             ),
           ),

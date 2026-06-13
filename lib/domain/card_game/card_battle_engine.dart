@@ -621,21 +621,10 @@ class CardBattleEngine {
       return s.withSide(side.id, newSide);
     }
 
-    // Tabuleiro CHEIO: insere front-packed empurrando a última criatura pra
-    // mão. Custa kReturnToHandCost e ENCERRA a vez (o controller dispara o
-    // endTurn ao detectar este caso). Sem compra (a mão troca 1 por 1).
-    if (side.crystals < kReturnToHandCost) return s;
-    final insertPos = requested < kLaneCount ? requested : kLaneCount - 1;
-    final list = List<CreatureInPlay>.from(packed)..insert(insertPos, placed);
-    final displaced = list.removeLast(); // a que caiu do slot de trás
-    final hand = List<Object>.from(side.hand)..removeAt(idx);
-    hand.add(displaced.card); // relíquias equipadas são descartadas (MVP)
-    final newSide = side.copyWith(
-      lanes: _packedToLanes(list),
-      hand: hand,
-      crystals: side.crystals - kReturnToHandCost,
-    );
-    return s.withSide(side.id, newSide);
+    // Tabuleiro CHEIO (3 criaturas): jogar criatura é PROIBIDO (CEO 2026-06-13).
+    // Removida a antiga jogada "empurra a última pra mão" — sem vaga, é no-op.
+    // (Pra abrir espaço, o jogador recua uma criatura — o que encerra a vez.)
+    return s;
   }
 
   /// Converte uma fila PACKED (frente→retaguarda) em lanes indexadas: o item i
@@ -745,19 +734,6 @@ class CardBattleEngine {
       st = st.withSide(sideId, newSide);
     }
     return st;
-  }
-
-  /// Esta jogada de criatura é o caso especial "tabuleiro cheio → carta volta
-  /// pra mão" (custa 3 e encerra a vez)? O controller usa isto pra disparar o
-  /// fim do turno automaticamente. Puro: depende só do estado ANTES da jogada.
-  bool isFullBoardReturnPlay(MatchState s, String cardId, int lane) {
-    final side = s.active;
-    if (lane < 0 || lane >= kLaneCount) return false;
-    if (!side.hand.any((c) => c is CreatureCard && c.id == cardId)) return false;
-    // Front-packed: só é caso "volta pra mão" quando a fila já está CHEIA
-    // (3 criaturas). Com vaga, qualquer posição pedida encaixa empurrando sem
-    // expulsar ninguém.
-    return side.creaturesInPlay.length >= kLaneCount;
   }
 
   MatchState _playRelic(MatchState s, PlayRelic a) {

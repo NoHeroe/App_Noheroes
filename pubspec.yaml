@@ -80,5 +80,6 @@ flutter:
     - assets/data/card_game/relics.json
     - assets/images/card_game/
     - assets/vfx/particles/
+    - assets/vfx/weapons/
     - assets/icons/rpg/
     - assets/fonts/

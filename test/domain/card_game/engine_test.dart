@@ -110,6 +110,45 @@ void main() {
     });
   });
 
+  group('tabuleiro CHEIO: jogar criatura é PROIBIDO (CEO 2026-06-13)', () {
+    // Seed cujo lado ativo começa com ≥4 criaturas na mão. Custo 0 isola o
+    // motivo do no-op (tabuleiro cheio, NÃO falta de cristais).
+    int seedWith4Creatures(CardLoadout a, CardLoadout b) {
+      for (var seed = 0; seed < 256; seed++) {
+        final s = engine.start(a, b, seed: seed);
+        if (s.active.handCreatures.length >= 4) return seed;
+      }
+      return -1;
+    }
+
+    test('com 3 criaturas em jogo, a 4ª é no-op (sem empurrar pra mão)', () {
+      final aL = makeLoadout(prefix: 'A', cost: 0);
+      final bL = makeLoadout(prefix: 'B', cost: 0);
+      final seed = seedWith4Creatures(aL, bL);
+      expect(seed, isNonNegative,
+          reason: 'precisa de 4 criaturas na mão inicial');
+      var s = engine.start(aL, bL, seed: seed);
+      final ids = s.active.handCreatures.take(4).map((c) => c.id).toList();
+      s = engine.apply(s, PlayCreature(ids[0]));
+      s = engine.apply(s, PlayCreature(ids[1]));
+      s = engine.apply(s, PlayCreature(ids[2]));
+      expect(s.active.creaturesInPlay.length, kLaneCount,
+          reason: 'as 3 lanes encheram');
+      final handBefore = s.active.hand.length;
+      final crystalsBefore = s.active.crystals;
+
+      // 4ª jogada com o tabuleiro cheio → no-op TOTAL (removido o "empurra
+      // a última pra mão", CEO 2026-06-13).
+      final s2 = engine.apply(s, PlayCreature(ids[3]));
+      expect(s2.active.creaturesInPlay.length, kLaneCount,
+          reason: 'a 4ª NÃO entra');
+      expect(_inHand(s2.active, ids[3]), isTrue,
+          reason: 'a 4ª continua na mão (não empurrada nem descartada)');
+      expect(s2.active.hand.length, handBefore, reason: 'mão intacta');
+      expect(s2.active.crystals, crystalsBefore, reason: 'cristais intactos');
+    });
+  });
+
   group('relíquia de ATK genérica = capacidade MELEE (CEO 2026-06-13)', () {
     CreatureInPlay withAtkRelic(DamageType type) => CreatureInPlay(
           card: creature(id: 'c_${type.name}', atk: 3, damageType: type),

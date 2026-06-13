@@ -71,12 +71,11 @@ const int kExtraDrawCost = 1;
 /// Quantas criaturas a mão inicial garante (o resto da mão é aleatório). 🎚️
 const int kInitialHandCreatures = 2;
 
-/// Custo em cristais da jogada especial "tabuleiro cheio → carta empurrada
-/// volta pra mão" (bloqueia o resto das ações do turno). 🎚️
-const int kReturnToHandCost = 3;
+// (Removido kReturnToHandCost — CEO 2026-06-13: tabuleiro cheio agora PROÍBE
+// jogar criatura; não existe mais a jogada "empurra a última pra mão".)
 
-/// Custo em cristais da ação VOLUNTÁRIA de recuar uma criatura própria em jogo
-/// de volta pra mão (não encerra a vez). 🎚️
+/// Custo em cristais da ação de RECUAR uma criatura própria em jogo de volta
+/// pra mão. ENCERRA a vez (CEO 2026-06-13). 🎚️
 const int kReturnVoluntaryCost = 2;
 
 // ---------------------------------------------------------------------------

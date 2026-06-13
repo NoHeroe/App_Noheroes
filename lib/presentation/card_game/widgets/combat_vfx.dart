@@ -31,10 +31,15 @@ class CombatVfx {
   static const String trace = '$_base/trace_01.png';
   static const String circle = '$_base/circle_05.png';
 
+  /// Espada (PNG tier 3, pasta weapons) usada no GOLPE melee — arte completa
+  /// (não é glow tingível). Aponta pra NE (cabo embaixo-esq, ponta em cima-dir).
+  static const String sword = 'assets/vfx/weapons/sword_tier3.png';
+
   /// Todas as texturas — usar pra `precacheImage` no início da partida e evitar
   /// engasgo no 1º efeito.
   static const List<String> all = <String>[
     slash, magic, light, flare, spark, star, smoke, scorch, trace, circle,
+    sword,
   ];
 
   /// Uma textura tingida (glow branco → cor do elemento via modulate).
@@ -187,6 +192,80 @@ class CombatVfx {
               _spark(i, size * 0.8, color, delay: d, count: 3),
           ],
         ),
+      ),
+    );
+  }
+
+  // ----------------------------------------------------------------- ESPADA --
+
+  /// GOLPE de ESPADA melee (CEO 2026-06-13): a espada (PNG tier 3) entra
+  /// "armada" (recuada), desce num ARCO rápido cortando o alvo e some; faíscas
+  /// no impacto. A carta atacante já AVANÇA (lunge) — isto é o golpe em si.
+  /// `delayMs` casa com o pico da investida (quando "encosta"). `flip`=lado do
+  /// BOT: espelha no eixo Y (golpe pra BAIXO, rumo ao jogador) em vez de pra cima.
+  /// Ângulos/tamanho são tunáveis (1ª passada — CEO afina no flutter run).
+  static Widget swordStrike({
+    double size = 88,
+    int delayMs = 240,
+    bool flip = false,
+  }) {
+    final d = Duration(milliseconds: delayMs);
+    const pivot = Alignment(-0.5, 0.55);
+    // GIRO no CABO (só a ponta arca): arma (+0.20) e varre a meia-lua terminando
+    // PRA FRENTE (rotações somam: 0.20 → -0.12). É SÓ rotação aqui — a VIAGEM é
+    // aplicada POR FORA (no Stack abaixo). Crítico (CEO 2026-06-13): se a
+    // translação ficasse DENTRO do giro, o avanço saía inclinado e a espada ia
+    // "pro lado" em vez de pra frente.
+    final blade = Image.asset(sword, width: size, height: size, fit: BoxFit.contain)
+        .animate()
+        .fadeIn(delay: d, duration: 60.ms)
+        .rotate(
+            begin: 0.0,
+            end: 0.20,
+            delay: d,
+            duration: 300.ms,
+            curve: Curves.easeOut,
+            alignment: pivot)
+        .rotate(
+            begin: 0.0,
+            end: -0.32,
+            delay: d + 300.ms,
+            duration: 200.ms,
+            curve: Curves.easeInCubic,
+            alignment: pivot)
+        .scaleXY(
+            begin: 1.0,
+            end: 1.15,
+            delay: d + 300.ms,
+            duration: 200.ms,
+            curve: Curves.easeIn)
+        .fadeOut(delay: d + 540.ms, duration: 130.ms, curve: Curves.easeOut);
+    // VIAGEM alinhada à TELA (por fora do giro): recuo curto pra trás (+y) e
+    // ESTOCADA longa PRA FRENTE/cima (-y) rumo ao alvo. moves somam (2º começa em
+    // 0): 0 → +56 (arma) → -174 (viaja). flipY espelha pro bot (golpe desce).
+    final traveling = Stack(
+      alignment: Alignment.center,
+      clipBehavior: Clip.none,
+      children: [
+        blade,
+        for (var i = 0; i < 4; i++)
+          _spark(i, size * 0.85, const Color(0xFFFFF2CC),
+              delay: d + 470.ms, count: 4),
+      ],
+    )
+        .animate()
+        .moveY(begin: 0, end: 56, delay: d, duration: 300.ms, curve: Curves.easeOut)
+        .moveY(
+            begin: 0,
+            end: -230,
+            delay: d + 300.ms,
+            duration: 200.ms,
+            curve: Curves.easeInCubic);
+    return IgnorePointer(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Transform.flip(flipY: flip, child: traveling),
       ),
     );
   }
@@ -394,11 +473,13 @@ class _DeathShatterState extends State<_DeathShatter>
     final s = widget.size;
     for (var i = 0; i < _count; i++) {
       final ang = (i / _count) * 2 * math.pi + (_rand.nextDouble() - 0.5) * 0.7;
-      final speed = s * (0.8 + _rand.nextDouble() * 1.2);
+      // Voam LONGE (CEO 2026-06-13): velocidade inicial bem maior + impulso pra
+      // cima mais forte (espalha melhor); a gravidade puxa de volta como vidro.
+      final speed = s * (1.7 + _rand.nextDouble() * 2.1); // 1.7..3.8
       final gray = 150 + _rand.nextInt(95); // 150..244
       _shards.add(_GlassShard(
         vx: math.cos(ang) * speed,
-        vy: math.sin(ang) * speed - s * 0.5, // leve impulso pra cima
+        vy: math.sin(ang) * speed - s * 0.7, // impulso pra cima
         rot: _rand.nextDouble() * math.pi,
         rotVel: (_rand.nextDouble() - 0.5) * 11,
         radius: s * (0.05 + _rand.nextDouble() * 0.07),
@@ -414,7 +495,7 @@ class _DeathShatterState extends State<_DeathShatter>
     final now = _c.lastElapsedDuration ?? Duration.zero;
     final dt = ((now - _last).inMicroseconds / 1e6).clamp(0.0, 0.05);
     _last = now;
-    final gravity = widget.size * 2.4;
+    final gravity = widget.size * 1.9; // menos puxão = carrega mais longe
     for (final sh in _shards) {
       sh.x += sh.vx * dt;
       sh.y += sh.vy * dt;

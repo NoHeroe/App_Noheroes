@@ -156,9 +156,9 @@ class PveMatchUiState {
   /// null enquanto a partida não terminou.
   final bool? playerWon;
 
-  /// Após uma troca com o tabuleiro CHEIO (carta empurrada volta pra mão), o
-  /// resto das ações da Fase de Jogo fica bloqueado — só sobra Encerrar Turno.
-  /// Resetado no início de cada turno do jogador.
+  /// Após RECUAR uma criatura pra mão (CEO 2026-06-13), o resto das ações da
+  /// Fase de Jogo fica bloqueado — só sobra Encerrar Turno. Resetado no início
+  /// de cada turno do jogador.
   final bool playLocked;
 
   /// A IA acabou de jogar uma criatura → anima a carta voando da mão até a lane.
@@ -232,15 +232,28 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
       ? const Duration(milliseconds: 800)
       : Duration.zero;
 
+  /// RESPIRO MAIOR após uma MORTE (CEO 2026-06-13): a morte de uma carta também
+  /// é um evento e pede um pouco mais de pausa antes da próxima ação. Substitui o
+  /// `_breathDelay` no beat que MATA. `Duration.zero` nos testes (replay síncrono).
+  Duration get _deathBreathDelay => _botStepDelay > Duration.zero
+      ? const Duration(milliseconds: 1150)
+      : Duration.zero;
+
   /// Duração da batida por TIPO: a MAGIA é teatral (canaliza ~640ms + voo ~480ms
   /// + impacto), então precisa de uma batida mais longa pra animação caber
   /// (CEO 2026-06-13). Os outros tipos usam o ritmo padrão.
   Duration _eventDelayFor(CombatHighlight? h) {
     if (_eventStepDelay == Duration.zero) return Duration.zero; // testes/sync
+    // RESPIRO de morte (CEO 2026-06-13): quando o golpe MATA, segura o destaque
+    // +500ms — dá janela pra sequência IMPACTO → MORTE (tremor + P&B + estilhaço)
+    // caber inteira antes do próximo evento, sem cortar o estilhaço.
+    final preDeath = (h?.targetDied == true && h?.isHeal == false)
+        ? const Duration(milliseconds: 500)
+        : Duration.zero;
     if (h?.damageType == DamageType.magico && h?.isHeal == false) {
-      return const Duration(milliseconds: 2000);
+      return const Duration(milliseconds: 2000) + preDeath;
     }
-    return _eventStepDelay;
+    return _eventStepDelay + preDeath;
   }
 
   /// Guard de reentrância: cobre `startMatch` e `endPlayerTurn` (pipelines
@@ -356,54 +369,46 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
   /// lane livre mais à frente. Retorna false se não for a vez do jogador ou
   /// se o engine recusar (no-op).
   bool playCreature(String cardId, {int? lane, String? mimicTargetId}) {
-    // Detecta (ANTES de aplicar) a jogada especial de "tabuleiro cheio →
-    // carta empurrada volta pra mão", que custa 3 cristais e ENCERRA a vez.
-    final match = state.match;
-    final fullReturn = lane != null &&
-        match != null &&
-        match.activeSide == state.playerSide &&
-        _engine.isFullBoardReturnPlay(match, cardId, lane);
-
-    final ok = _playerAction(
+    // Tabuleiro CHEIO → não dá pra jogar (CEO 2026-06-13: removida a jogada de
+    // "empurra pra mão"). `canPlayCreature` já bloqueia; aqui só posiciona.
+    return _playerAction(
       PlayCreature(cardId, lane: lane, mimicTargetId: mimicTargetId),
       onApplied: (before, after) {
         final name = _creatureName(before, cardId);
         final placed = _findCreature(after.sideOf(state.playerSide), cardId);
         final laneLabel = placed == null ? '' : ' na ${_laneLabel(placed.lane)}';
-        if (fullReturn) {
-          return 'Você jogou $name$laneLabel (tabuleiro cheio: '
-              'carta recuada volta pra mão, −$kReturnToHandCost · só resta '
-              'encerrar o turno).';
-        }
         return 'Você jogou $name$laneLabel.';
       },
       invalidText: () =>
           'Jogada inválida: ${_creatureName(state.match!, cardId)} '
           'não pôde ser jogada.',
     );
-
-    // Troca com tabuleiro cheio: bloqueia o resto das ações do turno (só sobra
-    // Encerrar Turno) em vez de encerrar automaticamente.
-    if (ok && fullReturn) {
-      state = state.copyWith(playLocked: true, clearSelectedCard: true);
-    }
-    return ok;
   }
 
-  /// Recua uma criatura PRÓPRIA em jogo de volta pra mão por
-  /// `kReturnVoluntaryCost` cristais. NÃO encerra a vez.
+  /// Recua uma criatura PRÓPRIA em jogo de volta pra mão (custo
+  /// `kReturnVoluntaryCost`, ou grátis com Recuo/Cartomante). ENCERRA a vez
+  /// (CEO 2026-06-13): trava o resto do turno — só sobra Encerrar Turno.
   bool returnToHand(String creatureId) {
     if (state.playLocked) return false;
-    return _playerAction(
+    final ok = _playerAction(
       ReturnToHand(creatureId),
       onApplied: (before, after) {
         final c = _findCreature(before.sideOf(state.playerSide), creatureId);
-        return 'Você recuou ${c?.card.nome ?? creatureId} pra mão '
-            '(−$kReturnVoluntaryCost cristais).';
+        final spent = before.sideOf(state.playerSide).crystals -
+            after.sideOf(state.playerSide).crystals;
+        final costNote = spent > 0 ? '−$spent cristais' : 'grátis';
+        return 'Você recuou ${c?.card.nome ?? creatureId} pra mão ($costNote · '
+            'só resta encerrar o turno).';
       },
       invalidText: () => 'Não dá pra recuar essa criatura '
           '(cristais insuficientes?).',
     );
+    // Recuar é uma ação que ENCERRA a vez: trava o resto do turno (só sobra
+    // Encerrar Turno), como a antiga jogada de tabuleiro cheio (CEO 2026-06-13).
+    if (ok) {
+      state = state.copyWith(playLocked: true, clearSelectedCard: true);
+    }
+    return ok;
   }
 
   /// Usa a ATIVA do herói (ADR-0028), 1×/partida. No-op se não há herói, já foi
@@ -706,13 +711,12 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     ];
   }
 
-  /// A criatura [card] pode ser jogada agora? Com lane livre, basta pagar o
-  /// custo da carta. Tabuleiro CHEIO ainda permite a jogada de retorno (empurra
-  /// a última pra mão), que custa `kReturnToHandCost` e encerra a vez.
+  /// A criatura [card] pode ser jogada agora? Precisa de lane LIVRE + cristais.
+  /// Tabuleiro CHEIO → não dá (CEO 2026-06-13: removida a jogada de "empurra pra
+  /// mão"; pra abrir vaga o jogador RECUA uma criatura, o que encerra a vez).
   bool canPlayCreature(CreatureCard card) {
     if (state.phase != PveMatchPhase.playerTurn) return false;
-    if (freeLanes().isNotEmpty) return canAfford(card);
-    return (state.playerBoard?.crystals ?? 0) >= kReturnToHandCost;
+    return freeLanes().isNotEmpty && canAfford(card);
   }
 
   /// Criaturas PRÓPRIAS em jogo compatíveis com a relíquia [relic].
@@ -872,7 +876,10 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
             highlight: ghost,
             clearHighlight: ghost == null,
           );
-          await Future<void>.delayed(_breathDelay);
+          // Beat que MATOU → respiro maior (a morte é um evento; pede mais ar).
+          final isDeathBeat = highlight.targetDied && !highlight.isHeal;
+          await Future<void>.delayed(
+              isDeathBeat ? _deathBreathDelay : _breathDelay);
         }
       }
     }

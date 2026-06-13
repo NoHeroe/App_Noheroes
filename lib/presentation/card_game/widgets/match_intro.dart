@@ -28,7 +28,8 @@ class MatchIntroOverlay extends StatefulWidget {
 }
 
 class _MatchIntroOverlayState extends State<MatchIntroOverlay> {
-  int _stage = 0; // 0 nuvens · 1 moeda · 2 banner (diálogo do oponente removido)
+  // -1 pré-roll (véu escuro, pré-carrega) · 0 nuvens · 1 moeda · 2 banner.
+  int _stage = -1;
 
   @override
   void initState() {
@@ -42,7 +43,13 @@ class _MatchIntroOverlayState extends State<MatchIntroOverlay> {
   }
 
   Future<void> _run() async {
+    // CEO 2026-06-13: respiro de pré-carga antes de tudo começar (véu escuro no
+    // 1º frame, dá tempo do flutter_animate/assets ficarem prontos antes da
+    // animação pesada das nuvens) — evita afobamento na abertura.
+    await _wait(800);
+    _go(0); // nuvens
     await _wait(1950); // nuvens de tempestade densas abrem e revelam o campo
+    await _wait(3000); // respiro de 3s entre o fim da fumaça e a moeda
     _go(1);
     await _wait(2400); // moeda gira + resultado
     _go(2); // banner: chama onComplete via TurnBanner.onDone
@@ -55,6 +62,12 @@ class _MatchIntroOverlayState extends State<MatchIntroOverlay> {
         child: Stack(
           fit: StackFit.expand,
           children: [
+            // Pré-roll: véu TOTALMENTE opaco (mesma cor do véu das nuvens) já no
+            // 1º frame, enquanto pré-carrega — transição perfeita pras nuvens.
+            if (_stage == -1)
+              const Positioned.fill(
+                child: ColoredBox(color: Color(0xFF0A0912)),
+              ),
             // Véu escuro leve atrás da moeda/banner (não nas nuvens).
             if (_stage >= 1)
               const ColoredBox(color: Color(0x99060008))

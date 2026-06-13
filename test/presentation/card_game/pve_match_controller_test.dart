@@ -405,4 +405,26 @@ void main() {
       expect(targets.map((t) => t.instanceId), contains(card.id));
     });
   });
+
+  group('recuar (CEO 2026-06-13)', () {
+    test('recuar uma criatura pra mão ENCERRA a vez (playLocked) e trava ações',
+        () async {
+      final c = makeController();
+      await startPlayerFirst(c);
+
+      final card = c.state.playerBoard!.handCreatures.first;
+      expect(c.playCreature(card.id, lane: 0), isTrue);
+      expect(c.state.playLocked, isFalse, reason: 'jogar criatura não trava');
+      final inPlay = c.state.playerBoard!.creaturesInPlay.first.instanceId;
+
+      // Recuar volta a criatura pra mão E encerra a vez (trava o resto do turno).
+      expect(c.returnToHand(inPlay), isTrue);
+      expect(c.state.playLocked, isTrue, reason: 'recuar encerra a vez');
+
+      // Com o turno travado, qualquer outra jogada é no-op (só resta Encerrar).
+      final other = c.state.playerBoard!.handCreatures.first;
+      expect(c.playCreature(other.id, lane: 0), isFalse,
+          reason: 'travado: só sobra Encerrar Turno');
+    });
+  });
 }
