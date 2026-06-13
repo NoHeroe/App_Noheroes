@@ -510,15 +510,17 @@ class CardBattleEngine {
   /// descartadas (MVP). No-op se a criatura não está em jogo ou faltam cristais.
   MatchState _returnToHand(MatchState s, ReturnToHand a) {
     final side = s.active;
-    // Ativa do Cartomante concede 1 recuo grátis (custo 0). Sem teto de mão
-    // (correção CEO 2026-06-12), o recuo nunca é bloqueado por mão cheia.
-    final free = side.freeRecuoPending;
-    final cost = free ? 0 : kReturnVoluntaryCost;
-    if (side.crystals < cost) return s;
     final target = side.creaturesInPlay
         .where((c) => c.instanceId == a.creatureId)
         .firstOrNull;
     if (target == null) return s;
+    // Recuo grátis: ativa do Cartomante (freeRecuoPending) OU a própria criatura
+    // tem a keyword Recuo (CEO 2026-06-12 — recua sem custo de cristal). Sem teto
+    // de mão, o recuo nunca é bloqueado por mão cheia.
+    final free =
+        side.freeRecuoPending || target.hasKeyword(AbilityKeyword.recuo);
+    final cost = free ? 0 : kReturnVoluntaryCost;
+    if (side.crystals < cost) return s;
 
     final packed = side.creaturesInPlay
         .where((c) => c.instanceId != a.creatureId)
@@ -528,7 +530,10 @@ class CardBattleEngine {
       lanes: _packedToLanes(packed),
       hand: hand,
       crystals: side.crystals - cost,
-      freeRecuoPending: false, // consome o recuo grátis (no-op se já era false).
+      // Consome o recuo grátis do Cartomante; mas se o grátis veio da keyword
+      // Recuo, preserva o pending (não gasta a ativa do herói à toa).
+      freeRecuoPending:
+          target.hasKeyword(AbilityKeyword.recuo) ? side.freeRecuoPending : false,
     );
     return s.withSide(side.id, newSide);
   }

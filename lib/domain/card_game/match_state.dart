@@ -330,6 +330,15 @@ class CreatureInPlay {
         byType[t] = (byType[t] ?? 0) + bonus;
       }
     }
+    // Cura como AÇÃO (keyword `cura`): a criatura também faz uma cura = ATK base
+    // (multi-ação; o valor real curado sai de `healer.atk` no _resolveHeal).
+    // `damage_type: cura` já entra como ação por si só — não duplica.
+    if (hasKeyword(AbilityKeyword.cura)) {
+      final heal = card.effectiveAtk;
+      if (heal > (byType[DamageType.cura] ?? 0)) {
+        byType[DamageType.cura] = heal;
+      }
+    }
     // Buffs temporários (Inspirar/Investida) só no ataque corpo a corpo.
     final meleeBuff = inspirarBonus + investidaBonus;
     if (meleeBuff > 0 && byType.containsKey(DamageType.corpoACorpo)) {

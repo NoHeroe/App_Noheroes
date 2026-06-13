@@ -473,6 +473,8 @@ IconData keywordIcon(AbilityKeyword k) {
       return Icons.visibility;
     case AbilityKeyword.executor:
       return Icons.dangerous;
+    case AbilityKeyword.cura:
+      return Icons.healing;
   }
 }
 
@@ -576,6 +578,8 @@ String keywordDescription(AbilityKeyword k) {
       return 'Revela e mira criaturas Furtivas (ignora a Furtividade).';
     case AbilityKeyword.executor:
       return 'Ao acertar, destrói o alvo se ele ficar com PV muito baixo.';
+    case AbilityKeyword.cura:
+      return 'Faz uma ação de cura no aliado mais ferido (ou em si).';
   }
 }
 

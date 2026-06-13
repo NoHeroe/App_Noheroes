@@ -156,4 +156,61 @@ void main() {
       expect(_hpOf(after.sideB, 'front'), 5);
     });
   });
+
+  group('Cura (keyword)', () {
+    test('faz ação de cura no aliado mais ferido (= ATK)', () {
+      final healer = inPlay(
+          id: 'healer',
+          atk: 3,
+          hp: 10,
+          type: DamageType.magico,
+          abilities: ['cura']);
+      final ally = inPlay(id: 'ally', atk: 0, hp: 10).copyWith(currentHp: 5);
+      final s = _stateWith(
+        aLanes: [healer, ally],
+        bLanes: [inPlay(id: 'enemy', atk: 0, hp: 20)],
+      );
+      final after = engine.endTurn(s);
+      expect(_hpOf(after.sideA, 'ally'), 8); // 5 + 3 (ATK do healer)
+    });
+
+    test('sem ninguém ferido, cura o próprio conjurador (no-op se cheio)', () {
+      final healer = inPlay(
+          id: 'healer',
+          atk: 3,
+          hp: 10,
+          type: DamageType.magico,
+          abilities: ['cura']);
+      final s = _stateWith(
+        aLanes: [healer],
+        bLanes: [inPlay(id: 'enemy', atk: 0, hp: 20)],
+      );
+      final after = engine.endTurn(s);
+      expect(_hpOf(after.sideA, 'healer'), 10); // todos cheios → sem overheal
+    });
+  });
+
+  group('Recuo (keyword)', () {
+    test('retorno pra mão é GRÁTIS com a keyword Recuo', () {
+      var s = _stateWith(
+        aLanes: [inPlay(id: 'r', atk: 1, hp: 5, abilities: ['recuo'])],
+        bLanes: [inPlay(id: 'e', atk: 0, hp: 5)],
+      );
+      s = s.withSide(SideId.a, s.sideA.copyWith(crystals: 5));
+      final after = engine.apply(s, const ReturnToHand('r'));
+      expect(after.sideA.crystals, 5); // não debitou
+      expect(after.sideA.hand.whereType<CreatureCard>().any((c) => c.id == 'r'),
+          isTrue);
+    });
+
+    test('sem a keyword, o retorno custa kReturnVoluntaryCost', () {
+      var s = _stateWith(
+        aLanes: [inPlay(id: 'n', atk: 1, hp: 5)],
+        bLanes: [inPlay(id: 'e', atk: 0, hp: 5)],
+      );
+      s = s.withSide(SideId.a, s.sideA.copyWith(crystals: 5));
+      final after = engine.apply(s, const ReturnToHand('n'));
+      expect(after.sideA.crystals, 5 - kReturnVoluntaryCost);
+    });
+  });
 }

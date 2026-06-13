@@ -217,6 +217,11 @@ enum AbilityKeyword {
   /// Ao acertar um ataque, EXECUTA (destrói) o alvo se o PV atual dele ficar
   /// ≤ 🎚️ `kExecutorThreshold`. Ataques mágicos/verdadeiros também executam.
   executor,
+
+  /// A criatura também faz uma AÇÃO de Cura (= seu ATK), no aliado mais ferido
+  /// (se ninguém ferido, no próprio conjurador). Cura limpa DoT/Doença. Some-se
+  /// aos ataques normais (multi-ação). `damage_type: cura` já cura por si só.
+  cura,
 }
 
 /// Magnitude opcional de uma keyword com parâmetro (ex.: "espinhos_3" → 3,
@@ -326,6 +331,8 @@ String abilityKeywordLabel(AbilityKeyword k) {
       return 'Percepção';
     case AbilityKeyword.executor:
       return 'Executor';
+    case AbilityKeyword.cura:
+      return 'Cura';
   }
 }
 
@@ -420,6 +427,8 @@ const Map<String, AbilityKeyword> _canonical = {
   'recuar': AbilityKeyword.recuo,
   'percepcao': AbilityKeyword.percepcao,
   'executor': AbilityKeyword.executor,
+  'cura': AbilityKeyword.cura,
+  'curar': AbilityKeyword.cura,
   // Aliases de grafia que aparecem nos dados crus.
   'defesa': AbilityKeyword.escudo,
   'vampirismo': AbilityKeyword.rouboDePv,
