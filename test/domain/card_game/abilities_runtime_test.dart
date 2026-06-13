@@ -124,37 +124,23 @@ void main() {
     });
   });
 
-  group('Ataque Duplo', () {
-    test('melee da frente que acerta causa dano verdadeiro na retaguarda', () {
+  group('Ataque Duplo (CEO 2026-06-13: 2× corpo a corpo, sem dano verdadeiro)',
+      () {
+    test('golpeia 2× melee no alvo da FRENTE; sem proc de dano verdadeiro', () {
       final s = _stateWith(
         aLanes: [
           inPlay(id: 'ad', atk: 4, abilities: ['Ataque Duplo'])
         ],
         bLanes: [
-          inPlay(id: 'b_front', hp: 10, armor: 1),
-          inPlay(id: 'b_back', hp: 10, armor: 5),
+          inPlay(id: 'b_front', hp: 10),
+          inPlay(id: 'b_back', hp: 10),
         ],
       );
       final after = engine.endTurn(s);
-      // Armadura do front (pool 1) absorve o golpe inteiro: PV intacto, quebra.
-      expect(_find(after.sideB, 'b_front').currentHp, 10);
-      expect(_find(after.sideB, 'b_front').armor, 0);
-      // Hit extra: dano VERDADEIRO (ignora os 5 de armadura) na retaguarda.
-      expect(_find(after.sideB, 'b_back').currentHp, 6);
-      final procs = after.lastTurnEvents
-          .whereType<AbilityTriggered>()
-          .where((e) => e.ability == 'Ataque Duplo');
-      expect(procs, hasLength(1));
-    });
-
-    test('sem retaguarda inimiga: nada acontece', () {
-      final s = _stateWith(
-        aLanes: [
-          inPlay(id: 'ad', atk: 4, abilities: ['Ataque Duplo'])
-        ],
-        bLanes: [inPlay(id: 'b_only', hp: 10)],
-      );
-      final after = engine.endTurn(s);
+      // Dois golpes melee de 4 NO MESMO alvo da frente: 10 - 4 - 4 = 2.
+      expect(_find(after.sideB, 'b_front').currentHp, 2);
+      // A retaguarda NÃO leva mais dano verdadeiro (proc aposentado).
+      expect(_find(after.sideB, 'b_back').currentHp, 10);
       expect(
           after.lastTurnEvents
               .whereType<AbilityTriggered>()
@@ -162,7 +148,18 @@ void main() {
           isEmpty);
     });
 
-    test('NÃO dispara em melee da retaguarda (via Alcance)', () {
+    test('ataca 2× mesmo sem retaguarda inimiga (não depende de backline)', () {
+      final s = _stateWith(
+        aLanes: [
+          inPlay(id: 'ad', atk: 4, abilities: ['Ataque Duplo'])
+        ],
+        bLanes: [inPlay(id: 'b_only', hp: 10)],
+      );
+      final after = engine.endTurn(s);
+      expect(_find(after.sideB, 'b_only').currentHp, 2); // 10 - 4 - 4
+    });
+
+    test('via Alcance, ataca 2× melee da retaguarda no alvo da frente', () {
       final s = _stateWith(
         aLanes: [
           inPlay(id: 'front', atk: 0),
@@ -174,16 +171,13 @@ void main() {
         ],
       );
       final after = engine.endTurn(s);
-      expect(_find(after.sideB, 'b_front').currentHp, 6); // Alcance atacou.
-      expect(_find(after.sideB, 'b_back').currentHp, 10); // sem hit extra.
-      expect(
-          after.lastTurnEvents
-              .whereType<AbilityTriggered>()
-              .where((e) => e.ability == 'Ataque Duplo'),
-          isEmpty);
+      // front (atk 0) não fere; o Alcance da retaguarda bate 2× na frente.
+      expect(_find(after.sideB, 'b_front').currentHp, 2);
+      expect(_find(after.sideB, 'b_back').currentHp, 10);
     });
 
-    test('concedido por relíquia (variante "AtaqueDuplo") também dispara', () {
+    test('concedido por relíquia (variante "AtaqueDuplo") também duplica melee',
+        () {
       final s = _stateWith(
         aLanes: [
           inPlay(id: 'ad', atk: 4, relics: [
@@ -196,7 +190,8 @@ void main() {
         ],
       );
       final after = engine.endTurn(s);
-      expect(_find(after.sideB, 'b_back').currentHp, 6);
+      expect(_find(after.sideB, 'b_front').currentHp, 2); // 2× melee na frente
+      expect(_find(after.sideB, 'b_back').currentHp, 10);
     });
   });
 

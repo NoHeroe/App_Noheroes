@@ -2339,19 +2339,22 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
           case DamageType.vitalismo:
             // Físico/verdadeiro: a carta AVANÇA cruzando a banda central até
             // "encostar" no alvo, segura no impacto (golpe de espada) e RETORNA
-            // ao slot. Lunge grande (56px) pra ser nítido — antes era 16px e
-            // ficava "invisível". Com Clip.none nos Stacks ancestrais não corta.
+            // ao slot. A da FRENTE cruza a banda central (56px); uma da
+            // RETAGUARDA (Alcance) avança POUCO (24px) — senão parece que "troca
+            // de lugar" com a carta da frente (feedback CEO 2026-06-13). O engine
+            // NÃO troca posição — Alcance ataca melee da retaguarda sem se mover.
+            final lunge = isFront ? 56.0 : 24.0;
             tile = tile
                 .animate(key: ObjectKey(h))
                 .moveY(
                     begin: 0,
-                    end: 56 * dir,
+                    end: lunge * dir,
                     duration: 260.ms,
                     curve: Curves.easeIn)
                 .then(delay: 150.ms) // segura no impacto (golpe legível)
                 .moveY(
                     begin: 0,
-                    end: -56 * dir,
+                    end: -lunge * dir,
                     duration: 320.ms,
                     curve: Curves.easeOut);
           case DamageType.magico:

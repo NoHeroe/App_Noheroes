@@ -328,9 +328,13 @@ class CreatureInPlay {
       if (bonus <= 0) continue;
       final t = r.grants.attackType;
       if (t == null) {
-        // Bônus genérico: só soma se o tipo BASE for físico.
+        // Bônus genérico (sem `attackType`) = capacidade de GOLPE CORPO-A-CORPO
+        // (CEO 2026-06-13). "+1 atk" numa relíquia não deve inflar o PROJÉTIL de
+        // um atirador — dá um ataque melee. Só pra base física (melee/à
+        // distância); mágica/cura não ganham melee por relíquia genérica.
         if (base == DamageType.corpoACorpo || base == DamageType.aDistancia) {
-          byType[base] = (byType[base] ?? 0) + bonus;
+          byType[DamageType.corpoACorpo] =
+              (byType[DamageType.corpoACorpo] ?? 0) + bonus;
         }
       } else {
         // Tipado: soma no ataque daquele tipo (cria se não existe).
@@ -382,6 +386,14 @@ class CreatureInPlay {
     for (final dt in DamageType.values) {
       final v = byType[dt];
       if (v != null && v > 0) out.add(CardAttack(dt, v));
+    }
+    // Ataque Duplo (CEO 2026-06-13): golpeia 2× CORPO A CORPO (o antigo "dano
+    // verdadeiro na retaguarda" foi aposentado — era praticamente o Pisotear).
+    // Duplica o ataque melee, se houver; o 2º golpe carrega os mesmos bônus
+    // (relíquia/Investida/Fúria) e dispara on-hit (Roubo de PV/Sangramento) de novo.
+    if (hasKeyword(AbilityKeyword.ataqueDuplo)) {
+      final meleeIdx = out.indexWhere((a) => a.type == DamageType.corpoACorpo);
+      if (meleeIdx >= 0) out.add(out[meleeIdx]);
     }
     return out;
   }

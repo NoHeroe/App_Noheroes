@@ -110,7 +110,7 @@ void main() {
     });
   });
 
-  group('relíquia de ATK só escala dano físico (CEO 2026-06-10)', () {
+  group('relíquia de ATK genérica = capacidade MELEE (CEO 2026-06-13)', () {
     CreatureInPlay withAtkRelic(DamageType type) => CreatureInPlay(
           card: creature(id: 'c_${type.name}', atk: 3, damageType: type),
           currentHp: 5,
@@ -118,16 +118,27 @@ void main() {
           relics: [relic(id: 'r_${type.name}', atkBonus: 5)],
         );
 
-    test('corpo a corpo: bônus aplica (3+5=8)', () {
+    test('corpo a corpo: bônus soma no próprio melee (3+5=8)', () {
       expect(withAtkRelic(DamageType.corpoACorpo).atk, 8);
     });
-    test('à distância: bônus aplica (3+5=8)', () {
-      expect(withAtkRelic(DamageType.aDistancia).atk, 8);
+    test('à distância: bônus vira ATAQUE MELEE; projétil NÃO infla', () {
+      final c = withAtkRelic(DamageType.aDistancia);
+      // O projétil (à distância) continua 3 — não é inflado pelo +5 genérico.
+      final ranged =
+          c.attacks.firstWhere((a) => a.type == DamageType.aDistancia);
+      expect(ranged.value, 3);
+      // E o atirador GANHA um golpe corpo-a-corpo de 5 (regra "+1 atk" = melee).
+      final melee =
+          c.attacks.where((a) => a.type == DamageType.corpoACorpo).toList();
+      expect(melee, hasLength(1));
+      expect(melee.first.value, 5);
     });
-    test('mágico: bônus IGNORADO (fica 3)', () {
-      expect(withAtkRelic(DamageType.magico).atk, 3);
+    test('mágico: bônus genérico IGNORADO (não ganha melee; fica 3)', () {
+      final c = withAtkRelic(DamageType.magico);
+      expect(c.atk, 3);
+      expect(c.attacks.any((a) => a.type == DamageType.corpoACorpo), isFalse);
     });
-    test('vitalismo: bônus IGNORADO (fica 3)', () {
+    test('vitalismo: bônus genérico IGNORADO (fica 3)', () {
       expect(withAtkRelic(DamageType.vitalismo).atk, 3);
     });
   });

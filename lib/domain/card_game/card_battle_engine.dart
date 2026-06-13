@@ -1473,8 +1473,12 @@ class CardBattleEngine {
           ));
         }
       }
-      // Sangramento: só dano físico; +1 acúmulo e reseta a duração.
-      if (physical && attacker.hasKeyword(AbilityKeyword.sangramento)) {
+      // Sangramento: só em golpe que ACERTOU (dano > 0, igual ao Roubo de PV —
+      // CEO 2026-06-13: não sangra se foi bloqueado/absorvido); físico; +1
+      // acúmulo por golpe (multi-ataque empilha) e reseta a duração.
+      if (damage > 0 &&
+          physical &&
+          attacker.hasKeyword(AbilityKeyword.sangramento)) {
         t = t.copyWith(
           bleedStacks: t.bleedStacks + 1,
           bleedTurns: kSangramentoTurns,
@@ -1487,8 +1491,12 @@ class CardBattleEngine {
           detail: '${t.bleedStacks} acúmulo(s) em ${t.card.nome}',
         ));
       }
-      // Veneno: qualquer acerto; aplica se ainda não envenenada.
-      if (attacker.hasKeyword(AbilityKeyword.veneno) && !t.poisoned) {
+      // Veneno: só em golpe que ACERTOU (dano > 0 — corrige o bug de "envenenar"
+      // num golpe absorvido, que mostrava o proc sem dano nenhum, CEO 2026-06-13).
+      // `!t.poisoned` evita reaplicar (multi-ataque não re-envenena).
+      if (damage > 0 &&
+          attacker.hasKeyword(AbilityKeyword.veneno) &&
+          !t.poisoned) {
         t = t.copyWith(poisoned: true);
         events.add(AbilityTriggered(
           side: atkSide.id,
@@ -1712,52 +1720,10 @@ class CardBattleEngine {
       }
     }
 
-    // ---- Ataque Duplo: melee DA FRENTE que acerta (não evadido) causa dano
-    // VERDADEIRO extra (= atk efetivo) a um inimigo ALEATÓRIO da retaguarda ----
-    if (meleeFromFront && attacker.hasKeyword(AbilityKeyword.ataqueDuplo)) {
-      // Retaguarda inimiga ATUAL (pós-dano principal): lanes vivas atrás da
-      // menor lane ocupada.
-      final occupied = <int>[];
-      for (var i = 0; i < defLanes.length; i++) {
-        final c = defLanes[i];
-        if (c != null && c.isAlive) occupied.add(i);
-      }
-      if (occupied.length > 1) {
-        final backline = occupied.sublist(1); // tudo atrás da frente.
-        final pickIdx = backline[s.rng.nextInt(backline.length)];
-        final extraTarget = defLanes[pickIdx]!;
-        // O hit extra é melee para fins de Voo (50%).
-        if (_rollEvade(s, attacker, extraTarget, DamageType.corpoACorpo)) {
-          events.add(AttackEvaded(
-            attackerSide: atkSide.id,
-            attackerCardId: attacker.instanceId,
-            attackerName: attacker.card.nome,
-            targetCardId: extraTarget.instanceId,
-            targetName: extraTarget.card.nome,
-          ));
-        } else {
-          // Dano verdadeiro: ignora armadura. Extra = valor DESTE ataque melee
-          // (multi-ataque: o ataque que disparou o Ataque Duplo).
-          final extraDmg = value;
-          final lethalE = _resolveLethal(extraTarget, extraTarget.currentHp - extraDmg);
-          final extraDied = lethalE.died;
-          defLanes[pickIdx] = lethalE.creature;
-          if (extraDied) anyDeath = true;
-          events.add(AbilityTriggered(
-            side: atkSide.id,
-            cardId: attacker.instanceId,
-            cardName: attacker.card.nome,
-            ability: abilityKeywordLabel(AbilityKeyword.ataqueDuplo),
-            detail: '$extraDmg de dano verdadeiro em '
-                '${extraTarget.card.nome}${extraDied ? ' (destruída)' : ''}',
-          ));
-          if (extraDied &&
-              attacker.hasKeyword(AbilityKeyword.cristalDeDrenagem)) {
-            gainDrainCrystal(extraTarget.card.nome);
-          }
-        }
-      }
-    }
+    // Ataque Duplo: AGORA é "golpeia 2× CORPO A CORPO" — modelado como um 2º
+    // ataque melee em `CreatureInPlay.attacks` (match_state.dart), que entra no
+    // loop de ataques como um golpe normal (com on-hit, evasão e morte próprios).
+    // O antigo proc de dano VERDADEIRO na retaguarda foi aposentado (CEO 2026-06-13).
 
     // ---- Retaliação do alvo melee: Espinhos + Contra-Ataque ----
     // Disparam quando o alvo foi atingido por melee (não evadido). Espinhos
