@@ -270,6 +270,32 @@ class CombatVfx {
     );
   }
 
+  // ------------------------------------------------------------ CORTE/IMPACTO -
+
+  /// CORTE de impacto (CEO 2026-06-13): uma lâmina VERMELHA atravessa a carta na
+  /// diagonal — de baixo-direita pra cima-esquerda, inclinada mais pro MEIO (mais
+  /// vertical que 45°). Aparece num estalo no momento do impacto (junto do tremor)
+  /// e some. Preenche o tile do alvo (usar em `Positioned.fill`).
+  static Widget slashCut({int delayMs = 0}) {
+    final d = Duration(milliseconds: delayMs);
+    return IgnorePointer(
+      child: CustomPaint(
+        painter: _SlashCutPainter(),
+        child: const SizedBox.expand(),
+      )
+          .animate()
+          .fadeIn(delay: d, duration: 50.ms)
+          .scaleXY(
+              begin: 0.55,
+              end: 1.0,
+              delay: d,
+              duration: 130.ms,
+              curve: Curves.easeOutBack)
+          .then(delay: 70.ms)
+          .fadeOut(duration: 200.ms, curve: Curves.easeIn),
+    );
+  }
+
   // ------------------------------------------------------------- PROJÉTIL ----
 
   /// Orbe/streak que VIAJA do atacante ao alvo (mágico = orbe arcano; à
@@ -644,4 +670,38 @@ class _GlassCrackPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_GlassCrackPainter old) => false;
+}
+
+/// Lâmina VERMELHA do CORTE de impacto: 3 traços (glow + núcleo + núcleo quente)
+/// na diagonal baixo-direita → cima-esquerda, inclinada mais pro MEIO da carta
+/// (mais vertical que 45°). Desenho único (`shouldRepaint=false`); o fade/escala
+/// ficam no widget.
+class _SlashCutPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    // Direção do corte (aponta pra cima-esquerda): |y| > |x| ⇒ mais vertical que
+    // 45°, virado pro meio da carta.
+    const dir = Offset(-0.5, -1.0);
+    final dn = dir / dir.distance;
+    final half = size.height * 0.55; // atravessa a carta (vertical)
+    final p1 = c + dn * half; // ponta cima-esquerda
+    final p2 = c - dn * half; // ponta baixo-direita
+    final w = size.shortestSide;
+    void stroke(Color color, double width, [double blur = 0]) {
+      final p = Paint()
+        ..color = color
+        ..strokeWidth = width
+        ..strokeCap = StrokeCap.round;
+      if (blur > 0) p.maskFilter = MaskFilter.blur(BlurStyle.normal, blur);
+      canvas.drawLine(p1, p2, p);
+    }
+
+    stroke(const Color(0x88FF1E12), w * 0.16, 7); // glow vermelho
+    stroke(const Color(0xFFFF2D1F), w * 0.06); // núcleo vermelho
+    stroke(const Color(0xFFFFE2DC), w * 0.02); // núcleo quente
+  }
+
+  @override
+  bool shouldRepaint(_SlashCutPainter old) => false;
 }

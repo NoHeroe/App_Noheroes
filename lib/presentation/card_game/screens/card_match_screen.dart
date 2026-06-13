@@ -2615,7 +2615,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
     }
 
     const projMs = 250;
-    final impactDelay = isProjectile ? projMs : 40;
+    // Impacto no CONTATO do golpe — sincroniza com o tremor do alvo. Projétil
+    // chega ~250ms; melee chega no fim da estocada da espada (`_hitContactMs`).
+    final impactDelay = _hitContactMs(type);
     return IgnorePointer(
       child: Stack(
         clipBehavior: Clip.none,
@@ -2631,6 +2633,10 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
                 durationMs: projMs,
               ),
             ),
+          // MELEE: CORTE vermelho atravessando a carta no impacto (CEO 2026-06-13)
+          // — junto com o tremor do alvo.
+          if (type == DamageType.corpoACorpo)
+            Positioned.fill(child: CombatVfx.slashCut(delayMs: impactDelay)),
           KeyedSubtree(
             key: ValueKey('fxImpact_${identityHashCode(h)}'),
             child: CombatVfx.impactBurst(color: color, delayMs: impactDelay),
