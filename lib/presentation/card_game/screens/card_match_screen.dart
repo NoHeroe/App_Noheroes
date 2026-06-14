@@ -121,6 +121,15 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
   // render-box durante o build (era uma das causas do restart no meio do voo).
   _Flight? _flying;
   int _flightSeq = 0; // id monotônico → Key única e estável por voo
+  // ARRASTE de carta da mão até o slot (CEO 2026-06-14). Estado LOCAL (não passa
+  // pelo provider → rebuild leve durante o drag). Só pra jogar CRIATURA; o toque
+  // (2 toques) continua funcionando em paralelo.
+  Object? _dragCard; // carta sendo arrastada (null = sem arraste)
+  Offset _dragPointer = Offset.zero; // dedo, em coords do _matchStack
+  int? _dragLane; // lane JOGÁVEL sob o dedo (null = inválida/fora)
+  int _dragCost = 0; // custo em cristais da jogada na _dragLane
+  double _dragCardW = 0;
+  double _dragCardH = 0;
   CardPlayNotification? _lastHandledBotNotif; // idempotência do gatilho do bot
   // Pisca o cemitério (vermelho + caveira) a cada carta que entra nele. Incrementa
   // por morte/descarte do MEU lado → vira a Key do efeito one-shot (CEO 2026-06-13).
@@ -732,6 +741,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
             // direto da carta atacante até o alvo — trajetória reta sem oclusão.
             if (_boot == _BootStatus.ready && !ui.isFinished)
               _rangedProjectileOverlay(ui),
+            // Carta sendo ARRASTADA (translúcida, segue o dedo) + custo (CEO
+            // 2026-06-14). No topo da pilha pra cruzar o tabuleiro sem oclusão.
+            if (_dragCard != null) _buildDragOverlay(),
             if (ui.isFinished && _boot == _BootStatus.ready)
               _matchOverOverlay(ui),
           ],
@@ -1032,6 +1044,125 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
       fromBot: false,
     ));
     if (flight != null) _beginFlight(flight);
+  }
+
+  // ───────────────────────── ARRASTE de carta (CEO 2026-06-14) ──────────────
+  /// Converte um ponto GLOBAL pras coords do `_matchStack` (origem dos overlays).
+  Offset _toStackLocal(Offset global) {
+    final box = _matchStackKey.currentContext?.findRenderObject() as RenderBox?;
+    return box?.globalToLocal(global) ?? global;
+  }
+
+  /// Lane do JOGADOR sob um ponto global (hit-test pelas GlobalKeys das lanes —
+  /// posições FIXAS, não afetadas pelo arraste). null se o dedo está fora.
+  int? _laneUnderGlobal(Offset global) {
+    for (var lane = 0; lane < kLaneCount; lane++) {
+      final box =
+          _playerLaneKeys[lane]?.currentContext?.findRenderObject() as RenderBox?;
+      if (box == null || !box.attached) continue;
+      final p = box.globalToLocal(global);
+      if (p.dx >= 0 && p.dy >= 0 && p.dx <= box.size.width && p.dy <= box.size.height) {
+        return lane;
+      }
+    }
+    return null;
+  }
+
+  void _onDragStart(Object card, double w, double h, Offset global) {
+    final ui = ref.read(pveMatchControllerProvider);
+    if (!ui.isPlayerTurn || ui.playLocked || _flying != null) return;
+    final ctrl = ref.read(pveMatchControllerProvider.notifier);
+    // Garante a carta SELECIONADA (acende as lanes jogáveis) sem dar toggle-off.
+    if (ui.selectedCardId != cardId(card)) ctrl.selectCard(cardId(card));
+    setState(() {
+      _dragCard = card;
+      _dragCardW = w;
+      _dragCardH = h;
+      _dragPointer = _toStackLocal(global);
+      _dragLane = null;
+      _dragCost = 0;
+    });
+  }
+
+  void _onDragUpdate(Offset global) {
+    if (_dragCard == null) return;
+    final lane = _laneUnderGlobal(global);
+    final prev = lane == null
+        ? null
+        : ref
+            .read(pveMatchControllerProvider.notifier)
+            .previewPlay(cardId(_dragCard!), lane);
+    setState(() {
+      _dragPointer = _toStackLocal(global);
+      _dragLane = prev != null ? lane : null; // só destaca lane VÁLIDA
+      _dragCost = prev?.cost ?? 0;
+    });
+  }
+
+  void _onDragEnd() {
+    final card = _dragCard;
+    final lane = _dragLane;
+    setState(() {
+      _dragCard = null;
+      _dragLane = null;
+    });
+    if (card == null || lane == null) return; // soltou fora → cancela
+    final ctrl = ref.read(pveMatchControllerProvider.notifier);
+    final before = _playerInstanceIds(ref.read(pveMatchControllerProvider));
+    if (ctrl.playCreature(cardId(card), lane: lane)) _triggerPlayerFlight(before);
+  }
+
+  /// Overlay da carta sendo arrastada (translúcida, segue o dedo) + badge do
+  /// custo quando paira sobre uma lane jogável. Renderizado no topo do `_matchStack`.
+  Widget _buildDragOverlay() {
+    final card = _dragCard;
+    if (card == null) return const SizedBox.shrink();
+    final w = _dragCardW, h = _dragCardH;
+    return Positioned(
+      left: _dragPointer.dx - w / 2,
+      top: _dragPointer.dy - h / 2,
+      width: w,
+      height: h,
+      child: IgnorePointer(
+        child: Opacity(
+          opacity: _dragLane != null ? 0.85 : 0.6,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              _gameFaceFor(card),
+              if (_dragLane != null)
+                Positioned(
+                  top: -10,
+                  right: -8,
+                  child: _dragCostBadge(_dragCost),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _dragCostBadge(int cost) {
+    const crystal = Color(0xFF8FD8FF); // ciano-cristal
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFF140D22),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: crystal, width: 1.2),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.diamond, size: 11, color: crystal),
+          const SizedBox(width: 3),
+          Text('$cost',
+              style: GoogleFonts.cinzelDecorative(
+                  fontSize: 12, fontWeight: FontWeight.w700, color: crystal)),
+        ],
+      ),
+    );
   }
 
   /// Indicador de TURNO compacto, ao lado do livro de skills no topo (CEO
@@ -2903,6 +3034,11 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
     final playable = card is CreatureCard
         ? controller.canPlayCreature(card)
         : controller.canPlayRelic(card as RelicCard);
+    // ARRASTE só pra CRIATURA jogável (CEO 2026-06-14). Relíquia/manobra seguem
+    // o toque. A carta "some" da mão enquanto está sendo arrastada (vai pro
+    // overlay que segue o dedo).
+    final canDrag = card is CreatureCard && playable;
+    final beingDragged = _dragCard != null && cardId(_dragCard!) == cardId(card);
 
     return Positioned(
       left: left,
@@ -2911,10 +3047,18 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
         angle: selected ? 0 : rot,
         child: GestureDetector(
           onTap: () => controller.selectCard(cardId(card)),
-          child: SizedBox(
-            width: cardW,
-            height: cardH,
-            child: _gameFaceFor(card, selected: selected, dimmed: !playable),
+          onPanStart: canDrag
+              ? (d) => _onDragStart(card, cardW, cardH, d.globalPosition)
+              : null,
+          onPanUpdate: canDrag ? (d) => _onDragUpdate(d.globalPosition) : null,
+          onPanEnd: canDrag ? (_) => _onDragEnd() : null,
+          child: Opacity(
+            opacity: beingDragged ? 0.25 : 1, // fantasma fica no overlay
+            child: SizedBox(
+              width: cardW,
+              height: cardH,
+              child: _gameFaceFor(card, selected: selected, dimmed: !playable),
+            ),
           ),
         ),
       ),
