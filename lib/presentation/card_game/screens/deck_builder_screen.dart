@@ -13,6 +13,7 @@ import '../card_ownership.dart';
 import '../deck_repository.dart';
 import '../../shared/widgets/nh_back_button.dart';
 import '../widgets/game_card_face.dart';
+import '../widgets/glossary_button.dart';
 import '../widgets/card_detail_sheet.dart';
 import '../../shared/widgets/nh_atmosphere.dart';
 
@@ -450,6 +451,8 @@ class _DeckBuilderScreenState extends ConsumerState<DeckBuilderScreen> {
             onTap: () =>
                 context.canPop() ? context.pop() : context.go('/library'),
           ),
+          const Spacer(),
+          const GlossaryButton(), // livro de buffs/legenda (CEO 2026-06-14)
         ],
       ),
     );

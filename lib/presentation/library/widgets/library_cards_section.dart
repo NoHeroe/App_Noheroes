@@ -12,6 +12,7 @@ import '../../card_game/screens/stellar_forge_screen.dart';
 import '../../card_game/card_ownership.dart';
 import '../../card_game/card_economy.dart';
 import '../../card_game/widgets/game_card_face.dart';
+import '../../card_game/widgets/glossary_button.dart';
 import '../../card_game/widgets/card_detail_sheet.dart';
 import '../../card_game/widgets/card_back.dart';
 import '../../shared/widgets/nh_back_button.dart';
@@ -337,6 +338,8 @@ class _LibraryCardsSectionState extends ConsumerState<LibraryCardsSection> {
         children: [
           NhBackButton(onTap: widget.onBack),
           const Spacer(),
+          const GlossaryButton(), // livro de buffs/legenda (CEO 2026-06-14)
+          const SizedBox(width: 8),
           Text('Forja Estelar',
               style: GoogleFonts.cinzelDecorative(
                   fontSize: 11, color: AppColors.goldLt, letterSpacing: 1)),
