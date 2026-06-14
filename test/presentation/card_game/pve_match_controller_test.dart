@@ -439,6 +439,35 @@ void main() {
       // pra CONSULTAR playableLanes — não precisa estar na mão (usa custo+count).
       expect(c.playableLanes(a), [1, 2]);
     });
+
+    test('previewPlay deriva insert/cascata/custo SEM aplicar (CEO 2026-06-14)',
+        () async {
+      final c = makeController();
+      final player = CardLoadout(
+        creatures: [for (var i = 0; i < 9; i++) creature(id: 'p$i', cost: 1)],
+        relics: [for (var i = 0; i < 9; i++) relic(id: 'r$i', cost: 9)],
+      );
+      await startPlayerFirst(c, player: player);
+      final a = c.state.playerBoard!.handCreatures[0];
+      final b = c.state.playerBoard!.handCreatures[1];
+      expect(c.playCreature(a.id), isTrue); // frente (lane 0), custa 1
+      final aInst = c.state.playerBoard!.lanes[0]!.instanceId;
+      final crystalsBefore = c.state.playerBoard!.crystals;
+
+      // Prévia de jogar b pedindo o slot 0: a frente (a) NÃO se move; b entra no
+      // slot traseiro (1). Custo = custo da carta.
+      final prev = c.previewPlay(b.id, 0);
+      expect(prev, isNotNull);
+      expect(prev!.insertLane, 1);
+      expect(prev.laneOf[aInst], 0, reason: 'a frente não se move na prévia');
+      expect(prev.cost, 1);
+      // NÃO aplicou: estado real intacto (só `a` em campo, cristais iguais).
+      expect(c.state.playerBoard!.creaturesInPlay.length, 1);
+      expect(c.state.playerBoard!.crystals, crystalsBefore);
+
+      // Jogada inválida (carta fora da mão) → null.
+      expect(c.previewPlay('inexistente', 0), isNull);
+    });
   });
 
   group('recuar (CEO 2026-06-13)', () {

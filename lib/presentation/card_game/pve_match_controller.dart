@@ -136,6 +136,27 @@ class CombatHighlight {
       );
 }
 
+/// Resultado SIMULADO de jogar uma carta numa lane (prévia do ARRASTE, CEO
+/// 2026-06-14): onde a carta entra, pra onde cada criatura JÁ em jogo se desloca
+/// (cascata do empurrão) e o custo em cristais. Calculado pelo engine puro — não
+/// toca a partida real. Ver `PveMatchController.previewPlay`.
+class PlayPreview {
+  const PlayPreview({
+    required this.insertLane,
+    required this.laneOf,
+    required this.cost,
+  });
+
+  /// Lane (0 = frente) onde a carta NOVA vai parar.
+  final int insertLane;
+
+  /// instanceId das criaturas JÁ em jogo → lane DEPOIS da jogada (cascata).
+  final Map<String, int> laneOf;
+
+  /// Custo em cristais da jogada.
+  final int cost;
+}
+
 /// Uma criatura acabou de ser JOGADA: a tela anima a carta saindo da mão até a
 /// lane (CEO 2026-06-13). `fromBot` decide a coreografia (IA: vira+expande do
 /// topo; jogador: cresce+desce com impacto). `creature` traz `card` e `lane`.
@@ -762,6 +783,39 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     final count = state.playerBoard?.creaturesInPlay.length ?? 0;
     if (count == 0) return const <int>[0];
     return <int>[for (var i = 1; i <= count && i < kLaneCount; i++) i];
+  }
+
+  /// SIMULA jogar [cardId] na [lane] (prévia do arraste, CEO 2026-06-14) SEM
+  /// aplicar: roda o engine PURO (`CardBattleEngine.apply`) e compara antes/depois
+  /// pra derivar onde a carta entra, a CASCATA do empurrão (cada criatura já em
+  /// jogo → lane nova) e o custo. Retorna null se a jogada for inválida (no-op:
+  /// sem vaga/cristais/fora do turno). Não toca a partida real.
+  PlayPreview? previewPlay(String cardId, int lane) {
+    final match = state.match;
+    if (match == null || state.phase != PveMatchPhase.playerTurn) return null;
+    final side = state.playerSide;
+    final after = _engine.apply(match, PlayCreature(cardId, lane: lane));
+    if (identical(after, match)) return null; // no-op = jogada inválida
+    final beforeSide = match.sideOf(side);
+    final afterSide = after.sideOf(side);
+    final beforeIds = <String>{
+      for (final c in beforeSide.creaturesInPlay) c.instanceId,
+    };
+    CreatureInPlay? placed;
+    final laneOf = <String, int>{};
+    for (final c in afterSide.creaturesInPlay) {
+      if (beforeIds.contains(c.instanceId)) {
+        laneOf[c.instanceId] = c.lane; // criatura existente → lane prevista
+      } else {
+        placed = c; // a carta NOVA (uid inédito)
+      }
+    }
+    if (placed == null) return null; // defensivo
+    return PlayPreview(
+      insertLane: placed.lane,
+      laneOf: laneOf,
+      cost: beforeSide.crystals - afterSide.crystals,
+    );
   }
 
   /// Criaturas PRÓPRIAS em jogo compatíveis com a relíquia [relic].
