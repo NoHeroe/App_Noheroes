@@ -33,6 +33,29 @@ void main() {
   });
 
   group('CreatureInPlay derivados', () {
+    test('relicSlots: base 1; Suporte (via relíquia) abre o 2º slot', () {
+      // Sem suporte: 1 slot.
+      final base = CreatureInPlay(
+        card: creature(id: 'c'),
+        currentHp: 5,
+        lane: 0,
+      );
+      expect(base.relicSlots, 1);
+      // Com o Emblema do Suporte equipado (concede 'suporte'): 2 slots.
+      final withSupport = CreatureInPlay(
+        card: creature(id: 'c'),
+        currentHp: 5,
+        lane: 0,
+        relics: [
+          relic(id: 'emblema', concept: CardConcept.neutro, abilities: const [
+            'suporte',
+            'magnetismo',
+          ]),
+        ],
+      );
+      expect(withSupport.relicSlots, 2);
+    });
+
     test('armor soma das relíquias', () {
       final c = CreatureInPlay(
         card: creature(id: 'c', relicSlots: 3),

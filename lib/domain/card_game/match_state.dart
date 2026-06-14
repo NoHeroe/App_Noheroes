@@ -221,6 +221,13 @@ class CreatureInPlay {
 
   bool hasKeyword(AbilityKeyword k) => keywords.contains(k);
 
+  /// Slots de relíquia EFETIVOS: base da carta + 1 se a criatura tiver Suporte
+  /// (concedido pela relíquia "Emblema do Suporte"). Como `keywords` já inclui as
+  /// habilidades das relíquias equipadas, equipar o Emblema 1º (ocupa o slot
+  /// base) passa a conceder Suporte → abre o 2º slot (CEO 2026-06-14).
+  int get relicSlots =>
+      card.relicSlots + (hasKeyword(AbilityKeyword.suporte) ? 1 : 0);
+
   /// Imunidade (Lote 6) a um efeito: Imunidade / Perseverança / Vigilante cobrem
   /// conjuntos diferentes. "imune a X" = X não a afeta (para Espinhos/Contra-
   /// Ataque o afetado é o ATACANTE; para os demais, o alvo/portador).

@@ -560,6 +560,13 @@ IconData keywordIcon(AbilityKeyword k) {
       return Icons.dangerous;
     case AbilityKeyword.cura:
       return Icons.healing;
+    // Round 3 (CEO 2026-06-14).
+    case AbilityKeyword.suporte:
+      return Icons.handshake;
+    case AbilityKeyword.magnetismo:
+      return Icons.tune;
+    case AbilityKeyword.sorte:
+      return Icons.casino;
   }
 }
 
@@ -666,6 +673,11 @@ String? keywordSvg(AbilityKeyword k) {
       return p('guillotine');
     case AbilityKeyword.cura:
       return p('healing');
+    // Round 3 (CEO 2026-06-14): sem SVG dedicado → usa o fallback Material.
+    case AbilityKeyword.suporte:
+    case AbilityKeyword.magnetismo:
+    case AbilityKeyword.sorte:
+      return null;
   }
 }
 
@@ -775,6 +787,12 @@ String keywordDescription(AbilityKeyword k) {
       return 'Ao acertar, destrói o alvo se ele ficar com PV muito baixo.';
     case AbilityKeyword.cura:
       return 'Faz uma ação de cura no aliado mais ferido (ou em si).';
+    case AbilityKeyword.suporte:
+      return 'O portador comporta 2 relíquias em vez de 1.';
+    case AbilityKeyword.magnetismo:
+      return 'Ao equipar, você escolhe uma habilidade extra para o item.';
+    case AbilityKeyword.sorte:
+      return 'A cada turno, uma habilidade aleatória se manifesta (troca a anterior).';
   }
 }
 

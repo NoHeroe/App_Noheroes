@@ -781,9 +781,12 @@ class CardBattleEngine {
       }
       updated = target.copyWith(currentHp: hp);
     } else {
-      // Permanente: respeita relicSlots; se cheio, substitui a mais antiga.
+      // Permanente: respeita os slots EFETIVOS (base + Suporte); se cheio,
+      // substitui a mais antiga. `target.relicSlots` (getter) já reflete o
+      // Suporte concedido por relíquias JÁ equipadas — equipe o Emblema do
+      // Suporte 1º pra abrir o 2º slot (CEO 2026-06-14).
       final newRelics = List<RelicCard>.from(target.relics);
-      if (newRelics.length >= target.card.relicSlots && newRelics.isNotEmpty) {
+      if (newRelics.length >= target.relicSlots && newRelics.isNotEmpty) {
         newRelics.removeAt(0); // descarta a antiga
       }
       newRelics.add(relic);

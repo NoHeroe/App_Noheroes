@@ -15,9 +15,10 @@ List<RelicCard> _loadRelics() => CardCatalog.parseRelics(
 
 void main() {
   group('catálogo de cartas reais (ACDA)', () {
-    test('contagens: 80 criaturas, 176 relíquias', () {
+    test('contagens: 80 criaturas, 178 relíquias', () {
       expect(_loadCreatures().length, 80);
-      expect(_loadRelics().length, 176);
+      // 176 originais + emblema_do_suporte + trevo_de_quatro_folhas (round 3).
+      expect(_loadRelics().length, 178);
     });
 
     test('todos os conceitos das criaturas são válidos (∈ os 6)', () {
@@ -122,6 +123,64 @@ void main() {
         // Toda carta real tem uma linha de Efeito não-vazia.
         expect(r.grants.rawEffect, isNotEmpty, reason: r.id);
       }
+    });
+  });
+
+  group('balanceamento round 3 (CEO 2026-06-14)', () {
+    test('teto de custo: nenhuma criatura custa > 5 (≥6 viraram 5)', () {
+      for (final c in _loadCreatures()) {
+        expect(c.cost, lessThanOrEqualTo(5), reason: '${c.id} cost=${c.cost}');
+      }
+    });
+
+    test('nerf: nenhum dano melee/vitalismo (base ou extra) > 4', () {
+      const nerfTypes = {DamageType.corpoACorpo, DamageType.vitalismo};
+      for (final c in _loadCreatures()) {
+        if (nerfTypes.contains(c.damageType)) {
+          expect(c.atk, lessThanOrEqualTo(4),
+              reason: '${c.id} atk=${c.atk} (${c.damageType})');
+        }
+        c.extraAttacks.forEach((type, value) {
+          if (nerfTypes.contains(type)) {
+            expect(value, lessThanOrEqualTo(4),
+                reason: '${c.id} extra[$type]=$value');
+          }
+        });
+      }
+    });
+
+    test('todas as criaturas têm exatamente 1 slot de relíquia base', () {
+      for (final c in _loadCreatures()) {
+        expect(c.relicSlots, 1, reason: '${c.id} relic_slots=${c.relicSlots}');
+      }
+    });
+
+    test('Azuos: 4/4 (vitalismo + corpo-a-corpo) + ganha Transformar', () {
+      final azuos = _loadCreatures().firstWhere((c) => c.id == 'azuos');
+      expect(azuos.atk, 4);
+      expect(azuos.extraAttacks[DamageType.corpoACorpo], 4);
+      expect(azuos.abilities.contains('transformar'), isTrue);
+    });
+
+    test('Emblema do Suporte: neutro, lendária, custo 2, suporte + magnetismo',
+        () {
+      final r =
+          _loadRelics().firstWhere((r) => r.id == 'emblema_do_suporte');
+      expect(r.concepts, [CardConcept.neutro]);
+      expect(r.rarity, Rarity.lendaria);
+      expect(r.cost, 2);
+      expect(r.grants.abilities, containsAll(['suporte', 'magnetismo']));
+    });
+
+    test('Trevo de Quatro Folhas: neutro, custo 3, armadura 1 + cura 1 + sorte',
+        () {
+      final r =
+          _loadRelics().firstWhere((r) => r.id == 'trevo_de_quatro_folhas');
+      expect(r.concepts, [CardConcept.neutro]);
+      expect(r.cost, 3);
+      expect(r.grants.armor, 1);
+      expect(r.grants.heal, 1);
+      expect(r.grants.abilities, contains('sorte'));
     });
   });
 }

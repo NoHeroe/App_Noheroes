@@ -222,6 +222,22 @@ enum AbilityKeyword {
   /// (se ninguém ferido, no próprio conjurador). Cura limpa DoT/Doença. Some-se
   /// aos ataques normais (multi-ação). `damage_type: cura` já cura por si só.
   cura,
+
+  // ── Round 3 (balanceamento, CEO 2026-06-14) ───────────────────────────────
+
+  /// PASSIVA estrutural: o portador comporta 2 relíquias em vez de 1
+  /// (`CreatureInPlay.relicSlots`). Concedida pela relíquia "Emblema do Suporte".
+  suporte,
+
+  /// Ao EQUIPAR a relíquia (item), o jogador ESCOLHE uma habilidade extra (entre
+  /// as existentes) que passa a ser concedida ao portador. Concedida pelo
+  /// "Emblema do Suporte". (Runtime de escolha: ver `PlayRelic.grantedAbility`.)
+  magnetismo,
+
+  /// A cada início do turno do dono, uma habilidade ALEATÓRIA (entre as
+  /// existentes) se manifesta no portador e SUBSTITUI a anterior. Concedida pelo
+  /// "Trevo de Quatro Folhas". RNG semeado (determinístico).
+  sorte,
 }
 
 /// Magnitude opcional de uma keyword com parâmetro (ex.: "espinhos_3" → 3,
@@ -333,6 +349,12 @@ String abilityKeywordLabel(AbilityKeyword k) {
       return 'Executor';
     case AbilityKeyword.cura:
       return 'Cura';
+    case AbilityKeyword.suporte:
+      return 'Suporte';
+    case AbilityKeyword.magnetismo:
+      return 'Magnetismo';
+    case AbilityKeyword.sorte:
+      return 'Sorte';
   }
 }
 
@@ -429,6 +451,10 @@ const Map<String, AbilityKeyword> _canonical = {
   'executor': AbilityKeyword.executor,
   'cura': AbilityKeyword.cura,
   'curar': AbilityKeyword.cura,
+  // Round 3 (CEO 2026-06-14).
+  'suporte': AbilityKeyword.suporte,
+  'magnetismo': AbilityKeyword.magnetismo,
+  'sorte': AbilityKeyword.sorte,
   // Aliases de grafia que aparecem nos dados crus.
   'defesa': AbilityKeyword.escudo,
   'vampirismo': AbilityKeyword.rouboDePv,

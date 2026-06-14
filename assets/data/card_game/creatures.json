@@ -56,17 +56,18 @@
       "vitalismo"
     ],
     "cost": 5,
-    "atk": 6,
+    "atk": 4,
     "hp": 6,
     "damage_type": "vitalismo",
     "rarity": "elite",
-    "relic_slots": 2,
+    "relic_slots": 1,
     "abilities": [
       "roubo_de_pv_2",
-      "crescimento"
+      "crescimento",
+      "transformar"
     ],
     "extra_attacks": {
-      "corpo_a_corpo": 6
+      "corpo_a_corpo": 4
     }
   },
   {
@@ -157,12 +158,12 @@
       "celestial",
       "magico"
     ],
-    "cost": 7,
+    "cost": 5,
     "atk": 4,
     "hp": 6,
     "damage_type": "magico",
     "rarity": "lendaria",
-    "relic_slots": 2,
+    "relic_slots": 1,
     "abilities": [
       "desmoralizar",
       "espinhos_2"
@@ -194,7 +195,7 @@
       "corrompido"
     ],
     "cost": 5,
-    "atk": 5,
+    "atk": 4,
     "hp": 6,
     "damage_type": "corpo_a_corpo",
     "rarity": "epica",
@@ -257,7 +258,7 @@
       "chrysalis"
     ],
     "cost": 5,
-    "atk": 6,
+    "atk": 4,
     "hp": 6,
     "damage_type": "corpo_a_corpo",
     "rarity": "lendaria",
@@ -288,7 +289,7 @@
       "corrompido"
     ],
     "cost": 5,
-    "atk": 5,
+    "atk": 4,
     "hp": 5,
     "damage_type": "vitalismo",
     "rarity": "epica",
@@ -369,8 +370,8 @@
       "celestial",
       "magico"
     ],
-    "cost": 6,
-    "atk": 7,
+    "cost": 5,
+    "atk": 4,
     "hp": 8,
     "damage_type": "corpo_a_corpo",
     "rarity": "lendaria",
@@ -403,7 +404,7 @@
     "concepts": [
       "corrompido"
     ],
-    "cost": 6,
+    "cost": 5,
     "atk": 6,
     "hp": 6,
     "damage_type": "magico",
@@ -569,7 +570,7 @@
       "celestial"
     ],
     "cost": 4,
-    "atk": 5,
+    "atk": 4,
     "hp": 4,
     "damage_type": "corpo_a_corpo",
     "rarity": "epica",
@@ -634,12 +635,12 @@
       "corrompido",
       "magico"
     ],
-    "cost": 6,
+    "cost": 5,
     "atk": 4,
     "hp": 5,
     "damage_type": "magico",
     "rarity": "lendaria",
-    "relic_slots": 2,
+    "relic_slots": 1,
     "abilities": [
       "cristal_de_drenagem",
       "escudo_sagrado",
@@ -653,12 +654,12 @@
       "corrompido",
       "vitalismo"
     ],
-    "cost": 6,
-    "atk": 5,
+    "cost": 5,
+    "atk": 4,
     "hp": 5,
     "damage_type": "corpo_a_corpo",
     "rarity": "elite",
-    "relic_slots": 2,
+    "relic_slots": 1,
     "abilities": [
       "roubo_de_pv_2",
       "sangramento"
@@ -679,7 +680,7 @@
     "hp": 5,
     "damage_type": "magico",
     "rarity": "lendaria",
-    "relic_slots": 2,
+    "relic_slots": 1,
     "abilities": [
       "escudo_espelhado"
     ],
@@ -711,12 +712,12 @@
       "corrompido",
       "vitalismo"
     ],
-    "cost": 6,
+    "cost": 5,
     "atk": 4,
     "hp": 4,
     "damage_type": "vitalismo",
     "rarity": "lendaria",
-    "relic_slots": 2,
+    "relic_slots": 1,
     "abilities": [
       "inabalavel",
       "ressurreicao",
@@ -800,7 +801,7 @@
       "magico"
     ],
     "cost": 3,
-    "atk": 5,
+    "atk": 4,
     "hp": 2,
     "damage_type": "corpo_a_corpo",
     "rarity": "rara",
@@ -864,7 +865,7 @@
       "celestial",
       "magico"
     ],
-    "cost": 6,
+    "cost": 5,
     "atk": 7,
     "hp": 7,
     "damage_type": "magico",
@@ -882,8 +883,8 @@
     "concepts": [
       "chrysalis"
     ],
-    "cost": 6,
-    "atk": 7,
+    "cost": 5,
+    "atk": 4,
     "hp": 7,
     "damage_type": "corpo_a_corpo",
     "rarity": "lendaria",
@@ -900,7 +901,7 @@
     "concepts": [
       "corrompido"
     ],
-    "cost": 6,
+    "cost": 5,
     "atk": 6,
     "hp": 7,
     "damage_type": "magico",
@@ -935,12 +936,12 @@
       "corrompido",
       "magico"
     ],
-    "cost": 6,
-    "atk": 7,
+    "cost": 5,
+    "atk": 4,
     "hp": 5,
     "damage_type": "corpo_a_corpo",
     "rarity": "lendaria",
-    "relic_slots": 2,
+    "relic_slots": 1,
     "abilities": [
       "ataque_duplo",
       "desmoralizar"
@@ -986,7 +987,7 @@
       "chrysalis"
     ],
     "cost": 5,
-    "atk": 5,
+    "atk": 4,
     "hp": 4,
     "damage_type": "corpo_a_corpo",
     "rarity": "epica",
@@ -1055,7 +1056,7 @@
     "hp": 4,
     "damage_type": "magico",
     "rarity": "lendaria",
-    "relic_slots": 2,
+    "relic_slots": 1,
     "abilities": [
       "mimico",
       "reflexo_magico",
@@ -1074,7 +1075,7 @@
     "hp": 3,
     "damage_type": "magico",
     "rarity": "lendaria",
-    "relic_slots": 2,
+    "relic_slots": 1,
     "abilities": [
       "veneno",
       "investida",
@@ -1175,7 +1176,7 @@
       "magico"
     ],
     "cost": 3,
-    "atk": 5,
+    "atk": 4,
     "hp": 2,
     "damage_type": "corpo_a_corpo",
     "rarity": "rara",
@@ -1190,8 +1191,8 @@
     "concepts": [
       "vitalismo"
     ],
-    "cost": 6,
-    "atk": 6,
+    "cost": 5,
+    "atk": 4,
     "hp": 5,
     "damage_type": "vitalismo",
     "rarity": "epica",
@@ -1225,12 +1226,12 @@
     "concepts": [
       "vitalismo"
     ],
-    "cost": 8,
-    "atk": 6,
+    "cost": 5,
+    "atk": 4,
     "hp": 6,
     "damage_type": "vitalismo",
     "rarity": "lendaria",
-    "relic_slots": 2,
+    "relic_slots": 1,
     "abilities": [
       "crescimento",
       "andorinha",
@@ -1244,7 +1245,7 @@
       "chrysalis"
     ],
     "cost": 5,
-    "atk": 5,
+    "atk": 4,
     "hp": 5,
     "damage_type": "corpo_a_corpo",
     "rarity": "epica",
@@ -1280,12 +1281,12 @@
       "celestial",
       "vitalismo"
     ],
-    "cost": 6,
+    "cost": 5,
     "atk": 3,
     "hp": 5,
     "damage_type": "magico",
     "rarity": "lendaria",
-    "relic_slots": 2,
+    "relic_slots": 1,
     "abilities": [
       "transformar",
       "contra_ataque"
@@ -1332,12 +1333,12 @@
     "concepts": [
       "neutro"
     ],
-    "cost": 6,
+    "cost": 5,
     "atk": 4,
     "hp": 5,
     "damage_type": "magico",
     "rarity": "elite",
-    "relic_slots": 2,
+    "relic_slots": 1,
     "abilities": [
       "cura",
       "escudo_sagrado",

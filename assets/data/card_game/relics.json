@@ -2904,5 +2904,40 @@
     },
     "rarity": "rara",
     "is_flash": true
+  },
+  {
+    "id": "emblema_do_suporte",
+    "nome": "Emblema do Suporte",
+    "concepts": [
+      "neutro"
+    ],
+    "cost": 2,
+    "grants": {
+      "abilities": [
+        "suporte",
+        "magnetismo"
+      ],
+      "raw_effect": "Suporte: o portador passa a comportar 2 reliquias. Magnetismo: ao equipar, voce ESCOLHE uma habilidade extra concedida ao item."
+    },
+    "rarity": "lendaria",
+    "is_flash": false
+  },
+  {
+    "id": "trevo_de_quatro_folhas",
+    "nome": "Trevo de Quatro Folhas",
+    "concepts": [
+      "neutro"
+    ],
+    "cost": 3,
+    "grants": {
+      "armor": 1,
+      "heal": 1,
+      "abilities": [
+        "sorte"
+      ],
+      "raw_effect": "Sorte: a cada turno, uma habilidade ALEATORIA se manifesta no portador e substitui a anterior."
+    },
+    "rarity": "epica",
+    "is_flash": false
   }
 ]
