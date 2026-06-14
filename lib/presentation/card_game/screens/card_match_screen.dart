@@ -727,6 +727,10 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
                 faceBuilder: (w) => _flyingFace(_flying!.notif.creature, w),
                 onComplete: _onFlightComplete,
               ),
+            // DARDO à distância (CEO 2026-06-14): viaja NO TOPO (acima das lanes)
+            // direto da carta atacante até o alvo — trajetória reta sem oclusão.
+            if (_boot == _BootStatus.ready && !ui.isFinished)
+              _rangedProjectileOverlay(ui),
             if (ui.isFinished && _boot == _BootStatus.ready)
               _matchOverOverlay(ui),
           ],
@@ -2042,15 +2046,15 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
     final controller = ref.read(pveMatchControllerProvider.notifier);
     final selected = _selectedPoolCard(ui);
 
-    // Destaques de seleção (apenas no lado do jogador). Criatura jogável acende
-    // só as lanes LIVRES (CEO 2026-06-13: sem vaga não dá pra jogar — removido o
-    // "empurra pra mão"). Com vaga, tocar num slot ocupado ainda fura a fila
-    // front-packed (sem expulsar ninguém).
+    // Destaques de seleção (apenas no lado do jogador). Criatura acende as lanes
+    // JOGÁVEIS (CEO 2026-06-14): a FRENTE só com tabuleiro vazio; com carta(s), os
+    // slots TRASEIROS — tocar num traseiro OCUPADO empurra o ocupante pra trás (a
+    // frente nunca é empurrada por jogada). Tabuleiro cheio não acende nada.
     final highlightLanes = <int>{};
     final highlightTargets = <String>{};
     if (isPlayerSide && ui.isPlayerTurn && selected != null) {
       if (selected is CreatureCard && controller.canPlayCreature(selected)) {
-        highlightLanes.addAll(controller.freeLanes());
+        highlightLanes.addAll(controller.playableLanes(selected));
       } else if (selected is RelicCard && controller.canAffordRelic(selected)) {
         highlightTargets.addAll(
             controller.compatibleTargets(selected).map((c) => c.instanceId));
@@ -2188,7 +2192,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
           shadows: const [Shadow(color: AppColors.black, blurRadius: 8)],
         ),
       )
-          .animate(key: ObjectKey(h))
+          .animate(key: ValueKey<int>(h.seq))
           .fadeIn(duration: 90.ms)
           .moveY(begin: 8, end: -16, duration: 620.ms, curve: Curves.easeOut)
           .fadeOut(delay: 400.ms, duration: 220.ms),
@@ -2306,8 +2310,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
       // CEO 2026-06-13: IMPACTO → MORTE. A carta VIVA (colorida) toma o tremor de
       // impacto no momento do golpe (`_hitContactMs`); SÓ DEPOIS do impacto ela
       // perde a cor + trinca e estilhaça. Por isso o cinza entra após o impacto.
-      final grayDelayMs =
-          _hitContactMs(h.damageType) + _impactWindowMs(h.damageType);
+      final grayDelayMs = _hitContactMs(h.damageType) +
+          _impactWindowMs(h.damageType) +
+          _kDeathDelayMs;
       content = _DelayedGrayscale(delayMs: grayDelayMs, child: content);
     }
 
@@ -2398,7 +2403,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
             // NÃO troca posição — Alcance ataca melee da retaguarda sem se mover.
             final lunge = isFront ? 56.0 : 24.0;
             tile = tile
-                .animate(key: ObjectKey(h))
+                .animate(key: ValueKey<int>(h.seq))
                 .moveY(
                     begin: 0,
                     end: lunge * dir,
@@ -2417,7 +2422,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
             // avança nem usa espada — dá um "pulso" de canalização PARADO e
             // dispara um orbe ROXO (overlay no alvo). Distinto do melee/arqueiro.
             tile = tile
-                .animate(key: ObjectKey(h))
+                .animate(key: ValueKey<int>(h.seq))
                 .scaleXY(
                     begin: 1, end: 1.06, duration: 220.ms, curve: Curves.easeOut)
                 .then()
@@ -2428,7 +2433,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
             // COICE pra trás ao LIBERAR — então o RAIO atinge o alvo (overlay do
             // alvo). Canalização = 800ms.
             tile = tile
-                .animate(key: ObjectKey(h))
+                .animate(key: ValueKey<int>(h.seq))
                 .scaleXY(begin: 1, end: 1.07, duration: 800.ms, curve: Curves.easeInOut)
                 .then()
                 .moveY(begin: 0, end: -16 * dir, duration: 130.ms, curve: Curves.easeOut)
@@ -2438,7 +2443,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
           case DamageType.aDistancia:
             // Lança flecha (viaja no overlay do alvo): recuo curto de "saque".
             tile = tile
-                .animate(key: ObjectKey(h))
+                .animate(key: ValueKey<int>(h.seq))
                 .moveY(
                     begin: 0,
                     end: -10 * dir,
@@ -2450,12 +2455,12 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
                 .scaleXY(begin: 1, end: 1 / 1.06, duration: 200.ms);
           case DamageType.cura:
           case null:
-            tile = tile.animate(key: ObjectKey(h)).shimmer(
+            tile = tile.animate(key: ValueKey<int>(h.seq)).shimmer(
                 duration: 450.ms,
                 color: AppColors.conceptChrysalis.withValues(alpha: 0.3));
         }
       } else if (isHlAbility) {
-        tile = tile.animate(key: ObjectKey(h)).shimmer(
+        tile = tile.animate(key: ValueKey<int>(h.seq)).shimmer(
             duration: 550.ms, color: AppColors.gold.withValues(alpha: 0.35));
       } else if (isHlTarget && !h.isHeal && h.targetDied) {
         // CEO 2026-06-13: sempre IMPACTO → MORTE. O alvo (VIVO) TREME no momento
@@ -2464,7 +2469,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
         final magicHit = h.damageType == DamageType.magico;
         final contact = _hitContactMs(h.damageType);
         tile = tile
-            .animate(key: ObjectKey(h))
+            .animate(key: ValueKey<int>(h.seq))
             // 1) IMPACTO (reação ao golpe, carta viva). Na magia, o tremor dura a
             // EXPLOSÃO inteira (`_impactWindowMs`); só DEPOIS vem a morte.
             .shake(
@@ -2474,20 +2479,20 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
                 rotation: magicHit ? 0.03 : 0.014)
             // 2) MORTE: segura trincada um instante e DESPEDAÇA (some rápido com
             // leve "estouro" pra fora — não encolhe).
-            .then(delay: _kDeathCrackHoldMs.ms)
+            .then(delay: (_kDeathDelayMs + _kDeathCrackHoldMs).ms)
             .fadeOut(duration: 160.ms, curve: Curves.easeOut)
             .scaleXY(
                 begin: 1, end: 1.08, duration: 160.ms, curve: Curves.easeOut);
       } else if (isHlTarget && !h.isHeal) {
         // IMPACTO (alvo sobrevive): tremor no momento do golpe (`_hitContactMs`).
         final magicHit = h.damageType == DamageType.magico;
-        tile = tile.animate(key: ObjectKey(h)).shake(
+        tile = tile.animate(key: ValueKey<int>(h.seq)).shake(
             delay: _hitContactMs(h.damageType).ms,
             hz: magicHit ? 6 : 7,
             duration: _impactWindowMs(h.damageType).ms,
             rotation: magicHit ? 0.032 : 0.012);
       } else if (isHlTarget && h.isHeal) {
-        tile = tile.animate(key: ObjectKey(h)).shimmer(
+        tile = tile.animate(key: ValueKey<int>(h.seq)).shimmer(
             duration: 550.ms,
             color: AppColors.conceptChrysalis.withValues(alpha: 0.3));
       }
@@ -2560,8 +2565,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
               setState(() => _movingCreatureId = null);
             }
             if (laneHighlighted) {
-              // Criatura: joga aqui (com vaga, tocar um slot ocupado fura a fila
-              // front-packed sem expulsar). Tabuleiro cheio não acende lane.
+              // Criatura: joga aqui. Tocar um slot traseiro OCUPADO empurra o
+              // ocupante pra trás (ADR-0032); a frente não é destacada com
+              // carta(s) em jogo. Tabuleiro cheio não acende lane.
               // Mímico: leva o alvo marcado (ou null → engine auto-escolhe).
               final mimicId = _selectedIsMimic(ui) ? _mimicTargetId : null;
               final before = _playerInstanceIds(ui);
@@ -2585,9 +2591,15 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
   /// Direção de ENTRADA do raio mágico: aponta do ALVO para o ATACANTE (ângulo
   /// FIEL à posição de quem atacou), via lane keys. Default vertical se a
   /// geometria não estiver disponível.
-  Offset _magicEntryFrom(
-      CombatHighlight h, bool isPlayerSideTarget, int targetLane) {
-    final fallback = Offset(0, isPlayerSideTarget ? -84.0 : 84.0);
+  /// Vetor (no espaço do tile do alvo) de onde o ataque VEM, na direção REAL do
+  /// atacante. `full=false` (magia): normalizado a 84px — o raio "entra" perto do
+  /// alvo. `full=true` (à distância): vetor COMPLETO alvo→atacante — o dardo viaja
+  /// a distância TODA, da carta atacante até a carta alvo (CEO 2026-06-14).
+  Offset _attackerEntryFrom(
+      CombatHighlight h, bool isPlayerSideTarget, int targetLane,
+      {bool full = false}) {
+    final fallback =
+        Offset(0, isPlayerSideTarget ? -1.0 : 1.0) * (full ? 168.0 : 84.0);
     final attId = h.attackerCardId;
     if (attId == null) return fallback;
     final ui = ref.read(pveMatchControllerProvider);
@@ -2616,7 +2628,63 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
         stackBox.globalToLocal(b.localToGlobal(b.size.center(Offset.zero)));
     final dir = centerIn(attBox) - centerIn(tgtBox); // alvo → atacante
     if (dir.distance < 1) return fallback;
-    return dir / dir.distance * 84.0; // entra a 84px na direção do atacante
+    return full ? dir : dir / dir.distance * 84.0;
+  }
+
+  /// DARDO à distância NO TOPO da pilha da partida (CEO 2026-06-14): renderizado
+  /// acima das lanes pra a trajetória reta atacante→alvo NÃO ficar atrás de
+  /// nenhuma carta (oclusão). Ancorado no CENTRO do alvo (coords do `_matchStack`)
+  /// e viaja o vetor completo desde o atacante. O impacto/tremor ficam no tile.
+  Widget _rangedProjectileOverlay(PveMatchUiState ui) {
+    final h = ui.highlight;
+    if (h == null ||
+        h.damageType != DamageType.aDistancia ||
+        h.isHeal ||
+        h.evaded ||
+        h.attackerCardId == null ||
+        h.targetCardId == null) {
+      return const SizedBox.shrink();
+    }
+    final isPlayerTarget = h.targetSide == ui.playerSide;
+    final tgtList =
+        (isPlayerTarget ? ui.playerBoard : ui.botBoard)?.creaturesInPlay ??
+            const <CreatureInPlay>[];
+    final attList =
+        (isPlayerTarget ? ui.botBoard : ui.playerBoard)?.creaturesInPlay ??
+            const <CreatureInPlay>[];
+    final tLane = tgtList.indexWhere((c) => c.instanceId == h.targetCardId);
+    final aLane = attList.indexWhere((c) => c.instanceId == h.attackerCardId);
+    if (tLane < 0 || aLane < 0) return const SizedBox.shrink();
+    final stackBox =
+        _matchStackKey.currentContext?.findRenderObject() as RenderBox?;
+    final tgtBox = (isPlayerTarget ? _playerLaneKeys : _botLaneKeys)[tLane]
+        ?.currentContext
+        ?.findRenderObject() as RenderBox?;
+    final attBox = (isPlayerTarget ? _botLaneKeys : _playerLaneKeys)[aLane]
+        ?.currentContext
+        ?.findRenderObject() as RenderBox?;
+    if (stackBox == null || tgtBox == null || attBox == null) {
+      return const SizedBox.shrink();
+    }
+    Offset centerIn(RenderBox b) =>
+        stackBox.globalToLocal(b.localToGlobal(b.size.center(Offset.zero)));
+    final attC = centerIn(attBox);
+    final tgtC = centerIn(tgtBox);
+    const size = 104.0;
+    final contact = _hitContactMs(DamageType.aDistancia);
+    return Positioned(
+      left: tgtC.dx - size / 2,
+      top: tgtC.dy - size / 2,
+      width: size,
+      height: size,
+      child: IgnorePointer(
+        child: KeyedSubtree(
+          key: ValueKey('fxBoltTop_${h.seq}'),
+          child: CombatVfx.rangedBolt(
+              durationMs: contact, from: attC - tgtC, size: size),
+        ),
+      ),
+    );
   }
 
   Widget _impactOverlay(
@@ -2659,10 +2727,10 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
           // O raio: vem da direção REAL do atacante e crava no alvo.
           Center(
             child: KeyedSubtree(
-              key: ValueKey('fxLightning_${identityHashCode(h)}'),
+              key: ValueKey('fxLightning_${h.seq}'),
               child: CombatVfx.lightningStrike(
                 delayMs: _kMagicChannelMs,
-                from: _magicEntryFrom(h, isPlayerSideTarget, targetLane),
+                from: _attackerEntryFrom(h, isPlayerSideTarget, targetLane),
               ),
             ),
           ),
@@ -2673,13 +2741,31 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
               maxWidth: double.infinity,
               maxHeight: double.infinity,
               child: KeyedSubtree(
-                key: ValueKey('fxBlast_${identityHashCode(h)}'),
+                key: ValueKey('fxBlast_${h.seq}'),
                 child: CombatVfx.impactBlast(
                     delayMs: contact, size: 168, durationMs: _kMagicBlastMs),
               ),
             ),
           ),
         ],
+      );
+    }
+
+    // À DISTÂNCIA (CEO 2026-06-14): MESMO esquema da magia. O DARDO (gelo) viaja
+    // DIRETO da carta atacante até o alvo num overlay NO TOPO
+    // (`_rangedProjectileOverlay`) — assim a trajetória reta atravessa o tabuleiro
+    // SEM oclusão (não fica atrás de outras cartas). AQUI no tile do alvo fica só
+    // o IMPACTO no centro + o tremor já existente, no contato. Tom GELO.
+    if (type == DamageType.aDistancia) {
+      final contact = _hitContactMs(h.damageType);
+      return IgnorePointer(
+        child: Center(
+          child: KeyedSubtree(
+            key: ValueKey('fxImpact_${h.seq}'),
+            child: CombatVfx.impactBurst(
+                color: const Color(0xFF9BE8FF), delayMs: contact),
+          ),
+        ),
       );
     }
 
@@ -2694,7 +2780,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
         children: [
           if (isProjectile)
             KeyedSubtree(
-              key: ValueKey('fxProj_${identityHashCode(h)}'),
+              key: ValueKey('fxProj_${h.seq}'),
               child: CombatVfx.projectile(
                 travel: Offset(0, startDy),
                 color: color,
@@ -2707,7 +2793,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
           if (type == DamageType.corpoACorpo)
             Positioned.fill(child: CombatVfx.slashCut(delayMs: impactDelay)),
           KeyedSubtree(
-            key: ValueKey('fxImpact_${identityHashCode(h)}'),
+            key: ValueKey('fxImpact_${h.seq}'),
             child: CombatVfx.impactBurst(color: color, delayMs: impactDelay),
           ),
         ],
@@ -2720,7 +2806,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
   /// desce rumo ao jogador. (O slash de energia/impacto entra depois.)
   Widget _slashFlash(CombatHighlight h, {bool isPlayerSide = true}) {
     return KeyedSubtree(
-      key: ObjectKey(h),
+      key: ValueKey<int>(h.seq),
       child: CombatVfx.swordStrike(
         delayMs: 240,
         flip: !isPlayerSide,
@@ -2736,9 +2822,10 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
     // estende a janela do evento de morte (+500ms) pra esta sequência caber.
     final delayMs = _hitContactMs(h.damageType) +
         _impactWindowMs(h.damageType) +
+        _kDeathDelayMs +
         _kDeathCrackHoldMs;
     return KeyedSubtree(
-      key: ObjectKey(h),
+      key: ValueKey<int>(h.seq),
       child: CombatVfx.deathShatter(delayMs: delayMs),
     );
   }
@@ -3730,11 +3817,18 @@ const int _kImpactMs = 300;
 // Sequência de morte: IMPACTO (carta viva treme) → P&B + trinca (segura
 // `_kDeathCrackHoldMs`) → ESTILHAÇA + esvanece.
 const int _kDeathCrackHoldMs = 180;
+// Respiro entre o FIM do impacto e o INÍCIO da morte (P&B + estilhaço) — CEO
+// 2026-06-14: a morte é um evento; pede um respiro após o impacto. A carta
+// segura colorida por este tempo, então perde a cor, trinca (hold) e estilhaça.
+const int _kDeathDelayMs = 200;
 // Quando a ESPADA melee "encosta" no alvo (ms desde o início do beat): avanço da
 // carta + mini-recuo + estocada. Sincroniza o impacto/morte com o fim do golpe.
 const int _kMeleeContactMs = 710;
 // MÁGICO: a carta CANALIZA 0.8s e então o RAIO atinge o alvo (CEO 2026-06-13).
 const int _kMagicChannelMs = 800;
+// À DISTÂNCIA: tempo de voo do dardo (gelo) da carta atacante até o alvo (CEO
+// 2026-06-14). Mais longo que a flecha antiga (250ms) pra o trajeto reto ler.
+const int _kRangedFlightMs = 420;
 // EXPLOSÃO mágica de impacto (sprite explosion.png) — dura mais que o tremor melee
 // pra a animação inteira ser percebida. A MORTE só dispara DEPOIS disso (regra do
 // CEO 2026-06-13: morte sempre após as animações de ataque encerrarem).
@@ -3751,8 +3845,9 @@ int _hitContactMs(DamageType? type) {
     case DamageType.corpoACorpo:
       return _kMeleeContactMs; // avanço + recuo + estocada da espada
     case DamageType.aDistancia:
+      return _kRangedFlightMs; // voo do dardo de gelo até o alvo (CEO 2026-06-14)
     case DamageType.vitalismo:
-      return 250; // chegada da flecha/orbe
+      return 250; // chegada do orbe
     case DamageType.cura:
     case null:
       return 0;

@@ -411,6 +411,34 @@ void main() {
       final targets = c.compatibleTargets(relicCard);
       expect(targets.map((t) => t.card.id), contains(card.id));
     });
+
+    test('playableLanes: frente só com tabuleiro vazio; depois só os traseiros '
+        '(CEO 2026-06-14)', () async {
+      final c = makeController();
+      final player = CardLoadout(
+        creatures: [for (var i = 0; i < 9; i++) creature(id: 'p$i', cost: 0)],
+        relics: [for (var i = 0; i < 9; i++) relic(id: 'r$i', cost: 9)],
+      );
+      await startPlayerFirst(c, player: player);
+
+      final hand = c.state.playerBoard!.handCreatures;
+      expect(hand.length, greaterThanOrEqualTo(2),
+          reason: 'mão inicial tem ≥2 criaturas (ADR-0028)');
+      final a = hand[0];
+      final b = hand[1];
+
+      // Tabuleiro vazio: só a FRENTE é jogável.
+      expect(c.playableLanes(a), [0], reason: 'vazio: só a frente');
+
+      expect(c.playCreature(a.id), isTrue); // entra na frente (lane 0)
+      // 1 carta: só o slot traseiro 1 (a frente não se move).
+      expect(c.playableLanes(b), [1]);
+
+      expect(c.playCreature(b.id), isTrue); // lane 1
+      // 2 cartas: traseiros 1 (empurra) e 2 (encaixa). `a` (custo 0) é reusada só
+      // pra CONSULTAR playableLanes — não precisa estar na mão (usa custo+count).
+      expect(c.playableLanes(a), [1, 2]);
+    });
   });
 
   group('recuar (CEO 2026-06-13)', () {
@@ -432,6 +460,30 @@ void main() {
       final other = c.state.playerBoard!.handCreatures.first;
       expect(c.playCreature(other.id, lane: 0), isFalse,
           reason: 'travado: só sobra Encerrar Turno');
+    });
+  });
+
+  group('CombatHighlight.seq (Key de VFX estável/única — hardening 2026-06-14)', () {
+    test('withDeadIds PRESERVA o seq (não zera ao marcar mortos)', () {
+      const h =
+          CombatHighlight(attackerCardId: 'a', targetCardId: 'b', seq: 7);
+      final withDead = h.withDeadIds(<String>{'x'});
+      expect(withDead.seq, 7, reason: 'seq sobrevive a withDeadIds');
+      expect(withDead.deadIds, <String>{'x'});
+      expect(withDead.attackerCardId, 'a');
+    });
+
+    test('withSeq carimba o seq mantendo os demais campos', () {
+      const h = CombatHighlight(
+          attackerCardId: 'a',
+          targetCardId: 'b',
+          deadIds: <String>{'x'},
+          seq: 1);
+      final stamped = h.withSeq(42);
+      expect(stamped.seq, 42);
+      expect(stamped.attackerCardId, 'a');
+      expect(stamped.targetCardId, 'b');
+      expect(stamped.deadIds, <String>{'x'}, reason: 'deadIds preservado');
     });
   });
 }

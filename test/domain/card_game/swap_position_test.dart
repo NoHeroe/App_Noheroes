@@ -58,5 +58,15 @@ void main() {
       expect(r.sideA.creaturesInPlay[0].instanceId, 'x'); // inalterado
       expect(r.sideA.crystals, 1);
     });
+
+    test('frente SOZINHA (sem cartas traseiras) não recua → no-op '
+        '(CEO 2026-06-14)', () {
+      final s = _state([_c('x')]); // só a frente, nada atrás
+      // Não há carta traseira pra trocar → qualquer alvo é inválido → no-op.
+      final r = engine.apply(s, const SwapPosition('x', 'y'));
+      expect(r.sideA.creaturesInPlay.length, 1);
+      expect(r.sideA.creaturesInPlay[0].instanceId, 'x'); // inalterada
+      expect(r.sideA.crystals, 3); // não cobrou
+    });
   });
 }

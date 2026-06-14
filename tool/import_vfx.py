@@ -24,7 +24,7 @@ os.makedirs(DST, exist_ok=True)
 
 # (source, dest, downscale_divisor, grid cols x rows) — grid só pra log/sanidade.
 JOBS = [
-    ("vfx_sequence_x32_ice_bolt.png", "ice_bolt.png", 2, (8, 4)),
+    ("vfx_sequence_x32_ice_bolt.png", "ranged_attack.png", 2, (8, 4)),
     ("vfx_sequence_x16_chaos.png",    "chaos.png",    2, (8, 2)),
     ("vfx_sequence_x16_blood.png",    "blood.png",    2, (8, 2)),
     ("magic shild.png",               "magic_shield.png", 2, (5, 4)),

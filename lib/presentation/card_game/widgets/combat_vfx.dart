@@ -58,14 +58,17 @@ class CombatVfx {
   static const int explosionCols = 8;
   static const int explosionRows = 4;
 
+  /// ATAQUE À DISTÂNCIA (dardo de GELO, CEO 2026-06-14) — sheet 8×4 = 32 quadros
+  /// de 128². Viaja DIRETO da carta atacante até o centro do alvo (ver
+  /// `rangedBolt`), então o impacto estoura e a animação para. Renomeado de
+  /// `ice_bolt` → `ranged_attack` (uso genérico de ataque à distância).
+  static const String rangedAttackSheet = 'assets/vfx/sprites/ranged_attack.png';
+  static const int rangedAttackCols = 8;
+  static const int rangedAttackRows = 4;
+
   /// BIBLIOTECA importada (CEO 2026-06-13) — padronizada, pronta pra ser usada em
   /// efeitos futuros do app. AINDA NÃO ligada a nenhuma animação (por isso fora
   /// do `all`/precache: só entra no precache quando virar efeito de fato).
-
-  /// Dardo de GELO — sheet 8×4 = 32 quadros de 128².
-  static const String iceBoltSheet = 'assets/vfx/sprites/ice_bolt.png';
-  static const int iceBoltCols = 8;
-  static const int iceBoltRows = 4;
 
   /// Explosão de CAOS (arcano/roxo) — sheet 8×2 = 16 quadros de 128².
   static const String chaosSheet = 'assets/vfx/sprites/chaos.png';
@@ -88,7 +91,7 @@ class CombatVfx {
   /// quando forem ligados a um efeito.)
   static const List<String> all = <String>[
     slash, magic, light, flare, spark, star, smoke, scorch, trace, circle,
-    sword, lightningSheet, explosionSheet,
+    sword, lightningSheet, explosionSheet, rangedAttackSheet,
   ];
 
   /// Uma textura tingida (glow branco → cor do elemento via modulate).
@@ -400,6 +403,56 @@ class CombatVfx {
         delayMs: delayMs,
       ),
     );
+  }
+
+  /// DARDO À DISTÂNCIA (CEO 2026-06-14): o sprite (gelo) viaja DIRETO da carta
+  /// atacante (`from`, vetor alvo→atacante) até o CENTRO do alvo, animando e
+  /// VIRADO pra direção de viagem; some ao chegar (o impacto estoura por cima).
+  /// Trajetória reta de ponta a ponta — sem corte/reaparecimento. `durationMs` =
+  /// tempo de voo (até o contato).
+  static Widget rangedBolt({
+    double size = 104,
+    int delayMs = 0,
+    int durationMs = 420,
+    Offset from = Offset.zero,
+  }) {
+    final d = Duration(milliseconds: delayMs);
+    // Direção de viagem = atacante → alvo. Gira o sprite (ponta pra cima por
+    // padrão) pra apontar nessa direção.
+    final travel = -from;
+    final angle = travel == Offset.zero
+        ? 0.0
+        : math.atan2(travel.dy, travel.dx) + math.pi / 2;
+    Widget fx = Transform.rotate(
+      angle: angle,
+      child: SpriteSheetFx(
+        asset: rangedAttackSheet,
+        columns: rangedAttackCols,
+        rows: rangedAttackRows,
+        width: size,
+        height: size,
+        durationMs: durationMs,
+        delayMs: delayMs,
+      ),
+    );
+    if (from != Offset.zero) {
+      // Translação POR FORA da rotação (a rotação só gira o sprite, não o vetor
+      // de viagem). easeIn = acelera rumo ao alvo. Fade no fim = dissolve no
+      // impacto, não "estaciona" no alvo.
+      fx = fx
+          .animate()
+          .move(
+              begin: from,
+              end: Offset.zero,
+              delay: d,
+              duration: durationMs.ms,
+              curve: Curves.easeIn)
+          .fadeOut(
+              delay: (delayMs + durationMs - 90).ms,
+              duration: 90.ms,
+              curve: Curves.easeIn);
+    }
+    return IgnorePointer(child: fx);
   }
 
   /// CANALIZAÇÃO mágica POR CÓDIGO (CEO 2026-06-13): muitas PARTÍCULAS amareladas

@@ -62,7 +62,15 @@ class CombatHighlight {
     this.ability,
     this.damageType,
     this.deadIds = const <String>{},
+    this.seq = 0,
   });
+
+  /// Sequência MONOTÔNICA da batida (carimbada pelo controller ao publicar). A UI
+  /// usa `seq` como Key dos overlays de VFX (em vez de `identityHashCode`/
+  /// `ObjectKey`), garantindo que cada batida tenha uma identidade ESTÁVEL no
+  /// rebuild e ÚNICA entre batidas — a animação roda 1× e nunca deixa de reiniciar
+  /// numa colisão de hash ou re-publicação. Default 0 em testes (não checam Key).
+  final int seq;
 
   /// Tipo do ataque (dirige a animação: físico avança+espada, mágico projétil,
   /// arqueiro flecha). null quando não se aplica (proc de habilidade).
@@ -108,6 +116,23 @@ class CombatHighlight {
         ability: ability,
         damageType: damageType,
         deadIds: ids,
+        seq: seq,
+      );
+
+  /// Carimba a sequência da batida (ver [seq]).
+  CombatHighlight withSeq(int s) => CombatHighlight(
+        attackerCardId: attackerCardId,
+        targetCardId: targetCardId,
+        attackerSide: attackerSide,
+        targetSide: targetSide,
+        amount: amount,
+        isHeal: isHeal,
+        evaded: evaded,
+        targetDied: targetDied,
+        ability: ability,
+        damageType: damageType,
+        deadIds: deadIds,
+        seq: s,
       );
 }
 
@@ -217,6 +242,11 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
   // run). O delay de evento precisa caber a animação do golpe + número + morte.
   // 1500ms nas jogadas do bot (CEO 2026-06-13: ainda "rápido" a 1300 — mais ar).
   Duration _botStepDelay = const Duration(milliseconds: 1500);
+
+  /// Contador MONOTÔNICO de batidas do replay — carimbado em cada highlight
+  /// publicado (`CombatHighlight.seq`) pra a UI ter uma Key de VFX estável/única
+  /// por batida (ver [CombatHighlight.seq]). Só cresce; nunca reseta.
+  int _hlSeq = 0;
 
   /// Delay entre EVENTOS narrados da Fase de Ataque (replay passo a passo).
   /// Acompanha o pacing do bot: `Duration.zero` (testes) => replay síncrono,
@@ -722,6 +752,18 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     return freeLanes().isNotEmpty && canAfford(card);
   }
 
+  /// Lanes onde [card] PODE ser posicionada agora (CEO 2026-06-14). A FRENTE
+  /// (lane 0) só é jogável com o tabuleiro VAZIO; com ≥1 carta, a jogada cai num
+  /// slot TRASEIRO (1..count) — empurrando o ocupante daquele slot pra trás,
+  /// nunca a frente. Diferente de [freeLanes] (só vazios): inclui slots traseiros
+  /// OCUPADOS, pois jogar neles empurra. Vazio se não dá pra jogar.
+  List<int> playableLanes(CreatureCard card) {
+    if (!canPlayCreature(card)) return const <int>[];
+    final count = state.playerBoard?.creaturesInPlay.length ?? 0;
+    if (count == 0) return const <int>[0];
+    return <int>[for (var i = 1; i <= count && i < kLaneCount; i++) i];
+  }
+
   /// Criaturas PRÓPRIAS em jogo compatíveis com a relíquia [relic].
   List<CreatureInPlay> compatibleTargets(RelicCard relic) {
     final board = state.playerBoard;
@@ -845,7 +887,9 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
             highlight.targetCardId != null) {
           dead.add(highlight.targetCardId!);
         }
-        highlight = highlight?.withDeadIds(<String>{...dead});
+        // Carimba uma sequência única por batida: Key de VFX estável no rebuild
+        // e única entre batidas (robustez — ver CombatHighlight.seq).
+        highlight = highlight?.withDeadIds(<String>{...dead}).withSeq(++_hlSeq);
         state = state.copyWith(
           match: step.state,
           highlight: highlight,
@@ -872,8 +916,9 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
             state = state.copyWith(match: finalState, clearHighlight: true);
             return;
           }
-          final ghost =
-              dead.isEmpty ? null : CombatHighlight(deadIds: <String>{...dead});
+          final ghost = dead.isEmpty
+              ? null
+              : CombatHighlight(deadIds: <String>{...dead}, seq: ++_hlSeq);
           state = state.copyWith(
             match: step.state,
             highlight: ghost,

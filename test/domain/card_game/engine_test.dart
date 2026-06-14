@@ -92,7 +92,8 @@ void main() {
       expect(s.active.lanes[2], isNull);
     });
 
-    test('jogar no lane 0 empurra o ocupante pra trás (re-indexa lanes)', () {
+    test('jogar pedindo o lane 0 NÃO empurra a frente — vai pro slot traseiro '
+        '(CEO 2026-06-14)', () {
       final aL = makeLoadout(prefix: 'A', cost: 1);
       final bL = makeLoadout(prefix: 'B');
       var s = engine.start(aL, bL, seed: seedWith2Creatures(aL, bL));
@@ -102,11 +103,43 @@ void main() {
       s = engine.apply(s, PlayCreature(first)); // auto → frente (lane 0)
       expect(s.active.lanes[0]?.card.id, first);
 
-      s = engine.apply(s, PlayCreature(second, lane: 0)); // fura a frente
-      expect(s.active.lanes[0]?.card.id, second, reason: 'novo na frente');
-      expect(s.active.lanes[1]?.card.id, first,
-          reason: 'ocupante empurrado pra trás');
+      // Pede o lane 0, mas a FRENTE nunca é empurrada por uma jogada: a nova cai
+      // no slot traseiro (lane 1) e `first` permanece na frente.
+      s = engine.apply(s, PlayCreature(second, lane: 0));
+      expect(s.active.lanes[0]?.card.id, first,
+          reason: 'a FRENTE não é empurrada por uma jogada');
+      expect(s.active.lanes[1]?.card.id, second,
+          reason: 'a nova cai no slot traseiro');
       expect(s.active.lanes[1]?.lane, 1, reason: 'lane re-indexada');
+    });
+
+    test('jogar num slot traseiro OCUPADO empurra o ocupante pra trás '
+        '(CEO 2026-06-14)', () {
+      int seedWith3Creatures(CardLoadout a, CardLoadout b) {
+        for (var seed = 0; seed < 256; seed++) {
+          final s = engine.start(a, b, seed: seed);
+          if (s.active.handCreatures.length >= 3) return seed;
+        }
+        return -1;
+      }
+
+      final aL = makeLoadout(prefix: 'A', cost: 0);
+      final bL = makeLoadout(prefix: 'B', cost: 0);
+      final seed = seedWith3Creatures(aL, bL);
+      expect(seed, isNonNegative, reason: 'precisa de 3 criaturas na mão');
+      var s = engine.start(aL, bL, seed: seed);
+      final ids = s.active.handCreatures.take(3).map((c) => c.id).toList();
+
+      s = engine.apply(s, PlayCreature(ids[0])); // frente (lane 0)
+      s = engine.apply(s, PlayCreature(ids[1])); // lane 1
+      // Joga a 3ª pedindo o lane 1 (ocupado): o ocupante vai pro lane 2 e a nova
+      // assume o lane 1; a frente fica intacta.
+      s = engine.apply(s, PlayCreature(ids[2], lane: 1));
+      expect(s.active.lanes[0]?.card.id, ids[0], reason: 'frente intacta');
+      expect(s.active.lanes[1]?.card.id, ids[2],
+          reason: 'nova assume o slot traseiro pedido');
+      expect(s.active.lanes[2]?.card.id, ids[1],
+          reason: 'ocupante empurrado pro fundo');
     });
   });
 

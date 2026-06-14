@@ -49,7 +49,7 @@ class _MatchIntroOverlayState extends State<MatchIntroOverlay> {
     await _wait(800);
     _go(0); // nuvens
     await _wait(1950); // nuvens de tempestade densas abrem e revelam o campo
-    await _wait(3000); // respiro de 3s entre o fim da fumaça e a moeda
+    await _wait(1500); // respiro de 1,5s entre o fim da fumaça e a moeda (CEO 2026-06-14)
     _go(1);
     await _wait(2400); // moeda gira + resultado
     _go(2); // banner: chama onComplete via TurnBanner.onDone

@@ -619,7 +619,12 @@ class CardBattleEngine {
     if (count < kLaneCount) {
       // Há vaga: encaixe front-packed (paga o custo da carta).
       if (card.cost > side.crystals) return s; // cristais insuficientes
-      final insertPos = requested < count ? requested : count; // clamp à fila
+      // REGRA 1 (CEO 2026-06-14): a carta da FRENTE (lane 0) NUNCA é empurrada
+      // por uma jogada. Tabuleiro vazio → 1ª vai pra frente; com ≥1 carta,
+      // qualquer jogada cai num slot TRASEIRO (1..count), empurrando o ocupante
+      // daquele slot e os posteriores. A frente só sai do lugar via manobra/swap.
+      final minPos = count == 0 ? 0 : 1;
+      final int insertPos = requested.clamp(minPos, count); // nunca o lane 0
       final list = List<CreatureInPlay>.from(packed)..insert(insertPos, placed);
       final hand = List<Object>.from(side.hand)..removeAt(idx);
       final newSide = side.copyWith(
@@ -2308,10 +2313,12 @@ class CardBattleEngine {
     return actions;
   }
 
-  /// Posição (front-packed) que o bot pede para [card]: melee fura na FRENTE
-  /// (índice 0, empurrando os demais pra trás); demais (ranged/mágico/cura/
-  /// vitalismo) encaixam na RETAGUARDA (logo após a última criatura). A engine
-  /// clampa o índice ao tamanho da fila. Retorna null com o tabuleiro cheio
+  /// Posição (front-packed) que o bot pede para [card]: melee tenta a posição
+  /// mais À FRENTE possível (índice 0). A engine clampa pela regra da frente fixa
+  /// (ADR-0032): com o tabuleiro VAZIO o melee assume a FRENTE; com carta(s) já em
+  /// jogo a FRENTE não é empurrada, então o melee entra no slot logo ATRÁS dela
+  /// (vira a frente quando a atual cair). Demais (ranged/mágico/cura/vitalismo)
+  /// encaixam na RETAGUARDA (após a última). null com o tabuleiro cheio
   /// (chamadores só jogam com vaga).
   int? _botLaneFor(BoardSide side, CreatureCard card) {
     final count = side.creaturesInPlay.length;
