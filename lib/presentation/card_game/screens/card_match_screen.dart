@@ -2204,6 +2204,37 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
     );
   }
 
+  /// Estilo visual de uma habilidade de AURA (início de turno): cor + marca
+  /// (▲ buff / ▼ debuff / ✦ sorte). Default dourado p/ procs genéricos.
+  ({Color color, String mark}) _auraStyle(String? ability) {
+    switch (ability) {
+      case 'Inspirar':
+      case 'Investida':
+        return (color: AppColors.conceptChrysalis, mark: '▲'); // buff
+      case 'Desmoralizar':
+      case 'Suprimir Magia':
+      case 'Névoa Tóxica':
+        return (color: AppColors.conceptCorrompido, mark: '▼'); // debuff
+      case 'Sorte':
+        return (color: AppColors.gold, mark: '✦');
+      default:
+        return (color: AppColors.gold, mark: '');
+    }
+  }
+
+  /// Silenciada: há criatura inimiga VIVA com Silêncio e esta não é imune. Mostra
+  /// 🚫 nas linhas de ataque mágico/cura no HUD (estado, não animação — CEO
+  /// 2026-06-14). Silêncio bloqueia mágico e cura do lado oposto ao silenciador.
+  bool _isSilenced(PveMatchUiState ui, CreatureInPlay c, bool isPlayerSide) {
+    final m = ui.match;
+    if (m == null) return false;
+    if (c.immuneTo(AbilityKeyword.silencio)) return false;
+    final enemy =
+        isPlayerSide ? m.sideOf(ui.botSideId) : m.sideOf(ui.playerSide);
+    return enemy.creaturesInPlay
+        .any((x) => x.hasKeyword(AbilityKeyword.silencio));
+  }
+
   /// Texto flutuante do evento destacado: dano/cura/evasão/habilidade.
   Widget _floatingHighlightText(CombatHighlight h) {
     final String text;
@@ -2215,8 +2246,11 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
       text = '+${h.amount ?? 0}';
       color = AppColors.conceptChrysalis;
     } else if (h.ability != null) {
-      text = h.ability!.toUpperCase();
-      color = AppColors.gold;
+      final st = _auraStyle(h.ability);
+      text = st.mark.isEmpty
+          ? h.ability!.toUpperCase()
+          : '${st.mark} ${h.ability!.toUpperCase()}';
+      color = st.color;
     } else {
       text = h.targetDied ? '-${h.amount ?? 0} †' : '-${h.amount ?? 0}';
       color = AppColors.hp;
@@ -2335,11 +2369,13 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
         !h.isHeal &&
         !h.evaded &&
         (h.amount ?? 0) > 0;
+    final silenced = creature != null && _isSilenced(ui, creature, isPlayerSide);
     Widget content = creature == null
         ? _emptyLane(lane, laneHighlighted)
         : _boardCard(creature,
             isFront: isFront,
             borderOverride: isMoving ? AppColors.gold : borderOverride,
+            silenced: silenced,
             impactHpDrop: hpImpact ? h.amount : null,
             impactDelayMs: hpImpact ? _hitContactMs(h.damageType) : null,
             impactSeq: hpImpact ? h.seq : null);
@@ -2515,8 +2551,16 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
                 color: AppColors.conceptChrysalis.withValues(alpha: 0.3));
         }
       } else if (isHlAbility) {
-        tile = tile.animate(key: ValueKey<int>(h.seq)).shimmer(
-            duration: 550.ms, color: AppColors.gold.withValues(alpha: 0.35));
+        // AURA de habilidade (início de turno): pulso colorido por categoria —
+        // verde p/ buff (Inspirar), vermelho p/ debuff (Desmoralizar/Suprimir/
+        // Névoa Tóxica), dourado p/ Sorte (CEO 2026-06-14). O label sobe pelo
+        // _floatingHighlightText.
+        final aura = _auraStyle(h.ability).color;
+        tile = tile
+            .animate(key: ValueKey<int>(h.seq))
+            .shimmer(duration: 600.ms, color: aura.withValues(alpha: 0.5))
+            .scaleXY(
+                begin: 0.97, end: 1, duration: 280.ms, curve: Curves.easeOut);
       } else if (isHlTarget && !h.isHeal && h.targetDied) {
         // CEO 2026-06-13: sempre IMPACTO → MORTE. O alvo (VIVO) TREME no momento
         // do golpe (`_hitContactMs`); só DEPOIS do impacto a carta perde a cor +
@@ -2940,6 +2984,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
   Widget _boardCard(CreatureInPlay c,
       {required bool isFront,
       Color? borderOverride,
+      bool silenced = false,
       int? impactHpDrop,
       int? impactDelayMs,
       int? impactSeq}) {
@@ -2964,6 +3009,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
       // bolinhas vermelhas no topo-direita (statusOverlay aposentado aqui).
       debuffs: _debuffGlyphs(c),
       footer: _boardFooter(c,
+          silenced: silenced,
           impactHpDrop: impactHpDrop,
           impactDelayMs: impactDelayMs,
           impactSeq: impactSeq),
@@ -2971,7 +3017,10 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
   }
 
   Widget _boardFooter(CreatureInPlay c,
-      {int? impactHpDrop, int? impactDelayMs, int? impactSeq}) {
+      {bool silenced = false,
+      int? impactHpDrop,
+      int? impactDelayMs,
+      int? impactSeq}) {
     // CEO 2026-06-13: tipos de ataque EMPILHADOS (esquerda) · defesas EM CIMA da
     // vida (direita), com ícones da mesma cor/tamanho da vida.
     return Row(
@@ -2983,21 +3032,38 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             for (final a in c.attacks)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 1),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    typeGlyph(a.type, size: 11),
-                    const SizedBox(width: 2),
-                    Text('${a.value}',
-                        style: GoogleFonts.robotoMono(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.gold)),
-                  ],
-                ),
-              ),
+              Builder(builder: (_) {
+                // Silêncio (CEO 2026-06-14): mágico e cura ficam BLOQUEADOS — 🚫
+                // sobre o glifo do tipo + valor esmaecido enquanto durar.
+                final blocked = silenced &&
+                    (a.type == DamageType.magico || a.type == DamageType.cura);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 1),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (blocked)
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            typeGlyph(a.type, size: 11),
+                            const Icon(Icons.block, size: 13, color: AppColors.hp),
+                          ],
+                        )
+                      else
+                        typeGlyph(a.type, size: 11),
+                      const SizedBox(width: 2),
+                      Text('${a.value}',
+                          style: GoogleFonts.robotoMono(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: blocked
+                                  ? AppColors.textMuted
+                                  : AppColors.gold)),
+                    ],
+                  ),
+                );
+              }),
           ],
         ),
         const Spacer(),

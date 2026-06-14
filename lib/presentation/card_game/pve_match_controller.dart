@@ -45,6 +45,18 @@ class MatchLogEntry {
   String toString() => '[T$turn][${kind.name}] $text';
 }
 
+/// Labels das habilidades de AURA de início de turno (emitidas em `_beginTurn`,
+/// antes da Fase de Ataque). Cada uma vira uma batida própria no replay para
+/// animar separadamente (ver `_beatsFor`). São exclusivas de início de turno —
+/// nunca aparecem como procs da fase de ataque, então ancorá-las é seguro.
+const Set<String> _kAuraAbilities = {
+  'Inspirar',
+  'Desmoralizar',
+  'Suprimir Magia',
+  'Névoa Tóxica',
+  'Sorte',
+};
+
 /// Destaque visual de UM evento de combate durante o replay narrado.
 ///
 /// A tela usa isto para animar os tiles das lanes (atacante avança, alvo
@@ -1024,7 +1036,13 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
         // RETALIAÇÃO que inflige dano (Espinhos/Contra-Ataque/Reflexo/Espinho de
         // Escudo) abre batida PRÓPRIA: o ATACANTE treme + toma o número ANTES da
         // próxima ação (CEO 2026-06-14). Procs sem dano direto seguem anexados.
-        (e is AbilityTriggered && e.targetCardId != null);
+        (e is AbilityTriggered && e.targetCardId != null) ||
+        // AURAS de início de turno (Inspirar/Desmoralizar/Suprimir/Névoa Tóxica/
+        // Sorte): cada uma abre batida própria pra animar ANTES dos ataques, mesmo
+        // quando várias disparam no mesmo step de _beginTurn (CEO 2026-06-14).
+        (e is AbilityTriggered &&
+            e.targetCardId == null &&
+            _kAuraAbilities.contains(e.ability));
     final beats = <List<MatchEvent>>[];
     for (final e in events) {
       if (beats.isEmpty || isAnchor(e)) {
