@@ -21,13 +21,18 @@ class PlayCreature extends GameAction {
 }
 
 /// Equipa uma relíquia do pool numa criatura PRÓPRIA do mesmo conceito.
+/// `grantedAbility` (round 3): habilidade ESCOLHIDA pelo jogador quando a
+/// relíquia concede Magnetismo (string canônica; só vale se o portador tiver
+/// Magnetismo). Vem de fora (UI/bot) — não afeta o determinismo do motor.
 class PlayRelic extends GameAction {
-  const PlayRelic(this.cardId, this.targetCreatureId);
+  const PlayRelic(this.cardId, this.targetCreatureId, {this.grantedAbility});
   final String cardId;
   final String targetCreatureId;
+  final String? grantedAbility;
 
   @override
-  String toString() => 'PlayRelic($cardId -> $targetCreatureId)';
+  String toString() =>
+      'PlayRelic($cardId -> $targetCreatureId${grantedAbility != null ? ', +$grantedAbility' : ''})';
 }
 
 /// Sacrifica uma carta (relíquia ou criatura do pool) por cristais. Máx 1/turno.

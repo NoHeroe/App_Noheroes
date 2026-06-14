@@ -240,6 +240,22 @@ enum AbilityKeyword {
   sorte,
 }
 
+/// Habilidades META do round 3 que NÃO entram no sorteio/escolha de Sorte e
+/// Magnetismo (não faz sentido sortear "você comporta 2 relíquias"). CEO
+/// 2026-06-14.
+const Set<AbilityKeyword> kMetaAbilities = {
+  AbilityKeyword.suporte,
+  AbilityKeyword.magnetismo,
+  AbilityKeyword.sorte,
+};
+
+/// Pool de onde Sorte (sorteia a cada turno) e Magnetismo (jogador escolhe ao
+/// equipar) tiram a habilidade concedida: TODAS as keywords existentes menos as
+/// 3 meta. (CEO 2026-06-14: "qualquer das existentes".)
+final List<AbilityKeyword> kGrantableAbilities = AbilityKeyword.values
+    .where((k) => !kMetaAbilities.contains(k))
+    .toList(growable: false);
+
 /// Magnitude opcional de uma keyword com parâmetro (ex.: "espinhos_3" → 3,
 /// "escudo_4" → 4, "roubo_de_pv_2" → 2). Null quando não há número.
 int? abilityMagnitude(String raw) {

@@ -70,6 +70,8 @@ class CreatureInPlay {
     this.nevoaArmed = false,
     this.esquivaBuffTurns = 0,
     this.armorPool,
+    this.sorteAbility,
+    this.magnetismoAbility,
   });
 
   final CreatureCard card;
@@ -160,6 +162,14 @@ class CreatureInPlay {
   /// ignora; Quebra de Armadura fura e a zera.
   final int? armorPool;
 
+  /// Sorte (round 3): habilidade aleatória manifestada NESTE turno. Só vale se a
+  /// criatura tem a keyword Sorte (re-sorteada a cada início de turno do dono).
+  final AbilityKeyword? sorteAbility;
+
+  /// Magnetismo (round 3): habilidade ESCOLHIDA pelo jogador ao equipar a
+  /// relíquia de Magnetismo. Só vale se a criatura tem a keyword Magnetismo.
+  final AbilityKeyword? magnetismoAbility;
+
   /// keyword FUNCIONAL: tem a keyword E não está suprimida por Doença (Doença
   /// desativa Inspirar, Desmoralizar e Reflexo Mágico na criatura doente).
   bool functionalKeyword(AbilityKeyword k) {
@@ -215,6 +225,16 @@ class CreatureInPlay {
         final k = abilityKeywordFromString(a);
         if (k != null) result.add(k);
       }
+    }
+    // Magnetismo (round 3): a habilidade escolhida pelo jogador ao equipar só
+    // vale se a criatura de fato tem Magnetismo.
+    if (magnetismoAbility != null &&
+        result.contains(AbilityKeyword.magnetismo)) {
+      result.add(magnetismoAbility!);
+    }
+    // Sorte (round 3): a habilidade aleatória do turno só vale enquanto tem Sorte.
+    if (sorteAbility != null && result.contains(AbilityKeyword.sorte)) {
+      result.add(sorteAbility!);
     }
     return result;
   }
@@ -445,6 +465,8 @@ class CreatureInPlay {
     bool? nevoaArmed,
     int? esquivaBuffTurns,
     int? armorPool,
+    AbilityKeyword? sorteAbility,
+    AbilityKeyword? magnetismoAbility,
   }) {
     return CreatureInPlay(
       card: card ?? this.card,
@@ -471,6 +493,8 @@ class CreatureInPlay {
       nevoaArmed: nevoaArmed ?? this.nevoaArmed,
       esquivaBuffTurns: esquivaBuffTurns ?? this.esquivaBuffTurns,
       armorPool: armorPool ?? this.armorPool,
+      sorteAbility: sorteAbility ?? this.sorteAbility,
+      magnetismoAbility: magnetismoAbility ?? this.magnetismoAbility,
     );
   }
 }

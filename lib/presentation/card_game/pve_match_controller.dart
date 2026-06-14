@@ -534,10 +534,28 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
     );
   }
 
-  /// Equipa/usa uma relíquia numa criatura própria em jogo.
-  bool playRelic(String cardId, String targetCreatureId) {
+  /// True se a relíquia [cardId] na mão do jogador concede Magnetismo — a UI
+  /// pede a escolha da habilidade ao equipar (round 3).
+  bool relicGrantsMagnetismo(String cardId) {
+    final m = state.match;
+    if (m == null) return false;
+    final side = m.sideOf(state.playerSide);
+    for (final c in side.hand) {
+      if (c is RelicCard && c.id == cardId) {
+        return c.grants.abilities.any(
+            (a) => abilityKeywordFromString(a) == AbilityKeyword.magnetismo);
+      }
+    }
+    return false;
+  }
+
+  /// Equipa/usa uma relíquia numa criatura própria em jogo. `grantedAbility`
+  /// (round 3): habilidade escolhida pelo jogador quando a relíquia tem
+  /// Magnetismo (string canônica de `AbilityKeyword`).
+  bool playRelic(String cardId, String targetCreatureId,
+      {String? grantedAbility}) {
     return _playerAction(
-      PlayRelic(cardId, targetCreatureId),
+      PlayRelic(cardId, targetCreatureId, grantedAbility: grantedAbility),
       onApplied: (before, after) {
         final side = before.sideOf(state.playerSide);
         final relic = _relicInPool(side, cardId);

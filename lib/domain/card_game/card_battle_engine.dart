@@ -116,6 +116,9 @@ class CardBattleEngine {
       }
     }
     newSide = _applyStartOfTurnBuffs(newSide, events);
+    // Sorte (round 3): re-sorteia a habilidade aleatória das criaturas com Sorte
+    // ANTES da fase de ataque (a UI anima pelo evento).
+    newSide = _applySorte(newSide, s, events);
     var state = s.withSide(side.id, newSide).copyWith(phase: MatchPhase.jogo);
     // Auras de início de turno que debuffam o INIMIGO (Lote 3b): Desmoralizar /
     // Suprimir Magia. Reduzem o atk do oponente até a rodada dele.
@@ -123,6 +126,35 @@ class CardBattleEngine {
     // Névoa Tóxica (Lote 7): aplica Doença a todos os inimigos.
     state = _applyNevoaToxica(state, side.id, events);
     return state;
+  }
+
+  /// Sorte (round 3): no início do turno do dono, cada criatura VIVA com Sorte
+  /// sorteia (rng semeado → determinístico) uma habilidade do pool
+  /// [kGrantableAbilities] e SUBSTITUI a anterior. Emite `AbilityTriggered`
+  /// ANTES da fase de ataque pra a UI animar. Degrada com elegância: keywords
+  /// que precisam de estado extra (mímico sem alvo, transformar sem 2ª forma)
+  /// simplesmente não disparam.
+  BoardSide _applySorte(BoardSide side, MatchState s, List<MatchEvent> events) {
+    List<CreatureInPlay?>? lanes;
+    for (var i = 0; i < side.lanes.length; i++) {
+      final c = side.lanes[i];
+      if (c == null || !c.isAlive || !c.hasKeyword(AbilityKeyword.sorte)) {
+        continue;
+      }
+      final picked =
+          kGrantableAbilities[s.rng.nextInt(kGrantableAbilities.length)];
+      if (picked == c.sorteAbility) continue; // sorteou a mesma → sem mudança
+      lanes ??= List<CreatureInPlay?>.from(side.lanes);
+      lanes[i] = c.copyWith(sorteAbility: picked);
+      events.add(AbilityTriggered(
+        side: side.id,
+        cardId: c.instanceId,
+        cardName: c.card.nome,
+        ability: abilityKeywordLabel(AbilityKeyword.sorte),
+        detail: 'manifestou ${abilityKeywordLabel(picked)}',
+      ));
+    }
+    return lanes == null ? side : side.copyWith(lanes: lanes);
   }
 
   /// Névoa Tóxica: se o lado [auraOwner] tem alguma criatura com a keyword, no
@@ -799,6 +831,19 @@ class CardBattleEngine {
       final heal = relic.grants.heal == null ? null : relic.scaledHeal;
       if (heal != null) hp += heal;
       updated = updated.copyWith(currentHp: hp.clamp(0, updated.maxHp));
+
+      // Magnetismo (round 3): se esta relíquia concede Magnetismo e o jogador
+      // escolheu uma habilidade (a.grantedAbility), ela passa a valer no
+      // portador (gated por hasKeyword(magnetismo) no getter `keywords`). Ignora
+      // as 3 metas (não faz sentido conceder suporte/magnetismo/sorte).
+      final granted = a.grantedAbility == null
+          ? null
+          : abilityKeywordFromString(a.grantedAbility!);
+      if (granted != null &&
+          !kMetaAbilities.contains(granted) &&
+          updated.hasKeyword(AbilityKeyword.magnetismo)) {
+        updated = updated.copyWith(magnetismoAbility: granted);
+      }
     }
 
     final newLanes = List<CreatureInPlay?>.from(side.lanes);

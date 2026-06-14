@@ -1150,6 +1150,107 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
     });
   }
 
+  // ──────────────────────── Equipar relíquia (+ Magnetismo) ─────────────────
+  /// Equipa [relicId] no alvo [targetId]. Se a relíquia concede Magnetismo,
+  /// abre o picker pra o jogador ESCOLHER a habilidade extra ANTES de equipar
+  /// (round 3, CEO 2026-06-14). Cancelar o picker NÃO equipa.
+  Future<void> _equipRelic(String relicId, String targetId) async {
+    final ctrl = ref.read(pveMatchControllerProvider.notifier);
+    String? granted;
+    if (ctrl.relicGrantsMagnetismo(relicId)) {
+      granted = await _pickMagnetismoAbility();
+      if (granted == null || !mounted) return; // cancelou → não equipa
+    }
+    ctrl.playRelic(relicId, targetId, grantedAbility: granted);
+  }
+
+  /// Picker do Magnetismo: grade das habilidades concedíveis ([kGrantableAbilities]);
+  /// retorna o `name` da escolhida (string canônica) ou null se cancelar.
+  Future<String?> _pickMagnetismoAbility() {
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: AppColors.surfaceAlt,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: AppColors.borderViolet),
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 440, maxHeight: 480),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                child: Row(
+                  children: [
+                    const Icon(Icons.tune, size: 18, color: AppColors.gold),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text('Magnetismo — escolha a habilidade',
+                          style: GoogleFonts.cinzel(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary)),
+                    ),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final k in kGrantableAbilities)
+                        InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () => Navigator.of(ctx).pop(k.name),
+                          child: Container(
+                            width: 120,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.black.withValues(alpha: 0.35),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Row(
+                              children: [
+                                keywordGlyph(k)
+                                    .build(size: 16, color: AppColors.goldLt),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(abilityKeywordLabel(k),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.robotoMono(
+                                          fontSize: 11,
+                                          color: AppColors.textSecondary)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8),
+                child: TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Cancelar'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   /// Overlay da carta sendo arrastada (translúcida, segue o dedo) + badge do
   /// custo quando paira sobre uma lane jogável. Renderizado no topo do `_matchStack`.
   Widget _buildDragOverlay() {
@@ -2530,7 +2631,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
               // Anima a MINHA carta voando da mão até o slot (CEO 2026-06-13).
               _triggerPlayerFlight(before);
             } else if (targetHighlighted && creature != null) {
-              controller.playRelic(selectedId, creature.instanceId);
+              // Magnetismo (round 3): se a relíquia pede escolha, abre o picker
+              // antes de equipar; senão equipa direto.
+              _equipRelic(selectedId, creature.instanceId);
             }
           },
           child: tile,
