@@ -130,6 +130,15 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
   int _dragCost = 0; // custo em cristais da jogada na _dragLane
   double _dragCardW = 0;
   double _dragCardH = 0;
+  // true do início ao fim/cancelamento do arraste. Desambigua toque de arraste e
+  // — junto com onPanCancel — impede que `_dragCard` fique preso quando a arena de
+  // gestos CANCELA o pan (era a causa da DUPLICAÇÃO: fantasma 0.25 na mão + carta
+  // jogada pelo toque) e do "preso ao soltar/arrastar rápido" (CEO 2026-06-14).
+  bool _panInProgress = false;
+  // Memo da última lane p/ a qual `previewPlay` (clona o motor) foi calculado:
+  // -2 = ainda não calculado · -1 = fora de lane · 0..n = lane. Evita simular o
+  // motor a CADA pixel do dedo (causa do arraste "duro e rígido", CEO 2026-06-14).
+  int _dragPreviewedLane = -2;
   CardPlayNotification? _lastHandledBotNotif; // idempotência do gatilho do bot
   // Pisca o cemitério (vermelho + caveira) a cada carta que entra nele. Incrementa
   // por morte/descarte do MEU lado → vira a Key do efeito one-shot (CEO 2026-06-13).
@@ -1075,41 +1084,70 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
     // Garante a carta SELECIONADA (acende as lanes jogáveis) sem dar toggle-off.
     if (ui.selectedCardId != cardId(card)) ctrl.selectCard(cardId(card));
     setState(() {
+      _panInProgress = true;
       _dragCard = card;
       _dragCardW = w;
       _dragCardH = h;
       _dragPointer = _toStackLocal(global);
       _dragLane = null;
       _dragCost = 0;
+      _dragPreviewedLane = -2;
     });
   }
 
   void _onDragUpdate(Offset global) {
-    if (_dragCard == null) return;
+    if (!_panInProgress || _dragCard == null) return;
     final lane = _laneUnderGlobal(global);
-    final prev = lane == null
-        ? null
-        : ref
-            .read(pveMatchControllerProvider.notifier)
-            .previewPlay(cardId(_dragCard!), lane);
+    final pointer = _toStackLocal(global);
+    final laneKey = lane ?? -1;
+    int? newLane = _dragLane;
+    int newCost = _dragCost;
+    // `previewPlay` clona o motor → só recalcula quando a lane sob o dedo MUDA.
+    // O fantasma segue o dedo todo frame (barato); a simulação não roda por pixel.
+    if (laneKey != _dragPreviewedLane) {
+      _dragPreviewedLane = laneKey;
+      final prev = lane == null
+          ? null
+          : ref
+              .read(pveMatchControllerProvider.notifier)
+              .previewPlay(cardId(_dragCard!), lane);
+      newLane = prev != null ? lane : null; // só destaca lane VÁLIDA
+      newCost = prev?.cost ?? 0;
+    }
     setState(() {
-      _dragPointer = _toStackLocal(global);
-      _dragLane = prev != null ? lane : null; // só destaca lane VÁLIDA
-      _dragCost = prev?.cost ?? 0;
+      _dragPointer = pointer;
+      _dragLane = newLane;
+      _dragCost = newCost;
     });
   }
 
   void _onDragEnd() {
+    if (!_panInProgress) return; // pan já cancelado/encerrado
     final card = _dragCard;
     final lane = _dragLane;
     setState(() {
+      _panInProgress = false;
       _dragCard = null;
       _dragLane = null;
+      _dragPreviewedLane = -2;
     });
     if (card == null || lane == null) return; // soltou fora → cancela
     final ctrl = ref.read(pveMatchControllerProvider.notifier);
     final before = _playerInstanceIds(ref.read(pveMatchControllerProvider));
     if (ctrl.playCreature(cardId(card), lane: lane)) _triggerPlayerFlight(before);
+  }
+
+  /// Pan CANCELADO pela arena de gestos (NÃO chega em onPanEnd): reseta o estado
+  /// SEM jogar a carta. Sem isto `_dragCard` ficava preso → fantasma 0.25 na mão +
+  /// a carta jogada depois pelo toque = DUPLICAÇÃO (CEO 2026-06-14).
+  void _onDragCancel() {
+    if (!_panInProgress && _dragCard == null) return;
+    setState(() {
+      _panInProgress = false;
+      _dragCard = null;
+      _dragLane = null;
+      _dragPreviewedLane = -2;
+    });
   }
 
   /// Overlay da carta sendo arrastada (translúcida, segue o dedo) + badge do
@@ -2187,11 +2225,23 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
     final isMoving = isPlayerSide &&
         creature != null &&
         _movingCreatureId == creature.instanceId;
+    // PV caindo JUNTO com o impacto: no beat em que ESTA criatura é o alvo de DANO
+    // (não cura, não esquiva, dano > 0), o número de vida desce no instante do
+    // golpe (`_hitContactMs`), rápido — em vez de seguir o snapshot pré-ataque.
+    final hpImpact = creature != null &&
+        h != null &&
+        isHlTarget &&
+        !h.isHeal &&
+        !h.evaded &&
+        (h.amount ?? 0) > 0;
     Widget content = creature == null
         ? _emptyLane(lane, laneHighlighted)
         : _boardCard(creature,
             isFront: isFront,
-            borderOverride: isMoving ? AppColors.gold : borderOverride);
+            borderOverride: isMoving ? AppColors.gold : borderOverride,
+            impactHpDrop: hpImpact ? h.amount : null,
+            impactDelayMs: hpImpact ? _hitContactMs(h.damageType) : null,
+            impactSeq: hpImpact ? h.seq : null);
     // Acabou de pousar de um voo (IA/jogador): a carta voadora era MÍNIMA — agora
     // a carta real surge com fade-in + leve assentamento, revelando os detalhes
     // (dano/cristal/relíquia/habilidades) de forma suave (CEO 2026-06-13).
@@ -2785,7 +2835,11 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
   /// rodapé de combate (ATK efetivo, PV atual colorido, keywords). Glow LEVE na
   /// cor do CONCEITO da carta (CEO 2026-06-13).
   Widget _boardCard(CreatureInPlay c,
-      {required bool isFront, Color? borderOverride}) {
+      {required bool isFront,
+      Color? borderOverride,
+      int? impactHpDrop,
+      int? impactDelayMs,
+      int? impactSeq}) {
     // Glow na cor do CONCEITO e SUAVE, feito dentro da GameCardFace
     // (`glowByConcept`) — sem camada extra. Antes era um glow forte na cor do
     // TIPO DE DANO, que o CEO pediu pra trocar pelo conceito e enfraquecer.
@@ -2806,11 +2860,15 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
       // CEO 2026-06-13: defesas vão pro rodapé (acima da vida); debuffs viram
       // bolinhas vermelhas no topo-direita (statusOverlay aposentado aqui).
       debuffs: _debuffGlyphs(c),
-      footer: _boardFooter(c),
+      footer: _boardFooter(c,
+          impactHpDrop: impactHpDrop,
+          impactDelayMs: impactDelayMs,
+          impactSeq: impactSeq),
     );
   }
 
-  Widget _boardFooter(CreatureInPlay c) {
+  Widget _boardFooter(CreatureInPlay c,
+      {int? impactHpDrop, int? impactDelayMs, int? impactSeq}) {
     // CEO 2026-06-13: tipos de ataque EMPILHADOS (esquerda) · defesas EM CIMA da
     // vida (direita), com ícones da mesma cor/tamanho da vida.
     return Row(
@@ -2852,19 +2910,48 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
               children: [
                 const Icon(Icons.favorite, size: 9, color: Colors.white),
                 const SizedBox(width: 2),
-                // PV com contagem ANIMADA (CEO 2026-06-13): ao mudar (dano/cura)
-                // o número desce/sobe contando, em vez de pular. Sem animação no
-                // 1º build (Tween só com end → não conta do zero ao entrar).
-                TweenAnimationBuilder<double>(
-                  tween: Tween<double>(end: c.currentHp.toDouble()),
-                  duration: const Duration(milliseconds: 450),
-                  curve: Curves.easeOut,
-                  builder: (ctx, val, _) => Text('${val.round()}',
-                      style: GoogleFonts.robotoMono(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: _boardHpColor(c))),
-                ),
+                // PV com contagem ANIMADA. No beat de IMPACTO (esta carta é o ALVO
+                // do golpe) o número DESCE junto com o impacto — começa em
+                // `impactDelayMs` (= _hitContactMs do tipo) e cai RÁPIDO (250ms).
+                // Antes seguia o snapshot pré-ataque e só caía no step seguinte,
+                // parecendo muito atrasado (CEO 2026-06-14). Fora do impacto,
+                // contagem suave padrão (dano/cura/crescimento entre steps).
+                if (impactHpDrop != null && impactHpDrop > 0)
+                  Builder(builder: (_) {
+                    final from = c.currentHp.toDouble();
+                    final to = (c.currentHp - impactHpDrop)
+                        .clamp(0, c.currentHp)
+                        .toDouble();
+                    return Text('${c.currentHp}',
+                            style: GoogleFonts.robotoMono(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: _boardHpColor(c)))
+                        .animate(key: ValueKey<int>(impactSeq ?? 0))
+                        .custom(
+                          delay: (impactDelayMs ?? 0).ms,
+                          duration: 250.ms,
+                          curve: Curves.easeOut,
+                          builder: (ctx, value, _) => Text(
+                            '${(from + (to - from) * value).round()}',
+                            style: GoogleFonts.robotoMono(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: _boardHpColor(c)),
+                          ),
+                        );
+                  })
+                else
+                  TweenAnimationBuilder<double>(
+                    tween: Tween<double>(end: c.currentHp.toDouble()),
+                    duration: const Duration(milliseconds: 450),
+                    curve: Curves.easeOut,
+                    builder: (ctx, val, _) => Text('${val.round()}',
+                        style: GoogleFonts.robotoMono(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: _boardHpColor(c))),
+                  ),
               ],
             ),
           ],
@@ -3047,11 +3134,12 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
         angle: selected ? 0 : rot,
         child: GestureDetector(
           onTap: () => controller.selectCard(cardId(card)),
-          onPanStart: canDrag
+          onPanStart: canDrag && !_panInProgress
               ? (d) => _onDragStart(card, cardW, cardH, d.globalPosition)
               : null,
           onPanUpdate: canDrag ? (d) => _onDragUpdate(d.globalPosition) : null,
           onPanEnd: canDrag ? (_) => _onDragEnd() : null,
+          onPanCancel: canDrag ? _onDragCancel : null,
           child: Opacity(
             opacity: beingDragged ? 0.25 : 1, // fantasma fica no overlay
             child: SizedBox(
