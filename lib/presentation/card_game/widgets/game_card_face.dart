@@ -31,7 +31,7 @@ class GameCardFace extends StatelessWidget {
     this.cornerBadge,
     this.itemIcon,
     this.showItemSlot = false,
-    this.effects = const <CardGlyph>[],
+    this.effects = const <EffectBadge>[],
     this.debuffs = const <CardGlyph>[],
     this.statusOverlay,
     this.minimal = false,
@@ -73,8 +73,8 @@ class GameCardFace extends StatelessWidget {
 
   /// Brasões de EFEITO (keywords) — pequenos círculos ROXOS na borda esquerda
   /// que vazam ~40% pra fora, abaixo da bandeira de raridade. + habilidades =
-  /// + brasões.
-  final List<CardGlyph> effects;
+  /// + brasões. Cada um carrega a MAGNITUDE (mostra o número se > 1).
+  final List<EffectBadge> effects;
 
   /// DEBUFFS (status negativos) — bolinhas VERMELHAS no TOPO-DIREITA (ao lado do
   /// cristal de custo). + debuffs = + bolinhas (CEO 2026-06-13).
@@ -283,7 +283,7 @@ class GameCardFace extends StatelessWidget {
             left: -7,
             child: Column(
               children: [
-                for (final g in effects) _EffectCrest(glyph: g),
+                for (final g in effects) _EffectCrest(badge: g),
               ],
             ),
           ),
@@ -377,6 +377,14 @@ class CardGlyph {
     }
     return Icon(fallback, size: size, color: color);
   }
+}
+
+/// Brasão de EFEITO com MAGNITUDE: o glifo + a quantidade do buff (ex.: Espinhos
+/// 3). O número só aparece quando `count > 1` — sinalização sutil (CEO 2026-06-13).
+class EffectBadge {
+  const EffectBadge(this.glyph, [this.count = 1]);
+  final CardGlyph glyph;
+  final int count;
 }
 
 /// Ícones RPG profissionais (game-icons.net, CC BY 3.0). Monocromáticos →
@@ -770,11 +778,23 @@ String keywordDescription(AbilityKeyword k) {
   }
 }
 
-/// Brasões de efeito (glifos RPG) a partir das strings de habilidade da carta.
-List<CardGlyph> effectGlyphsFromAbilities(List<String> abilities) => abilities
-    .map(abilityKeywordFromString)
-    .whereType<AbilityKeyword>()
-    .map(keywordGlyph)
+/// Brasões de efeito (glifo + magnitude) a partir das strings de habilidade da
+/// carta. A magnitude vem do número na string (ex.: "espinhos_3" → 3); sem
+/// número = 1 (não mostra contador). CEO 2026-06-13.
+List<EffectBadge> effectGlyphsFromAbilities(List<String> abilities) {
+  final out = <EffectBadge>[];
+  for (final a in abilities) {
+    final k = abilityKeywordFromString(a);
+    if (k == null) continue;
+    out.add(EffectBadge(keywordGlyph(k), abilityMagnitude(a) ?? 1));
+  }
+  return out;
+}
+
+/// Brasões de efeito de uma criatura EM JOGO: usa a magnitude EFETIVA (carta +
+/// relíquias) via `keywordValue`. CEO 2026-06-13.
+List<EffectBadge> effectBadgesForCreature(CreatureInPlay c) => c.keywords
+    .map((k) => EffectBadge(keywordGlyph(k), c.keywordValue(k, 1)))
     .toList();
 
 /// Camada de STATUS transitório de uma criatura no tabuleiro: armadura (física
@@ -989,15 +1009,14 @@ class _CrystalFacets extends CustomPainter {
 /// Brasão de HABILIDADE (esquerda) — círculo ROXO com ícone branco (CEO
 /// 2026-06-13: era dourado).
 class _EffectCrest extends StatelessWidget {
-  const _EffectCrest({required this.glyph});
-  final CardGlyph glyph;
+  const _EffectCrest({required this.badge});
+  final EffectBadge badge;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    Widget crest = Container(
       width: 16,
       height: 16,
-      margin: const EdgeInsets.only(bottom: 3),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
@@ -1009,8 +1028,41 @@ class _EffectCrest extends StatelessWidget {
         border: Border.all(color: const Color(0xFF120A1E), width: 1),
         boxShadow: const [BoxShadow(color: Color(0x88000000), blurRadius: 3)],
       ),
-      child: glyph.build(size: 10, color: Colors.white),
+      child: badge.glyph.build(size: 10, color: Colors.white),
     );
+    // MAGNITUDE > 1 (CEO 2026-06-13): pílula pequena com o número no canto inf-dir
+    // — sinalização sutil de "quantos" daquele buff (ex.: Espinhos 3).
+    if (badge.count > 1) {
+      crest = Stack(
+        clipBehavior: Clip.none,
+        children: [
+          crest,
+          Positioned(
+            right: -3,
+            bottom: -2,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 0.5),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A0F2B),
+                borderRadius: BorderRadius.circular(5),
+                border:
+                    Border.all(color: const Color(0xFFB07BE8), width: 0.6),
+              ),
+              child: Text(
+                '${badge.count}',
+                style: const TextStyle(
+                  fontSize: 7,
+                  height: 1,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFFEBDBFF),
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return Padding(padding: const EdgeInsets.only(bottom: 3), child: crest);
   }
 }
 

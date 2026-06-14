@@ -81,5 +81,6 @@ flutter:
     - assets/images/card_game/
     - assets/vfx/particles/
     - assets/vfx/weapons/
+    - assets/vfx/sprites/
     - assets/icons/rpg/
     - assets/fonts/

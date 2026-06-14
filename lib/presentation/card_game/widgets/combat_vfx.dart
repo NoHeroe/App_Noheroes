@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -31,15 +32,63 @@ class CombatVfx {
   static const String trace = '$_base/trace_01.png';
   static const String circle = '$_base/circle_05.png';
 
-  /// Espada (PNG tier 3, pasta weapons) usada no GOLPE melee — arte completa
-  /// (não é glow tingível). Aponta pra NE (cabo embaixo-esq, ponta em cima-dir).
-  static const String sword = 'assets/vfx/weapons/sword_tier3.png';
+  // --------------------------------------------------------------------------
+  // SPRITE-SHEETS (assets/vfx/sprites/) + arma estática (assets/vfx/weapons/).
+  //
+  // CONVENÇÃO (ADR-0031): nome do arquivo = snake_case semântico, SEM contagem
+  // de quadros / grid / tier embutido. O grid mora aqui nas consts, um bloco por
+  // sheet: `<nome>Sheet` (caminho) + `<nome>Cols`/`<nome>Rows` (grade). Sheets
+  // são RGBA-transparentes e downscaladas 2× no import (ver tool/import_vfx.py).
+  // --------------------------------------------------------------------------
 
-  /// Todas as texturas — usar pra `precacheImage` no início da partida e evitar
-  /// engasgo no 1º efeito.
+  /// Espada usada no GOLPE melee — arte completa estática (não é glow tingível).
+  /// Aponta pra NE (cabo embaixo-esq, ponta em cima-dir).
+  static const String sword = 'assets/vfx/weapons/sword.png';
+
+  /// RAIO do ATAQUE mágico — sheet 5×1 (640×128 = 5×128²): junta (0–2) → estoura
+  /// dourado/azul (3) → dissipa (4). Versão que o CEO aprovou. A canalização é
+  /// por CÓDIGO (`spellChannel`), não sprite.
+  static const String lightningSheet = 'assets/vfx/sprites/lightning.png';
+  static const int lightningCols = 5;
+  static const int lightningRows = 1;
+
+  /// Explosão de IMPACTO (CEO 2026-06-13): sheet 8×4 = 32 quadros de 128².
+  /// Toca centralizada na carta atingida, no impacto.
+  static const String explosionSheet = 'assets/vfx/sprites/explosion.png';
+  static const int explosionCols = 8;
+  static const int explosionRows = 4;
+
+  /// BIBLIOTECA importada (CEO 2026-06-13) — padronizada, pronta pra ser usada em
+  /// efeitos futuros do app. AINDA NÃO ligada a nenhuma animação (por isso fora
+  /// do `all`/precache: só entra no precache quando virar efeito de fato).
+
+  /// Dardo de GELO — sheet 8×4 = 32 quadros de 128².
+  static const String iceBoltSheet = 'assets/vfx/sprites/ice_bolt.png';
+  static const int iceBoltCols = 8;
+  static const int iceBoltRows = 4;
+
+  /// Explosão de CAOS (arcano/roxo) — sheet 8×2 = 16 quadros de 128².
+  static const String chaosSheet = 'assets/vfx/sprites/chaos.png';
+  static const int chaosCols = 8;
+  static const int chaosRows = 2;
+
+  /// Estilhaço de SANGUE — sheet 8×2 = 16 quadros de 128².
+  static const String bloodSheet = 'assets/vfx/sprites/blood.png';
+  static const int bloodCols = 8;
+  static const int bloodRows = 2;
+
+  /// ESCUDO mágico (esfera de energia que forma e dissipa) — sheet 5×4 = 20
+  /// quadros de 240².
+  static const String magicShieldSheet = 'assets/vfx/sprites/magic_shield.png';
+  static const int magicShieldCols = 5;
+  static const int magicShieldRows = 4;
+
+  /// Texturas EM USO num combate — `precacheImage` no início da partida pra
+  /// evitar engasgo no 1º efeito. (Sheets da biblioteca importada entram aqui
+  /// quando forem ligados a um efeito.)
   static const List<String> all = <String>[
     slash, magic, light, flare, spark, star, smoke, scorch, trace, circle,
-    sword,
+    sword, lightningSheet, explosionSheet,
   ];
 
   /// Uma textura tingida (glow branco → cor do elemento via modulate).
@@ -293,6 +342,72 @@ class CombatVfx {
               curve: Curves.easeOutBack)
           .then(delay: 70.ms)
           .fadeOut(duration: 200.ms, curve: Curves.easeIn),
+    );
+  }
+
+  /// RAIO que ATINGE o alvo (sprite-sheet 5 quadros, dourado/azul) — impacto do
+  /// ataque MÁGICO (CEO 2026-06-13). PEQUENO e RÁPIDO; VEM da direção do atacante
+  /// (`from` = offset de entrada rumo ao alvo no centro). `delayMs` = após a
+  /// canalização (~0.8s).
+  /// RAIO no alvo — ATAQUE mágico (versão aprovada pelo CEO): pequeno e rápido,
+  /// VEM da direção do atacante (`from`) e CRAVA no alvo; some no fim (vanish).
+  /// `delayMs` = após a canalização.
+  static Widget lightningStrike({
+    double size = 72,
+    int delayMs = 0,
+    int durationMs = 340,
+    Offset from = Offset.zero,
+  }) {
+    final d = Duration(milliseconds: delayMs);
+    Widget fx = SpriteSheetFx(
+      asset: lightningSheet,
+      columns: lightningCols,
+      rows: lightningRows,
+      width: size,
+      height: size,
+      durationMs: durationMs,
+      delayMs: delayMs,
+    );
+    // VANISH no fim — fade pra não terminar "duro".
+    fx = fx.animate().fadeOut(
+        delay: (delayMs + durationMs - 130).ms,
+        duration: 150.ms,
+        curve: Curves.easeIn);
+    if (from != Offset.zero) {
+      // Entra de `from` (lado do atacante) e CRAVA no alvo (centro), rápido.
+      fx = fx.animate().move(
+          begin: from,
+          end: Offset.zero,
+          delay: d,
+          duration: (durationMs * 0.55).round().ms,
+          curve: Curves.easeOutCubic);
+    }
+    return IgnorePointer(child: fx);
+  }
+
+  /// EXPLOSÃO de impacto na carta atingida (sprite-sheet 32 quadros) — CEO
+  /// 2026-06-13. `delayMs` = momento do contato (junto com o tremor).
+  static Widget impactBlast(
+      {double size = 132, int delayMs = 0, int durationMs = 460}) {
+    return IgnorePointer(
+      child: SpriteSheetFx(
+        asset: explosionSheet,
+        columns: explosionCols,
+        rows: explosionRows,
+        width: size,
+        height: size,
+        durationMs: durationMs,
+        delayMs: delayMs,
+      ),
+    );
+  }
+
+  /// CANALIZAÇÃO mágica POR CÓDIGO (CEO 2026-06-13): muitas PARTÍCULAS amareladas
+  /// se reúnem num ponto formando uma BOLINHA DE LUZ que cresce. ~0.8s, no centro
+  /// da carta atacante.
+  static Widget spellChannel({double size = 100, int durationMs = 800}) {
+    return IgnorePointer(
+      child: _SpellChannelConverge(size: size, durationMs: durationMs),
     );
   }
 
@@ -704,4 +819,255 @@ class _SlashCutPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_SlashCutPainter old) => false;
+}
+
+/// Tocador de SPRITE-SHEET em GRADE (quadro a quadro, toca 1×). Carrega a imagem
+/// como `ui.Image` e desenha o quadro atual via `drawImageRect`. Grade de
+/// [columns]×[rows], ordem de leitura (esq→dir, cima→baixo); toca [frames]
+/// quadros (default = columns*rows) a partir de [startFrame], exibindo em
+/// [width]×[height]. `delayMs` antes de começar. Cores nativas do sprite.
+class SpriteSheetFx extends StatefulWidget {
+  const SpriteSheetFx({
+    super.key,
+    required this.asset,
+    required this.columns,
+    this.rows = 1,
+    this.frames,
+    this.startFrame = 0,
+    required this.width,
+    required this.height,
+    this.durationMs = 450,
+    this.delayMs = 0,
+  });
+
+  final String asset;
+  final int columns;
+  final int rows;
+  final int? frames; // quantos quadros tocar (null = columns*rows)
+  final int startFrame; // offset (ordem de leitura) na folha
+  final double width;
+  final double height;
+  final int durationMs;
+  final int delayMs;
+
+  @override
+  State<SpriteSheetFx> createState() => _SpriteSheetFxState();
+}
+
+class _SpriteSheetFxState extends State<SpriteSheetFx>
+    with SingleTickerProviderStateMixin {
+  ui.Image? _image;
+  ImageStream? _stream;
+  ImageStreamListener? _listener;
+  bool _started = false; // só desenha depois que começa (não mostra frame 0)
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: Duration(milliseconds: widget.durationMs),
+  );
+
+  int get _frameCount => widget.frames ?? widget.columns * widget.rows;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveImage();
+    if (widget.delayMs > 0) {
+      Future<void>.delayed(Duration(milliseconds: widget.delayMs), () {
+        if (mounted) setState(() => _started = true);
+        if (mounted) _c.forward();
+      });
+    } else {
+      _started = true;
+      _c.forward();
+    }
+  }
+
+  void _resolveImage() {
+    _stream = AssetImage(widget.asset).resolve(ImageConfiguration.empty);
+    _listener = ImageStreamListener((info, _) {
+      if (mounted) {
+        // Clona pra ter um handle próprio (não desmonta o do cache).
+        setState(() => _image = info.image.clone());
+      }
+      info.dispose();
+    });
+    _stream!.addListener(_listener!);
+  }
+
+  @override
+  void dispose() {
+    if (_stream != null && _listener != null) _stream!.removeListener(_listener!);
+    _image?.dispose();
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final img = _image;
+    if (img == null || !_started) {
+      return SizedBox(width: widget.width, height: widget.height);
+    }
+    return SizedBox(
+      width: widget.width,
+      height: widget.height,
+      child: RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: _c,
+          builder: (_, __) => CustomPaint(
+            size: Size(widget.width, widget.height),
+            painter: _SpriteSheetPainter(img, widget.columns, widget.rows,
+                widget.startFrame, _frameCount, _c.value),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SpriteSheetPainter extends CustomPainter {
+  _SpriteSheetPainter(
+      this.image, this.columns, this.rows, this.startFrame, this.frames, this.t);
+  final ui.Image image;
+  final int columns;
+  final int rows;
+  final int startFrame;
+  final int frames;
+  final double t; // progresso 0..1
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final fw = image.width / columns;
+    final fh = image.height / rows;
+    var i = (t * frames).floor();
+    if (i >= frames) i = frames - 1;
+    if (i < 0) i = 0;
+    final g = startFrame + i; // quadro absoluto (ordem de leitura)
+    final col = g % columns;
+    final row = g ~/ columns;
+    final src = Rect.fromLTWH(col * fw, row * fh, fw, fh);
+    final dst = Rect.fromLTWH(0, 0, size.width, size.height);
+    canvas.drawImageRect(
+        image, src, dst, Paint()..filterQuality = FilterQuality.medium);
+  }
+
+  @override
+  bool shouldRepaint(_SpriteSheetPainter old) =>
+      old.t != t || old.image != image;
+}
+
+/// CANALIZAÇÃO por código: partículas amareladas que se reúnem no centro,
+/// formando uma bolinha de luz que cresce (CEO 2026-06-13).
+class _SpellChannelConverge extends StatefulWidget {
+  const _SpellChannelConverge({required this.size, required this.durationMs});
+  final double size;
+  final int durationMs;
+  @override
+  State<_SpellChannelConverge> createState() => _SpellChannelConvergeState();
+}
+
+class _SpellChannelConvergeState extends State<_SpellChannelConverge>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: Duration(milliseconds: widget.durationMs),
+  )..forward();
+  late final List<_ConvP> _ps;
+
+  @override
+  void initState() {
+    super.initState();
+    final rnd = math.Random(7);
+    _ps = List.generate(28, (i) {
+      return _ConvP(
+        angle: rnd.nextDouble() * 2 * math.pi,
+        startR: 0.5 + rnd.nextDouble() * 0.5, // fração do raio (0.5..1.0)
+        radius: 1.1 + rnd.nextDouble() * 1.9, // raio do ponto
+        delay: rnd.nextDouble() * 0.4, // entram escalonados
+        spin: (rnd.nextDouble() - 0.5) * 0.7, // leve espiral
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: widget.size,
+      height: widget.size,
+      child: RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: _c,
+          builder: (_, __) => CustomPaint(
+            size: Size(widget.size, widget.size),
+            painter: _ConvPainter(_ps, _c.value),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ConvP {
+  _ConvP({
+    required this.angle,
+    required this.startR,
+    required this.radius,
+    required this.delay,
+    required this.spin,
+  });
+  final double angle;
+  final double startR;
+  final double radius;
+  final double delay;
+  final double spin;
+}
+
+class _ConvPainter extends CustomPainter {
+  _ConvPainter(this.ps, this.t);
+  final List<_ConvP> ps;
+  final double t;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = size.center(Offset.zero);
+    final maxR = size.shortestSide / 2;
+    // BOLINHA de luz central pequena e SUTIL (CEO 2026-06-13: não pode parecer
+    // explosão) — só um pontinho que cresce conforme as partículas convergem.
+    final ball = Curves.easeIn.transform(t) * maxR * 0.20;
+    if (ball > 0.5) {
+      final glowR = ball * 1.7;
+      canvas.drawCircle(
+        c,
+        glowR,
+        Paint()
+          ..shader = const RadialGradient(
+            colors: [Color(0xBBFFF1B0), Color(0x00FFE066)],
+          ).createShader(Rect.fromCircle(center: c, radius: glowR)),
+      );
+      canvas.drawCircle(c, ball * 0.7, Paint()..color = const Color(0xFFFFF6D0));
+    }
+    // Partículas amareladas convergindo pro centro.
+    for (final p in ps) {
+      final lt = ((t - p.delay) / (1 - p.delay)).clamp(0.0, 1.0);
+      final e = Curves.easeIn.transform(lt);
+      final r = p.startR * maxR * (1 - e); // raio diminui → converge
+      final a = p.angle + p.spin * e * math.pi; // leve espiral
+      final pos = c + Offset(math.cos(a), math.sin(a)) * r;
+      final op = ((lt < 0.15 ? lt / 0.15 : 1.0) * (1 - e * 0.85)).clamp(0.0, 1.0);
+      if (op <= 0.01) continue;
+      canvas.drawCircle(pos, p.radius * 2.2,
+          Paint()..color = const Color(0xFFFFC83C).withValues(alpha: op * 0.25));
+      canvas.drawCircle(pos, p.radius,
+          Paint()..color = const Color(0xFFFFE27A).withValues(alpha: op));
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ConvPainter old) => old.t != t;
 }

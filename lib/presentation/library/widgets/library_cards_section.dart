@@ -711,8 +711,9 @@ class _CardTile extends StatelessWidget {
       artIcon: card.icon,
       showItemSlot: false, // coleção não mostra slot de item
       showCost: !card.isHero, // herói não tem custo de cristal
-      effects:
-          isCreature ? effectGlyphsFromAbilities(card.abilities) : const [],
+      effects: isCreature
+          ? effectGlyphsFromAbilities(card.abilities)
+          : const <EffectBadge>[],
       footer: footer,
       cornerBadge: level > 1
           ? Container(

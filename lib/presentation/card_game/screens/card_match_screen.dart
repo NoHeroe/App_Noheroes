@@ -2343,16 +2343,17 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
     if (creature != null && showChannel) {
       tile = Stack(
         clipBehavior: Clip.none,
+        alignment: Alignment.center,
         children: [
           tile,
-          Positioned(
-            top: isPlayerSide ? -30 : null,
-            bottom: isPlayerSide ? null : -30,
-            left: 0,
-            right: 0,
+          // Canalização por CÓDIGO (CEO 2026-06-13): partículas amareladas se
+          // reúnem num ponto formando uma bolinha de luz, no CENTRO da carta.
+          Positioned.fill(
             child: Center(
-              child: RepaintBoundary(
-                child: CombatVfx.magicChannel(color: AppColors.conceptMagico),
+              child: OverflowBox(
+                maxWidth: double.infinity,
+                maxHeight: double.infinity,
+                child: RepaintBoundary(child: CombatVfx.spellChannel()),
               ),
             ),
           ),
@@ -2400,12 +2401,12 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
                 .scaleXY(
                     begin: 1, end: 1 / 1.06, duration: 220.ms, curve: Curves.easeIn);
           case DamageType.magico:
-            // MAGIA TEATRAL (CEO 2026-06-13): a carta INCHA carregando a magia
-            // (~640ms, lento) enquanto o orbe cresce girando (overlay), e dá um
-            // COICE pra trás ao LIBERAR — então o projétil sai (overlay do alvo).
+            // MAGIA (CEO 2026-06-13): a carta CANALIZA 0.8s (incha, lento) e dá um
+            // COICE pra trás ao LIBERAR — então o RAIO atinge o alvo (overlay do
+            // alvo). Canalização = 800ms.
             tile = tile
                 .animate(key: ObjectKey(h))
-                .scaleXY(begin: 1, end: 1.07, duration: 640.ms, curve: Curves.easeInOut)
+                .scaleXY(begin: 1, end: 1.07, duration: 800.ms, curve: Curves.easeInOut)
                 .then()
                 .moveY(begin: 0, end: -16 * dir, duration: 130.ms, curve: Curves.easeOut)
                 .scaleXY(begin: 1, end: 1 / 1.07, duration: 130.ms)
@@ -2477,7 +2478,8 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
           tile,
           if (isHlTarget && !hh.isHeal && !hh.evaded)
             Positioned.fill(
-              child: RepaintBoundary(child: _impactOverlay(hh, isPlayerSide)),
+              child: RepaintBoundary(
+                  child: _impactOverlay(hh, isPlayerSide, creature.lane)),
             ),
           // Morte: com o replay pré-estado o alvo morto ainda está visível no
           // passo — o shatter estilhaça SOBRE o tile (some no passo seguinte,
@@ -2556,7 +2558,45 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
   /// tingidas por elemento): mágico = orbe arcano que viaja + impacto; à
   /// distância = bolt/streak que viaja + impacto; melee/verdadeiro = impacto
   /// imediato (o corte em si é o `_slashFlash` no atacante).
-  Widget _impactOverlay(CombatHighlight h, bool isPlayerSideTarget) {
+  /// Direção de ENTRADA do raio mágico: aponta do ALVO para o ATACANTE (ângulo
+  /// FIEL à posição de quem atacou), via lane keys. Default vertical se a
+  /// geometria não estiver disponível.
+  Offset _magicEntryFrom(
+      CombatHighlight h, bool isPlayerSideTarget, int targetLane) {
+    final fallback = Offset(0, isPlayerSideTarget ? -84.0 : 84.0);
+    final attId = h.attackerCardId;
+    if (attId == null) return fallback;
+    final ui = ref.read(pveMatchControllerProvider);
+    final attList = (isPlayerSideTarget ? ui.botBoard : ui.playerBoard)
+            ?.creaturesInPlay ??
+        const <CreatureInPlay>[];
+    var attLane = -1;
+    for (var i = 0; i < attList.length; i++) {
+      if (attList[i].instanceId == attId) {
+        attLane = i; // front-packed: índice = lane
+        break;
+      }
+    }
+    if (attLane < 0) return fallback;
+    final stackBox =
+        _matchStackKey.currentContext?.findRenderObject() as RenderBox?;
+    final tgtBox =
+        (isPlayerSideTarget ? _playerLaneKeys : _botLaneKeys)[targetLane]
+            ?.currentContext
+            ?.findRenderObject() as RenderBox?;
+    final attBox = (isPlayerSideTarget ? _botLaneKeys : _playerLaneKeys)[attLane]
+        ?.currentContext
+        ?.findRenderObject() as RenderBox?;
+    if (stackBox == null || tgtBox == null || attBox == null) return fallback;
+    Offset centerIn(RenderBox b) =>
+        stackBox.globalToLocal(b.localToGlobal(b.size.center(Offset.zero)));
+    final dir = centerIn(attBox) - centerIn(tgtBox); // alvo → atacante
+    if (dir.distance < 1) return fallback;
+    return dir / dir.distance * 84.0; // entra a 84px na direção do atacante
+  }
+
+  Widget _impactOverlay(
+      CombatHighlight h, bool isPlayerSideTarget, int targetLane) {
     final type = h.damageType;
     final isMagic = type == DamageType.magico;
     // Vitalismo/verdadeiro é À DISTÂNCIA (CEO 2026-06-13): orbe que VIAJA até o
@@ -2583,34 +2623,38 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
     // do jogador (embaixo) leva tiro de cima; alvo do bot (em cima) de baixo.
     final startDy = isPlayerSideTarget ? -66.0 : 66.0;
 
-    // MAGIA TEATRAL (CEO 2026-06-13): o projétil é GRANDE e LENTO, lançado só
-    // quando a canalização libera (~640ms), chega ~1120ms e estoura num impacto
-    // grande e exagerado (onda de choque). Os outros (flecha) seguem rápidos.
+    // MAGIA (CEO 2026-06-13): o atacante CANALIZA ~0.8s e então o RAIO (sprite
+    // dourado/azul) ATINGE o alvo (junta → estoura → dissipa). Sem orbe lento; o
+    // raio é instantâneo. `_kMagicChannelMs` = quando a canalização libera.
     if (isMagic) {
-      const launchMs = 640; // a canalização libera
-      const travelMs = 480; // voo lento
-      const arriveMs = launchMs + travelMs; // ~1120
-      return IgnorePointer(
-        child: Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.center,
-          children: [
-            KeyedSubtree(
-              key: ValueKey('fxProj_${identityHashCode(h)}'),
-              child: CombatVfx.projectile(
-                travel: Offset(0, startDy * 1.1),
-                color: color,
-                size: 44,
-                durationMs: travelMs,
-                delayMs: launchMs,
+      final contact = _hitContactMs(h.damageType);
+      return Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          // O raio: vem da direção REAL do atacante e crava no alvo.
+          Center(
+            child: KeyedSubtree(
+              key: ValueKey('fxLightning_${identityHashCode(h)}'),
+              child: CombatVfx.lightningStrike(
+                delayMs: _kMagicChannelMs,
+                from: _magicEntryFrom(h, isPlayerSideTarget, targetLane),
               ),
             ),
-            KeyedSubtree(
-              key: ValueKey('fxImpact_${identityHashCode(h)}'),
-              child: CombatVfx.magicImpact(color: color, delayMs: arriveMs),
+          ),
+          // EXPLOSÃO de impacto no CONTATO (junto com o tremor já existente),
+          // centralizada na carta atingida (CEO 2026-06-13).
+          Center(
+            child: OverflowBox(
+              maxWidth: double.infinity,
+              maxHeight: double.infinity,
+              child: KeyedSubtree(
+                key: ValueKey('fxBlast_${identityHashCode(h)}'),
+                child: CombatVfx.impactBlast(delayMs: contact),
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 
@@ -2741,7 +2785,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
           : null,
       showItemSlot: true,
       itemIcon: c.relics.isNotEmpty ? _relicSlotIcon(c.relics.first) : null,
-      effects: c.keywords.map(keywordGlyph).toList(),
+      effects: effectBadgesForCreature(c),
       // CEO 2026-06-13: defesas vão pro rodapé (acima da vida); debuffs viram
       // bolinhas vermelhas no topo-direita (statusOverlay aposentado aqui).
       debuffs: _debuffGlyphs(c),
@@ -3063,7 +3107,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
       showItemSlot: creature != null && !minimal,
       effects: (creature != null && !minimal)
           ? effectGlyphsFromAbilities(creature.abilities)
-          : const [],
+          : const <EffectBadge>[],
       minimal: minimal,
       // IN-GAME: glow suave na cor do conceito (CEO 2026-06-13).
       glowByConcept: true,
@@ -3663,6 +3707,8 @@ const int _kDeathCrackHoldMs = 180;
 // Quando a ESPADA melee "encosta" no alvo (ms desde o início do beat): avanço da
 // carta + mini-recuo + estocada. Sincroniza o impacto/morte com o fim do golpe.
 const int _kMeleeContactMs = 710;
+// MÁGICO: a carta CANALIZA 0.8s e então o RAIO atinge o alvo (CEO 2026-06-13).
+const int _kMagicChannelMs = 800;
 
 /// Momento (ms desde o início do beat) em que o golpe ENCOSTA no alvo, por tipo —
 /// sincroniza o tremor de IMPACTO (e a MORTE, que vem depois) com a chegada do
@@ -3670,7 +3716,8 @@ const int _kMeleeContactMs = 710;
 int _hitContactMs(DamageType? type) {
   switch (type) {
     case DamageType.magico:
-      return 1120; // projétil mágico lento
+      // Canalização (0.8s) + chegada/estouro do raio (~200ms).
+      return _kMagicChannelMs + 200;
     case DamageType.corpoACorpo:
       return _kMeleeContactMs; // avanço + recuo + estocada da espada
     case DamageType.aDistancia:

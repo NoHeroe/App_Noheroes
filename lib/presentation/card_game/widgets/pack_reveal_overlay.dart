@@ -341,9 +341,9 @@ class _PackRevealOverlayState extends State<PackRevealOverlay> {
   Rarity _rarityOf(Object card) =>
       card is CreatureCard ? card.rarity : (card as RelicCard).rarity;
 
-  List<CardGlyph> _effectsOf(Object card) => card is CreatureCard
+  List<EffectBadge> _effectsOf(Object card) => card is CreatureCard
       ? effectGlyphsFromAbilities(card.abilities)
-      : const <CardGlyph>[];
+      : const <EffectBadge>[];
 
   IconData _artIconOf(Object card) {
     if (card is CreatureCard) return _damageIcon(card.damageType);
