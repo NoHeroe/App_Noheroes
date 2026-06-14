@@ -98,6 +98,9 @@ class AbilityTriggered extends MatchEvent {
     required this.cardName,
     required this.ability,
     required this.detail,
+    this.targetCardId,
+    this.amount,
+    this.targetDied = false,
   });
 
   /// Lado DONO da criatura cuja habilidade disparou.
@@ -106,6 +109,15 @@ class AbilityTriggered extends MatchEvent {
   final String cardName;
   final String ability;
   final String detail;
+
+  /// Quando a habilidade INFLIGE dano direto em alguém — ex.: RETALIAÇÃO de
+  /// Espinhos/Contra-Ataque/Reflexo no ATACANTE — [targetCardId] é a vítima,
+  /// [amount] é o dano e [targetDied] se ela morreu. Permite à UI dar um beat
+  /// próprio: a vítima TREME + mostra o número. null/0 em habilidades sem dano
+  /// direto (mantém o evento genérico).
+  final String? targetCardId;
+  final int? amount;
+  final bool targetDied;
 
   @override
   String toString() =>

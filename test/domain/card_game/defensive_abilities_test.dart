@@ -84,11 +84,13 @@ void main() {
       final after = engine.endTurn(s);
       expect(_hpOf(after.sideB, 'def'), 7); // 10 - 3 do golpe.
       expect(_hpOf(after.sideA, 'atk'), 10 - kEspinhosDamage); // espetou-se.
-      expect(
-        after.lastTurnEvents.whereType<AbilityTriggered>().any(
-            (e) => e.ability == 'Espinhos'),
-        isTrue,
-      );
+      // O evento de Espinhos aponta o ATACANTE como vítima + o dano, pra a UI
+      // dar um beat próprio (atacante treme + número) — CEO 2026-06-14.
+      final spike = after.lastTurnEvents
+          .whereType<AbilityTriggered>()
+          .firstWhere((e) => e.ability == 'Espinhos');
+      expect(spike.targetCardId, 'atk');
+      expect(spike.amount, kEspinhosDamage);
     });
 
     test('NÃO retalia ataque à distância (só melee)', () {

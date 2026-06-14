@@ -328,14 +328,14 @@ class CreatureInPlay {
       if (bonus <= 0) continue;
       final t = r.grants.attackType;
       if (t == null) {
-        // Bônus genérico (sem `attackType`) = capacidade de GOLPE CORPO-A-CORPO
-        // (CEO 2026-06-13). "+1 atk" numa relíquia não deve inflar o PROJÉTIL de
-        // um atirador — dá um ataque melee. Só pra base física (melee/à
-        // distância); mágica/cura não ganham melee por relíquia genérica.
-        if (base == DamageType.corpoACorpo || base == DamageType.aDistancia) {
-          byType[DamageType.corpoACorpo] =
-              (byType[DamageType.corpoACorpo] ?? 0) + bonus;
-        }
+        // Bônus genérico (sem `attackType`, ex.: ESPADA/adaga/lâmina) = a criatura
+        // GANHA a capacidade de lutar CORPO A CORPO com +bônus (CEO 2026-06-14).
+        // Vale pra QUALQUER base — mago, curador e arqueiro inclusos: a arma branca
+        // concede um ataque melee (adicional ao ataque do tipo base), em vez de
+        // inflar o projétil/magia. (Antes só base física ganhava — bug: a espada
+        // não fazia nada num mago.)
+        byType[DamageType.corpoACorpo] =
+            (byType[DamageType.corpoACorpo] ?? 0) + bonus;
       } else {
         // Tipado: soma no ataque daquele tipo (cria se não existe).
         byType[t] = (byType[t] ?? 0) + bonus;

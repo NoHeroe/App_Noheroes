@@ -1755,6 +1755,9 @@ class CardBattleEngine {
           ability: abilityKeywordLabel(AbilityKeyword.espinhos),
           detail: '$thorns de dano verdadeiro em '
               '${attacker.card.nome}${res.died ? ' (destruída)' : ''}',
+          targetCardId: attacker.instanceId, // o ATACANTE toma o dano
+          amount: thorns,
+          targetDied: res.died,
         ));
         if (res.died) {
           attackerDied = true;
@@ -1778,6 +1781,9 @@ class CardBattleEngine {
           ability: abilityKeywordLabel(AbilityKeyword.contraAtaque),
           detail: 'contra-atacou ${attacker.card.nome} '
               '($cdmg de dano)${res.died ? ' (destruída)' : ''}',
+          targetCardId: attacker.instanceId,
+          amount: cdmg,
+          targetDied: res.died,
         ));
         if (res.died) {
           attackerDied = true;
@@ -1803,6 +1809,9 @@ class CardBattleEngine {
           ability: abilityKeywordLabel(AbilityKeyword.reflexoMagico),
           detail: 'refletiu $raw de dano mágico em '
               '${attacker.card.nome}${res.died ? ' (destruída)' : ''}',
+          targetCardId: attacker.instanceId,
+          amount: raw,
+          targetDied: res.died,
         ));
         if (res.died) {
           attackerDied = true;
@@ -1863,6 +1872,9 @@ class CardBattleEngine {
         ability: abilityKeywordLabel(AbilityKeyword.espinhoDeEscudo),
         detail: '$kEspinhoDeEscudoDamage de dano em '
             '${attacker.card.nome}${res.died ? ' (destruída)' : ''}',
+        targetCardId: attacker.instanceId,
+        amount: kEspinhoDeEscudoDamage,
+        targetDied: res.died,
       ));
       if (res.died) {
         attackerDied = true;

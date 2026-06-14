@@ -205,13 +205,22 @@ void main() {
       expect(melee, hasLength(1));
       expect(melee.first.value, 5);
     });
-    test('mágico: bônus genérico IGNORADO (não ganha melee; fica 3)', () {
+    test('mágico: GANHA um golpe melee do bônus genérico (CEO 2026-06-14)', () {
       final c = withAtkRelic(DamageType.magico);
-      expect(c.atk, 3);
-      expect(c.attacks.any((a) => a.type == DamageType.corpoACorpo), isFalse);
+      // O ataque mágico segue 3 (não inflado); a espada concede um golpe melee 5.
+      expect(c.attacks.firstWhere((a) => a.type == DamageType.magico).value, 3);
+      final melee =
+          c.attacks.where((a) => a.type == DamageType.corpoACorpo).toList();
+      expect(melee, hasLength(1));
+      expect(melee.first.value, 5);
     });
-    test('vitalismo: bônus genérico IGNORADO (fica 3)', () {
-      expect(withAtkRelic(DamageType.vitalismo).atk, 3);
+    test('vitalismo: GANHA um golpe melee do bônus genérico (CEO 2026-06-14)',
+        () {
+      final c = withAtkRelic(DamageType.vitalismo);
+      expect(
+          c.attacks.firstWhere((a) => a.type == DamageType.vitalismo).value, 3);
+      expect(
+          c.attacks.firstWhere((a) => a.type == DamageType.corpoACorpo).value, 5);
     });
   });
 

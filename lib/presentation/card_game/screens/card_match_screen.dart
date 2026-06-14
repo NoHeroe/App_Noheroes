@@ -2192,8 +2192,12 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
           shadows: const [Shadow(color: AppColors.black, blurRadius: 8)],
         ),
       )
+          // O número desce JUNTO com o impacto do golpe (CEO 2026-06-14): espera o
+          // golpe ENCOSTAR (`_hitContactMs` por tipo: melee 710 / mágico 1000 / à
+          // distância 420) em vez de aparecer no início do beat. Cura/habilidade
+          // têm contato 0 (aparecem na hora).
           .animate(key: ValueKey<int>(h.seq))
-          .fadeIn(duration: 90.ms)
+          .fadeIn(delay: _hitContactMs(h.damageType).ms, duration: 90.ms)
           .moveY(begin: 8, end: -16, duration: 620.ms, curve: Curves.easeOut)
           .fadeOut(delay: 400.ms, duration: 220.ms),
     );

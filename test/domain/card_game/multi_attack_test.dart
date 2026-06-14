@@ -55,12 +55,19 @@ void main() {
       expect(c.attacks.single.value, 5);
     });
 
-    test('bônus genérico (sem attackType) só vale p/ tipo físico', () {
-      // base mágico + relíquia genérica +5 → NÃO soma (mágico não escala genérico)
+    test('bônus genérico (espada) concede ataque MELEE a QUALQUER base '
+        '(CEO 2026-06-14)', () {
+      // base MÁGICO + relíquia genérica +5 → ganha um ataque CORPO A CORPO de 5
+      // (além do mágico 4): a carta "pega a espada" e passa a lutar de perto.
       final mag = _inPlay(_creature(DamageType.magico, 4),
           relics: [_relic(atkBonus: 5)]);
-      expect(mag.attacks.single.value, 4);
-      // base melee + relíquia genérica +5 → soma
+      expect(mag.attacks.length, 2);
+      expect(
+          mag.attacks.firstWhere((a) => a.type == DamageType.magico).value, 4);
+      expect(
+          mag.attacks.firstWhere((a) => a.type == DamageType.corpoACorpo).value,
+          5);
+      // base melee + relíquia genérica +5 → soma no próprio melee → 9.
       final mel = _inPlay(_creature(DamageType.corpoACorpo, 4),
           relics: [_relic(atkBonus: 5)]);
       expect(mel.attacks.single.value, 9);

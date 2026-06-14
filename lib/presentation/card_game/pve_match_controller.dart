@@ -948,7 +948,11 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
         e is AttackResolved ||
         e is AttackEvaded ||
         e is HealResolved ||
-        e is StatusDamageResolved;
+        e is StatusDamageResolved ||
+        // RETALIAÇÃO que inflige dano (Espinhos/Contra-Ataque/Reflexo/Espinho de
+        // Escudo) abre batida PRÓPRIA: o ATACANTE treme + toma o número ANTES da
+        // próxima ação (CEO 2026-06-14). Procs sem dano direto seguem anexados.
+        (e is AbilityTriggered && e.targetCardId != null);
     final beats = <List<MatchEvent>>[];
     for (final e in events) {
       if (beats.isEmpty || isAnchor(e)) {
@@ -994,6 +998,18 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
           damageType: DamageType.cura,
         );
       case AbilityTriggered():
+        // RETALIAÇÃO com dano (Espinhos/Contra-Ataque/Reflexo/Espinho de Escudo):
+        // destaca o ATACANTE (vítima) TOMANDO o dano — tremor + número '-N', SEM
+        // projétil (damageType null = impacto LOCAL imediato no atacante). O
+        // atacante está no lado OPOSTO ao dono da habilidade.
+        if (e.targetCardId != null) {
+          return CombatHighlight(
+            targetCardId: e.targetCardId,
+            targetSide: opposite(e.side),
+            amount: e.amount,
+            targetDied: e.targetDied,
+          );
+        }
         return CombatHighlight(
           attackerCardId: e.cardId,
           attackerSide: e.side,
