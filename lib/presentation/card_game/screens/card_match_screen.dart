@@ -2223,24 +2223,37 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
     // Papel desta criatura no evento de combate sendo narrado (replay).
     final h = ui.highlight;
     final cid = creature?.instanceId;
-    final isHlTarget = h != null && cid != null && h.targetCardId == cid;
+    // Lado DESTA carta. O instanceId já é único por lado (engine), mas casamos o
+    // LADO do destaque também — defesa extra contra cruzamento numa partida
+    // ESPELHO (CEO 2026-06-13). Null-safe: se o destaque não traz lado, casa só
+    // pelo id (comportamento antigo, sem regressão).
+    final sideId = isPlayerSide ? ui.playerSide : ui.botSideId;
+    final isHlTarget = h != null &&
+        cid != null &&
+        h.targetCardId == cid &&
+        (h.targetSide == null || h.targetSide == sideId);
     final isHlAbility = h != null &&
         cid != null &&
         h.ability != null &&
-        h.attackerCardId == cid;
+        h.attackerCardId == cid &&
+        (h.attackerSide == null || h.attackerSide == sideId);
     final isHlAttacker = h != null &&
         cid != null &&
         h.ability == null &&
         h.attackerCardId == cid &&
+        (h.attackerSide == null || h.attackerSide == sideId) &&
         !isHlTarget;
 
     // Já estilhaçou numa batida anterior DESTE step (Pisotear/Ataque Duplo) ou
     // no respiro pós-morte: o snapshot pré-ataque ainda contém a carta, mas ela
     // não deve "ressuscitar" enquanto o destaque está noutra ação. Renderiza o
     // slot vazio/transparente até o próximo step compactar o tabuleiro.
-    final shattered =
-        creature != null && h != null && cid != null &&
-            h.deadIds.contains(cid) && h.targetCardId != cid;
+    final shattered = creature != null &&
+        h != null &&
+        cid != null &&
+        h.deadIds.contains(cid) &&
+        h.targetCardId != cid &&
+        (h.targetSide == null || h.targetSide == sideId);
     // Anti-duplicação: esconde a criatura SÓ enquanto ela está de fato VOANDO
     // (`_flying`). A carta da IA está no lado do bot (fromBot); a minha, no meu
     // lado. NÃO usar `botPlayNotification` aqui — o controller a segura ~1500ms
@@ -2293,7 +2306,8 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
       // CEO 2026-06-13: IMPACTO → MORTE. A carta VIVA (colorida) toma o tremor de
       // impacto no momento do golpe (`_hitContactMs`); SÓ DEPOIS do impacto ela
       // perde a cor + trinca e estilhaça. Por isso o cinza entra após o impacto.
-      final grayDelayMs = _hitContactMs(h.damageType) + _kImpactMs;
+      final grayDelayMs =
+          _hitContactMs(h.damageType) + _impactWindowMs(h.damageType);
       content = _DelayedGrayscale(delayMs: grayDelayMs, child: content);
     }
 
@@ -2353,7 +2367,16 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
               child: OverflowBox(
                 maxWidth: double.infinity,
                 maxHeight: double.infinity,
-                child: RepaintBoundary(child: CombatVfx.spellChannel()),
+                // A canalização ENCERRA quando o raio dispara (CEO 2026-06-13):
+                // some com fade até `_kMagicChannelMs`, não fica visível durante o
+                // golpe.
+                child: RepaintBoundary(
+                  child: CombatVfx.spellChannel()
+                      .animate()
+                      .fadeOut(
+                          delay: (_kMagicChannelMs - 150).ms,
+                          duration: 150.ms),
+                ),
               ),
             ),
           ),
@@ -2442,11 +2465,12 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
         final contact = _hitContactMs(h.damageType);
         tile = tile
             .animate(key: ObjectKey(h))
-            // 1) IMPACTO (reação ao golpe, carta viva).
+            // 1) IMPACTO (reação ao golpe, carta viva). Na magia, o tremor dura a
+            // EXPLOSÃO inteira (`_impactWindowMs`); só DEPOIS vem a morte.
             .shake(
                 delay: contact.ms,
                 hz: magicHit ? 7 : 8,
-                duration: _kImpactMs.ms,
+                duration: _impactWindowMs(h.damageType).ms,
                 rotation: magicHit ? 0.03 : 0.014)
             // 2) MORTE: segura trincada um instante e DESPEDAÇA (some rápido com
             // leve "estouro" pra fora — não encolhe).
@@ -2460,7 +2484,7 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
         tile = tile.animate(key: ObjectKey(h)).shake(
             delay: _hitContactMs(h.damageType).ms,
             hz: magicHit ? 6 : 7,
-            duration: (magicHit ? 460 : _kImpactMs).ms,
+            duration: _impactWindowMs(h.damageType).ms,
             rotation: magicHit ? 0.032 : 0.012);
       } else if (isHlTarget && h.isHeal) {
         tile = tile.animate(key: ObjectKey(h)).shimmer(
@@ -2650,7 +2674,8 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
               maxHeight: double.infinity,
               child: KeyedSubtree(
                 key: ValueKey('fxBlast_${identityHashCode(h)}'),
-                child: CombatVfx.impactBlast(delayMs: contact),
+                child: CombatVfx.impactBlast(
+                    delayMs: contact, size: 168, durationMs: _kMagicBlastMs),
               ),
             ),
           ),
@@ -2709,8 +2734,9 @@ class _CardMatchScreenState extends ConsumerState<CardMatchScreen>
     // Estilhaça DEPOIS do IMPACTO + hold da carta trincada (sincroniza com o
     // início do fadeOut do tile): contato do golpe + impacto + hold. O controller
     // estende a janela do evento de morte (+500ms) pra esta sequência caber.
-    final delayMs =
-        _hitContactMs(h.damageType) + _kImpactMs + _kDeathCrackHoldMs;
+    final delayMs = _hitContactMs(h.damageType) +
+        _impactWindowMs(h.damageType) +
+        _kDeathCrackHoldMs;
     return KeyedSubtree(
       key: ObjectKey(h),
       child: CombatVfx.deathShatter(delayMs: delayMs),
@@ -3709,6 +3735,10 @@ const int _kDeathCrackHoldMs = 180;
 const int _kMeleeContactMs = 710;
 // MÁGICO: a carta CANALIZA 0.8s e então o RAIO atinge o alvo (CEO 2026-06-13).
 const int _kMagicChannelMs = 800;
+// EXPLOSÃO mágica de impacto (sprite explosion.png) — dura mais que o tremor melee
+// pra a animação inteira ser percebida. A MORTE só dispara DEPOIS disso (regra do
+// CEO 2026-06-13: morte sempre após as animações de ataque encerrarem).
+const int _kMagicBlastMs = 620;
 
 /// Momento (ms desde o início do beat) em que o golpe ENCOSTA no alvo, por tipo —
 /// sincroniza o tremor de IMPACTO (e a MORTE, que vem depois) com a chegada do
@@ -3728,6 +3758,13 @@ int _hitContactMs(DamageType? type) {
       return 0;
   }
 }
+
+/// Janela de IMPACTO por tipo (ms): quanto tempo o alvo treme E quanto a MORTE
+/// espera ANTES de estilhaçar. A magia espera a EXPLOSÃO inteira (`_kMagicBlastMs`)
+/// — assim a morte só dispara após a animação de ataque (CEO 2026-06-13); os
+/// demais tipos usam o tremor padrão (`_kImpactMs`).
+int _impactWindowMs(DamageType? type) =>
+    type == DamageType.magico ? _kMagicBlastMs : _kImpactMs;
 
 /// Filtro de luminância (P&B) reutilizado — `const` pra não recriar por frame.
 const ColorFilter _kGrayscaleFilter = ColorFilter.matrix(<double>[

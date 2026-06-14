@@ -173,7 +173,8 @@ void main() {
       expect(c.playCreature(cr.id, lane: 0), isTrue);
       final badRelic = c.state.playerBoard!.handRelics.first;
       expect(c.compatibleTargets(badRelic), isEmpty);
-      expect(c.playRelic(badRelic.id, cr.id), isFalse);
+      expect(c.playRelic(badRelic.id, c.state.playerBoard!.lanes[0]!.instanceId),
+          isFalse);
       expect(c.state.playerBoard!.lanes[0]!.relics, isEmpty);
     });
 
@@ -197,7 +198,10 @@ void main() {
       expect(caro.canAffordRelic(relCara), isFalse);
       expect(caro.canPlayRelic(relCara), isFalse);
       expect(caro.compatibleTargets(relCara), isNotEmpty);
-      expect(caro.playRelic(relCara.id, cr1.id), isFalse);
+      expect(
+          caro.playRelic(
+              relCara.id, caro.state.playerBoard!.lanes[0]!.instanceId),
+          isFalse);
       expect(caro.state.playerBoard!.lanes[0]!.relics, isEmpty);
       expect(caro.state.playerBoard!.crystals, 2);
 
@@ -219,7 +223,10 @@ void main() {
       final relOk = barato.state.playerBoard!.handRelics.first;
       expect(barato.canAffordRelic(relOk), isTrue);
       expect(barato.canPlayRelic(relOk), isTrue);
-      expect(barato.playRelic(relOk.id, cr2.id), isTrue);
+      expect(
+          barato.playRelic(
+              relOk.id, barato.state.playerBoard!.lanes[0]!.instanceId),
+          isTrue);
       expect(barato.state.playerBoard!.lanes[0]!.relics, hasLength(1));
       expect(barato.state.playerBoard!.crystals, 1);
     });
@@ -398,11 +405,11 @@ void main() {
       // Ação bem-sucedida limpa a seleção.
       expect(c.state.selectedCardId, isNull);
       expect(c.freeLanes(), [1, 2]);
-      expect(c.state.playerBoard!.lanes[0]?.instanceId, card.id);
+      expect(c.state.playerBoard!.lanes[0]?.card.id, card.id);
 
       final relicCard = c.state.playerBoard!.handRelics.first;
       final targets = c.compatibleTargets(relicCard);
-      expect(targets.map((t) => t.instanceId), contains(card.id));
+      expect(targets.map((t) => t.card.id), contains(card.id));
     });
   });
 

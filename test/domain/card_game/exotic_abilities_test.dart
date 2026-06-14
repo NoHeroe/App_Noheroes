@@ -177,7 +177,7 @@ void main() {
     test('copia stats e keywords do alvo marcado (inimigo)', () {
       final s = mimicState();
       final after = engine.apply(s, const PlayCreature('mim', mimicTargetId: 'boss'));
-      final placed = _find(after.sideA, 'mim');
+      final placed = after.sideA.lanes[0]!; // mímico jogado vai pra frente
       expect(placed.card.atk, 9);
       expect(placed.card.hp, 20);
       expect(placed.currentHp, 20);
@@ -187,7 +187,7 @@ void main() {
     test('sem alvo marcado, auto-escolhe o mais forte em jogo', () {
       final s = mimicState();
       final after = engine.apply(s, const PlayCreature('mim'));
-      final placed = _find(after.sideA, 'mim');
+      final placed = after.sideA.lanes[0]!; // mímico jogado vai pra frente
       expect(placed.card.atk, 9); // copiou o boss (único em jogo).
     });
   });

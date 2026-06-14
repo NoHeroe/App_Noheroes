@@ -251,7 +251,10 @@ class PveMatchController extends StateNotifier<PveMatchUiState> {
         ? const Duration(milliseconds: 500)
         : Duration.zero;
     if (h?.damageType == DamageType.magico && h?.isHeal == false) {
-      return const Duration(milliseconds: 2000) + preDeath;
+      // Magia: canalização (0.8s) + raio + EXPLOSÃO (~0.62s, termina ~1.62s) e,
+      // só DEPOIS, a MORTE (P&B + estilhaço). 2.2s + preDeath cabe a sequência
+      // inteira sem cortar a explosão nem a morte (CEO 2026-06-13).
+      return const Duration(milliseconds: 2200) + preDeath;
     }
     return _eventStepDelay + preDeath;
   }

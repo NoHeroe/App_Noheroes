@@ -39,7 +39,7 @@ void main() {
       s = engine.apply(s, PlayCreature(creatureId));
       final side = s.sideOf(activeId);
       expect(side.crystals, kStartingCrystals - 1);
-      expect(side.lanes[0]!.instanceId, creatureId);
+      expect(side.lanes[0]!.card.id, creatureId);
       expect(_inHand(side, creatureId), isFalse, reason: 'saiu da mão');
       // ADR-0028: sem auto-refill — a mão encolhe ao jogar.
       expect(side.hand.length, handBefore - 1,
@@ -87,7 +87,7 @@ void main() {
       // Pede o slot 3 (lane 2) com o tabuleiro vazio → não pode deixar buraco
       // na frente, então vai pro lane 0.
       s = engine.apply(s, PlayCreature(id, lane: 2));
-      expect(s.active.lanes[0]?.instanceId, id);
+      expect(s.active.lanes[0]?.card.id, id);
       expect(s.active.lanes[1], isNull);
       expect(s.active.lanes[2], isNull);
     });
@@ -100,11 +100,11 @@ void main() {
       final second = s.active.handCreatures[1].id;
 
       s = engine.apply(s, PlayCreature(first)); // auto → frente (lane 0)
-      expect(s.active.lanes[0]?.instanceId, first);
+      expect(s.active.lanes[0]?.card.id, first);
 
       s = engine.apply(s, PlayCreature(second, lane: 0)); // fura a frente
-      expect(s.active.lanes[0]?.instanceId, second, reason: 'novo na frente');
-      expect(s.active.lanes[1]?.instanceId, first,
+      expect(s.active.lanes[0]?.card.id, second, reason: 'novo na frente');
+      expect(s.active.lanes[1]?.card.id, first,
           reason: 'ocupante empurrado pra trás');
       expect(s.active.lanes[1]?.lane, 1, reason: 'lane re-indexada');
     });
@@ -189,10 +189,11 @@ void main() {
       var s = engine.start(aL, bL, seed: seedWithMixedHand(aL, bL));
       final id = s.active.handCreatures.first.id;
       s = engine.apply(s, PlayCreature(id)); // crystals 3-1=2
-      expect(s.active.lanes[0]?.instanceId, id);
+      expect(s.active.lanes[0]?.card.id, id);
       final before = s.active.crystals;
+      final inPlayId = s.active.lanes[0]!.instanceId;
 
-      s = engine.apply(s, ReturnToHand(id)); // 2-2=0
+      s = engine.apply(s, ReturnToHand(inPlayId)); // 2-2=0
       expect(s.active.lanes[0], isNull, reason: 'saiu do tabuleiro');
       expect(s.active.crystals, before - kReturnVoluntaryCost);
       expect(_inHand(s.active, id), isTrue, reason: 'voltou pra mão');
@@ -204,9 +205,10 @@ void main() {
       var s = engine.start(aL, bL, seed: seedWithMixedHand(aL, bL));
       final id = s.active.handCreatures.first.id;
       s = engine.apply(s, PlayCreature(id));
-      s = engine.apply(s, ReturnToHand(id)); // crystals 2->0
+      final inPlayId = s.active.lanes[0]!.instanceId;
+      s = engine.apply(s, ReturnToHand(inPlayId)); // crystals 2->0
       // Sem criatura em jogo e 0 cristais: nova tentativa é no-op.
-      final s2 = engine.apply(s, ReturnToHand(id));
+      final s2 = engine.apply(s, ReturnToHand(inPlayId));
       expect(identical(s2.active, s.active) || s2.active.crystals == 0, isTrue);
     });
   });
@@ -262,7 +264,7 @@ void main() {
       final creatureId = s.active.handCreatures.first.id;
       s = engine.apply(s, PlayCreature(creatureId));
       final relicId = s.active.handRelics.first.id;
-      s = engine.apply(s, PlayRelic(relicId, creatureId));
+      s = engine.apply(s, PlayRelic(relicId, s.active.lanes[0]!.instanceId));
 
       final inPlay = s.active.lanes[0]!;
       expect(inPlay.relics, isEmpty);
@@ -278,7 +280,7 @@ void main() {
       final creatureId = s.active.handCreatures.first.id;
       s = engine.apply(s, PlayCreature(creatureId));
       final relicId = s.active.handRelics.first.id;
-      s = engine.apply(s, PlayRelic(relicId, creatureId));
+      s = engine.apply(s, PlayRelic(relicId, s.active.lanes[0]!.instanceId));
       final inPlay = s.active.lanes[0]!;
       expect(inPlay.relics.length, 1);
       expect(inPlay.armor, 1);
@@ -312,7 +314,7 @@ void main() {
       final creatureId = s.active.handCreatures.first.id;
       s = engine.apply(s, PlayCreature(creatureId)); // 3 - 1 = 2
       final relicId = s.active.handRelics.first.id;
-      s = engine.apply(s, PlayRelic(relicId, creatureId)); // 2 - 2 = 0
+      s = engine.apply(s, PlayRelic(relicId, s.active.lanes[0]!.instanceId)); // 2 - 2 = 0
 
       final side = s.sideOf(activeId);
       expect(side.lanes[0]!.relics.length, 1);
@@ -329,7 +331,7 @@ void main() {
       final creatureId = s.active.handCreatures.first.id;
       s = engine.apply(s, PlayCreature(creatureId)); // 3 - 1 = 2
       final relicId = s.active.handRelics.first.id;
-      s = engine.apply(s, PlayRelic(relicId, creatureId)); // 2 - 1 = 1
+      s = engine.apply(s, PlayRelic(relicId, s.active.lanes[0]!.instanceId)); // 2 - 1 = 1
 
       final side = s.sideOf(activeId);
       // Flash não fica equipada, mas o custo foi cobrado.
@@ -347,7 +349,7 @@ void main() {
       s = engine.apply(s, PlayCreature(creatureId)); // 3 - 1 = 2 < custo 3
       final relicId = s.active.handRelics.first.id;
       final before = s;
-      s = engine.apply(s, PlayRelic(relicId, creatureId));
+      s = engine.apply(s, PlayRelic(relicId, s.active.lanes[0]!.instanceId));
 
       expect(identical(s, before), isTrue, reason: 'deve ser no-op');
       expect(s.active.lanes[0]!.relics, isEmpty);

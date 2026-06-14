@@ -93,6 +93,46 @@ void main() {
           reason: 'só a atingida vai pro cemitério');
     });
   });
+
+  group('partida ESPELHO (CEO 2026-06-13): mesma carta nos DOIS lados', () {
+    // Bug: criatura normal ficava com instanceId = card.id (único só POR LADO).
+    // Quando os dois jogavam a MESMA carta, os instanceIds colidiam → mira/Key/
+    // deadIds confundiam os lados e a carta piscava/sumia ao atacar. Agora o
+    // engine carimba uid = lado#carta#turno, único GLOBALMENTE.
+    MatchState mirror(SideId active) {
+      final card = creature(id: 'mirror', cost: 0, atk: 2, hp: 3);
+      BoardSide side(SideId id) => BoardSide(
+            id: id,
+            lanes: List<CreatureInPlay?>.filled(kLaneCount, null),
+            crystals: 5,
+            hand: <Object>[card],
+            deck: const <Object>[],
+            sacrificedThisTurn: false,
+          );
+      return MatchState(
+        sideA: side(SideId.a),
+        sideB: side(SideId.b),
+        activeSide: active,
+        turn: 3,
+        phase: MatchPhase.jogo,
+        rng: makeRng(1),
+      );
+    }
+
+    test('a MESMA carta jogada pelos dois lados gera instanceIds DISTINTOS', () {
+      final afterA = engine.apply(mirror(SideId.a), const PlayCreature('mirror'));
+      final aInst = afterA.sideA.lanes[0]!.instanceId;
+      final afterB = engine.apply(mirror(SideId.b), const PlayCreature('mirror'));
+      final bInst = afterB.sideB.lanes[0]!.instanceId;
+
+      expect(aInst, isNot('mirror'),
+          reason: 'instanceId não é mais só o card.id');
+      expect(aInst == bInst, isFalse,
+          reason: 'lados opostos NÃO podem compartilhar instanceId (espelho)');
+      // A identidade de CARTA continua igual nos dois lados.
+      expect(afterA.sideA.lanes[0]!.card.id, afterB.sideB.lanes[0]!.card.id);
+    });
+  });
 }
 
 /// Atacante melee forte o bastante pra matar a Caixa da frente (1 PV).

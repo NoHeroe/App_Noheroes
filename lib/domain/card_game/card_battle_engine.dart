@@ -603,8 +603,18 @@ class CardBattleEngine {
     final isMimic = card.abilities
         .any((x) => abilityKeywordFromString(x) == AbilityKeyword.mimico);
     final playCard = isMimic ? _mimicCard(s, card, a.mimicTargetId) : card;
-    final placed =
-        CreatureInPlay(card: playCard, currentHp: playCard.hp, lane: 0);
+    // instanceId GLOBALMENTE único (lado#carta#turno). Antes, criatura normal
+    // ficava com uid=null → instanceId=card.id, único só POR LADO. Em partida
+    // ESPELHO (os dois lados jogam a MESMA carta) os dois compartilhavam o
+    // instanceId → colisão de mira/Key/deadIds: ao atacar, a carta do outro
+    // lado piscava/sumia (bug CEO 2026-06-13). Side+turno garante unicidade
+    // global e estável (copyWith preserva). Tokens (Caixa Coringa) já tinham uid.
+    final placed = CreatureInPlay(
+      card: playCard,
+      currentHp: playCard.hp,
+      lane: 0,
+      uid: '${side.id.name}#${playCard.id}#${s.turn}',
+    );
 
     if (count < kLaneCount) {
       // Há vaga: encaixe front-packed (paga o custo da carta).
